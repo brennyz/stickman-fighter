@@ -571,7 +571,7 @@ function unlockAchievement(id) {
   const ach = ACHIEVEMENTS.find(a => a.id === id);
   persist();
   try { AudioSys.sfx('newmonster'); } catch (_) {}
-  try { UI.toast(t('toast.achievementUnlock', { name: ach ? achLabel(ach, 'name') : id }), 4000); } catch (_) {}
+  try { UI.toast(t('toast.achievementUnlock', { name: ach ? achLabel(ach, 'name') : id }), 4000, { tone: 'ok' }); } catch (_) {}
   // Nooit missions-DOM rebuilden midden in een gevecht
   try {
     if (state === 'menu' && UI.renderMissions) UI.renderMissions();
@@ -902,7 +902,7 @@ function applySaveImportText(text, sourceLabel) {
   window.__sfImportConfirm = false;
   updateSaveImportPreview(text);
   if (sourceLabel) {
-    userToast(`Save geladen uit ${sourceLabel} — tik Import voor preview`, 3200);
+    userToast(tOr('toast.saveLoadedPreview', 'Save uit {src} — tik Import om te kijken', { src: sourceLabel }), 3200);
   }
   return true;
 }
@@ -940,7 +940,7 @@ function runImportSaveClick() {
   const previewEl = document.getElementById('saveImportPreview');
   if (!ta || !ta.value.trim()) {
     if (openSaveImportFilePicker()) return;
-    userToast('Kies een exportbestand of plak save-JSON in het vak', 2800);
+    userToast(t('toast.pickFileOrPaste'), 2800, { tone: 'warn' });
     return;
   }
   try {
@@ -948,7 +948,7 @@ function runImportSaveClick() {
     if (!window.__sfImportConfirm) {
       window.__sfImportConfirm = true;
       updateSaveImportPreview(ta.value);
-      UI.toast('Import-preview — tik Import nogmaals om te laden', 3600);
+      UI.toast(t('toast.importPreview'), 3600, { tone: 'warn' });
       setTimeout(() => { window.__sfImportConfirm = false; }, 8000);
       return;
     }
@@ -959,7 +959,7 @@ function runImportSaveClick() {
   } catch (e) {
     window.__sfImportConfirm = false;
     if (previewEl) { previewEl.style.display = 'none'; previewEl.textContent = ''; }
-    UI.toast((e && e.message) ? e.message : 'Ongeldige save — controleer JSON', 3200);
+    UI.toast((e && e.message) ? e.message : t('toast.invalidSave'), 3200, { tone: 'danger' });
   }
 }
 
@@ -2293,7 +2293,7 @@ function copyPlayLink() {
     const url = await resolveSharePlayUrl();
     try {
       await navigator.clipboard.writeText(url);
-      UI.toast('GitHub Pages-link gekopieerd — deel speel.html (niet de tunnel)', 3600);
+      UI.toast(t('toast.pagesLinkCopied'), 3600, { tone: 'ok' });
     } catch (_) {
       UI.toast(url, 4500);
     }
@@ -2307,7 +2307,7 @@ function sharePlayLink() {
       try {
         await navigator.share({
           title: 'Stickman Fighter',
-          text: 'Gratis stickman vechtspel — open de link, tik SPELEN (Android + iPad + PC)',
+          text: 'Gratis stickman vechtspel — open de link, tik SPELEN (Android + PC)',
           url,
         });
         return;
@@ -2317,7 +2317,7 @@ function sharePlayLink() {
     }
     try {
       await navigator.clipboard.writeText(url);
-      UI.toast('Pages-link gekopieerd — stuur naar vrienden (Chrome op Android)', 3600);
+      UI.toast(t('toast.pagesLinkCopiedAndroid'), 3600, { tone: 'ok' });
     } catch (_) {
       UI.toast(url, 4500);
     }
@@ -2525,7 +2525,7 @@ function modeFirstMinuteLine(mode) {
     adventure: 'Eerste minuut: links lopen · rechts slaan · joy ↑ mik op vliegers · vol energy = SUPER',
     training: 'Eerste minuut: spring rode laser · blokkeer dichtbij · energy vol → SUPER',
     wall: '60s · combo ×3/×5/×8 hints · record-tempo + projectie in HUD',
-    versus: 'Eerste minuut: P1 links · P2 rechts · liggend iPad werkt het best',
+    versus: 'Eerste minuut: P1 links · P2 rechts',
     coinrun: '45s munten · joy ↑ mik · roze vlieger = +3 · max 3 shuriken snel',
   };
   return lines[mode] || lines.adventure;
@@ -2630,6 +2630,8 @@ function maybeWelcomeToast() {
       const lvl = document.getElementById('levelScreen');
       if (lvl && lvl.classList.contains('active')) return;
     } catch (_) {}
+    const splash = document.getElementById('sfSplash');
+    if (splash && !splash.classList.contains('is-done')) return;
     userToast(t('toast.welcome'), 3800);
   }, 2800);
 }

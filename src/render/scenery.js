@@ -1839,6 +1839,7 @@ function paintSplashStripCanvas(cv, t, opts) {
   const scroll = calm ? 0 : (t || 0) * 20;
   const progress = opts.progress != null ? Math.max(0, Math.min(1, opts.progress)) : 1;
   const compact = !!opts.compact;
+  const hero = !!opts.hero && !compact;
 
   const skyTop = P ? P.skyTop : '#4a6a82';
   const skyMid = P ? P.skyMid : '#7a94a6';
@@ -1852,8 +1853,8 @@ function paintSplashStripCanvas(cv, t, opts) {
   const roadLo = P ? P.roadLo : '#484642';
   const straw = P ? P.straw : '#a88850';
 
-  const roadH = Math.max(14, Math.round(h * (compact ? 0.22 : 0.2)));
-  const fieldH = Math.max(16, Math.round(h * (compact ? 0.26 : 0.3)));
+  const roadH = Math.max(14, Math.round(h * (compact ? 0.22 : hero ? 0.18 : 0.2)));
+  const fieldH = Math.max(16, Math.round(h * (compact ? 0.26 : hero ? 0.24 : 0.3)));
   const roadY = h - roadH;
   const fieldY = roadY - fieldH;
   const horizonY = fieldY;
@@ -1901,11 +1902,11 @@ function paintSplashStripCanvas(cv, t, opts) {
   }
 
   // Mini oak (left) — reuse canopy clusters when available
-  const oakX = Math.round(w * 0.18);
+  const oakX = Math.round(w * (hero ? 0.14 : 0.18));
   const oakBase = roadY - 2;
   if (typeof drawPixelOakTree === 'function' && !compact) {
     const sway = calm ? 0 : Math.sin((t || 0) * 1.4) * 1.5;
-    drawPixelOakTree(c, oakX, oakBase, 0.55, sway);
+    drawPixelOakTree(c, oakX, oakBase, hero ? 1.05 : 0.55, sway);
   } else {
     c.fillStyle = '#3a3024';
     c.fillRect(oakX - 3, oakBase - 28, 6, 28);
@@ -1987,17 +1988,25 @@ function paintSplashStripCanvas(cv, t, opts) {
     c.restore();
   };
   const stroll = calm ? 0 : Math.sin((t || 0) * 0.7) * 10;
-  drawSplashStick(w * 0.58 + stroll, 1, '#d0d4da', compact ? 0.85 : 1);
-  drawSplashStick(w * 0.72 + stroll * 0.6, -1, '#c09098', compact ? 0.9 : 1.05);
+  const sc = compact ? 0.85 : hero ? 4.4 : 1;
+  if (hero) {
+    drawSplashStick(w * 0.42 + stroll, 1, '#d0d4da', sc);
+    drawSplashStick(w * 0.58 + stroll * 0.45, -1, '#ffd75e', sc * 1.08);
+    drawSplashStick(w * 0.74 + stroll * 0.7, 1, '#c09098', sc * 0.92);
+  } else {
+    drawSplashStick(w * 0.58 + stroll, 1, '#d0d4da', sc);
+    drawSplashStick(w * 0.72 + stroll * 0.6, -1, '#c09098', compact ? 0.9 : 1.05);
+  }
 
   // Soft caption bar (non-compact)
   if (!compact) {
+    const capH = hero ? 22 : 14;
     c.fillStyle = P ? P.captionBg : 'rgba(18,22,26,.55)';
-    c.fillRect(0, h - 14, w, 14);
+    c.fillRect(0, h - capH, w, capH);
     c.fillStyle = P ? P.captionFg : 'rgba(220,214,200,.82)';
-    c.font = 'bold 9px monospace';
+    c.font = hero ? 'bold 13px monospace' : 'bold 9px monospace';
     c.textAlign = 'left';
-    c.fillText('LANDWEG · MONSTER ARENA', 8, h - 4);
+    c.fillText('MONSTER ARENA', 10, h - (hero ? 7 : 4));
   }
 
   c.imageSmoothingEnabled = prev;

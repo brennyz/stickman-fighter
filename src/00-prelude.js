@@ -33,7 +33,7 @@ const Perf = {
     // Tier only throttles FX density — no clearCache/scheduleResize (eye-strain flashes)
     if (this.tier >= 2 && this.frames > 120 && !save.liteFx && !window.__sfLiteHint) {
       window.__sfLiteHint = 1;
-      try { UI.toast('Traag op iPad? Instellingen → Lite FX', 4200); } catch (_) {}
+      try { UI.toast(typeof t === 'function' ? t('toast.liteFxHint') : 'Traag? Instellingen → Lite FX', 4200, { tone: 'warn' }); } catch (_) {}
     }
   },
   reset() { this.tier = 0; this.emaMs = 16.7; this.frames = 0; },

@@ -1357,79 +1357,166 @@ const UI = {
     }
   },
 
-  /** Eén zichtbare toast. Rest in de rij — Android Chrome/TWA = dezelfde HTML, geen native Toast. */
-  toast(msg, ms) {
-    msg = String(msg == null ? '' : msg);
-    let i = 0;
-    while (i < msg.length && msg.charAt(i) <= ' ') i++;
-    let j = msg.length;
-    while (j > i && msg.charAt(j - 1) <= ' ') j--;
-    msg = msg.slice(i, j);
-    if (!msg) return;
-    if (!(ms > 0)) ms = 2800;
-    if (ms < 1200) ms = 1200;
-    if (ms > 7000) ms = 7000;
+  _toastQ: null,
+  _toastEls: null,
+
+  _ensureToastHost(host) {
+    if (!host || !host.setAttribute) return;
     try {
-      const host = document.getElementById('toastHost');
-      if (host && host.querySelector('.sf-boot-fail')) return;
+      if (!host.getAttribute || host.getAttribute('role') !== 'status') {
+        host.setAttribute('role', 'status');
+      }
+      if (!host.getAttribute || host.getAttribute('aria-live') !== 'polite') {
+        host.setAttribute('aria-live', 'polite');
+        host.setAttribute('aria-relevant', 'additions');
+      }
     } catch (_) {}
-    if (this._toastCur === msg) return;
-    const q = this._toastQ || (this._toastQ = []);
-    for (let k = 0; k < q.length; k++) if (q[k].msg === msg) return;
-    if (q.length >= 4) q.shift();
-    q.push({ msg: msg, ms: ms });
-    this._pumpToast();
   },
 
-  _pumpToast() {
-    if (this._toastBusy) return;
-    const q = this._toastQ || (this._toastQ = []);
-    const next = q.shift();
-    if (!next) return;
-    this._showToastNow(next.msg, next.ms);
+  _resolveToastText(msg) {
+    const text = String(msg == null ? '' : msg).trim();
+    if (!text) return '';
+    if (/^[a-z][a-z0-9]*(\.[a-zA-Z0-9_]+)+$/.test(text) && text.length < 80) {
+      try {
+        if (typeof tOr === 'function') {
+          const resolved = tOr(text, '');
+          if (resolved && resolved !== text) return resolved;
+        }
+        if (typeof t === 'function') {
+          const resolved = t(text);
+          if (resolved && resolved !== text) return resolved;
+        }
+      } catch (_) {}
+      return '';
+    }
+    return text;
   },
 
-  _showToastNow(msg, ms) {
+  _parseToastArgs(ms, opts) {
+    let duration = 2800;
+    let tone = 'info';
+    if (ms && typeof ms === 'object') {
+      opts = ms;
+      duration = Number(opts.ms) > 0 ? Number(opts.ms) : 2800;
+    } else if (typeof ms === 'number' && ms > 0) {
+      duration = ms;
+    }
+    if (opts && typeof opts === 'object') {
+      if (opts.tone) tone = String(opts.tone);
+      if (typeof ms !== 'number' && Number(opts.ms) > 0) duration = Number(opts.ms);
+    }
+    if (tone !== 'ok' && tone !== 'warn' && tone !== 'danger') tone = 'info';
+    return { ms: duration, tone };
+  },
+
+  toast(msg, ms, opts) {
+    const text = this._resolveToastText(msg);
+    if (!text) return;
+    const spec = this._parseToastArgs(ms, opts);
     const host = document.getElementById('toastHost');
-    if (!host) {
-      this._toastBusy = false;
+    if (!host) return;
+    try {
+      if (host.querySelector('.sf-boot-fail')) return;
+    } catch (_) {}
+    this._ensureToastHost(host);
+    this._toastQ = this._toastQ || [];
+    this._toastEls = this._toastEls || [];
+
+    const sameEl = this._toastEls.find((el) => el && el.textContent === text);
+    if (sameEl) {
+      this._bumpToast(sameEl, spec.ms);
       return;
     }
-    if (host.querySelector('.sf-boot-fail')) {
-      this._toastBusy = false;
+    const sameQ = this._toastQ.find((q) => q.text === text);
+    if (sameQ) {
+      sameQ.ms = Math.max(sameQ.ms, spec.ms);
+      if (spec.tone !== 'info') sameQ.tone = spec.tone;
       return;
     }
-    this._toastBusy = true;
-    this._toastCur = msg;
-    if (this._toastHide) {
-      clearTimeout(this._toastHide);
-      this._toastHide = null;
+    const item = { text, ms: spec.ms, tone: spec.tone };
+    if (this._toastEls.length >= 2) {
+      this._toastQ.push(item);
+      if (this._toastQ.length > 4) this._toastQ.shift();
+      return;
     }
-    if (this._toastGap) {
-      clearTimeout(this._toastGap);
-      this._toastGap = null;
+    this._mountToast(item);
+  },
+
+  _bumpToast(el, ms) {
+    if (!el) return;
+    if (el._toastHide) {
+      try { clearTimeout(el._toastHide); } catch (_) {}
     }
-    const old = host.querySelectorAll('.toast');
-    for (let n = 0; n < old.length; n++) {
-      if (old[n].classList.contains('sf-boot-fail')) continue;
-      try { old[n].remove(); } catch (_) {}
-    }
+    el._toastHide = setTimeout(() => this._dismissToast(el), ms || 2800);
+    try {
+      el.classList.remove('toast-bump');
+      void el.offsetWidth;
+      el.classList.add('toast-bump');
+    } catch (_) {}
+  },
+
+  _mountToast(item) {
+    const host = document.getElementById('toastHost');
+    if (!host || !item) return;
     const el = document.createElement('div');
-    el.className = 'toast';
-    el.setAttribute('role', 'status');
-    el.textContent = msg;
-    host.appendChild(el);
-    const self = this;
-    this._toastHide = setTimeout(() => {
-      try { el.remove(); } catch (_) {}
-      self._toastHide = null;
-      self._toastCur = '';
-      self._toastGap = setTimeout(() => {
-        self._toastGap = null;
-        self._toastBusy = false;
-        self._pumpToast();
-      }, 220);
-    }, ms);
+    el.className = 'toast' + (item.tone && item.tone !== 'info' ? ' toast-' + item.tone : '');
+    el.textContent = item.text;
+    try { el.setAttribute('role', 'status'); } catch (_) {}
+    const dismiss = () => this._dismissToast(el);
+    try {
+      el.addEventListener('click', dismiss);
+      el.addEventListener('keydown', (e) => {
+        if (e && (e.key === 'Enter' || e.key === ' ' || e.key === 'Escape')) {
+          if (e.preventDefault) e.preventDefault();
+          dismiss();
+        }
+      });
+    } catch (_) {}
+    try {
+      if (host.firstChild) host.insertBefore(el, host.firstChild);
+      else host.appendChild(el);
+    } catch (_) {
+      try { host.appendChild(el); } catch (__) {}
+    }
+    this._toastEls = this._toastEls || [];
+    this._toastEls.unshift(el);
+    el._toastHide = setTimeout(dismiss, item.ms || 2800);
+  },
+
+  _dismissToast(el) {
+    if (!el) return;
+    if (el._toastHide) {
+      try { clearTimeout(el._toastHide); } catch (_) {}
+      el._toastHide = null;
+    }
+    try { el.remove(); } catch (_) {
+      try { if (el.parentNode) el.parentNode.removeChild(el); } catch (__) {}
+    }
+    this._toastEls = (this._toastEls || []).filter((x) => x !== el);
+    this._flushToastQ();
+  },
+
+  _flushToastQ() {
+    this._toastQ = this._toastQ || [];
+    this._toastEls = this._toastEls || [];
+    while (this._toastEls.length < 2 && this._toastQ.length) {
+      this._mountToast(this._toastQ.shift());
+    }
+  },
+
+  clearToasts() {
+    this._toastQ = [];
+    const els = (this._toastEls || []).slice();
+    this._toastEls = [];
+    for (const el of els) {
+      if (el && el._toastHide) {
+        try { clearTimeout(el._toastHide); } catch (_) {}
+        el._toastHide = null;
+      }
+      try { if (el) el.remove(); } catch (_) {
+        try { if (el && el.parentNode) el.parentNode.removeChild(el); } catch (__) {}
+      }
+    }
   },
 
   goMenu(opts) {
@@ -1857,8 +1944,9 @@ const UI = {
     const missAlert = readyClaim > 0 || bonusReady;
     const profileEl = document.getElementById('menuProfileBar');
     if (profileEl) {
+      const tag = save.playerTag ? String(save.playerTag) : '';
       profileEl.innerHTML =
-        `<span class="prof-row"><b>Lv ${save.lvl}</b><span>${weaponLabel(w)}</span>` +
+        `<span class="prof-row"><b>${tag ? tag + ' · ' : ''}Lv ${save.lvl}</b><span>${weaponLabel(w)}</span>` +
         `<span style="color:${(skillById(save.skill || 'spiral_orb').color)}">${skillLabel(skillById(save.skill || 'spiral_orb'))}</span>` +
         `<span style="color:${equippedSuper().color}">${superLabel(equippedSuper())}</span>` +
         `<span style="color:${st.accent}">${styleLabel(st)}</span></span>` +
@@ -1947,7 +2035,7 @@ const UI = {
     const playLinkEl = document.getElementById('menuPlayLink');
     if (playLinkEl) {
       if (location.hostname.endsWith('.github.io')) {
-        playLinkEl.textContent = '✓ GitHub Pages — Deel link (Android + iPad)';
+        playLinkEl.textContent = '✓ Speel-link — deel met vrienden (Android)';
       } else if (!playLinkEl.dataset.loaded) {
         playLinkEl.dataset.loaded = '1';
         loadHostingBundle().then(({ hosting }) => {
@@ -1970,7 +2058,7 @@ const UI = {
     try {
       // Menu-UI only — never leave play canvas competing with this screen
       if (typeof state !== 'undefined' && state === 'play' && game) {
-        try { UI.toast('Eerst gevecht afmaken of pauzeren', 2200); } catch (_) {}
+        try { UI.toast(t('toast.finishFight'), 2200, { tone: 'warn' }); } catch (_) {}
         return;
       }
       if (typeof state !== 'undefined' && state === 'play' && !game) state = 'menu';
@@ -2056,11 +2144,11 @@ const UI = {
   openSummonHub() {
     try {
       if (state === 'play' && game) {
-        UI.toast('Eerst gevecht afmaken of pauzeren', 2400);
+        UI.toast(t('toast.finishFight'), 2400, { tone: 'warn' });
         return;
       }
       if (typeof adventureSpecialDuelActive === 'function' && adventureSpecialDuelActive(game)) {
-        UI.toast(t('toast.satanReflectHint'), 2400);
+        UI.toast(t('toast.satanReflectHint'), 2400, { tone: 'warn' });
         return;
       }
       if (state === 'play' && !game) state = 'menu';
@@ -2343,7 +2431,7 @@ const UI = {
     try {
       if (this._chestPullBusy) return;
       if (state === 'play' && game) {
-        UI.toast('Niet tijdens gevecht', 2000);
+        UI.toast(t('toast.notDuringCombat'), 2000, { tone: 'warn' });
         return;
       }
       const screen = document.getElementById('summonScreen');
@@ -2654,7 +2742,7 @@ const UI = {
         const short = (u) => String(u || '').replace(/^https:\/\//, '');
         if (stable && !isTunnelHostUrl(stable)) {
           linkEl.innerHTML =
-            `<div style="opacity:.8;margin-bottom:4px">Vaste speel-link (GitHub Pages) — deel deze</div>` +
+            `<div style="opacity:.8;margin-bottom:4px">Speel-link — deel deze met vrienden</div>` +
             `<a href="${stable}" style="color:#7cf5ff;font-weight:800" rel="noopener">${short(stable)}</a>`;
         } else {
           linkEl.textContent = withShareRevParam('https://brennyz.github.io/stickman-fighter/speel.html', SW_CACHE_REV);
@@ -2662,10 +2750,10 @@ const UI = {
         const kind = playHostKind();
         if (badgeEl) {
           const labels = {
-            pages: 'GitHub Pages — stabiele deel-link',
-            tunnel: 'Tunnel (dev) — deel nooit deze URL',
-            netlify: 'Netlify — export save bij URL-wissel',
-            local: 'Lokaal — deel GitHub Pages met vrienden',
+            pages: 'Stabiele speel-link',
+            tunnel: 'Thuis-test — deel deze URL niet',
+            netlify: 'Andere host — kopieer je save bij wissel',
+            local: 'Lokaal — deel de speel-link met vrienden',
             file: 'Lokaal bestand — deel GitHub Pages',
             other: 'Online host',
           };
@@ -2705,10 +2793,10 @@ const UI = {
         let hint = hosting.stableHint || '';
         if (!hint) {
           if (stable && String(stable).includes('github.io')) {
-            hint = 'Primair: GitHub Pages — bookmark speel.html (Safari → Delen → Zet op beginscherm). Tunnel is alleen thuis-dev.';
-          } else if (location.hostname.endsWith('.github.io')) hint = 'Je speelt via GitHub Pages — deel speel.html met vrienden.';
-          else if (location.hostname.endsWith('.netlify.app')) hint = 'Netlify-host — export save bij URL-wissel.';
-          else hint = 'Gebruik de vaste Pages-link hierboven; tunnel nooit als deel-link.';
+            hint = 'Deel deze link met vrienden. Op Android: Chrome → App installeren.';
+          } else if (location.hostname.endsWith('.github.io')) hint = 'Deel deze link met vrienden. Op Android: Chrome → App installeren.';
+          else if (location.hostname.endsWith('.netlify.app')) hint = 'Deel de speel-link hierboven met vrienden.';
+          else hint = 'Deel de speel-link hierboven met vrienden.';
         }
         if (onTunnel) {
           hint += ' Tunnel offline/503? Open de vaste GitHub Pages-link (primair).';
@@ -2723,7 +2811,7 @@ const UI = {
       })
       .catch(() => {
         linkEl.textContent = 'https://brennyz.github.io/stickman-fighter/speel.html';
-        if (hintEl) hintEl.textContent = 'Primair: GitHub Pages speel.html — export save bij URL-wissel.';
+        if (hintEl) hintEl.textContent = 'Deel deze link met vrienden. Op Android: Chrome → App installeren.';
       });
   },
 

@@ -35,7 +35,7 @@ const Perf = {
     // Tier only throttles FX density — no clearCache/scheduleResize (eye-strain flashes)
     if (this.tier >= 2 && this.frames > 120 && !save.liteFx && !window.__sfLiteHint) {
       window.__sfLiteHint = 1;
-      try { UI.toast('Traag op iPad? Instellingen → Lite FX', 4200); } catch (_) {}
+      try { UI.toast(typeof t === 'function' ? t('toast.liteFxHint') : 'Traag? Instellingen → Lite FX', 4200, { tone: 'warn' }); } catch (_) {}
     }
   },
   reset() { this.tier = 0; this.emaMs = 16.7; this.frames = 0; },
@@ -323,9 +323,9 @@ const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const VERSION_UPDATE_SAVE_KEY = 'stickfighter_version_update_save_v1';
 const VERSION_UPDATE_FLAG_KEY = 'stickfighter_version_update_flag_v1';
 const SAVE_EXPORT_SCHEMA = 3;
-const APP_VERSION = '1.18.158';
+const APP_VERSION = '1.18.159';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 368;
+const SW_CACHE_REV = 369;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', petCoins: 0, dex: {}, summons: {}, pets: {}, activePet: null,
   eggPets: {}, activeEggPet: null, eggDaily: null,
   chestDaily: null, chestWeapons: {},
@@ -344,7 +344,7 @@ const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', petCoins: 0,
   showTouchPads: null,
   /** Keyboard legend on PC / when pads off (default on) */
   kbLegend: true,
-  reducedMotion: false, liteFx: false, highContrast: false, lang: null, lastPlay: null, tipsSeen: {},
+  reducedMotion: false, liteFx: false, highContrast: false, lang: null, playerTag: '', lastPlay: null, tipsSeen: {},
   stats: { kills: 0, advWins: 0, wallBestRun: 0, maxCombo: 0, maxKillStreak: 0, trainMaxCombo: 0, pickups: 0, bossKills: 0, vsMatches: 0, vsWins: 0, matsCoinBest: 0, summonCount: 0, killsSinceSummon: 0, petsTamed: 0, eggsHatched: 0, weaponFinishers: 0, tideBattleWins: 0, skillShards: 0, itemShards: 0, dailyBonusCount: 0 },
   achievements: {}, daily: null, vsPlayedIds: [], weaponMastery: {}, skillUpgrades: {}, itemUpgrades: {}, activeTechnique: 'spiral_orb', skill: 'spiral_orb', super: 'ketsbam', missionsIntroSeen: false };
 
@@ -1258,12 +1258,26 @@ function readSaveJson(raw) {
   }
 }
 
-function userToast(msg, ms) {
+function userToast(msg, ms, opts) {
   try {
-    if (typeof UI !== 'undefined' && UI.toast) UI.toast(msg, ms || 3200);
+    if (typeof UI !== 'undefined' && UI.toast) UI.toast(msg, ms || 3200, opts);
   } catch (err) {
     console.warn('[Stickman] toast', msg, err);
   }
+}
+
+function toastT(key, params, fallback) {
+  try {
+    if (typeof tOr === 'function') {
+      const s = tOr(key, fallback || '', params);
+      if (s) return s;
+    }
+    if (typeof t === 'function') {
+      const s = t(key, params);
+      if (s && s !== key) return s;
+    }
+  } catch (_) {}
+  return fallback || '';
 }
 
 function writeSaveStamp(json) {
@@ -1310,7 +1324,7 @@ function persist() {
     if (json.length > 180000) {
       if (!window.__sfPersistWarn) {
         window.__sfPersistWarn = true;
-        try { UI.toast('Save bijna te groot — export in Instellingen', 4800); } catch (_) {}
+        try { UI.toast(toastT('toast.saveAlmostTooBig', null, 'Save bijna te groot — export in Instellingen'), 4800, { tone: 'warn' }); } catch (_) {}
       }
     }
     localStorage.setItem(SAVE_KEY, json);
@@ -1321,7 +1335,7 @@ function persist() {
     } catch (_) {}
     if (!backupOk && !window.__sfBackupWriteWarn) {
       window.__sfBackupWriteWarn = true;
-      userToast('Backup opslaan mislukt — export save in Instellingen (hoofd-save wel OK)', 5200);
+      userToast(toastT('toast.backupWriteFail', null, 'Backup opslaan mislukt — export save in Instellingen (hoofd-save wel OK)'), 5200, { tone: 'warn' });
     }
     writeSaveStamp(json);
     return true;
@@ -1334,8 +1348,8 @@ function persist() {
     if (!window.__sfPersistWarn) {
       window.__sfPersistWarn = true;
       userToast(backupSaved
-        ? 'Hoofd-save mislukt — backup wel bijgewerkt (export in Instellingen)'
-        : 'Opslaan mislukt — export save in Instellingen', 5200);
+        ? toastT('toast.persistPrimaryFail', null, 'Hoofd-save mislukt — backup wel bijgewerkt (export in Instellingen)')
+        : toastT('toast.persistFail', null, 'Opslaan mislukt — export save in Instellingen'), 5200, { tone: 'danger' });
     }
     return false;
   }
@@ -1368,8 +1382,8 @@ function persistOrToast(context) {
   if (!window.__sfPersistCtxWarn[key]) {
     window.__sfPersistCtxWarn[key] = true;
     userToast(context
-      ? `Opslaan mislukt (${context}) — export save in Instellingen`
-      : 'Opslaan mislukt — export save in Instellingen', 4200);
+      ? toastT('toast.persistFailCtx', { context }, `Opslaan mislukt (${context}) — export save in Instellingen`)
+      : toastT('toast.persistFail', null, 'Opslaan mislukt — export save in Instellingen'), 4200, { tone: 'warn' });
   }
   return false;
 }
@@ -1388,7 +1402,7 @@ function applySaveFromBackupRaw() {
 function restoreSaveFromBackup() {
   try {
     if (!applySaveFromBackupRaw()) {
-      userToast('Backup herstellen mislukt — export save als je die hebt', 4200);
+      userToast(toastT('toast.backupFailed', null, 'Backup herstellen mislukt — export save als je die hebt'), 4200, { tone: 'danger' });
       return false;
     }
     try { checkAchievements(); } catch (_) {}
@@ -1462,7 +1476,7 @@ function applyVersionUpdateSave() {
   try {
     save = sanitizeSave(stash.save);
     if (!persist()) {
-      userToast('Save geladen maar opslaan mislukt — export in Instellingen', 4200);
+      userToast(toastT('toast.persistFail', null, 'Save geladen maar opslaan mislukt — export in Instellingen'), 4200, { tone: 'danger' });
       return false;
     }
     clearVersionUpdateSave();
@@ -1514,6 +1528,17 @@ function sanitizeTipsSeen(raw) {
     out[k.slice(0, 48)] = raw[k] ? 1 : 0;
   }
   return out;
+}
+
+function sanitizePlayerTag(raw) {
+  let s = String(raw == null ? '' : raw);
+  s = s.replace(/<[^>]*>/g, '');
+  try {
+    s = s.replace(/[^\p{L}\p{N} _.'-]/gu, '');
+  } catch (_) {
+    s = s.replace(/[^\w\s.'-]/g, '');
+  }
+  return s.replace(/\s+/g, ' ').trim().slice(0, 16);
 }
 
 /** Corrupte / gemanipuleerde saves veilig maken (localStorage + import). */
@@ -1843,6 +1868,7 @@ function sanitizeSave(s) {
   if (out.lang != null && typeof SUPPORTED_LANGS !== 'undefined' && !SUPPORTED_LANGS.includes(out.lang)) {
     out.lang = null;
   }
+  out.playerTag = sanitizePlayerTag(out.playerTag);
 
   out.stats = Object.assign({}, DEFAULT_SAVE.stats, out.stats || {});
   const cleanStats = {};
@@ -1926,12 +1952,17 @@ const I18N = {
     common: { backHome: 'Terug naar menu', ok: 'Begrepen!', offline: 'Offline' },
     menu: {
       continue: 'Verder spelen', adventure: 'Avontuur', adventureSub: 'Verhaal · eilanden · bazen',
-      arcade: 'Arcade', arcadeSub: 'Training · Muur · Muntjes', versus: '2 spelers', versusSub: 'Lokaal · iPad liggend',
+      arcade: 'Arcade', arcadeSub: 'Training · Muur · Muntjes', versus: '2 spelers', versusSub: 'Lokaal',
       collect: 'Collectie', collectSub: 'Wapens · stijl · boek', music: 'Muziek', missions: 'Missies',
       summons: 'Summons', summonsSub: 'Dagelijkse kist · wapen & pet',
-      options: 'Opties', tips: 'Tips', fresh: 'Verse versie', install: 'Zet in app-lade', installSub: 'Één icoon op je beginscherm',
+      options: 'Opties', tips: 'Tips', fresh: 'Verse versie', install: 'Zet in app-lade', installSub: 'Één icoon, zoals een echte app',
       pressStart: 'insert coin', missionReady: 'missie klaar', dayBonus: 'Dagbonus',
       choosePath: 'KIES JE PAD', lastPlayed: 'LAATST', playHere: 'SPEEL',
+      startGame: 'SPELEN', startSub: 'Start het gevecht',
+      titleName: 'Naam — hoeft niet', titleNamePh: 'Bijnaam (optioneel)',
+      titleNote: 'Geen account — je save blijft op deze telefoon',
+      titleGreet: 'Hoi, {name}',
+      splash0: 'Laden…', splash1: 'Pixelmap…', splash2: 'Arena…', splash3: 'Klaar',
     },
     hub: {
       step: 'Stap 2 · Kies modus', solo: 'SOLO', collection: 'COLLECTIE',
@@ -1964,26 +1995,29 @@ const I18N = {
       xp: '+{xp} XP verdiend · nu Lv {lvl} ({cur}/{need} XP)' },
     settings: {
       title: 'Instellingen', sub: 'Geluid, trilling & HUD — opgeslagen op dit apparaat',
-      lang: 'Taal / Language', music: 'Muziek', sfx: 'Effecten', shake: 'Schermschok', haptics: 'Trillen (iPad)',
-      comboHud: 'Combo-HUD', bigTouch: 'Grote knoppen (iPad)',
-      kbLegend: 'Toetsen-legenda (PC)', showTouchPads: 'Touch-knoppen altijd',
-      reducedMotion: 'Minder beweging (FX + iOS)',
-      liteFx: 'Lite FX (iPad sneller)', highContrast: 'Hoog contrast tekst', restoreBackup: 'Herstel save uit backup',
-      a11yMotionOn: 'Minder beweging: aan', a11yMotionOs: 'Minder beweging: via iOS/OS',
-      a11yContrastOn: 'Hoog contrast: aan', a11yContrastOs: 'Hoog contrast: via iOS/OS',
-      a11yDefault: 'Toegankelijkheid: standaard — schakel hierboven of via iOS Weergave',
-      sfxSamplesOn: 'Online SFX: Kenney CC0 geladen',
-      sfxSamplesLoad: 'Online SFX: laden… (synth fallback)',
-      sfxSamplesOff: 'Online SFX: offline — synth fallback',
-      syncBackup: 'Sync backup = hoofd-save', freshCache: 'Verse versie (cache legen)', clearSave: 'Nieuwe start (dubbel tikken)',
-      hosting: 'Hosting & voortgang', copyLink: 'Kopieer vaste speel-link', openLink: 'Open vaste link',
-      savePort: 'Save export / import', exportSave: 'Export save', importSave: 'Import save',
+      lang: 'Taal', music: 'Muziek', sfx: 'Effecten', shake: 'Schermschok', haptics: 'Trillen',
+      comboHud: 'Combo-HUD', bigTouch: 'Grote knoppen',
+      kbLegend: 'Toetsenbord-hulp', showTouchPads: 'Touch-knoppen altijd',
+      reducedMotion: 'Minder beweging',
+      liteFx: 'Lite FX', highContrast: 'Hoog contrast tekst', restoreBackup: 'Herstel save uit backup',
+      a11yMotionOn: 'Minder beweging: aan', a11yMotionOs: 'Minder beweging: via systeem',
+      a11yContrastOn: 'Hoog contrast: aan', a11yContrastOs: 'Hoog contrast: via systeem',
+      a11yDefault: 'Toegankelijkheid: standaard — schakel hierboven of in je telefoon-instellingen',
+      a11yTip: 'Minder beweging = rustigere banners. Hoog contrast = dikkere randen. Lite FX = soepeler op telefoon.',
+      sfxSamplesOn: 'Geluidseffecten: geladen',
+      sfxSamplesLoad: 'Geluidseffecten: laden…',
+      sfxSamplesOff: 'Geluidseffecten: offline',
+      syncBackup: 'Backup bijwerken', freshCache: 'Verse versie', clearSave: 'Nieuwe start (dubbel tikken)',
+      syncHint: 'Zet de backup gelijk aan je huidige voortgang.',
+      freshHint: 'Menu reageert niet? Tik hier voor de nieuwste versie.',
+      hosting: 'Speel-link', copyLink: 'Kopieer speel-link', openLink: 'Open speel-link',
+      savePort: 'Voortgang kopiëren', exportSave: 'Kopieer save', importSave: 'Laad save',
       importSaveFile: 'Bestand kiezen',
-      savePortDesc: 'Export kopieert JSON (clipboard + download). Import: kies een bestand of plak JSON — 1× preview, 2× laden. Huidige save gaat naar Backup.',
-      savePortPlaceholder: 'Plak JSON of kies een exportbestand (.json) — meta.key stickfighter_save_v1 · 2× Import om te laden',
+      savePortDesc: 'Kopieer je voortgang (bestand + klembord). Laden: kies een bestand of plak hier — 1× kijken, 2× laden. Je huidige save gaat naar backup.',
+      savePortPlaceholder: 'Plak je save hier, of kies een bestand',
       privacy: 'Privacy',
       ageHint: 'Cartoon-gevecht · tiener+ · geen chat',
-      installAge: 'Cartoon-stickman gevechten · aanbevolen tiener+ · geen chat.',
+      installAge: 'Cartoon-gevechten · tiener+ · geen chat.',
       langChanged: 'Taal: {lang}',
     },
     missions: { title: 'Missies & prestaties', sub: '3 missies per dag',
@@ -1993,7 +2027,7 @@ const I18N = {
       crackEgg: 'Dag-ei openen', crackEggSub: 'Gratis arcade-pull' },
     dex: { title: 'Monsterboek', sub: '{n} soorten · rariteit = HP · boerderij / dierentuin / zee-filters · 4 rariteiten = Kristallijn' },
     help: { title: 'Tips & controls' },
-    install: { title: 'In app-lade zetten', sub: 'Verschijnt als icoon — net als een echte app' },
+    install: { title: 'Zet in app-lade', sub: 'Één icoon, zoals een echte app' },
     island: {
       1: { name: 'Oost-eiland', sub: 'Lv 1–10' }, 2: { name: 'Vuur-eiland', sub: 'Lv 11–20' },
       3: { name: 'Neon-eiland', sub: 'Lv 21–30' }, 4: { name: 'Tempel-eiland', sub: 'Lv 31–40' },
@@ -2006,7 +2040,7 @@ const I18N = {
     audio: {
       musicOff: 'Muziek uit', sfxOff: 'Geluid uit', musicPct: 'Muziek {pct}%', sfxPct: 'SFX {pct}%',
       allMuted: 'Alles stil', pauseDuck: 'BGM zacht', pauseTrack: 'Track: {track}',
-      ctxSuspended: 'Tik slider voor geluid (iPad)',
+      ctxSuspended: 'Tik slider voor geluid',
       track: { menu: 'Menu', menu2: 'Menu 2', menu3: 'Menu 3', menuArcade: 'Arcade', menuHero: 'Hero', menuDream: 'Dream',
         battle: 'Gevecht', elite: 'Elite', boss: 'Baas', wall: 'Muur', training: 'Training', coinrun: 'Mats' },
     },
@@ -2016,12 +2050,17 @@ const I18N = {
     common: { backHome: 'Back to menu', ok: 'Got it!', offline: 'Offline' },
     menu: {
       continue: 'Continue', adventure: 'Adventure', adventureSub: 'Story · islands · bosses',
-      arcade: 'Arcade', arcadeSub: 'Training · Wall · Coins', versus: '2 players', versusSub: 'Local · iPad landscape',
+      arcade: 'Arcade', arcadeSub: 'Training · Wall · Coins', versus: '2 players', versusSub: 'Local',
       collect: 'Collection', collectSub: 'Weapons · style · book', music: 'Music', missions: 'Missions',
       summons: 'Summons', summonsSub: 'Daily chest · weapon & pet',
-      options: 'Options', tips: 'Tips', fresh: 'Fresh version', install: 'Add to home screen', installSub: 'One icon on your device',
+      options: 'Options', tips: 'Tips', fresh: 'Fresh version', install: 'Add as app', installSub: 'One icon, like a real app',
       pressStart: 'insert coin', missionReady: 'mission ready', dayBonus: 'Daily bonus',
       choosePath: 'CHOOSE YOUR PATH', lastPlayed: 'LAST', playHere: 'PLAY',
+      startGame: 'PLAY', startSub: 'Start the fight',
+      titleName: 'Name — optional', titleNamePh: 'Nickname (optional)',
+      titleNote: 'No account — your save stays on this phone',
+      titleGreet: 'Hi, {name}',
+      splash0: 'Loading…', splash1: 'Pixel map…', splash2: 'Arena…', splash3: 'Ready',
     },
     hub: {
       step: 'Step 2 · Pick mode', solo: 'SOLO', collection: 'COLLECTION',
@@ -2054,26 +2093,29 @@ const I18N = {
       xp: '+{xp} XP earned · now Lv {lvl} ({cur}/{need} XP)' },
     settings: {
       title: 'Settings', sub: 'Sound, haptics & HUD — saved on this device',
-      lang: 'Language / Taal', music: 'Music', sfx: 'Effects', shake: 'Screen shake', haptics: 'Haptics (iPad)',
-      comboHud: 'Combo HUD', bigTouch: 'Big buttons (iPad)',
-      kbLegend: 'Keyboard legend (PC)', showTouchPads: 'Always show touch pads',
-      reducedMotion: 'Reduce motion (FX + iOS)',
-      liteFx: 'Lite FX (faster iPad)', highContrast: 'High contrast text', restoreBackup: 'Restore save from backup',
-      a11yMotionOn: 'Reduce motion: on', a11yMotionOs: 'Reduce motion: via iOS/OS',
-      a11yContrastOn: 'High contrast: on', a11yContrastOs: 'High contrast: via iOS/OS',
-      a11yDefault: 'Accessibility: default — toggle above or via iOS Display settings',
-      sfxSamplesOn: 'Online SFX: Kenney CC0 loaded',
-      sfxSamplesLoad: 'Online SFX: loading… (synth fallback)',
-      sfxSamplesOff: 'Online SFX: offline — synth fallback',
-      syncBackup: 'Sync backup = main save', freshCache: 'Fresh version (clear cache)', clearSave: 'New start (tap twice)',
-      hosting: 'Hosting & progress', copyLink: 'Copy play link', openLink: 'Open play link',
-      savePort: 'Save export / import', exportSave: 'Export save', importSave: 'Import save',
+      lang: 'Language', music: 'Music', sfx: 'Effects', shake: 'Screen shake', haptics: 'Haptics',
+      comboHud: 'Combo HUD', bigTouch: 'Big buttons',
+      kbLegend: 'Keyboard help', showTouchPads: 'Always show touch pads',
+      reducedMotion: 'Reduce motion',
+      liteFx: 'Lite FX', highContrast: 'High contrast text', restoreBackup: 'Restore save from backup',
+      a11yMotionOn: 'Reduce motion: on', a11yMotionOs: 'Reduce motion: via system',
+      a11yContrastOn: 'High contrast: on', a11yContrastOs: 'High contrast: via system',
+      a11yDefault: 'Accessibility: default — toggle above or in your phone settings',
+      a11yTip: 'Reduce motion = calmer banners. High contrast = thicker borders. Lite FX = smoother on phone.',
+      sfxSamplesOn: 'Sound effects: loaded',
+      sfxSamplesLoad: 'Sound effects: loading…',
+      sfxSamplesOff: 'Sound effects: offline',
+      syncBackup: 'Update backup', freshCache: 'Fresh version', clearSave: 'New start (tap twice)',
+      syncHint: 'Set the backup equal to your current progress.',
+      freshHint: 'Menu stuck? Tap here for the newest version.',
+      hosting: 'Play link', copyLink: 'Copy play link', openLink: 'Open play link',
+      savePort: 'Copy progress', exportSave: 'Copy save', importSave: 'Load save',
       importSaveFile: 'Choose file',
-      savePortDesc: 'Export copies JSON (clipboard + download). Import: pick a file or paste JSON — 1× preview, 2× load. Current save goes to Backup.',
-      savePortPlaceholder: 'Paste JSON or choose an export file (.json) — meta.key stickfighter_save_v1 · tap Import twice to load',
+      savePortDesc: 'Copy your progress (file + clipboard). Load: pick a file or paste here — 1× preview, 2× load. Current save goes to backup.',
+      savePortPlaceholder: 'Paste your save here, or choose a file',
       privacy: 'Privacy',
       ageHint: 'Cartoon combat · teens+ · no chat',
-      installAge: 'Cartoon stickman combat · teens+ recommended · no chat.',
+      installAge: 'Cartoon combat · teens+ · no chat.',
       langChanged: 'Language: {lang}',
     },
     missions: { title: 'Missions & achievements', sub: '3 missions a day',
@@ -2083,7 +2125,7 @@ const I18N = {
       crackEgg: 'Open daily egg', crackEggSub: 'Free arcade pull' },
     dex: { title: 'Monster book', sub: '{n} species · rarity = HP · farm / zoo / sea filters · 4 rarities = Crystalline' },
     help: { title: 'Tips & controls' },
-    install: { title: 'Add to home screen', sub: 'Shows as an icon — like a real app' },
+    install: { title: 'Add as app', sub: 'One icon, like a real app' },
     island: {
       1: { name: 'East island', sub: 'Lv 1–10' }, 2: { name: 'Fire island', sub: 'Lv 11–20' },
       3: { name: 'Neon island', sub: 'Lv 21–30' }, 4: { name: 'Temple island', sub: 'Lv 31–40' },
@@ -2096,7 +2138,7 @@ const I18N = {
     audio: {
       musicOff: 'Music off', sfxOff: 'Sound off', musicPct: 'Music {pct}%', sfxPct: 'SFX {pct}%',
       allMuted: 'All muted', pauseDuck: 'BGM ducked', pauseTrack: 'Track: {track}',
-      ctxSuspended: 'Tap slider to wake audio (iPad)',
+      ctxSuspended: 'Tap slider to wake audio',
       track: { menu: 'Menu', menu2: 'Menu 2', menu3: 'Menu 3', menuArcade: 'Arcade', menuHero: 'Hero', menuDream: 'Dream',
         battle: 'Battle', elite: 'Elite', boss: 'Boss', wall: 'Wall', training: 'Training', coinrun: 'Mats' },
     },
@@ -2106,11 +2148,16 @@ const I18N = {
     common: { backHome: 'Zurück zum Menü', ok: 'Verstanden!', offline: 'Offline' },
     menu: {
       continue: 'Weiterspielen', adventure: 'Abenteuer', adventureSub: 'Story · Inseln · Bosse',
-      arcade: 'Arcade', arcadeSub: 'Training · Mauer · Münzen', versus: '2 Spieler', versusSub: 'Lokal · iPad quer',
+      arcade: 'Arcade', arcadeSub: 'Training · Mauer · Münzen', versus: '2 Spieler', versusSub: 'Lokal',
       collect: 'Sammlung', collectSub: 'Waffen · Stil · Buch', music: 'Musik', missions: 'Missionen',
-      options: 'Optionen', tips: 'Tipps', fresh: 'Neue Version', install: 'Zum Home-Bildschirm', installSub: 'Ein Icon auf dem Gerät',
+      options: 'Optionen', tips: 'Tipps', fresh: 'Neue Version', install: 'Als App speichern', installSub: 'Ein Icon, wie eine echte App',
       pressStart: 'insert coin', missionReady: 'Mission bereit', dayBonus: 'Tagesbonus',
       choosePath: 'WÄHLE DEINEN WEG', lastPlayed: 'ZULETZT', playHere: 'SPIEL',
+      startGame: 'SPIELEN', startSub: 'Starte den Kampf',
+      titleName: 'Name — muss nicht', titleNamePh: 'Spitzname (optional)',
+      titleNote: 'Kein Konto — dein Save bleibt auf diesem Handy',
+      titleGreet: 'Hi, {name}',
+      splash0: 'Laden…', splash1: 'Pixelmap…', splash2: 'Arena…', splash3: 'Fertig',
     },
     hub: {
       step: 'Schritt 2 · Modus wählen', solo: 'SOLO', collection: 'SAMMLUNG',
@@ -2139,17 +2186,19 @@ const I18N = {
       xp: '+{xp} XP · jetzt Lv {lvl} ({cur}/{need} XP)' },
     settings: {
       title: 'Einstellungen', sub: 'Sound, Vibration & HUD — auf diesem Gerät gespeichert',
-      lang: 'Sprache / Language', music: 'Musik', sfx: 'Effekte', shake: 'Bildschirmshake', haptics: 'Vibration (iPad)',
-      comboHud: 'Combo-HUD', bigTouch: 'Große Tasten (iPad)',
-      kbLegend: 'Tastatur-Legende (PC)', showTouchPads: 'Touch-Tasten immer',
+      lang: 'Sprache', music: 'Musik', sfx: 'Effekte', shake: 'Bildschirmshake', haptics: 'Vibration',
+      comboHud: 'Combo-HUD', bigTouch: 'Große Tasten',
+      kbLegend: 'Tastatur-Hilfe', showTouchPads: 'Touch-Tasten immer',
       reducedMotion: 'Weniger Bewegung',
-      liteFx: 'Lite FX (schneller)', highContrast: 'Hoher Kontrast', restoreBackup: 'Save aus Backup',
-      syncBackup: 'Backup syncen', freshCache: 'Neue Version (Cache leeren)', clearSave: 'Neustart (2× tippen)',
-      hosting: 'Hosting & Fortschritt', copyLink: 'Link kopieren', openLink: 'Link öffnen',
-      savePort: 'Save export / import', exportSave: 'Save exportieren', importSave: 'Save importieren',
+      liteFx: 'Lite FX', highContrast: 'Hoher Kontrast', restoreBackup: 'Save aus Backup',
+      syncBackup: 'Backup aktualisieren', freshCache: 'Neue Version', clearSave: 'Neustart (2× tippen)',
+      syncHint: 'Backup auf deinen aktuellen Stand setzen.',
+      freshHint: 'Menü hängt? Tippe hier für die neueste Version.',
+      hosting: 'Spiel-Link', copyLink: 'Link kopieren', openLink: 'Link öffnen',
+      savePort: 'Fortschritt kopieren', exportSave: 'Save kopieren', importSave: 'Save laden',
       importSaveFile: 'Datei wählen',
-      savePortDesc: 'Export kopiert JSON (Zwischenablage + Download). Import: Datei oder JSON — 1× Vorschau, 2× laden. Aktueller Save geht ins Backup.',
-      savePortPlaceholder: 'JSON einfügen oder Exportdatei (.json) wählen — meta.key stickfighter_save_v1 · 2× Import zum Laden',
+      savePortDesc: 'Kopiere deinen Fortschritt (Datei + Zwischenablage). Laden: Datei oder hier einfügen — 1× Vorschau, 2× laden.',
+      savePortPlaceholder: 'Save hier einfügen oder Datei wählen',
       privacy: 'Datenschutz',
       ageHint: 'Cartoon-Kampf · ab Teenager · kein Chat',
       installAge: 'Cartoon-Stockfigur-Kämpfe · Teenager+ · kein Chat.',
@@ -2161,7 +2210,7 @@ const I18N = {
     pets: { title: 'Pets · Begleiter', sub: 'Dex-Pets & Ei-Pets', crackEgg: 'Tages-Ei öffnen', crackEggSub: 'Gratis Pull' },
     dex: { title: 'Monsterbuch', sub: '{n} Arten · Seltenheit = HP · Farm / Zoo / Meer' },
     help: { title: 'Tipps & Steuerung' },
-    install: { title: 'Zum Home-Bildschirm', sub: 'Wie eine echte App' },
+    install: { title: 'Als App speichern', sub: 'Ein Icon, wie eine echte App' },
     island: {
       1: { name: 'Ost-Insel', sub: 'Lv 1–10' }, 2: { name: 'Feuer-Insel', sub: 'Lv 11–20' },
       3: { name: 'Neon-Insel', sub: 'Lv 21–30' }, 4: { name: 'Tempel-Insel', sub: 'Lv 31–40' },
@@ -2178,11 +2227,16 @@ const I18N = {
     common: { backHome: 'Retour au menu', ok: 'Compris !', offline: 'Hors ligne' },
     menu: {
       continue: 'Continuer', adventure: 'Aventure', adventureSub: 'Histoire · îles · boss',
-      arcade: 'Arcade', arcadeSub: 'Entraînement · Mur · Pièces', versus: '2 joueurs', versusSub: 'Local · iPad paysage',
+      arcade: 'Arcade', arcadeSub: 'Entraînement · Mur · Pièces', versus: '2 joueurs', versusSub: 'Local',
       collect: 'Collection', collectSub: 'Armes · style · bestiaire', music: 'Musique', missions: 'Missions',
-      options: 'Options', tips: 'Astuces', fresh: 'Version fraîche', install: 'Ajouter à l\'écran d\'accueil', installSub: 'Une icône sur l\'appareil',
+      options: 'Options', tips: 'Astuces', fresh: 'Version fraîche', install: 'Ajouter comme app', installSub: 'Une icône, comme une vraie app',
       pressStart: 'insert coin', missionReady: 'mission prête', dayBonus: 'Bonus du jour',
       choosePath: 'CHOISIS TON CHEMIN', lastPlayed: 'DERNIER', playHere: 'JOUER',
+      startGame: 'JOUER', startSub: 'Lance le combat',
+      titleName: 'Nom — pas obligatoire', titleNamePh: 'Surnom (optionnel)',
+      titleNote: 'Pas de compte — ta sauvegarde reste sur ce téléphone',
+      titleGreet: 'Salut, {name}',
+      splash0: 'Chargement…', splash1: 'Pixelmap…', splash2: 'Arène…', splash3: 'Prêt',
     },
     hub: {
       step: 'Étape 2 · Choisir le mode', solo: 'SOLO', collection: 'COLLECTION',
@@ -2211,17 +2265,19 @@ const I18N = {
       xp: '+{xp} XP · Lv {lvl} ({cur}/{need} XP)' },
     settings: {
       title: 'Options', sub: 'Son, vibrations & HUD — sauvegardé sur cet appareil',
-      lang: 'Langue / Language', music: 'Musique', sfx: 'Effets', shake: 'Secousse écran', haptics: 'Vibration (iPad)',
-      comboHud: 'HUD combo', bigTouch: 'Gros boutons (iPad)',
-      kbLegend: 'Légende clavier (PC)', showTouchPads: 'Toujours boutons tactile',
+      lang: 'Langue', music: 'Musique', sfx: 'Effets', shake: 'Secousse écran', haptics: 'Vibration',
+      comboHud: 'HUD combo', bigTouch: 'Gros boutons',
+      kbLegend: 'Aide clavier', showTouchPads: 'Toujours boutons tactile',
       reducedMotion: 'Moins de mouvement',
-      liteFx: 'Lite FX (plus rapide)', highContrast: 'Contraste élevé', restoreBackup: 'Restaurer backup',
-      syncBackup: 'Sync backup', freshCache: 'Version fraîche (cache)', clearSave: 'Nouveau départ (2× tap)',
-      hosting: 'Hébergement & progrès', copyLink: 'Copier le lien', openLink: 'Ouvrir le lien',
-      savePort: 'Export / import save', exportSave: 'Exporter save', importSave: 'Importer save',
+      liteFx: 'Lite FX', highContrast: 'Contraste élevé', restoreBackup: 'Restaurer backup',
+      syncBackup: 'Mettre à jour la backup', freshCache: 'Version fraîche', clearSave: 'Nouveau départ (2× tap)',
+      syncHint: 'Aligner la backup sur ta progression actuelle.',
+      freshHint: 'Menu bloqué ? Tape ici pour la dernière version.',
+      hosting: 'Lien de jeu', copyLink: 'Copier le lien', openLink: 'Ouvrir le lien',
+      savePort: 'Copier la progression', exportSave: 'Copier la save', importSave: 'Charger la save',
       importSaveFile: 'Choisir fichier',
-      savePortDesc: 'Export copie le JSON (presse-papiers + téléchargement). Import : fichier ou JSON — 1× aperçu, 2× charger. La save actuelle va dans Backup.',
-      savePortPlaceholder: 'Coller le JSON ou choisir un fichier (.json) — meta.key stickfighter_save_v1 · 2× Import pour charger',
+      savePortDesc: 'Copie ta progression (fichier + presse-papiers). Charger : fichier ou coller ici — 1× aperçu, 2× charger.',
+      savePortPlaceholder: 'Colle ta save ici, ou choisis un fichier',
       privacy: 'Confidentialité',
       ageHint: 'Combat cartoon · ados+ · pas de chat',
       installAge: 'Combats stickman cartoon · ados+ · pas de chat.',
@@ -2233,7 +2289,7 @@ const I18N = {
     pets: { title: 'Pets · Compagnons', sub: 'Pets dex & œufs arcade', crackEgg: 'Ouvrir l\'œuf du jour', crackEggSub: 'Tir gratuit' },
     dex: { title: 'Bestiaire', sub: '{n} espèces · rareté = PV · ferme / zoo / mer' },
     help: { title: 'Astuces & contrôles' },
-    install: { title: 'Ajouter à l\'écran d\'accueil', sub: 'Comme une vraie app' },
+    install: { title: 'Ajouter comme app', sub: 'Une icône, comme une vraie app' },
     island: {
       1: { name: 'Île de l\'Est', sub: 'Lv 1–10' }, 2: { name: 'Île de Feu', sub: 'Lv 11–20' },
       3: { name: 'Île Néon', sub: 'Lv 21–30' }, 4: { name: 'Île Temple', sub: 'Lv 31–40' },
@@ -2250,11 +2306,16 @@ const I18N = {
     common: { backHome: 'Volver al menú', ok: '¡Entendido!', offline: 'Sin conexión' },
     menu: {
       continue: 'Continuar', adventure: 'Aventura', adventureSub: 'Historia · islas · jefes',
-      arcade: 'Arcade', arcadeSub: 'Entrenamiento · Muro · Monedas', versus: '2 jugadores', versusSub: 'Local · iPad horizontal',
+      arcade: 'Arcade', arcadeSub: 'Entrenamiento · Muro · Monedas', versus: '2 jugadores', versusSub: 'Local',
       collect: 'Colección', collectSub: 'Armas · estilo · bestiario', music: 'Música', missions: 'Misiones',
-      options: 'Opciones', tips: 'Consejos', fresh: 'Versión nueva', install: 'Añadir a inicio', installSub: 'Un icono en tu dispositivo',
+      options: 'Opciones', tips: 'Consejos', fresh: 'Versión nueva', install: 'Añadir como app', installSub: 'Un icono, como una app real',
       pressStart: 'insert coin', missionReady: 'misión lista', dayBonus: 'Bonus diario',
       choosePath: 'ELIGE TU CAMINO', lastPlayed: 'ÚLTIMO', playHere: 'JUEGA',
+      startGame: 'JUGAR', startSub: 'Empieza el combate',
+      titleName: 'Nombre — no hace falta', titleNamePh: 'Apodo (opcional)',
+      titleNote: 'Sin cuenta — tu partida se queda en este teléfono',
+      titleGreet: 'Hola, {name}',
+      splash0: 'Cargando…', splash1: 'Pixelmap…', splash2: 'Arena…', splash3: 'Listo',
     },
     hub: {
       step: 'Paso 2 · Elige modo', solo: 'SOLO', collection: 'COLECCIÓN',
@@ -2283,17 +2344,19 @@ const I18N = {
       xp: '+{xp} XP · Lv {lvl} ({cur}/{need} XP)' },
     settings: {
       title: 'Opciones', sub: 'Sonido, vibración y HUD — guardado en este dispositivo',
-      lang: 'Idioma / Language', music: 'Música', sfx: 'Efectos', shake: 'Sacudida pantalla', haptics: 'Vibración (iPad)',
-      comboHud: 'HUD combo', bigTouch: 'Botones grandes (iPad)',
-      kbLegend: 'Leyenda teclado (PC)', showTouchPads: 'Siempre botones táctiles',
+      lang: 'Idioma', music: 'Música', sfx: 'Efectos', shake: 'Sacudida pantalla', haptics: 'Vibración',
+      comboHud: 'HUD combo', bigTouch: 'Botones grandes',
+      kbLegend: 'Ayuda de teclado', showTouchPads: 'Siempre botones táctiles',
       reducedMotion: 'Menos movimiento',
-      liteFx: 'Lite FX (más rápido)', highContrast: 'Alto contraste', restoreBackup: 'Restaurar backup',
-      syncBackup: 'Sync backup', freshCache: 'Versión nueva (caché)', clearSave: 'Nuevo inicio (2× tap)',
-      hosting: 'Hosting y progreso', copyLink: 'Copiar enlace', openLink: 'Abrir enlace',
-      savePort: 'Export / import save', exportSave: 'Exportar save', importSave: 'Importar save',
+      liteFx: 'Lite FX', highContrast: 'Alto contraste', restoreBackup: 'Restaurar backup',
+      syncBackup: 'Actualizar backup', freshCache: 'Versión nueva', clearSave: 'Nuevo inicio (2× tap)',
+      syncHint: 'Iguala la copia a tu progreso actual.',
+      freshHint: '¿Menú atascado? Toca aquí para la versión nueva.',
+      hosting: 'Enlace para jugar', copyLink: 'Copiar enlace', openLink: 'Abrir enlace',
+      savePort: 'Copiar progreso', exportSave: 'Copiar save', importSave: 'Cargar save',
       importSaveFile: 'Elegir archivo',
-      savePortDesc: 'Export copia JSON (portapapeles + descarga). Import: archivo o JSON — 1× vista previa, 2× cargar. La save actual va a Backup.',
-      savePortPlaceholder: 'Pega JSON o elige un archivo (.json) — meta.key stickfighter_save_v1 · 2× Import para cargar',
+      savePortDesc: 'Copia tu progreso (archivo + portapapeles). Cargar: elige un archivo o pega aquí — 1× vista, 2× cargar.',
+      savePortPlaceholder: 'Pega tu save aquí, o elige un archivo',
       privacy: 'Privacidad',
       ageHint: 'Combate cartoon · teens+ · sin chat',
       installAge: 'Combates stickman cartoon · teens+ · sin chat.',
@@ -2305,7 +2368,7 @@ const I18N = {
     pets: { title: 'Pets · Compañeros', sub: 'Pets dex y huevos arcade', crackEgg: 'Abrir huevo diario', crackEggSub: 'Tirada gratis' },
     dex: { title: 'Bestiario', sub: '{n} especies · rareza = HP · granja / zoo / mar' },
     help: { title: 'Consejos y controles' },
-    install: { title: 'Añadir a inicio', sub: 'Como una app real' },
+    install: { title: 'Añadir como app', sub: 'Un icono, como una app real' },
     island: {
       1: { name: 'Isla Este', sub: 'Lv 1–10' }, 2: { name: 'Isla Fuego', sub: 'Lv 11–20' },
       3: { name: 'Isla Neón', sub: 'Lv 21–30' }, 4: { name: 'Isla Templo', sub: 'Lv 31–40' },
@@ -2491,6 +2554,7 @@ function applyLangStaticScreens() {
   setText('settingsHead', 'settings.title');
   setText('settingsSub', 'settings.sub');
   setText('setLangLbl', 'settings.lang');
+  setText('settingsA11yTip', 'settings.a11yTip');
   const setMap = [
     ['setShake', 'settings.shake'], ['setHaptics', 'settings.haptics'], ['setComboHud', 'settings.comboHud'],
     ['setBigTouch', 'settings.bigTouch'], ['setKbLegend', 'settings.kbLegend'], ['setShowTouchPads', 'settings.showTouchPads'],
@@ -2517,10 +2581,12 @@ function applyLangStaticScreens() {
   if (savePortDesc) savePortDesc.textContent = t('settings.savePortDesc');
   const savePortText = document.getElementById('savePortText');
   if (savePortText) savePortText.placeholder = t('settings.savePortPlaceholder');
-  const hostingTitle = document.querySelector('#settingsScreen .settings-card div[style*="ffd75e"]');
-  if (hostingTitle) hostingTitle.textContent = t('settings.hosting');
-  const savePortTitle = document.querySelectorAll('#settingsScreen .settings-card div[style*="ffd75e"]')[1];
-  if (savePortTitle) savePortTitle.textContent = t('settings.savePort');
+  setText('settingsShareFoldSum', 'settings.hosting');
+  setText('settingsShareTitle', 'settings.hosting');
+  setText('settingsSaveFoldSum', 'settings.savePort');
+  setText('settingsSaveTitle', 'settings.savePort');
+  setText('settingsSyncHint', 'settings.syncHint');
+  setText('settingsFreshHint', 'settings.freshHint');
 
   setText('missionsHead', 'missions.title');
   setText('missionsSub', 'missions.sub');
@@ -2587,7 +2653,11 @@ function applyLangStaticScreens() {
   }
 
   const charIpadCard = document.getElementById('charIpadTipCard');
-  if (charIpadCard) charIpadCard.innerHTML = t('ui.charIpadTip');
+  if (charIpadCard) {
+    charIpadCard.textContent = '';
+    charIpadCard.hidden = true;
+    charIpadCard.style.display = 'none';
+  }
 
   const charFightBtn = document.getElementById('btnCharFight');
   if (charFightBtn) charFightBtn.textContent = t('ui.charFight');
@@ -2700,7 +2770,8 @@ function renderLangSwitchBar(bar) {
       safeUiAction(() => {
         setLang(code);
         AudioSys.sfx('select');
-        UI.toast(t('settings.langChanged', { lang: LANG_LABELS[code] }), 2200);
+        try { if (UI.clearToasts) UI.clearToasts(); } catch (_) {}
+        UI.toast(t('settings.langChanged', { lang: LANG_LABELS[code] }), 2200, { tone: 'ok' });
         UI.renderSettings();
         UI.renderMenu();
         if (typeof UI.renderModeHub === 'function') UI.renderModeHub();
@@ -2738,6 +2809,7 @@ function applyLang() {
     else if (active === 'modeHubScreen') UI.renderModeHub();
     UI.syncBackLabels();
   }
+  try { if (typeof syncTitleGateCopy === 'function') syncTitleGateCopy(); } catch (_) {}
 }
 
 function initLang() {
@@ -3452,7 +3524,7 @@ function unlockAchievement(id) {
   const ach = ACHIEVEMENTS.find(a => a.id === id);
   persist();
   try { AudioSys.sfx('newmonster'); } catch (_) {}
-  try { UI.toast(t('toast.achievementUnlock', { name: ach ? achLabel(ach, 'name') : id }), 4000); } catch (_) {}
+  try { UI.toast(t('toast.achievementUnlock', { name: ach ? achLabel(ach, 'name') : id }), 4000, { tone: 'ok' }); } catch (_) {}
   // Nooit missions-DOM rebuilden midden in een gevecht
   try {
     if (state === 'menu' && UI.renderMissions) UI.renderMissions();
@@ -3783,7 +3855,7 @@ function applySaveImportText(text, sourceLabel) {
   window.__sfImportConfirm = false;
   updateSaveImportPreview(text);
   if (sourceLabel) {
-    userToast(`Save geladen uit ${sourceLabel} — tik Import voor preview`, 3200);
+    userToast(tOr('toast.saveLoadedPreview', 'Save uit {src} — tik Import om te kijken', { src: sourceLabel }), 3200);
   }
   return true;
 }
@@ -3821,7 +3893,7 @@ function runImportSaveClick() {
   const previewEl = document.getElementById('saveImportPreview');
   if (!ta || !ta.value.trim()) {
     if (openSaveImportFilePicker()) return;
-    userToast('Kies een exportbestand of plak save-JSON in het vak', 2800);
+    userToast(t('toast.pickFileOrPaste'), 2800, { tone: 'warn' });
     return;
   }
   try {
@@ -3829,7 +3901,7 @@ function runImportSaveClick() {
     if (!window.__sfImportConfirm) {
       window.__sfImportConfirm = true;
       updateSaveImportPreview(ta.value);
-      UI.toast('Import-preview — tik Import nogmaals om te laden', 3600);
+      UI.toast(t('toast.importPreview'), 3600, { tone: 'warn' });
       setTimeout(() => { window.__sfImportConfirm = false; }, 8000);
       return;
     }
@@ -3840,7 +3912,7 @@ function runImportSaveClick() {
   } catch (e) {
     window.__sfImportConfirm = false;
     if (previewEl) { previewEl.style.display = 'none'; previewEl.textContent = ''; }
-    UI.toast((e && e.message) ? e.message : 'Ongeldige save — controleer JSON', 3200);
+    UI.toast((e && e.message) ? e.message : t('toast.invalidSave'), 3200, { tone: 'danger' });
   }
 }
 
@@ -5174,7 +5246,7 @@ function copyPlayLink() {
     const url = await resolveSharePlayUrl();
     try {
       await navigator.clipboard.writeText(url);
-      UI.toast('GitHub Pages-link gekopieerd — deel speel.html (niet de tunnel)', 3600);
+      UI.toast(t('toast.pagesLinkCopied'), 3600, { tone: 'ok' });
     } catch (_) {
       UI.toast(url, 4500);
     }
@@ -5188,7 +5260,7 @@ function sharePlayLink() {
       try {
         await navigator.share({
           title: 'Stickman Fighter',
-          text: 'Gratis stickman vechtspel — open de link, tik SPELEN (Android + iPad + PC)',
+          text: 'Gratis stickman vechtspel — open de link, tik SPELEN (Android + PC)',
           url,
         });
         return;
@@ -5198,7 +5270,7 @@ function sharePlayLink() {
     }
     try {
       await navigator.clipboard.writeText(url);
-      UI.toast('Pages-link gekopieerd — stuur naar vrienden (Chrome op Android)', 3600);
+      UI.toast(t('toast.pagesLinkCopiedAndroid'), 3600, { tone: 'ok' });
     } catch (_) {
       UI.toast(url, 4500);
     }
@@ -5406,7 +5478,7 @@ function modeFirstMinuteLine(mode) {
     adventure: 'Eerste minuut: links lopen · rechts slaan · joy ↑ mik op vliegers · vol energy = SUPER',
     training: 'Eerste minuut: spring rode laser · blokkeer dichtbij · energy vol → SUPER',
     wall: '60s · combo ×3/×5/×8 hints · record-tempo + projectie in HUD',
-    versus: 'Eerste minuut: P1 links · P2 rechts · liggend iPad werkt het best',
+    versus: 'Eerste minuut: P1 links · P2 rechts',
     coinrun: '45s munten · joy ↑ mik · roze vlieger = +3 · max 3 shuriken snel',
   };
   return lines[mode] || lines.adventure;
@@ -5511,6 +5583,8 @@ function maybeWelcomeToast() {
       const lvl = document.getElementById('levelScreen');
       if (lvl && lvl.classList.contains('active')) return;
     } catch (_) {}
+    const splash = document.getElementById('sfSplash');
+    if (splash && !splash.classList.contains('is-done')) return;
     userToast(t('toast.welcome'), 3800);
   }, 2800);
 }
@@ -5972,7 +6046,7 @@ function grantZoneWeapon(weaponId, opts) {
       const zone = weaponDropZoneOf(w);
       const col = zone ? zone.color : '#c47aff';
       if (typeof UI !== 'undefined' && UI && typeof UI.toast === 'function') {
-        UI.toast(`${zone ? zone.name : 'Zone'}: ${weaponLabel(w)}!`, 3800);
+        UI.toast(t('toast.zoneDrop', { zone: zone ? zone.name : t('toast.zoneFallback'), name: weaponLabel(w) }), 3800, { tone: 'ok' });
       }
       if (typeof game !== 'undefined' && game && typeof game.banner === 'function') {
         game.banner(weaponLabel(w), 2.1, col, 34);
@@ -7510,7 +7584,7 @@ function trackWeaponFinisher(weaponId, gameRef) {
   if (newTierIdx > prevTierIdx && typeof UI !== 'undefined') {
     const w = weaponById(weaponId);
     const tier = WEAPON_MASTERY_TIERS[newTierIdx];
-    try { UI.toast(`${w.name}: ${tier.name}!`, 3200); } catch (_) {}
+    try { UI.toast(t('toast.masteryTier', { name: w.name, tier: tier.name }), 3200, { tone: 'ok' }); } catch (_) {}
   }
   if (typeof checkAchievements === 'function') checkAchievements();
 }
@@ -9183,10 +9257,8 @@ function swapVsSides() {}
 
 function toastVersusRetired() {
   try {
-    UI.toast(t('toast.versusRetired') || '2-speler lokaal is uit — later online multiplayer', 3200);
-  } catch (_) {
-    try { UI.toast('2-speler lokaal is uit — later online multiplayer', 3200); } catch (__) {}
-  }
+    UI.toast(t('toast.versusRetired'), 3200, { tone: 'warn' });
+  } catch (_) {}
 }
 /* --- src/data/monsters.js --- */
 /* ============================ MONSTERS ================================= */
@@ -11903,7 +11975,49 @@ function seedNlGameStrings() {
     skillEquipped: '{name} uitgerust als special',
     superEquipped: '{name} uitgerust als nood-super',
     superUnlock: 'Nieuwe nood-super: {name}!',
-    welcome: 'Welkom! Menu → Tips · per modus één korte hint bovenin (geen toast-stapel)',
+    welcome: 'Welkom! Menu → Tips · tik een melding weg · per modus één hint bovenin',
+    unknownMode: 'Onbekende modus',
+    noSession: 'Nog geen sessie — kies een modus',
+    noPlayLink: 'Geen speel-link gevonden — zie Instellingen',
+    pasteSaveFirst: 'Plak eerst je save in het vak',
+    importPreview: 'Import-preview — tik Import nogmaals om te laden',
+    invalidSave: 'Ongeldige save — controleer JSON',
+    noBackup: 'Geen backup gevonden op dit apparaat',
+    backupConfirm: 'Backup Lv {lvl}{drift} — tik nogmaals om te herstellen',
+    backupDrift: ' (hoofd en backup verschillen)',
+    backupRestored: 'Backup teruggezet — save + backup synchroon',
+    backupFailed: 'Backup herstellen mislukt — export save als je die hebt',
+    syncConfirm: 'Sync overschrijft backup met hoofd-save — tik nogmaals',
+    syncOk: 'Backup gesynchroniseerd met hoofd-save',
+    syncFailed: 'Sync mislukt — export save als vangnet',
+    clearConfirm: 'Nogmaals tikken = voortgang wissen (backup blijft)',
+    newStart: 'Nieuwe start — backup staat nog in Instellingen',
+    exportCopied: 'Save gekopieerd + download · {summary} (~{size})',
+    exportBox: 'Save in vak + download · {summary} (~{size})',
+    finishFight: 'Eerst gevecht afmaken of pauzeren',
+    notDuringCombat: 'Niet tijdens gevecht',
+    liteFxHint: 'Traag? Instellingen → Lite FX',
+    saveAlmostTooBig: 'Save bijna te groot — export in Instellingen',
+    saveRestoredSafe: 'Save hersteld uit backup — je voortgang is veilig',
+    genericSafeError: 'Er ging iets mis — opgeslagen voortgang is veilig',
+    backupWriteFail: 'Backup opslaan mislukt — export save in Instellingen (hoofd-save wel OK)',
+    persistPrimaryFail: 'Hoofd-save mislukt — backup wel bijgewerkt (export in Instellingen)',
+    persistFail: 'Opslaan mislukt — export save in Instellingen',
+    persistFailCtx: 'Opslaan mislukt ({context}) — export save in Instellingen',
+    pickFileOrPaste: 'Kies een exportbestand of plak save-JSON in het vak',
+    saveLoadedPreview: 'Save uit {src} — tik Import om te kijken',
+    filePickerUnavailable: 'Bestand kiezen niet beschikbaar',
+    pagesLinkCopied: 'Speel-link gekopieerd — stuur naar vrienden',
+    pagesLinkCopiedAndroid: 'Speel-link gekopieerd — stuur naar vrienden (Chrome)',
+    saveFailRetry: 'Opslaan mislukt — probeer opnieuw',
+    zoneDrop: '{zone}: {name}!',
+    zoneFallback: 'Zone',
+    masteryTier: '{name}: {tier}!',
+    saveRepaired: 'Save gerepareerd: {notes}',
+    saveCorruptOverwritten: 'Corrupte hoofd-save overschreven — export blijft je vangnet bij URL-wissel',
+    saveRestoredAfterLoad: 'Save hersteld uit backup na laadfout',
+    saveLoadFailedFresh: 'Save kon niet geladen worden — nieuwe voortgang gestart (export backup als je die had)',
+    staleCacheMenu: 'Oude cache — menu reageert niet. Tik «Verse versie» in de dock.',
   });
   if (!I18N.nl.gamble) I18N.nl.gamble = {};
   Object.assign(I18N.nl.gamble, {
@@ -12034,8 +12148,8 @@ function seedNlGameStrings() {
     '<b>Rariteiten:</b> Gewoon → Ongewoon → Zeldzaam → Episch → Legendarisch → Mythisch. Zeldzamer = meer XP & meer max HP.',
     '<b>50 levels:</b> <b>5 eilanden × 10 levels</b> — skill gate wapens per eiland · baas Lv 10/20/30/40/50 opent volgend eiland · hitte-meter: 5× = Meester-buff · 9× = gevaar! · 10× = Satan.',
     '<b>Backup:</b> elke save wordt dubbel opgeslagen — bij problemen: <b>Instellingen → Herstel save uit backup</b>.',
-    '<b>Delen:</b> menu → <b>Deel link</b> — vrienden op Android openen in Chrome → Zet in app-lade. Zie ANDROID-DELEN.txt op GitHub.',
-    '<b>Offline:</b> na 1× online openen cache’t de app HTML+JS — banner onderaan bij geen net. Tunnel-link heeft internet nodig; GitHub Pages + app-lade = stabielst.',
+    '<b>Delen:</b> menu → <b>Deel link</b> — vrienden openen in Chrome en tikken <b>Zet in app-lade</b>.',
+    '<b>Offline:</b> na 1× online spelen werkt de app daarna ook zonder net. Banner onderaan als je offline bent.',
   ];
   if (!I18N.nl.menu) I18N.nl.menu = {};
   I18N.nl.menu.d20Tips = [
@@ -12043,7 +12157,7 @@ function seedNlGameStrings() {
     'Komt eraan: Mat\'s bonus game — korte mini-uitdaging na een sterke run of perfecte ronde.',
     'Komt eraan: mik met je wapen — richt op de vloer voor schokgolven of op vogels voor bonus-XP.',
     'Volle energy → tik 🌀 voor Spiral Orb — grote schade en screen-shake.',
-    '2P op iPad: liggend houden; P1 linker helft, P2 rechter helft (joystick + knoppen).',
+    'Avontuur: joystick links · slaan rechts · volle energy = SUPER.',
     'Muur: combo\'s stapelen schade — bomstenen (rood) ontploffen, goud = extra XP.',
     'Monsterboek vullen = meer max HP via rariteit (gewoon +3 … mythisch +25).',
     'Komt eraan: avontuur-character select vóór elk level — eigen loadout per run.',
@@ -12057,7 +12171,7 @@ function seedNlGameStrings() {
     'Verder spelen hervat je laatste modus (avontuur, training, muur of 2P).',
     'Komt eraan: vloer-slag met zware wapens — scheurt tegels in muur-modus.',
     'Willekeurig duo op character select: 🎲 kiest twee verschillende vechters.',
-    'Instellingen: grote knoppen, minder schok, combo-HUD — handig op iPad.',
+    'Instellingen: grote knoppen, minder schok, combo-HUD — handig op telefoon.',
     'Komt eraan: Mat co-op assist — korte buff als je zijn bonus haalt.',
   ];
   I18N.nl.menu.d20Polish = [
@@ -12087,7 +12201,7 @@ function seedNlGameStrings() {
     '5 eilanden — baas Lv 10/20/30/40/50 opent volgend eiland',
     'Skill gate — max wapen per eiland in avontuur',
     '5× verlies op één level = Meester-buff +20%',
-    'Training = solo · Versus = 2P lokaal op iPad',
+    'Training = solo oefenen vs RabbitRobot',
     'Muur-combo’s = sneller sloop & meer XP',
     'Monsterboek vullen = meer max HP',
     'Verder spelen hervat je laatste modus',
@@ -12127,7 +12241,7 @@ function seedNlGameStrings() {
     charReplayLast: 'Herhaal · {p1} vs {p2}',
     charPickNow1: 'P1',
     charPickNow2: 'P2',
-    charIpadTip: 'iPad: speler 1 gebruikt de linker helft van het scherm (joystick + knoppen), speler 2 de rechter helft. Draai je iPad liggend voor het meeste ruimte.',
+    charIpadTip: '',
     levelHead: 'Kies een eiland',
     levelSub: 'Normal → Nightmare 2.0 → Hell 3.0 · hitte-meter · 9× = gevaar! · 10× = Satan',
     diff: { normal: 'Normal', nightmare: 'Nightmare', hell: 'Hell' },
@@ -12314,7 +12428,7 @@ function seedNlGameStrings() {
     petCoinTip: 'Speel <b>munten bonus</b> voor pet coins (2 gouden munten = 1 PC). Koop pets hier, of tem via kills in het monsterboek. Pets volgen je in avontuur & training.',
     petSummaryTamed: 'Getemd <b>{tamed}/{total}</b> · actief <b>{active}</b> · <b>{wallet} pet coins</b>',
     petNone: 'geen',
-    installSub: 'Verschijnt als icoon — net als een echte app',
+    installSub: 'Één icoon, zoals een echte app',
     boss: 'BAAS',
     topHunter: 'Top jager',
     modeAdventure: '5 eilanden × 10 levels · hitte-meter · 9× = gevaar! · 10× = Satan · Meester-buff · dobbel-gok',
@@ -12325,7 +12439,7 @@ function seedNlGameStrings() {
     firstMinuteAdventure: 'Eerste minuut: links lopen · rechts slaan · joy ↑ mik op vliegers · vol energy = SUPER',
     firstMinuteTraining: 'Eerste minuut: spring rode laser · blokkeer dichtbij · energy vol → SUPER',
     firstMinuteWall: '60s · combo ×3/×5/×8 hints · record-tempo + projectie in HUD',
-    firstMinuteVersus: 'Eerste minuut: P1 links · P2 rechts · liggend iPad werkt het best',
+    firstMinuteVersus: 'Eerste minuut: P1 links · P2 rechts',
     firstMinuteCoinrun: '45s munten · joy ↑ mik · roze vlieger = +3 · max 3 shuriken snel',
     firstMinuteAdventureKb: 'Eerste minuut: A/D lopen · W springen · J/K/L · U technique · Shift subst',
     firstMinuteTrainingKb: 'Eerste minuut: spring lasers · Shift = substitutie · energy vol → U',
@@ -12702,17 +12816,43 @@ const CATALOG_EN = {
     'Rarities: Common → Uncommon → Rare → Epic → Legendary → Mythic. Rarer = more XP & max HP.',
     '50 levels: 5 islands × 10 levels — skill gate weapons per island · boss Lv 10/20/30/40/50 opens next island · heat meter: 5× = Master buff · 9× = danger! · 10× = Satan.',
     'Backup: every save is stored twice — if needed: Settings → Restore save from backup.',
-    'Share: menu → Share link — friends on Android open in Chrome → Add to home screen. See ANDROID-DELEN.txt on GitHub.',
-    'Offline: after opening online once the app caches HTML+JS — banner at bottom when offline. Tunnel links need internet; GitHub Pages + home screen = most stable.',
+    'Share: menu → Share link — friends open in Chrome and tap Add as app.',
+    'Offline: after playing online once, the app also works without a network. Banner at the bottom when you are offline.',
   ] },
   toast: {
     unknownMode: 'Unknown mode', noSession: 'No session yet — pick a mode',
     missionsIntro: 'Missions: Play → claim XP → Daily bonus',
     missionReady1: '1 mission ready to claim', missionReadyN: '{n} missions ready to claim',
     dayBonusReady: 'Daily bonus +80 XP ready', noPlayLink: 'No play link found — see Settings',
-    pasteSaveFirst: 'Paste save JSON in the box first', importPreview: 'Import preview — tap Import again to load',
+    pasteSaveFirst: 'Paste your save in the box first', importPreview: 'Import preview — tap Import again to load',
     invalidSave: 'Invalid save — check JSON', noBackup: 'No backup found on this device',
     backupConfirm: 'Backup Lv {lvl}{drift} — tap again to restore',
+    backupDrift: ' (main and backup differ)',
+    welcome: 'Welcome! Menu → Tips · tap a notice to dismiss · one hint per mode at top',
+    finishFight: 'Finish or pause the fight first',
+    notDuringCombat: 'Not during a fight',
+    liteFxHint: 'Running slow? Settings → Lite FX',
+    saveAlmostTooBig: 'Save almost too large — export in Settings',
+    saveRestoredSafe: 'Save restored from backup — your progress is safe',
+    genericSafeError: 'Something went wrong — saved progress is safe',
+    backupWriteFail: 'Backup save failed — export in Settings (main save is OK)',
+    persistPrimaryFail: 'Main save failed — backup updated (export in Settings)',
+    persistFail: 'Save failed — export in Settings',
+    persistFailCtx: 'Save failed ({context}) — export in Settings',
+    pickFileOrPaste: 'Pick an export file or paste save JSON in the box',
+    saveLoadedPreview: 'Save from {src} — tap Import to preview',
+    filePickerUnavailable: 'File picker not available',
+    pagesLinkCopied: 'Play link copied — send it to friends',
+    pagesLinkCopiedAndroid: 'Play link copied — send it to friends (Chrome)',
+    saveFailRetry: 'Save failed — try again',
+    zoneDrop: '{zone}: {name}!',
+    zoneFallback: 'Zone',
+    masteryTier: '{name}: {tier}!',
+    saveRepaired: 'Save repaired: {notes}',
+    saveCorruptOverwritten: 'Corrupt main save overwritten — export stays your safety net',
+    saveRestoredAfterLoad: 'Save restored from backup after a load error',
+    saveLoadFailedFresh: 'Save could not load — started fresh (export a backup if you had one)',
+    staleCacheMenu: 'Stale cache — menu not responding. Tap «Fresh version» in the dock.',
     backupRestored: 'Backup restored — save + backup in sync',
     backupFailed: 'Backup restore failed — export save if you have one',
     syncConfirm: 'Sync overwrites backup with main save — tap again',
@@ -12933,7 +13073,7 @@ const CATALOG_EN = {
     charReplayLast: 'Replay · {p1} vs {p2}',
     charPickNow1: 'P1',
     charPickNow2: 'P2',
-    charIpadTip: 'iPad: player 1 uses the left half (joystick + buttons), player 2 the right half. Landscape works best.',
+    charIpadTip: '',
     levelHead: 'Pick an island',
     levelSub: 'Normal → Nightmare 2.0 → Hell 3.0 · heat meter · 9× = danger! · 10× = Satan',
     diff: { normal: 'Normal', nightmare: 'Nightmare', hell: 'Hell' },
@@ -13120,7 +13260,7 @@ const CATALOG_EN = {
     petCoinTip: 'Play <b>coin bonus</b> for pet coins (2 gold coins = 1 PC). Buy pets here, or tame via monster book kills. Pets follow you in adventure & training.',
     petSummaryTamed: 'Tamed <b>{tamed}/{total}</b> · active <b>{active}</b> · <b>{wallet} pet coins</b>',
     petNone: 'none',
-    installSub: 'Shows as an icon — like a real app',
+    installSub: 'One icon, like a real app',
     boss: 'BOSS',
     topHunter: 'Top hunter',
     modeAdventure: '5 islands × 10 levels · heat meter · 9× = danger! · 10× = Satan · Master buff · gamble',
@@ -13131,7 +13271,7 @@ const CATALOG_EN = {
     firstMinuteAdventure: 'First minute: move left · punch right · joy ↑ aim flyers · full energy = SUPER',
     firstMinuteTraining: 'First minute: jump the red laser · block up close · full energy → SUPER',
     firstMinuteWall: '60s · combo ×3/×5/×8 hints · record pace + projection in HUD',
-    firstMinuteVersus: 'First minute: P1 left · P2 right · landscape iPad works best',
+    firstMinuteVersus: 'First minute: P1 left · P2 right',
     firstMinuteCoinrun: '45s coins · joy ↑ aim · pink flyer = +3 · max 3 shuriken fast',
     firstMinuteAdventureKb: 'First minute: A/D move · W jump · J/K/L · U technique · Shift subst',
     firstMinuteTrainingKb: 'First minute: jump lasers · Shift = subst · full energy → U',
@@ -13188,7 +13328,7 @@ const CATALOG_EN = {
     '5 islands — boss Lv 10/20/30/40/50 opens next island',
     'Skill gate — max weapon per island in adventure',
     '5× loss on one level = Master buff +20%',
-    'Training = solo · Versus = 2P local on iPad',
+    'Training = solo practice vs RabbitRobot',
     'Wall combos = faster smash & more XP',
     'Fill monster book = more max HP',
     'Continue resumes your last mode',
@@ -13198,7 +13338,7 @@ const CATALOG_EN = {
     'Coming: Mat\'s bonus game — short mini-challenge after a strong run or perfect round.',
     'Coming: aim your weapon — floor for shockwaves or birds for bonus XP.',
     'Full energy → tap 🌀 for Spiral Orb — big damage and screen-shake.',
-    '2P on iPad: landscape; P1 left half, P2 right half (joystick + buttons).',
+    'Adventure: joystick left · punch right · full energy = SUPER.',
     'Wall: combos stack damage — red bombs explode, gold = extra XP.',
     'Fill monster book = more max HP by rarity (common +3 … mythic +25).',
     'Coming: adventure character select before each level — loadout per run.',
@@ -13212,7 +13352,7 @@ const CATALOG_EN = {
     'Continue resumes your last mode (adventure, training, wall or 2P).',
     'Coming: floor slam with heavy weapons — cracks tiles in wall mode.',
     'Random duo on character select: 🎲 picks two different fighters.',
-    'Settings: big buttons, less shake, combo HUD — handy on iPad.',
+    'Settings: big buttons, less shake, combo HUD — handy on phone.',
     'Coming: Mat co-op assist — short buff when you clear his bonus.',
   ], d20Polish: [
     'Weapon preview glow in collection',
@@ -23017,6 +23157,7 @@ function paintSplashStripCanvas(cv, t, opts) {
   const scroll = calm ? 0 : (t || 0) * 20;
   const progress = opts.progress != null ? Math.max(0, Math.min(1, opts.progress)) : 1;
   const compact = !!opts.compact;
+  const hero = !!opts.hero && !compact;
 
   const skyTop = P ? P.skyTop : '#4a6a82';
   const skyMid = P ? P.skyMid : '#7a94a6';
@@ -23030,8 +23171,8 @@ function paintSplashStripCanvas(cv, t, opts) {
   const roadLo = P ? P.roadLo : '#484642';
   const straw = P ? P.straw : '#a88850';
 
-  const roadH = Math.max(14, Math.round(h * (compact ? 0.22 : 0.2)));
-  const fieldH = Math.max(16, Math.round(h * (compact ? 0.26 : 0.3)));
+  const roadH = Math.max(14, Math.round(h * (compact ? 0.22 : hero ? 0.18 : 0.2)));
+  const fieldH = Math.max(16, Math.round(h * (compact ? 0.26 : hero ? 0.24 : 0.3)));
   const roadY = h - roadH;
   const fieldY = roadY - fieldH;
   const horizonY = fieldY;
@@ -23079,11 +23220,11 @@ function paintSplashStripCanvas(cv, t, opts) {
   }
 
   // Mini oak (left) — reuse canopy clusters when available
-  const oakX = Math.round(w * 0.18);
+  const oakX = Math.round(w * (hero ? 0.14 : 0.18));
   const oakBase = roadY - 2;
   if (typeof drawPixelOakTree === 'function' && !compact) {
     const sway = calm ? 0 : Math.sin((t || 0) * 1.4) * 1.5;
-    drawPixelOakTree(c, oakX, oakBase, 0.55, sway);
+    drawPixelOakTree(c, oakX, oakBase, hero ? 1.05 : 0.55, sway);
   } else {
     c.fillStyle = '#3a3024';
     c.fillRect(oakX - 3, oakBase - 28, 6, 28);
@@ -23165,17 +23306,25 @@ function paintSplashStripCanvas(cv, t, opts) {
     c.restore();
   };
   const stroll = calm ? 0 : Math.sin((t || 0) * 0.7) * 10;
-  drawSplashStick(w * 0.58 + stroll, 1, '#d0d4da', compact ? 0.85 : 1);
-  drawSplashStick(w * 0.72 + stroll * 0.6, -1, '#c09098', compact ? 0.9 : 1.05);
+  const sc = compact ? 0.85 : hero ? 4.4 : 1;
+  if (hero) {
+    drawSplashStick(w * 0.42 + stroll, 1, '#d0d4da', sc);
+    drawSplashStick(w * 0.58 + stroll * 0.45, -1, '#ffd75e', sc * 1.08);
+    drawSplashStick(w * 0.74 + stroll * 0.7, 1, '#c09098', sc * 0.92);
+  } else {
+    drawSplashStick(w * 0.58 + stroll, 1, '#d0d4da', sc);
+    drawSplashStick(w * 0.72 + stroll * 0.6, -1, '#c09098', compact ? 0.9 : 1.05);
+  }
 
   // Soft caption bar (non-compact)
   if (!compact) {
+    const capH = hero ? 22 : 14;
     c.fillStyle = P ? P.captionBg : 'rgba(18,22,26,.55)';
-    c.fillRect(0, h - 14, w, 14);
+    c.fillRect(0, h - capH, w, capH);
     c.fillStyle = P ? P.captionFg : 'rgba(220,214,200,.82)';
-    c.font = 'bold 9px monospace';
+    c.font = hero ? 'bold 13px monospace' : 'bold 9px monospace';
     c.textAlign = 'left';
-    c.fillText('LANDWEG · MONSTER ARENA', 8, h - 4);
+    c.fillText('MONSTER ARENA', 10, h - (hero ? 7 : 4));
   }
 
   c.imageSmoothingEnabled = prev;
@@ -24855,7 +25004,7 @@ class Game {
         try {
           if (!gameUiTimerOk(self)) return;
           self.banner(t('banner.satanIncoming'), 2.2, '#ff3040', 42);
-          UI.toast(t('toast.satanIncoming'), 3800);
+          UI.toast(t('toast.satanIncoming'), 3800, { tone: 'danger' });
         } catch (_) {}
       }, 900);
     }
@@ -25425,7 +25574,7 @@ class Game {
           setTimeout(() => {
             try {
               if (!gameUiTimerOk(self, { allowOver: true })) return;
-              UI.toast(t('toast.islandUnlock', { name: islandLabel(islandFromLevel(lv + 1), 'name'), cap: nCap }), 4200);
+              UI.toast(t('toast.islandUnlock', { name: islandLabel(islandFromLevel(lv + 1), 'name'), cap: nCap }), 4200, { tone: 'ok' });
             } catch (_) {}
           }, 1700);
         }
@@ -25439,9 +25588,9 @@ class Game {
           setTimeout(() => {
             try {
               if (!gameUiTimerOk(self, { allowOver: true })) return;
-              if (diff === 'normal') UI.toast(t('toast.diffUnlockNightmare'), 4800);
-              else if (diff === 'nightmare') UI.toast(t('toast.diffUnlockHell'), 4800);
-              else UI.toast(t('toast.diffHellCleared'), 4200);
+              if (diff === 'normal') UI.toast(t('toast.diffUnlockNightmare'), 4800, { tone: 'ok' });
+              else if (diff === 'nightmare') UI.toast(t('toast.diffUnlockHell'), 4800, { tone: 'ok' });
+              else UI.toast(t('toast.diffHellCleared'), 4200, { tone: 'ok' });
             } catch (_) {}
           }, 1900);
         }
@@ -25473,7 +25622,7 @@ class Game {
             if (!gameUiTimerOk(self, { allowOver: true })) return;
             UI.toast(eggBonus.duplicate
               ? t('toast.eggDuplicate', { name: eggBonus.def.name })
-              : t('toast.eggNew', { name: eggBonus.def.name, rar: rarityLabel(eggBonus.def.rarity) }), 3800);
+              : t('toast.eggNew', { name: eggBonus.def.name, rar: rarityLabel(eggBonus.def.rarity) }), 3800, { tone: 'ok' });
           } catch (_) {}
         }, 1200);
       }
@@ -25500,7 +25649,7 @@ class Game {
         setTimeout(() => {
           try {
             if (!gameUiTimerOk(self, { allowOver: true })) return;
-            UI.toast(t('toast.masterBuffGain'), 3800);
+            UI.toast(t('toast.masterBuffGain'), 3800, { tone: 'ok' });
           } catch (_) {}
         }, 1500);
       }
@@ -25509,7 +25658,7 @@ class Game {
         setTimeout(() => {
           try {
             if (!gameUiTimerOk(self, { allowOver: true })) return;
-            UI.toast(t('toast.satanHeatDanger'), 4200);
+            UI.toast(t('toast.satanHeatDanger'), 4200, { tone: 'danger' });
           } catch (_) {}
         }, gotMaster ? 3200 : 1500);
       } else if (satanSoon) {
@@ -25517,7 +25666,7 @@ class Game {
         setTimeout(() => {
           try {
             if (!gameUiTimerOk(self, { allowOver: true })) return;
-            UI.toast(t('toast.satanComingNext'), 4200);
+            UI.toast(t('toast.satanComingNext'), 4200, { tone: 'danger' });
           } catch (_) {}
         }, gotMaster ? 3200 : 1500);
       }
@@ -25672,7 +25821,7 @@ class Game {
         this.player.maxhp += hpB;
         this.player.hp += hpB;
       }
-      try { UI.toast(t('toast.dexDiscover', { rar: rarityLabel(sp.rarity), name: sp.name || m.spId, hp: hpB }), 3200); } catch (_) {}
+      try { UI.toast(t('toast.dexDiscover', { rar: rarityLabel(sp.rarity), name: sp.name || m.spId, hp: hpB }), 3200, { tone: 'ok' }); } catch (_) {}
     }
     if (m.spId && save.dex) {
       save.dex[m.spId] = (save.dex[m.spId] || 0) + 1;
@@ -25687,7 +25836,7 @@ class Game {
         spawnGamePet(this);
         noteRunLootPet(this.runLoot, tame.sp.name);
         this.banner(t('banner.pet', { name: tame.sp.name }), 2.2, tame.sp.c1, 36);
-        UI.toast(t('toast.petTamed', { name: tame.sp.name, cur: tame.kills, need: tame.need }), 4200);
+        UI.toast(t('toast.petTamed', { name: tame.sp.name, cur: tame.kills, need: tame.need }), 4200, { tone: 'ok' });
       }
     } catch (_) {}
     try { checkAchievements(); } catch (_) {}
@@ -25695,10 +25844,10 @@ class Game {
       if (countBefore < dexCount()) {
         const half = Math.ceil(SPECIES_ORDER.length / 2);
         if (countBefore < half && dexCount() >= half) {
-          UI.toast(t('toast.styleUnlockTome'), 3500);
+          UI.toast(t('toast.styleUnlockTome'), 3500, { tone: 'ok' });
         }
         if (tiersBefore < 4 && dexRarityTierCount() >= 4) {
-          UI.toast(t('toast.styleUnlockCrystal'), 3500);
+          UI.toast(t('toast.styleUnlockCrystal'), 3500, { tone: 'ok' });
         }
       }
     } catch (_) {}
@@ -25747,7 +25896,7 @@ class Game {
       try { ensureSatanSvg(); } catch (_) {}
       triggerSatanIntro(this, mon);
       this.floater(W / 2, Math.max(100, (this.advHudBottom || 120) + 24), t('hud.satanShort'), '#ff3040', 18);
-      UI.toast(t('toast.satanReflectHint'), 4200);
+      UI.toast(t('toast.satanReflectHint'), 4200, { tone: 'warn' });
       this.modeHintLine = IS_TOUCH ? t('hud.satanHintTouch') : t('hud.satanHintKb');
       this.hint = 8;
     } catch (err) {
@@ -25764,7 +25913,7 @@ class Game {
       clearSatanState(this);
       if (!won) return;
       this.banner(t('banner.satanWin'), 2.2, '#ffd75e', 46);
-      UI.toast(t('toast.satanWinTide'), 4200);
+      UI.toast(t('toast.satanWinTide'), 4200, { tone: 'ok' });
       try { AudioSys.sfx('win'); } catch (_) {}
       const self = this;
       setTimeout(() => {
@@ -25816,7 +25965,7 @@ class Game {
       }
       this.floater(W / 2, Math.max(100, (this.advHudBottom || 120) + 24), t('hud.tideBattleShort'), '#4a9fff', 18);
       if (!firstTide) {
-        UI.toast(t('toast.tideBattle', { name: mon.sp.name }), 3200);
+        UI.toast(t('toast.tideBattle', { name: mon.sp.name }), 3200, { tone: 'warn' });
       }
     } catch (err) {
       console.error('[TideBattle] start', err);
@@ -25874,13 +26023,13 @@ class Game {
         return;
       }
       this.banner(t('banner.tideBattleWin'), 2.2, '#4a9fff', 44);
-      UI.toast(t('toast.tideBattleWin', { xp, coins }), 4200);
+      UI.toast(t('toast.tideBattleWin', { xp, coins }), 4200, { tone: 'ok' });
       this.floater(W / 2, 140, `+${xp} XP · +${coins} PC`, '#4a9fff', 17);
       try { AudioSys.sfx('win'); } catch (_) {}
       checkAchievements();
       if (fromSatan && this.waveIdx < 0) {
         this.betweenT = 1.4;
-        try { UI.toast(t('toast.satanTideDone'), 3200); } catch (_) {}
+        try { UI.toast(t('toast.satanTideDone'), 3200, { tone: 'ok' }); } catch (_) {}
       }
     } catch (err) {
       console.error('[TideBattle] finish', err);
@@ -26806,11 +26955,11 @@ class Game {
           try { AudioSys.sfx('newmonster'); } catch (_) {}
         }
         const newStyle = STYLES.find(s => s.needLvl === save.lvl && styleUnlocked(s));
-        if (newStyle) { try { UI.toast(t('toast.styleUnlock', { name: styleLabel(newStyle) }), 3500); } catch (_) {} }
+        if (newStyle) { try { UI.toast(t('toast.styleUnlock', { name: styleLabel(newStyle) }), 3500, { tone: 'ok' }); } catch (_) {} }
         const newSkill = SKILLS.find(s => s.needLvl === save.lvl && skillUnlocked(s));
-        if (newSkill) { try { UI.toast(t('toast.skillUnlock', { name: skillLabel(newSkill) }), 3500); } catch (_) {} }
+        if (newSkill) { try { UI.toast(t('toast.skillUnlock', { name: skillLabel(newSkill) }), 3500, { tone: 'ok' }); } catch (_) {} }
         const newSuper = SUPERS.find(s => s.needLvl === save.lvl && superUnlocked(s));
-        if (newSuper) { try { UI.toast(t('toast.superUnlock', { name: superLabel(newSuper) }), 3500); } catch (_) {} }
+        if (newSuper) { try { UI.toast(t('toast.superUnlock', { name: superLabel(newSuper) }), 3500, { tone: 'ok' }); } catch (_) {} }
       } catch (lvlErr) {
         try { sfReportError('grantXP/level', lvlErr, 'Level-up hiccup — gevecht gaat door'); } catch (_) {}
         break;
@@ -31803,79 +31952,166 @@ const UI = {
     }
   },
 
-  /** Eén zichtbare toast. Rest in de rij — Android Chrome/TWA = dezelfde HTML, geen native Toast. */
-  toast(msg, ms) {
-    msg = String(msg == null ? '' : msg);
-    let i = 0;
-    while (i < msg.length && msg.charAt(i) <= ' ') i++;
-    let j = msg.length;
-    while (j > i && msg.charAt(j - 1) <= ' ') j--;
-    msg = msg.slice(i, j);
-    if (!msg) return;
-    if (!(ms > 0)) ms = 2800;
-    if (ms < 1200) ms = 1200;
-    if (ms > 7000) ms = 7000;
+  _toastQ: null,
+  _toastEls: null,
+
+  _ensureToastHost(host) {
+    if (!host || !host.setAttribute) return;
     try {
-      const host = document.getElementById('toastHost');
-      if (host && host.querySelector('.sf-boot-fail')) return;
+      if (!host.getAttribute || host.getAttribute('role') !== 'status') {
+        host.setAttribute('role', 'status');
+      }
+      if (!host.getAttribute || host.getAttribute('aria-live') !== 'polite') {
+        host.setAttribute('aria-live', 'polite');
+        host.setAttribute('aria-relevant', 'additions');
+      }
     } catch (_) {}
-    if (this._toastCur === msg) return;
-    const q = this._toastQ || (this._toastQ = []);
-    for (let k = 0; k < q.length; k++) if (q[k].msg === msg) return;
-    if (q.length >= 4) q.shift();
-    q.push({ msg: msg, ms: ms });
-    this._pumpToast();
   },
 
-  _pumpToast() {
-    if (this._toastBusy) return;
-    const q = this._toastQ || (this._toastQ = []);
-    const next = q.shift();
-    if (!next) return;
-    this._showToastNow(next.msg, next.ms);
+  _resolveToastText(msg) {
+    const text = String(msg == null ? '' : msg).trim();
+    if (!text) return '';
+    if (/^[a-z][a-z0-9]*(\.[a-zA-Z0-9_]+)+$/.test(text) && text.length < 80) {
+      try {
+        if (typeof tOr === 'function') {
+          const resolved = tOr(text, '');
+          if (resolved && resolved !== text) return resolved;
+        }
+        if (typeof t === 'function') {
+          const resolved = t(text);
+          if (resolved && resolved !== text) return resolved;
+        }
+      } catch (_) {}
+      return '';
+    }
+    return text;
   },
 
-  _showToastNow(msg, ms) {
+  _parseToastArgs(ms, opts) {
+    let duration = 2800;
+    let tone = 'info';
+    if (ms && typeof ms === 'object') {
+      opts = ms;
+      duration = Number(opts.ms) > 0 ? Number(opts.ms) : 2800;
+    } else if (typeof ms === 'number' && ms > 0) {
+      duration = ms;
+    }
+    if (opts && typeof opts === 'object') {
+      if (opts.tone) tone = String(opts.tone);
+      if (typeof ms !== 'number' && Number(opts.ms) > 0) duration = Number(opts.ms);
+    }
+    if (tone !== 'ok' && tone !== 'warn' && tone !== 'danger') tone = 'info';
+    return { ms: duration, tone };
+  },
+
+  toast(msg, ms, opts) {
+    const text = this._resolveToastText(msg);
+    if (!text) return;
+    const spec = this._parseToastArgs(ms, opts);
     const host = document.getElementById('toastHost');
-    if (!host) {
-      this._toastBusy = false;
+    if (!host) return;
+    try {
+      if (host.querySelector('.sf-boot-fail')) return;
+    } catch (_) {}
+    this._ensureToastHost(host);
+    this._toastQ = this._toastQ || [];
+    this._toastEls = this._toastEls || [];
+
+    const sameEl = this._toastEls.find((el) => el && el.textContent === text);
+    if (sameEl) {
+      this._bumpToast(sameEl, spec.ms);
       return;
     }
-    if (host.querySelector('.sf-boot-fail')) {
-      this._toastBusy = false;
+    const sameQ = this._toastQ.find((q) => q.text === text);
+    if (sameQ) {
+      sameQ.ms = Math.max(sameQ.ms, spec.ms);
+      if (spec.tone !== 'info') sameQ.tone = spec.tone;
       return;
     }
-    this._toastBusy = true;
-    this._toastCur = msg;
-    if (this._toastHide) {
-      clearTimeout(this._toastHide);
-      this._toastHide = null;
+    const item = { text, ms: spec.ms, tone: spec.tone };
+    if (this._toastEls.length >= 2) {
+      this._toastQ.push(item);
+      if (this._toastQ.length > 4) this._toastQ.shift();
+      return;
     }
-    if (this._toastGap) {
-      clearTimeout(this._toastGap);
-      this._toastGap = null;
+    this._mountToast(item);
+  },
+
+  _bumpToast(el, ms) {
+    if (!el) return;
+    if (el._toastHide) {
+      try { clearTimeout(el._toastHide); } catch (_) {}
     }
-    const old = host.querySelectorAll('.toast');
-    for (let n = 0; n < old.length; n++) {
-      if (old[n].classList.contains('sf-boot-fail')) continue;
-      try { old[n].remove(); } catch (_) {}
-    }
+    el._toastHide = setTimeout(() => this._dismissToast(el), ms || 2800);
+    try {
+      el.classList.remove('toast-bump');
+      void el.offsetWidth;
+      el.classList.add('toast-bump');
+    } catch (_) {}
+  },
+
+  _mountToast(item) {
+    const host = document.getElementById('toastHost');
+    if (!host || !item) return;
     const el = document.createElement('div');
-    el.className = 'toast';
-    el.setAttribute('role', 'status');
-    el.textContent = msg;
-    host.appendChild(el);
-    const self = this;
-    this._toastHide = setTimeout(() => {
-      try { el.remove(); } catch (_) {}
-      self._toastHide = null;
-      self._toastCur = '';
-      self._toastGap = setTimeout(() => {
-        self._toastGap = null;
-        self._toastBusy = false;
-        self._pumpToast();
-      }, 220);
-    }, ms);
+    el.className = 'toast' + (item.tone && item.tone !== 'info' ? ' toast-' + item.tone : '');
+    el.textContent = item.text;
+    try { el.setAttribute('role', 'status'); } catch (_) {}
+    const dismiss = () => this._dismissToast(el);
+    try {
+      el.addEventListener('click', dismiss);
+      el.addEventListener('keydown', (e) => {
+        if (e && (e.key === 'Enter' || e.key === ' ' || e.key === 'Escape')) {
+          if (e.preventDefault) e.preventDefault();
+          dismiss();
+        }
+      });
+    } catch (_) {}
+    try {
+      if (host.firstChild) host.insertBefore(el, host.firstChild);
+      else host.appendChild(el);
+    } catch (_) {
+      try { host.appendChild(el); } catch (__) {}
+    }
+    this._toastEls = this._toastEls || [];
+    this._toastEls.unshift(el);
+    el._toastHide = setTimeout(dismiss, item.ms || 2800);
+  },
+
+  _dismissToast(el) {
+    if (!el) return;
+    if (el._toastHide) {
+      try { clearTimeout(el._toastHide); } catch (_) {}
+      el._toastHide = null;
+    }
+    try { el.remove(); } catch (_) {
+      try { if (el.parentNode) el.parentNode.removeChild(el); } catch (__) {}
+    }
+    this._toastEls = (this._toastEls || []).filter((x) => x !== el);
+    this._flushToastQ();
+  },
+
+  _flushToastQ() {
+    this._toastQ = this._toastQ || [];
+    this._toastEls = this._toastEls || [];
+    while (this._toastEls.length < 2 && this._toastQ.length) {
+      this._mountToast(this._toastQ.shift());
+    }
+  },
+
+  clearToasts() {
+    this._toastQ = [];
+    const els = (this._toastEls || []).slice();
+    this._toastEls = [];
+    for (const el of els) {
+      if (el && el._toastHide) {
+        try { clearTimeout(el._toastHide); } catch (_) {}
+        el._toastHide = null;
+      }
+      try { if (el) el.remove(); } catch (_) {
+        try { if (el && el.parentNode) el.parentNode.removeChild(el); } catch (__) {}
+      }
+    }
   },
 
   goMenu(opts) {
@@ -32303,8 +32539,9 @@ const UI = {
     const missAlert = readyClaim > 0 || bonusReady;
     const profileEl = document.getElementById('menuProfileBar');
     if (profileEl) {
+      const tag = save.playerTag ? String(save.playerTag) : '';
       profileEl.innerHTML =
-        `<span class="prof-row"><b>Lv ${save.lvl}</b><span>${weaponLabel(w)}</span>` +
+        `<span class="prof-row"><b>${tag ? tag + ' · ' : ''}Lv ${save.lvl}</b><span>${weaponLabel(w)}</span>` +
         `<span style="color:${(skillById(save.skill || 'spiral_orb').color)}">${skillLabel(skillById(save.skill || 'spiral_orb'))}</span>` +
         `<span style="color:${equippedSuper().color}">${superLabel(equippedSuper())}</span>` +
         `<span style="color:${st.accent}">${styleLabel(st)}</span></span>` +
@@ -32393,7 +32630,7 @@ const UI = {
     const playLinkEl = document.getElementById('menuPlayLink');
     if (playLinkEl) {
       if (location.hostname.endsWith('.github.io')) {
-        playLinkEl.textContent = '✓ GitHub Pages — Deel link (Android + iPad)';
+        playLinkEl.textContent = '✓ Speel-link — deel met vrienden (Android)';
       } else if (!playLinkEl.dataset.loaded) {
         playLinkEl.dataset.loaded = '1';
         loadHostingBundle().then(({ hosting }) => {
@@ -32416,7 +32653,7 @@ const UI = {
     try {
       // Menu-UI only — never leave play canvas competing with this screen
       if (typeof state !== 'undefined' && state === 'play' && game) {
-        try { UI.toast('Eerst gevecht afmaken of pauzeren', 2200); } catch (_) {}
+        try { UI.toast(t('toast.finishFight'), 2200, { tone: 'warn' }); } catch (_) {}
         return;
       }
       if (typeof state !== 'undefined' && state === 'play' && !game) state = 'menu';
@@ -32502,11 +32739,11 @@ const UI = {
   openSummonHub() {
     try {
       if (state === 'play' && game) {
-        UI.toast('Eerst gevecht afmaken of pauzeren', 2400);
+        UI.toast(t('toast.finishFight'), 2400, { tone: 'warn' });
         return;
       }
       if (typeof adventureSpecialDuelActive === 'function' && adventureSpecialDuelActive(game)) {
-        UI.toast(t('toast.satanReflectHint'), 2400);
+        UI.toast(t('toast.satanReflectHint'), 2400, { tone: 'warn' });
         return;
       }
       if (state === 'play' && !game) state = 'menu';
@@ -32789,7 +33026,7 @@ const UI = {
     try {
       if (this._chestPullBusy) return;
       if (state === 'play' && game) {
-        UI.toast('Niet tijdens gevecht', 2000);
+        UI.toast(t('toast.notDuringCombat'), 2000, { tone: 'warn' });
         return;
       }
       const screen = document.getElementById('summonScreen');
@@ -33100,7 +33337,7 @@ const UI = {
         const short = (u) => String(u || '').replace(/^https:\/\//, '');
         if (stable && !isTunnelHostUrl(stable)) {
           linkEl.innerHTML =
-            `<div style="opacity:.8;margin-bottom:4px">Vaste speel-link (GitHub Pages) — deel deze</div>` +
+            `<div style="opacity:.8;margin-bottom:4px">Speel-link — deel deze met vrienden</div>` +
             `<a href="${stable}" style="color:#7cf5ff;font-weight:800" rel="noopener">${short(stable)}</a>`;
         } else {
           linkEl.textContent = withShareRevParam('https://brennyz.github.io/stickman-fighter/speel.html', SW_CACHE_REV);
@@ -33108,10 +33345,10 @@ const UI = {
         const kind = playHostKind();
         if (badgeEl) {
           const labels = {
-            pages: 'GitHub Pages — stabiele deel-link',
-            tunnel: 'Tunnel (dev) — deel nooit deze URL',
-            netlify: 'Netlify — export save bij URL-wissel',
-            local: 'Lokaal — deel GitHub Pages met vrienden',
+            pages: 'Stabiele speel-link',
+            tunnel: 'Thuis-test — deel deze URL niet',
+            netlify: 'Andere host — kopieer je save bij wissel',
+            local: 'Lokaal — deel de speel-link met vrienden',
             file: 'Lokaal bestand — deel GitHub Pages',
             other: 'Online host',
           };
@@ -33151,10 +33388,10 @@ const UI = {
         let hint = hosting.stableHint || '';
         if (!hint) {
           if (stable && String(stable).includes('github.io')) {
-            hint = 'Primair: GitHub Pages — bookmark speel.html (Safari → Delen → Zet op beginscherm). Tunnel is alleen thuis-dev.';
-          } else if (location.hostname.endsWith('.github.io')) hint = 'Je speelt via GitHub Pages — deel speel.html met vrienden.';
-          else if (location.hostname.endsWith('.netlify.app')) hint = 'Netlify-host — export save bij URL-wissel.';
-          else hint = 'Gebruik de vaste Pages-link hierboven; tunnel nooit als deel-link.';
+            hint = 'Deel deze link met vrienden. Op Android: Chrome → App installeren.';
+          } else if (location.hostname.endsWith('.github.io')) hint = 'Deel deze link met vrienden. Op Android: Chrome → App installeren.';
+          else if (location.hostname.endsWith('.netlify.app')) hint = 'Deel de speel-link hierboven met vrienden.';
+          else hint = 'Deel de speel-link hierboven met vrienden.';
         }
         if (onTunnel) {
           hint += ' Tunnel offline/503? Open de vaste GitHub Pages-link (primair).';
@@ -33169,7 +33406,7 @@ const UI = {
       })
       .catch(() => {
         linkEl.textContent = 'https://brennyz.github.io/stickman-fighter/speel.html';
-        if (hintEl) hintEl.textContent = 'Primair: GitHub Pages speel.html — export save bij URL-wissel.';
+        if (hintEl) hintEl.textContent = 'Deel deze link met vrienden. Op Android: Chrome → App installeren.';
       });
   },
 
@@ -34865,7 +35102,7 @@ function startGame(mode, opts) {
     return;
   }
   if (!allowed[mode]) {
-    try { UI.toast('Onbekende modus', 2200); } catch (_) {}
+    try { UI.toast(t('toast.unknownMode'), 2200, { tone: 'warn' }); } catch (_) {}
     return;
   }
   try { primePlayInput(false); } catch (_) {}
@@ -35014,7 +35251,7 @@ const btnContinue = document.getElementById('btnContinue');
 bindPress(btnContinue, () => {
   AudioSys.init(); AudioSys.sfx('select');
   try {
-    if (!resumeLastPlay()) userToast('Nog geen sessie — kies een modus', 2400);
+    if (!resumeLastPlay()) userToast(t('toast.noSession'), 2400, { tone: 'warn' });
   } catch (err) {
     sfReportError('resume', err, 'Verder spelen mislukt — kies een modus');
   }
@@ -35128,7 +35365,7 @@ if (btnOpenPlayLink) btnOpenPlayLink.addEventListener('click', () => {
   safeAsync((async () => {
     const url = await resolveSharePlayUrl();
     if (url) window.open(url, '_blank', 'noopener');
-    else userToast('Geen speel-link gevonden — zie Instellingen', 2800);
+    else userToast(t('toast.noPlayLink'), 2800, { tone: 'warn' });
   })(), 'openPlayLink', 'Link openen mislukt');
 });
 const btnExportSave = document.getElementById('btnExportSave');
@@ -35154,9 +35391,10 @@ if (btnExportSave) btnExportSave.addEventListener('click', () => {
       a.click();
       URL.revokeObjectURL(url);
     } catch (_) {}
-    UI.toast(clipped
-      ? `Save gekopieerd + download · ${saveExportSummaryLine()} (~${formatSaveBytes(json.length)})`
-      : `Save in vak + download · ${saveExportSummaryLine()} (~${formatSaveBytes(json.length)})`, 3600);
+    UI.toast(t(clipped ? 'toast.exportCopied' : 'toast.exportBox', {
+      summary: saveExportSummaryLine(),
+      size: formatSaveBytes(json.length),
+    }), 3600, { tone: 'ok' });
     UI.renderSettings();
   })(), 'exportSave', 'Export mislukt — kopieer JSON handmatig uit het vak');
 });
@@ -35165,7 +35403,7 @@ bindSaveImportFile();
 const btnImportSaveFile = document.getElementById('btnImportSaveFile');
 if (btnImportSaveFile) btnImportSaveFile.addEventListener('click', () => {
   AudioSys.sfx('select');
-  if (!openSaveImportFilePicker()) userToast('Bestand kiezen niet beschikbaar', 2400);
+  if (!openSaveImportFilePicker()) userToast(t('toast.filePickerUnavailable'), 2400, { tone: 'warn' });
 });
 if (btnImportSave) btnImportSave.addEventListener('click', () => runImportSaveClick());
 function bindSettingsControls() {
@@ -35286,20 +35524,20 @@ if (btnRestoreBackup) btnRestoreBackup.addEventListener('click', () => {
     if (!window.__sfBackupConfirm) {
       const h = saveHealthSummary();
       if (!h.backupOk) {
-        UI.toast('Geen backup gevonden op dit apparaat', 3000);
+        UI.toast(t('toast.noBackup'), 3000, { tone: 'warn' });
         return;
       }
       window.__sfBackupConfirm = true;
-      const driftHint = h.driftDetail || (h.drift ? ' (hoofd en backup verschillen)' : '');
-      UI.toast(`Backup Lv ${h.backupLvl}${driftHint} — tik nogmaals om te herstellen`, 4500);
+      const driftHint = h.driftDetail || (h.drift ? t('toast.backupDrift') : '');
+      UI.toast(t('toast.backupConfirm', { lvl: h.backupLvl, drift: driftHint }), 4500, { tone: 'warn' });
       setTimeout(() => { window.__sfBackupConfirm = false; }, 6000);
       return;
     }
     window.__sfBackupConfirm = false;
     if (restoreSaveFromBackup()) {
-      UI.toast('Backup teruggezet — save + backup synchroon', 3000);
+      UI.toast(t('toast.backupRestored'), 3000, { tone: 'ok' });
       UI.renderSettings();
-    } else UI.toast('Backup herstellen mislukt — export save als je die hebt', 3200);
+    } else UI.toast(t('toast.backupFailed'), 3200, { tone: 'danger' });
   }, 'restoreBackup', 'Backup herstellen mislukt');
 });
 const btnSyncBackup = document.getElementById('btnSyncBackup');
@@ -35308,15 +35546,15 @@ if (btnSyncBackup) btnSyncBackup.addEventListener('click', () => {
     AudioSys.sfx('select');
     if (!window.__sfSyncBackupConfirm) {
       window.__sfSyncBackupConfirm = true;
-      UI.toast('Sync overschrijft backup met hoofd-save — tik nogmaals', 3800);
+      UI.toast(t('toast.syncConfirm'), 3800, { tone: 'warn' });
       setTimeout(() => { window.__sfSyncBackupConfirm = false; }, 5000);
       return;
     }
     window.__sfSyncBackupConfirm = false;
     if (syncBackupFromPrimary()) {
-      UI.toast('Backup gesynchroniseerd met hoofd-save', 2800);
+      UI.toast(t('toast.syncOk'), 2800, { tone: 'ok' });
       UI.renderSettings();
-    } else UI.toast('Sync mislukt — export save als vangnet', 3200);
+    } else UI.toast(t('toast.syncFailed'), 3200, { tone: 'danger' });
   }, 'syncBackup', 'Backup sync mislukt');
 });
 const btnClearSave = document.getElementById('btnClearSave');
@@ -35324,7 +35562,7 @@ if (btnClearSave) btnClearSave.addEventListener('click', () => {
   safeUiAction(() => {
     if (!window.__sfClearConfirm) {
       window.__sfClearConfirm = true;
-      UI.toast('Nogmaals tikken = voortgang wissen (backup blijft)', 3500);
+      UI.toast(t('toast.clearConfirm'), 3500, { tone: 'warn' });
       setTimeout(() => { window.__sfClearConfirm = false; }, 4000);
       return;
     }
@@ -35332,12 +35570,12 @@ if (btnClearSave) btnClearSave.addEventListener('click', () => {
     try { localStorage.removeItem(SAVE_KEY); } catch (_) {}
     save = sanitizeSave(Object.assign({}, DEFAULT_SAVE));
     if (!persistPrimaryOnly()) {
-      userToast('Opslaan mislukt — probeer opnieuw', 3200);
+      userToast(t('toast.saveFailRetry'), 3200, { tone: 'danger' });
       return;
     }
     AudioSys.sfx('lose');
     UI.renderMenu();
-    UI.toast('Nieuwe start — backup staat nog in Instellingen', 4000);
+    UI.toast(t('toast.newStart'), 4000, { tone: 'ok' });
   }, 'clearSave', 'Reset mislukt — probeer opnieuw');
 });
 bindSettingsControls();
@@ -36112,13 +36350,156 @@ function dismissSplashOverlay() {
 
 function paintSplashTargets(t, progress) {
   if (typeof paintSplashStripCanvas !== 'function') return;
+  const root = document.getElementById('sfSplash');
+  const hero = !!(root && root.classList.contains('is-title'));
   const main = document.getElementById('sfSplashCanvas');
-  if (main) paintSplashStripCanvas(main, t, { progress });
+  if (main && hero) {
+    const w = Math.max(480, Math.round(main.clientWidth || 720));
+    const h = Math.max(220, Math.round(main.clientHeight || 360));
+    if (main.width !== w || main.height !== h) {
+      main.width = w;
+      main.height = h;
+    }
+  }
+  if (main) paintSplashStripCanvas(main, t, { progress, hero });
   const tunnel = document.getElementById('tunnelBootStrip');
   const ov = document.getElementById('tunnelBootOverlay');
   if (tunnel && ov && !ov.hidden) {
     paintSplashStripCanvas(tunnel, t, { progress, compact: true });
   }
+}
+
+function shouldSkipTitleGate() {
+  try {
+    const q = new URLSearchParams(location.search);
+    if (q.get('mode')) return true;
+    if (q.get('sfdebug') === '1') return true;
+    if (q.get('nosplash') === '1') return true;
+  } catch (_) {}
+  return false;
+}
+
+function syncTitleGateCopy() {
+  const greet = document.getElementById('sfTitleGreet');
+  const nameLbl = document.getElementById('sfTitleNameLbl');
+  const nameInp = document.getElementById('sfTitleName');
+  const note = document.getElementById('sfTitleNote');
+  const startLbl = document.getElementById('sfTitleStartLbl');
+  const contLbl = document.getElementById('sfTitleContinueLbl');
+  const tag = (typeof save !== 'undefined' && save && save.playerTag) ? String(save.playerTag) : '';
+  if (nameLbl) nameLbl.textContent = typeof t === 'function' ? t('menu.titleName') : 'Hoe heet je?';
+  if (nameInp) {
+    nameInp.placeholder = typeof t === 'function' ? t('menu.titleNamePh') : 'Jouw naam';
+    if (!nameInp.value && tag) nameInp.value = tag;
+  }
+  if (note) note.textContent = typeof t === 'function' ? t('menu.titleNote') : 'Geen account — je save blijft op deze telefoon';
+  if (startLbl) {
+    startLbl.innerHTML = (typeof t === 'function' ? t('menu.startGame') : 'SPELEN') +
+      '<small>' + (typeof t === 'function' ? t('menu.startSub') : 'Start het gevecht') + '</small>';
+  }
+  const lp = (typeof save !== 'undefined' && save && save.lastPlay) ? save.lastPlay : null;
+  if (contLbl) {
+    const modeName = lp && typeof t === 'function' && lp.mode ? t('modes.' + lp.mode) : '';
+    contLbl.innerHTML = (typeof t === 'function' ? t('menu.continue') : 'Verder spelen') +
+      '<small>' + (modeName || (typeof t === 'function' ? t('menu.startSub') : 'Laatste modus')) + '</small>';
+  }
+  if (greet) {
+    const live = (nameInp && nameInp.value.trim()) || tag;
+    greet.textContent = live && typeof t === 'function'
+      ? t('menu.titleGreet', { name: live })
+      : (live ? ('Hoi, ' + live) : '');
+    greet.hidden = !live;
+  }
+}
+
+function saveTitlePlayerTag() {
+  const inp = document.getElementById('sfTitleName');
+  if (!inp || typeof save === 'undefined' || !save) return;
+  const tag = typeof sanitizePlayerTag === 'function' ? sanitizePlayerTag(inp.value) : String(inp.value || '').trim().slice(0, 16);
+  save.playerTag = tag;
+  try { persist(); } catch (_) {}
+}
+
+function enterHubFromTitle(opts) {
+  opts = opts || {};
+  if (window.__sfTitleEntered && document.getElementById('sfSplash')?.classList.contains('is-done')) {
+    if (opts.resume) {
+      try { if (typeof resumeLastPlay === 'function') resumeLastPlay(); } catch (_) {}
+    }
+    return;
+  }
+  window.__sfTitleEntered = true;
+  saveTitlePlayerTag();
+  dismissSplashOverlay();
+  try { AudioSys.init(); AudioSys.sfx('select'); } catch (_) {}
+  try { if (typeof UI !== 'undefined' && UI.renderMenu) UI.renderMenu(); } catch (_) {}
+  if (opts.resume) {
+    try {
+      if (typeof resumeLastPlay === 'function' && resumeLastPlay()) return;
+      if (typeof userToast === 'function' && typeof t === 'function') {
+        userToast(t('toast.noSession'), 2400, { tone: 'warn' });
+      }
+    } catch (_) {}
+  }
+  try { UI.show('menuScreen'); } catch (_) {}
+}
+
+function wireTitleGate() {
+  if (window.__sfTitleWired) return;
+  window.__sfTitleWired = true;
+  const start = document.getElementById('sfTitleStart');
+  const cont = document.getElementById('sfTitleContinue');
+  const nameInp = document.getElementById('sfTitleName');
+  const go = (resume) => {
+    try { enterHubFromTitle({ resume: !!resume }); } catch (_) { dismissSplashOverlay(); }
+  };
+  if (start && typeof bindPress === 'function') bindPress(start, () => go(false));
+  else if (start) start.addEventListener('click', () => go(false));
+  if (cont && typeof bindPress === 'function') bindPress(cont, () => go(true));
+  else if (cont) cont.addEventListener('click', () => go(true));
+  if (nameInp) {
+    nameInp.addEventListener('input', () => { try { syncTitleGateCopy(); } catch (_) {} });
+    nameInp.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') { e.preventDefault(); go(false); }
+    });
+  }
+}
+
+function runTitleArenaLoop() {
+  if (window.__sfTitleLoop) return;
+  window.__sfTitleLoop = true;
+  const t0 = performance.now();
+  const tick = (now) => {
+    const root = document.getElementById('sfSplash');
+    if (!root || root.classList.contains('is-done')) {
+      window.__sfTitleLoop = false;
+      return;
+    }
+    try { paintSplashTargets((now - t0) / 1000, 1); } catch (_) {}
+    requestAnimationFrame(tick);
+  };
+  requestAnimationFrame(tick);
+}
+
+function showTitleGate() {
+  const root = document.getElementById('sfSplash');
+  if (!root || root.classList.contains('is-done')) return;
+  if (shouldSkipTitleGate()) {
+    dismissSplashOverlay();
+    return;
+  }
+  root.classList.add('is-title');
+  root.setAttribute('aria-busy', 'false');
+  const gate = document.getElementById('sfTitleGate');
+  if (gate) gate.hidden = false;
+  const cont = document.getElementById('sfTitleContinue');
+  if (cont) {
+    const lp = (typeof save !== 'undefined' && save && save.lastPlay && save.lastPlay.mode);
+    cont.hidden = !lp;
+  }
+  try { syncTitleGateCopy(); } catch (_) {}
+  try { wireTitleGate(); } catch (_) {}
+  runTitleArenaLoop();
 }
 
 function runSplashIntro() {
@@ -36133,7 +36514,12 @@ function runSplashIntro() {
   const dur = calm ? 220 : 1050;
   const t0 = performance.now();
   let finished = false;
-  const labels = ['Laden…', 'Pixelmap…', 'Arena…', 'Klaar'];
+  const labels = [
+    (typeof tOr === 'function' ? tOr('menu.splash0', 'Laden…') : 'Laden…'),
+    (typeof tOr === 'function' ? tOr('menu.splash1', 'Pixelmap…') : 'Pixelmap…'),
+    (typeof tOr === 'function' ? tOr('menu.splash2', 'Arena…') : 'Arena…'),
+    (typeof tOr === 'function' ? tOr('menu.splash3', 'Klaar') : 'Klaar'),
+  ];
 
   // First paint immediately so the canvas isn’t blank while CSS shows
   try { paintSplashTargets(0, 0); } catch (_) {}
@@ -36143,9 +36529,9 @@ function runSplashIntro() {
     finished = true;
     if (fill) fill.style.width = '100%';
     if (bar) bar.setAttribute('aria-valuenow', '100');
-    if (sub) sub.textContent = 'Klaar';
+    if (sub) sub.textContent = (typeof tOr === 'function' ? tOr('menu.splash3', 'Klaar') : 'Klaar');
     try { paintSplashTargets(dur / 1000, 1); } catch (_) {}
-    dismissSplashOverlay();
+    showTitleGate();
   };
 
   const tick = (now) => {
@@ -36196,20 +36582,20 @@ function bootGame() {
     const repairNotes = saveSanitizeNotes(beforeSave, save);
     persist();
     if (repairNotes.length && !hadCorruptPrimary && !window.__sfRecoveredBackup) {
-      userToast('Save gerepareerd: ' + repairNotes.slice(0, 2).join(' · '), 4200);
+      userToast(toastT('toast.saveRepaired', { notes: repairNotes.slice(0, 2).join(' · ') }, 'Save gerepareerd: ' + repairNotes.slice(0, 2).join(' · ')), 4200, { tone: 'ok' });
     }
     if (hadCorruptPrimary && !window.__sfRecoveredBackup) {
-      userToast('Corrupte hoofd-save overschreven — export blijft je vangnet bij URL-wissel', 4500);
+      userToast(toastT('toast.saveCorruptOverwritten', null, 'Corrupte hoofd-save overschreven — export blijft je vangnet bij URL-wissel'), 4500, { tone: 'warn' });
     }
   } catch (err) {
     console.error('[Stickman] save sanitize', err);
     if (applySaveFromBackupRaw()) {
       window.__sfRecoveredBackup = true;
-      userToast('Save hersteld uit backup na laadfout', 4800);
+      userToast(toastT('toast.saveRestoredAfterLoad', null, 'Save hersteld uit backup na laadfout'), 4800, { tone: 'ok' });
     } else {
       save = Object.assign({}, DEFAULT_SAVE);
       try { persistPrimaryOnly(); } catch (_) {}
-      userToast('Save kon niet geladen worden — nieuwe voortgang gestart (export backup als je die had)', 4800);
+      userToast(toastT('toast.saveLoadFailedFresh', null, 'Save kon niet geladen worden — nieuwe voortgang gestart (export backup als je die had)'), 4800, { tone: 'danger' });
     }
   }
   safeCall(() => dismissTunnelOverlayIfStatic(), 'overlay');
@@ -36261,7 +36647,7 @@ function bootGame() {
   } catch (_) {}
   if (window.__sfRecoveredBackup) {
     window.__sfRecoveredBackup = false;
-    safeCall(() => UI.toast('Save hersteld uit backup — je voortgang is veilig', 4200), 'toast');
+    safeCall(() => UI.toast(t('toast.saveRestoredSafe'), 4200, { tone: 'ok' }), 'toast');
   }
   AudioSys.desiredSong = 'menu';
   safeCall(() => { if (typeof AudioSys.applyVolumes === 'function') AudioSys.applyVolumes(); }, 'vol');
@@ -36276,7 +36662,7 @@ function bootGame() {
     try {
       const hub = document.querySelector('[data-hub]');
       if (hub && !hub.dataset.sfPressBound) {
-        userToast('Oude cache — menu reageert niet. Tik «Verse versie» in de dock.', 6500);
+        userToast(toastT('toast.staleCacheMenu', null, 'Oude cache — menu reageert niet. Tik «Verse versie» in de dock.'), 6500, { tone: 'danger' });
         document.getElementById('btnVerseVersie')?.classList.add('sw-update');
       }
     } catch (_) {}
@@ -36294,6 +36680,7 @@ function bootGame() {
     get state() { return state; },
     get swRev() { return SW_CACHE_REV; },
     startGame, save, Game, UI, recoverToMenu, syncPlayLayer,
+    enterHub: enterHubFromTitle,
     debug: typeof sfDebugScreen === 'function' ? sfDebugScreen : null,
     fixPlayLayer: () => (typeof sfDebugScreen === 'function' ? sfDebugScreen({ fix: true }) : null),
     goMenu: () => recoverToMenu({ force: true }),
@@ -36351,7 +36738,7 @@ function reportAppError(label) {
   window.__sfReportedErr = true;
   console.error(label);
   try {
-    if (typeof UI !== 'undefined' && UI.toast) UI.toast('Er ging iets mis — opgeslagen voortgang is veilig', 4000);
+    if (typeof UI !== 'undefined' && UI.toast) UI.toast(typeof t === 'function' ? t('toast.genericSafeError') : 'Er ging iets mis — opgeslagen voortgang is veilig', 4000, { tone: 'danger' });
   } catch (_) {}
 }
 window.addEventListener('error', (e) => {

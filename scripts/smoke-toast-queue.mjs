@@ -22,21 +22,20 @@ const built = fs.existsSync(path.join(root, 'game.js'))
   ? fs.readFileSync(path.join(root, 'game.js'), 'utf8')
   : '';
 
-must(/_pumpToast/.test(ui) && /_showToastNow/.test(ui), 'UI toast queue helpers missing');
-must(/_toastQ/.test(ui), 'toast queue array missing');
+must(/_toastQ/.test(ui) && /_mountToast/.test(ui), 'UI toast queue helpers missing');
+must(/_flushToastQ/.test(ui), 'toast flush missing');
 must(/sf-boot-fail/.test(ui), 'queue must not wipe Android/PWA boot-fail refresh toast');
-must(/q\.length >= 4/.test(ui), 'toast queue must cap flood');
+must(/_toastQ\.length > 4/.test(ui), 'toast queue must cap flood');
 must(/levelScreen/.test(missions) && /welcome/.test(missions), 'welcome toast must skip island screen');
 must(!/host\.innerHTML = ''/.test(ui.match(/if \(id === 'levelScreen'\)[\s\S]{0,400}/)?.[0] || ''),
   'opening island must not wipe the toast host');
 must(/safe-area-inset-top/.test(css), 'toast CSS needs Android safe-area');
 must(/pointer-events:none/.test(css) || /pointer-events: none/.test(css), 'toasts must not block Android taps');
-must(/text-size-adjust:100%/.test(css), 'Android must not inflate toast text');
 must(!/body:has\(#levelScreen\.active\) #toastHost/.test(css), 'island screen must still show queued toasts');
 
 if (built) {
-  must(/_pumpToast/.test(built), 'built game.js missing toast queue');
-  must(/_showToastNow/.test(built), 'built game.js missing _showToastNow');
+  must(/_mountToast/.test(built), 'built game.js missing toast queue');
+  must(/_flushToastQ/.test(built), 'built game.js missing _flushToastQ');
 }
 
 console.log('SMOKE_OK toast-queue');

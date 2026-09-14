@@ -257,7 +257,7 @@ class Game {
         try {
           if (!gameUiTimerOk(self)) return;
           self.banner(t('banner.satanIncoming'), 2.2, '#ff3040', 42);
-          UI.toast(t('toast.satanIncoming'), 3800);
+          UI.toast(t('toast.satanIncoming'), 3800, { tone: 'danger' });
         } catch (_) {}
       }, 900);
     }
@@ -827,7 +827,7 @@ class Game {
           setTimeout(() => {
             try {
               if (!gameUiTimerOk(self, { allowOver: true })) return;
-              UI.toast(t('toast.islandUnlock', { name: islandLabel(islandFromLevel(lv + 1), 'name'), cap: nCap }), 4200);
+              UI.toast(t('toast.islandUnlock', { name: islandLabel(islandFromLevel(lv + 1), 'name'), cap: nCap }), 4200, { tone: 'ok' });
             } catch (_) {}
           }, 1700);
         }
@@ -841,9 +841,9 @@ class Game {
           setTimeout(() => {
             try {
               if (!gameUiTimerOk(self, { allowOver: true })) return;
-              if (diff === 'normal') UI.toast(t('toast.diffUnlockNightmare'), 4800);
-              else if (diff === 'nightmare') UI.toast(t('toast.diffUnlockHell'), 4800);
-              else UI.toast(t('toast.diffHellCleared'), 4200);
+              if (diff === 'normal') UI.toast(t('toast.diffUnlockNightmare'), 4800, { tone: 'ok' });
+              else if (diff === 'nightmare') UI.toast(t('toast.diffUnlockHell'), 4800, { tone: 'ok' });
+              else UI.toast(t('toast.diffHellCleared'), 4200, { tone: 'ok' });
             } catch (_) {}
           }, 1900);
         }
@@ -875,7 +875,7 @@ class Game {
             if (!gameUiTimerOk(self, { allowOver: true })) return;
             UI.toast(eggBonus.duplicate
               ? t('toast.eggDuplicate', { name: eggBonus.def.name })
-              : t('toast.eggNew', { name: eggBonus.def.name, rar: rarityLabel(eggBonus.def.rarity) }), 3800);
+              : t('toast.eggNew', { name: eggBonus.def.name, rar: rarityLabel(eggBonus.def.rarity) }), 3800, { tone: 'ok' });
           } catch (_) {}
         }, 1200);
       }
@@ -902,7 +902,7 @@ class Game {
         setTimeout(() => {
           try {
             if (!gameUiTimerOk(self, { allowOver: true })) return;
-            UI.toast(t('toast.masterBuffGain'), 3800);
+            UI.toast(t('toast.masterBuffGain'), 3800, { tone: 'ok' });
           } catch (_) {}
         }, 1500);
       }
@@ -911,7 +911,7 @@ class Game {
         setTimeout(() => {
           try {
             if (!gameUiTimerOk(self, { allowOver: true })) return;
-            UI.toast(t('toast.satanHeatDanger'), 4200);
+            UI.toast(t('toast.satanHeatDanger'), 4200, { tone: 'danger' });
           } catch (_) {}
         }, gotMaster ? 3200 : 1500);
       } else if (satanSoon) {
@@ -919,7 +919,7 @@ class Game {
         setTimeout(() => {
           try {
             if (!gameUiTimerOk(self, { allowOver: true })) return;
-            UI.toast(t('toast.satanComingNext'), 4200);
+            UI.toast(t('toast.satanComingNext'), 4200, { tone: 'danger' });
           } catch (_) {}
         }, gotMaster ? 3200 : 1500);
       }
@@ -1074,7 +1074,7 @@ class Game {
         this.player.maxhp += hpB;
         this.player.hp += hpB;
       }
-      try { UI.toast(t('toast.dexDiscover', { rar: rarityLabel(sp.rarity), name: sp.name || m.spId, hp: hpB }), 3200); } catch (_) {}
+      try { UI.toast(t('toast.dexDiscover', { rar: rarityLabel(sp.rarity), name: sp.name || m.spId, hp: hpB }), 3200, { tone: 'ok' }); } catch (_) {}
     }
     if (m.spId && save.dex) {
       save.dex[m.spId] = (save.dex[m.spId] || 0) + 1;
@@ -1089,7 +1089,7 @@ class Game {
         spawnGamePet(this);
         noteRunLootPet(this.runLoot, tame.sp.name);
         this.banner(t('banner.pet', { name: tame.sp.name }), 2.2, tame.sp.c1, 36);
-        UI.toast(t('toast.petTamed', { name: tame.sp.name, cur: tame.kills, need: tame.need }), 4200);
+        UI.toast(t('toast.petTamed', { name: tame.sp.name, cur: tame.kills, need: tame.need }), 4200, { tone: 'ok' });
       }
     } catch (_) {}
     try { checkAchievements(); } catch (_) {}
@@ -1097,10 +1097,10 @@ class Game {
       if (countBefore < dexCount()) {
         const half = Math.ceil(SPECIES_ORDER.length / 2);
         if (countBefore < half && dexCount() >= half) {
-          UI.toast(t('toast.styleUnlockTome'), 3500);
+          UI.toast(t('toast.styleUnlockTome'), 3500, { tone: 'ok' });
         }
         if (tiersBefore < 4 && dexRarityTierCount() >= 4) {
-          UI.toast(t('toast.styleUnlockCrystal'), 3500);
+          UI.toast(t('toast.styleUnlockCrystal'), 3500, { tone: 'ok' });
         }
       }
     } catch (_) {}
@@ -1149,7 +1149,7 @@ class Game {
       try { ensureSatanSvg(); } catch (_) {}
       triggerSatanIntro(this, mon);
       this.floater(W / 2, Math.max(100, (this.advHudBottom || 120) + 24), t('hud.satanShort'), '#ff3040', 18);
-      UI.toast(t('toast.satanReflectHint'), 4200);
+      UI.toast(t('toast.satanReflectHint'), 4200, { tone: 'warn' });
       this.modeHintLine = IS_TOUCH ? t('hud.satanHintTouch') : t('hud.satanHintKb');
       this.hint = 8;
     } catch (err) {
@@ -1166,7 +1166,7 @@ class Game {
       clearSatanState(this);
       if (!won) return;
       this.banner(t('banner.satanWin'), 2.2, '#ffd75e', 46);
-      UI.toast(t('toast.satanWinTide'), 4200);
+      UI.toast(t('toast.satanWinTide'), 4200, { tone: 'ok' });
       try { AudioSys.sfx('win'); } catch (_) {}
       const self = this;
       setTimeout(() => {
@@ -1218,7 +1218,7 @@ class Game {
       }
       this.floater(W / 2, Math.max(100, (this.advHudBottom || 120) + 24), t('hud.tideBattleShort'), '#4a9fff', 18);
       if (!firstTide) {
-        UI.toast(t('toast.tideBattle', { name: mon.sp.name }), 3200);
+        UI.toast(t('toast.tideBattle', { name: mon.sp.name }), 3200, { tone: 'warn' });
       }
     } catch (err) {
       console.error('[TideBattle] start', err);
@@ -1276,13 +1276,13 @@ class Game {
         return;
       }
       this.banner(t('banner.tideBattleWin'), 2.2, '#4a9fff', 44);
-      UI.toast(t('toast.tideBattleWin', { xp, coins }), 4200);
+      UI.toast(t('toast.tideBattleWin', { xp, coins }), 4200, { tone: 'ok' });
       this.floater(W / 2, 140, `+${xp} XP · +${coins} PC`, '#4a9fff', 17);
       try { AudioSys.sfx('win'); } catch (_) {}
       checkAchievements();
       if (fromSatan && this.waveIdx < 0) {
         this.betweenT = 1.4;
-        try { UI.toast(t('toast.satanTideDone'), 3200); } catch (_) {}
+        try { UI.toast(t('toast.satanTideDone'), 3200, { tone: 'ok' }); } catch (_) {}
       }
     } catch (err) {
       console.error('[TideBattle] finish', err);
@@ -2208,11 +2208,11 @@ class Game {
           try { AudioSys.sfx('newmonster'); } catch (_) {}
         }
         const newStyle = STYLES.find(s => s.needLvl === save.lvl && styleUnlocked(s));
-        if (newStyle) { try { UI.toast(t('toast.styleUnlock', { name: styleLabel(newStyle) }), 3500); } catch (_) {} }
+        if (newStyle) { try { UI.toast(t('toast.styleUnlock', { name: styleLabel(newStyle) }), 3500, { tone: 'ok' }); } catch (_) {} }
         const newSkill = SKILLS.find(s => s.needLvl === save.lvl && skillUnlocked(s));
-        if (newSkill) { try { UI.toast(t('toast.skillUnlock', { name: skillLabel(newSkill) }), 3500); } catch (_) {} }
+        if (newSkill) { try { UI.toast(t('toast.skillUnlock', { name: skillLabel(newSkill) }), 3500, { tone: 'ok' }); } catch (_) {} }
         const newSuper = SUPERS.find(s => s.needLvl === save.lvl && superUnlocked(s));
-        if (newSuper) { try { UI.toast(t('toast.superUnlock', { name: superLabel(newSuper) }), 3500); } catch (_) {} }
+        if (newSuper) { try { UI.toast(t('toast.superUnlock', { name: superLabel(newSuper) }), 3500, { tone: 'ok' }); } catch (_) {} }
       } catch (lvlErr) {
         try { sfReportError('grantXP/level', lvlErr, 'Level-up hiccup — gevecht gaat door'); } catch (_) {}
         break;

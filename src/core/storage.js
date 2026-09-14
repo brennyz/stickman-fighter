@@ -5,9 +5,9 @@ const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const VERSION_UPDATE_SAVE_KEY = 'stickfighter_version_update_save_v1';
 const VERSION_UPDATE_FLAG_KEY = 'stickfighter_version_update_flag_v1';
 const SAVE_EXPORT_SCHEMA = 3;
-const APP_VERSION = '1.18.158';
+const APP_VERSION = '1.18.159';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 368;
+const SW_CACHE_REV = 369;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', petCoins: 0, dex: {}, summons: {}, pets: {}, activePet: null,
   eggPets: {}, activeEggPet: null, eggDaily: null,
   chestDaily: null, chestWeapons: {},
@@ -26,7 +26,7 @@ const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', petCoins: 0,
   showTouchPads: null,
   /** Keyboard legend on PC / when pads off (default on) */
   kbLegend: true,
-  reducedMotion: false, liteFx: false, highContrast: false, lang: null, lastPlay: null, tipsSeen: {},
+  reducedMotion: false, liteFx: false, highContrast: false, lang: null, playerTag: '', lastPlay: null, tipsSeen: {},
   stats: { kills: 0, advWins: 0, wallBestRun: 0, maxCombo: 0, maxKillStreak: 0, trainMaxCombo: 0, pickups: 0, bossKills: 0, vsMatches: 0, vsWins: 0, matsCoinBest: 0, summonCount: 0, killsSinceSummon: 0, petsTamed: 0, eggsHatched: 0, weaponFinishers: 0, tideBattleWins: 0, skillShards: 0, itemShards: 0, dailyBonusCount: 0 },
   achievements: {}, daily: null, vsPlayedIds: [], weaponMastery: {}, skillUpgrades: {}, itemUpgrades: {}, activeTechnique: 'spiral_orb', skill: 'spiral_orb', super: 'ketsbam', missionsIntroSeen: false };
 
@@ -940,12 +940,26 @@ function readSaveJson(raw) {
   }
 }
 
-function userToast(msg, ms) {
+function userToast(msg, ms, opts) {
   try {
-    if (typeof UI !== 'undefined' && UI.toast) UI.toast(msg, ms || 3200);
+    if (typeof UI !== 'undefined' && UI.toast) UI.toast(msg, ms || 3200, opts);
   } catch (err) {
     console.warn('[Stickman] toast', msg, err);
   }
+}
+
+function toastT(key, params, fallback) {
+  try {
+    if (typeof tOr === 'function') {
+      const s = tOr(key, fallback || '', params);
+      if (s) return s;
+    }
+    if (typeof t === 'function') {
+      const s = t(key, params);
+      if (s && s !== key) return s;
+    }
+  } catch (_) {}
+  return fallback || '';
 }
 
 function writeSaveStamp(json) {
@@ -992,7 +1006,7 @@ function persist() {
     if (json.length > 180000) {
       if (!window.__sfPersistWarn) {
         window.__sfPersistWarn = true;
-        try { UI.toast('Save bijna te groot — export in Instellingen', 4800); } catch (_) {}
+        try { UI.toast(toastT('toast.saveAlmostTooBig', null, 'Save bijna te groot — export in Instellingen'), 4800, { tone: 'warn' }); } catch (_) {}
       }
     }
     localStorage.setItem(SAVE_KEY, json);
@@ -1003,7 +1017,7 @@ function persist() {
     } catch (_) {}
     if (!backupOk && !window.__sfBackupWriteWarn) {
       window.__sfBackupWriteWarn = true;
-      userToast('Backup opslaan mislukt — export save in Instellingen (hoofd-save wel OK)', 5200);
+      userToast(toastT('toast.backupWriteFail', null, 'Backup opslaan mislukt — export save in Instellingen (hoofd-save wel OK)'), 5200, { tone: 'warn' });
     }
     writeSaveStamp(json);
     return true;
@@ -1016,8 +1030,8 @@ function persist() {
     if (!window.__sfPersistWarn) {
       window.__sfPersistWarn = true;
       userToast(backupSaved
-        ? 'Hoofd-save mislukt — backup wel bijgewerkt (export in Instellingen)'
-        : 'Opslaan mislukt — export save in Instellingen', 5200);
+        ? toastT('toast.persistPrimaryFail', null, 'Hoofd-save mislukt — backup wel bijgewerkt (export in Instellingen)')
+        : toastT('toast.persistFail', null, 'Opslaan mislukt — export save in Instellingen'), 5200, { tone: 'danger' });
     }
     return false;
   }
@@ -1050,8 +1064,8 @@ function persistOrToast(context) {
   if (!window.__sfPersistCtxWarn[key]) {
     window.__sfPersistCtxWarn[key] = true;
     userToast(context
-      ? `Opslaan mislukt (${context}) — export save in Instellingen`
-      : 'Opslaan mislukt — export save in Instellingen', 4200);
+      ? toastT('toast.persistFailCtx', { context }, `Opslaan mislukt (${context}) — export save in Instellingen`)
+      : toastT('toast.persistFail', null, 'Opslaan mislukt — export save in Instellingen'), 4200, { tone: 'warn' });
   }
   return false;
 }
@@ -1070,7 +1084,7 @@ function applySaveFromBackupRaw() {
 function restoreSaveFromBackup() {
   try {
     if (!applySaveFromBackupRaw()) {
-      userToast('Backup herstellen mislukt — export save als je die hebt', 4200);
+      userToast(toastT('toast.backupFailed', null, 'Backup herstellen mislukt — export save als je die hebt'), 4200, { tone: 'danger' });
       return false;
     }
     try { checkAchievements(); } catch (_) {}
@@ -1144,7 +1158,7 @@ function applyVersionUpdateSave() {
   try {
     save = sanitizeSave(stash.save);
     if (!persist()) {
-      userToast('Save geladen maar opslaan mislukt — export in Instellingen', 4200);
+      userToast(toastT('toast.persistFail', null, 'Save geladen maar opslaan mislukt — export in Instellingen'), 4200, { tone: 'danger' });
       return false;
     }
     clearVersionUpdateSave();
@@ -1196,6 +1210,17 @@ function sanitizeTipsSeen(raw) {
     out[k.slice(0, 48)] = raw[k] ? 1 : 0;
   }
   return out;
+}
+
+function sanitizePlayerTag(raw) {
+  let s = String(raw == null ? '' : raw);
+  s = s.replace(/<[^>]*>/g, '');
+  try {
+    s = s.replace(/[^\p{L}\p{N} _.'-]/gu, '');
+  } catch (_) {
+    s = s.replace(/[^\w\s.'-]/g, '');
+  }
+  return s.replace(/\s+/g, ' ').trim().slice(0, 16);
 }
 
 /** Corrupte / gemanipuleerde saves veilig maken (localStorage + import). */
@@ -1525,6 +1550,7 @@ function sanitizeSave(s) {
   if (out.lang != null && typeof SUPPORTED_LANGS !== 'undefined' && !SUPPORTED_LANGS.includes(out.lang)) {
     out.lang = null;
   }
+  out.playerTag = sanitizePlayerTag(out.playerTag);
 
   out.stats = Object.assign({}, DEFAULT_SAVE.stats, out.stats || {});
   const cleanStats = {};

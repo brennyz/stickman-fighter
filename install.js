@@ -89,8 +89,8 @@
 
     if (doneMsg) doneMsg.style.display = isStandalone ? 'block' : 'none';
     if (androidBtn) androidBtn.style.display = (!isStandalone && deferredPrompt) ? 'flex' : 'none';
-    if (androidSteps) androidSteps.style.display = (!isStandalone && isAndroid && !deferredPrompt) ? 'block' : 'none';
-    if (iosSteps) iosSteps.style.display = (!isStandalone && isIOS) ? 'block' : 'none';
+    if (androidSteps) androidSteps.style.display = (!isStandalone && (isAndroid || isIOS) && !deferredPrompt) ? 'block' : 'none';
+    if (iosSteps) iosSteps.style.display = 'none';
     if (desktopSteps) desktopSteps.style.display = (!isStandalone && !isIOS && !isAndroid && !deferredPrompt) ? 'block' : 'none';
     if (fileNote) fileNote.style.display = (location.protocol === 'file:') ? 'block' : 'none';
     refreshInstallCacheLine();

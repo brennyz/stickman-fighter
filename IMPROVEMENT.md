@@ -1,9 +1,10 @@
-| 2026-09-14 | **parked** | #259 P1 landing (SPELEN + SATAN + floaters + train hit-reg + VERLOREN). Hit-reg owned here — geen rewrite t.o.v. draft #261. Wacht «merge». **v1.18.158 / SW v368**. |
+| 2026-09-14 | **merge main** | #259 P1 landing + #260 toast/title-gate. Hit-reg ongemoeid. **v1.18.159 / SW v369**. |
 | 2026-09-14 | **train hit-reg** | Training: capsule-hurtbox + face-naar-robot zodat W/joy-up J/K/L/U RabbitRobot raken; floaters niet links clippen; resultaat VERLOREN / YOU LOST. **v1.18.158 / SW v368**. |
+| 2026-09-14 | **title-gate** | SPELEN eerst; splash-poppetjes groter; naam optioneel. **v1.18.157 / SW v367**. |
 | 2026-09-14 | **P1 entry** | speel.html: alleen het install-blok van dit apparaat; Android ziet geen iPad. SPELEN blijft hero. **v1.18.157 / SW v367**. |
-| 2026-09-14 | **toast queue** | Eén toast tegelijk (wachtrij), Android Chrome/TWA = dezelfde HTML onder safe-area. Geen stapel. **v1.18.156 / SW v366**. |
-| 2026-09-14 | **satan look** | SATAN-kaart: dikkere duivel (geen aura-insect), groter portret, korte copy, hitte-balk zonder dubbele tekst. **v1.18.155 / SW v365**. |
-| 2026-09-14 | **island polish** | HEAT/SATAN-kaarten: geen sf-icon-broken (skip harden + SVG size + fallback). Schade-floaters ruimer + −N merge. **v1.18.154 / SW v364**. |
+| 2026-09-14 | **toast/UI** | Toast-queue + toon (ok/warn/danger) + tik-weg. **v1.18.156 / SW v366**. |
+| 2026-09-14 | **satan look** | SATAN-kaart: dikkere duivel, groter portret, korte copy. **v1.18.155 / SW v365**. |
+| 2026-09-14 | **island polish** | HEAT/SATAN-kaarten + floaters. **v1.18.154 / SW v364**. |
 | 2026-09-14 | **playtest P1** | Android-first: landing fold + NL-first hub; trainLostTip + energy/iframe copy; opener 2-mob + robot block/HP readable. **v1.18.153 / SW v363**. |
 | 2026-08-17 | **merge** | Mega-merge: #247 light-FX + #246 versus-stubs + #240 dawnblade (roster blijft retired) · **v1.18.152 / SW v362**. |
 | 2026-08-17 | **merge** | LIVE FF: d8 PWA + d20 health + d13 missies + d2 training + d11 nav + d19 muur + d7 save + d14 FX · **v1.18.151 / SW v361**. |
@@ -136,7 +137,7 @@ Schrijf **1–3 regels** per sessie: datum, d#, wat, versie.
 
 | Datum (UTC) | d# | Update |
 |-------------|-----|--------|
-| 2026-09-14 | — | PARKED: #259 P1 landing v1.18.158/SW368. Hit-reg owned here; #261 draft overlaps — geen herschrijven. Wacht «merge». |
+| 2026-09-14 | — | MERGE MAIN: #259 + #260 → v1.18.159 / SW 369. Hit-reg gehouden. #261 closed. #256 store-draft overgeslagen. |
 | 2026-09-14 | — | Training hit-reg: capsule + face-naar-robot; floater left-clamp; YOU LOST/VERLOREN. v1.18.158 / SW 368. |
 | 2026-09-14 | — | P1 entry: één install-blok per apparaat, geen iPad op Android. v1.18.157 / SW 367. |
 | 2026-09-14 | — | Toast-wachtrij: één tegelijk, Android = HTML onder statusbalk. v1.18.156 / SW 366. |

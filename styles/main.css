@@ -1535,11 +1535,53 @@
   }
   .sf-splash.is-done { opacity:0; visibility:hidden; pointer-events:none; }
   .sf-splash-canvas {
-    display:block; width:min(92vw, var(--ui-rail, 520px)); max-width:min(92vw, 640px);
-    height:auto; aspect-ratio:480/140;
+    display:block; width:min(94vw, 720px); max-width:min(94vw, 720px);
+    height:auto; aspect-ratio:720/360;
     image-rendering:pixelated; border:2px solid rgba(168,140,80,.28);
     box-shadow:0 10px 28px rgba(0,0,0,.45); background:#4a6a82;
   }
+  .sf-splash.is-title .sf-splash-canvas {
+    position:absolute; top:0; left:0; right:0;
+    width:100%; max-width:none; height:46vh; aspect-ratio:auto;
+    border:none; box-shadow:none; border-radius:0;
+  }
+  .sf-splash.is-title .sf-splash-title {
+    position:relative; z-index:1; margin-top:calc(46vh - 8px);
+    font-size:clamp(34px, 11vw, 56px);
+  }
+  .sf-splash.is-title .sf-title-gate { position:relative; z-index:1; }
+  .sf-splash.is-title .sf-splash-bar,
+  .sf-splash.is-title .sf-splash-sub { display:none; }
+  .sf-title-gate {
+    display:flex; flex-direction:column; align-items:center; gap:10px;
+    width:min(92vw, 400px); margin-top:4px;
+  }
+  .sf-title-gate[hidden],
+  .sf-splash .sf-title-continue[hidden] { display:none !important; }
+  .sf-title-greet {
+    margin:0; text-align:center;
+    font-family:'Bangers', cursive; font-size:clamp(22px, 6vw, 32px);
+    letter-spacing:1px; color:#ffd75e; text-shadow:2px 2px 0 #2a2418;
+  }
+  .sf-title-greet[hidden] { display:none; }
+  .sf-title-name-wrap {
+    display:flex; flex-direction:column; gap:6px; width:100%;
+    font-size:13px; font-weight:800; color:#cfe0ff; text-align:left;
+  }
+  .sf-title-name-wrap input {
+    width:100%; min-height:52px; border-radius:14px; padding:12px 14px;
+    font-size:18px; font-weight:800; color:#eef2ff;
+    background:#0a0d18; border:2px solid rgba(255,215,94,.4);
+    box-sizing:border-box;
+  }
+  .sf-title-note { margin:0; font-size:13px; line-height:1.4; color:#8a98a4; text-align:center; }
+  .sf-splash .sf-title-start,
+  .sf-splash .sf-title-continue {
+    width:100%; min-height:58px; justify-content:center;
+    font-size:20px; border-radius:16px;
+  }
+  .sf-splash .sf-title-start small,
+  .sf-splash .sf-title-continue small { display:block; font-size:12px; opacity:.85; font-weight:700; }
   .tunnel-boot-strip { aspect-ratio:480/100; margin-bottom:4px; }
   .sf-splash-title {
     font-family:'Bangers', cursive; font-size:clamp(26px, 8vw, 44px); letter-spacing:2px;
@@ -1557,13 +1599,23 @@
   }
   .sf-splash-sub { font-size:clamp(12px, 3.2vw, 15px); font-weight:700; color:#8a98a4; letter-spacing:.04em; }
   @media (min-width: 768px) {
-    .sf-splash-canvas { width: min(78vw, 640px); }
+    .sf-splash-canvas { width: min(82vw, 720px); }
     .sf-splash-bar { width: min(52vw, 420px); }
   }
+  @media (max-height: 720px) {
+    .sf-splash.is-title .sf-splash-canvas { height: 34vh; }
+    .sf-splash.is-title .sf-splash-title { margin-top: calc(32vh - 4px); }
+  }
   @media (orientation: landscape) and (max-height: 500px) {
-    .sf-splash { gap: 8px; }
-    .sf-splash-canvas { width: min(58vw, 520px); }
+    .sf-splash { gap: 6px; padding-top: 8px; }
+    .sf-splash-canvas { width: min(52vw, 560px); }
     .sf-splash-title { font-size: clamp(22px, 5.5vw, 34px); }
+    .sf-splash.is-title .sf-splash-canvas { height: 28vh; width: 100%; max-width: none; }
+    .sf-splash.is-title .sf-splash-title { margin-top: calc(26vh - 4px); font-size: clamp(22px, 5.5vw, 34px); }
+    .sf-title-name-wrap input { min-height: 44px; font-size: 16px; }
+    .sf-splash .sf-title-start,
+    .sf-splash .sf-title-continue { min-height: 48px; }
+    .sf-title-note { display: none; }
   }
   body.reduced-motion .sf-splash { transition: none; }
   body.reduced-motion #tunnelBootOverlay .boot-spinner { animation-duration: 1.4s; }
@@ -1890,18 +1942,25 @@
       text-shadow:0 3px 0 #a86818; }
   #resultScreen .btn { margin-top:8px; }
 
-  /* Android Chrome/TWA: zelfde HTML-toast, onder statusbalk, geen tik-blokkade. Eén tegelijk (JS-queue). */
+  /* Android Chrome/TWA: HTML-toast onder statusbalk. Queue + toon (ok/warn/danger) van #260. */
   #toastHost { position:fixed; left:50%; top:max(12px, calc(env(safe-area-inset-top, 0px) + 10px));
       transform:translateX(-50%); z-index:40; pointer-events:none;
-      display:flex; flex-direction:column; gap:0; align-items:center;
+      display:flex; flex-direction:column; gap:8px; align-items:center;
       width:min(92vw, 420px); max-width:calc(100vw - 24px); }
   body:not(.is-playing) #toastHost { top:max(70px, calc(env(safe-area-inset-top, 0px) + 56px)); }
-  .toast { background:rgba(15,20,40,.92); border:1px solid rgba(255,215,94,.45); color:#fff;
+  body.is-playing #toastHost { top:max(86px, calc(env(safe-area-inset-top, 0px) + 70px)); }
+  .toast { background:rgba(10,14,28,.94); border:1.5px solid rgba(255,215,94,.55); color:#fff;
       padding:12px 16px; border-radius:14px; font-weight:800; font-size:15px; line-height:1.35;
-      box-shadow:0 8px 24px rgba(0,0,0,.4); animation: toastIn .35s ease; width:100%; box-sizing:border-box;
-      text-align:center; word-spacing:.04em; user-select:none; -webkit-user-select:none;
-      -webkit-text-size-adjust:100%; text-size-adjust:100%; }
-  @keyframes toastIn { from { opacity:0; transform:translateY(-12px); } to { opacity:1; transform:none; } }
+      box-shadow:0 10px 28px rgba(0,0,0,.5); animation: toastIn .28s ease; width:100%; box-sizing:border-box;
+      text-align:center; pointer-events:auto; cursor:pointer; touch-action:manipulation;
+      -webkit-tap-highlight-color:transparent; letter-spacing:.01em; user-select:none; }
+  .toast-ok { border-color:rgba(124,252,138,.6); }
+  .toast-warn { border-color:rgba(255,215,94,.75); }
+  .toast-danger { border-color:rgba(255,107,107,.7); background:rgba(36,12,16,.95); }
+  .toast-bump { animation: toastBump .28s ease; }
+  body.big-touch .toast { font-size:16px; padding:13px 18px; }
+  @keyframes toastIn { from { opacity:0; transform:translateY(-10px); } to { opacity:1; transform:none; } }
+  @keyframes toastBump { 0% { transform:scale(1); } 40% { transform:scale(1.03); } 100% { transform:scale(1); } }
 
   .version-update-overlay { position:fixed; inset:0; z-index:55; display:flex; align-items:center; justify-content:center;
       padding:max(16px, env(safe-area-inset-top)) 16px max(16px, env(safe-area-inset-bottom));
@@ -2028,6 +2087,22 @@
   .pause-audio-quick { display:flex; flex-wrap:wrap; gap:8px; justify-content:center; margin:10px 0 2px; }
   .pause-audio-quick .btn.tog { flex:1 1 30%; min-width:92px; min-height:40px; font-size:12px; padding:8px 10px; justify-content:center; }
   .settings-card .tog { width:100%; margin-top:8px; justify-content:center; }
+  .settings-fold {
+    width:min(92vw,480px); margin:8px 0;
+    background:rgba(255,255,255,.05); border:1px solid rgba(255,255,255,.12);
+    border-radius:16px; padding:4px 14px 8px;
+  }
+  .settings-fold > summary {
+    cursor:pointer; list-style:none; padding:12px 4px;
+    font-weight:800; color:#ffd75e; font-size:15px;
+  }
+  .settings-fold > summary::-webkit-details-marker { display:none; }
+  .settings-fold > summary::after { content:' ▾'; opacity:.7; font-weight:700; }
+  .settings-fold[open] > summary::after { content:' ▴'; }
+  .settings-fold .settings-fold-body {
+    width:100%; margin:0; padding:8px 2px 6px;
+    background:transparent; border:none;
+  }
 
   .char-grid-scroll { width:min(94vw, 720px); max-height:min(50vh, 400px); overflow-y:auto;
       overflow-x:hidden; margin:8px 0 12px; padding:4px 2px 8px; -webkit-overflow-scrolling:touch;
@@ -2270,6 +2345,7 @@
   body.high-contrast #menuDailyHint { color: #e8f0ff; opacity: 1; }
   body.high-contrast #a11yStatusLine { color: #f0f4ff; border-color: rgba(255,255,255,.35); }
   body.high-contrast .hub-tile { border-width: 2px; }
+  body.high-contrast .toast { border-width: 2px; background: #0a1020; color: #fff; font-weight: 900; }
   body.high-contrast .island-info-chip.onboard { color: #e8f4ff; border-color: rgba(124,245,255,.55); }
   body.reduced-motion .toast { animation: none; }
   body.high-contrast #netStatus { font-weight: 900; border-width: 2px; }
@@ -2518,6 +2594,7 @@
     #charSelectScreen.char-select-arena .char-arena-featured,
     .char-arena-preview { border-width: 2px; border-color: rgba(255,255,255,.35); }
     #menuLangBar .dex-filter-btn { border-width: 2px; font-weight: 900; }
+    .toast { border-width: 2px; background: #0a1020; color: #fff; font-weight: 900; }
     .char-fight-btn { border: 2px solid rgba(255,255,255,.45); }
     .level-roll-sum, .level-roll-outcome { color: #e8f0ff; font-weight: 800; }
     .level-roll-flash-card { border-width: 3px; border-color: rgba(255,215,94,.75); }
