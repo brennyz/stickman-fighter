@@ -910,6 +910,10 @@
   ],
   "sessionLog": [
     {
+      "at": "2026-09-14T19:45:31Z",
+      "summary": "Mega-merge coverage green except pre-existing main spiral-orb/dex smokes. Stack SHA on cursor/mega-merge-stack-f6c0; skip #279."
+    },
+    {
       "at": "2026-09-14T19:36:07Z",
       "summary": "Mega-merge stack conflict-resolved onto main-tip: listed PRs minus #279. v1.18.166 / SW 376."
     },
@@ -1004,10 +1008,6 @@
     {
       "at": "2026-09-14T12:03:51Z",
       "summary": "MERGED #257 → origin/main 0d3bfff · v1.18.153 / SW 363 · Pages ~1–3 min"
-    },
-    {
-      "at": "2026-09-14T11:03:54Z",
-      "summary": "Playtest P1: startscherm fold + NL hub, combat feedback/opener, trainLostTip · v1.18.153 / SW 363"
     }
   ],
   "implementedFeaturesSummary": "d18 char select deel 1+2 (v1.11.1-2); Mats coinrun + shuriken mik/vliegers + anti-spam (v1.12.0); speel.html (v1.12.2+). Zie HANDOFF-ZOEKINDEX.md en improvement-d20-bag.json userFeatureLog.",
