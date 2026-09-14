@@ -91,6 +91,13 @@
   },
   "userWishlist": [
     {
+      "id": "w-20260914T123000",
+      "from": "user",
+      "text": "Nee eerst verder verbeteren (2026-09-14): iOS/iPad dingen eruit — Android-first UI heeft die niet nodig; haal informatie weg die er niet toe doet; UI/UX overal dezelfde taal (geen mix iPad/Safari/Android).",
+      "status": "done-in-code",
+      "updated": "2026-09-14"
+    },
+    {
       "id": "w-20260914T121200",
       "from": "user",
       "text": "Verbeter de game, toast, UI/UX, alles (2026-09-14). Complementary to merged #257 — not a start-screen/opener/training rewrite. Toast queue + de-dupe + tap-dismiss + a11y; i18n leftover hardcoded toasts; Android-readable toast/UI. Do not touch Versus/nuclear CSS/share-URL/iOS/secrets.",
@@ -544,6 +551,10 @@
   ],
   "sessionLog": [
     {
+      "at": "2026-09-14T12:35:10Z",
+      "summary": "Android-first copy: iPad/iOS/Safari eruit uit settings, speel.html, install, tips en share · v1.18.155 / SW 365"
+    },
+    {
       "at": "2026-09-14T12:27:53Z",
       "summary": "Toast/UI polish: queue + tap-dismiss + leftover i18n + Android-leesbare notices · v1.18.154 / SW 364"
     },
@@ -638,10 +649,6 @@
     {
       "at": "2026-08-17T06:41:19Z",
       "summary": "d8 PWA: SW wacht op menu, update-banner tikt alleen op hub — klaar voor super-merge"
-    },
-    {
-      "at": "2026-08-17T06:33:20Z",
-      "summary": "Director-protocol ontvangen — d20-claim via CLI, niet mergen"
     }
   ],
   "implementedFeaturesSummary": "d18 char select deel 1+2 (v1.11.1-2); Mats coinrun + shuriken mik/vliegers + anti-spam (v1.12.0); speel.html (v1.12.2+). Zie HANDOFF-ZOEKINDEX.md en improvement-d20-bag.json userFeatureLog.",

@@ -51,8 +51,25 @@ must(/pointer-events:\s*auto/.test(css.match(/\.toast \{[\s\S]*?\}/)?.[0] || '')
 must(/t\('toast\.unknownMode'\)/.test(start), 'unknownMode must use i18n');
 must(/t\('toast\.noBackup'\)/.test(start), 'backup toasts must use i18n');
 must(/toastT\(/.test(storage), 'storage leftover toasts should use toastT');
-must(/APP_VERSION = '1\.18\.154'/.test(storage), 'version should be 1.18.154');
-must(/SW_CACHE_REV = 364/.test(storage), 'SW rev should be 364');
+must(/APP_VERSION = '1\.18\.155'/.test(storage), 'version should be 1.18.155');
+must(/SW_CACHE_REV = 365/.test(storage), 'SW rev should be 365');
+
+const i18n = fs.readFileSync(path.join(root, 'src/i18n/i18n.js'), 'utf8');
+const speel = fs.readFileSync(path.join(root, 'speel.html'), 'utf8');
+must(!/Trillen \(iPad\)/.test(index), 'settings HTML still says Trillen (iPad)');
+must(!/Grote knoppen \(iPad\)/.test(index), 'settings HTML still says Grote knoppen (iPad)');
+must(!/Lite FX \(iPad/.test(index), 'settings HTML still says Lite FX (iPad)');
+must(!/FX \+ iOS/.test(index), 'settings HTML still mentions iOS motion');
+must(!/id="installIosSteps"/.test(index), 'install iOS steps should be gone');
+must(!/id="stepsIos"/.test(speel), 'speel.html iOS install card should be gone');
+must(!/iPad \/ iPhone/.test(speel), 'speel.html still advertises iPad install');
+must(!/haptics: 'Trillen \(iPad\)'/.test(i18n), 'i18n settings.haptics still iPad');
+must(!/bigTouch: 'Grote knoppen \(iPad\)'/.test(i18n), 'i18n settings.bigTouch still iPad');
+must(!/versusSub: 'Lokaal · iPad/.test(i18n), 'menu.versusSub still iPad');
+must(!/2P op iPad/.test(catalog), 'catalog d20 tip still iPad');
+must(!/handy on iPad/.test(catalog), 'EN catalog still says handy on iPad');
+must(!/Android \+ iPad/.test(ui), 'menu play-link still says Android + iPad');
+must(!/Safari → Delen/.test(ui), 'hosting hint still teaches Safari Add to Home');
 
 if (built) {
   must(/_toastQ/.test(built), 'built game.js missing toast queue');

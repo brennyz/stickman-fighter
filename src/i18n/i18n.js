@@ -8,7 +8,7 @@ const I18N = {
     common: { backHome: 'Terug naar menu', ok: 'Begrepen!', offline: 'Offline' },
     menu: {
       continue: 'Verder spelen', adventure: 'Avontuur', adventureSub: 'Verhaal · eilanden · bazen',
-      arcade: 'Arcade', arcadeSub: 'Training · Muur · Muntjes', versus: '2 spelers', versusSub: 'Lokaal · iPad liggend',
+      arcade: 'Arcade', arcadeSub: 'Training · Muur · Muntjes', versus: '2 spelers', versusSub: 'Lokaal',
       collect: 'Collectie', collectSub: 'Wapens · stijl · boek', music: 'Muziek', missions: 'Missies',
       summons: 'Summons', summonsSub: 'Dagelijkse kist · wapen & pet',
       options: 'Opties', tips: 'Tips', fresh: 'Verse versie', install: 'Zet in app-lade', installSub: 'Één icoon op je beginscherm',
@@ -46,14 +46,15 @@ const I18N = {
       xp: '+{xp} XP verdiend · nu Lv {lvl} ({cur}/{need} XP)' },
     settings: {
       title: 'Instellingen', sub: 'Geluid, trilling & HUD — opgeslagen op dit apparaat',
-      lang: 'Taal / Language', music: 'Muziek', sfx: 'Effecten', shake: 'Schermschok', haptics: 'Trillen (iPad)',
-      comboHud: 'Combo-HUD', bigTouch: 'Grote knoppen (iPad)',
+      lang: 'Taal', music: 'Muziek', sfx: 'Effecten', shake: 'Schermschok', haptics: 'Trillen',
+      comboHud: 'Combo-HUD', bigTouch: 'Grote knoppen',
       kbLegend: 'Toetsen-legenda (PC)', showTouchPads: 'Touch-knoppen altijd',
-      reducedMotion: 'Minder beweging (FX + iOS)',
-      liteFx: 'Lite FX (iPad sneller)', highContrast: 'Hoog contrast tekst', restoreBackup: 'Herstel save uit backup',
-      a11yMotionOn: 'Minder beweging: aan', a11yMotionOs: 'Minder beweging: via iOS/OS',
-      a11yContrastOn: 'Hoog contrast: aan', a11yContrastOs: 'Hoog contrast: via iOS/OS',
-      a11yDefault: 'Toegankelijkheid: standaard — schakel hierboven of via iOS Weergave',
+      reducedMotion: 'Minder beweging',
+      liteFx: 'Lite FX', highContrast: 'Hoog contrast tekst', restoreBackup: 'Herstel save uit backup',
+      a11yMotionOn: 'Minder beweging: aan', a11yMotionOs: 'Minder beweging: via systeem',
+      a11yContrastOn: 'Hoog contrast: aan', a11yContrastOs: 'Hoog contrast: via systeem',
+      a11yDefault: 'Toegankelijkheid: standaard — schakel hierboven of in je telefoon-instellingen',
+      a11yTip: 'Minder beweging = rustigere banners. Hoog contrast = dikkere randen. Lite FX = soepeler op telefoon.',
       sfxSamplesOn: 'Online SFX: Kenney CC0 geladen',
       sfxSamplesLoad: 'Online SFX: laden… (synth fallback)',
       sfxSamplesOff: 'Online SFX: offline — synth fallback',
@@ -88,7 +89,7 @@ const I18N = {
     audio: {
       musicOff: 'Muziek uit', sfxOff: 'Geluid uit', musicPct: 'Muziek {pct}%', sfxPct: 'SFX {pct}%',
       allMuted: 'Alles stil', pauseDuck: 'BGM zacht', pauseTrack: 'Track: {track}',
-      ctxSuspended: 'Tik slider voor geluid (iPad)',
+      ctxSuspended: 'Tik slider voor geluid',
       track: { menu: 'Menu', menu2: 'Menu 2', menu3: 'Menu 3', menuArcade: 'Arcade', menuHero: 'Hero', menuDream: 'Dream',
         battle: 'Gevecht', elite: 'Elite', boss: 'Baas', wall: 'Muur', training: 'Training', coinrun: 'Mats' },
     },
@@ -98,7 +99,7 @@ const I18N = {
     common: { backHome: 'Back to menu', ok: 'Got it!', offline: 'Offline' },
     menu: {
       continue: 'Continue', adventure: 'Adventure', adventureSub: 'Story · islands · bosses',
-      arcade: 'Arcade', arcadeSub: 'Training · Wall · Coins', versus: '2 players', versusSub: 'Local · iPad landscape',
+      arcade: 'Arcade', arcadeSub: 'Training · Wall · Coins', versus: '2 players', versusSub: 'Local',
       collect: 'Collection', collectSub: 'Weapons · style · book', music: 'Music', missions: 'Missions',
       summons: 'Summons', summonsSub: 'Daily chest · weapon & pet',
       options: 'Options', tips: 'Tips', fresh: 'Fresh version', install: 'Add to home screen', installSub: 'One icon on your device',
@@ -136,14 +137,15 @@ const I18N = {
       xp: '+{xp} XP earned · now Lv {lvl} ({cur}/{need} XP)' },
     settings: {
       title: 'Settings', sub: 'Sound, haptics & HUD — saved on this device',
-      lang: 'Language / Taal', music: 'Music', sfx: 'Effects', shake: 'Screen shake', haptics: 'Haptics (iPad)',
-      comboHud: 'Combo HUD', bigTouch: 'Big buttons (iPad)',
+      lang: 'Language', music: 'Music', sfx: 'Effects', shake: 'Screen shake', haptics: 'Haptics',
+      comboHud: 'Combo HUD', bigTouch: 'Big buttons',
       kbLegend: 'Keyboard legend (PC)', showTouchPads: 'Always show touch pads',
-      reducedMotion: 'Reduce motion (FX + iOS)',
-      liteFx: 'Lite FX (faster iPad)', highContrast: 'High contrast text', restoreBackup: 'Restore save from backup',
-      a11yMotionOn: 'Reduce motion: on', a11yMotionOs: 'Reduce motion: via iOS/OS',
-      a11yContrastOn: 'High contrast: on', a11yContrastOs: 'High contrast: via iOS/OS',
-      a11yDefault: 'Accessibility: default — toggle above or via iOS Display settings',
+      reducedMotion: 'Reduce motion',
+      liteFx: 'Lite FX', highContrast: 'High contrast text', restoreBackup: 'Restore save from backup',
+      a11yMotionOn: 'Reduce motion: on', a11yMotionOs: 'Reduce motion: via system',
+      a11yContrastOn: 'High contrast: on', a11yContrastOs: 'High contrast: via system',
+      a11yDefault: 'Accessibility: default — toggle above or in your phone settings',
+      a11yTip: 'Reduce motion = calmer banners. High contrast = thicker borders. Lite FX = smoother on phone.',
       sfxSamplesOn: 'Online SFX: Kenney CC0 loaded',
       sfxSamplesLoad: 'Online SFX: loading… (synth fallback)',
       sfxSamplesOff: 'Online SFX: offline — synth fallback',
@@ -178,7 +180,7 @@ const I18N = {
     audio: {
       musicOff: 'Music off', sfxOff: 'Sound off', musicPct: 'Music {pct}%', sfxPct: 'SFX {pct}%',
       allMuted: 'All muted', pauseDuck: 'BGM ducked', pauseTrack: 'Track: {track}',
-      ctxSuspended: 'Tap slider to wake audio (iPad)',
+      ctxSuspended: 'Tap slider to wake audio',
       track: { menu: 'Menu', menu2: 'Menu 2', menu3: 'Menu 3', menuArcade: 'Arcade', menuHero: 'Hero', menuDream: 'Dream',
         battle: 'Battle', elite: 'Elite', boss: 'Boss', wall: 'Wall', training: 'Training', coinrun: 'Mats' },
     },
@@ -188,7 +190,7 @@ const I18N = {
     common: { backHome: 'Zurück zum Menü', ok: 'Verstanden!', offline: 'Offline' },
     menu: {
       continue: 'Weiterspielen', adventure: 'Abenteuer', adventureSub: 'Story · Inseln · Bosse',
-      arcade: 'Arcade', arcadeSub: 'Training · Mauer · Münzen', versus: '2 Spieler', versusSub: 'Lokal · iPad quer',
+      arcade: 'Arcade', arcadeSub: 'Training · Mauer · Münzen', versus: '2 Spieler', versusSub: 'Lokal',
       collect: 'Sammlung', collectSub: 'Waffen · Stil · Buch', music: 'Musik', missions: 'Missionen',
       options: 'Optionen', tips: 'Tipps', fresh: 'Neue Version', install: 'Zum Home-Bildschirm', installSub: 'Ein Icon auf dem Gerät',
       pressStart: 'insert coin', missionReady: 'Mission bereit', dayBonus: 'Tagesbonus',
@@ -221,8 +223,8 @@ const I18N = {
       xp: '+{xp} XP · jetzt Lv {lvl} ({cur}/{need} XP)' },
     settings: {
       title: 'Einstellungen', sub: 'Sound, Vibration & HUD — auf diesem Gerät gespeichert',
-      lang: 'Sprache / Language', music: 'Musik', sfx: 'Effekte', shake: 'Bildschirmshake', haptics: 'Vibration (iPad)',
-      comboHud: 'Combo-HUD', bigTouch: 'Große Tasten (iPad)',
+      lang: 'Sprache', music: 'Musik', sfx: 'Effekte', shake: 'Bildschirmshake', haptics: 'Vibration',
+      comboHud: 'Combo-HUD', bigTouch: 'Große Tasten',
       kbLegend: 'Tastatur-Legende (PC)', showTouchPads: 'Touch-Tasten immer',
       reducedMotion: 'Weniger Bewegung',
       liteFx: 'Lite FX (schneller)', highContrast: 'Hoher Kontrast', restoreBackup: 'Save aus Backup',
@@ -260,7 +262,7 @@ const I18N = {
     common: { backHome: 'Retour au menu', ok: 'Compris !', offline: 'Hors ligne' },
     menu: {
       continue: 'Continuer', adventure: 'Aventure', adventureSub: 'Histoire · îles · boss',
-      arcade: 'Arcade', arcadeSub: 'Entraînement · Mur · Pièces', versus: '2 joueurs', versusSub: 'Local · iPad paysage',
+      arcade: 'Arcade', arcadeSub: 'Entraînement · Mur · Pièces', versus: '2 joueurs', versusSub: 'Local',
       collect: 'Collection', collectSub: 'Armes · style · bestiaire', music: 'Musique', missions: 'Missions',
       options: 'Options', tips: 'Astuces', fresh: 'Version fraîche', install: 'Ajouter à l\'écran d\'accueil', installSub: 'Une icône sur l\'appareil',
       pressStart: 'insert coin', missionReady: 'mission prête', dayBonus: 'Bonus du jour',
@@ -293,8 +295,8 @@ const I18N = {
       xp: '+{xp} XP · Lv {lvl} ({cur}/{need} XP)' },
     settings: {
       title: 'Options', sub: 'Son, vibrations & HUD — sauvegardé sur cet appareil',
-      lang: 'Langue / Language', music: 'Musique', sfx: 'Effets', shake: 'Secousse écran', haptics: 'Vibration (iPad)',
-      comboHud: 'HUD combo', bigTouch: 'Gros boutons (iPad)',
+      lang: 'Langue', music: 'Musique', sfx: 'Effets', shake: 'Secousse écran', haptics: 'Vibration',
+      comboHud: 'HUD combo', bigTouch: 'Gros boutons',
       kbLegend: 'Légende clavier (PC)', showTouchPads: 'Toujours boutons tactile',
       reducedMotion: 'Moins de mouvement',
       liteFx: 'Lite FX (plus rapide)', highContrast: 'Contraste élevé', restoreBackup: 'Restaurer backup',
@@ -332,7 +334,7 @@ const I18N = {
     common: { backHome: 'Volver al menú', ok: '¡Entendido!', offline: 'Sin conexión' },
     menu: {
       continue: 'Continuar', adventure: 'Aventura', adventureSub: 'Historia · islas · jefes',
-      arcade: 'Arcade', arcadeSub: 'Entrenamiento · Muro · Monedas', versus: '2 jugadores', versusSub: 'Local · iPad horizontal',
+      arcade: 'Arcade', arcadeSub: 'Entrenamiento · Muro · Monedas', versus: '2 jugadores', versusSub: 'Local',
       collect: 'Colección', collectSub: 'Armas · estilo · bestiario', music: 'Música', missions: 'Misiones',
       options: 'Opciones', tips: 'Consejos', fresh: 'Versión nueva', install: 'Añadir a inicio', installSub: 'Un icono en tu dispositivo',
       pressStart: 'insert coin', missionReady: 'misión lista', dayBonus: 'Bonus diario',
@@ -365,8 +367,8 @@ const I18N = {
       xp: '+{xp} XP · Lv {lvl} ({cur}/{need} XP)' },
     settings: {
       title: 'Opciones', sub: 'Sonido, vibración y HUD — guardado en este dispositivo',
-      lang: 'Idioma / Language', music: 'Música', sfx: 'Efectos', shake: 'Sacudida pantalla', haptics: 'Vibración (iPad)',
-      comboHud: 'HUD combo', bigTouch: 'Botones grandes (iPad)',
+      lang: 'Idioma', music: 'Música', sfx: 'Efectos', shake: 'Sacudida pantalla', haptics: 'Vibración',
+      comboHud: 'HUD combo', bigTouch: 'Botones grandes',
       kbLegend: 'Leyenda teclado (PC)', showTouchPads: 'Siempre botones táctiles',
       reducedMotion: 'Menos movimiento',
       liteFx: 'Lite FX (más rápido)', highContrast: 'Alto contraste', restoreBackup: 'Restaurar backup',
@@ -573,6 +575,7 @@ function applyLangStaticScreens() {
   setText('settingsHead', 'settings.title');
   setText('settingsSub', 'settings.sub');
   setText('setLangLbl', 'settings.lang');
+  setText('settingsA11yTip', 'settings.a11yTip');
   const setMap = [
     ['setShake', 'settings.shake'], ['setHaptics', 'settings.haptics'], ['setComboHud', 'settings.comboHud'],
     ['setBigTouch', 'settings.bigTouch'], ['setKbLegend', 'settings.kbLegend'], ['setShowTouchPads', 'settings.showTouchPads'],
@@ -669,7 +672,11 @@ function applyLangStaticScreens() {
   }
 
   const charIpadCard = document.getElementById('charIpadTipCard');
-  if (charIpadCard) charIpadCard.innerHTML = t('ui.charIpadTip');
+  if (charIpadCard) {
+    charIpadCard.textContent = '';
+    charIpadCard.hidden = true;
+    charIpadCard.style.display = 'none';
+  }
 
   const charFightBtn = document.getElementById('btnCharFight');
   if (charFightBtn) charFightBtn.textContent = t('ui.charFight');

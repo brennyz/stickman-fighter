@@ -2280,7 +2280,7 @@ function sharePlayLink() {
       try {
         await navigator.share({
           title: 'Stickman Fighter',
-          text: 'Gratis stickman vechtspel — open de link, tik SPELEN (Android + iPad + PC)',
+          text: 'Gratis stickman vechtspel — open de link, tik SPELEN (Android + PC)',
           url,
         });
         return;
@@ -2498,7 +2498,7 @@ function modeFirstMinuteLine(mode) {
     adventure: 'Eerste minuut: links lopen · rechts slaan · joy ↑ mik op vliegers · vol energy = SUPER',
     training: 'Eerste minuut: spring rode laser · blokkeer dichtbij · energy vol → SUPER',
     wall: '60s · combo ×3/×5/×8 hints · record-tempo + projectie in HUD',
-    versus: 'Eerste minuut: P1 links · P2 rechts · liggend iPad werkt het best',
+    versus: 'Eerste minuut: P1 links · P2 rechts',
     coinrun: '45s munten · joy ↑ mik · roze vlieger = +3 · max 3 shuriken snel',
   };
   return lines[mode] || lines.adventure;

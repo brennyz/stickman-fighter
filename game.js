@@ -274,9 +274,9 @@ const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const VERSION_UPDATE_SAVE_KEY = 'stickfighter_version_update_save_v1';
 const VERSION_UPDATE_FLAG_KEY = 'stickfighter_version_update_flag_v1';
 const SAVE_EXPORT_SCHEMA = 3;
-const APP_VERSION = '1.18.154';
+const APP_VERSION = '1.18.155';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 364;
+const SW_CACHE_REV = 365;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', petCoins: 0, dex: {}, summons: {}, pets: {}, activePet: null,
   eggPets: {}, activeEggPet: null, eggDaily: null,
   chestDaily: null, chestWeapons: {},
@@ -1891,7 +1891,7 @@ const I18N = {
     common: { backHome: 'Terug naar menu', ok: 'Begrepen!', offline: 'Offline' },
     menu: {
       continue: 'Verder spelen', adventure: 'Avontuur', adventureSub: 'Verhaal · eilanden · bazen',
-      arcade: 'Arcade', arcadeSub: 'Training · Muur · Muntjes', versus: '2 spelers', versusSub: 'Lokaal · iPad liggend',
+      arcade: 'Arcade', arcadeSub: 'Training · Muur · Muntjes', versus: '2 spelers', versusSub: 'Lokaal',
       collect: 'Collectie', collectSub: 'Wapens · stijl · boek', music: 'Muziek', missions: 'Missies',
       summons: 'Summons', summonsSub: 'Dagelijkse kist · wapen & pet',
       options: 'Opties', tips: 'Tips', fresh: 'Verse versie', install: 'Zet in app-lade', installSub: 'Één icoon op je beginscherm',
@@ -1929,14 +1929,15 @@ const I18N = {
       xp: '+{xp} XP verdiend · nu Lv {lvl} ({cur}/{need} XP)' },
     settings: {
       title: 'Instellingen', sub: 'Geluid, trilling & HUD — opgeslagen op dit apparaat',
-      lang: 'Taal / Language', music: 'Muziek', sfx: 'Effecten', shake: 'Schermschok', haptics: 'Trillen (iPad)',
-      comboHud: 'Combo-HUD', bigTouch: 'Grote knoppen (iPad)',
+      lang: 'Taal', music: 'Muziek', sfx: 'Effecten', shake: 'Schermschok', haptics: 'Trillen',
+      comboHud: 'Combo-HUD', bigTouch: 'Grote knoppen',
       kbLegend: 'Toetsen-legenda (PC)', showTouchPads: 'Touch-knoppen altijd',
-      reducedMotion: 'Minder beweging (FX + iOS)',
-      liteFx: 'Lite FX (iPad sneller)', highContrast: 'Hoog contrast tekst', restoreBackup: 'Herstel save uit backup',
-      a11yMotionOn: 'Minder beweging: aan', a11yMotionOs: 'Minder beweging: via iOS/OS',
-      a11yContrastOn: 'Hoog contrast: aan', a11yContrastOs: 'Hoog contrast: via iOS/OS',
-      a11yDefault: 'Toegankelijkheid: standaard — schakel hierboven of via iOS Weergave',
+      reducedMotion: 'Minder beweging',
+      liteFx: 'Lite FX', highContrast: 'Hoog contrast tekst', restoreBackup: 'Herstel save uit backup',
+      a11yMotionOn: 'Minder beweging: aan', a11yMotionOs: 'Minder beweging: via systeem',
+      a11yContrastOn: 'Hoog contrast: aan', a11yContrastOs: 'Hoog contrast: via systeem',
+      a11yDefault: 'Toegankelijkheid: standaard — schakel hierboven of in je telefoon-instellingen',
+      a11yTip: 'Minder beweging = rustigere banners. Hoog contrast = dikkere randen. Lite FX = soepeler op telefoon.',
       sfxSamplesOn: 'Online SFX: Kenney CC0 geladen',
       sfxSamplesLoad: 'Online SFX: laden… (synth fallback)',
       sfxSamplesOff: 'Online SFX: offline — synth fallback',
@@ -1971,7 +1972,7 @@ const I18N = {
     audio: {
       musicOff: 'Muziek uit', sfxOff: 'Geluid uit', musicPct: 'Muziek {pct}%', sfxPct: 'SFX {pct}%',
       allMuted: 'Alles stil', pauseDuck: 'BGM zacht', pauseTrack: 'Track: {track}',
-      ctxSuspended: 'Tik slider voor geluid (iPad)',
+      ctxSuspended: 'Tik slider voor geluid',
       track: { menu: 'Menu', menu2: 'Menu 2', menu3: 'Menu 3', menuArcade: 'Arcade', menuHero: 'Hero', menuDream: 'Dream',
         battle: 'Gevecht', elite: 'Elite', boss: 'Baas', wall: 'Muur', training: 'Training', coinrun: 'Mats' },
     },
@@ -1981,7 +1982,7 @@ const I18N = {
     common: { backHome: 'Back to menu', ok: 'Got it!', offline: 'Offline' },
     menu: {
       continue: 'Continue', adventure: 'Adventure', adventureSub: 'Story · islands · bosses',
-      arcade: 'Arcade', arcadeSub: 'Training · Wall · Coins', versus: '2 players', versusSub: 'Local · iPad landscape',
+      arcade: 'Arcade', arcadeSub: 'Training · Wall · Coins', versus: '2 players', versusSub: 'Local',
       collect: 'Collection', collectSub: 'Weapons · style · book', music: 'Music', missions: 'Missions',
       summons: 'Summons', summonsSub: 'Daily chest · weapon & pet',
       options: 'Options', tips: 'Tips', fresh: 'Fresh version', install: 'Add to home screen', installSub: 'One icon on your device',
@@ -2019,14 +2020,15 @@ const I18N = {
       xp: '+{xp} XP earned · now Lv {lvl} ({cur}/{need} XP)' },
     settings: {
       title: 'Settings', sub: 'Sound, haptics & HUD — saved on this device',
-      lang: 'Language / Taal', music: 'Music', sfx: 'Effects', shake: 'Screen shake', haptics: 'Haptics (iPad)',
-      comboHud: 'Combo HUD', bigTouch: 'Big buttons (iPad)',
+      lang: 'Language', music: 'Music', sfx: 'Effects', shake: 'Screen shake', haptics: 'Haptics',
+      comboHud: 'Combo HUD', bigTouch: 'Big buttons',
       kbLegend: 'Keyboard legend (PC)', showTouchPads: 'Always show touch pads',
-      reducedMotion: 'Reduce motion (FX + iOS)',
-      liteFx: 'Lite FX (faster iPad)', highContrast: 'High contrast text', restoreBackup: 'Restore save from backup',
-      a11yMotionOn: 'Reduce motion: on', a11yMotionOs: 'Reduce motion: via iOS/OS',
-      a11yContrastOn: 'High contrast: on', a11yContrastOs: 'High contrast: via iOS/OS',
-      a11yDefault: 'Accessibility: default — toggle above or via iOS Display settings',
+      reducedMotion: 'Reduce motion',
+      liteFx: 'Lite FX', highContrast: 'High contrast text', restoreBackup: 'Restore save from backup',
+      a11yMotionOn: 'Reduce motion: on', a11yMotionOs: 'Reduce motion: via system',
+      a11yContrastOn: 'High contrast: on', a11yContrastOs: 'High contrast: via system',
+      a11yDefault: 'Accessibility: default — toggle above or in your phone settings',
+      a11yTip: 'Reduce motion = calmer banners. High contrast = thicker borders. Lite FX = smoother on phone.',
       sfxSamplesOn: 'Online SFX: Kenney CC0 loaded',
       sfxSamplesLoad: 'Online SFX: loading… (synth fallback)',
       sfxSamplesOff: 'Online SFX: offline — synth fallback',
@@ -2061,7 +2063,7 @@ const I18N = {
     audio: {
       musicOff: 'Music off', sfxOff: 'Sound off', musicPct: 'Music {pct}%', sfxPct: 'SFX {pct}%',
       allMuted: 'All muted', pauseDuck: 'BGM ducked', pauseTrack: 'Track: {track}',
-      ctxSuspended: 'Tap slider to wake audio (iPad)',
+      ctxSuspended: 'Tap slider to wake audio',
       track: { menu: 'Menu', menu2: 'Menu 2', menu3: 'Menu 3', menuArcade: 'Arcade', menuHero: 'Hero', menuDream: 'Dream',
         battle: 'Battle', elite: 'Elite', boss: 'Boss', wall: 'Wall', training: 'Training', coinrun: 'Mats' },
     },
@@ -2071,7 +2073,7 @@ const I18N = {
     common: { backHome: 'Zurück zum Menü', ok: 'Verstanden!', offline: 'Offline' },
     menu: {
       continue: 'Weiterspielen', adventure: 'Abenteuer', adventureSub: 'Story · Inseln · Bosse',
-      arcade: 'Arcade', arcadeSub: 'Training · Mauer · Münzen', versus: '2 Spieler', versusSub: 'Lokal · iPad quer',
+      arcade: 'Arcade', arcadeSub: 'Training · Mauer · Münzen', versus: '2 Spieler', versusSub: 'Lokal',
       collect: 'Sammlung', collectSub: 'Waffen · Stil · Buch', music: 'Musik', missions: 'Missionen',
       options: 'Optionen', tips: 'Tipps', fresh: 'Neue Version', install: 'Zum Home-Bildschirm', installSub: 'Ein Icon auf dem Gerät',
       pressStart: 'insert coin', missionReady: 'Mission bereit', dayBonus: 'Tagesbonus',
@@ -2104,8 +2106,8 @@ const I18N = {
       xp: '+{xp} XP · jetzt Lv {lvl} ({cur}/{need} XP)' },
     settings: {
       title: 'Einstellungen', sub: 'Sound, Vibration & HUD — auf diesem Gerät gespeichert',
-      lang: 'Sprache / Language', music: 'Musik', sfx: 'Effekte', shake: 'Bildschirmshake', haptics: 'Vibration (iPad)',
-      comboHud: 'Combo-HUD', bigTouch: 'Große Tasten (iPad)',
+      lang: 'Sprache', music: 'Musik', sfx: 'Effekte', shake: 'Bildschirmshake', haptics: 'Vibration',
+      comboHud: 'Combo-HUD', bigTouch: 'Große Tasten',
       kbLegend: 'Tastatur-Legende (PC)', showTouchPads: 'Touch-Tasten immer',
       reducedMotion: 'Weniger Bewegung',
       liteFx: 'Lite FX (schneller)', highContrast: 'Hoher Kontrast', restoreBackup: 'Save aus Backup',
@@ -2143,7 +2145,7 @@ const I18N = {
     common: { backHome: 'Retour au menu', ok: 'Compris !', offline: 'Hors ligne' },
     menu: {
       continue: 'Continuer', adventure: 'Aventure', adventureSub: 'Histoire · îles · boss',
-      arcade: 'Arcade', arcadeSub: 'Entraînement · Mur · Pièces', versus: '2 joueurs', versusSub: 'Local · iPad paysage',
+      arcade: 'Arcade', arcadeSub: 'Entraînement · Mur · Pièces', versus: '2 joueurs', versusSub: 'Local',
       collect: 'Collection', collectSub: 'Armes · style · bestiaire', music: 'Musique', missions: 'Missions',
       options: 'Options', tips: 'Astuces', fresh: 'Version fraîche', install: 'Ajouter à l\'écran d\'accueil', installSub: 'Une icône sur l\'appareil',
       pressStart: 'insert coin', missionReady: 'mission prête', dayBonus: 'Bonus du jour',
@@ -2176,8 +2178,8 @@ const I18N = {
       xp: '+{xp} XP · Lv {lvl} ({cur}/{need} XP)' },
     settings: {
       title: 'Options', sub: 'Son, vibrations & HUD — sauvegardé sur cet appareil',
-      lang: 'Langue / Language', music: 'Musique', sfx: 'Effets', shake: 'Secousse écran', haptics: 'Vibration (iPad)',
-      comboHud: 'HUD combo', bigTouch: 'Gros boutons (iPad)',
+      lang: 'Langue', music: 'Musique', sfx: 'Effets', shake: 'Secousse écran', haptics: 'Vibration',
+      comboHud: 'HUD combo', bigTouch: 'Gros boutons',
       kbLegend: 'Légende clavier (PC)', showTouchPads: 'Toujours boutons tactile',
       reducedMotion: 'Moins de mouvement',
       liteFx: 'Lite FX (plus rapide)', highContrast: 'Contraste élevé', restoreBackup: 'Restaurer backup',
@@ -2215,7 +2217,7 @@ const I18N = {
     common: { backHome: 'Volver al menú', ok: '¡Entendido!', offline: 'Sin conexión' },
     menu: {
       continue: 'Continuar', adventure: 'Aventura', adventureSub: 'Historia · islas · jefes',
-      arcade: 'Arcade', arcadeSub: 'Entrenamiento · Muro · Monedas', versus: '2 jugadores', versusSub: 'Local · iPad horizontal',
+      arcade: 'Arcade', arcadeSub: 'Entrenamiento · Muro · Monedas', versus: '2 jugadores', versusSub: 'Local',
       collect: 'Colección', collectSub: 'Armas · estilo · bestiario', music: 'Música', missions: 'Misiones',
       options: 'Opciones', tips: 'Consejos', fresh: 'Versión nueva', install: 'Añadir a inicio', installSub: 'Un icono en tu dispositivo',
       pressStart: 'insert coin', missionReady: 'misión lista', dayBonus: 'Bonus diario',
@@ -2248,8 +2250,8 @@ const I18N = {
       xp: '+{xp} XP · Lv {lvl} ({cur}/{need} XP)' },
     settings: {
       title: 'Opciones', sub: 'Sonido, vibración y HUD — guardado en este dispositivo',
-      lang: 'Idioma / Language', music: 'Música', sfx: 'Efectos', shake: 'Sacudida pantalla', haptics: 'Vibración (iPad)',
-      comboHud: 'HUD combo', bigTouch: 'Botones grandes (iPad)',
+      lang: 'Idioma', music: 'Música', sfx: 'Efectos', shake: 'Sacudida pantalla', haptics: 'Vibración',
+      comboHud: 'HUD combo', bigTouch: 'Botones grandes',
       kbLegend: 'Leyenda teclado (PC)', showTouchPads: 'Siempre botones táctiles',
       reducedMotion: 'Menos movimiento',
       liteFx: 'Lite FX (más rápido)', highContrast: 'Alto contraste', restoreBackup: 'Restaurar backup',
@@ -2456,6 +2458,7 @@ function applyLangStaticScreens() {
   setText('settingsHead', 'settings.title');
   setText('settingsSub', 'settings.sub');
   setText('setLangLbl', 'settings.lang');
+  setText('settingsA11yTip', 'settings.a11yTip');
   const setMap = [
     ['setShake', 'settings.shake'], ['setHaptics', 'settings.haptics'], ['setComboHud', 'settings.comboHud'],
     ['setBigTouch', 'settings.bigTouch'], ['setKbLegend', 'settings.kbLegend'], ['setShowTouchPads', 'settings.showTouchPads'],
@@ -2552,7 +2555,11 @@ function applyLangStaticScreens() {
   }
 
   const charIpadCard = document.getElementById('charIpadTipCard');
-  if (charIpadCard) charIpadCard.innerHTML = t('ui.charIpadTip');
+  if (charIpadCard) {
+    charIpadCard.textContent = '';
+    charIpadCard.hidden = true;
+    charIpadCard.style.display = 'none';
+  }
 
   const charFightBtn = document.getElementById('btnCharFight');
   if (charFightBtn) charFightBtn.textContent = t('ui.charFight');
@@ -5127,7 +5134,7 @@ function sharePlayLink() {
       try {
         await navigator.share({
           title: 'Stickman Fighter',
-          text: 'Gratis stickman vechtspel — open de link, tik SPELEN (Android + iPad + PC)',
+          text: 'Gratis stickman vechtspel — open de link, tik SPELEN (Android + PC)',
           url,
         });
         return;
@@ -5345,7 +5352,7 @@ function modeFirstMinuteLine(mode) {
     adventure: 'Eerste minuut: links lopen · rechts slaan · joy ↑ mik op vliegers · vol energy = SUPER',
     training: 'Eerste minuut: spring rode laser · blokkeer dichtbij · energy vol → SUPER',
     wall: '60s · combo ×3/×5/×8 hints · record-tempo + projectie in HUD',
-    versus: 'Eerste minuut: P1 links · P2 rechts · liggend iPad werkt het best',
+    versus: 'Eerste minuut: P1 links · P2 rechts',
     coinrun: '45s munten · joy ↑ mik · roze vlieger = +3 · max 3 shuriken snel',
   };
   return lines[mode] || lines.adventure;
@@ -11997,7 +12004,7 @@ function seedNlGameStrings() {
     'Komt eraan: Mat\'s bonus game — korte mini-uitdaging na een sterke run of perfecte ronde.',
     'Komt eraan: mik met je wapen — richt op de vloer voor schokgolven of op vogels voor bonus-XP.',
     'Volle energy → tik 🌀 voor Spiral Orb — grote schade en screen-shake.',
-    '2P op iPad: liggend houden; P1 linker helft, P2 rechter helft (joystick + knoppen).',
+    'Avontuur: joystick links · slaan rechts · volle energy = SUPER.',
     'Muur: combo\'s stapelen schade — bomstenen (rood) ontploffen, goud = extra XP.',
     'Monsterboek vullen = meer max HP via rariteit (gewoon +3 … mythisch +25).',
     'Komt eraan: avontuur-character select vóór elk level — eigen loadout per run.',
@@ -12011,7 +12018,7 @@ function seedNlGameStrings() {
     'Verder spelen hervat je laatste modus (avontuur, training, muur of 2P).',
     'Komt eraan: vloer-slag met zware wapens — scheurt tegels in muur-modus.',
     'Willekeurig duo op character select: 🎲 kiest twee verschillende vechters.',
-    'Instellingen: grote knoppen, minder schok, combo-HUD — handig op iPad.',
+    'Instellingen: grote knoppen, minder schok, combo-HUD — handig op telefoon.',
     'Komt eraan: Mat co-op assist — korte buff als je zijn bonus haalt.',
   ];
   I18N.nl.menu.d20Polish = [
@@ -12041,7 +12048,7 @@ function seedNlGameStrings() {
     '5 eilanden — baas Lv 10/20/30/40/50 opent volgend eiland',
     'Skill gate — max wapen per eiland in avontuur',
     '5× verlies op één level = Meester-buff +20%',
-    'Training = solo · Versus = 2P lokaal op iPad',
+    'Training = solo oefenen vs RabbitRobot',
     'Muur-combo’s = sneller sloop & meer XP',
     'Monsterboek vullen = meer max HP',
     'Verder spelen hervat je laatste modus',
@@ -12081,7 +12088,7 @@ function seedNlGameStrings() {
     charReplayLast: 'Herhaal · {p1} vs {p2}',
     charPickNow1: 'P1',
     charPickNow2: 'P2',
-    charIpadTip: 'iPad: speler 1 gebruikt de linker helft van het scherm (joystick + knoppen), speler 2 de rechter helft. Draai je iPad liggend voor het meeste ruimte.',
+    charIpadTip: '',
     levelHead: 'Kies een eiland',
     levelSub: 'Normal → Nightmare 2.0 → Hell 3.0 · hitte-meter · 9× = gevaar! · 10× = Satan',
     diff: { normal: 'Normal', nightmare: 'Nightmare', hell: 'Hell' },
@@ -12279,7 +12286,7 @@ function seedNlGameStrings() {
     firstMinuteAdventure: 'Eerste minuut: links lopen · rechts slaan · joy ↑ mik op vliegers · vol energy = SUPER',
     firstMinuteTraining: 'Eerste minuut: spring rode laser · blokkeer dichtbij · energy vol → SUPER',
     firstMinuteWall: '60s · combo ×3/×5/×8 hints · record-tempo + projectie in HUD',
-    firstMinuteVersus: 'Eerste minuut: P1 links · P2 rechts · liggend iPad werkt het best',
+    firstMinuteVersus: 'Eerste minuut: P1 links · P2 rechts',
     firstMinuteCoinrun: '45s munten · joy ↑ mik · roze vlieger = +3 · max 3 shuriken snel',
     firstMinuteAdventureKb: 'Eerste minuut: A/D lopen · W springen · J/K/L · U technique · Shift subst',
     firstMinuteTrainingKb: 'Eerste minuut: spring lasers · Shift = substitutie · energy vol → U',
@@ -12912,7 +12919,7 @@ const CATALOG_EN = {
     charReplayLast: 'Replay · {p1} vs {p2}',
     charPickNow1: 'P1',
     charPickNow2: 'P2',
-    charIpadTip: 'iPad: player 1 uses the left half (joystick + buttons), player 2 the right half. Landscape works best.',
+    charIpadTip: '',
     levelHead: 'Pick an island',
     levelSub: 'Normal → Nightmare 2.0 → Hell 3.0 · heat meter · 9× = danger! · 10× = Satan',
     diff: { normal: 'Normal', nightmare: 'Nightmare', hell: 'Hell' },
@@ -13110,7 +13117,7 @@ const CATALOG_EN = {
     firstMinuteAdventure: 'First minute: move left · punch right · joy ↑ aim flyers · full energy = SUPER',
     firstMinuteTraining: 'First minute: jump the red laser · block up close · full energy → SUPER',
     firstMinuteWall: '60s · combo ×3/×5/×8 hints · record pace + projection in HUD',
-    firstMinuteVersus: 'First minute: P1 left · P2 right · landscape iPad works best',
+    firstMinuteVersus: 'First minute: P1 left · P2 right',
     firstMinuteCoinrun: '45s coins · joy ↑ aim · pink flyer = +3 · max 3 shuriken fast',
     firstMinuteAdventureKb: 'First minute: A/D move · W jump · J/K/L · U technique · Shift subst',
     firstMinuteTrainingKb: 'First minute: jump lasers · Shift = subst · full energy → U',
@@ -13167,7 +13174,7 @@ const CATALOG_EN = {
     '5 islands — boss Lv 10/20/30/40/50 opens next island',
     'Skill gate — max weapon per island in adventure',
     '5× loss on one level = Master buff +20%',
-    'Training = solo · Versus = 2P local on iPad',
+    'Training = solo practice vs RabbitRobot',
     'Wall combos = faster smash & more XP',
     'Fill monster book = more max HP',
     'Continue resumes your last mode',
@@ -13177,7 +13184,7 @@ const CATALOG_EN = {
     'Coming: Mat\'s bonus game — short mini-challenge after a strong run or perfect round.',
     'Coming: aim your weapon — floor for shockwaves or birds for bonus XP.',
     'Full energy → tap 🌀 for Spiral Orb — big damage and screen-shake.',
-    '2P on iPad: landscape; P1 left half, P2 right half (joystick + buttons).',
+    'Adventure: joystick left · punch right · full energy = SUPER.',
     'Wall: combos stack damage — red bombs explode, gold = extra XP.',
     'Fill monster book = more max HP by rarity (common +3 … mythic +25).',
     'Coming: adventure character select before each level — loadout per run.',
@@ -13191,7 +13198,7 @@ const CATALOG_EN = {
     'Continue resumes your last mode (adventure, training, wall or 2P).',
     'Coming: floor slam with heavy weapons — cracks tiles in wall mode.',
     'Random duo on character select: 🎲 picks two different fighters.',
-    'Settings: big buttons, less shake, combo HUD — handy on iPad.',
+    'Settings: big buttons, less shake, combo HUD — handy on phone.',
     'Coming: Mat co-op assist — short buff when you clear his bonus.',
   ], d20Polish: [
     'Weapon preview glow in collection',
@@ -32423,7 +32430,7 @@ const UI = {
     const playLinkEl = document.getElementById('menuPlayLink');
     if (playLinkEl) {
       if (location.hostname.endsWith('.github.io')) {
-        playLinkEl.textContent = '✓ GitHub Pages — Deel link (Android + iPad)';
+        playLinkEl.textContent = '✓ GitHub Pages — Deel link (Android)';
       } else if (!playLinkEl.dataset.loaded) {
         playLinkEl.dataset.loaded = '1';
         loadHostingBundle().then(({ hosting }) => {
@@ -33181,7 +33188,7 @@ const UI = {
         let hint = hosting.stableHint || '';
         if (!hint) {
           if (stable && String(stable).includes('github.io')) {
-            hint = 'Primair: GitHub Pages — bookmark speel.html (Safari → Delen → Zet op beginscherm). Tunnel is alleen thuis-dev.';
+            hint = 'Primair: GitHub Pages — deel speel.html. Op Android: Chrome → App installeren. Tunnel is alleen thuis-dev.';
           } else if (location.hostname.endsWith('.github.io')) hint = 'Je speelt via GitHub Pages — deel speel.html met vrienden.';
           else if (location.hostname.endsWith('.netlify.app')) hint = 'Netlify-host — export save bij URL-wissel.';
           else hint = 'Gebruik de vaste Pages-link hierboven; tunnel nooit als deel-link.';
