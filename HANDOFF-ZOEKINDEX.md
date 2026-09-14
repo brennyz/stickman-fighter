@@ -24,6 +24,7 @@ rg -l "handoff|coinrun|projAimVelocity|charSelectScreen|ASSET-STYLE" .
 | Character select **deel 2** | 1.11.2 | `7d236c1` | `#charIconRow`, `#btnCharSagaClash`, saga strip |
 | **Mats** muntjes bonus | 1.12.0 | `f6c86bf` | `coinrun`, `#btnMatsCoins`, `initCoinRun` |
 | **Mikken** shuriken (hoog/vliegers) | 1.12.0 | `f6c86bf` | `projAimVelocity`, `drawTouchControls` aim-lijn |
+| **Mik-indicator** kleur + radius (Options) | 1.18.164 | — | `save.aimColor` / `save.aimRadius`, `drawPlayerAimIndicator` |
 | Shuriken anti-spam | 1.12.0 | `f6c86bf` | `canThrowShuriken`, `SHURIKEN_BURST_*` |
 | speel.html delen | 1.12.2+ | `0a63376`+ | `speel.html`, `resolveSharePlayUrl` |
 | Agent handoff docs | — | `4de8d95`+ | `agent-handoff.json`, `AGENTS.md` |

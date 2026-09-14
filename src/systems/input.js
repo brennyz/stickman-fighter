@@ -35,10 +35,25 @@ function fighterAimNorm(f) {
   return { nx: nx / len, ny: ny / len };
 }
 
-function aimVisualColor(ny) {
-  if (ny < -0.42) return '#7cf5ff';
-  if (ny > 0.22) return '#ffb06a';
-  return '#e8f0ff';
+function aimPrefColor() {
+  try {
+    return sanitizeAimHex(typeof save !== 'undefined' && save ? save.aimColor : AIM_COLOR_DEFAULT);
+  } catch (_) {
+    return AIM_COLOR_DEFAULT;
+  }
+}
+
+function aimPrefRadius() {
+  try {
+    return sanitizeAimRadius(typeof save !== 'undefined' && save ? save.aimRadius : AIM_RADIUS_DEFAULT);
+  } catch (_) {
+    return AIM_RADIUS_DEFAULT;
+  }
+}
+
+/** User color for the beam/dot. High/low still share one color — the height bar shows vertical aim. */
+function aimVisualColor(_ny) {
+  return aimPrefColor();
 }
 
 function drawJoyAimGuide(c, jx, jy, j, ui, accent) {
@@ -68,10 +83,11 @@ function drawJoyAimGuide(c, jx, jy, j, ui, accent) {
   c.fillRect(barX - px, Math.round(jy - px), px * 2, px * 2);
   if (j.active && Math.abs(j.dy) >= JOY_AIM_DEAD_PX) {
     const t = clamp(-j.dy / JOY_MAX_PX, -1, 1);
-    c.globalAlpha = 0.75;
+    c.globalAlpha = 0.82;
     c.fillStyle = aimVisualColor(-t);
     const ay = Math.round(jy - t * (barH / 2 - 4));
-    c.fillRect(barX - px * 2, ay - px, px * 4, px * 3);
+    const mark = Math.max(px * 3, Math.round(aimPrefRadius() * 0.55));
+    c.fillRect(barX - mark, ay - Math.round(mark * 0.55), mark * 2, Math.round(mark * 1.15));
   }
   c.restore();
   c.imageSmoothingEnabled = prev;
@@ -81,31 +97,95 @@ function drawPlayerAimIndicator(c, fighter, alpha) {
   if (!fighter || !fighter.alive) return;
   const aim = fighterAimNorm(fighter);
   const col = aimVisualColor(aim.ny);
+  const r = aimPrefRadius();
   const ox = fighter.x;
   const oy = fighter.y - 52 + clamp(aim.ny, -1, 0.55) * 32;
-  const len = 54;
+  const len = 38 + r * 2;
   c.save();
   c.globalAlpha = alpha != null ? alpha : 0.5;
   c.strokeStyle = col;
-  c.lineWidth = 3;
+  c.lineWidth = Math.max(2, r * 0.38);
+  c.lineCap = 'round';
   c.beginPath();
   c.moveTo(ox, oy);
   c.lineTo(ox + aim.nx * len, oy + aim.ny * len * 1.08);
   c.stroke();
   c.fillStyle = col;
   c.beginPath();
-  c.arc(ox + aim.nx * len, oy + aim.ny * len * 1.08, 5, 0, TAU);
+  c.arc(ox + aim.nx * len, oy + aim.ny * len * 1.08, Math.max(3, r), 0, TAU);
   c.fill();
   const hit = meleeHitPoint(fighter, { range: 40 });
+  const cross = Math.max(5, r + 1);
   c.globalAlpha *= 0.55;
-  c.lineWidth = 1.5;
+  c.lineWidth = Math.max(1.4, r * 0.22);
   c.beginPath();
-  c.moveTo(hit.hx - 6, hit.hy);
-  c.lineTo(hit.hx + 6, hit.hy);
-  c.moveTo(hit.hx, hit.hy - 6);
-  c.lineTo(hit.hx, hit.hy + 6);
+  c.moveTo(hit.hx - cross, hit.hy);
+  c.lineTo(hit.hx + cross, hit.hy);
+  c.moveTo(hit.hx, hit.hy - cross);
+  c.lineTo(hit.hx, hit.hy + cross);
   c.stroke();
   c.restore();
+}
+
+function drawAimPrefPreview() {
+  const el = document.getElementById('aimPrefPreview');
+  if (!el || typeof el.getContext !== 'function') return;
+  const c = el.getContext('2d');
+  if (!c) return;
+  const w = el.width || 180;
+  const h = el.height || 72;
+  c.clearRect(0, 0, w, h);
+  c.fillStyle = '#0a0d18';
+  c.fillRect(0, 0, w, h);
+  const col = aimPrefColor();
+  const r = aimPrefRadius();
+  const ox = 22;
+  const oy = h * 0.62;
+  const nx = 0.86;
+  const ny = -0.5;
+  const len = Math.min(w - 36, 40 + r * 2.4);
+  c.save();
+  c.strokeStyle = col;
+  c.lineWidth = Math.max(2, r * 0.38);
+  c.lineCap = 'round';
+  c.beginPath();
+  c.moveTo(ox, oy);
+  c.lineTo(ox + nx * len, oy + ny * len);
+  c.stroke();
+  c.fillStyle = col;
+  c.beginPath();
+  c.arc(ox + nx * len, oy + ny * len, Math.max(3, r), 0, Math.PI * 2);
+  c.fill();
+  c.restore();
+}
+
+function applyAimPrefs(color, radius) {
+  if (typeof save === 'undefined' || !save) return { color: AIM_COLOR_DEFAULT, radius: AIM_RADIUS_DEFAULT };
+  if (color != null) save.aimColor = sanitizeAimHex(color);
+  if (radius != null) save.aimRadius = sanitizeAimRadius(radius);
+  if (typeof persist === 'function') persist();
+  syncAimPrefControls();
+  return { color: aimPrefColor(), radius: aimPrefRadius() };
+}
+
+function syncAimPrefControls() {
+  const color = aimPrefColor();
+  const radius = aimPrefRadius();
+  const picker = document.getElementById('setAimColor');
+  if (picker && document.activeElement !== picker) picker.value = color;
+  const swatches = document.getElementById('setAimColorSwatches');
+  if (swatches) {
+    swatches.querySelectorAll('[data-aim-color]').forEach((btn) => {
+      const on = sanitizeAimHex(btn.getAttribute('data-aim-color')) === color;
+      btn.classList.toggle('on', on);
+      btn.setAttribute('aria-pressed', on ? 'true' : 'false');
+    });
+  }
+  const range = document.getElementById('setAimRadius');
+  if (range && document.activeElement !== range) range.value = String(radius);
+  const lbl = document.getElementById('setAimRadiusLbl');
+  if (lbl) lbl.textContent = String(radius);
+  drawAimPrefPreview();
 }
 
 /** Werpers / technique: snelheid in de mikrichting (joy ↑ = hoger gooien). */

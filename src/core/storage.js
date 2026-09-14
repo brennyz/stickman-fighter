@@ -5,9 +5,9 @@ const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const VERSION_UPDATE_SAVE_KEY = 'stickfighter_version_update_save_v1';
 const VERSION_UPDATE_FLAG_KEY = 'stickfighter_version_update_flag_v1';
 const SAVE_EXPORT_SCHEMA = 3;
-const APP_VERSION = '1.18.163';
+const APP_VERSION = '1.18.164';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 373;
+const SW_CACHE_REV = 374;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', petCoins: 0, dex: {}, summons: {}, pets: {}, activePet: null,
   eggPets: {}, activeEggPet: null, eggDaily: null,
   chestDaily: null, chestWeapons: {},
@@ -22,6 +22,9 @@ const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', petCoins: 0,
   },
   bestWall: 0, trainWins: 0, music: true, sfx: true, style: 'classic', stars: {},
   musicVol: 0.85, sfxVol: 1, shake: true, haptics: true, comboHud: true, bigTouch: true,
+  /** Aim beam / radius cue when mikken hoog-laag on the move bar */
+  aimColor: '#7cf5ff',
+  aimRadius: 8,
   /** null/undefined = auto via IS_TOUCH; true = force pads; false = force keyboard */
   showTouchPads: null,
   /** Keyboard legend on PC / when pads off (default on) */
@@ -29,6 +32,25 @@ const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', petCoins: 0,
   reducedMotion: false, liteFx: false, highContrast: false, lang: null, playerTag: '', lastPlay: null, tipsSeen: {},
   stats: { kills: 0, advWins: 0, wallBestRun: 0, maxCombo: 0, maxKillStreak: 0, trainMaxCombo: 0, pickups: 0, bossKills: 0, vsMatches: 0, vsWins: 0, matsCoinBest: 0, summonCount: 0, killsSinceSummon: 0, petsTamed: 0, eggsHatched: 0, weaponFinishers: 0, tideBattleWins: 0, skillShards: 0, itemShards: 0, dailyBonusCount: 0 },
   achievements: {}, daily: null, vsPlayedIds: [], weaponMastery: {}, skillUpgrades: {}, itemUpgrades: {}, activeTechnique: 'spiral_orb', skill: 'spiral_orb', super: 'ketsbam', missionsIntroSeen: false };
+
+const AIM_COLOR_DEFAULT = '#7cf5ff';
+const AIM_RADIUS_DEFAULT = 8;
+const AIM_RADIUS_MIN = 4;
+const AIM_RADIUS_MAX = 18;
+const AIM_COLOR_SWATCHES = ['#7cf5ff', '#ffd75e', '#7cfc8a', '#ffb06a', '#ffb0b8', '#c792ff', '#e8f0ff'];
+
+function sanitizeAimHex(raw) {
+  const s = String(raw == null ? '' : raw).trim().toLowerCase();
+  if (/^#[0-9a-f]{6}$/.test(s)) return s;
+  if (/^#[0-9a-f]{3}$/.test(s)) return '#' + s[1] + s[1] + s[2] + s[2] + s[3] + s[3];
+  return AIM_COLOR_DEFAULT;
+}
+
+function sanitizeAimRadius(raw) {
+  const n = Number(raw);
+  if (!Number.isFinite(n)) return AIM_RADIUS_DEFAULT;
+  return Math.max(AIM_RADIUS_MIN, Math.min(AIM_RADIUS_MAX, Math.round(n)));
+}
 
 const MAX_LEVEL = 70;
 const LEVELS_PER_ISLAND = 10;
@@ -1334,6 +1356,8 @@ function sanitizeSave(s) {
     const v = Number(out.sfxVol);
     return Number.isFinite(v) ? clamp(v, 0, 1) : DEFAULT_SAVE.sfxVol;
   })();
+  out.aimColor = sanitizeAimHex(out.aimColor);
+  out.aimRadius = sanitizeAimRadius(out.aimRadius);
   out.music = out.music !== false;
   out.sfx = out.sfx !== false;
   out.shake = out.shake !== false;

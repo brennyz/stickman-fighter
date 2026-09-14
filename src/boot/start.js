@@ -384,6 +384,34 @@ function bindSettingsControls() {
   onVol('setSfxVol', 'setSfxVolLbl', 'sfxVol');
   onVol('pauseMusicVol', 'pauseMusicVolLbl', 'musicVol');
   onVol('pauseSfxVol', 'pauseSfxVolLbl', 'sfxVol');
+  const swatchHost = document.getElementById('setAimColorSwatches');
+  if (swatchHost && !swatchHost.dataset.bound) {
+    swatchHost.dataset.bound = '1';
+    swatchHost.addEventListener('click', (e) => {
+      const btn = e.target && e.target.closest ? e.target.closest('[data-aim-color]') : null;
+      if (!btn) return;
+      applyAimPrefs(btn.getAttribute('data-aim-color'), null);
+      try { AudioSys.sfx('select'); } catch (_) {}
+      haptic(6);
+    });
+  }
+  const aimColorEl = document.getElementById('setAimColor');
+  if (aimColorEl && !aimColorEl.dataset.bound) {
+    aimColorEl.dataset.bound = '1';
+    const onAimColor = () => applyAimPrefs(aimColorEl.value, null);
+    aimColorEl.addEventListener('input', onAimColor);
+    aimColorEl.addEventListener('change', onAimColor);
+  }
+  const aimRadEl = document.getElementById('setAimRadius');
+  if (aimRadEl && !aimRadEl.dataset.bound) {
+    aimRadEl.dataset.bound = '1';
+    const onAimRadius = () => {
+      applyAimPrefs(null, aimRadEl.value);
+      aimRadEl.setAttribute('aria-valuenow', String(aimPrefRadius()));
+    };
+    aimRadEl.addEventListener('input', onAimRadius);
+    aimRadEl.addEventListener('change', onAimRadius);
+  }
   const toggles = [
     ['setShake', 'shake'], ['setHaptics', 'haptics'], ['setComboHud', 'comboHud'],
     ['setBigTouch', 'bigTouch'], ['setKbLegend', 'kbLegend'], ['setShowTouchPads', 'showTouchPads'],

@@ -82,6 +82,7 @@ const mutators = [
   (s) => { s.tipsSeen = 'yes'; },
   (s) => { delete s.lvl; delete s.xp; },
   (s) => { s.musicVol = 'loud'; s.sfxVol = Infinity; },
+  (s) => { s.aimColor = 'red'; s.aimRadius = 99; },
   (s) => {
     s.skillUpgrades = { spiral_orb: { level: 'max', shards: null }, fake: 42 };
     s.itemUpgrades = { weapon: { katana: { level: -3, shards: 'x' } }, hacker: { x: 1 } };

@@ -323,9 +323,9 @@ const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const VERSION_UPDATE_SAVE_KEY = 'stickfighter_version_update_save_v1';
 const VERSION_UPDATE_FLAG_KEY = 'stickfighter_version_update_flag_v1';
 const SAVE_EXPORT_SCHEMA = 3;
-const APP_VERSION = '1.18.163';
+const APP_VERSION = '1.18.164';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 373;
+const SW_CACHE_REV = 374;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', petCoins: 0, dex: {}, summons: {}, pets: {}, activePet: null,
   eggPets: {}, activeEggPet: null, eggDaily: null,
   chestDaily: null, chestWeapons: {},
@@ -340,6 +340,9 @@ const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', petCoins: 0,
   },
   bestWall: 0, trainWins: 0, music: true, sfx: true, style: 'classic', stars: {},
   musicVol: 0.85, sfxVol: 1, shake: true, haptics: true, comboHud: true, bigTouch: true,
+  /** Aim beam / radius cue when mikken hoog-laag on the move bar */
+  aimColor: '#7cf5ff',
+  aimRadius: 8,
   /** null/undefined = auto via IS_TOUCH; true = force pads; false = force keyboard */
   showTouchPads: null,
   /** Keyboard legend on PC / when pads off (default on) */
@@ -347,6 +350,25 @@ const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', petCoins: 0,
   reducedMotion: false, liteFx: false, highContrast: false, lang: null, playerTag: '', lastPlay: null, tipsSeen: {},
   stats: { kills: 0, advWins: 0, wallBestRun: 0, maxCombo: 0, maxKillStreak: 0, trainMaxCombo: 0, pickups: 0, bossKills: 0, vsMatches: 0, vsWins: 0, matsCoinBest: 0, summonCount: 0, killsSinceSummon: 0, petsTamed: 0, eggsHatched: 0, weaponFinishers: 0, tideBattleWins: 0, skillShards: 0, itemShards: 0, dailyBonusCount: 0 },
   achievements: {}, daily: null, vsPlayedIds: [], weaponMastery: {}, skillUpgrades: {}, itemUpgrades: {}, activeTechnique: 'spiral_orb', skill: 'spiral_orb', super: 'ketsbam', missionsIntroSeen: false };
+
+const AIM_COLOR_DEFAULT = '#7cf5ff';
+const AIM_RADIUS_DEFAULT = 8;
+const AIM_RADIUS_MIN = 4;
+const AIM_RADIUS_MAX = 18;
+const AIM_COLOR_SWATCHES = ['#7cf5ff', '#ffd75e', '#7cfc8a', '#ffb06a', '#ffb0b8', '#c792ff', '#e8f0ff'];
+
+function sanitizeAimHex(raw) {
+  const s = String(raw == null ? '' : raw).trim().toLowerCase();
+  if (/^#[0-9a-f]{6}$/.test(s)) return s;
+  if (/^#[0-9a-f]{3}$/.test(s)) return '#' + s[1] + s[1] + s[2] + s[2] + s[3] + s[3];
+  return AIM_COLOR_DEFAULT;
+}
+
+function sanitizeAimRadius(raw) {
+  const n = Number(raw);
+  if (!Number.isFinite(n)) return AIM_RADIUS_DEFAULT;
+  return Math.max(AIM_RADIUS_MIN, Math.min(AIM_RADIUS_MAX, Math.round(n)));
+}
 
 const MAX_LEVEL = 70;
 const LEVELS_PER_ISLAND = 10;
@@ -1652,6 +1674,8 @@ function sanitizeSave(s) {
     const v = Number(out.sfxVol);
     return Number.isFinite(v) ? clamp(v, 0, 1) : DEFAULT_SAVE.sfxVol;
   })();
+  out.aimColor = sanitizeAimHex(out.aimColor);
+  out.aimRadius = sanitizeAimRadius(out.aimRadius);
   out.music = out.music !== false;
   out.sfx = out.sfx !== false;
   out.shake = out.shake !== false;
@@ -2010,6 +2034,8 @@ const I18N = {
     settings: {
       title: 'Instellingen', sub: 'Geluid, trilling & HUD — opgeslagen op dit apparaat',
       lang: 'Taal', music: 'Muziek', sfx: 'Effecten', shake: 'Schermschok', haptics: 'Trillen',
+      aimHead: 'Mik-indicator', aimHint: 'Kleur en grootte van de straal als je omhoog of omlaag mikt met de beweegbalk.',
+      aimColor: 'Kleur', aimRadius: 'Grootte', aimPick: 'Kies zelf',
       comboHud: 'Combo-HUD', bigTouch: 'Grote knoppen',
       kbLegend: 'Toetsenbord-hulp', showTouchPads: 'Touch-knoppen altijd',
       reducedMotion: 'Minder beweging',
@@ -2122,6 +2148,8 @@ const I18N = {
     settings: {
       title: 'Settings', sub: 'Sound, haptics & HUD — saved on this device',
       lang: 'Language', music: 'Music', sfx: 'Effects', shake: 'Screen shake', haptics: 'Haptics',
+      aimHead: 'Aim indicator', aimHint: 'Color and size of the beam when you aim high or low with the move bar.',
+      aimColor: 'Color', aimRadius: 'Size', aimPick: 'Custom',
       comboHud: 'Combo HUD', bigTouch: 'Big buttons',
       kbLegend: 'Keyboard help', showTouchPads: 'Always show touch pads',
       reducedMotion: 'Reduce motion',
@@ -2217,6 +2245,8 @@ const I18N = {
     settings: {
       title: 'Einstellungen', sub: 'Sound, Vibration & HUD — auf diesem Gerät gespeichert',
       lang: 'Sprache', music: 'Musik', sfx: 'Effekte', shake: 'Bildschirmshake', haptics: 'Vibration',
+      aimHead: 'Zielanzeige', aimHint: 'Farbe und Größe des Strahls beim Zielen nach oben oder unten.',
+      aimColor: 'Farbe', aimRadius: 'Größe', aimPick: 'Eigene Farbe',
       comboHud: 'Combo-HUD', bigTouch: 'Große Tasten',
       kbLegend: 'Tastatur-Hilfe', showTouchPads: 'Touch-Tasten immer',
       reducedMotion: 'Weniger Bewegung',
@@ -2298,6 +2328,8 @@ const I18N = {
     settings: {
       title: 'Options', sub: 'Son, vibrations & HUD — sauvegardé sur cet appareil',
       lang: 'Langue', music: 'Musique', sfx: 'Effets', shake: 'Secousse écran', haptics: 'Vibration',
+      aimHead: 'Viseur', aimHint: 'Couleur et taille du rayon quand tu vises haut ou bas avec la barre de déplacement.',
+      aimColor: 'Couleur', aimRadius: 'Taille', aimPick: 'Personnaliser',
       comboHud: 'HUD combo', bigTouch: 'Gros boutons',
       kbLegend: 'Aide clavier', showTouchPads: 'Toujours boutons tactile',
       reducedMotion: 'Moins de mouvement',
@@ -2379,6 +2411,8 @@ const I18N = {
     settings: {
       title: 'Opciones', sub: 'Sonido, vibración y HUD — guardado en este dispositivo',
       lang: 'Idioma', music: 'Música', sfx: 'Efectos', shake: 'Sacudida pantalla', haptics: 'Vibración',
+      aimHead: 'Indicador de mira', aimHint: 'Color y tamaño del rayo al apuntar arriba o abajo con la barra de movimiento.',
+      aimColor: 'Color', aimRadius: 'Tamaño', aimPick: 'Elegir',
       comboHud: 'HUD combo', bigTouch: 'Botones grandes',
       kbLegend: 'Ayuda de teclado', showTouchPads: 'Siempre botones táctiles',
       reducedMotion: 'Menos movimiento',
@@ -2596,6 +2630,11 @@ function applyLangStaticScreens() {
   setText('settingsHead', 'settings.title');
   setText('settingsSub', 'settings.sub');
   setText('setLangLbl', 'settings.lang');
+  setText('setAimHead', 'settings.aimHead');
+  setText('setAimHint', 'settings.aimHint');
+  setText('setAimColorLbl', 'settings.aimColor');
+  setText('setAimRadiusName', 'settings.aimRadius');
+  setText('setAimPickLbl', 'settings.aimPick');
   setText('settingsA11yTip', 'settings.a11yTip');
   const setMap = [
     ['setShake', 'settings.shake'], ['setHaptics', 'settings.haptics'], ['setComboHud', 'settings.comboHud'],
@@ -15900,10 +15939,25 @@ function fighterAimNorm(f) {
   return { nx: nx / len, ny: ny / len };
 }
 
-function aimVisualColor(ny) {
-  if (ny < -0.42) return '#7cf5ff';
-  if (ny > 0.22) return '#ffb06a';
-  return '#e8f0ff';
+function aimPrefColor() {
+  try {
+    return sanitizeAimHex(typeof save !== 'undefined' && save ? save.aimColor : AIM_COLOR_DEFAULT);
+  } catch (_) {
+    return AIM_COLOR_DEFAULT;
+  }
+}
+
+function aimPrefRadius() {
+  try {
+    return sanitizeAimRadius(typeof save !== 'undefined' && save ? save.aimRadius : AIM_RADIUS_DEFAULT);
+  } catch (_) {
+    return AIM_RADIUS_DEFAULT;
+  }
+}
+
+/** User color for the beam/dot. High/low still share one color — the height bar shows vertical aim. */
+function aimVisualColor(_ny) {
+  return aimPrefColor();
 }
 
 function drawJoyAimGuide(c, jx, jy, j, ui, accent) {
@@ -15933,10 +15987,11 @@ function drawJoyAimGuide(c, jx, jy, j, ui, accent) {
   c.fillRect(barX - px, Math.round(jy - px), px * 2, px * 2);
   if (j.active && Math.abs(j.dy) >= JOY_AIM_DEAD_PX) {
     const t = clamp(-j.dy / JOY_MAX_PX, -1, 1);
-    c.globalAlpha = 0.75;
+    c.globalAlpha = 0.82;
     c.fillStyle = aimVisualColor(-t);
     const ay = Math.round(jy - t * (barH / 2 - 4));
-    c.fillRect(barX - px * 2, ay - px, px * 4, px * 3);
+    const mark = Math.max(px * 3, Math.round(aimPrefRadius() * 0.55));
+    c.fillRect(barX - mark, ay - Math.round(mark * 0.55), mark * 2, Math.round(mark * 1.15));
   }
   c.restore();
   c.imageSmoothingEnabled = prev;
@@ -15946,31 +16001,95 @@ function drawPlayerAimIndicator(c, fighter, alpha) {
   if (!fighter || !fighter.alive) return;
   const aim = fighterAimNorm(fighter);
   const col = aimVisualColor(aim.ny);
+  const r = aimPrefRadius();
   const ox = fighter.x;
   const oy = fighter.y - 52 + clamp(aim.ny, -1, 0.55) * 32;
-  const len = 54;
+  const len = 38 + r * 2;
   c.save();
   c.globalAlpha = alpha != null ? alpha : 0.5;
   c.strokeStyle = col;
-  c.lineWidth = 3;
+  c.lineWidth = Math.max(2, r * 0.38);
+  c.lineCap = 'round';
   c.beginPath();
   c.moveTo(ox, oy);
   c.lineTo(ox + aim.nx * len, oy + aim.ny * len * 1.08);
   c.stroke();
   c.fillStyle = col;
   c.beginPath();
-  c.arc(ox + aim.nx * len, oy + aim.ny * len * 1.08, 5, 0, TAU);
+  c.arc(ox + aim.nx * len, oy + aim.ny * len * 1.08, Math.max(3, r), 0, TAU);
   c.fill();
   const hit = meleeHitPoint(fighter, { range: 40 });
+  const cross = Math.max(5, r + 1);
   c.globalAlpha *= 0.55;
-  c.lineWidth = 1.5;
+  c.lineWidth = Math.max(1.4, r * 0.22);
   c.beginPath();
-  c.moveTo(hit.hx - 6, hit.hy);
-  c.lineTo(hit.hx + 6, hit.hy);
-  c.moveTo(hit.hx, hit.hy - 6);
-  c.lineTo(hit.hx, hit.hy + 6);
+  c.moveTo(hit.hx - cross, hit.hy);
+  c.lineTo(hit.hx + cross, hit.hy);
+  c.moveTo(hit.hx, hit.hy - cross);
+  c.lineTo(hit.hx, hit.hy + cross);
   c.stroke();
   c.restore();
+}
+
+function drawAimPrefPreview() {
+  const el = document.getElementById('aimPrefPreview');
+  if (!el || typeof el.getContext !== 'function') return;
+  const c = el.getContext('2d');
+  if (!c) return;
+  const w = el.width || 180;
+  const h = el.height || 72;
+  c.clearRect(0, 0, w, h);
+  c.fillStyle = '#0a0d18';
+  c.fillRect(0, 0, w, h);
+  const col = aimPrefColor();
+  const r = aimPrefRadius();
+  const ox = 22;
+  const oy = h * 0.62;
+  const nx = 0.86;
+  const ny = -0.5;
+  const len = Math.min(w - 36, 40 + r * 2.4);
+  c.save();
+  c.strokeStyle = col;
+  c.lineWidth = Math.max(2, r * 0.38);
+  c.lineCap = 'round';
+  c.beginPath();
+  c.moveTo(ox, oy);
+  c.lineTo(ox + nx * len, oy + ny * len);
+  c.stroke();
+  c.fillStyle = col;
+  c.beginPath();
+  c.arc(ox + nx * len, oy + ny * len, Math.max(3, r), 0, Math.PI * 2);
+  c.fill();
+  c.restore();
+}
+
+function applyAimPrefs(color, radius) {
+  if (typeof save === 'undefined' || !save) return { color: AIM_COLOR_DEFAULT, radius: AIM_RADIUS_DEFAULT };
+  if (color != null) save.aimColor = sanitizeAimHex(color);
+  if (radius != null) save.aimRadius = sanitizeAimRadius(radius);
+  if (typeof persist === 'function') persist();
+  syncAimPrefControls();
+  return { color: aimPrefColor(), radius: aimPrefRadius() };
+}
+
+function syncAimPrefControls() {
+  const color = aimPrefColor();
+  const radius = aimPrefRadius();
+  const picker = document.getElementById('setAimColor');
+  if (picker && document.activeElement !== picker) picker.value = color;
+  const swatches = document.getElementById('setAimColorSwatches');
+  if (swatches) {
+    swatches.querySelectorAll('[data-aim-color]').forEach((btn) => {
+      const on = sanitizeAimHex(btn.getAttribute('data-aim-color')) === color;
+      btn.classList.toggle('on', on);
+      btn.setAttribute('aria-pressed', on ? 'true' : 'false');
+    });
+  }
+  const range = document.getElementById('setAimRadius');
+  if (range && document.activeElement !== range) range.value = String(radius);
+  const lbl = document.getElementById('setAimRadiusLbl');
+  if (lbl) lbl.textContent = String(radius);
+  drawAimPrefPreview();
 }
 
 /** Werpers / technique: snelheid in de mikrichting (joy ↑ = hoger gooien). */
@@ -34898,6 +35017,7 @@ const UI = {
     const lblS = document.getElementById('setSfxVolLbl');
     if (lblM) lblM.textContent = mPct + '%';
     if (lblS) lblS.textContent = sPct + '%';
+    try { if (typeof syncAimPrefControls === 'function') syncAimPrefControls(); } catch (_) {}
     ['setShake', 'setHaptics', 'setComboHud', 'setBigTouch', 'setKbLegend', 'setShowTouchPads', 'setReducedMotion', 'setLiteFx', 'setHighContrast'].forEach((id, i) => {
       const el = document.getElementById(id);
       if (!el) return;
@@ -35535,6 +35655,34 @@ function bindSettingsControls() {
   onVol('setSfxVol', 'setSfxVolLbl', 'sfxVol');
   onVol('pauseMusicVol', 'pauseMusicVolLbl', 'musicVol');
   onVol('pauseSfxVol', 'pauseSfxVolLbl', 'sfxVol');
+  const swatchHost = document.getElementById('setAimColorSwatches');
+  if (swatchHost && !swatchHost.dataset.bound) {
+    swatchHost.dataset.bound = '1';
+    swatchHost.addEventListener('click', (e) => {
+      const btn = e.target && e.target.closest ? e.target.closest('[data-aim-color]') : null;
+      if (!btn) return;
+      applyAimPrefs(btn.getAttribute('data-aim-color'), null);
+      try { AudioSys.sfx('select'); } catch (_) {}
+      haptic(6);
+    });
+  }
+  const aimColorEl = document.getElementById('setAimColor');
+  if (aimColorEl && !aimColorEl.dataset.bound) {
+    aimColorEl.dataset.bound = '1';
+    const onAimColor = () => applyAimPrefs(aimColorEl.value, null);
+    aimColorEl.addEventListener('input', onAimColor);
+    aimColorEl.addEventListener('change', onAimColor);
+  }
+  const aimRadEl = document.getElementById('setAimRadius');
+  if (aimRadEl && !aimRadEl.dataset.bound) {
+    aimRadEl.dataset.bound = '1';
+    const onAimRadius = () => {
+      applyAimPrefs(null, aimRadEl.value);
+      aimRadEl.setAttribute('aria-valuenow', String(aimPrefRadius()));
+    };
+    aimRadEl.addEventListener('input', onAimRadius);
+    aimRadEl.addEventListener('change', onAimRadius);
+  }
   const toggles = [
     ['setShake', 'shake'], ['setHaptics', 'haptics'], ['setComboHud', 'comboHud'],
     ['setBigTouch', 'bigTouch'], ['setKbLegend', 'kbLegend'], ['setShowTouchPads', 'showTouchPads'],
