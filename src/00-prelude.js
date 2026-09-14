@@ -1,6 +1,6 @@
 'use strict';
 /* =========================================================================
-   STICKMAN FIGHTER — Monster Arena
+   STICKMAN FIGHTER
    Stickman-vechtgame voor iPad (touch) en desktop (toetsenbord).
    Modi: Avontuur, Training, Versus 2P, Muur, Mats (coinrun).
    Audio (sfx + bgm) is procedureel via Web Audio — rechtenvrij.

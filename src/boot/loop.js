@@ -191,7 +191,7 @@ function paintMenuHeroCanvas(t) {
   }
 
   let map = { roadY: Hs * 0.82 };
-  const drawOne = (fn, ctx) => fn(ctx, Ws, Hs, t, { lite, caption: true }) || map;
+  const drawOne = (fn, ctx) => fn(ctx, Ws, Hs, t, { lite, caption: false }) || map;
 
   if (N >= 2 && aTo > 0.02 && fromIdx !== toIdx) {
     const buf = ensureMenuVistaBuf(Ws, Hs);
@@ -210,7 +210,7 @@ function paintMenuHeroCanvas(t) {
   } else if (N >= 1) {
     map = drawOne(VISTAS[fromIdx], c);
   } else if (typeof drawLandwegPixelmap === 'function') {
-    map = drawLandwegPixelmap(c, Ws, Hs, t, { lite, caption: true, groundY: Hs * 0.58 }) || map;
+    map = drawLandwegPixelmap(c, Ws, Hs, t, { lite, caption: false, groundY: Hs * 0.58 }) || map;
     map.roadY = (map.groundY || Hs * 0.58) + 8;
   } else {
     const sky = c.createLinearGradient(0, 0, 0, Hs);
@@ -598,17 +598,10 @@ function shouldSkipTitleGate() {
 
 function syncTitleGateCopy() {
   const greet = document.getElementById('sfTitleGreet');
-  const nameLbl = document.getElementById('sfTitleNameLbl');
-  const nameInp = document.getElementById('sfTitleName');
   const note = document.getElementById('sfTitleNote');
   const startLbl = document.getElementById('sfTitleStartLbl');
   const contLbl = document.getElementById('sfTitleContinueLbl');
   const tag = (typeof save !== 'undefined' && save && save.playerTag) ? String(save.playerTag) : '';
-  if (nameLbl) nameLbl.textContent = typeof t === 'function' ? t('menu.titleName') : 'Hoe heet je?';
-  if (nameInp) {
-    nameInp.placeholder = typeof t === 'function' ? t('menu.titleNamePh') : 'Jouw naam';
-    if (!nameInp.value && tag) nameInp.value = tag;
-  }
   if (note) note.textContent = typeof t === 'function' ? t('menu.titleNote') : 'Geen account — je save blijft op deze telefoon';
   if (startLbl) {
     startLbl.innerHTML = (typeof t === 'function' ? t('menu.startGame') : 'SPELEN') +
@@ -621,20 +614,15 @@ function syncTitleGateCopy() {
       '<small>' + (modeName || (typeof t === 'function' ? t('menu.startSub') : 'Laatste modus')) + '</small>';
   }
   if (greet) {
-    const live = (nameInp && nameInp.value.trim()) || tag;
-    greet.textContent = live && typeof t === 'function'
-      ? t('menu.titleGreet', { name: live })
-      : (live ? ('Hoi, ' + live) : '');
-    greet.hidden = !live;
+    greet.textContent = tag && typeof t === 'function'
+      ? t('menu.titleGreet', { name: tag })
+      : (tag ? ('Hoi, ' + tag) : '');
+    greet.hidden = !tag;
   }
 }
 
 function saveTitlePlayerTag() {
-  const inp = document.getElementById('sfTitleName');
-  if (!inp || typeof save === 'undefined' || !save) return;
-  const tag = typeof sanitizePlayerTag === 'function' ? sanitizePlayerTag(inp.value) : String(inp.value || '').trim().slice(0, 16);
-  save.playerTag = tag;
-  try { persist(); } catch (_) {}
+  /* Name field removed from title-gate — keep any existing save.playerTag. */
 }
 
 function enterHubFromTitle(opts) {
@@ -666,7 +654,6 @@ function wireTitleGate() {
   window.__sfTitleWired = true;
   const start = document.getElementById('sfTitleStart');
   const cont = document.getElementById('sfTitleContinue');
-  const nameInp = document.getElementById('sfTitleName');
   const go = (resume) => {
     try { enterHubFromTitle({ resume: !!resume }); } catch (_) { dismissSplashOverlay(); }
   };
@@ -674,12 +661,6 @@ function wireTitleGate() {
   else if (start) start.addEventListener('click', () => go(false));
   if (cont && typeof bindPress === 'function') bindPress(cont, () => go(true));
   else if (cont) cont.addEventListener('click', () => go(true));
-  if (nameInp) {
-    nameInp.addEventListener('input', () => { try { syncTitleGateCopy(); } catch (_) {} });
-    nameInp.addEventListener('keydown', (e) => {
-      if (e.key === 'Enter') { e.preventDefault(); go(false); }
-    });
-  }
 }
 
 function runTitleArenaLoop() {
@@ -733,8 +714,8 @@ function runSplashIntro() {
   let finished = false;
   const labels = [
     (typeof tOr === 'function' ? tOr('menu.splash0', 'Laden…') : 'Laden…'),
-    (typeof tOr === 'function' ? tOr('menu.splash1', 'Pixelmap…') : 'Pixelmap…'),
-    (typeof tOr === 'function' ? tOr('menu.splash2', 'Arena…') : 'Arena…'),
+    (typeof tOr === 'function' ? tOr('menu.splash1', 'Laden…') : 'Laden…'),
+    (typeof tOr === 'function' ? tOr('menu.splash2', 'Laden…') : 'Laden…'),
     (typeof tOr === 'function' ? tOr('menu.splash3', 'Klaar') : 'Klaar'),
   ];
 
