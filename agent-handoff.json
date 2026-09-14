@@ -17,11 +17,11 @@
     "swCache": "stickfighter-app-v375",
     "gameJsQuery": "game.js?v=375",
     "cssQuery": "styles/main.css?v=375",
-    "featureBranch": "cursor/i18n-en-de-nl-chrome-1c6f",
+    "featureBranch": "cursor/i18n-factcheck-za-7bca",
     "pushBlocked": null,
     "shareUrl": "https://brennyz.github.io/stickman-fighter/speel.html",
-    "note": "i18n coverage #273 is the rebase base for factcheck #283. Additive aliases added. Do not fight polish strings.",
-    "updated": "2026-09-14T16:50:00Z"
+    "note": "#283 rebased on #273. Coverage keys + overlays; polish wording wins. v1.18.165 / SW 375. Do not silent-merge main.",
+    "updated": "2026-09-14T17:20:00Z"
   },
   "githubSync": {
     "policy": "Trigger van de user: «merge main» = commit (als nodig) + push origin/main. Daarna GitHub Pages (~1–3 min) → speel.html is LIVE. Niet stil pushen. Houd pendingUpload bij tot origin/main gelijk is.",
@@ -110,6 +110,13 @@
       "id": "w-20260914T165500",
       "from": "user",
       "text": "Harden deze laatste features. Pure harden-pass on THIS lane only (EN/DE/NL i18n). Harden coverage, no leftover Dutch in EN/DE. Same PR (#273). No scope creep.",
+      "status": "done-in-code",
+      "updated": "2026-09-14"
+    },
+    {
+      "id": "w-20260914T165200",
+      "from": "user",
+      "text": "LANGUAGE FACT-CHECKER + fixes. Start locales Z→A. Find Dutch leaks, mixed/garbled copy, English stubs; fix catalogs + hardcoded UI.",
       "status": "done-in-code",
       "updated": "2026-09-14"
     },
@@ -644,6 +651,14 @@
   ],
   "sessionLog": [
     {
+      "at": "2026-09-14T17:20:02Z",
+      "summary": "#283 rebased onto #273: coverage keys + overlays; polish wording wins. v1.18.165 / SW 375. Not silent main."
+    },
+    {
+      "at": "2026-09-14T17:20:00Z",
+      "summary": "#283 rebased on #273: coverage keys + overlays; polish wording wins. v1.18.165 / SW 375. Not silent main."
+    },
+    {
       "at": "2026-09-14T17:10:20Z",
       "summary": "#273 is rebase base for factcheck #283: t() EN-first aligned, additive dexAppears/errLoad aliases. No string fight."
     },
@@ -734,14 +749,6 @@
     {
       "at": "2026-08-17T14:01:21Z",
       "summary": "GitHub-sync: PC==main; wachtlijst + vraag-bij-upload; tracking nog lokaal"
-    },
-    {
-      "at": "2026-08-17T10:21:10Z",
-      "summary": "PC-pull geregeld: pull-main.sh + GITHUB-PUSH is nu pull-kaart; main LIVE"
-    },
-    {
-      "at": "2026-08-17T10:20:50Z",
-      "summary": "pull-main script + GITHUB-PUSH bijwerken zodat de pc één commando kan pullen"
     }
   ],
   "implementedFeaturesSummary": "d18 char select deel 1+2 (v1.11.1-2); Mats coinrun + shuriken mik/vliegers + anti-spam (v1.12.0); speel.html (v1.12.2+). Zie HANDOFF-ZOEKINDEX.md en improvement-d20-bag.json userFeatureLog.",

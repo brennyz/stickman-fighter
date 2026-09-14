@@ -129,7 +129,7 @@ document.querySelectorAll('[data-hub]').forEach((el) => {
     AudioSys.init(); AudioSys.sfx('select');
     const hub = el.dataset.hub;
     if (hub === 'adventure') {
-      UI.safeOpen('levelScreen', () => UI.renderLevels(), { msg: 'Avontuur laden mislukt' });
+      UI.safeOpen('levelScreen', () => UI.renderLevels(), { msg: t('ui.errLoadAdventure') });
     } else if (hub === 'versus') {
       try { toastVersusRetired(); } catch (_) {}
     } else if (hub === 'summon') {
@@ -142,7 +142,7 @@ document.querySelectorAll('[data-hub]').forEach((el) => {
 bindPress(document.getElementById('menuProfileBar'), () => {
   AudioSys.init(); AudioSys.sfx('select');
   UI.safeOpen('missionsScreen', () => UI.renderMissions(), {
-    msg: 'Missies laden mislukt — herlaad via Verse versie',
+    msg: t('ui.errLoadMissions'),
   });
 });
 bindPress(document.getElementById('btnGambleGooiStart'), () => gokGooiStartFromScreen());
@@ -180,7 +180,7 @@ bindPress(btnMatsCoins, () => {
 function openCollectionScreen(screenId, renderFn) {
   AudioSys.init();
   AudioSys.sfx('select');
-  UI.safeOpen(screenId, renderFn, { msg: 'Scherm laden mislukt — herlaad via Verse versie' });
+  UI.safeOpen(screenId, renderFn, { msg: t('ui.errLoadScreen') });
 }
 
 bindPress(document.getElementById('btnWeapons'), () => {
@@ -243,13 +243,13 @@ bindPress(btnSettings, () => {
   UI.safeOpen('settingsScreen', () => {
     UI.renderSettings();
     UI.renderHosting();
-  }, { msg: 'Instellingen laden mislukt' });
+  }, { msg: t('ui.errLoadSettings') });
 });
 const btnMissions = document.getElementById('btnMissions');
 bindPress(btnMissions, () => {
   AudioSys.init(); AudioSys.sfx('select');
   UI.safeOpen('missionsScreen', () => UI.renderMissions(), {
-    msg: 'Missies laden mislukt — herlaad via Verse versie',
+    msg: t('ui.errLoadMissions'),
   });
 });
 const dailyClaimAllBtn = document.getElementById('dailyClaimAllBtn');
@@ -493,7 +493,7 @@ bindSettingsControls();
 const btnHelp = document.getElementById('btnHelp');
 bindPress(btnHelp, () => {
   AudioSys.init(); AudioSys.sfx('select');
-  UI.safeOpen('helpScreen', () => UI.renderHelp(), { msg: 'Help laden mislukt' });
+  UI.safeOpen('helpScreen', () => UI.renderHelp(), { msg: t('ui.errLoadHelp') });
 });
 function runForceFreshVersion() {
   safeAsync(runVersionUpdateWithSavePrompt(), 'forceFresh', t('versionUpdate.fail'));
@@ -503,7 +503,7 @@ bindPress(document.getElementById('btnForceFresh'), runForceFreshVersion);
 const btnIslandHelp = document.getElementById('btnIslandHelp');
 bindPress(btnIslandHelp, () => {
   AudioSys.sfx('select');
-  UI.safeOpen('helpScreen', () => UI.renderHelp(), { msg: 'Help laden mislukt' });
+  UI.safeOpen('helpScreen', () => UI.renderHelp(), { msg: t('ui.errLoadHelp') });
 });
 const helpOk = document.getElementById('helpOk');
 bindPress(helpOk, () => { AudioSys.sfx('select'); UI.goMenu(); });

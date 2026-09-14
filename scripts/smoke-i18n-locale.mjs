@@ -3,6 +3,7 @@
  * Locale chrome: dock label is Tips (not raw menu.tips),
  * NL lose copy is VERLOREN, no leftover PICK AN ISLAND,
  * version banner is dismissible and hidden during play.
+ * Coverage (#273) + Z→A polish overlays (#283).
  */
 import fs from 'fs';
 import path from 'path';
@@ -22,6 +23,12 @@ const css = fs.readFileSync(path.join(root, 'styles/main.css'), 'utf8');
 const html = fs.readFileSync(path.join(root, 'index.html'), 'utf8');
 const game = fs.readFileSync(path.join(root, 'src/game/game.js'), 'utf8');
 const ui = fs.readFileSync(path.join(root, 'src/ui/ui.js'), 'utf8');
+const locales = fs.readFileSync(path.join(root, 'src/i18n/catalog-locales.js'), 'utf8');
+const start = fs.readFileSync(path.join(root, 'src/boot/start.js'), 'utf8');
+const deChrome = fs.readFileSync(path.join(root, 'src/i18n/catalog-de.js'), 'utf8');
+const manifest = fs.readFileSync(path.join(root, 'src/manifest.json'), 'utf8');
+const catalogEn = catalog.split('const CATALOG_EN')[1] || '';
+const i18nEs = (i18n.split(/\n\s+es:\s+\{/)[1] || '').split(/\n\s+zh:\s+\{/)[0];
 
 if (/I18N\.nl\.menu\.tips\s*=\s*\[/.test(catalog)) fail('NL menu.tips must stay the dock label, not a tip array');
 if (!/I18N\.nl\.menu\.tipList\s*=\s*\[/.test(catalog)) fail('NL tip list must live on menu.tipList');
@@ -49,15 +56,18 @@ if (!/__sfNetQuietUpdate/.test(loop)) fail('dismiss must quiet the update banner
 if (!/body\.is-playing #netStatus\.sw-update/.test(css)) fail('update banner must hide during play');
 if (!/id="sfTitleStart"/.test(html) || /id="sfTitleName"/.test(html)) fail('name field must stay off the title gate');
 
-const deChrome = fs.readFileSync(path.join(root, 'src/i18n/catalog-de.js'), 'utf8');
-const manifest = fs.readFileSync(path.join(root, 'src/manifest.json'), 'utf8');
 if (!manifest.includes('src/i18n/catalog-de.js')) fail('manifest must load catalog-de.js');
+if (!manifest.includes('src/i18n/catalog-locales.js')) fail('manifest must load catalog-locales.js');
 if (!/CATALOG_DE_CHROME/.test(catalog)) fail('mergeI18nCatalogs must merge CATALOG_DE_CHROME');
+if (!/applyLocaleOverlays/.test(catalog)) fail('mergeI18nCatalogs must re-apply locale overlays after chrome');
+if (!/function applyLocaleOverlays/.test(locales)) fail('applyLocaleOverlays missing in catalog-locales.js');
 if (!/const CATALOG_DE_CHROME/.test(deChrome)) fail('CATALOG_DE_CHROME missing');
 for (const ns of ['ui:', 'hud:', 'combat:', 'toast:', 'missionsUi:']) {
   if (!deChrome.includes(ns)) fail('DE chrome missing namespace ' + ns);
 }
 if (!/lang !== 'en'/.test(i18n) || !/lang !== 'nl'/.test(i18n)) fail('t() must prefer EN over NL when locale is not Dutch');
+if (!/Non-NL missing keys fall back to EN first/.test(i18n)) fail('t() must fall back to EN before NL for non-NL');
+if (!/order = lang === 'nl' \? \['nl', 'en'\] : \[lang, 'en', 'nl'\]/.test(catalog)) fail('i18nList must prefer EN over NL for non-NL');
 if (!/summons: 'Summons'/.test(i18n) || !/summonsSub: 'Tägliche Kiste/.test(i18n)) {
   fail('DE menu.summons chrome missing');
 }
@@ -66,12 +76,32 @@ if (!/renderSummon/.test(i18n) || !/renderUpgrades/.test(i18n)) {
   fail('applyLang must re-render summon and upgrades on locale switch');
 }
 
-if (/charBig5Hint: 'Eigen vechters/.test(catalog.split('const CATALOG_EN')[1] || '')) {
-  fail('EN catalog still has Dutch charBig5Hint');
+if (!/overlayI18nCatalog\(CATALOG_FR/.test(locales)) fail('FR overlay missing');
+if (!/overlayI18nCatalog\(CATALOG_ES/.test(locales)) fail('ES overlay missing');
+if (!/overlayI18nCatalog\(CATALOG_DE/.test(locales)) fail('DE overlay missing');
+
+for (const loc of ['FR', 'ES', 'DE']) {
+  if (!new RegExp(`overlayI18nCatalog\\(CATALOG_${loc}[\\s\\S]*toast:\\s*\\{`).test(locales)) fail(loc + ' toast overlay missing');
+  if (!new RegExp(`overlayI18nCatalog\\(CATALOG_${loc}[\\s\\S]*combat:\\s*\\{`).test(locales)) fail(loc + ' combat overlay missing');
+  if (!new RegExp(`overlayI18nCatalog\\(CATALOG_${loc}[\\s\\S]*hud:\\s*\\{`).test(locales)) fail(loc + ' hud overlay missing');
 }
-if (/spiral_orb: 'Spiraal Orb'/.test(catalog.split('const CATALOG_EN')[1] || '')) {
-  fail('EN catalog still has Dutch Spiraal Orb skill name');
-}
+
+if (/Lande 3 finishers/.test(catalog + locales)) fail('FR still has machine-Dutch Lande 3 finishers');
+if (/Aterriza 3 finishers/.test(catalog + locales)) fail('ES still has machine-English Aterriza 3 finishers');
+if (/Schlacker/.test(catalog + locales)) fail('DE wall100 still has garbled Schlacker');
+if (/DANNeben/.test(locales)) fail('DE miss typo DANNeben');
+if (!/Place 3 finishers/.test(locales)) fail('FR finisher3 not polished');
+if (!/Asesta 3 finishers/.test(locales)) fail('ES finisher3 not polished');
+if (!/Abrissprofi/.test(locales)) fail('DE wall100 not polished to Abrissprofi');
+
+if (/charBig5Hint: 'Eigen vechters/.test(catalogEn)) fail('EN catalog still has Dutch charBig5Hint');
+if (/spiral_orb: 'Spiraal Orb'/.test(catalogEn)) fail('EN catalog still has Dutch Spiraal Orb skill name');
+if (/charBig5Hint: 'Own fighters/.test(catalogEn)) fail('EN charBig5Hint should be Your fighters (polish)');
+if (!/charBig5Hint: 'Your fighters · quick pick'/.test(catalogEn)) fail('EN charBig5Hint polish missing');
+if (!/charLocked: 'Vergrendeld'/.test(catalog)) fail('NL charLocked must be Vergrendeld');
+if (!/charHead: 'KIES VECHTER'/.test(catalog)) fail('NL charHead must be KIES VECHTER');
+if (/satanAfterClear: 'Adventure gehaald/.test(catalog)) fail('NL satanAfterClear still has English Adventure');
+
 if (!/continueLastMode: 'Laatste modus'/.test(catalog)) fail('NL continueLastMode missing');
 if (!/continueLastMode: 'Last mode'/.test(catalog)) fail('EN continueLastMode missing');
 if (!/continueLastMode: 'Letzter Modus'/.test(deChrome)) fail('DE continueLastMode missing');
@@ -104,4 +134,17 @@ if (!/egg\.dailyReady/.test(fs.readFileSync(path.join(root, 'src/data/egg-pets.j
 }
 if (/Gratis Pull/.test(i18n)) fail('DE pets.crackEggSub still has leftover Dutch Gratis');
 
-console.log('SMOKE_OK i18n-locale: Tips, VERLOREN, EN/DE chrome catalogs, no leftover Dutch tiles');
+if (!/updateReady: 'Nouvelle version prête/.test(i18n)) fail('FR net chrome missing');
+if (!/updateReady: 'Nueva versión lista/.test(i18n)) fail('ES net chrome missing');
+if (!/summons: 'Summons', summonsSub: 'Coffre du jour/.test(i18n)) fail('FR summons chrome missing');
+if (!/summons: 'Summons', summonsSub: 'Cofre diario/.test(i18n)) fail('ES summons chrome missing');
+if (/teens\+/.test(i18nEs)) fail('ES ageHint still has English teens+');
+if (/Version fraîche/.test(i18n)) fail('FR still has calque Version fraîche');
+
+if (!/ui\.dexAppear/.test(ui) && !/ui\.dexAppears/.test(ui)) fail('dex card still hardcodes appear line');
+if (!/ui\.dexNotBeaten/.test(ui) && !/ui\.dexNotSeen/.test(ui)) fail('dex card still hardcodes Dutch not-seen');
+if (!/ui\.dexPlayAdv/.test(ui)) fail('dex card still hardcodes Speel avontuur');
+if (!/ui\.errLoadAdventure/.test(start)) fail('adventure load error still hardcoded Dutch');
+if (!/ui\.errLoadHelp/.test(start)) fail('help load error still hardcoded Dutch');
+
+console.log('SMOKE_OK i18n-locale: Tips/VERLOREN + #273 coverage + #283 overlays (EN-first, no Dutch leak stubs)');
