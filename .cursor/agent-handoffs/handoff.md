@@ -42,6 +42,12 @@ Menu → **2 spelers** → `charSelectScreen`.
 |--------|--------|---------|
 | v1.12.0 | `f6c86bf` | Modus `coinrun`, knop **Mats · muntjes bonus**, 45s, munten + roze vliegers |
 
+### Move-bar aim tutorial (hoog / laag)
+
+| Versie | Code | Reset voor hertest |
+|--------|------|--------------------|
+| v1.18.164 | `src/systems/aim-tutorial.js` · `tipsSeen.moveBarAim` | `window.__sf.resetAimTutorial()` daarna Avontuur of Training starten |
+
 ### Mikken met wapen (shuriken) — vloer / vogels / hoog
 
 | Versie | Commit | In game |

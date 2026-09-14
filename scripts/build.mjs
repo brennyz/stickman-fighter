@@ -24,6 +24,7 @@ const REQUIRED_MODULES = [
   'src/systems/a11y.js',
   'src/systems/fighter-move.js',
   'src/systems/input.js',
+  'src/systems/aim-tutorial.js',
 ];
 for (const req of REQUIRED_MODULES) {
   if (!files.includes(req)) {

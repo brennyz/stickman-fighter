@@ -47,6 +47,7 @@ function startGame(mode, opts) {
   try { AudioSys.setPaused(false); } catch (_) {}
   try { recordLastPlay(mode, opts); } catch (_) {}
   try { applyModeOnboarding(mode, game); } catch (_) {}
+  try { if (typeof maybeStartAimTutorial === 'function') maybeStartAimTutorial(game); } catch (_) {}
   try { UI.hideGambleRollFlash(); } catch (_) {}
   try { UI.show(null); } catch (_) { try { syncPlayLayer(); } catch (__) {} }
   // Eerste speelframe — voorkomt 1 frame menu-blauw op canvas
