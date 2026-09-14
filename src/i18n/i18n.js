@@ -530,10 +530,11 @@ function setLang(code) {
 
 function t(key, params) {
   const lang = getLang();
-  // Locale in scope: current lang first. Non-NL never falls through to Dutch chrome.
+  // Coverage + factcheck (#283): current → EN → NL. Non-NL never leaks Dutch chrome.
   let s = i18nLookup(I18N[lang], key);
-  if (!s && lang !== 'nl') s = i18nLookup(I18N.en, key);
-  if (!s) s = (lang === 'nl' ? i18nLookup(I18N.en, key) : i18nLookup(I18N.nl, key)) || key;
+  if (!s && lang !== 'en') s = i18nLookup(I18N.en, key);
+  if (!s && lang !== 'nl') s = i18nLookup(I18N.nl, key);
+  if (!s) s = key;
   if (params && typeof params === 'object') {
     for (const [k, v] of Object.entries(params)) {
       s = s.split('{' + k + '}').join(String(v));

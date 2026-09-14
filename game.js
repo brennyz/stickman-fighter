@@ -2474,10 +2474,11 @@ function setLang(code) {
 
 function t(key, params) {
   const lang = getLang();
-  // Locale in scope: current lang first. Non-NL never falls through to Dutch chrome.
+  // Coverage + factcheck (#283): current → EN → NL. Non-NL never leaks Dutch chrome.
   let s = i18nLookup(I18N[lang], key);
-  if (!s && lang !== 'nl') s = i18nLookup(I18N.en, key);
-  if (!s) s = (lang === 'nl' ? i18nLookup(I18N.en, key) : i18nLookup(I18N.nl, key)) || key;
+  if (!s && lang !== 'en') s = i18nLookup(I18N.en, key);
+  if (!s && lang !== 'nl') s = i18nLookup(I18N.nl, key);
+  if (!s) s = key;
   if (params && typeof params === 'object') {
     for (const [k, v] of Object.entries(params)) {
       s = s.split('{' + k + '}').join(String(v));
@@ -12682,6 +12683,17 @@ function seedNlGameStrings() {
     dexHintSpecies: '{cur}/{need} soorten',
     dexHintRarities: '{cur}/{need} rariteiten',
     dexHintKillsBook: '{cur}/{need} kills in boek',
+    // Aliases for factcheck #283 — same chrome, do not fight their ui.js names.
+    dexAppears: 'Verschijnt in avontuur · unlock Lv {lv}',
+    dexBaseStats: '{type} · basis HP {hp} · dmg {dmg} · spd {spd} · {xp} XP · Lv {lv}',
+    dexNotSeen: 'Nog niet verslagen',
+    dexKillsLine: '{n}× verslagen',
+    dexPlayAdv: 'Speel avontuur',
+    errLoadAdventure: 'Avontuur laden mislukt',
+    errLoadMissions: 'Missies laden mislukt — herlaad via Verse versie',
+    errLoadSettings: 'Instellingen laden mislukt',
+    errLoadScreen: 'Scherm laden mislukt — herlaad via Verse versie',
+    errLoadHelp: 'Tips laden mislukt',
   });
   if (!I18N.nl.egg) I18N.nl.egg = {};
   Object.assign(I18N.nl.egg, {
@@ -13643,6 +13655,16 @@ const CATALOG_EN = {
     dexHintSpecies: '{cur}/{need} species',
     dexHintRarities: '{cur}/{need} rarities',
     dexHintKillsBook: '{cur}/{need} kills in book',
+    dexAppears: 'Appears in adventure · unlock Lv {lv}',
+    dexBaseStats: '{type} · base HP {hp} · dmg {dmg} · spd {spd} · {xp} XP · Lv {lv}',
+    dexNotSeen: 'Not defeated yet',
+    dexKillsLine: '{n}× defeated',
+    dexPlayAdv: 'Play adventure',
+    errLoadAdventure: 'Could not load adventure',
+    errLoadMissions: 'Could not load missions — tap Fresh version',
+    errLoadSettings: 'Could not load settings',
+    errLoadScreen: 'Could not load screen — tap Fresh version',
+    errLoadHelp: 'Could not load tips',
   },
   fighter: {
     energyEmpty: 'Energy not full!', subst: 'Substitution!', dash: 'Dash!',
@@ -15160,6 +15182,16 @@ const CATALOG_DE_CHROME = {
     dexHintSpecies: '{cur}/{need} Arten',
     dexHintRarities: '{cur}/{need} Seltenheiten',
     dexHintKillsBook: '{cur}/{need} Kills im Buch',
+    dexAppears: 'Erscheint im Abenteuer · Unlock Lv {lv}',
+    dexBaseStats: '{type} · Basis-HP {hp} · dmg {dmg} · spd {spd} · {xp} XP · Lv {lv}',
+    dexNotSeen: 'Noch nicht besiegt',
+    dexKillsLine: '{n}× besiegt',
+    dexPlayAdv: 'Abenteuer spielen',
+    errLoadAdventure: 'Abenteuer laden fehlgeschlagen',
+    errLoadMissions: 'Missionen laden fehlgeschlagen — Neue Version tippen',
+    errLoadSettings: 'Einstellungen laden fehlgeschlagen',
+    errLoadScreen: 'Bildschirm laden fehlgeschlagen — Neue Version tippen',
+    errLoadHelp: 'Tipps laden fehlgeschlagen',
   },
 };
 /* --- src/systems/audio-samples.js --- */

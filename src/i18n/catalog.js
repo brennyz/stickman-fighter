@@ -886,6 +886,17 @@ function seedNlGameStrings() {
     dexHintSpecies: '{cur}/{need} soorten',
     dexHintRarities: '{cur}/{need} rariteiten',
     dexHintKillsBook: '{cur}/{need} kills in boek',
+    // Aliases for factcheck #283 — same chrome, do not fight their ui.js names.
+    dexAppears: 'Verschijnt in avontuur · unlock Lv {lv}',
+    dexBaseStats: '{type} · basis HP {hp} · dmg {dmg} · spd {spd} · {xp} XP · Lv {lv}',
+    dexNotSeen: 'Nog niet verslagen',
+    dexKillsLine: '{n}× verslagen',
+    dexPlayAdv: 'Speel avontuur',
+    errLoadAdventure: 'Avontuur laden mislukt',
+    errLoadMissions: 'Missies laden mislukt — herlaad via Verse versie',
+    errLoadSettings: 'Instellingen laden mislukt',
+    errLoadScreen: 'Scherm laden mislukt — herlaad via Verse versie',
+    errLoadHelp: 'Tips laden mislukt',
   });
   if (!I18N.nl.egg) I18N.nl.egg = {};
   Object.assign(I18N.nl.egg, {
@@ -1847,6 +1858,16 @@ const CATALOG_EN = {
     dexHintSpecies: '{cur}/{need} species',
     dexHintRarities: '{cur}/{need} rarities',
     dexHintKillsBook: '{cur}/{need} kills in book',
+    dexAppears: 'Appears in adventure · unlock Lv {lv}',
+    dexBaseStats: '{type} · base HP {hp} · dmg {dmg} · spd {spd} · {xp} XP · Lv {lv}',
+    dexNotSeen: 'Not defeated yet',
+    dexKillsLine: '{n}× defeated',
+    dexPlayAdv: 'Play adventure',
+    errLoadAdventure: 'Could not load adventure',
+    errLoadMissions: 'Could not load missions — tap Fresh version',
+    errLoadSettings: 'Could not load settings',
+    errLoadScreen: 'Could not load screen — tap Fresh version',
+    errLoadHelp: 'Could not load tips',
   },
   fighter: {
     energyEmpty: 'Energy not full!', subst: 'Substitution!', dash: 'Dash!',

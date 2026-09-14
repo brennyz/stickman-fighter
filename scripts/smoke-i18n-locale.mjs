@@ -57,7 +57,7 @@ if (!/const CATALOG_DE_CHROME/.test(deChrome)) fail('CATALOG_DE_CHROME missing')
 for (const ns of ['ui:', 'hud:', 'combat:', 'toast:', 'missionsUi:']) {
   if (!deChrome.includes(ns)) fail('DE chrome missing namespace ' + ns);
 }
-if (!/lang !== 'nl'/.test(i18n)) fail('t() must prefer EN over NL when locale is not Dutch');
+if (!/lang !== 'en'/.test(i18n) || !/lang !== 'nl'/.test(i18n)) fail('t() must prefer EN over NL when locale is not Dutch');
 if (!/summons: 'Summons'/.test(i18n) || !/summonsSub: 'Tägliche Kiste/.test(i18n)) {
   fail('DE menu.summons chrome missing');
 }

@@ -20,7 +20,7 @@
     "featureBranch": "cursor/i18n-en-de-nl-chrome-1c6f",
     "pushBlocked": null,
     "shareUrl": "https://brennyz.github.io/stickman-fighter/speel.html",
-    "note": "i18n coverage #273 only. Factcheck polish is #283 — do not fight strings; additive keys. Merge #273 then rebase #283.",
+    "note": "i18n coverage #273 is the rebase base for factcheck #283. Additive aliases added. Do not fight polish strings.",
     "updated": "2026-09-14T16:50:00Z"
   },
   "githubSync": {
@@ -644,6 +644,10 @@
   ],
   "sessionLog": [
     {
+      "at": "2026-09-14T17:10:20Z",
+      "summary": "#273 is rebase base for factcheck #283: t() EN-first aligned, additive dexAppears/errLoad aliases. No string fight."
+    },
+    {
       "at": "2026-09-14T17:08:39Z",
       "summary": "Parked on #273 coverage. Factcheck polish is #283 — no string fight; merge #273 then rebase #283."
     },
@@ -738,10 +742,6 @@
     {
       "at": "2026-08-17T10:20:50Z",
       "summary": "pull-main script + GITHUB-PUSH bijwerken zodat de pc één commando kan pullen"
-    },
-    {
-      "at": "2026-08-17T10:18:00Z",
-      "summary": "main LIVE 33d89b6 v1.18.151 — pull-commando voor de pc klaar"
     }
   ],
   "implementedFeaturesSummary": "d18 char select deel 1+2 (v1.11.1-2); Mats coinrun + shuriken mik/vliegers + anti-spam (v1.12.0); speel.html (v1.12.2+). Zie HANDOFF-ZOEKINDEX.md en improvement-d20-bag.json userFeatureLog.",
