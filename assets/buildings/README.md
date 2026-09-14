@@ -1,20 +1,20 @@
 # assets/buildings — factory pixel icons
 
-32×32 stickman-pixel SVGs. **Locked ids** (quirky factories, not generic sawmill/forge):
+32×32 stickman-pixel SVGs. **Locked ids = systems #292:**
 
 | File | buildingId |
 |------|------------|
 | `stick_lighter.svg` | `stick_lighter` |
 | `woodchip_glue.svg` | `woodchip_glue` |
 | `chipping_wood.svg` | `chipping_wood` |
-| `bamboo_boesa_boiler.svg` | `bamboo_boesa_boiler` |
-| `echo_whistle_mill.svg` | `echo_whistle_mill` |
+| `bamboo_boesa.svg` | `bamboo_boesa` |
+| `echo_whistle.svg` | `echo_whistle` |
 | `hub-buildings.svg` | `buildings` (HOME pixel) |
 
-Kebab-case copies (`stick-lighter.svg`, …) exist for older probes.
+Draft aliases (`bamboo_boesa_boiler.svg`, `echo_whistle_mill.svg`, kebab-case) still exist so old probes do not 404.
 
-HOME **stroke** tile: `assets/buttons/hub/buildings.svg`  
-Per-factory stroke (systems `artHint.iconFile`): `assets/buttons/modes/buildings-*.svg`
+HOME stroke: `assets/buttons/hub/buildings.svg`  
+Per-factory stroke: `assets/buttons/modes/buildings-*.svg`
 
 Wire map: [`../../BUILDING-PIXEL-MAP.md`](../../BUILDING-PIXEL-MAP.md)  
 Regenerate: `npm run pixels:buildings`  

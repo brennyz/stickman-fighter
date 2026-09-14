@@ -91,6 +91,13 @@
   },
   "userWishlist": [
     {
+      "id": "w-20260914T172600",
+      "from": "user",
+      "text": "Systems PR READY #292 — wire pixel art to stick_lighter, woodchip_glue, chipping_wood, bamboo_boesa, echo_whistle. Mega-merge only.",
+      "status": "done-in-code",
+      "updated": "2026-09-14"
+    },
+    {
       "id": "w-20260914T172200",
       "from": "user",
       "text": "Locked building art ids/names: stick_lighter, woodchip_glue, chipping_wood, bamboo_boesa_boiler, echo_whistle_mill — quirky factories, not generic sawmill/forge.",
@@ -628,6 +635,10 @@
   ],
   "sessionLog": [
     {
+      "at": "2026-09-14T17:27:40Z",
+      "summary": "Wired building pixels to #292 ids: stick_lighter, woodchip_glue, chipping_wood, bamboo_boesa, echo_whistle. Mega-merge only."
+    },
+    {
       "at": "2026-09-14T17:25:12Z",
       "summary": "Locked building art ids to stick_lighter…echo_whistle_mill (quirky factories, not forge/sawmill)."
     },
@@ -722,10 +733,6 @@
     {
       "at": "2026-08-17T10:20:50Z",
       "summary": "pull-main script + GITHUB-PUSH bijwerken zodat de pc één commando kan pullen"
-    },
-    {
-      "at": "2026-08-17T10:18:00Z",
-      "summary": "main LIVE 33d89b6 v1.18.151 — pull-commando voor de pc klaar"
     }
   ],
   "implementedFeaturesSummary": "d18 char select deel 1+2 (v1.11.1-2); Mats coinrun + shuriken mik/vliegers + anti-spam (v1.12.0); speel.html (v1.12.2+). Zie HANDOFF-ZOEKINDEX.md en improvement-d20-bag.json userFeatureLog.",

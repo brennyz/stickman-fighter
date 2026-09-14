@@ -11740,8 +11740,8 @@ function summonRevealCardDelayMs(totalMs) {
  *   stick_lighter
  *   woodchip_glue
  *   chipping_wood
- *   bamboo_boesa_boiler
- *   echo_whistle_mill
+ *   bamboo_boesa
+ *   echo_whistle
  *
  * Preview: assets/buildings/preview.html
  * Map:     BUILDING-PIXEL-MAP.md
@@ -11776,21 +11776,21 @@ const BUILDING_PIXELS = {
     hub: 'assets/buttons/hub/buildings.svg',
     iconFile: 'assets/buttons/modes/buildings-chipping-wood.svg',
   },
-  bamboo_boesa_boiler: {
-    id: 'bamboo_boesa_boiler',
+  bamboo_boesa: {
+    id: 'bamboo_boesa',
     name: 'Bamboo-Boesa Boiler',
     nameNl: 'Bamboe-Boesa Ketel',
     accent: '#4ecf6a',
-    card: 'assets/buildings/bamboo_boesa_boiler.svg',
+    card: 'assets/buildings/bamboo_boesa.svg',
     hub: 'assets/buttons/hub/buildings.svg',
     iconFile: 'assets/buttons/modes/buildings-bamboo-boesa.svg',
   },
-  echo_whistle_mill: {
-    id: 'echo_whistle_mill',
+  echo_whistle: {
+    id: 'echo_whistle',
     name: 'Echo-Whistle Mill',
     nameNl: 'Echo-Fluitmolen',
     accent: '#c792ff',
-    card: 'assets/buildings/echo_whistle_mill.svg',
+    card: 'assets/buildings/echo_whistle.svg',
     hub: 'assets/buttons/hub/buildings.svg',
     iconFile: 'assets/buttons/modes/buildings-echo-whistle.svg',
   },
@@ -11800,8 +11800,8 @@ const BUILDING_IDS = [
   'stick_lighter',
   'woodchip_glue',
   'chipping_wood',
-  'bamboo_boesa_boiler',
-  'echo_whistle_mill',
+  'bamboo_boesa',
+  'echo_whistle',
 ];
 
 /** HOME tile (stroke + pixel). */
@@ -11836,19 +11836,21 @@ const BUILDING_PIXEL_ALIASES = {
   woodchipper: 'chipping_wood',
   'chip-wood': 'chipping_wood',
 
-  bambooboesaboiler: 'bamboo_boesa_boiler',
-  bambooboesa: 'bamboo_boesa_boiler',
-  'bamboo-boesa': 'bamboo_boesa_boiler',
-  'boesa-boiler': 'bamboo_boesa_boiler',
-  boesa: 'bamboo_boesa_boiler',
-  'bamboo-boiler': 'bamboo_boesa_boiler',
-  bambooboiler: 'bamboo_boesa_boiler',
+  bamboo_boesa_boiler: 'bamboo_boesa',
+  bambooboesaboiler: 'bamboo_boesa',
+  bambooboesa: 'bamboo_boesa',
+  'bamboo-boesa': 'bamboo_boesa',
+  'boesa-boiler': 'bamboo_boesa',
+  boesa: 'bamboo_boesa',
+  'bamboo-boiler': 'bamboo_boesa',
+  bambooboiler: 'bamboo_boesa',
 
-  echowhistlemill: 'echo_whistle_mill',
-  'whistle-mill': 'echo_whistle_mill',
-  whistlemill: 'echo_whistle_mill',
-  'echo-mill': 'echo_whistle_mill',
-  echomill: 'echo_whistle_mill',
+  echo_whistle_mill: 'echo_whistle',
+  echowhistlemill: 'echo_whistle',
+  'whistle-mill': 'echo_whistle',
+  whistlemill: 'echo_whistle',
+  'echo-mill': 'echo_whistle',
+  echomill: 'echo_whistle',
 
   /* leftover generic stubs from early partner drafts — not the locked names */
   dojo: 'chipping_wood',
@@ -11858,17 +11860,17 @@ const BUILDING_PIXEL_ALIASES = {
   smith: 'stick_lighter',
   workshop: 'stick_lighter',
   foundry: 'stick_lighter',
-  garden: 'bamboo_boesa_boiler',
-  farm: 'bamboo_boesa_boiler',
-  kitchen: 'bamboo_boesa_boiler',
+  garden: 'bamboo_boesa',
+  farm: 'bamboo_boesa',
+  kitchen: 'bamboo_boesa',
   tower: 'woodchip_glue',
   watch: 'woodchip_glue',
   barracks: 'woodchip_glue',
   ranch: 'woodchip_glue',
-  shrine: 'echo_whistle_mill',
-  well: 'echo_whistle_mill',
-  temple: 'echo_whistle_mill',
-  mill: 'echo_whistle_mill',
+  shrine: 'echo_whistle',
+  well: 'echo_whistle',
+  temple: 'echo_whistle',
+  mill: 'echo_whistle',
 };
 
 function _buildingKeyForms(id) {
