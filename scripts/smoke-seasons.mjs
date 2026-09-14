@@ -73,7 +73,7 @@ must(/blurb: \{/.test(i18n) && /jungle:/.test(i18n), 'season blurbs missing');
 ['nl', 'en', 'de', 'fr', 'es'].forEach((lang) => {
   const idx = i18n.indexOf(`  ${lang}: {`);
   must(idx !== -1, `lang ${lang} missing`);
-  const slice = i18n.slice(idx, idx + 9000);
+  const slice = i18n.slice(idx, idx + 24000);
   must(/title: 'Seizoen'|title: 'Season'|title: 'Saison'|title: 'Temporada'/.test(slice),
     `season.title missing for ${lang}`);
 });

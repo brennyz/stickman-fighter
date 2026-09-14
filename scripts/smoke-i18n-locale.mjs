@@ -127,7 +127,9 @@ if (/Export bevat:/.test(ui)) fail('settings export hint still hardcodes Dutch')
 if (/Laatst opgeslagen:/.test(ui)) fail('settings save stamp still hardcodes Dutch');
 if (/Cosmetisch metgezel/.test(ui) || /Nog niet uitgekomen/.test(ui)) fail('egg pet chrome still hardcodes Dutch');
 if (!/ui\.dexSummary/.test(ui) || !/ui\.dexAllTypes/.test(ui)) fail('dex chrome must use t()');
-if (!/ui\.saveExportContains/.test(ui)) fail('settings export must use t()');
+if (!/ui\.saveExportContains/.test(ui) && !/exportHint\.textContent = saveExportSummaryLine\(\)/.test(ui)) {
+  fail('settings export must use t() or #269 summary line');
+}
 const missions = fs.readFileSync(path.join(root, 'src/systems/missions.js'), 'utf8');
 if (/boek \$\{dexCountFromSave/.test(missions) || /\$\{[^}]+\} prestaties/.test(missions)) fail('save export summary still hardcodes Dutch');
 if (/Volgende prestatie/.test(missions)) fail('dex next achievement still hardcodes Dutch');
