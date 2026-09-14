@@ -37,9 +37,9 @@
     "lastAsked": "2026-08-17T14:01:21Z",
     "pendingUpload": [
       {
-        "id": "commit-3fe2347",
+        "id": "commit-37f010a",
         "kind": "commit",
-        "text": "3fe2347 fix(ui): VERLOREN keep-loot, no sticky lose toasts, train Again i18n"
+        "text": "37f010a fix(i18n): NL result titles + Hub/Arcade follow language (v1.18.166 / SW 376)"
       }
     ],
     "pendingMerge": [
@@ -47,10 +47,10 @@
         "id": "pr-267",
         "kind": "pr",
         "ref": "#267",
-        "title": "EN-NL + VERLOREN keep-loot + no sticky lose toasts",
-        "status": "draft",
+        "title": "EN-NL VERLOREN + no NL ROBOT WINS + quiet toasts",
+        "status": "ready-wait-merge",
         "url": "https://github.com/brennyz/stickman-fighter/pull/267",
-        "note": "Niet op main."
+        "note": "Merge-ready. Niet op main tot «merge»."
       },
       {
         "id": "pr-266",
@@ -634,6 +634,10 @@
   ],
   "sessionLog": [
     {
+      "at": "2026-09-14T16:21:32Z",
+      "summary": "#267 merge-klaar: NL geen ROBOT WINS, VERLOREN, Hub/Arcade i18n, v1.18.166/SW376. Wacht «merge»."
+    },
+    {
       "at": "2026-09-14T16:15:52Z",
       "summary": "#267 EN-NL strak: resultaat-titels i18n, NL geen ROBOT WINS, streak-shouts, v1.18.166/SW376. #269 = upgrades. Wacht «merge»."
     },
@@ -728,10 +732,6 @@
     {
       "at": "2026-08-17T14:31:25Z",
       "summary": "Mega-merge op main: light-FX + versus-stubs + dawnblade · v1.18.152 / SW 362"
-    },
-    {
-      "at": "2026-08-17T14:01:21Z",
-      "summary": "GitHub-sync: PC==main; wachtlijst + vraag-bij-upload; tracking nog lokaal"
     }
   ],
   "implementedFeaturesSummary": "d18 char select deel 1+2 (v1.11.1-2); Mats coinrun + shuriken mik/vliegers + anti-spam (v1.12.0); speel.html (v1.12.2+). Zie HANDOFF-ZOEKINDEX.md en improvement-d20-bag.json userFeatureLog.",
