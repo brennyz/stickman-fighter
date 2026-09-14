@@ -1,3 +1,4 @@
+| 2026-09-14 | **P1 entry** | speel.html: alleen het install-blok van dit apparaat; Android ziet geen iPad. SPELEN blijft hero. **v1.18.157 / SW v367**. |
 | 2026-09-14 | **toast queue** | Eén toast tegelijk (wachtrij), Android Chrome/TWA = dezelfde HTML onder safe-area. Geen stapel. **v1.18.156 / SW v366**. |
 | 2026-09-14 | **satan look** | SATAN-kaart: dikkere duivel (geen aura-insect), groter portret, korte copy, hitte-balk zonder dubbele tekst. **v1.18.155 / SW v365**. |
 | 2026-09-14 | **island polish** | HEAT/SATAN-kaarten: geen sf-icon-broken (skip harden + SVG size + fallback). Schade-floaters ruimer + −N merge. **v1.18.154 / SW v364**. |
@@ -133,6 +134,7 @@ Schrijf **1–3 regels** per sessie: datum, d#, wat, versie.
 
 | Datum (UTC) | d# | Update |
 |-------------|-----|--------|
+| 2026-09-14 | — | P1 entry: één install-blok per apparaat, geen iPad op Android. v1.18.157 / SW 367. |
 | 2026-09-14 | — | Toast-wachtrij: één tegelijk, Android = HTML onder statusbalk. v1.18.156 / SW 366. |
 | 2026-09-14 | — | SATAN-kaart dikkere duivel + groter portret + korte copy. v1.18.155 / SW 365. |
 | 2026-09-14 | — | HEAT/SATAN-kaarten geen broken-icon; schade-floaters ruimer + −N merge. v1.18.154 / SW 364. |

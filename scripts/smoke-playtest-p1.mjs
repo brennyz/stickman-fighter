@@ -52,6 +52,9 @@ must(/waves\[1\]\.slice\(0, 4\)/.test(monsters), 'level 1 wave 2 must cap at 4 e
 must(/id="installFold"/.test(speel), 'landing install fold missing');
 must(/id="btnPlay"/.test(speel), 'landing SPELEN id missing');
 must(speel.indexOf('id="btnPlay"') < speel.indexOf('id="installFold"'), 'SPELEN must lead landing');
+must(/Android-first/.test(speel), 'landing must pick one install platform (Android-first)');
+must(!/getElementById\('stepsIos'\)\.classList\.remove/.test(speel), 'must never unhide iPad install from JS');
+must(/class="qrbox hide"/.test(speel), 'QR must start hidden (Android never sees iPad QR first)');
 must(/hub-tile-adventure/.test(index) && /hub-tile-featured/.test(index), 'Avontuur should be featured primary');
 
 if (built) {

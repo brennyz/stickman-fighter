@@ -4,10 +4,10 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#151b33">
-<title>Speel Stickman Fighter — gratis op Android, iPad & PC</title>
-<meta name="description" content="Gratis stickman vechtspel. Open de link, tik Spelen, en zet het als app op je scherm. Android (Chrome) en iPad (Safari).">
+<title>Speel Stickman Fighter — tik SPELEN</title>
+<meta name="description" content="Gratis stickman vechtspel. Tik SPELEN, kies Avontuur. Op Android: optioneel als app in Chrome.">
 <meta property="og:title" content="Stickman Fighter — speel gratis">
-<meta property="og:description" content="Spiral Orb, monsters, 2 spelers op één scherm. Android + iPad + PC.">
+<meta property="og:description" content="Tik SPELEN. Avontuur, Training, kisten. Werkt in Chrome op Android.">
 <meta property="og:image" content="https://brennyz.github.io/stickman-fighter/icons/icon-512.png">
 <meta property="og:url" content="https://brennyz.github.io/stickman-fighter/speel.html">
 <link rel="canonical" href="https://brennyz.github.io/stickman-fighter/speel.html">
@@ -88,8 +88,8 @@
       <div class="step"><span class="n">3</span><span>Telefoon of iPad erbij? Scan de QR-code hieronder.</span></div>
     </div>
 
-    <div class="qrbox" id="qrbox">
-      <div style="font-size:13px;color:#a8b8e8;margin-bottom:8px">Scan met je telefoon of iPad:</div>
+    <div class="qrbox hide" id="qrbox">
+      <div style="font-size:13px;color:#a8b8e8;margin-bottom:8px">Scan met je telefoon:</div>
       <img id="qrimg" alt="QR-code naar het spel" loading="lazy">
       <div class="linkline" id="linkline"></div>
     </div>
@@ -141,11 +141,10 @@
     qr.src = 'https://api.qrserver.com/v1/create-qr-code/?size=380x380&margin=2&data=' + encodeURIComponent(shareUrl);
   }
 
-  document.getElementById(isAndroid ? 'stepsAndroid' : isIOS ? 'stepsIos' : 'stepsDesktop').classList.remove('hide');
-  if (!isAndroid && !isIOS) {
-    document.getElementById('stepsAndroid').classList.remove('hide');
-    document.getElementById('stepsIos').classList.remove('hide');
-  }
+  /* Android-first: toon alleen het blok van dit apparaat. Nooit iPad+Android+PC tegelijk. */
+  var stepId = isAndroid ? 'stepsAndroid' : isIOS ? 'stepsIos' : 'stepsDesktop';
+  document.getElementById(stepId).classList.remove('hide');
+  if (!isAndroid && !isIOS) document.getElementById('qrbox').classList.remove('hide');
 
   function cachedShareUrl() {
     try {
