@@ -30,6 +30,8 @@ if (!/id="pressStartLine"[^>]*\bhidden\b/.test(html)) fail('insert-coin line mus
 if (!/id="menuArcadePre"[^>]*\bhidden\b/.test(html)) fail('KIES JE PAD kicker must stay hidden');
 if (!/id="btnAdventure"/.test(html) || !/Avontuur/.test(html)) fail('Avontuur tile missing — players need a way in');
 if (!/id="sfTitleStart"/.test(html) || !/SPELEN/.test(html)) fail('SPELEN gate missing');
+if (!/id="sfTitleStart"[^>]*hub-tile|hub-tile[^>]*id="sfTitleStart"/.test(html)) fail('SPELEN must match HOME hub-tile style');
+if (/id="sfTitleName"/.test(html)) fail('optional name field should be off the title gate');
 
 const i18n = fs.readFileSync(path.join(root, 'src/i18n/i18n.js'), 'utf8');
 if (/splash2: 'Arena/.test(i18n) || /splash2: 'Arène/.test(i18n)) fail('i18n splash still says Arena');

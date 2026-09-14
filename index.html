@@ -50,19 +50,18 @@
   <div class="sf-splash-sub" id="sfSplashSub">Laden…</div>
   <div id="sfTitleGate" class="sf-title-gate" hidden>
     <p class="sf-title-greet" id="sfTitleGreet" hidden></p>
-    <button type="button" class="btn mode-btn b-adventure sf-title-start" id="sfTitleStart">
-      <span class="ico"><img src="assets/buttons/chrome/play.svg" alt="" width="28" height="28" decoding="async" draggable="false"></span>
-      <div id="sfTitleStartLbl">SPELEN<small>Start het gevecht</small></div>
-    </button>
-    <button type="button" class="btn mode-btn b-continue sf-title-continue" id="sfTitleContinue" hidden>
-      <span class="ico"><img src="assets/buttons/hub/continue.svg" alt="" width="28" height="28" decoding="async" draggable="false"></span>
-      <div id="sfTitleContinueLbl">Verder spelen<small>Laatste modus</small></div>
-    </button>
-    <label class="sf-title-name-wrap" for="sfTitleName">
-      <span id="sfTitleNameLbl">Naam — hoeft niet</span>
-      <input id="sfTitleName" type="text" maxlength="16" autocomplete="nickname" enterkeyhint="go" placeholder="Bijnaam (optioneel)" aria-describedby="sfTitleNote">
-    </label>
-    <p class="sf-title-note" id="sfTitleNote">Geen account — je save blijft op deze telefoon</p>
+    <div class="hub-tile-grid sf-title-grid">
+      <button type="button" class="hub-tile hub-tile-adventure hub-tile-featured sf-title-start" id="sfTitleStart" data-hub-badge="SPEEL">
+        <span class="hub-tile-ico"><img src="assets/buttons/chrome/play.svg" alt="" width="28" height="28" decoding="async" draggable="false"></span>
+        <span class="hub-tile-title" id="sfTitleStartLbl">SPELEN</span>
+        <span class="hub-tile-sub" id="sfTitleStartSub">Start het gevecht</span>
+      </button>
+      <button type="button" class="hub-tile hub-tile-arcade sf-title-continue" id="sfTitleContinue" hidden>
+        <span class="hub-tile-ico"><img src="assets/buttons/hub/continue.svg" alt="" width="28" height="28" decoding="async" draggable="false"></span>
+        <span class="hub-tile-title" id="sfTitleContinueLbl">Verder spelen</span>
+        <span class="hub-tile-sub" id="sfTitleContinueSub">Laatste modus</span>
+      </button>
+    </div>
   </div>
 </div>
 <script>
@@ -114,9 +113,10 @@
     <div class="arcade-menu-body menu-landing-body">
       <div class="menu-landing-scroll">
         <div class="menu-landing-inner">
-          <button class="btn mode-btn b-continue" id="btnContinue" type="button" style="display:none">
-            <span class="ico"><img src="assets/buttons/hub/continue.svg" alt="" width="28" height="28" decoding="async" draggable="false"></span>
-            <div>Verder spelen<small>Laatste modus</small></div>
+          <button type="button" class="hub-tile hub-tile-featured" id="btnContinue" hidden>
+            <span class="hub-tile-ico"><img src="assets/buttons/hub/continue.svg" alt="" width="28" height="28" decoding="async" draggable="false"></span>
+            <span class="hub-tile-title" id="btnContinueTitle">Verder spelen</span>
+            <span class="hub-tile-sub" id="btnContinueSub">Laatste modus</span>
           </button>
           <!-- C · game-menu glass tiles -->
           <div class="hub-tile-grid menu-game-grid" role="navigation" aria-label="Hoofdcategorieën">

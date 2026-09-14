@@ -539,11 +539,8 @@ function applyLangStaticScreens() {
   setText('menuLangLbl', 'settings.lang');
   setText('pressStartLine', 'menu.pressStart');
   setText('menuArcadePre', 'menu.choosePath');
-  const cont = document.getElementById('btnContinue');
-  if (cont) {
-    const div = cont.querySelector('div');
-    if (div && !save.lastPlay?.mode) div.firstChild && (div.childNodes[0].textContent = t('menu.continue') + '\n');
-  }
+  const contTitle = document.getElementById('btnContinueTitle');
+  if (contTitle && !save.lastPlay?.mode) contTitle.textContent = t('menu.continue');
 
   const hubMap = [
     ['.hub-tile-adventure .hub-tile-title', 'menu.adventure'],

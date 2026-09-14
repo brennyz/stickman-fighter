@@ -375,7 +375,7 @@
       var(--menu-tile-solid);
   }
   #menuScreen.menu-video-overhaul .menu-profile-bar,
-  #menuScreen.menu-video-overhaul .menu-landing-inner > .btn.mode-btn.b-continue {
+  #menuScreen.menu-video-overhaul .menu-landing-inner > #btnContinue.hub-tile {
     background: var(--menu-tile-solid-hi);
     border-color: var(--menu-edge);
     -webkit-backdrop-filter: none;
@@ -383,7 +383,7 @@
     color: var(--menu-ink);
     opacity: 1;
   }
-  #menuScreen.menu-video-overhaul .menu-landing-inner > .btn.mode-btn.b-continue .ico img {
+  #menuScreen.menu-video-overhaul .menu-landing-inner > #btnContinue.hub-tile .hub-tile-ico img {
     opacity: 1 !important;
   }
   #menuScreen.menu-video-overhaul .menu-hub-hint { color: var(--menu-ink-muted); opacity: 1; }
@@ -607,7 +607,7 @@
   .menu-lang-wrap { width: 100%; margin: 0 0 8px; text-align: center; }
   .menu-lang-lbl { font-weight: 900; color: #7cf5ff; font-size: 11px; margin-bottom: 6px; letter-spacing: .06em; }
   .menu-lang-bar { width: 100%; margin: 0; justify-content: center; }
-  .menu-landing-inner > .btn.mode-btn.b-continue { width: 100%; margin: 2px 0 0; min-height: 54px; }
+  .menu-landing-inner > #btnContinue.hub-tile { width: 100%; margin: 2px 0 0; min-height: 72px; }
   .hub-tile-grid { display: grid; grid-template-columns: 1fr 1fr; gap: var(--ui-gap); width: 100%; margin: 4px 0 0; }
   .hub-tile-grid .hub-tile-adventure { grid-column: 1 / -1; min-height: 96px; }
   .hub-tile {
@@ -1555,8 +1555,24 @@
     display:flex; flex-direction:column; align-items:center; gap:10px;
     width:min(92vw, 400px); margin-top:4px;
   }
+  .sf-title-gate .sf-title-grid {
+    width:100%;
+    grid-template-columns: 1fr;
+    margin: 0;
+  }
+  .sf-title-gate .hub-tile {
+    width:100%;
+    min-height:88px;
+    color: var(--menu-ink, #e8f0ff);
+    background: rgba(12, 18, 28, .72);
+    border-color: rgba(255,255,255,.12);
+  }
+  .sf-title-gate .hub-tile-title { color: var(--menu-ink, #e8f0ff); }
+  .sf-title-gate .hub-tile-sub { color: var(--menu-ink-muted, #9db1e3); }
+  .sf-title-gate .hub-tile-adventure { border-color: rgba(78,207,106,.35); }
   .sf-title-gate[hidden],
-  .sf-splash .sf-title-continue[hidden] { display:none !important; }
+  .sf-splash .sf-title-continue[hidden],
+  #btnContinue[hidden] { display:none !important; }
   .sf-title-greet {
     margin:0; text-align:center;
     font-family:'Bangers', cursive; font-size:clamp(22px, 6vw, 32px);

@@ -1966,12 +1966,16 @@ const UI = {
           adventure: t('modes.adventure') + ` Lv ${lp.level || 1}`,
           training: t('modes.training'), wall: t('modes.wall'), versus: t('modes.versus'), coinrun: t('modes.coinrun'),
         };
-        cont.style.display = 'flex';
-        const contDiv = cont.querySelector('div');
-        if (contDiv) {
-          contDiv.innerHTML = `${t('menu.continue')}<small>${labels[lp.mode] || lp.mode}</small>`;
-        }
-      } else cont.style.display = 'none';
+        cont.hidden = false;
+        cont.style.display = '';
+        const titleEl = document.getElementById('btnContinueTitle');
+        const subEl = document.getElementById('btnContinueSub');
+        if (titleEl) titleEl.textContent = t('menu.continue');
+        if (subEl) subEl.textContent = labels[lp.mode] || lp.mode;
+      } else {
+        cont.hidden = true;
+        cont.style.display = 'none';
+      }
     }
     document.querySelectorAll('[data-hub]').forEach((el) => {
       const featured = featHub ? el.dataset.hub === featHub : el.dataset.hub === 'adventure';

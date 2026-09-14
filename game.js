@@ -2483,11 +2483,8 @@ function applyLangStaticScreens() {
   setText('menuLangLbl', 'settings.lang');
   setText('pressStartLine', 'menu.pressStart');
   setText('menuArcadePre', 'menu.choosePath');
-  const cont = document.getElementById('btnContinue');
-  if (cont) {
-    const div = cont.querySelector('div');
-    if (div && !save.lastPlay?.mode) div.firstChild && (div.childNodes[0].textContent = t('menu.continue') + '\n');
-  }
+  const contTitle = document.getElementById('btnContinueTitle');
+  if (contTitle && !save.lastPlay?.mode) contTitle.textContent = t('menu.continue');
 
   const hubMap = [
     ['.hub-tile-adventure .hub-tile-title', 'menu.adventure'],
@@ -32552,12 +32549,16 @@ const UI = {
           adventure: t('modes.adventure') + ` Lv ${lp.level || 1}`,
           training: t('modes.training'), wall: t('modes.wall'), versus: t('modes.versus'), coinrun: t('modes.coinrun'),
         };
-        cont.style.display = 'flex';
-        const contDiv = cont.querySelector('div');
-        if (contDiv) {
-          contDiv.innerHTML = `${t('menu.continue')}<small>${labels[lp.mode] || lp.mode}</small>`;
-        }
-      } else cont.style.display = 'none';
+        cont.hidden = false;
+        cont.style.display = '';
+        const titleEl = document.getElementById('btnContinueTitle');
+        const subEl = document.getElementById('btnContinueSub');
+        if (titleEl) titleEl.textContent = t('menu.continue');
+        if (subEl) subEl.textContent = labels[lp.mode] || lp.mode;
+      } else {
+        cont.hidden = true;
+        cont.style.display = 'none';
+      }
     }
     document.querySelectorAll('[data-hub]').forEach((el) => {
       const featured = featHub ? el.dataset.hub === featHub : el.dataset.hub === 'adventure';
@@ -36372,43 +36373,29 @@ function shouldSkipTitleGate() {
 
 function syncTitleGateCopy() {
   const greet = document.getElementById('sfTitleGreet');
-  const nameLbl = document.getElementById('sfTitleNameLbl');
-  const nameInp = document.getElementById('sfTitleName');
-  const note = document.getElementById('sfTitleNote');
   const startLbl = document.getElementById('sfTitleStartLbl');
+  const startSub = document.getElementById('sfTitleStartSub');
   const contLbl = document.getElementById('sfTitleContinueLbl');
+  const contSub = document.getElementById('sfTitleContinueSub');
   const tag = (typeof save !== 'undefined' && save && save.playerTag) ? String(save.playerTag) : '';
-  if (nameLbl) nameLbl.textContent = typeof t === 'function' ? t('menu.titleName') : 'Hoe heet je?';
-  if (nameInp) {
-    nameInp.placeholder = typeof t === 'function' ? t('menu.titleNamePh') : 'Jouw naam';
-    if (!nameInp.value && tag) nameInp.value = tag;
-  }
-  if (note) note.textContent = typeof t === 'function' ? t('menu.titleNote') : 'Geen account — je save blijft op deze telefoon';
-  if (startLbl) {
-    startLbl.innerHTML = (typeof t === 'function' ? t('menu.startGame') : 'SPELEN') +
-      '<small>' + (typeof t === 'function' ? t('menu.startSub') : 'Start het gevecht') + '</small>';
-  }
+  if (startLbl) startLbl.textContent = typeof t === 'function' ? t('menu.startGame') : 'SPELEN';
+  if (startSub) startSub.textContent = typeof t === 'function' ? t('menu.startSub') : 'Start het gevecht';
   const lp = (typeof save !== 'undefined' && save && save.lastPlay) ? save.lastPlay : null;
-  if (contLbl) {
+  if (contLbl) contLbl.textContent = typeof t === 'function' ? t('menu.continue') : 'Verder spelen';
+  if (contSub) {
     const modeName = lp && typeof t === 'function' && lp.mode ? t('modes.' + lp.mode) : '';
-    contLbl.innerHTML = (typeof t === 'function' ? t('menu.continue') : 'Verder spelen') +
-      '<small>' + (modeName || (typeof t === 'function' ? t('menu.startSub') : 'Laatste modus')) + '</small>';
+    contSub.textContent = modeName || (typeof t === 'function' ? t('menu.continue') : 'Laatste modus');
   }
   if (greet) {
-    const live = (nameInp && nameInp.value.trim()) || tag;
-    greet.textContent = live && typeof t === 'function'
-      ? t('menu.titleGreet', { name: live })
-      : (live ? ('Hoi, ' + live) : '');
-    greet.hidden = !live;
+    greet.textContent = tag && typeof t === 'function'
+      ? t('menu.titleGreet', { name: tag })
+      : (tag ? ('Hoi, ' + tag) : '');
+    greet.hidden = !tag;
   }
 }
 
 function saveTitlePlayerTag() {
-  const inp = document.getElementById('sfTitleName');
-  if (!inp || typeof save === 'undefined' || !save) return;
-  const tag = typeof sanitizePlayerTag === 'function' ? sanitizePlayerTag(inp.value) : String(inp.value || '').trim().slice(0, 16);
-  save.playerTag = tag;
-  try { persist(); } catch (_) {}
+  /* Name field removed from the title gate — keep any existing save.playerTag. */
 }
 
 function enterHubFromTitle(opts) {
@@ -36440,7 +36427,6 @@ function wireTitleGate() {
   window.__sfTitleWired = true;
   const start = document.getElementById('sfTitleStart');
   const cont = document.getElementById('sfTitleContinue');
-  const nameInp = document.getElementById('sfTitleName');
   const go = (resume) => {
     try { enterHubFromTitle({ resume: !!resume }); } catch (_) { dismissSplashOverlay(); }
   };
@@ -36448,12 +36434,6 @@ function wireTitleGate() {
   else if (start) start.addEventListener('click', () => go(false));
   if (cont && typeof bindPress === 'function') bindPress(cont, () => go(true));
   else if (cont) cont.addEventListener('click', () => go(true));
-  if (nameInp) {
-    nameInp.addEventListener('input', () => { try { syncTitleGateCopy(); } catch (_) {} });
-    nameInp.addEventListener('keydown', (e) => {
-      if (e.key === 'Enter') { e.preventDefault(); go(false); }
-    });
-  }
 }
 
 function runTitleArenaLoop() {
