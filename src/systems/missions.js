@@ -1485,6 +1485,9 @@ function previewImportSave(text) {
     }
   }
   if (parsed.eggDaily && typeof parsed.eggDaily === 'object') clean.eggDaily = Object.assign({}, parsed.eggDaily);
+  if (parsed.buildings && typeof parsed.buildings === 'object' && !Array.isArray(parsed.buildings)) {
+    clean.buildings = parsed.buildings;
+  }
   if (typeof parsed.activePet === 'string') clean.activePet = parsed.activePet;
   if (typeof parsed.activeEggPet === 'string') clean.activeEggPet = parsed.activeEggPet;
   const final = sanitizeSave(clean);
@@ -1508,6 +1511,9 @@ function previewImportSave(text) {
     }
   }
   if (parsed.eggDaily && typeof parsed.eggDaily === 'object') rawMerged.eggDaily = Object.assign({}, parsed.eggDaily);
+  if (parsed.buildings && typeof parsed.buildings === 'object' && !Array.isArray(parsed.buildings)) {
+    rawMerged.buildings = parsed.buildings;
+  }
   if (typeof parsed.activePet === 'string') rawMerged.activePet = parsed.activePet;
   if (typeof parsed.activeEggPet === 'string') rawMerged.activeEggPet = parsed.activeEggPet;
   const repairNotes = saveSanitizeNotes(rawMerged, final);

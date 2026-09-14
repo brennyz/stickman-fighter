@@ -779,6 +779,9 @@ function rollHitDamage(attacker, spec, mult) {
   if (attacker.isPlayer && typeof game !== 'undefined' && game && game.styleCritBonus) {
     critChance += game.styleCritBonus;
   }
+  if (attacker.isPlayer && typeof game !== 'undefined' && game && game.buildingCritBonus) {
+    critChance += game.buildingCritBonus;
+  }
   if (attacker.isPlayer && k === 'weapon' && attacker.weapon && attacker.weapon.upgradeCrit) {
     critChance += attacker.weapon.upgradeCrit;
   }
@@ -796,6 +799,9 @@ function projCritMeta(f) {
   let critChance = prof.crit + (sig.critAdd || 0) + (sig.techniqueCrit || 0);
   const eqSk = fighterEquippedSkill(f);
   if (eqSk && (eqSk.id === 'void_gaze' || eqSk.behavior === 'pull' || eqSk.behavior === 'slash')) critChance += 0.05;
+  if (f && f.isPlayer && typeof game !== 'undefined' && game && game.buildingCritBonus) {
+    critChance += game.buildingCritBonus;
+  }
   return { critChance: clamp(critChance, 0, 0.42), critMul: prof.critMul };
 }
 
@@ -1129,6 +1135,9 @@ function readSaveJson(raw) {
     }
     // lang: copy raw — SUPPORTED_LANGS may not exist yet (storage loads before i18n)
     if (typeof parsed.lang === 'string') merged.lang = parsed.lang;
+    if (parsed.buildings && typeof parsed.buildings === 'object' && !Array.isArray(parsed.buildings)) {
+      merged.buildings = parsed.buildings;
+    }
     return merged;
   } catch (e) {
     return null;
@@ -1926,6 +1935,24 @@ function sanitizeSave(s) {
     if (typeof VS_ROSTER !== 'undefined' && VS_ROSTER.some(r => r.id === id) && !played.includes(id)) played.push(id);
   }
   out.vsPlayedIds = played.slice(0, 32);
+
+  if (typeof sanitizeBuildingSave === 'function') {
+    try { sanitizeBuildingSave(out); }
+    catch (_) {
+      out.buildings = (typeof emptyBuildingsBag === 'function')
+        ? emptyBuildingsBag()
+        : { schema: 1, factories: {}, wallet: {} };
+    }
+  } else if (typeof sanitizeBuildingsBag === 'function') {
+    try { out.buildings = sanitizeBuildingsBag(out.buildings); }
+    catch (_) {
+      out.buildings = (typeof emptyBuildingsBag === 'function')
+        ? emptyBuildingsBag()
+        : { schema: 1, factories: {}, wallet: {} };
+    }
+  } else if (!out.buildings || typeof out.buildings !== 'object' || Array.isArray(out.buildings)) {
+    out.buildings = { schema: 1, factories: {}, wallet: {} };
+  }
 
   const allowedKeys = new Set(Object.keys(DEFAULT_SAVE));
   for (const k of Object.keys(out)) {

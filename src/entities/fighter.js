@@ -69,7 +69,9 @@ class Fighter {
     if (spec && spec.kind === 'weapon') spec = sanitizeWeaponSpec(spec);
     if (spec && spec.kind === 'weapon' && (typeof isDawnbladeWeapon === 'function' ? isDawnbladeWeapon(w) : (w.masterSword || w.dawnblade || w.id === 'master_sword' || w.id === 'dawnblade'))) spec.unblockable = true;
     spec = applySignatureToSpec(this, spec);
-    return applyStyleToSpec(this, spec);
+    spec = applyStyleToSpec(this, spec);
+    if (typeof applyBuildingToSpec === 'function') spec = applyBuildingToSpec(this, spec);
+    return spec;
   }
 
   startAttack(kind, game) {
@@ -512,8 +514,9 @@ class Fighter {
       const stageMul = (typeof game !== 'undefined' && game && game.stageEnergyMul) ? game.stageEnergyMul : 1;
       const petMul = (typeof game !== 'undefined' && game && game.petEnergyMul) ? game.petEnergyMul : 1;
       const styleMul = (typeof game !== 'undefined' && game && game.styleEnergyMul) ? game.styleEnergyMul : 1;
+      const buildingMul = (typeof game !== 'undefined' && game && game.buildingEnergyMul) ? game.buildingEnergyMul : 1;
       const energyRegenMul = (this.isPlayer || this.playerSlot) ? skillBonuses('energy').regenMul : 1;
-      const rate = (this.attack ? 4.2 : 2.8) * stageMul * petMul * styleMul * energyRegenMul;
+      const rate = (this.attack ? 4.2 : 2.8) * stageMul * petMul * styleMul * buildingMul * energyRegenMul;
       const prevE = this._energyPrev == null ? this.energy : this._energyPrev;
       this.energy = clamp(this.energy + dt * rate, 0, 100);
       if (this.energy >= 100 && prevE < 100) {
@@ -587,6 +590,9 @@ class Fighter {
     dmg = Math.round(dmg);
     if (this.isPlayer && game && game.styleDefMul && game.styleDefMul !== 1) {
       dmg = Math.max(1, Math.round(dmg * game.styleDefMul));
+    }
+    if (this.isPlayer && game && game.buildingDefMul && game.buildingDefMul !== 1) {
+      dmg = Math.max(1, Math.round(dmg * game.buildingDefMul));
     }
     this.hp -= dmg;
     if (this.isPlayer && game) {

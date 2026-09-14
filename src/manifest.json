@@ -23,6 +23,7 @@
   "src/data/tide-battle.js",
   "src/data/satan-encounter.js",
   "src/data/pets.js",
+  "src/data/buildings-powers.js",
   "src/data/egg-pets.js",
   "src/data/chest-summons.js",
   "src/data/building-pixels.js",

@@ -269,6 +269,7 @@ function loop(now) {
     if (!ctx || !canvas) return;
     const hidden = typeof document !== 'undefined' && document.hidden;
     if (hidden) { lastTime = now; return; }
+    try { if (typeof maybeTickBuildings === 'function') maybeTickBuildings(Date.now()); } catch (_) {}
     const idle = Perf.loopIdleMode();
     if (idle) {
       loopIdleFrames++;
@@ -364,8 +365,37 @@ function loop(now) {
   }
 }
 
+let _buildingTickWall = 0;
+let _buildingPersistWall = 0;
+function tickBuildingsNow(nowMs, opts) {
+  const now = Math.floor(Number(nowMs) || Date.now());
+  opts = opts || {};
+  if (typeof buildingTickAll === 'function') {
+    try { return !!buildingTickAll(typeof save !== 'undefined' ? save : null, now); }
+    catch (_) { /* fall through to powers wrapper */ }
+  }
+  if (typeof tickBuildingResources === 'function') {
+    const r = tickBuildingResources(now, { skipPersist: opts.skipPersist !== false });
+    return !!(r && (r.added > 0 || r.primed || r.rollback));
+  }
+  return false;
+}
+function maybeTickBuildings(nowMs) {
+  const now = Math.floor(Number(nowMs) || Date.now());
+  if (now - _buildingTickWall < 1000) return;
+  _buildingTickWall = now;
+  const changed = tickBuildingsNow(now, { skipPersist: true });
+  if (changed && now - _buildingPersistWall > 15000) {
+    _buildingPersistWall = now;
+    try { if (typeof persist === 'function') persist(); } catch (_) {}
+  }
+}
+
 document.addEventListener('visibilitychange', () => {
   if (document.hidden) {
+    try {
+      tickBuildingsNow(Date.now());
+    } catch (_) {}
     // NIET cancelGambleStart — tab-blink / iPad audio-unlock killde dice→start
     if (state === 'play' && game && !game.over) {
       try { Input.releaseAll(); } catch (_) {}
@@ -379,6 +409,9 @@ document.addEventListener('visibilitychange', () => {
       try { AudioSys.syncContextPower(); } catch (_) {}
     }
   } else {
+    try {
+      tickBuildingsNow(Date.now());
+    } catch (_) {}
     try { AudioSys.syncContextPower(); } catch (_) {}
     AudioSys.applyVolumes();
   }
@@ -819,6 +852,7 @@ function bootGame() {
     try { if (typeof buildingTickAll === 'function') buildingTickAll(save); } catch (_) {}
     const repairNotes = saveSanitizeNotes(beforeSave, save);
     persist();
+    try { tickBuildingsNow(Date.now()); } catch (_) {}
     if (repairNotes.length && !hadCorruptPrimary && !window.__sfRecoveredBackup) {
       userToast(toastT('toast.saveRepaired', { notes: repairNotes.slice(0, 2).join(' · ') }, 'Save gerepareerd: ' + repairNotes.slice(0, 2).join(' · ')), 4200, { tone: 'ok' });
     }

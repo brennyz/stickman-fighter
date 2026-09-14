@@ -26,6 +26,7 @@ const REGRESSION_MUST_DEFINE = [
   'speciesBlurb', 'speciesBiomeId', 'dexBiomeDiscovered',
   'listGearSlots', 'equipGear', 'unequipGear', 'getEquippedGear',
   'gearEquipItem', 'gearTooltipModel', 'gearRenderDescriptor',
+  'tickBuildingResources', 'collectBuildingResource', 'applyBuildingPowersToPlayer', 'buildingPowerBonus',
 ];
 
 /** Consts / values that must appear in the bundle (not only functions). */
