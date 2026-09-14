@@ -140,6 +140,7 @@ Schrijf **1–3 regels** per sessie: datum, d#, wat, versie.
 
 | Datum (UTC) | d# | Update |
 |-------------|-----|--------|
+| 2026-09-14 | — | FOMO/retention design audit: `docs/FOMO-GAPS.md` (P0 clock+ritual+pity+streak · P1 weekly/shard/NM sneak). No gameplay. v1.18.163 / SW 373. |
 | 2026-09-14 | — | #266 sprint: locale (VERLOREN, Tips-label, eilandkop) + stillere versie-banner + rest HOME. v1.18.163 / SW 373. Draft. |
 | 2026-09-14 | — | Start polish + unify HOME-tegels (Avontuur/Training/Collect/Settings/pauze). Naamveld weg. #265 folded. v1.18.162 / SW 372. #263 geparkeerd. |
 | 2026-09-14 | — | Arcade pick-mode = HOME hub-tegels; net/SW-banner volgt game-taal. v1.18.161 / SW 371. #263 geparkeerd. |
