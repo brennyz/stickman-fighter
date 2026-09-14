@@ -75,5 +75,30 @@ if (/\.mission-card \.claim-btn[\s\S]{0,160}linear-gradient\(180deg,#ffe259/.tes
 
 const start = fs.readFileSync(path.join(root, 'src/boot/start.js'), 'utf8');
 if (!/btnUpgradesHome/.test(start)) fail('start HOME upgrades tile must be bound');
+if (!/function openUpgradesHub/.test(start)
+    || !/bindPress\(document\.getElementById\('btnUpgradesHome'\),\s*openUpgradesHub\)/.test(start)) {
+  fail('HOME Upgrades tile must open upgrades in one tap');
+}
+
+const i18n = fs.readFileSync(path.join(root, 'src/i18n/i18n.js'), 'utf8');
+if (!/options: 'Opties'/.test(i18n) || !/tips: 'Tips'/.test(i18n) || !/music: 'Muziek'/.test(i18n)) {
+  fail('HOME drawer NL labels must stay short (Muziek / Opties / Tips)');
+}
+if (!/fresh: 'Vers'/.test(i18n) || !/install: 'App'/.test(i18n) || !/installSub: 'Lade'/.test(i18n)) {
+  fail('App/drawer leftover labels must stay short (App / Lade / Vers)');
+}
+
+if (!/\.weapon-preview[\s\S]{0,220}var\(--menu-tile-solid\)/.test(css)) {
+  fail('weapon preview must use HOME solid tiles, not gray-flat');
+}
+if (!/\.statbar[\s\S]{0,160}var\(--menu-tile-solid\)/.test(css)) {
+  fail('statbars must use HOME solid tiles');
+}
+if (!/\.upgrade-polish-card[\s\S]{0,520}var\(--menu-tile-solid\)/.test(css)) {
+  fail('upgrade cards must use HOME solid tiles');
+}
+if (!/\.sub-home-bar\s*\{[^}]*position:\s*relative/.test(css)) {
+  fail('Terug naar menu must stay in-flow so it does not cover cards');
+}
 
 console.log('SMOKE_OK unify-ui: HOME tiles + upgrades entry + readable cards');
