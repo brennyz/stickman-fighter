@@ -230,10 +230,23 @@ const I18N = {
   de: {
     back: { menu: '← Menü', collect: '← Sammlung', levels: '← Level' },
     common: { backHome: 'Zurück zum Menü', ok: 'Verstanden!', offline: 'Offline' },
+    net: {
+      updateReady: 'Neue Version bereit — tippen zum Laden',
+      updateWait: 'Neue Version — lädt im Menü',
+      dismiss: 'Schließen',
+      offlinePlay: 'Offline — spielt aus Cache · Save bleibt hier',
+      offlinePlayHint: 'Offline — aus Cache · Icon in der Leiste = immer spielen',
+      offlineMenu: 'Offline — Menü & Save aus Cache',
+      offlineNeedOnce: 'Offline — 1× online öffnen, danach ohne Netz',
+      backOnline: 'Wieder online',
+      cacheLoading: 'Cache laden… — danach auch offline',
+      offlineReady: 'Bereit offline — Save bleibt hier',
+    },
     menu: {
       continue: 'Weiterspielen', adventure: 'Abenteuer', adventureSub: 'Story · Inseln · Bosse',
       arcade: 'Arcade', arcadeSub: 'Training · Mauer · Münzen', versus: '2 Spieler', versusSub: 'Lokal',
       collect: 'Sammlung', collectSub: 'Waffen · Stil · Buch', music: 'Musik', missions: 'Missionen',
+      summons: 'Summons', summonsSub: 'Tägliche Kiste · Waffe & Pet',
       options: 'Optionen', tips: 'Tipps', fresh: 'Neue Version', install: 'Als App speichern', installSub: 'Ein Icon, wie eine echte App',
       pressStart: 'insert coin', missionReady: 'Mission bereit', dayBonus: 'Tagesbonus',
       choosePath: 'WÄHLE DEINEN WEG', lastPlayed: 'ZULETZT', playHere: 'SPIEL',
@@ -262,11 +275,15 @@ const I18N = {
     modes: { adventure: 'Abenteuer', training: 'Training', wall: 'Mauer', versus: '2 Spieler', coinrun: 'Münzen' },
     pause: {
       title: 'Pause', sub: 'Spiral Orb bereit — los! · Fortschritt bleibt auf diesem Gerät',
+      wallTime: '{n}s übrig', wallStones: '{n} Steine', wallCombo: 'Combo ×{n}',
+      wallPaceAhead: '+{n} vs Rekord-Tempo', wallPaceBehind: '−{n} vs Rekord-Tempo',
+      wallGap: 'noch {gap} bis Rekord',
       resume: 'Weiter', music: 'Musik', sfx: 'Sound', quit: 'Menü verlassen',
       quitArcade: 'Stopp & Arcade',
       vsRestart: 'Match neu starten', vsRestartSub: '0-0 · gleiche Kämpfer',
       vsSwap: 'Seite tauschen', vsSwapSub: 'P1 ↔ P2 · gleicher Stand',
-      audioHint: 'Lautstärke in Pause — sync mit Einstellungen',
+      audioHint: 'Lautstärke in Pause — Slider sync mit Einstellungen',
+      audioMuteAll: 'Alles aus', audioRestore: 'Standard', audioSfxOnly: 'Nur Sound',
     },
     result: { again: 'Nochmal', next: 'Nächstes Level', menu: 'Hauptmenü', menuArcade: 'Arcade', rematch: 'Revanche', rematchSub: 'Gleiche Kämpfer',
       xp: '+{xp} XP · jetzt Lv {lvl} ({cur}/{need} XP)' },
@@ -277,6 +294,13 @@ const I18N = {
       kbLegend: 'Tastatur-Hilfe', showTouchPads: 'Touch-Tasten immer',
       reducedMotion: 'Weniger Bewegung',
       liteFx: 'Lite FX', highContrast: 'Hoher Kontrast', restoreBackup: 'Save aus Backup',
+      a11yMotionOn: 'Weniger Bewegung: an', a11yMotionOs: 'Weniger Bewegung: über System',
+      a11yContrastOn: 'Hoher Kontrast: an', a11yContrastOs: 'Hoher Kontrast: über System',
+      a11yDefault: 'Barrierefreiheit: Standard — oben oder in den Handy-Einstellungen',
+      a11yTip: 'Weniger Bewegung = ruhigere Banner. Hoher Kontrast = dickere Ränder. Lite FX = flüssiger am Handy.',
+      sfxSamplesOn: 'Soundeffekte: geladen',
+      sfxSamplesLoad: 'Soundeffekte: laden…',
+      sfxSamplesOff: 'Soundeffekte: offline',
       syncBackup: 'Backup aktualisieren', freshCache: 'Neue Version', clearSave: 'Neustart (2× tippen)',
       syncHint: 'Backup auf deinen aktuellen Stand setzen.',
       freshHint: 'Menü hängt? Tippe hier für die neueste Version.',
@@ -293,7 +317,7 @@ const I18N = {
     missions: { title: 'Missionen & Erfolge', sub: '3 tägliche Missionen · XP abholen',
       claimAll: 'Alle abholen', claimAllSub: '+XP auf einmal', dayBonus: 'Tagesbonus', dayBonusSub: '+80 XP',
       achievements: 'Erfolge' },
-    pets: { title: 'Pets · Begleiter', sub: 'Dex-Pets & Ei-Pets', crackEgg: 'Tages-Ei öffnen', crackEggSub: 'Gratis Pull' },
+    pets: { title: 'Pets · Begleiter', sub: 'Dex-Pets & Ei-Pets', crackEgg: 'Tages-Ei öffnen', crackEggSub: 'Kostenloser Arcade-Zug' },
     dex: { title: 'Monsterbuch', sub: '{n} Arten · Seltenheit = HP · Farm / Zoo / Meer' },
     help: { title: 'Tipps & Steuerung' },
     install: { title: 'Als App speichern', sub: 'Ein Icon, wie eine echte App' },
@@ -506,7 +530,11 @@ function setLang(code) {
 
 function t(key, params) {
   const lang = getLang();
-  let s = i18nLookup(I18N[lang], key) || i18nLookup(I18N.nl, key) || i18nLookup(I18N.en, key) || key;
+  // Coverage + factcheck (#283): current → EN → NL. Non-NL never leaks Dutch chrome.
+  let s = i18nLookup(I18N[lang], key);
+  if (!s && lang !== 'en') s = i18nLookup(I18N.en, key);
+  if (!s && lang !== 'nl') s = i18nLookup(I18N.nl, key);
+  if (!s) s = key;
   if (params && typeof params === 'object') {
     for (const [k, v] of Object.entries(params)) {
       s = s.split('{' + k + '}').join(String(v));
@@ -578,8 +606,14 @@ function applyLangStaticScreens() {
   const cont = document.getElementById('btnContinue');
   if (cont) {
     const div = cont.querySelector('div');
-    if (div && !save.lastPlay?.mode) div.firstChild && (div.childNodes[0].textContent = t('menu.continue') + '\n');
+    if (div) {
+      const lp = save && save.lastPlay;
+      const modeName = lp && lp.mode ? t('modes.' + lp.mode) : t('ui.continueLastMode');
+      div.innerHTML = t('menu.continue') + '<small>' + modeName + '</small>';
+    }
   }
+  const pauseBtn = document.getElementById('pauseBtn');
+  if (pauseBtn) pauseBtn.setAttribute('aria-label', t('pause.title'));
 
   const hubMap = [
     ['.hub-tile-adventure .hub-tile-title', 'menu.adventure'],
@@ -738,6 +772,30 @@ function applyLangStaticScreens() {
   setText('weaponScreenHead', 'ui.weaponHead');
   setText('weaponScreenSub', 'ui.weaponSub');
   setText('helpFirstMinute', 'ui.helpFirstMinute');
+  setText('summonScreenHead', 'ui.summonHead');
+  setText('summonScreenSub', 'ui.summonSub');
+  setText('summonWhereStrip', 'ui.summonWhere');
+  setText('summonStageHint', 'ui.summonHint');
+  setText('summonRevealText', 'ui.summonReveal');
+  const chestPullLbl = document.getElementById('btnChestPull');
+  if (chestPullLbl) {
+    const d = chestPullLbl.querySelector('div');
+    if (d) {
+      const leftSmall = document.getElementById('chestPullLbl');
+      const leftTxt = leftSmall ? leftSmall.textContent : '';
+      d.innerHTML = t('ui.summonPull') + '<small id="chestPullLbl">' + leftTxt + '</small>';
+    }
+  }
+  const gotoW = document.getElementById('btnSummonGotoWeapons');
+  if (gotoW) {
+    const d = gotoW.querySelector('div');
+    if (d) d.innerHTML = t('ui.summonGotoWeapons') + '<small>' + t('ui.summonGotoSub') + '</small>';
+  }
+  const gotoP = document.getElementById('btnSummonGotoPets');
+  if (gotoP) {
+    const d = gotoP.querySelector('div');
+    if (d) d.innerHTML = t('ui.summonGotoPets') + '<small>' + t('ui.summonGotoSub') + '</small>';
+  }
 
   const gambleStartLbl = document.getElementById('gambleStartLbl');
   if (gambleStartLbl) gambleStartLbl.innerHTML = t('ui.gambleStart') + '<small>' + t('ui.gambleStartSub') + '</small>';
@@ -895,13 +953,15 @@ function applyLang() {
     else if (active === 'missionsScreen') UI.renderMissions();
     else if (active === 'helpScreen' && typeof UI.renderHelp === 'function') UI.renderHelp();
     else if (active === 'weaponScreen' && typeof UI.renderWeapons === 'function') UI.renderWeapons();
+    else if (active === 'summonScreen' && typeof UI.renderSummon === 'function') UI.renderSummon();
+    else if (active === 'upgradeScreen' && typeof UI.renderUpgrades === 'function') UI.renderUpgrades();
     else if (active === 'styleScreen' && typeof UI.renderStyle === 'function') UI.renderStyle();
     else if (active === 'skillScreen' && typeof UI.renderSkills === 'function') UI.renderSkills();
     else if (active === 'charSelectScreen' && typeof UI.renderCharSelect === 'function') UI.renderCharSelect();
     else if (active === 'levelScreen' && typeof UI.renderLevels === 'function') UI.renderLevels();
     else if (active === 'gambleScreen' && typeof UI.renderGamble === 'function' && pendingAdvLevel) {
       UI.renderGamble(pendingAdvLevel);
-    } else if (active === 'petScreen' && typeof UI.renderDexPets === 'function') UI.renderDexPets();
+    } else if (active === 'petScreen' && typeof UI.renderPets === 'function') UI.renderPets();
     else if (active === 'dexScreen' && typeof UI.renderDex === 'function') UI.renderDex();
     else if (active === 'skillScreen' && typeof UI.renderSkills === 'function') UI.renderSkills();
     else if (active === 'modeHubScreen') UI.renderModeHub();

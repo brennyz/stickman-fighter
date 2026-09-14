@@ -437,15 +437,15 @@ function achievementProgressHint(ach) {
   switch (ach.id) {
     case 'first_win': return `${Math.min(s.stats.advWins || 0, 1)}/1 level-win`;
     case 'lv10': return `Lv ${Math.min(s.lvl, 10)}/10`;
-    case 'dex10': return `${Object.keys(s.dex || {}).length}/10 soorten`;
-    case 'dexFull': return `${Object.keys(s.dex || {}).length}/${SPECIES_ORDER.length} soorten`;
+    case 'dex10': return t('ui.dexHintSpecies', { cur: Object.keys(s.dex || {}).length, need: 10 });
+    case 'dexFull': return t('ui.dexHintSpecies', { cur: Object.keys(s.dex || {}).length, need: SPECIES_ORDER.length });
     case 'dex100': {
       let n = 0;
       for (const v of Object.values(s.dex || {})) n += v || 0;
-      return `${Math.min(n, 100)}/100 kills in boek`;
+      return t('ui.dexHintKillsBook', { cur: Math.min(n, 100), need: 100 });
     }
-    case 'dexHalf': return `${Object.keys(s.dex || {}).length}/${Math.ceil(SPECIES_ORDER.length / 2)} soorten`;
-    case 'dexTiers': return `${dexRarityTierCount()}/4 rariteiten`;
+    case 'dexHalf': return t('ui.dexHintSpecies', { cur: Object.keys(s.dex || {}).length, need: Math.ceil(SPECIES_ORDER.length / 2) });
+    case 'dexTiers': return t('ui.dexHintRarities', { cur: dexRarityTierCount(), need: 4 });
     case 'dexFarm': return `${typeof dexBiomeDiscovered === 'function' ? dexBiomeDiscovered('farm') : 0}/10 boerderij`;
     case 'dexZoo': return `${typeof dexBiomeDiscovered === 'function' ? dexBiomeDiscovered('zoo') : 0}/10 dierentuin`;
     case 'dexSea': return `${typeof dexBiomeDiscovered === 'function' ? dexBiomeDiscovered('sea') : 0}/5 zee`;
@@ -703,10 +703,12 @@ function saveExportSummaryLine(s) {
   const summons = summonCountFromSave(st);
   const pets = petCountFromSave(st);
   const eggs = eggCountFromSave(st);
-  let line = `Lv ${st.lvl} · unlock ${st.unlocked} · boek ${dexCountFromSave(st)} · kills ${dexTotalKillsFromSave(st)} · ${Object.keys(st.achievements || {}).length} prestaties`;
-  if (summons) line += ` · ✦ ${summons} summon`;
-  if (pets) line += ` · pet ${pets}`;
-  if (eggs) line += ` · ei ${eggs}`;
+  let line = t('ui.saveHealthStats', {
+    lvl: st.lvl, unlocked: st.unlocked, dex: dexCountFromSave(st), kills: dexTotalKillsFromSave(st),
+  }) + t('ui.saveExportAch', { n: Object.keys(st.achievements || {}).length });
+  if (summons) line += t('ui.saveHealthSummon', { n: summons });
+  if (pets) line += t('ui.saveHealthPet', { n: pets });
+  if (eggs) line += t('ui.saveHealthEgg', { n: eggs });
   if (typeof countSkillUpgradeLevels === 'function') {
     const sk = countSkillUpgradeLevels(st);
     if (sk) line += ` · skill +${sk} Lv`;
@@ -1198,10 +1200,10 @@ function importPreviewWarnings(next, meta) {
   if (meta && meta.app) lines.push('App-versie export: v' + meta.app);
   if (meta && meta.summary && typeof meta.summary === 'object') {
     const s = meta.summary;
-    let sum = `Export-samenvatting: Lv ${s.lvl} · unlock ${s.unlocked} · boek ${s.dex} · ${s.achievements} prestaties`;
-    if (s.summons) sum += ` · ✦ ${s.summons}`;
-    if (s.pets) sum += ` · pet ${s.pets}`;
-    if (s.eggs) sum += ` · ei ${s.eggs}`;
+    let sum = t('ui.saveHealthStats', { lvl: s.lvl, unlocked: s.unlocked, dex: s.dex, kills: s.kills || 0 }) + t('ui.saveExportAch', { n: s.achievements });
+    if (s.summons) sum += t('ui.saveHealthSummon', { n: s.summons });
+    if (s.pets) sum += t('ui.saveHealthPet', { n: s.pets });
+    if (s.eggs) sum += t('ui.saveHealthEgg', { n: s.eggs });
     if (s.skillUpLv) sum += ` · skill +${s.skillUpLv} Lv`;
     if (s.itemUpLv) sum += ` · item +${s.itemUpLv} Lv`;
     if (s.petCoins) sum += ` · ${s.petCoins} pet coins`;
@@ -2694,8 +2696,8 @@ function dexNextAchievementHtml() {
   const pct = Math.min(100, Math.round(bestFrac * 100));
   const hint = achievementProgressHint(best);
   return `<div class="dex-ach-next" style="margin-top:10px;padding:8px 10px;border-radius:12px;background:rgba(255,215,94,.06);border:1px solid rgba(255,215,94,.2)">` +
-    `<div style="font-size:11px;font-weight:800;color:#ffd75e;margin-bottom:4px">Volgende prestatie · ${best.name}</div>` +
-    `<div style="font-size:12px;opacity:.85">${best.desc}${hint ? ' · ' + hint : ''}</div>` +
+    `<div style="font-size:11px;font-weight:800;color:#ffd75e;margin-bottom:4px">${t('ui.dexNextAch', { name: achLabel(best, 'name') })}</div>` +
+    `<div style="font-size:12px;opacity:.85">${achLabel(best, 'desc')}${hint ? ' · ' + hint : ''}</div>` +
     `<div class="xpline" style="margin-top:6px;height:6px"><div style="width:${pct}%"></div></div></div>`;
 }
 function dexSortedIds(rarityFilter, typeFilter, sortKey, biomeFilter) {
@@ -2799,7 +2801,7 @@ function weaponNextUnlockHtml() {
   const need = Math.max(0, next.unlock - save.lvl);
   const pct = Math.min(100, Math.round((save.lvl / next.unlock) * 100));
   return `<div class="dex-ach-next" style="margin-top:10px;padding:8px 10px;border-radius:12px;background:rgba(124,245,255,.06);border:1px solid rgba(124,245,255,.22)">` +
-    `<div style="font-size:11px;font-weight:800;color:#7cf5ff;margin-bottom:4px">Volgende wapen · ${weaponLabel(next)}</div>` +
+    `<div style="font-size:11px;font-weight:800;color:#7cf5ff;margin-bottom:4px">${t('ui.dexNextWeapon', { name: weaponLabel(next) })}</div>` +
     `<div style="font-size:12px;opacity:.85"><span class="rar-pill" style="color:${rar.color};border-color:${rar.color}">${rarityLabel(next.rarity)}</span>` +
     ` · unlock Lv <b>${next.unlock}</b>${need ? ` · nog <b>${need}</b> level${need === 1 ? '' : 's'}` : ' · bijna!'}</div>` +
     `<div class="xpline" style="margin-top:6px;height:6px"><div style="width:${pct}%"></div></div></div>`;
@@ -2808,9 +2810,9 @@ function dexCosmeticProgressLines() {
   const out = [];
   const half = Math.ceil(SPECIES_ORDER.length / 2);
   const checks = [
-    { styleId: 'crystal', cur: dexRarityTierCount(), goal: 4, label: 'rariteiten', name: 'Kristallijn' },
-    { styleId: 'tome', cur: dexCount(), goal: half, label: 'soorten', name: 'Boekmeester' },
-    { styleId: 'hunter', cur: dexTotalKills(), goal: 75, label: 'kills', name: 'Jagerlook' },
+    { styleId: 'crystal', cur: dexRarityTierCount(), goal: 4, label: t('ui.dexChipRarities'), name: styleLabel('crystal', 'name') || 'Kristallijn' },
+    { styleId: 'tome', cur: dexCount(), goal: half, label: t('ui.dexChipSpecies'), name: styleLabel('tome', 'name') || 'Boekmeester' },
+    { styleId: 'hunter', cur: dexTotalKills(), goal: 75, label: t('ui.dexChipKills'), name: styleLabel('hunter', 'name') || 'Jagerlook' },
   ];
   for (const c of checks) {
     const st = STYLES.find(s => s.id === c.styleId);

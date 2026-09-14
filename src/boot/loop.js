@@ -649,7 +649,7 @@ function syncTitleGateCopy() {
   if (contLbl) {
     const modeName = lp && typeof t === 'function' && lp.mode ? t('modes.' + lp.mode) : '';
     contLbl.innerHTML = (typeof t === 'function' ? t('menu.continue') : 'Verder spelen') +
-      '<small>' + (modeName || (typeof t === 'function' ? t('menu.startSub') : 'Laatste modus')) + '</small>';
+      '<small>' + (modeName || (typeof t === 'function' ? t('ui.continueLastMode') : 'Laatste modus')) + '</small>';
   }
   if (greet) {
     greet.textContent = tag && typeof t === 'function'

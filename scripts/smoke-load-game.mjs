@@ -230,7 +230,97 @@ Promise.resolve().then(() => {
     console.error('SMOKE_FAIL bootGame did not run (__sfBooted unset)');
     process.exit(1);
   }
-  console.log('SMOKE_OK game.js loaded + bootGame');
+  const tFn = ctx.t;
+  const set = ctx.setLang;
+  if (typeof tFn !== 'function' || typeof set !== 'function') {
+    console.error('SMOKE_FAIL t/setLang not in boot scope');
+    process.exit(1);
+  }
+  set('en');
+  if (tFn('menu.adventure') !== 'Adventure') {
+    console.error('SMOKE_FAIL EN menu.adventure leftover', tFn('menu.adventure'));
+    process.exit(1);
+  }
+  if (tFn('ui.weaponHead') !== 'Weapons' || /Wapens|Avontuur|Verzameld/.test(tFn('ui.weaponSummary', {
+    unlocked: 1, total: 2, usable: 1, name: 'Fists', cap: 10,
+  }))) {
+    console.error('SMOKE_FAIL EN weapons chrome leftover Dutch', tFn('ui.weaponHead'), tFn('ui.weaponSummary', {
+      unlocked: 1, total: 2, usable: 1, name: 'Fists', cap: 10,
+    }));
+    process.exit(1);
+  }
+  if (tFn('ui.summonPull') !== 'Open chest' || /kist|vandaag/i.test(tFn('ui.summonQuota', { left: 3, total: 10 }))) {
+    console.error('SMOKE_FAIL EN summon chrome leftover Dutch');
+    process.exit(1);
+  }
+  if (/Golf /.test(tFn('hud.levelWave', { n: 1, wv: 1, total: 3 }))) {
+    console.error('SMOKE_FAIL EN HUD still Dutch Golf');
+    process.exit(1);
+  }
+  set('de');
+  if (tFn('menu.adventure') !== 'Abenteuer') {
+    console.error('SMOKE_FAIL DE menu.adventure leftover', tFn('menu.adventure'));
+    process.exit(1);
+  }
+  if (tFn('ui.weaponHead') !== 'Waffen' || /Wapens|Avontuur|Verzameld/.test(tFn('ui.weaponSummary', {
+    unlocked: 1, total: 2, usable: 1, name: 'Fäuste', cap: 10,
+  }))) {
+    console.error('SMOKE_FAIL DE weapons chrome leftover Dutch');
+    process.exit(1);
+  }
+  if (!/Heute/.test(tFn('ui.summonQuota', { left: 3, total: 10 })) || /Vandaag/.test(tFn('ui.summonQuota', { left: 3, total: 10 }))) {
+    console.error('SMOKE_FAIL DE summon quota leftover Dutch', tFn('ui.summonQuota', { left: 3, total: 10 }));
+    process.exit(1);
+  }
+  if (/Golf /.test(tFn('hud.levelWave', { n: 1, wv: 1, total: 3 })) || !/Welle/.test(tFn('hud.levelWave', { n: 1, wv: 1, total: 3 }))) {
+    console.error('SMOKE_FAIL DE HUD not German', tFn('hud.levelWave', { n: 1, wv: 1, total: 3 }));
+    process.exit(1);
+  }
+  set('nl');
+  if (tFn('menu.adventure') !== 'Avontuur' || tFn('ui.weaponHead') !== 'Wapens') {
+    console.error('SMOKE_FAIL NL chrome drifted', tFn('menu.adventure'), tFn('ui.weaponHead'));
+    process.exit(1);
+  }
+  if (tFn('result.advLose') !== 'VERLOREN') {
+    console.error('SMOKE_FAIL NL lose copy drifted', tFn('result.advLose'));
+    process.exit(1);
+  }
+
+  function flatten(obj, prefix = '', out = {}) {
+    if (!obj || typeof obj !== 'object' || Array.isArray(obj)) return out;
+    for (const [k, v] of Object.entries(obj)) {
+      const p = prefix ? prefix + '.' + k : k;
+      if (v && typeof v === 'object' && !Array.isArray(v)) flatten(v, p, out);
+      else if (typeof v === 'string') out[p] = v;
+    }
+    return out;
+  }
+  const CHROME_NS = ['ui', 'hud', 'combat', 'toast', 'missionsUi', 'menu', 'hub', 'settings', 'pause', 'result', 'banner', 'net', 'modes', 'common', 'back', 'pets', 'dex', 'egg'];
+  const DUTCH_MARK = /(Avontuur|Verzameld|Collectie|Vandaag|Uitrusten|Overslaan|Instellingen|Missies|Monsterboek|Gooi &|Laatste modus|Verse versie|Spiraal Orb|Bliksemprik|Leegteblik|Eigen vechters|Terug naar menu|Getemd ·|Temmen:|Kies een eiland|Dagelijkse kist|Muur Slopen|Verder spelen|Dag-ei|Cosmetisch metgezel|Alle types|Alle biomen|Export bevat|Laatst opgeslagen|Nog niet uitgekomen|Nog niet verslagen|Gratis Pull|Gratis arcade|Verschijnt in avontuur)/;
+  /** Retired Versus / 2P chrome — DE may omit; t() falls back to EN, never NL. */
+  const RETIRED_VS = /^(menu\.versus|hub\.versus|hub\.fightersLocal|hub\.vsRecord|modes\.versus|pause\.vs|result\.vs|banner\.(round|p1Round|p2Round|timeHpVs)|combat\.vs|toast\.(char|vs)|hud\.(roundWinner|roundSkip|matchPoint|vsTot|vsFatality|p1Line|p2Line|hintDual|nextRound|spawnP1|spawnP2|spawnGrace|decisiveRound|timeHpWin|roundInfo|hpLead))/;
+  const I18N = ctx.__sfI18N || ctx.I18N;
+  if (!I18N || !I18N.nl || !I18N.en || !I18N.de) {
+    console.error('SMOKE_FAIL I18N tables missing after boot');
+    process.exit(1);
+  }
+  const nl = flatten(I18N.nl);
+  const en = flatten(I18N.en);
+  const de = flatten(I18N.de);
+  const chromeKeys = Object.keys(nl).filter((k) => CHROME_NS.some((n) => k === n || k.startsWith(n + '.')));
+  const missEn = chromeKeys.filter((k) => en[k] == null);
+  const missDe = chromeKeys.filter((k) => de[k] == null && !RETIRED_VS.test(k));
+  const enDutch = chromeKeys.filter((k) => en[k] && DUTCH_MARK.test(en[k]));
+  const deDutch = chromeKeys.filter((k) => de[k] && DUTCH_MARK.test(de[k]));
+  if (missEn.length || missDe.length || enDutch.length || deDutch.length) {
+    if (missEn.length) console.error('SMOKE_FAIL EN missing chrome keys', missEn.join(', '));
+    if (missDe.length) console.error('SMOKE_FAIL DE missing chrome keys', missDe.join(', '));
+    if (enDutch.length) console.error('SMOKE_FAIL EN leftover Dutch', enDutch.map((k) => k + '=' + en[k]).join(' | '));
+    if (deDutch.length) console.error('SMOKE_FAIL DE leftover Dutch', deDutch.map((k) => k + '=' + de[k]).join(' | '));
+    process.exit(1);
+  }
+
+  console.log('SMOKE_OK game.js loaded + bootGame + EN/DE/NL chrome');
 }).catch((e) => {
   console.error('SMOKE_FAIL', e.message);
   process.exit(1);

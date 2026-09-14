@@ -20,6 +20,7 @@
   "src/data/egg-pets.js",
   "src/data/chest-summons.js",
   "src/i18n/catalog.js",
+  "src/i18n/catalog-de.js",
   "src/systems/audio-samples.js",
   "src/systems/audio.js",
   "src/systems/input.js",
