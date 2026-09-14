@@ -2014,8 +2014,8 @@ const I18N = {
       collectedAll: 'Oogst +{n} uit {k} gebouwen',
       waveHeal: '+{n} HP',
       stick_lighter: { name: 'Stick-Lighter' }, woodchip_glue: { name: 'Woodchip-Glue' },
-      chipping_wood: { name: 'Chipping-Wood' }, bamboo_boesa: { name: 'Bamboo-Boesa' },
-      echo_whistle: { name: 'Echo-Whistle' },
+      chipping_wood: { name: 'Chipping-Wood' }, bamboo_boesa_boiler: { name: 'Bamboo-Boesa Boiler' },
+      echo_whistle_mill: { name: 'Echo-Whistle Mill' },
       res: { embers: 'sintels', glue: 'lijm', chips: 'chips', steam: 'stoom', echoes: 'echo' },
     },
     modes: { adventure: 'Avontuur', training: 'Training', wall: 'Muur', versus: '2 spelers', coinrun: 'Muntjes' },
@@ -2135,8 +2135,8 @@ const I18N = {
       collectedAll: 'Harvest +{n} from {k} buildings',
       waveHeal: '+{n} HP',
       stick_lighter: { name: 'Stick-Lighter' }, woodchip_glue: { name: 'Woodchip-Glue' },
-      chipping_wood: { name: 'Chipping-Wood' }, bamboo_boesa: { name: 'Bamboo-Boesa' },
-      echo_whistle: { name: 'Echo-Whistle' },
+      chipping_wood: { name: 'Chipping-Wood' }, bamboo_boesa_boiler: { name: 'Bamboo-Boesa Boiler' },
+      echo_whistle_mill: { name: 'Echo-Whistle Mill' },
       res: { embers: 'embers', glue: 'glue', chips: 'chips', steam: 'steam', echoes: 'echoes' },
     },
     modes: { adventure: 'Adventure', training: 'Training', wall: 'Wall', versus: '2 players', coinrun: 'Coins' },
@@ -2243,8 +2243,8 @@ const I18N = {
       collectedAll: 'Ernte +{n} aus {k} Gebäuden',
       waveHeal: '+{n} HP',
       stick_lighter: { name: 'Stick-Lighter' }, woodchip_glue: { name: 'Woodchip-Glue' },
-      chipping_wood: { name: 'Chipping-Wood' }, bamboo_boesa: { name: 'Bamboo-Boesa' },
-      echo_whistle: { name: 'Echo-Whistle' },
+      chipping_wood: { name: 'Chipping-Wood' }, bamboo_boesa_boiler: { name: 'Bamboo-Boesa Boiler' },
+      echo_whistle_mill: { name: 'Echo-Whistle Mill' },
       res: { embers: 'Glut', glue: 'Leim', chips: 'Späne', steam: 'Dampf', echoes: 'Echos' },
     },
     modes: { adventure: 'Abenteuer', training: 'Training', wall: 'Mauer', versus: '2 Spieler', coinrun: 'Münzen' },
@@ -2333,8 +2333,8 @@ const I18N = {
       collectedAll: 'Récolte +{n} de {k} bâtiments',
       waveHeal: '+{n} PV',
       stick_lighter: { name: 'Stick-Lighter' }, woodchip_glue: { name: 'Woodchip-Glue' },
-      chipping_wood: { name: 'Chipping-Wood' }, bamboo_boesa: { name: 'Bamboo-Boesa' },
-      echo_whistle: { name: 'Echo-Whistle' },
+      chipping_wood: { name: 'Chipping-Wood' }, bamboo_boesa_boiler: { name: 'Bamboo-Boesa Boiler' },
+      echo_whistle_mill: { name: 'Echo-Whistle Mill' },
       res: { embers: 'braises', glue: 'colle', chips: 'copeaux', steam: 'vapeur', echoes: 'échos' },
     },
     modes: { adventure: 'Aventure', training: 'Entraînement', wall: 'Mur', versus: '2 joueurs', coinrun: 'Pièces' },
@@ -2423,8 +2423,8 @@ const I18N = {
       collectedAll: 'Cosecha +{n} de {k} edificios',
       waveHeal: '+{n} HP',
       stick_lighter: { name: 'Stick-Lighter' }, woodchip_glue: { name: 'Woodchip-Glue' },
-      chipping_wood: { name: 'Chipping-Wood' }, bamboo_boesa: { name: 'Bamboo-Boesa' },
-      echo_whistle: { name: 'Echo-Whistle' },
+      chipping_wood: { name: 'Chipping-Wood' }, bamboo_boesa_boiler: { name: 'Bamboo-Boesa Boiler' },
+      echo_whistle_mill: { name: 'Echo-Whistle Mill' },
       res: { embers: 'brasas', glue: 'cola', chips: 'astillas', steam: 'vapor', echoes: 'ecos' },
     },
     modes: { adventure: 'Aventura', training: 'Entrenamiento', wall: 'Muro', versus: '2 jugadores', coinrun: 'Monedas' },
@@ -11187,8 +11187,8 @@ function petProgressLine(speciesId) {
  *     byId: { stick_lighter: { level, pending, stock, lastCollectAt }, ... }
  *   }
  * Locked systems ids: stick_lighter, woodchip_glue, chipping_wood,
- * bamboo_boesa, echo_whistle. Also accepts kebab / longer pixel names
- * and systems-shaped { levels, pending, stock }.
+ * bamboo_boesa_boiler, echo_whistle_mill. Short / kebab names alias in.
+ * Also accepts systems-shaped { levels, pending, stock }.
  * Never throws. Clock rollback = no refund. Versus untouched.
  */
 const BUILDINGS_SCHEMA = 1;
@@ -11198,13 +11198,13 @@ const BUILDING_OFFLINE_MAX_MS = 48 * 3600 * 1000;
 const BUILDING_PENDING_HOURS = 4;
 const BUILDING_STARTER_ID = 'stick_lighter';
 
-/** Exact systems catalog (FINAL lock). */
+/** Exact systems catalog (locked). */
 const BUILDING_FACTORY_IDS = [
   'stick_lighter',
   'woodchip_glue',
   'chipping_wood',
-  'bamboo_boesa',
-  'echo_whistle',
+  'bamboo_boesa_boiler',
+  'echo_whistle_mill',
 ];
 
 const BUILDING_ID_ALIASES = {
@@ -11217,21 +11217,21 @@ const BUILDING_ID_ALIASES = {
   chipping_wood: 'chipping_wood', chippingwood: 'chipping_wood',
   factory_chipping_wood: 'chipping_wood', factorychippingwood: 'chipping_wood',
   dojo: 'chipping_wood', hall: 'chipping_wood', training: 'chipping_wood',
-  bamboo_boesa: 'bamboo_boesa', bambooboesa: 'bamboo_boesa',
-  bamboo_boesa_boiler: 'bamboo_boesa', bambooboesaboiler: 'bamboo_boesa',
-  bambooboiler: 'bamboo_boesa', boesa: 'bamboo_boesa',
-  garden: 'bamboo_boesa', farm: 'bamboo_boesa', kitchen: 'bamboo_boesa',
-  echo_whistle: 'echo_whistle', echowhistle: 'echo_whistle',
-  echo_whistle_mill: 'echo_whistle', echowhistlemill: 'echo_whistle',
-  whistlemill: 'echo_whistle', shrine: 'echo_whistle', well: 'echo_whistle',
+  bamboo_boesa_boiler: 'bamboo_boesa_boiler', bambooboesaboiler: 'bamboo_boesa_boiler',
+  bamboo_boesa: 'bamboo_boesa_boiler', bambooboesa: 'bamboo_boesa_boiler',
+  bambooboiler: 'bamboo_boesa_boiler', boesa: 'bamboo_boesa_boiler',
+  garden: 'bamboo_boesa_boiler', farm: 'bamboo_boesa_boiler', kitchen: 'bamboo_boesa_boiler',
+  echo_whistle_mill: 'echo_whistle_mill', echowhistlemill: 'echo_whistle_mill',
+  echo_whistle: 'echo_whistle_mill', echowhistle: 'echo_whistle_mill',
+  whistlemill: 'echo_whistle_mill', shrine: 'echo_whistle_mill', well: 'echo_whistle_mill',
 };
 
 const BUILDING_RESOURCE = {
-  stick_lighter:  { id: 'embers',  basePerHour: 10, stepPerHour: 3, stockCap: 200 },
-  woodchip_glue:  { id: 'glue',    basePerHour:  8, stepPerHour: 3, stockCap: 160 },
-  chipping_wood:  { id: 'chips',   basePerHour: 12, stepPerHour: 4, stockCap: 240 },
-  bamboo_boesa:   { id: 'steam',   basePerHour: 16, stepPerHour: 5, stockCap: 320 },
-  echo_whistle:   { id: 'echoes',  basePerHour:  6, stepPerHour: 2, stockCap: 120 },
+  stick_lighter:       { id: 'embers',  basePerHour: 10, stepPerHour: 3, stockCap: 200 },
+  woodchip_glue:       { id: 'glue',    basePerHour:  8, stepPerHour: 3, stockCap: 160 },
+  chipping_wood:       { id: 'chips',   basePerHour: 12, stepPerHour: 4, stockCap: 240 },
+  bamboo_boesa_boiler: { id: 'steam',   basePerHour: 16, stepPerHour: 5, stockCap: 320 },
+  echo_whistle_mill:   { id: 'echoes',  basePerHour:  6, stepPerHour: 2, stockCap: 120 },
 };
 
 /** Power tiers: index 0 unused; [1]=lv1, [3]=lv3, [5]=lv5. Higher lv keeps lv5. */
@@ -11251,12 +11251,12 @@ const BUILDING_POWER_TIERS = {
     3: { dmgMul: 1.04 },
     5: { dmgMul: 1.06, speedMul: 1.02 },
   },
-  bamboo_boesa: {
+  bamboo_boesa_boiler: {
     1: { maxHp: 4 },
     3: { maxHp: 8 },
     5: { maxHp: 12, healBetween: 0.02 },
   },
-  echo_whistle: {
+  echo_whistle_mill: {
     1: { energyMul: 1.04 },
     3: { energyMul: 1.08 },
     5: { energyMul: 1.10, techniqueMul: 1.04 },
@@ -11264,11 +11264,11 @@ const BUILDING_POWER_TIERS = {
 };
 
 const BUILDING_META = {
-  stick_lighter: { name: 'Stick-Lighter', accent: '#ffd75e' },
-  woodchip_glue: { name: 'Woodchip-Glue', accent: '#b8e986' },
-  chipping_wood: { name: 'Chipping-Wood', accent: '#7cf5ff' },
-  bamboo_boesa:  { name: 'Bamboo-Boesa', accent: '#6ee06e' },
-  echo_whistle:  { name: 'Echo-Whistle', accent: '#c792ff' },
+  stick_lighter:       { name: 'Stick-Lighter', accent: '#ffd75e' },
+  woodchip_glue:       { name: 'Woodchip-Glue', accent: '#b8e986' },
+  chipping_wood:       { name: 'Chipping-Wood', accent: '#7cf5ff' },
+  bamboo_boesa_boiler: { name: 'Bamboo-Boesa Boiler', accent: '#6ee06e' },
+  echo_whistle_mill:   { name: 'Echo-Whistle Mill', accent: '#c792ff' },
 };
 
 function emptyBuildingSlot(level) {

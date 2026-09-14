@@ -98,7 +98,7 @@ run(`
   save.buildings = sanitizeBuildingsBag({
     schema: 1,
     lastTickAt: 1,
-    levels: { stick_lighter: 5, woodchip_glue: 5, chipping_wood: 5, bamboo_boesa: 5, echo_whistle: 5 },
+    levels: { stick_lighter: 5, woodchip_glue: 5, chipping_wood: 5, bamboo_boesa_boiler: 5, echo_whistle_mill: 5 },
     pending: { chipping_wood: 9999 },
     stock: { chipping_wood: 9999 },
   });
@@ -124,8 +124,8 @@ run(`
       stick_lighter: { level: 1, pending: 0, stock: 0 },
       woodchip_glue: { level: 1, pending: 0, stock: 0 },
       chipping_wood: { level: 1, pending: 0, stock: 0 },
-      bamboo_boesa: { level: 1, pending: 0, stock: 0 },
-      echo_whistle: { level: 1, pending: 0, stock: 0 },
+      bamboo_boesa_boiler: { level: 1, pending: 0, stock: 0 },
+      echo_whistle_mill: { level: 1, pending: 0, stock: 0 },
     },
   });
 `);
@@ -190,7 +190,7 @@ assert(run('save.buildings.byId.stick_lighter.level === 2'), 'kebab alias');
 
 run(`
   save.buildings = sanitizeBuildingsBag({
-    byId: { chipping_wood: { level: 5 }, stick_lighter: { level: 0 }, woodchip_glue: { level: 0 }, bamboo_boesa: { level: 0 }, echo_whistle: { level: 0 } },
+    byId: { chipping_wood: { level: 5 }, stick_lighter: { level: 0 }, woodchip_glue: { level: 0 }, bamboo_boesa_boiler: { level: 0 }, echo_whistle_mill: { level: 0 } },
   });
   globalThis.__player = { maxhp: 100, hp: 100, baseDmg: 10, speed: 260 };
   globalThis.__game = {};
@@ -203,7 +203,7 @@ assert(run('globalThis.__game.buildingCritBonus === 0'), 'no lighter crit');
 
 run(`
   save.buildings = sanitizeBuildingsBag({
-    byId: { stick_lighter: { level: 0 }, woodchip_glue: { level: 0 }, chipping_wood: { level: 0 }, bamboo_boesa: { level: 0 }, echo_whistle: { level: 0 } },
+    byId: { stick_lighter: { level: 0 }, woodchip_glue: { level: 0 }, chipping_wood: { level: 0 }, bamboo_boesa_boiler: { level: 0 }, echo_whistle_mill: { level: 0 } },
   });
   globalThis.__player2 = { maxhp: 100, hp: 100, baseDmg: 10, speed: 260 };
   globalThis.__game2 = {};
@@ -214,13 +214,22 @@ assert(run('globalThis.__player2.baseDmg === 10 && globalThis.__player2.maxhp ==
 assert(run('buildingCanonId("stick_lighter") === "stick_lighter"'), 'locked stick_lighter');
 assert(run('buildingCanonId("woodchip_glue") === "woodchip_glue"'), 'locked woodchip_glue');
 assert(run('buildingCanonId("chipping_wood") === "chipping_wood"'), 'locked chipping_wood');
-assert(run('buildingCanonId("bamboo_boesa") === "bamboo_boesa"'), 'locked bamboo_boesa');
-assert(run('buildingCanonId("echo_whistle") === "echo_whistle"'), 'locked echo_whistle');
-assert(run('buildingCanonId("bamboo-boesa-boiler") === "bamboo_boesa"'), 'long pixel boiler');
-assert(run('buildingCanonId("echo-whistle-mill") === "echo_whistle"'), 'long pixel mill');
+assert(run('buildingCanonId("bamboo_boesa_boiler") === "bamboo_boesa_boiler"'), 'locked bamboo_boesa_boiler');
+assert(run('buildingCanonId("echo_whistle_mill") === "echo_whistle_mill"'), 'locked echo_whistle_mill');
+assert(run('buildingCanonId("bamboo_boesa") === "bamboo_boesa_boiler"'), 'short boiler alias');
+assert(run('buildingCanonId("echo_whistle") === "echo_whistle_mill"'), 'short mill alias');
+assert(run('buildingCanonId("bamboo-boesa-boiler") === "bamboo_boesa_boiler"'), 'kebab boiler');
+assert(run('buildingCanonId("echo-whistle-mill") === "echo_whistle_mill"'), 'kebab mill');
 assert(run('buildingCanonId("dojo") === "chipping_wood"'), 'legacy dojo alias');
+run(`
+  save.buildings = sanitizeBuildingsBag({
+    byId: { bamboo_boesa: { level: 4, pending: 3, stock: 7 }, echo_whistle: { level: 2 } },
+  });
+`);
+assert(run('save.buildings.byId.bamboo_boesa_boiler.level === 4'), 'short boiler bag migrates');
+assert(run('save.buildings.byId.echo_whistle_mill.level === 2'), 'short mill bag migrates');
 
 const ids = run('BUILDING_FACTORY_IDS.join(",")');
-assert(ids === 'stick_lighter,woodchip_glue,chipping_wood,bamboo_boesa,echo_whistle', 'locked systems ids');
+assert(ids === 'stick_lighter,woodchip_glue,chipping_wood,bamboo_boesa_boiler,echo_whistle_mill', 'locked systems ids');
 
 console.log('SMOKE_OK buildings-powers · 5 factories · starter stick_lighter Lv1 · offline delta · caps · collect · powers');

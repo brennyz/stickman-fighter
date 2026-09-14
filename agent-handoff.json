@@ -97,6 +97,13 @@
   },
   "userWishlist": [
     {
+      "id": "w-20260914T172508",
+      "from": "user",
+      "text": "Locked building ids: stick_lighter, woodchip_glue, chipping_wood, bamboo_boesa_boiler, echo_whistle_mill.",
+      "status": "open",
+      "updated": "2026-09-14"
+    },
+    {
       "id": "w-20260914T171300",
       "from": "user",
       "text": "BUILDINGS POWERS + TIMED RESOURCES (4 of 4). Mega-merge batch — DO NOT merge to main. Each of 5 buildings grants a combat/adventure power at levels + a real-time resource (online/offline delta) with collect caps. Hook buildings systems schema. Document rates. Draft PR.",
@@ -627,6 +634,10 @@
   ],
   "sessionLog": [
     {
+      "at": "2026-09-14T17:25:08Z",
+      "summary": "Locked factory ids now stick_lighter, woodchip_glue, chipping_wood, bamboo_boesa_boiler, echo_whistle_mill. Draft #290."
+    },
+    {
       "at": "2026-09-14T17:20:53Z",
       "summary": "Buildings 4/4: timed resources + Lv1/3/5 powers on 5 factories. Draft #290, no merge. v1.18.164/SW374."
     },
@@ -721,10 +732,6 @@
     {
       "at": "2026-08-17T10:18:00Z",
       "summary": "main LIVE 33d89b6 v1.18.151 — pull-commando voor de pc klaar"
-    },
-    {
-      "at": "2026-08-17T10:03:24Z",
-      "summary": "LIVE gemerged #248–#255 naar main conflictloos · v1.18.151 / SW 361 — pull main op de pc"
     }
   ],
   "implementedFeaturesSummary": "d18 char select deel 1+2 (v1.11.1-2); Mats coinrun + shuriken mik/vliegers + anti-spam (v1.12.0); speel.html (v1.12.2+). Zie HANDOFF-ZOEKINDEX.md en improvement-d20-bag.json userFeatureLog.",

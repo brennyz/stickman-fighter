@@ -4,7 +4,7 @@ Lane **4 of 4** (mega-merge batch). Android-first. No Versus. **Do not merge to 
 
 Keys the buildings **systems** bag (`save.buildings`, `BUILDINGS_SCHEMA = 1`) on the **locked factory ids**:
 
-`stick_lighter` · `woodchip_glue` · `chipping_wood` · `bamboo_boesa` · `echo_whistle`
+`stick_lighter` · `woodchip_glue` · `chipping_wood` · `bamboo_boesa_boiler` · `echo_whistle_mill`
 
 Kebab / longer pixel names (`stick-lighter`, `bamboo-boesa-boiler`, `echo-whistle-mill`) and the old dojo/forge labels alias in. If a systems catalog (`BUILDING_IDS` / `BUILDING_DEFS`) is already in the bundle, unknown ids still map by index.
 
@@ -15,8 +15,8 @@ Kebab / longer pixel names (`stick-lighter`, `bamboo-boesa-boiler`, `echo-whistl
 | `stick_lighter` | Stick-Lighter | Lv1 +1% crit · Lv3 +2% · Lv5 +3% crit +2% DMG | **embers** |
 | `woodchip_glue` | Woodchip-Glue | Lv1 +0.35s shield/wave · Lv3 +0.70s · Lv5 +1.00s and −4% incoming | **glue** |
 | `chipping_wood` | Chipping-Wood | Lv1 +2% DMG · Lv3 +4% · Lv5 +6% DMG +2% speed | **chips** |
-| `bamboo_boesa` | Bamboo-Boesa | Lv1 +4 HP · Lv3 +8 · Lv5 +12 HP +2% heal between adventure waves | **steam** |
-| `echo_whistle` | Echo-Whistle | Lv1 +4% energy · Lv3 +8% · Lv5 +10% energy +4% technique | **echoes** |
+| `bamboo_boesa_boiler` | Bamboo-Boesa Boiler | Lv1 +4 HP · Lv3 +8 · Lv5 +12 HP +2% heal between adventure waves | **steam** |
+| `echo_whistle_mill` | Echo-Whistle Mill | Lv1 +4% energy · Lv3 +8% · Lv5 +10% energy +4% technique | **echoes** |
 
 First-time bag (no `save.buildings` yet): **`stick_lighter` starts at Lv1**, others Lv0. Existing systems levels are never overwritten. Power tiers stop at Lv5; resource rate still scales through Lv10.
 
@@ -31,8 +31,8 @@ Combat apply is the same shape as pets/styles (`applyBuildingPowersToPlayer` aft
 | stick_lighter | embers | 10 | +3 | 4 hours of current rate | 200 |
 | woodchip_glue | glue | 8 | +3 | 4 hours | 160 |
 | chipping_wood | chips | 12 | +4 | 4 hours | 240 |
-| bamboo_boesa | steam | 16 | +5 | 4 hours | 320 |
-| echo_whistle | echoes | 6 | +2 | 4 hours | 120 |
+| bamboo_boesa_boiler | steam | 16 | +5 | 4 hours | 320 |
+| echo_whistle_mill | echoes | 6 | +2 | 4 hours | 120 |
 
 Examples: `chipping_wood` Lv1 = 12/h, pending cap 48. Lv5 = 28/h, pending cap 112.
 
