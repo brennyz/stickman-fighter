@@ -123,9 +123,9 @@ function equipEggPet(id) {
 
 function eggDailyStatusLine() {
   ensureEggDaily();
-  if (canCrackDailyEgg()) return 'Dag-ei klaar';
-  if (canAdvEggBonus()) return 'Bonus-ei: win 1× avontuur';
-  return 'Morgen weer ei';
+  if (canCrackDailyEgg()) return t('egg.dailyReady');
+  if (canAdvEggBonus()) return t('egg.advBonus');
+  return t('egg.tomorrow');
 }
 
 function eggProgressSummary() {
@@ -134,7 +134,7 @@ function eggProgressSummary() {
   return {
     owned,
     total: EGG_ROSTER.length,
-    activeName: active ? active.name : 'geen',
+    activeName: active ? active.name : t('ui.petNone'),
     daily: eggDailyStatusLine(),
   };
 }

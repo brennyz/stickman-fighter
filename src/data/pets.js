@@ -151,9 +151,9 @@ function equipPet(petId) {
 function petProgressLine(speciesId) {
   const def = PET_BY_SPECIES[speciesId];
   if (!def) return '';
-  if (isPetTamed(def.id)) return save.activePet === def.id ? 'Pet · actief' : 'Pet · getemd';
+  if (isPetTamed(def.id)) return save.activePet === def.id ? t('ui.petLineActive') : t('ui.petLineTamed');
   const cost = petCoinCost(def.id);
-  if (canBuyPetWithCoins(def.id)) return `Pet · kopen ${cost} PC`;
+  if (canBuyPetWithCoins(def.id)) return t('ui.petLineBuy', { cost });
   const need = petKillNeed(speciesId);
   const cur = save.dex[speciesId] || 0;
   const coinHint = petCoinsBalance() > 0 ? ` · ${petCoinsBalance()}/${cost} PC` : '';

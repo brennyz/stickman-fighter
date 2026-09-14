@@ -88,5 +88,17 @@ if (/Vandaag: \$\{left\}/.test(ui)) fail('summon quota still hardcoded Dutch');
 if (/Verzameld <b>/.test(ui)) fail('collection summary still hardcoded Dutch Verzameld');
 if (!/ui\.eggSummary/.test(ui)) fail('egg summary must use t()');
 if (!/ui\.styleSummary/.test(ui)) fail('style summary must use t()');
+if (/Dag-ei openen/.test(ui)) fail('egg crack button still hardcodes Dag-ei');
+if (/Alle types/.test(ui) || /Alle biomen/.test(ui)) fail('dex filters still hardcode Dutch');
+if (/Export bevat:/.test(ui)) fail('settings export hint still hardcodes Dutch');
+if (/Laatst opgeslagen:/.test(ui)) fail('settings save stamp still hardcodes Dutch');
+if (/Cosmetisch metgezel/.test(ui) || /Nog niet uitgekomen/.test(ui)) fail('egg pet chrome still hardcodes Dutch');
+if (!/ui\.dexSummary/.test(ui) || !/ui\.dexAllTypes/.test(ui)) fail('dex chrome must use t()');
+if (!/ui\.saveExportContains/.test(ui)) fail('settings export must use t()');
+if (!/pets\.crackEgg/.test(ui)) fail('egg crack must use pets.crackEgg');
+if (!/egg\.dailyReady/.test(fs.readFileSync(path.join(root, 'src/data/egg-pets.js'), 'utf8'))) {
+  fail('egg daily status must use egg.* keys');
+}
+if (/Gratis Pull/.test(i18n)) fail('DE pets.crackEggSub still has leftover Dutch Gratis');
 
 console.log('SMOKE_OK i18n-locale: Tips, VERLOREN, EN/DE chrome catalogs, no leftover Dutch tiles');

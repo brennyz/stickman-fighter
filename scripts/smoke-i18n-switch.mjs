@@ -1,0 +1,87 @@
+#!/usr/bin/env node
+/**
+ * Locale switch: HOME tiles, dock Tips, weapons/settings heads
+ * stay in EN / DE / NL with no leftover Dutch on EN/DE.
+ */
+import fs from 'fs';
+import path from 'path';
+import { spawn } from 'child_process';
+import { fileURLToPath } from 'url';
+import { ensureSmokeServer, smokeBaseUrl } from './smoke-static-server.mjs';
+
+const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
+
+const chrome = ['/usr/local/bin/google-chrome', '/usr/bin/google-chrome'].find((p) => fs.existsSync(p));
+if (!chrome) { console.log('SMOKE_OK i18n-switch (static only, no chrome)'); process.exit(0); }
+
+const outDir = '/tmp/sf-i18n-switch';
+fs.mkdirSync(outDir, { recursive: true });
+
+async function getPuppeteer() {
+  try { return await import('puppeteer-core'); } catch (_) {
+    await new Promise((res, rej) => {
+      const p = spawn('npm', ['install', '--no-save', 'puppeteer-core@23'], { cwd: outDir, stdio: 'inherit' });
+      p.on('exit', (c) => (c === 0 ? res() : rej(new Error('npm'))));
+    });
+    return import(path.join(outDir, 'node_modules/puppeteer-core/lib/esm/puppeteer/puppeteer-core.js'));
+  }
+}
+
+async function run() {
+  const port = Number(process.env.SF_I18N_SWITCH_PORT || 8798);
+  let server = null;
+  try { server = await ensureSmokeServer(port); } catch (_) {}
+  const puppeteer = await getPuppeteer();
+  const browser = await puppeteer.default.launch({
+    executablePath: chrome, headless: 'new',
+    args: ['--no-sandbox', '--disable-gpu', '--window-size=390,844'],
+  });
+  const page = await browser.newPage();
+  await page.goto(smokeBaseUrl(port) + '?nosplash=1', { waitUntil: 'load', timeout: 60000 });
+  await page.waitForFunction(() => window.__sfBooted, { timeout: 45000 });
+
+  const result = await page.evaluate(() => {
+    const DUTCH = /(Avontuur|Collectie|Instellingen|Wapens|Vandaag|Verzameld|Uitrusten|Dag-ei|muur |× vandaag)/;
+    function snap(lang) {
+      if (typeof setLang === 'function') setLang(lang);
+      else if (typeof save !== 'undefined') {
+        save.lang = lang;
+        if (typeof persist === 'function') persist();
+        if (typeof applyLang === 'function') applyLang();
+      }
+      const adv = (document.querySelector('.hub-tile-adventure .hub-tile-title') || {}).textContent || '';
+      const collect = (document.querySelector('.hub-tile-collect .hub-tile-title') || {}).textContent || '';
+      const help = (document.getElementById('btnHelp') || {}).title || (document.getElementById('btnHelp') || {}).textContent || '';
+      const weapons = (document.getElementById('weaponScreenHead') || {}).textContent || '';
+      const settings = (document.getElementById('settingsHead') || {}).textContent || '';
+      const tAdv = typeof t === 'function' ? t('menu.adventure') : '';
+      const tHud = typeof t === 'function' ? t('hud.levelWave', { n: 1, wv: 1, total: 3 }) : '';
+      return { lang, adv, collect, help, weapons, settings, tAdv, tHud };
+    }
+    const en = snap('en');
+    const de = snap('de');
+    const nl = snap('nl');
+    const enOk = /Adventure/i.test(en.adv) && /Collection/i.test(en.collect)
+      && /Weapons/i.test(en.weapons) && /Settings|Options/i.test(en.settings)
+      && /Tips/i.test(en.help) && !DUTCH.test([en.adv, en.collect, en.weapons, en.settings].join(' '))
+      && /Wave/.test(en.tHud) && !/Golf/.test(en.tHud);
+    const deOk = /Abenteuer/i.test(de.adv) && /Sammlung/i.test(de.collect)
+      && /Waffen/i.test(de.weapons) && /Einstellungen/i.test(de.settings)
+      && /Tipp/i.test(de.help) && !DUTCH.test([de.adv, de.collect, de.weapons, de.settings].join(' '))
+      && /Welle/.test(de.tHud) && !/Golf/.test(de.tHud) && !/Vandaag/.test(de.tHud);
+    const nlOk = /Avontuur/.test(nl.adv) && /Collectie/.test(nl.collect)
+      && /Wapens/.test(nl.weapons) && /Instellingen/.test(nl.settings)
+      && /Tips/.test(nl.help);
+    return { ok: !!(enOk && deOk && nlOk), en, de, nl, enOk, deOk, nlOk };
+  });
+
+  await browser.close();
+  if (server) server.close();
+  if (!result.ok) {
+    console.error('SMOKE_FAIL i18n-switch', JSON.stringify(result, null, 2));
+    process.exit(1);
+  }
+  console.log('SMOKE_OK i18n-switch', JSON.stringify({ en: result.en, de: result.de, nl: result.nl }));
+}
+
+run().catch((e) => { console.error('SMOKE_FAIL', e); process.exit(1); });

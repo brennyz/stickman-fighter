@@ -1023,7 +1023,7 @@ const UI = {
   petTab: 'dex',
   advIslandPick: 0,
   lastResult: null,
-  pauseSubDefault: 'Spiral Orb klaar — moto! · voortgang blijft op dit apparaat',
+  pauseSubDefault: '',
 
   activeScreen() {
     return this.screens.find(sid => document.getElementById(sid)?.classList.contains('active')) || null;
@@ -3596,12 +3596,14 @@ const UI = {
         const tot = biomeTot[b] || 0;
         if (!tot) return '';
         const n = typeof dexBiomeDiscovered === 'function' ? dexBiomeDiscovered(b) : 0;
-        const lab = (typeof DEX_BIOME_LABEL !== 'undefined' && DEX_BIOME_LABEL[b]) || b;
+        const lab = tOr('ui.dexBiome.' + b, (typeof DEX_BIOME_LABEL !== 'undefined' && DEX_BIOME_LABEL[b]) || b);
         return `<span class="rar-pill" style="color:#9fd4ff;border-color:#4a7aa0;margin:2px">${lab} ${n}/${tot}</span>`;
       }).filter(Boolean).join(' ');
       sumEl.innerHTML =
-        `Boek <b>${dexCount()}/${SPECIES_ORDER.length}</b> · kills <b>${kills}</b> · bonus max HP <b>+${totalHp}</b>` +
-        ` · rariteiten <b>${dexRarityTierCount()}/6</b>` +
+        t('ui.dexSummary', {
+          n: `<b>${dexCount()}</b>`, total: `<b>${SPECIES_ORDER.length}</b>`,
+          kills: `<b>${kills}</b>`, hp: `<b>${totalHp}</b>`, tiers: `<b>${dexRarityTierCount()}</b>`,
+        }) +
         `<div class="dex-mini-row">${dexMiniStat('HP', totalHp, SPECIES_ORDER.length * 25, '#6ee06e')}` +
         `${dexMiniStat('Kills', kills, 150, '#ffd75e')}</div>` +
         (tierChips ? `<div style="margin-top:6px;line-height:1.7">${tierChips}</div>` : '') +
@@ -3639,14 +3641,14 @@ const UI = {
       const mk = (id, label) =>
         `<button type="button" class="dex-filter-btn${cur === id ? ' active' : ''}" data-dex-biome-filter="${id}">${label}</button>`;
       const tot = typeof dexBiomeTotals === 'function' ? dexBiomeTotals() : {};
-      const lab = (typeof DEX_BIOME_LABEL !== 'undefined') ? DEX_BIOME_LABEL : {};
       const order = ['farm', 'zoo', 'sea', 'classic', 'secret'];
-      return mk('all', 'Alle biomen') +
+      return mk('all', t('ui.dexAllBiomes')) +
         order.map((b) => {
           const nTot = tot[b] || 0;
           if (!nTot) return '';
           const n = typeof dexBiomeDiscovered === 'function' ? dexBiomeDiscovered(b) : 0;
-          return mk(b, `${lab[b] || b} ${n}/${nTot}`);
+          const lab = tOr('ui.dexBiome.' + b, (typeof DEX_BIOME_LABEL !== 'undefined' && DEX_BIOME_LABEL[b]) || b);
+          return mk(b, `${lab} ${n}/${nTot}`);
         }).join('');
     });
     bindFilterBar(document.getElementById('dexTypeFilterBar'), 'data-dex-type-filter', 'dexTypeFilter', () => {
@@ -3659,14 +3661,14 @@ const UI = {
         const t = SPECIES[id].type;
         if (!seen.has(t)) { seen.add(t); types.push(t); }
       }
-      return mk('all', 'Alle types') +
-        types.map(t => mk(t, MONSTER_TYPE_LABEL[t] || t)).join('');
+      return mk('all', t('ui.dexAllTypes')) +
+        types.map((tp) => mk(tp, tOr('ui.dexType.' + tp, MONSTER_TYPE_LABEL[tp] || tp))).join('');
     });
     bindFilterBar(document.getElementById('dexSortBar'), 'data-dex-sort', 'dexSortKey', () => {
       const cur = this.dexSortKey || 'book';
       const mk = (id, label) =>
         `<button type="button" class="dex-filter-btn${cur === id ? ' active' : ''}" data-dex-sort="${id}">${label}</button>`;
-      return mk('book', 'Boek') + mk('rarity', 'Rariteit') + mk('unlock', 'Unlock Lv') + mk('kills', 'Kills');
+      return mk('book', t('ui.dexSortBook')) + mk('rarity', t('ui.dexSortRarity')) + mk('unlock', t('ui.dexSortUnlock')) + mk('kills', t('ui.dexSortKills'));
     });
     const list = document.getElementById('dexList');
     if (!list) return;
@@ -3701,7 +3703,7 @@ const UI = {
       el.appendChild(cv);
       const info = document.createElement('div');
       const hpB = rarityHpBonus(sp.rarity);
-      const typeLbl = MONSTER_TYPE_LABEL[sp.type] || sp.type;
+      const typeLbl = tOr('ui.dexType.' + sp.type, MONSTER_TYPE_LABEL[sp.type] || sp.type);
       const statRow = kills
         ? `<div class="dex-mini-row">${dexMiniStat('HP', sp.hp, DEX_REF_STATS.hp, '#6ee06e')}` +
           `${dexMiniStat('ATK', sp.dmg, DEX_REF_STATS.dmg, '#ff7a4d')}` +
@@ -3710,19 +3712,19 @@ const UI = {
       const lockHint = kills
         ? ''
         : (canMeet
-          ? `<div style="color:#7cf5ff;font-size:12px;margin-top:4px">Verschijnt in avontuur · unlock Lv ${unlockLv}</div>`
+          ? `<div style="color:#7cf5ff;font-size:12px;margin-top:4px">${t('ui.dexAppear', { lvl: unlockLv })}</div>`
           : (unlockLv != null
-            ? `<div style="opacity:.72;font-size:12px;margin-top:4px">Unlock Lv ${unlockLv}</div>`
-            : `<div style="opacity:.78;font-size:12px;margin-top:4px">${typeof dexSecretHint === 'function' ? dexSecretHint(id) : 'Geheim'}</div>`));
+            ? `<div style="opacity:.72;font-size:12px;margin-top:4px">${t('ui.dexUnlockLv', { lvl: unlockLv })}</div>`
+            : `<div style="opacity:.78;font-size:12px;margin-top:4px">${typeof dexSecretHint === 'function' ? dexSecretHint(id) : t('ui.dexSecret')}</div>`));
       const petLine = PET_BY_SPECIES[id]
         ? `<div style="font-size:12px;margin-top:4px;color:${isPetTamed(PET_BY_SPECIES[id].id) ? '#7cf5ff' : '#8fa3d9'}">${petProgressLine(id)}</div>`
         : '';
       const biome = typeof speciesBiomeId === 'function' ? speciesBiomeId(sp, id) : '';
-      const biomeLbl = (typeof DEX_BIOME_LABEL !== 'undefined' && DEX_BIOME_LABEL[biome]) || '';
+      const biomeLbl = biome ? tOr('ui.dexBiome.' + biome, (typeof DEX_BIOME_LABEL !== 'undefined' && DEX_BIOME_LABEL[biome]) || '') : '';
       const blurb = kills && typeof speciesBlurb === 'function' ? speciesBlurb(id) : '';
       const blurbLine = blurb ? `<div class="dex-blurb">${blurb}</div>` : '';
       info.innerHTML = `<div class="cname">${kills ? sp.name : '???'} ${kills ? `<span class="rar-pill" style="color:${rar.color};border-color:${rar.color}">${rarityLabel(sp.rarity)}</span>` : ''}${id === topKillId ? ` <span class="rar-pill" style="color:#ffd75e;border-color:#ffd75e">${t('ui.topHunter')}</span>` : ''}${kills && biomeLbl ? ` <span class="rar-pill" style="color:#9fd4ff;border-color:#4a7aa0">${biomeLbl}</span>` : ''}</div>
-        <div class="cinfo">${kills ? `${typeLbl} · basis HP ${sp.hp} · dmg ${sp.dmg} · spd ${sp.speed} · ${sp.xp} XP · Lv ${unlockLv || '?'}` : 'Nog niet verslagen'}</div>${blurbLine}${lockHint}${petLine}${statRow}`;
+        <div class="cinfo">${kills ? t('ui.dexStats', { type: typeLbl, hp: sp.hp, dmg: sp.dmg, spd: sp.speed, xp: sp.xp, lvl: unlockLv || '?' }) : t('ui.dexNotBeaten')}</div>${blurbLine}${lockHint}${petLine}${statRow}`;
       el.appendChild(info);
       const right = document.createElement('div');
       right.className = 'right';
@@ -3813,14 +3815,14 @@ const UI = {
       }
       el.appendChild(cv);
       const info = document.createElement('div');
-      const badge = active ? ' <span class="rar-pill" style="color:#7cf5ff;border-color:#7cf5ff">ACTIEF</span>' : '';
+      const badge = active ? ` <span class="rar-pill" style="color:#7cf5ff;border-color:#7cf5ff">${t('ui.petActive').toUpperCase()}</span>` : '';
       const upLv = tamed ? itemUpgradeLevel('pet', def.id) : 0;
       const upMax = tamed ? itemUpgradeMax('pet', def.id) : 0;
       const upBadge = upLv > 0 ? ` <span class="rar-pill" style="color:#ffd75e;border-color:#ffd75e">↑ Lv ${upLv}/${upMax}</span>` : '';
       const petEntry = tamed && save.pets ? save.pets[def.id] : null;
       const chestPetSk = petEntry && typeof petEntry.skill === 'string' ? petEntry.skill : null;
       const chestPetBadge = chestPetSk
-        ? ` <span class="rar-pill" style="color:#ffd75e;border-color:#ffd75e">Kist</span>`
+        ? ` <span class="rar-pill" style="color:#ffd75e;border-color:#ffd75e">${t('ui.weaponChestBadge')}</span>`
         : '';
       info.innerHTML = `<div class="cname">${sp.name} <span class="rar-pill" style="color:${rar.color};border-color:${rar.color}">${rarityLabel(sp.rarity)}</span>${badge}${chestPetBadge}${upBadge}</div>` +
         `<div class="cinfo">${def.perk}</div>` +
@@ -3838,7 +3840,7 @@ const UI = {
       if (tamed) {
         right.innerHTML = active ? `${SVG_CHECK_MINI} ${t('ui.petActive')}` : t('ui.petEquip');
       } else if (canBuy) {
-        right.innerHTML = `kopen<br>${cost} ${SVG_COIN_ICON}`;
+        right.innerHTML = `${t('ui.petBuy')}<br>${cost} ${SVG_COIN_ICON}`;
         right.style.color = '#ff9ad5';
       } else {
         right.innerHTML = kills > 0 ? `${need - kills} kills` : `${cost} ${SVG_COIN_ICON}`;
@@ -3857,7 +3859,7 @@ const UI = {
               UI.toast(t('toast.petFollow', { name: sp.name }), 2200);
             }
             this.renderPets();
-          }, 'equipPet/' + def.id, 'Pet kiezen mislukt');
+          }, 'equipPet/' + def.id, t('ui.errPetPick'));
         });
       } else if (canBuy) {
         bindPress(el, () => {
@@ -3870,7 +3872,7 @@ const UI = {
             AudioSys.sfx('summon');
             UI.toast(t('toast.petBought', { name: sp.name }), 2600);
             this.renderPets();
-          }, 'buyPet/' + def.id, 'Pet kopen mislukt');
+          }, 'buyPet/' + def.id, t('ui.errPetBuy'));
         });
       }
       list.appendChild(el);
@@ -3896,7 +3898,7 @@ const UI = {
       crackBtn.style.display = ready ? '' : 'none';
       crackBtn.innerHTML =
         `<span class="ico"><img src="assets/buttons/chrome/egg.svg" alt="" width="28" height="28" decoding="async" draggable="false"></span>` +
-        `<div>Dag-ei openen<small>Gratis arcade-pull · vandaag</small></div>`;
+        `<div>${t('pets.crackEgg')}<small>${t('pets.crackEggSub')}</small></div>`;
       if (!crackBtn.dataset.bound) {
         crackBtn.dataset.bound = '1';
         bindPress(crackBtn, () => {
@@ -3913,7 +3915,7 @@ const UI = {
               : t('toast.eggHatch', { name: res.def.name, rarity: rarityLabel(res.def.rarity) }), 3600);
             this.renderPets();
             this.renderMenu();
-          }, 'crackDailyEgg', 'Ei openen mislukt');
+          }, 'crackDailyEgg', t('ui.errEggCrack'));
         });
       }
     }
@@ -3934,15 +3936,15 @@ const UI = {
       drawEggPetArt(cc, def, 18, 1.1, 0, 0, !owned);
       el.appendChild(cv);
       const info = document.createElement('div');
-      const badge = active ? ' <span class="rar-pill" style="color:#ffd75e;border-color:#ffd75e">ACTIEF</span>' : '';
+      const badge = active ? ` <span class="rar-pill" style="color:#ffd75e;border-color:#ffd75e">${t('ui.petActive').toUpperCase()}</span>` : '';
       info.innerHTML = `<div class="cname">${def.name} <span class="rar-pill" style="color:${rar.color};border-color:${rar.color}">${rarityLabel(def.rarity)}</span>${badge}</div>` +
         `<div class="cinfo">${def.perk}</div>` +
-        `<div class="cinfo" style="opacity:.78;font-size:12px;margin-top:3px">${owned ? 'Cosmetisch metgezel' : 'Nog niet uitgekomen'}</div>`;
+        `<div class="cinfo" style="opacity:.78;font-size:12px;margin-top:3px">${owned ? t('ui.eggCosmetic') : t('ui.eggUnhatched')}</div>`;
       el.appendChild(info);
       const right = document.createElement('div');
       right.className = 'right';
       if (owned) {
-        right.innerHTML = active ? '&#10004; actief' : 'uitrusten';
+        right.innerHTML = active ? `&#10004; ${t('ui.petActive')}` : t('ui.petEquip');
       } else {
         right.textContent = '???';
         right.style.opacity = '0.7';
@@ -3960,7 +3962,7 @@ const UI = {
               UI.toast(t('toast.eggFloat', { name: def.name }), 2200);
             }
             this.renderPets();
-          }, 'equipEggPet/' + def.id, 'Ei-pet kiezen mislukt');
+          }, 'equipEggPet/' + def.id, t('ui.errEggPick'));
         });
       }
       list.appendChild(el);
@@ -4218,48 +4220,49 @@ const UI = {
         ? ` · ~${formatSaveBytes(h.primaryBytes || h.backupBytes)}`
         : '';
       let statusPrimary = h.primaryCorrupt
-        ? `${SVG_WARN_ICON} Hoofd-save corrupt`
-        : (h.primaryValid ? `${SVG_CHECK_MINI} Save OK` : (h.primaryOk ? `${SVG_WARN_ICON} Save onleesbaar` : `${SVG_WARN_ICON} Geen primary save`));
+        ? `${SVG_WARN_ICON} ${t('ui.savePrimaryCorrupt')}`
+        : (h.primaryValid ? `${SVG_CHECK_MINI} ${t('ui.saveOk')}` : (h.primaryOk ? `${SVG_WARN_ICON} ${t('ui.saveUnreadable')}` : `${SVG_WARN_ICON} ${t('ui.saveNoPrimary')}`));
       if (h.drift && h.backupOk) {
-        statusPrimary += h.driftDetail
-          ? ` · ${h.driftDetail} — tik Herstel backup`
-          : ' · hoofd/backup verschillen — tik Herstel backup';
+        statusPrimary += ' · ' + (h.driftDetail
+          ? t('ui.saveDriftRestore', { detail: h.driftDetail })
+          : t('ui.saveDriftGeneric'));
       }
       if (h.backupCorrupt && h.backupOk === false && h.primaryValid) {
-        statusPrimary += ' · backup corrupt (hoofd OK)';
+        statusPrimary += ' · ' + t('ui.saveBackupCorrupt');
       }
       let healthHtml =
-        `<b>Lv ${h.lvl}</b> · unlock ${h.unlocked} · boek ${h.dex} · kills ${h.kills}` +
-        (h.summons ? ` · ✦ ${h.summons} summon` : '') +
-        (h.pets ? ` · pet ${h.pets}` : '') +
-        (h.eggs ? ` · ei ${h.eggs}` : '') +
+        t('ui.saveHealthStats', { lvl: h.lvl, unlocked: h.unlocked, dex: h.dex, kills: h.kills }) +
+        (h.summons ? t('ui.saveHealthSummon', { n: h.summons }) : '') +
+        (h.pets ? t('ui.saveHealthPet', { n: h.pets }) : '') +
+        (h.eggs ? t('ui.saveHealthEgg', { n: h.eggs }) : '') +
         `${sizeLine}<br>` +
         statusPrimary +
-        (h.backupOk ? ` · ${SVG_CHECK_MINI} Backup (Lv ${h.backupLvl})` : ` · ${SVG_WARN_ICON} Geen backup`);
+        (h.backupOk ? ` · ${SVG_CHECK_MINI} ${t('ui.saveBackupOk', { n: h.backupLvl })}` : ` · ${SVG_WARN_ICON} ${t('ui.saveNoBackup')}`);
       if (h.drift && h.backupOk) {
-        healthHtml += `<br><span style="opacity:.85;color:#ffd75e">Drift: ${h.driftDetail || 'hoofd ≠ backup'} — Herstel backup óf Sync backup</span>`;
+        healthHtml += `<br><span style="opacity:.85;color:#ffd75e">${t('ui.saveDriftLine', { detail: h.driftDetail || '≠' })}</span>`;
       }
       if (h.saveAgeDays != null && h.saveAgeDays >= 14) {
-        healthHtml += `<br><span style="opacity:.75;color:#ffb0b8">Laatste save ${h.saveAgeDays} dagen geleden — export als vangnet</span>`;
+        healthHtml += `<br><span style="opacity:.75;color:#ffb0b8">${t('ui.saveAgeWarn', { n: h.saveAgeDays })}</span>`;
       }
       if (h.stampAt) {
         let stampLabel = '';
         try {
           const d = new Date(h.stampAt);
           if (!Number.isNaN(d.getTime())) {
-            stampLabel = d.toLocaleString('nl-NL', { dateStyle: 'short', timeStyle: 'short' });
+            const loc = getLang() === 'de' ? 'de-DE' : getLang() === 'nl' ? 'nl-NL' : 'en-US';
+            stampLabel = d.toLocaleString(loc, { dateStyle: 'short', timeStyle: 'short' });
           }
         } catch (_) {}
         if (stampLabel) {
-          healthHtml += `<br><span style="opacity:.7">Laatst opgeslagen: ${stampLabel}</span>`;
+          healthHtml += `<br><span style="opacity:.7">${t('ui.saveLastSaved', { when: stampLabel })}</span>`;
         }
       }
       healthEl.innerHTML = healthHtml +
-        `<br><span style="opacity:.75">Export schema v${h.exportSchema || SAVE_EXPORT_SCHEMA} · keys vast: ${SAVE_KEY} + backup (niet hernoemen)</span>`;
+        `<br><span style="opacity:.75">${t('ui.saveSchemaKeys', { n: h.exportSchema || SAVE_EXPORT_SCHEMA, key: SAVE_KEY })}</span>`;
     }
     const exportHint = document.getElementById('saveExportHint');
     if (exportHint) {
-      exportHint.textContent = `Export bevat: ${saveExportSummaryLine()} · key ${SAVE_KEY}`;
+      exportHint.textContent = t('ui.saveExportContains', { summary: saveExportSummaryLine(), key: SAVE_KEY });
     }
     bindSavePortPreview();
     const setVal = (id, v) => { const el = document.getElementById(id); if (el) el.value = v; };
