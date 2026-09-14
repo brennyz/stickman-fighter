@@ -94,7 +94,7 @@
       "id": "w-20260914T160200",
       "from": "user",
       "text": "NEW OWNER: (1) Upgrades menu not accessible — HOME tile from start/hub. (2) App drawer: drop cluttery words, keep actions. (3) Weapons gray panel contrast + similar. (4) Continue HOME unify. New PR. #263 parked. No silent main.",
-      "status": "active",
+      "status": "done-in-code",
       "updated": "2026-09-14"
     },
     {
@@ -621,6 +621,10 @@
   ],
   "sessionLog": [
     {
+      "at": "2026-09-14T16:09:35Z",
+      "summary": "#266 LIVE. New #269: upgrades HOME tile, App/Vers labels, weapon contrast. v1.18.165/SW375. Draft. #263 parked."
+    },
+    {
       "at": "2026-09-14T15:17:48Z",
       "summary": "#266 sprint: NL VERLOREN, Tips-label i.p.v. menu.tips, stillere versie-banner, rest HOME. v1.18.163/SW373. Draft."
     },
@@ -715,10 +719,6 @@
     {
       "at": "2026-08-17T10:03:24Z",
       "summary": "LIVE gemerged #248–#255 naar main conflictloos · v1.18.151 / SW 361 — pull main op de pc"
-    },
-    {
-      "at": "2026-08-17T10:02:29Z",
-      "summary": "LIVE merge van d8–d14 stack naar main (conflictloos FF)"
     }
   ],
   "implementedFeaturesSummary": "d18 char select deel 1+2 (v1.11.1-2); Mats coinrun + shuriken mik/vliegers + anti-spam (v1.12.0); speel.html (v1.12.2+). Zie HANDOFF-ZOEKINDEX.md en improvement-d20-bag.json userFeatureLog.",
