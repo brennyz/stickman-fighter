@@ -46,13 +46,16 @@ must(/equipment: \{ head: null, chest: null, hands: null, legs: null, back: null
 must(/ownedGear: \{\}/.test(storage), 'DEFAULT_SAVE.ownedGear missing');
 must(/gear: \{ schema: 1/.test(storage), 'DEFAULT_SAVE.gear missing');
 must(/renderGear/.test(ui) && /gearScreen/.test(ui), 'UI must render + navigate gearScreen');
-must(/gearEquipItem/.test(ui) && /gearTooltipModel/.test(ui) && /gearRenderDescriptor/.test(ui), 'renderGear must call systems bind helpers');
+must(/gearEquipItem/.test(ui) && /gearTooltipModel/.test(ui) && /drawGearHeroDoll/.test(ui), 'renderGear must call systems bind helpers');
 must(/btnGear',\s*'hub\.gear'/.test(i18n), 'Character tile must be i18n-wired');
 must(/--menu-tile-solid/.test(css.match(/\.gear-slot-card \{[\s\S]*?\}/)?.[0] || ''), 'slot cards must use HOME tiles');
 must(/min-height:\s*max\(56px,\s*var\(--touch-min\)\)/.test(css), 'Android touch floor missing on slot cards');
 must(!/\.gear-picker \{[\s\S]{0,160}max-height/.test(css), 'picker must not nest-scroll (one page scroll)');
 must(/save\.equipment/.test(uiAdapt) && /ownedGear/.test(uiAdapt), 'v1 save.equipment + ownedGear missing');
 must(/needLvl/.test(uiAdapt) && /needTrain/.test(uiAdapt) && /needDex/.test(uiAdapt) && /needTime/.test(uiAdapt), 'v1 item lock fields missing');
+must(/GEAR_DRAW_ORDER = \['back', 'legs', 'chest', 'head', 'hands', 'weapon', 'pet'\]/.test(uiAdapt), 'draw-order must be back→legs→chest→head→hands→weapon→pet');
+must(/function drawGearHeroDoll/.test(uiAdapt), 'drawGearHeroDoll missing');
+must(/isCosmetic/.test(uiAdapt) && /hasStats/.test(uiAdapt), 'contract item flags missing');
 must(/\.gear-filter-btn/.test(css), 'filter chips CSS missing');
 must(!/\.screen\s*\{\s*display:\s*none\s*!important/.test(css), 'nuclear display:none forbidden');
 
@@ -140,6 +143,22 @@ async function run() {
       if (!desc || !desc.slots || desc.slots.length !== 5) return { ok: false, why: 'gearRenderDescriptor' };
       const tip = gearTooltipModel(gearItemById('head_wrap_cloth'));
       if (!tip || !tip.vanity || tip.appliesStats) return { ok: false, why: 'tooltip vanity starter', tip };
+      if (GEAR_DRAW_ORDER.join(',') !== 'back,legs,chest,head,hands,weapon,pet') {
+        return { ok: false, why: 'GEAR_DRAW_ORDER', order: GEAR_DRAW_ORDER };
+      }
+      const statCosmetic = contractGearItem(gearItemById('head_visor_neon'));
+      if (!statCosmetic || !statCosmetic.isCosmetic || !statCosmetic.hasStats) {
+        return { ok: false, why: 'cosmetic-with-stats contract', item: statCosmetic };
+      }
+      if (!gearHasStats(statCosmetic)) return { ok: false, why: 'gearHasStats missed cosmetic+mods' };
+      const lookCosmetic = contractGearItem(gearItemById('head_wrap_cloth'));
+      if (!lookCosmetic || !lookCosmetic.isCosmetic || lookCosmetic.hasStats) {
+        return { ok: false, why: 'vanity wrap must be cosmetic without stats' };
+      }
+      const hub = document.getElementById('hubStatGear');
+      if (hub && hub.textContent && !/\/5\b/.test(hub.textContent)) {
+        return { ok: false, why: 'hub tile must show equippedCount/5', text: hub.textContent };
+      }
 
       const locked = gearEquipItem('head_helm_iron');
       if (locked && locked.ok) return { ok: false, why: 'lvl-gated helm must refuse at default lvl' };

@@ -20,8 +20,8 @@ Draw overlay (back → front): `back → legs → chest → head → hands → w
 
 `id`, `slotId`, `kind` (`armour`|`cosmetic`), `isCosmetic`, `hasStats`, `rarity`, `icon`, `needLvl`, `needTrain`, `needDex`, `needTime`, `mods?`, `draw`, `i18n`
 
-- Cosmetic default: no stats. `hasStats` only when `mods` are real.
-- LOOK pill if `!hasStats`. STAT pill if `hasStats`. Locked items never show fake stats.
+- Cosmetic-first: `hasStats` is often false. Some cosmetics **do** have stats (`hasStats` + real `mods`). Vanity never applies combat.
+- LOOK pill if `!hasStats`. STAT pill if `hasStats` (including stat cosmetics). Locked items: lock + condition, never fake stats.
 
 ## Lock copy
 
@@ -46,7 +46,7 @@ Equip requires **owned + unlocked + slot match**. Sanitize strips locked / wrong
 
 ## UI
 
-HOME tile `#btnGear` — title Character / Figuur, subtitle `Slots · look`, pill `n/5`.
+HOME tile `#btnGear` — title Character / Figuur, subtitle `Slots · look`, pill `equippedCount/5`.
 
 Char screen: Back + title → hero stickman (draw-order) → 5 HOME slot cards → weapon aside → slot sheet (inventory filtered by `slotId`).
 

@@ -3,7 +3,8 @@
  * Save bags: save.equipment + save.ownedGear. Systems #280 save.gear is a mirror.
  * Do not redeclare GEAR_SLOT_IDS, gearItemById, sanitizeGearSave, gearEquipItem.
  */
-const GEAR_DRAW_ORDER = ['back', 'legs', 'chest', 'head', 'hands'];
+const GEAR_DRAW_ORDER = ['back', 'legs', 'chest', 'head', 'hands', 'weapon', 'pet'];
+const GEAR_SLOT_DRAW_ORDER = ['back', 'legs', 'chest', 'head', 'hands'];
 const GEAR_UI_FILTERS = ['all', 'look', 'stat', 'lock', 'owned'];
 
 function _gearSlotIds() {
@@ -33,13 +34,15 @@ function contractGearItem(raw) {
   const mods = (raw.mods && typeof raw.mods === 'object' && !Array.isArray(raw.mods)) ? raw.mods : null;
   const hasModKeys = !!(mods && Object.keys(mods).length);
   const vanity = raw.vanity === true;
-  const isCosmetic = raw.isCosmetic != null ? !!raw.isCosmetic : (raw.kind === 'cosmetic' || vanity);
+  const kind = raw.kind === 'armour' ? 'armour' : 'cosmetic';
+  const isCosmetic = raw.isCosmetic != null ? !!raw.isCosmetic : (kind === 'cosmetic');
+  /* Cosmetic-first often hasStats false; some cosmetics have real mods. Vanity never applies stats. */
   const hasStats = vanity ? false : (raw.hasStats === true || hasModKeys);
   return {
     id: String(raw.id).slice(0, 48),
     slotId,
     slot: slotId,
-    kind: raw.kind === 'armour' ? 'armour' : 'cosmetic',
+    kind,
     isCosmetic,
     hasStats: !!(hasStats && hasModKeys),
     rarity: typeof raw.rarity === 'string' ? raw.rarity : 'common',
@@ -232,8 +235,13 @@ function gearSlotName(slotId) {
 }
 
 function gearHasStats(item) {
-  if (typeof gearItemHasCombatStats === 'function') return gearItemHasCombatStats(item);
-  return !!(item && item.hasStats && item.vanity !== true && item.mods);
+  const it = contractGearItem(item) || item;
+  if (!it) return false;
+  if (it.vanity === true) return false;
+  if (typeof gearItemHasCombatStats === 'function' && (item && item.mods)) {
+    return !!gearItemHasCombatStats(item);
+  }
+  return !!(it.hasStats && it.mods);
 }
 
 function gearStatLine(item) {
@@ -299,6 +307,50 @@ function gearEquippedCount() {
 function gearUiRenderDescriptor(s) {
   if (typeof gearRenderDescriptor === 'function') return gearRenderDescriptor(s);
   return { schema: 1, slots: _gearSlotIds().map((id) => ({ slot: id, itemId: null })) };
+}
+
+function drawGearHeroDoll(cv, saveObj) {
+  if (!cv || typeof Fighter !== 'function') return;
+  const cc = cv.getContext('2d');
+  if (!cc) return;
+  const s = saveObj || (typeof save === 'object' ? save : null);
+  cc.clearRect(0, 0, cv.width, cv.height);
+  cc.save();
+  const desc = (typeof gearRenderDescriptor === 'function' && s) ? gearRenderDescriptor(s) : gearUiRenderDescriptor(s);
+  const layers = (desc && desc.slots) ? desc.slots : [];
+  for (const sid of GEAR_SLOT_DRAW_ORDER) {
+    const layer = layers.find((L) => L.slot === sid);
+    const tint = layer && (layer.tint || layer.accent);
+    if (!tint) continue;
+    const g = cc.createRadialGradient(cv.width / 2, cv.height * 0.55, 6, cv.width / 2, cv.height * 0.55, sid === 'back' ? 78 : 52);
+    g.addColorStop(0, String(tint) + (sid === 'back' ? '66' : '33'));
+    g.addColorStop(1, 'rgba(0,0,0,0)');
+    cc.fillStyle = g;
+    cc.fillRect(0, 0, cv.width, cv.height);
+  }
+  cc.translate(cv.width / 2, cv.height - 18);
+  cc.scale(1.15, 1.15);
+  const st = typeof styleById === 'function' ? styleById((s && s.style) || 'classic') : { body: '#f2f5ff' };
+  const wpn = (s && typeof weaponById === 'function') ? weaponById(s.weapon || 'vuist') : null;
+  const preview = new Fighter({
+    isPlayer: true, x: 0, y: 0, color: (st && st.body) || '#f2f5ff', style: st, scale: 1,
+    weapon: wpn || undefined,
+  });
+  preview.animT = 0.35;
+  preview.draw(cc);
+  if (s && s.activePet && typeof drawMonsterArt === 'function') {
+    const def = (typeof activePetDef === 'function') ? activePetDef()
+      : ((typeof petDef === 'function') ? petDef(s.activePet) : null);
+    const sp = def && typeof SPECIES !== 'undefined' ? SPECIES[def.speciesId] : null;
+    if (sp) {
+      cc.save();
+      cc.translate(36, -6);
+      cc.scale(0.36, 0.36);
+      drawMonsterArt(cc, sp, sp.size || 22, 1.1, false, false);
+      cc.restore();
+    }
+  }
+  cc.restore();
 }
 
 function gearFilterItems(items, filter, q) {

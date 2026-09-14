@@ -323,9 +323,9 @@ const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const VERSION_UPDATE_SAVE_KEY = 'stickfighter_version_update_save_v1';
 const VERSION_UPDATE_FLAG_KEY = 'stickfighter_version_update_flag_v1';
 const SAVE_EXPORT_SCHEMA = 3;
-const APP_VERSION = '1.18.166';
+const APP_VERSION = '1.18.167';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 376;
+const SW_CACHE_REV = 377;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', petCoins: 0, dex: {}, summons: {}, pets: {}, activePet: null,
   eggPets: {}, activeEggPet: null, eggDaily: null,
   chestDaily: null, chestWeapons: {},
@@ -13614,8 +13614,8 @@ function seedNlFromRuntime() {
   }
   if (!I18N.nl.gear) I18N.nl.gear = {};
   Object.assign(I18N.nl.gear, {
-    hubStat: '{n}/5 slots',
-    summarySlots: '<b>{n}</b>/5 slots',
+    hubStat: '{n}/5',
+    summarySlots: '<b>{n}</b>/5',
     pillVanity: 'LOOK',
     pillStat: 'STAT',
     pillLock: 'LOCK',
@@ -13666,8 +13666,8 @@ function mergeI18nCatalogs() {
 
 const CATALOG_EN = {
   gear: {
-    hubStat: '{n}/5 slots',
-    summarySlots: '<b>{n}</b>/5 slots',
+    hubStat: '{n}/5',
+    summarySlots: '<b>{n}</b>/5',
     pillVanity: 'LOOK',
     pillStat: 'STAT',
     pillLock: 'LOCK',
@@ -18173,7 +18173,8 @@ function applyFighterMove(f, mv, dt, opts) {
  * Save bags: save.equipment + save.ownedGear. Systems #280 save.gear is a mirror.
  * Do not redeclare GEAR_SLOT_IDS, gearItemById, sanitizeGearSave, gearEquipItem.
  */
-const GEAR_DRAW_ORDER = ['back', 'legs', 'chest', 'head', 'hands'];
+const GEAR_DRAW_ORDER = ['back', 'legs', 'chest', 'head', 'hands', 'weapon', 'pet'];
+const GEAR_SLOT_DRAW_ORDER = ['back', 'legs', 'chest', 'head', 'hands'];
 const GEAR_UI_FILTERS = ['all', 'look', 'stat', 'lock', 'owned'];
 
 function _gearSlotIds() {
@@ -18203,13 +18204,15 @@ function contractGearItem(raw) {
   const mods = (raw.mods && typeof raw.mods === 'object' && !Array.isArray(raw.mods)) ? raw.mods : null;
   const hasModKeys = !!(mods && Object.keys(mods).length);
   const vanity = raw.vanity === true;
-  const isCosmetic = raw.isCosmetic != null ? !!raw.isCosmetic : (raw.kind === 'cosmetic' || vanity);
+  const kind = raw.kind === 'armour' ? 'armour' : 'cosmetic';
+  const isCosmetic = raw.isCosmetic != null ? !!raw.isCosmetic : (kind === 'cosmetic');
+  /* Cosmetic-first often hasStats false; some cosmetics have real mods. Vanity never applies stats. */
   const hasStats = vanity ? false : (raw.hasStats === true || hasModKeys);
   return {
     id: String(raw.id).slice(0, 48),
     slotId,
     slot: slotId,
-    kind: raw.kind === 'armour' ? 'armour' : 'cosmetic',
+    kind,
     isCosmetic,
     hasStats: !!(hasStats && hasModKeys),
     rarity: typeof raw.rarity === 'string' ? raw.rarity : 'common',
@@ -18402,8 +18405,13 @@ function gearSlotName(slotId) {
 }
 
 function gearHasStats(item) {
-  if (typeof gearItemHasCombatStats === 'function') return gearItemHasCombatStats(item);
-  return !!(item && item.hasStats && item.vanity !== true && item.mods);
+  const it = contractGearItem(item) || item;
+  if (!it) return false;
+  if (it.vanity === true) return false;
+  if (typeof gearItemHasCombatStats === 'function' && (item && item.mods)) {
+    return !!gearItemHasCombatStats(item);
+  }
+  return !!(it.hasStats && it.mods);
 }
 
 function gearStatLine(item) {
@@ -18469,6 +18477,50 @@ function gearEquippedCount() {
 function gearUiRenderDescriptor(s) {
   if (typeof gearRenderDescriptor === 'function') return gearRenderDescriptor(s);
   return { schema: 1, slots: _gearSlotIds().map((id) => ({ slot: id, itemId: null })) };
+}
+
+function drawGearHeroDoll(cv, saveObj) {
+  if (!cv || typeof Fighter !== 'function') return;
+  const cc = cv.getContext('2d');
+  if (!cc) return;
+  const s = saveObj || (typeof save === 'object' ? save : null);
+  cc.clearRect(0, 0, cv.width, cv.height);
+  cc.save();
+  const desc = (typeof gearRenderDescriptor === 'function' && s) ? gearRenderDescriptor(s) : gearUiRenderDescriptor(s);
+  const layers = (desc && desc.slots) ? desc.slots : [];
+  for (const sid of GEAR_SLOT_DRAW_ORDER) {
+    const layer = layers.find((L) => L.slot === sid);
+    const tint = layer && (layer.tint || layer.accent);
+    if (!tint) continue;
+    const g = cc.createRadialGradient(cv.width / 2, cv.height * 0.55, 6, cv.width / 2, cv.height * 0.55, sid === 'back' ? 78 : 52);
+    g.addColorStop(0, String(tint) + (sid === 'back' ? '66' : '33'));
+    g.addColorStop(1, 'rgba(0,0,0,0)');
+    cc.fillStyle = g;
+    cc.fillRect(0, 0, cv.width, cv.height);
+  }
+  cc.translate(cv.width / 2, cv.height - 18);
+  cc.scale(1.15, 1.15);
+  const st = typeof styleById === 'function' ? styleById((s && s.style) || 'classic') : { body: '#f2f5ff' };
+  const wpn = (s && typeof weaponById === 'function') ? weaponById(s.weapon || 'vuist') : null;
+  const preview = new Fighter({
+    isPlayer: true, x: 0, y: 0, color: (st && st.body) || '#f2f5ff', style: st, scale: 1,
+    weapon: wpn || undefined,
+  });
+  preview.animT = 0.35;
+  preview.draw(cc);
+  if (s && s.activePet && typeof drawMonsterArt === 'function') {
+    const def = (typeof activePetDef === 'function') ? activePetDef()
+      : ((typeof petDef === 'function') ? petDef(s.activePet) : null);
+    const sp = def && typeof SPECIES !== 'undefined' ? SPECIES[def.speciesId] : null;
+    if (sp) {
+      cc.save();
+      cc.translate(36, -6);
+      cc.scale(0.36, 0.36);
+      drawMonsterArt(cc, sp, sp.size || 22, 1.1, false, false);
+      cc.restore();
+    }
+  }
+  cc.restore();
 }
 
 function gearFilterItems(items, filter, q) {
@@ -33994,8 +34046,8 @@ const UI = {
       setStat('hubStatStyle', `${stylesN}/${STYLES.length} outfits`);
       const gearN = typeof gearEquippedCount === 'function' ? gearEquippedCount() : 0;
       setStat('hubStatGear', typeof tOr === 'function'
-        ? tOr('gear.hubStat', '{n}/5 slots', { n: gearN })
-        : (gearN + '/5 slots'));
+        ? tOr('gear.hubStat', '{n}/5', { n: gearN })
+        : (gearN + '/5'));
       const skillsN = skillUnlockedCount();
       const activeSk = skillById(save.skill || 'spiral_orb');
       const activeSp = equippedSuper();
@@ -36141,7 +36193,7 @@ const UI = {
       }, 0);
       const catalogN = (typeof GEAR_ITEMS !== 'undefined' && Array.isArray(GEAR_ITEMS)) ? GEAR_ITEMS.length : items.length;
       sumEl.innerHTML =
-        `${tOr('gear.summarySlots', '<b>{n}</b>/5 slots', { n: filled })} · ` +
+        `${tOr('gear.summarySlots', '<b>{n}</b>/5', { n: filled })} · ` +
         `<span class="gear-pill gear-pill-stat">${esc(tOr('gear.pillStat', 'STAT'))} ${statN}</span> ` +
         `<span class="gear-pill gear-pill-vanity">${esc(tOr('gear.pillVanity', 'LOOK'))} ${Math.max(0, filled - statN)}</span>` +
         `<span class="gear-pill">${esc(tOr('gear.catalogN', '{n} items', { n: catalogN }))}</span>`;
@@ -36210,26 +36262,15 @@ const UI = {
     }
 
     const cv = document.getElementById('gearDollCanvas');
-    if (cv && typeof Fighter === 'function') {
+    if (cv && typeof drawGearHeroDoll === 'function') {
+      drawGearHeroDoll(cv, save);
+    } else if (cv && typeof Fighter === 'function') {
       const cc = cv.getContext('2d');
       cc.clearRect(0, 0, cv.width, cv.height);
+      const st = typeof styleById === 'function' ? styleById(save.style || 'classic') : { body: '#f2f5ff' };
       cc.save();
-      const desc = (typeof gearRenderDescriptor === 'function') ? gearRenderDescriptor(save) : null;
-      const layers = (desc && desc.slots) ? desc.slots : [];
-      const drawIds = (typeof GEAR_DRAW_ORDER !== 'undefined' ? GEAR_DRAW_ORDER : ['back', 'legs', 'chest', 'head', 'hands']);
-      for (const sid of drawIds) {
-        const layer = layers.find((L) => L.slot === sid);
-        const tint = layer && (layer.tint || layer.accent);
-        if (!tint) continue;
-        const g = cc.createRadialGradient(cv.width / 2, cv.height * 0.55, 6, cv.width / 2, cv.height * 0.55, sid === 'back' ? 78 : 52);
-        g.addColorStop(0, tint + (sid === 'back' ? '66' : '33'));
-        g.addColorStop(1, 'rgba(0,0,0,0)');
-        cc.fillStyle = g;
-        cc.fillRect(0, 0, cv.width, cv.height);
-      }
       cc.translate(cv.width / 2, cv.height - 18);
       cc.scale(1.15, 1.15);
-      const st = typeof styleById === 'function' ? styleById(save.style || 'classic') : { body: '#f2f5ff' };
       const preview = new Fighter({ isPlayer: true, x: 0, y: 0, color: st.body, style: st, scale: 1 });
       preview.animT = 0.35;
       preview.draw(cc);
@@ -36237,7 +36278,8 @@ const UI = {
     }
 
     const detail = document.getElementById('gearDetail');
-    const picked = typeof gearItemById === 'function' ? gearItemById(this.gearItemPick) : null;
+    const rawPicked = typeof gearItemById === 'function' ? gearItemById(this.gearItemPick) : null;
+    const picked = (typeof contractGearItem === 'function' && rawPicked) ? contractGearItem(rawPicked) : rawPicked;
     if (detail) {
       if (!picked) {
         detail.innerHTML = `<div class="gear-detail-sub">${esc(tOr('gear.pickHint', 'Tik een slot, dan een item.'))}</div>`;

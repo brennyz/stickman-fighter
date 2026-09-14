@@ -1932,8 +1932,8 @@ const UI = {
       setStat('hubStatStyle', `${stylesN}/${STYLES.length} outfits`);
       const gearN = typeof gearEquippedCount === 'function' ? gearEquippedCount() : 0;
       setStat('hubStatGear', typeof tOr === 'function'
-        ? tOr('gear.hubStat', '{n}/5 slots', { n: gearN })
-        : (gearN + '/5 slots'));
+        ? tOr('gear.hubStat', '{n}/5', { n: gearN })
+        : (gearN + '/5'));
       const skillsN = skillUnlockedCount();
       const activeSk = skillById(save.skill || 'spiral_orb');
       const activeSp = equippedSuper();
@@ -4079,7 +4079,7 @@ const UI = {
       }, 0);
       const catalogN = (typeof GEAR_ITEMS !== 'undefined' && Array.isArray(GEAR_ITEMS)) ? GEAR_ITEMS.length : items.length;
       sumEl.innerHTML =
-        `${tOr('gear.summarySlots', '<b>{n}</b>/5 slots', { n: filled })} · ` +
+        `${tOr('gear.summarySlots', '<b>{n}</b>/5', { n: filled })} · ` +
         `<span class="gear-pill gear-pill-stat">${esc(tOr('gear.pillStat', 'STAT'))} ${statN}</span> ` +
         `<span class="gear-pill gear-pill-vanity">${esc(tOr('gear.pillVanity', 'LOOK'))} ${Math.max(0, filled - statN)}</span>` +
         `<span class="gear-pill">${esc(tOr('gear.catalogN', '{n} items', { n: catalogN }))}</span>`;
@@ -4148,26 +4148,15 @@ const UI = {
     }
 
     const cv = document.getElementById('gearDollCanvas');
-    if (cv && typeof Fighter === 'function') {
+    if (cv && typeof drawGearHeroDoll === 'function') {
+      drawGearHeroDoll(cv, save);
+    } else if (cv && typeof Fighter === 'function') {
       const cc = cv.getContext('2d');
       cc.clearRect(0, 0, cv.width, cv.height);
+      const st = typeof styleById === 'function' ? styleById(save.style || 'classic') : { body: '#f2f5ff' };
       cc.save();
-      const desc = (typeof gearRenderDescriptor === 'function') ? gearRenderDescriptor(save) : null;
-      const layers = (desc && desc.slots) ? desc.slots : [];
-      const drawIds = (typeof GEAR_DRAW_ORDER !== 'undefined' ? GEAR_DRAW_ORDER : ['back', 'legs', 'chest', 'head', 'hands']);
-      for (const sid of drawIds) {
-        const layer = layers.find((L) => L.slot === sid);
-        const tint = layer && (layer.tint || layer.accent);
-        if (!tint) continue;
-        const g = cc.createRadialGradient(cv.width / 2, cv.height * 0.55, 6, cv.width / 2, cv.height * 0.55, sid === 'back' ? 78 : 52);
-        g.addColorStop(0, tint + (sid === 'back' ? '66' : '33'));
-        g.addColorStop(1, 'rgba(0,0,0,0)');
-        cc.fillStyle = g;
-        cc.fillRect(0, 0, cv.width, cv.height);
-      }
       cc.translate(cv.width / 2, cv.height - 18);
       cc.scale(1.15, 1.15);
-      const st = typeof styleById === 'function' ? styleById(save.style || 'classic') : { body: '#f2f5ff' };
       const preview = new Fighter({ isPlayer: true, x: 0, y: 0, color: st.body, style: st, scale: 1 });
       preview.animT = 0.35;
       preview.draw(cc);
@@ -4175,7 +4164,8 @@ const UI = {
     }
 
     const detail = document.getElementById('gearDetail');
-    const picked = typeof gearItemById === 'function' ? gearItemById(this.gearItemPick) : null;
+    const rawPicked = typeof gearItemById === 'function' ? gearItemById(this.gearItemPick) : null;
+    const picked = (typeof contractGearItem === 'function' && rawPicked) ? contractGearItem(rawPicked) : rawPicked;
     if (detail) {
       if (!picked) {
         detail.innerHTML = `<div class="gear-detail-sub">${esc(tOr('gear.pickHint', 'Tik een slot, dan een item.'))}</div>`;

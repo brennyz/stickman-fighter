@@ -922,8 +922,8 @@ function seedNlFromRuntime() {
   }
   if (!I18N.nl.gear) I18N.nl.gear = {};
   Object.assign(I18N.nl.gear, {
-    hubStat: '{n}/5 slots',
-    summarySlots: '<b>{n}</b>/5 slots',
+    hubStat: '{n}/5',
+    summarySlots: '<b>{n}</b>/5',
     pillVanity: 'LOOK',
     pillStat: 'STAT',
     pillLock: 'LOCK',
@@ -974,8 +974,8 @@ function mergeI18nCatalogs() {
 
 const CATALOG_EN = {
   gear: {
-    hubStat: '{n}/5 slots',
-    summarySlots: '<b>{n}</b>/5 slots',
+    hubStat: '{n}/5',
+    summarySlots: '<b>{n}</b>/5',
     pillVanity: 'LOOK',
     pillStat: 'STAT',
     pillLock: 'LOCK',
