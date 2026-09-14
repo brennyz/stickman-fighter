@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
+     stroke="#e8f0ff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+     aria-hidden="true">
+  <!-- Figuur / gear: stickman + slot frame -->
+  <circle cx="12" cy="6.2" r="2.1" fill="rgba(232,240,255,.14)"/>
+  <path d="M12 8.6v6.2"/>
+  <path d="M8.2 11.2h7.6"/>
+  <path d="M9.2 20.2l2.8-5.2 2.8 5.2"/>
+  <rect x="3.4" y="3.4" width="17.2" height="17.2" rx="3.2" stroke="#ffd75e" stroke-width="1.7" opacity=".85"/>
+</svg>

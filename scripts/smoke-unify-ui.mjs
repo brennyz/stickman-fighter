@@ -37,12 +37,16 @@ if (!/#pauseScreen \.mode-btn[\s\S]{0,80}var\(--menu-tile-solid\)/.test(css)
 if (!/#resultScreen \.mode-btn/.test(css)) {
   fail('Result mode-btns must inherit HOME tile chrome');
 }
+if (!/\.gear-hero[\s\S]{0,160}var\(--menu-tile-solid\)/.test(css)
+    && !/\.gear-slot-card[\s\S]{0,160}var\(--menu-tile-solid\)/.test(css)) {
+  fail('Gear screen cards must use HOME solid tiles');
+}
 if (/\.screen\s*\{\s*display:\s*none\s*!important/.test(css)
     || /display:\s*none\s*!important[\s\S]{0,40}all \.screen/.test(css)) {
   fail('nuclear display:none on .screen is forbidden');
 }
 
-['levelScreen', 'weaponScreen', 'settingsScreen', 'pauseScreen', 'resultScreen'].forEach((id) => {
+['levelScreen', 'weaponScreen', 'settingsScreen', 'pauseScreen', 'resultScreen', 'gearScreen'].forEach((id) => {
   if (!new RegExp(`id="${id}"`).test(html)) fail(`missing #${id}`);
 });
 if (!/id="sfTitleStart"/.test(html) || /id="sfTitleName"/.test(html)) {

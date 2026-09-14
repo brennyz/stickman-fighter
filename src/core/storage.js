@@ -5,9 +5,9 @@ const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const VERSION_UPDATE_SAVE_KEY = 'stickfighter_version_update_save_v1';
 const VERSION_UPDATE_FLAG_KEY = 'stickfighter_version_update_flag_v1';
 const SAVE_EXPORT_SCHEMA = 3;
-const APP_VERSION = '1.18.163';
+const APP_VERSION = '1.18.165';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 373;
+const SW_CACHE_REV = 375;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', petCoins: 0, dex: {}, summons: {}, pets: {}, activePet: null,
   eggPets: {}, activeEggPet: null, eggDaily: null,
   chestDaily: null, chestWeapons: {},
@@ -27,6 +27,10 @@ const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', petCoins: 0,
   /** Keyboard legend on PC / when pads off (default on) */
   kbLegend: true,
   reducedMotion: false, liteFx: false, highContrast: false, lang: null, playerTag: '', lastPlay: null, tipsSeen: {},
+  /** Epoch ms — set once in sanitizeSave. Time gates use account age from this. */
+  createdAt: 0,
+  /** 5-slot loadout — see src/data/gear.js + docs/GEAR-SYSTEM.md */
+  gear: { schema: 1, equipped: { head: null, chest: null, hands: null, legs: null, back: null }, owned: {} },
   stats: { kills: 0, advWins: 0, wallBestRun: 0, maxCombo: 0, maxKillStreak: 0, trainMaxCombo: 0, pickups: 0, bossKills: 0, vsMatches: 0, vsWins: 0, matsCoinBest: 0, summonCount: 0, killsSinceSummon: 0, petsTamed: 0, eggsHatched: 0, weaponFinishers: 0, tideBattleWins: 0, skillShards: 0, itemShards: 0, dailyBonusCount: 0 },
   achievements: {}, daily: null, vsPlayedIds: [], weaponMastery: {}, skillUpgrades: {}, itemUpgrades: {}, activeTechnique: 'spiral_orb', skill: 'spiral_orb', super: 'ketsbam', missionsIntroSeen: false };
 
@@ -851,6 +855,37 @@ function readSaveJson(raw) {
     merged.advSatanAt = Object.assign({}, parsed.advSatanAt || {});
     merged.zoneWeapons = Object.assign({}, parsed.zoneWeapons || {});
     merged.chestWeapons = Object.assign({}, parsed.chestWeapons || {});
+    {
+      const emptyEq = { head: null, chest: null, hands: null, legs: null, back: null };
+      const gIn = (parsed.gear && typeof parsed.gear === 'object') ? parsed.gear : {};
+      const eqSrc = (parsed.equipment && typeof parsed.equipment === 'object') ? parsed.equipment : {};
+      const eqOld = (parsed.gearEquipped && typeof parsed.gearEquipped === 'object') ? parsed.gearEquipped : {};
+      const equipped = Object.assign({}, emptyEq, (gIn.equipped && typeof gIn.equipped === 'object') ? gIn.equipped : {});
+      const eqPick = (sid) => {
+        const alias = sid === 'hands' ? 'arms' : (sid === 'back' ? 'aura' : null);
+        const v = equipped[sid] || eqSrc[sid] || (alias && eqSrc[alias]) || eqOld[sid] || (alias && eqOld[alias]);
+        return (typeof v === 'string' && v.trim()) ? String(v).trim().slice(0, 48) : null;
+      };
+      equipped.head = eqPick('head');
+      equipped.chest = eqPick('chest');
+      equipped.hands = eqPick('hands');
+      equipped.legs = eqPick('legs');
+      equipped.back = eqPick('back');
+      const owned = Object.assign({}, (gIn.owned && typeof gIn.owned === 'object') ? gIn.owned : {});
+      const ownOld = Object.assign(
+        {},
+        (parsed.gearOwned && typeof parsed.gearOwned === 'object') ? parsed.gearOwned : {},
+        (parsed.ownedGear && typeof parsed.ownedGear === 'object') ? parsed.ownedGear : {}
+      );
+      for (const [id, v] of Object.entries(ownOld)) {
+        if (!id || owned[id] || !v) continue;
+        owned[id] = (typeof v === 'object')
+          ? { at: Number(v.at) || 0, src: typeof v.src === 'string' ? v.src : 'grant' }
+          : { at: 0, src: 'grant' };
+      }
+      merged.gear = { schema: 1, equipped, owned };
+      if (parsed.createdAt != null) merged.createdAt = parsed.createdAt;
+    }
     if (parsed.chestDaily && typeof parsed.chestDaily === 'object') merged.chestDaily = Object.assign({}, parsed.chestDaily);
     merged.advCleared = Object.assign(
       { normal: false, nightmare: false, hell: false },
@@ -1592,6 +1627,27 @@ function sanitizeSave(s) {
     };
   } else {
     out.daily = null;
+  }
+  {
+    const gearNow = Date.now();
+    try {
+      out.createdAt = typeof sanitizeCreatedAt === 'function'
+        ? sanitizeCreatedAt(out.createdAt, out, gearNow)
+        : (Number(out.createdAt) > 1e11 ? Math.floor(Number(out.createdAt)) : gearNow);
+    } catch (_) {
+      out.createdAt = gearNow;
+    }
+    try {
+      if (typeof migrateFlatGearIntoBag === 'function') migrateFlatGearIntoBag(out);
+      if (typeof sanitizeGearSave === 'function') {
+        out.gear = sanitizeGearSave(out.gear, out, gearNow);
+        if (typeof grantStarterGear === 'function') grantStarterGear(out, gearNow);
+      } else {
+        out.gear = { schema: 1, equipped: { head: null, chest: null, hands: null, legs: null, back: null }, owned: {} };
+      }
+    } catch (_) {
+      out.gear = { schema: 1, equipped: { head: null, chest: null, hands: null, legs: null, back: null }, owned: {} };
+    }
   }
   if (!Array.isArray(out.vsPlayedIds)) out.vsPlayedIds = [];
   const played = [];

@@ -21,7 +21,7 @@ const I18N = {
     menu: {
       continue: 'Verder spelen', adventure: 'Avontuur', adventureSub: 'Verhaal · eilanden · bazen',
       arcade: 'Arcade', arcadeSub: 'Training · Muur · Muntjes', versus: '2 spelers', versusSub: 'Lokaal',
-      collect: 'Collectie', collectSub: 'Wapens · stijl · boek', music: 'Muziek', missions: 'Missies',
+      collect: 'Collectie', collectSub: 'Wapens · figuur · boek', music: 'Muziek', missions: 'Missies',
       summons: 'Summons', summonsSub: 'Dagelijkse kist · wapen & pet',
       options: 'Opties', tips: 'Tips', fresh: 'Verse versie', install: 'Zet in app-lade', installSub: 'Één icoon, zoals een echte app',
       pressStart: 'insert coin', missionReady: 'missie klaar', dayBonus: 'Dagbonus',
@@ -35,7 +35,8 @@ const I18N = {
     hub: {
       step: 'Stap 2 · Kies modus', solo: 'SOLO', collection: 'COLLECTIE',
       arcadeTitle: 'Arcade', arcadeSub: 'Snelle sessies · save blijft hier',
-      collectTitle: 'Collectie', collectSub: 'Wapens · pets · stijl · boek',
+      collectTitle: 'Collectie', collectSub: 'Figuur · wapens · pets · stijl',
+      gear: 'Figuur', gearSub: 'Slots · look',
       training: 'Training', trainingSub: '1v1 · RabbitRobot · oefenen',
       wall: 'Muur Slopen', wallSub: '60 sec · combo = sneller',
       mats: 'Muntjes', matsSub: '45 sec · munten → pet coins',
@@ -133,7 +134,7 @@ const I18N = {
     menu: {
       continue: 'Continue', adventure: 'Adventure', adventureSub: 'Story · islands · bosses',
       arcade: 'Arcade', arcadeSub: 'Training · Wall · Coins', versus: '2 players', versusSub: 'Local',
-      collect: 'Collection', collectSub: 'Weapons · style · book', music: 'Music', missions: 'Missions',
+      collect: 'Collection', collectSub: 'Weapons · figure · book', music: 'Music', missions: 'Missions',
       summons: 'Summons', summonsSub: 'Daily chest · weapon & pet',
       options: 'Options', tips: 'Tips', fresh: 'Fresh version', install: 'Add as app', installSub: 'One icon, like a real app',
       pressStart: 'insert coin', missionReady: 'mission ready', dayBonus: 'Daily bonus',
@@ -147,7 +148,8 @@ const I18N = {
     hub: {
       step: 'Step 2 · Pick mode', solo: 'SOLO', collection: 'COLLECTION',
       arcadeTitle: 'Arcade', arcadeSub: 'Quick sessions · save stays here',
-      collectTitle: 'Collection', collectSub: 'Weapons · pets · style · book',
+      collectTitle: 'Collection', collectSub: 'Figure · weapons · pets · style',
+      gear: 'Character', gearSub: 'Slots · look',
       training: 'Training', trainingSub: '1v1 · RabbitRobot · practice',
       wall: 'Wall Smash', wallSub: '60 sec · combo = faster',
       mats: 'Coins', matsSub: '45 sec · coins → pet coins',
@@ -233,7 +235,7 @@ const I18N = {
     menu: {
       continue: 'Weiterspielen', adventure: 'Abenteuer', adventureSub: 'Story · Inseln · Bosse',
       arcade: 'Arcade', arcadeSub: 'Training · Mauer · Münzen', versus: '2 Spieler', versusSub: 'Lokal',
-      collect: 'Sammlung', collectSub: 'Waffen · Stil · Buch', music: 'Musik', missions: 'Missionen',
+      collect: 'Sammlung', collectSub: 'Waffen · Figur · Buch', music: 'Musik', missions: 'Missionen',
       options: 'Optionen', tips: 'Tipps', fresh: 'Neue Version', install: 'Als App speichern', installSub: 'Ein Icon, wie eine echte App',
       pressStart: 'insert coin', missionReady: 'Mission bereit', dayBonus: 'Tagesbonus',
       choosePath: 'WÄHLE DEINEN WEG', lastPlayed: 'ZULETZT', playHere: 'SPIEL',
@@ -246,7 +248,8 @@ const I18N = {
     hub: {
       step: 'Schritt 2 · Modus wählen', solo: 'SOLO', collection: 'SAMMLUNG',
       arcadeTitle: 'Arcade', arcadeSub: 'Schnelle Runden · Save bleibt hier',
-      collectTitle: 'Sammlung', collectSub: 'Waffen · Pets · Stil · Buch',
+      collectTitle: 'Sammlung', collectSub: 'Figur · Waffen · Pets · Stil',
+      gear: 'Figur', gearSub: 'Slots · Look',
       training: 'Training', trainingSub: '1v1 · RabbitRobot · Üben',
       wall: 'Mauer', wallSub: '60 Sek · Combo = schneller',
       mats: 'Münzen', matsSub: '45 Sek · Münzen → Pet-Coins',
@@ -314,7 +317,7 @@ const I18N = {
     menu: {
       continue: 'Continuer', adventure: 'Aventure', adventureSub: 'Histoire · îles · boss',
       arcade: 'Arcade', arcadeSub: 'Entraînement · Mur · Pièces', versus: '2 joueurs', versusSub: 'Local',
-      collect: 'Collection', collectSub: 'Armes · style · bestiaire', music: 'Musique', missions: 'Missions',
+      collect: 'Collection', collectSub: 'Armes · figure · bestiaire', music: 'Musique', missions: 'Missions',
       options: 'Options', tips: 'Astuces', fresh: 'Version fraîche', install: 'Ajouter comme app', installSub: 'Une icône, comme une vraie app',
       pressStart: 'insert coin', missionReady: 'mission prête', dayBonus: 'Bonus du jour',
       choosePath: 'CHOISIS TON CHEMIN', lastPlayed: 'DERNIER', playHere: 'JOUER',
@@ -327,7 +330,8 @@ const I18N = {
     hub: {
       step: 'Étape 2 · Choisir le mode', solo: 'SOLO', collection: 'COLLECTION',
       arcadeTitle: 'Arcade', arcadeSub: 'Sessions rapides · save ici',
-      collectTitle: 'Collection', collectSub: 'Armes · pets · style · bestiaire',
+      collectTitle: 'Collection', collectSub: 'Figure · armes · pets · style',
+      gear: 'Figure', gearSub: 'Slots · look',
       training: 'Entraînement', trainingSub: '1v1 · RabbitRobot · pratique',
       wall: 'Mur', wallSub: '60 s · combo = plus vite',
       mats: 'Pièces', matsSub: '45 s · pièces → pet coins',
@@ -395,7 +399,7 @@ const I18N = {
     menu: {
       continue: 'Continuar', adventure: 'Aventura', adventureSub: 'Historia · islas · jefes',
       arcade: 'Arcade', arcadeSub: 'Entrenamiento · Muro · Monedas', versus: '2 jugadores', versusSub: 'Local',
-      collect: 'Colección', collectSub: 'Armas · estilo · bestiario', music: 'Música', missions: 'Misiones',
+      collect: 'Colección', collectSub: 'Armas · figura · bestiario', music: 'Música', missions: 'Misiones',
       options: 'Opciones', tips: 'Consejos', fresh: 'Versión nueva', install: 'Añadir como app', installSub: 'Un icono, como una app real',
       pressStart: 'insert coin', missionReady: 'misión lista', dayBonus: 'Bonus diario',
       choosePath: 'ELIGE TU CAMINO', lastPlayed: 'ÚLTIMO', playHere: 'JUEGA',
@@ -408,7 +412,8 @@ const I18N = {
     hub: {
       step: 'Paso 2 · Elige modo', solo: 'SOLO', collection: 'COLECCIÓN',
       arcadeTitle: 'Arcade', arcadeSub: 'Sesiones rápidas · save aquí',
-      collectTitle: 'Colección', collectSub: 'Armas · pets · estilo · bestiario',
+      collectTitle: 'Colección', collectSub: 'Figura · armas · pets · estilo',
+      gear: 'Figura', gearSub: 'Slots · look',
       training: 'Entrenamiento', trainingSub: '1v1 · RabbitRobot · practicar',
       wall: 'Muro', wallSub: '60 s · combo = más rápido',
       mats: 'Monedas', matsSub: '45 s · monedas → pet coins',
@@ -632,6 +637,7 @@ function applyLangStaticScreens() {
     ['btnSkills', 'hub.skills', 'hub.skillsSub'],
     ['btnUpgrades', 'hub.upgrades', 'hub.upgradesSub'],
     ['btnDex', 'hub.dex', 'hub.dexSub'],
+    ['btnGear', 'hub.gear', 'hub.gearSub'],
   ];
   for (const [id, titleKey, subKey] of modeRows) {
     const btn = document.getElementById(id);
@@ -729,6 +735,8 @@ function applyLangStaticScreens() {
   setText('gambleSub', 'ui.gambleSub');
   setText('styleScreenHead', 'ui.styleHead');
   setText('styleScreenSub', 'ui.styleSub');
+  setText('gearScreenHead', 'ui.gearHead');
+  setText('gearScreenSub', 'ui.gearSub');
   setText('skillScreenHead', 'ui.skillSummaryHead');
   setText('skillScreenSub', 'ui.skillSub');
   setText('upgradeScreenHead', 'ui.skillHead');
@@ -841,6 +849,7 @@ function applyLangStaticScreens() {
     weaponScreen: t('back.collect'),
     petScreen: t('back.collect'),
     styleScreen: t('back.collect'),
+    gearScreen: t('back.collect'),
     skillScreen: t('back.collect'),
     upgradeScreen: t('back.collect'),
     dexScreen: t('back.collect'),
@@ -896,6 +905,7 @@ function applyLang() {
     else if (active === 'helpScreen' && typeof UI.renderHelp === 'function') UI.renderHelp();
     else if (active === 'weaponScreen' && typeof UI.renderWeapons === 'function') UI.renderWeapons();
     else if (active === 'styleScreen' && typeof UI.renderStyle === 'function') UI.renderStyle();
+    else if (active === 'gearScreen' && typeof UI.renderGear === 'function') UI.renderGear();
     else if (active === 'skillScreen' && typeof UI.renderSkills === 'function') UI.renderSkills();
     else if (active === 'charSelectScreen' && typeof UI.renderCharSelect === 'function') UI.renderCharSelect();
     else if (active === 'levelScreen' && typeof UI.renderLevels === 'function') UI.renderLevels();

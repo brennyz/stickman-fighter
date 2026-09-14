@@ -122,12 +122,13 @@ const get = (id) => {
 };
 
 [
-  'menuScreen', 'levelScreen', 'gambleScreen', 'weaponScreen', 'styleScreen', 'skillScreen', 'settingsScreen',
+  'menuScreen', 'levelScreen', 'gambleScreen', 'weaponScreen', 'styleScreen', 'gearScreen', 'skillScreen', 'settingsScreen',
   'missionsScreen', 'charSelectScreen', 'dexScreen', 'helpScreen', 'installScreen',
   'resultScreen', 'pauseScreen', 'game', 'toastHost', 'pauseBtn', 'menuStats',
   'menuDailyHint', 'menuTipLine', 'menuPlayLink', 'togMusic', 'togSfx',
   'btnAdventure', 'btnTraining', 'btnWall', 'btnMatsCoins', 'btnWeapons', 'btnDex', 'btnVersus',
-  'btnContinue', 'btnStyle', 'btnSkills', 'btnSettings', 'btnMissions', 'btnMissionsLbl', 'btnHelp', 'helpOk',
+  'btnContinue', 'btnStyle', 'btnGear', 'btnSkills', 'btnSettings', 'btnMissions', 'btnMissionsLbl', 'btnHelp', 'helpOk',
+  'gearSlotList', 'gearWeaponAside', 'gearDollCanvas', 'gearDetail', 'gearPicker', 'gearSummary',
   'skillPreview', 'skillGrid', 'skillGridScroll', 'skillSagaBlurb', 'skillBehaviorBar', 'btnSkillSort', 'skillNextUnlock',
   'superPreview', 'superGrid', 'superGridScroll', 'superSummary', 'superNextUnlock',
   'btnGuvve', 'pauseResume', 'pauseQuit', 'resAgain', 'resNext', 'resMenu',
