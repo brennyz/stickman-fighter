@@ -762,6 +762,20 @@
       "text": "Gear contract v1 draw order back→front: back, legs, chest, head, hands, weapon-hold, pet. Item.draw.layer + offsets; one item per slot. Align fine-tune to slotIds head/chest/hands/legs/back.",
       "status": "done-in-code",
       "updated": "2026-09-14"
+    },
+    {
+      "id": "w-20260914T171534",
+      "from": "user",
+      "text": "Gear contract v1 locked for drops: payload { gearId, at } → ownedGear. Prefer can-own-while-locked; UI shows gates. Slots head/chest/hands/legs/back. Hook Adventure defeat/stage clear, daily chest optional gear pull, zone drops.",
+      "status": "done-in-code",
+      "updated": "2026-09-14"
+    },
+    {
+      "id": "w-20260914T171113",
+      "from": "user",
+      "text": "Systems PR READY #280 with 131 gear ids + gates. Wire world drops to those catalog ids; respect level+time gates; can-own-locked OK.",
+      "status": "done-in-code",
+      "updated": "2026-09-14"
     }
   ],
   "agentRules": [

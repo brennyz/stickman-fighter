@@ -165,6 +165,17 @@ function pushChestPull(entry) {
 }
 
 function grantChestConsolation(kind) {
+  try {
+    if (typeof rollGearChestPull === 'function' && Math.random() < 0.16) {
+      const g = rollGearChestPull();
+      if (g) {
+        return {
+          type: 'gear', kind, nice: false,
+          gearId: g.id, rarity: g.rarity, name: (typeof gearLabel === 'function' ? gearLabel(g) : g.name),
+        };
+      }
+    }
+  } catch (_) {}
   const roll = Math.random();
   if (roll < 0.45) {
     const coins = 8 + Math.floor(Math.random() * 16);

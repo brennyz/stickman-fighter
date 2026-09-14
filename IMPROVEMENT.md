@@ -143,6 +143,8 @@ Schrijf **1–3 regels** per sessie: datum, d#, wat, versie.
 
 | Datum (UTC) | d# | Update |
 |-------------|-----|--------|
+| 2026-09-14 | — | Gear contract v1: ownedGear {gearId,at}, zone drops on NM/Hell, can-own-locked. Catalog = #280 (131). v1.18.164 / SW 374. |
+| 2026-09-14 | — | Gear world drops wired to #280 catalog (131 IDs). Rolls respect lvl+days; grant can-own-locked. 16×16 pixels. v1.18.164 / SW 374. |
 | 2026-09-14 | — | Gear UI schema delta: only save.gear {schema,equipped,owned} + createdAt; drop flat bags; HOME Uitrusting. v1.18.169 / SW 379. |
 | 2026-09-14 | — | Gear UI large catalog: rarity chips + search/sort + n/total, page-scroll (no tiny-list). v1.18.168 / SW 378. |
 | 2026-09-14 | — | Gear UI contract v1 locked: cosmetics may have STAT, doll draw-order +weapon+pet, hub n/5. v1.18.167 / SW 377. |

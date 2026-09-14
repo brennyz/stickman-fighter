@@ -894,6 +894,7 @@ function createRunLoot() {
     hpBonus: 0,
     levelUps: 0,
     weapons: [],
+    gear: [],
     finishers: 0,
   };
 }
@@ -940,10 +941,17 @@ function noteRunLootWeapon(loot, weaponId) {
   if (!loot.weapons.includes(weaponId)) loot.weapons.push(weaponId);
 }
 
+function noteRunLootGear(loot, gearId) {
+  if (!loot || !gearId) return;
+  if (!loot.gear) loot.gear = [];
+  if (!loot.gear.includes(gearId)) loot.gear.push(gearId);
+}
+
 function runLootHasItems(loot) {
   if (!loot) return false;
   if (loot.summons.length || loot.dex.length || loot.pets.length || loot.eggs.length) return true;
   if (loot.petCoins > 0 || loot.hpBonus > 0 || loot.levelUps > 0 || loot.weapons.length) return true;
+  if (loot.gear && loot.gear.length) return true;
   if (loot.finishers > 0) return true;
   const pk = loot.pickups || {};
   return (pk.heal || 0) + (pk.rage || 0) + (pk.energy || 0) + (pk.shield || 0) > 0;
@@ -962,6 +970,7 @@ function runLootSummaryShort(loot) {
   if (loot.finishers) parts.push(`③${loot.finishers}`);
   if (loot.levelUps) parts.push(`↑${loot.levelUps}`);
   if (loot.weapons && loot.weapons.length) parts.push(`⚔${loot.weapons.length}`);
+  if (loot.gear && loot.gear.length) parts.push(`G${loot.gear.length}`);
   if (loot.petCoins) parts.push(`PC${loot.petCoins}`);
   return parts.join(' · ');
 }
@@ -1009,6 +1018,13 @@ function formatRunLootHtml(loot, mode) {
     }
   }
   if (loot.petCoins) push('PC', t('runLoot.petCoinsLine', { n: loot.petCoins }), '#ffd75e');
+  if (loot.gear && loot.gear.length) {
+    for (const gid of loot.gear) {
+      const name = typeof gearLabel === 'function' ? gearLabel(gid) : gid;
+      const col = typeof gearAccent === 'function' ? gearAccent(gearById(gid)) : '#c792ff';
+      push('G', t('runLoot.gearLine', { name }), col);
+    }
+  }
   if (!rows.length) return '';
   const head = mode === 'adventure' ? t('runLoot.headAdv') : t('runLoot.head');
   return `<div class="run-loot-head">${escRunLootHtml(head)}</div><div class="run-loot-lines">${rows.join('')}</div>`;

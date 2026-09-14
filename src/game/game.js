@@ -669,7 +669,8 @@ class Game {
       pk.life -= dt;
       if (!p.alive) continue;
       const dy = (p.y - 48) - pk.y;
-      if ((p.x - pk.x) ** 2 + dy ** 2 < 44 * 44) {
+      const grabR = (pk.kind === 'gear' && typeof IS_TOUCH !== 'undefined' && IS_TOUCH) ? 58 : 44;
+      if ((p.x - pk.x) ** 2 + dy ** 2 < grabR * grabR) {
         try { this.collectPickup(pk); } catch (pickErr) {
           try { sfReportError('pickup', pickErr, 'Pickup hiccup — gevecht gaat door'); } catch (_) {}
           pk.life = 0;
@@ -868,6 +869,12 @@ class Game {
           try { noteRunLootWeapon(this.runLoot, zwBoss.id); } catch (_) {}
         }
       } catch (_) {}
+      try {
+        const gdClear = typeof rollGearStageClearDrop === 'function' ? rollGearStageClearDrop(lv, diff) : null;
+        if (gdClear && this.player) {
+          this.spawnPickup(this.player.x, this.player.y - 56, { gearId: gdClear.id, dropTier: 'elite' });
+        }
+      } catch (_) {}
       const eggBonus = maybeAdvEggBonus();
       if (eggBonus) {
         spawnGameEggPet(this);
@@ -1042,6 +1049,16 @@ class Game {
         const zw = rollZoneWeaponDrop(this, m);
         if (zw) {
           try { noteRunLootWeapon(this.runLoot, zw.id); } catch (_) {}
+        }
+      } catch (_) {}
+      try {
+        const gd = typeof rollGearWorldDrop === 'function' ? rollGearWorldDrop(this, m) : null;
+        if (gd) {
+          let dropTier = 'normal';
+          if (m.superBoss) dropTier = 'superBoss';
+          else if (m.elite) dropTier = 'elite';
+          else if (m.giant) dropTier = 'giant';
+          this.spawnPickup(m.x + rand(-16, 16), m.y - m.size * 0.4, { gearId: gd.id, dropTier });
         }
       } catch (_) {}
     }
@@ -1313,6 +1330,19 @@ class Game {
       }
       return;
     }
+    if (opts.gearId) {
+      const gdef = typeof gearItemById === 'function' ? gearItemById(opts.gearId)
+        : (typeof gearById === 'function' ? gearById(opts.gearId) : null);
+      if (!gdef) return;
+      this.pickups.push({
+        x, y, kind: 'gear', gearId: gdef.id, dropTier: opts.dropTier || 'normal',
+        t: rand(0, TAU), life: SHARD_PICKUP_LIFE, bob: 0,
+      });
+      if (opts.dropTier && opts.dropTier !== 'normal') {
+        try { AudioSys.sfxAt('bell', x); } catch (_) {}
+      }
+      return;
+    }
     if (opts.itemCat && opts.itemId && itemUpgradeEligible(opts.itemCat, opts.itemId)) {
       this.pickups.push({
         x, y, kind: 'item_shard', itemCat: opts.itemCat, itemId: opts.itemId, dropTier: opts.dropTier || 'normal',
@@ -1347,7 +1377,7 @@ class Game {
     const meta = PICKUP_META[pk.kind] || PICKUP_META.heal;
     const p = this.player;
     const rareDrop = pk.dropTier === 'superBoss' || pk.dropTier === 'elite' || pk.dropTier === 'giant';
-    if (pk.kind === 'skill_shard' || pk.kind === 'item_shard') {
+    if (pk.kind === 'skill_shard' || pk.kind === 'item_shard' || pk.kind === 'gear') {
       if (rareDrop) {
         try { AudioSys.sfx('megaDrop'); } catch (_) {}
         haptic(pk.dropTier === 'superBoss' ? 28 : 18);
@@ -1386,6 +1416,20 @@ class Game {
         }
         break;
       }
+      case 'gear': {
+        const gid = pk.gearId;
+        const gdef = typeof gearById === 'function' ? gearById(gid) : null;
+        if (!gdef) break;
+        const fresh = typeof grantGearItem === 'function' ? grantGearItem(gid, { silent: true }) : false;
+        try { noteRunLootGear(this.runLoot, gid); } catch (_) {}
+        const col = typeof gearAccent === 'function' ? gearAccent(gdef) : '#c792ff';
+        const lbl = typeof gearLabel === 'function' ? gearLabel(gdef) : gdef.name;
+        this.floater(p.x, p.y - 100, t('combat.pickupGear', { name: lbl }), col, 15);
+        if (fresh) {
+          try { UI.toast(t('toast.gearDrop', { name: lbl, slot: gearSlotLabel(gdef.slot) }), 3600, { tone: 'ok' }); } catch (_) {}
+        }
+        break;
+      }
       case 'heal':
         p.hp = Math.min(p.maxhp, p.hp + Math.round(p.maxhp * 0.28));
         noteRunLootPickup(this.runLoot, 'heal');
@@ -1408,14 +1452,12 @@ class Game {
         this.floater(p.x, p.y - 100, t('combat.pickupShield'), meta.color, 16);
         break;
     }
-    this.banner(pickupLabel(pk.kind, pk.skillId, pk.itemCat, pk.itemId), 0.9,
-      (pk.kind === 'skill_shard' && SKILL_DEFS[pk.skillId]) ? SKILL_DEFS[pk.skillId].color
-        : (pk.kind === 'item_shard' && pk.itemCat && pk.itemId) ? itemUpgradeColor(pk.itemCat, pk.itemId)
-          : meta.color, 28);
-    this.burst(pk.x, pk.y,
-      (pk.kind === 'skill_shard' && SKILL_DEFS[pk.skillId]) ? SKILL_DEFS[pk.skillId].color
-        : (pk.kind === 'item_shard' && pk.itemCat && pk.itemId) ? itemUpgradeColor(pk.itemCat, pk.itemId)
-          : meta.color, 14);
+    const bannerCol = (pk.kind === 'skill_shard' && SKILL_DEFS[pk.skillId]) ? SKILL_DEFS[pk.skillId].color
+      : (pk.kind === 'item_shard' && pk.itemCat && pk.itemId) ? itemUpgradeColor(pk.itemCat, pk.itemId)
+      : (pk.kind === 'gear' && pk.gearId && typeof gearAccent === 'function') ? gearAccent(gearById(pk.gearId))
+      : meta.color;
+    this.banner(pickupLabel(pk.kind, pk.skillId, pk.itemCat, pk.itemId, pk.gearId), 0.9, bannerCol, 28);
+    this.burst(pk.x, pk.y, bannerCol, 14);
     bumpStat('pickups', 1);
     bumpDaily('pickups', 1);
     pk.life = 0;
@@ -2734,6 +2776,7 @@ class Game {
   }
 
   update(dt) {
+    try { if (typeof tickPlayTime === 'function') tickPlayTime(dt); } catch (_) {}
     // Solo-modes: nooit 2P-pads (primePlayInput(mode-string) was een regressie)
     if (this.mode !== 'versus' && typeof Input !== 'undefined' && Input.dualMode) {
       try { Input.dualMode = false; Input.layout(W, H); } catch (_) {}
@@ -3404,16 +3447,23 @@ class Game {
           ? SKILL_DEFS[pk.skillId].color
           : (pk.kind === 'item_shard' && pk.itemCat && pk.itemId)
             ? itemUpgradeColor(pk.itemCat, pk.itemId)
+            : (pk.kind === 'gear' && pk.gearId && typeof gearAccent === 'function')
+              ? gearAccent(gearById(pk.gearId))
             : meta.color;
         const y = pk.y + (pk.bob || 0);
         c.save();
         const pkBlur = (save.liteFx || Perf.tier >= 1 || motionReduced()) ? 0 : 14;
         c.shadowColor = pkCol; c.shadowBlur = pkBlur;
         c.fillStyle = pkCol;
-        c.beginPath(); c.arc(pk.x, y, 14, 0, TAU); c.fill();
+        const orbR = pk.kind === 'gear' ? 16 : 14;
+        c.beginPath(); c.arc(pk.x, y, orbR, 0, TAU); c.fill();
         c.strokeStyle = '#fff'; c.lineWidth = 2;
-        c.beginPath(); c.arc(pk.x, y, 14, 0, TAU); c.stroke();
-        drawPickupIcon(c, pk.kind, pk.x, y, pkCol);
+        c.beginPath(); c.arc(pk.x, y, orbR, 0, TAU); c.stroke();
+        if (pk.kind === 'gear' && pk.gearId && typeof drawGearPixels === 'function') {
+          drawGearPixels(c, pk.gearId, pk.x, y, 2);
+        } else {
+          drawPickupIcon(c, pk.kind, pk.x, y, pkCol);
+        }
         c.restore();
       }
     }

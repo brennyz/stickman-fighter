@@ -65,6 +65,7 @@ Cursor kan SVG’s als code schrijven en in `assets/` zetten. Raster via image-t
 | Grote mode-knop art (optioneel) | `.svg` | `0 0 64 64` | Alleen als gevraagd |
 | PWA / home screen | `.png` | 180 / 192 / 512 | Blijft in `icons/` |
 | Foto / scenery samples | `.png` / notes | zie `assets/forest-floor/` | Geen knop-UI |
+| Gear / cosmetic world-drop | `.svg` pixel-rects | `0 0 16 16` | `assets/gear/{slot}_{kind}_{slug}.svg` |
 
 ---
 
@@ -79,6 +80,7 @@ assets/
   ui/               ← overige UI-SVG (lock, check, saga chips als files)
   forest-floor/     ← scenery samples (bestaand)
   seasons/          ← pixel-art overlay slots (jungle/halloween/…); zie SEASON-OVERLAY.md
+  gear/             ← 16×16 pixel armour / cosmetics (world drops)
 icons/              ← alleen PWA app-iconen (180/192/512 png)
 ```
 

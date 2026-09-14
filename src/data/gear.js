@@ -13,6 +13,10 @@
  *
  * MOST cosmetics are vanity. SOME cosmetics have stats. Armour has stats.
  * Every lootable item has BOTH unlockLvl (save.lvl) AND unlockDays (account age).
+ *
+ * World-drop lane (this PR, sibling src/data/gear-world.js):
+ *   grant is can-own-locked (gates not re-checked); rolls use lootable / allowLocked.
+ *   rollGearDrop is implemented here so systems + spawners share one picker.
  */
 const GEAR_SCHEMA = 1;
 const GEAR_MS_PER_DAY = 86400000;
@@ -29,6 +33,11 @@ const GEAR_ID_ALIASES = {
   charm_aura_glow: 'back_aura_glow',
   charm_cape_shadow: 'back_cape_shadow',
   charm_void: 'back_void',
+  g_head_cloth: 'head_wrap_cloth',
+  g_body_iron: 'chest_plate_iron',
+  g_hands_tape: 'hands_gloves_tape',
+  g_feet_wraps: 'legs_wrap',
+  g_cosmetic_shadowcloak: 'back_cape_shadow',
 };
 const GEAR_SLOTS = [
   { id: 'head',  name: 'Hoofd',  nameEn: 'Head',  kindHint: 'armour',   accent: '#7cf5ff' },
@@ -588,16 +597,22 @@ function _persistGearIfLive(st) {
 }
 
 function _gearGrantInto(s, id, src, now) {
-  const can = gearCanGrant(id, s, now);
-  if (!can.ok) return can;
-  if (can.already) return can;
+  /* can-own-locked: write owned even if unequippable. Rolls filter via lootable. */
+  const item = gearItemById(id);
+  if (!item) return { ok: false, reason: 'unknown' };
+  if (gearItemOwned(item.id, s)) return { ok: true, already: true, item };
   const bag = ensureGearSave(s);
-  if (Object.keys(bag.owned).length >= GEAR_OWNED_CAP) return { ok: false, reason: 'full', item: can.item };
-  bag.owned[can.item.id] = {
-    at: gearNowMs(now),
+  if (Object.keys(bag.owned).length >= GEAR_OWNED_CAP) return { ok: false, reason: 'full', item };
+  const at = gearNowMs(now);
+  bag.owned[item.id] = {
+    at,
     src: typeof src === 'string' ? src.replace(/[^\w\-]/g, '').slice(0, GEAR_SRC_MAX) || 'grant' : 'grant',
   };
-  return { ok: true, item: can.item };
+  if (s && typeof s === 'object') {
+    if (!s.ownedGear || typeof s.ownedGear !== 'object' || Array.isArray(s.ownedGear)) s.ownedGear = {};
+    s.ownedGear[item.id] = { gearId: item.id, at };
+  }
+  return { ok: true, item };
 }
 
 function grantStarterGear(s, now) {
@@ -842,9 +857,64 @@ function pickGearDropCandidate(ctx) {
   return best;
 }
 
+const GEAR_DROP_WEIGHT = {
+  common: 1, uncommon: 0.55, rare: 0.28, epic: 0.12,
+  legendary: 0.05, mythic: 0.035, nightmare: 0.022, hell: 0.016,
+};
+
+function gearDropWeight(item, zone) {
+  let w = GEAR_DROP_WEIGHT[item && item.rarity] || 0.2;
+  if (zone && item && item.needDiff === zone) w *= 2.4;
+  else if (zone === 'hell' && item && item.needDiff === 'nightmare') w *= 1.25;
+  return w;
+}
+
+function pickWeightedGearItem(list, zone) {
+  if (!list || !list.length) return null;
+  let total = 0;
+  for (const it of list) total += gearDropWeight(it, zone);
+  if (!(total > 0)) return list[0];
+  let r = Math.random() * total;
+  for (const it of list) {
+    r -= gearDropWeight(it, zone);
+    if (r <= 0) return it;
+  }
+  return list[0];
+}
+
+/** Zone may satisfy needDiff for a *drop* (can-own-locked). Equip still uses gearGateState. */
+function gearZoneSatisfiesDiff(item, zone) {
+  if (!item || !item.needDiff) return true;
+  if (item.needDiff === 'nightmare') return zone === 'nightmare' || zone === 'hell';
+  if (item.needDiff === 'hell') return zone === 'hell';
+  return false;
+}
+
+function gearItemLootableForDrop(item, s, now, zone) {
+  if (!item) return false;
+  const gate = gearGateState(item, s, now);
+  if (!gate.levelOk || !gate.timeOk || !gate.advOk) return false;
+  if (gate.diffOk) return true;
+  return gearZoneSatisfiesDiff(item, zone);
+}
+
 function rollGearDrop(ctx) {
-  void ctx;
-  return null;
+  ctx = ctx || {};
+  const st = ctx.save || (typeof save !== 'undefined' ? save : null);
+  const now = ctx.now;
+  const zone = ctx.zone === 'nightmare' || ctx.zone === 'hell' ? ctx.zone : null;
+  const exclude = ctx.excludeIds && typeof ctx.excludeIds === 'object' ? ctx.excludeIds : null;
+  const list = [];
+  for (const item of GEAR_ITEMS) {
+    if (!item.droppable) continue;
+    if (exclude && (exclude[item.id] || (exclude.indexOf && exclude.indexOf(item.id) !== -1))) continue;
+    if (!ctx.allowOwned && gearItemOwned(item.id, st)) continue;
+    if (!ctx.allowLocked && !gearItemLootableForDrop(item, st, now, zone)) continue;
+    if (ctx.slot && item.slot !== gearCanonSlot(ctx.slot) && item.slot !== ctx.slot) continue;
+    if (ctx.kind && item.kind !== ctx.kind) continue;
+    list.push(item);
+  }
+  return pickWeightedGearItem(list, zone);
 }
 
 function gearRenderDescriptor(s) {
