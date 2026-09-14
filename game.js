@@ -47184,68 +47184,29 @@ const UI = {
     try { if (typeof renderSeasonSwitch === 'function') renderSeasonSwitch(); } catch (_) {}
     try { if (typeof syncSeasonFlavorUi === 'function') syncSeasonFlavorUi(); } catch (_) {}
     const verEl = document.getElementById('setAppVersion');
-    if (verEl) {
-      const fps = Perf.emaMs > 0 ? Math.round(1000 / Perf.emaMs) : 0;
-      const perfNote = save.liteFx
-        ? 'Lite FX'
-        : (Perf.tier >= 2 ? t('ui.perfAdaptiveHeavy', { fps }) : Perf.tier >= 1 ? t('ui.perfAdaptive', { fps }) : t('ui.perfSmooth', { fps }));
-      verEl.textContent = `v${APP_VERSION} · SW v${SW_CACHE_REV} · ${perfNote}`;
-    }
-    const perfEl = document.getElementById('setPerfLine');
-    if (perfEl) {
-      const p = perfFxSummary();
-      perfEl.textContent = formatPerfStripLine(p);
-    }
+    if (verEl) verEl.textContent = 'v' + APP_VERSION;
     const healthEl = document.getElementById('saveHealthLine');
     if (healthEl) {
       const h = saveHealthSummary();
-      const sizeLine = (h.primaryBytes || h.backupBytes)
-        ? ` · ~${formatSaveBytes(h.primaryBytes || h.backupBytes)}`
-        : '';
-      let statusPrimary = h.primaryCorrupt
-        ? `${SVG_WARN_ICON} ${t('ui.savePrimaryCorrupt')}`
-        : (h.primaryValid ? `${SVG_CHECK_MINI} ${t('ui.saveOk')}` : (h.primaryOk ? `${SVG_WARN_ICON} ${t('ui.saveUnreadable')}` : `${SVG_WARN_ICON} ${t('ui.saveNoPrimary')}`));
-      if (h.drift && h.backupOk) {
-        statusPrimary += ' · ' + (h.driftDetail
-          ? t('ui.saveDriftRestore', { detail: h.driftDetail })
-          : t('ui.saveDriftGeneric'));
-      }
-      if (h.backupCorrupt && h.backupOk === false && h.primaryValid) {
-        statusPrimary += ' · ' + t('ui.saveBackupCorrupt');
-      }
-      let healthHtml =
-        t('ui.saveHealthStats', { lvl: h.lvl, unlocked: h.unlocked, dex: h.dex, kills: h.kills }) +
-        (h.summons ? t('ui.saveHealthSummon', { n: h.summons }) : '') +
-        (h.pets ? t('ui.saveHealthPet', { n: h.pets }) : '') +
-        (h.eggs ? t('ui.saveHealthEgg', { n: h.eggs }) : '') +
-        `${sizeLine}<br>` +
-        statusPrimary +
-        (h.backupOk ? ` · ${SVG_CHECK_MINI} ${t('ui.saveBackupOk', { n: h.backupLvl })}` : ` · ${SVG_WARN_ICON} ${t('ui.saveNoBackup')}`);
-      if (h.drift && h.backupOk) {
-        healthHtml += `<br><span style="opacity:.85;color:#ffd75e">${t('ui.saveDriftLine', { detail: h.driftDetail || '≠' })}</span>`;
-      }
-      if (h.saveAgeDays != null && h.saveAgeDays >= 14) {
-        healthHtml += `<br><span style="opacity:.75;color:#ffb0b8">${t('ui.saveAgeWarn', { n: h.saveAgeDays })}</span>`;
-      }
-      if (h.stampAt) {
-        let stampLabel = '';
-        try {
-          const d = new Date(h.stampAt);
-          if (!Number.isNaN(d.getTime())) {
-            const loc = getLang() === 'de' ? 'de-DE' : getLang() === 'nl' ? 'nl-NL' : 'en-US';
-            stampLabel = d.toLocaleString(loc, { dateStyle: 'short', timeStyle: 'short' });
-          }
-        } catch (_) {}
-        if (stampLabel) {
-          healthHtml += `<br><span style="opacity:.7">${t('ui.saveLastSaved', { when: stampLabel })}</span>`;
-        }
-      }
-      healthEl.innerHTML = healthHtml +
-        `<br><span style="opacity:.75">${t('ui.saveSchemaKeys', { n: h.exportSchema || SAVE_EXPORT_SCHEMA, key: SAVE_KEY })}</span>`;
+      const lvl = h.lvl != null ? h.lvl : '?';
+      healthEl.textContent = h.primaryCorrupt
+        ? t('settings.saveAutoBad', { lvl })
+        : t('settings.saveAutoLine', { lvl });
+    }
+    const detail = document.getElementById('saveHealthDetail');
+    if (detail) {
+      const h = saveHealthSummary();
+      const bits = [];
+      if (h.primaryCorrupt) bits.push(t('settings.saveOfflineBad'));
+      else if (h.primaryValid) bits.push(t('settings.saveOfflineOk'));
+      if (h.backupOk) bits.push(t('settings.saveOfflineBackup', { lvl: h.backupLvl }));
+      if (h.drift && h.backupOk) bits.push(t('settings.saveOfflineDrift'));
+      if (h.primaryBytes) bits.push('~' + formatSaveBytes(h.primaryBytes));
+      detail.textContent = bits.join(' · ');
     }
     const exportHint = document.getElementById('saveExportHint');
     if (exportHint) {
-      exportHint.textContent = t('ui.saveExportContains', { summary: saveExportSummaryLine(), key: SAVE_KEY });
+      exportHint.textContent = saveExportSummaryLine();
     }
     bindSavePortPreview();
     const setVal = (id, v) => { const el = document.getElementById(id); if (el) el.value = v; };
