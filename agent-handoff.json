@@ -94,7 +94,7 @@
       "id": "w-20260914T172100",
       "from": "user",
       "text": "LOCKED gear contract v1: slots head/chest/hands/legs/back; weapon aside; save.equipment + ownedGear; cosmetics may have stats; lock copy Lv/train/dex/date/not found; hub tile equippedCount/5; draw-order back→legs→chest→head→hands→weapon→pet. Wire IDs even if systems PR unmerged.",
-      "status": "active",
+      "status": "done-in-code",
       "updated": "2026-09-14"
     },
     {
@@ -628,6 +628,10 @@
   ],
   "sessionLog": [
     {
+      "at": "2026-09-14T17:24:42Z",
+      "summary": "Locked contract v1: cosmetic+stats STAT pill, doll draw-order +weapon+pet, hub equippedCount/5."
+    },
+    {
       "at": "2026-09-14T17:20:30Z",
       "summary": "Gear UI aligned to contract v1: HOME Figuur tile, 5 slot cards, weapon aside, save.equipment + ownedGear."
     },
@@ -722,10 +726,6 @@
     {
       "at": "2026-08-17T10:20:50Z",
       "summary": "pull-main script + GITHUB-PUSH bijwerken zodat de pc één commando kan pullen"
-    },
-    {
-      "at": "2026-08-17T10:18:00Z",
-      "summary": "main LIVE 33d89b6 v1.18.151 — pull-commando voor de pc klaar"
     }
   ],
   "implementedFeaturesSummary": "d18 char select deel 1+2 (v1.11.1-2); Mats coinrun + shuriken mik/vliegers + anti-spam (v1.12.0); speel.html (v1.12.2+). Zie HANDOFF-ZOEKINDEX.md en improvement-d20-bag.json userFeatureLog.",
