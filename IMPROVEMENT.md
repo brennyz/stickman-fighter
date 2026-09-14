@@ -1,3 +1,4 @@
+| 2026-09-14 | **ghost HP** | Training: ghost-balk + goud-flash + RABBIT n/max. Geen hit-reg rewrite. **v1.18.160 / SW v370**. |
 | 2026-09-14 | **merge main** | #259 P1 landing + #260 toast/title-gate. Hit-reg ongemoeid. **v1.18.159 / SW v369**. |
 | 2026-09-14 | **train hit-reg** | Training: capsule-hurtbox + face-naar-robot zodat W/joy-up J/K/L/U RabbitRobot raken; floaters niet links clippen; resultaat VERLOREN / YOU LOST. **v1.18.158 / SW v368**. |
 | 2026-09-14 | **title-gate** | SPELEN eerst; splash-poppetjes groter; naam optioneel. **v1.18.157 / SW v367**. |
@@ -137,6 +138,7 @@ Schrijf **1–3 regels** per sessie: datum, d#, wat, versie.
 
 | Datum (UTC) | d# | Update |
 |-------------|-----|--------|
+| 2026-09-14 | — | Training ghost-HP + goud-flash + RABBIT n/max. Hit-reg ongemoeid. v1.18.160 / SW 370. |
 | 2026-09-14 | — | MERGE MAIN: #259 + #260 → v1.18.159 / SW 369. Hit-reg gehouden. #261 closed. #256 store-draft overgeslagen. |
 | 2026-09-14 | — | Training hit-reg: capsule + face-naar-robot; floater left-clamp; YOU LOST/VERLOREN. v1.18.158 / SW 368. |
 | 2026-09-14 | — | P1 entry: één install-blok per apparaat, geen iPad op Android. v1.18.157 / SW 367. |
