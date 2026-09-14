@@ -142,6 +142,7 @@ Schrijf **1–3 regels** per sessie: datum, d#, wat, versie.
 
 | Datum (UTC) | d# | Update |
 |-------------|-----|--------|
+| 2026-09-14 | — | Owner: geen individuele merges. #269 blijft draft tot Brendon mega-merge van alle feature-sets + conflict check. Main ongemoeid. |
 | 2026-09-14 | — | Scanner pack #269: Upgrades HOME 1-tap; auto-save primair; Options geen dump; contrast + back-bar; lade 4 knoppen; install/talen uit HOME. v1.18.166 / SW 376. Draft. Niet mergen. |
 | 2026-09-14 | — | Upgrades HOME-tegel op start + collect featured; lade App/Vers; wapenkaarten contrast. v1.18.165 / SW 375. Draft. #263 parked. |
 | 2026-09-14 | — | #266 sprint: locale (VERLOREN, Tips-label, eilandkop) + stillere versie-banner + rest HOME. v1.18.163 / SW 373. Draft. |
