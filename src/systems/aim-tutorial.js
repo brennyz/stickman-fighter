@@ -154,7 +154,7 @@ function aimTutorialLayout() {
   const joy = aimTutJoyPos();
   const portrait = H > W * 1.05;
   const cardW = Math.min(W - 20, portrait ? 420 : 460);
-  const cardH = Math.min(portrait ? H * 0.46 : H * 0.62, Math.round(318 * Math.max(0.92, ui)));
+  const cardH = Math.min(portrait ? H * 0.42 : H * 0.58, Math.round(292 * Math.max(0.9, Math.min(ui, 1.05))));
   let cardX = Math.round((W - cardW) / 2);
   let cardY = Math.round(Math.max(12, Math.min(H * 0.1, joy.y - cardH - 28)));
   if (cardY + cardH > joy.y - 36) {
@@ -385,14 +385,14 @@ function drawAimTutorial(c, g) {
 
   c.textBaseline = 'alphabetic';
   c.fillStyle = '#ffd75e';
-  const titleSize = cardW < 320 ? 17 : 20;
+  const titleSize = cardW < 320 ? 16 : 18;
   c.font = '900 ' + titleSize + 'px -apple-system, sans-serif';
   c.textAlign = 'center';
-  const titleLines = aimTutWrap(c, title, cardW - 28);
-  let ty = cardY + 28 + (skipH > 20 ? 10 : 0);
+  const titleLines = aimTutWrap(c, title, cardW - 36);
+  let ty = cardY + skipH + 28;
   for (const line of titleLines.slice(0, 2)) {
     c.fillText(line, cardX + cardW / 2, ty);
-    ty += titleSize + 4;
+    ty += titleSize + 5;
   }
 
   c.fillStyle = '#e8f0ff';
