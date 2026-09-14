@@ -17,17 +17,17 @@
     "swCache": "stickfighter-app-v376",
     "gameJsQuery": "game.js?v=376",
     "cssQuery": "styles/main.css?v=376",
-    "featureBranch": "cursor/mega-merge-stack-f6c0",
+    "featureBranch": "main",
     "pushBlocked": null,
     "shareUrl": "https://brennyz.github.io/stickman-fighter/speel.html",
-    "note": "Mega-merge stack (freeze): listed PRs minus #279 onto origin/main tip. v1.18.166 / SW 376. Do not silent-merge main.",
-    "updated": "2026-09-14T19:36:07Z"
+    "note": "Mega-merge LIVE on origin/main via #293. Listed PRs minus #279. v1.18.166 / SW 376.",
+    "updated": "2026-09-14T19:47:00Z"
   },
   "githubSync": {
     "policy": "Trigger van de user: «merge main» = commit (als nodig) + push origin/main. Daarna GitHub Pages (~1–3 min) → speel.html is LIVE. Niet stil pushen. Houd pendingUpload bij tot origin/main gelijk is.",
-    "pcEqualsMain": false,
-    "localHead": "197890b9c30ec3371d7d2c2d0cc177151ad995b3",
-    "remoteMainHead": "197890b9c30ec3371d7d2c2d0cc177151ad995b3",
+    "pcEqualsMain": true,
+    "localHead": "470bd4e4ab6a1c7d87dca1a40b7a98bdcedb9712",
+    "remoteMainHead": "470bd4e4ab6a1c7d87dca1a40b7a98bdcedb9712",
     "ahead": 0,
     "behind": 0,
     "dirty": true,
@@ -910,6 +910,10 @@
   ],
   "sessionLog": [
     {
+      "at": "2026-09-14T19:47:05Z",
+      "summary": "Mega-merge #293 fast-forwarded to origin/main. Listed PRs landed minus #279. v1.18.166 / SW 376."
+    },
+    {
       "at": "2026-09-14T19:45:31Z",
       "summary": "Mega-merge coverage green except pre-existing main spiral-orb/dex smokes. Stack SHA on cursor/mega-merge-stack-f6c0; skip #279."
     },
@@ -1004,10 +1008,6 @@
     {
       "at": "2026-09-14T12:15:48Z",
       "summary": "Start post-merge polish: HEAT/SATAN portraits + floater crowding"
-    },
-    {
-      "at": "2026-09-14T12:03:51Z",
-      "summary": "MERGED #257 → origin/main 0d3bfff · v1.18.153 / SW 363 · Pages ~1–3 min"
     }
   ],
   "implementedFeaturesSummary": "d18 char select deel 1+2 (v1.11.1-2); Mats coinrun + shuriken mik/vliegers + anti-spam (v1.12.0); speel.html (v1.12.2+). Zie HANDOFF-ZOEKINDEX.md en improvement-d20-bag.json userFeatureLog.",
