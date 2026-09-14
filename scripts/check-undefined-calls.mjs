@@ -23,6 +23,8 @@ const REGRESSION_MUST_DEFINE = [
   'fighterMoveXBounds', 'refreshA11yUi', 'motionReduced',
   'combatEntryFor', 'applySignatureToSpec', 'trackVsRosterUse', 'vsRosterName', 'weaponLightFx', 'spawnWeaponLightHit',
   'speciesBlurb', 'speciesBiomeId', 'dexBiomeDiscovered',
+  'listGearSlots', 'equipGear', 'unequipGear', 'getEquippedGear',
+  'gearEquipItem', 'gearTooltipModel', 'gearRenderDescriptor',
 ];
 
 /** Consts / values that must appear in the bundle (not only functions). */

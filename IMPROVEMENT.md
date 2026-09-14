@@ -143,6 +143,12 @@ Schrijf **1–3 regels** per sessie: datum, d#, wat, versie.
 
 | Datum (UTC) | d# | Update |
 |-------------|-----|--------|
+| 2026-09-14 | — | Gear UI schema delta: only save.gear {schema,equipped,owned} + createdAt; drop flat bags; HOME Uitrusting. v1.18.169 / SW 379. |
+| 2026-09-14 | — | Gear UI large catalog: rarity chips + search/sort + n/total, page-scroll (no tiny-list). v1.18.168 / SW 378. |
+| 2026-09-14 | — | Gear UI contract v1 locked: cosmetics may have STAT, doll draw-order +weapon+pet, hub n/5. v1.18.167 / SW 377. |
+| 2026-09-14 | — | Gear UI contract v1: HOME Figuur-tegel, 5 slot-kaarten (title/sub stacked), weapon aside, save.equipment + ownedGear. v1.18.166 / SW 376. |
+| 2026-09-14 | — | Gear UI bind #280: GEAR_SLOT_IDS + gearTooltipModel/gearEquipItem/gearRenderDescriptor, save.gear, filter+scroll for 131. v1.18.165 / SW 375. Draft. |
+| 2026-09-14 | — | Gear UI char-screen: 5 slots (head/chest/hands/legs/back), LOOK vs STAT, level/time/train/dex locks, save.equipment. v1.18.164 / SW 374. Draft. |
 | 2026-09-14 | — | Options: mik-indicator kleur + radius (beweegbalk). Persist + live preview. Combat-math ongemoeid. v1.18.164 / SW 374. Draft. |
 | 2026-09-14 | — | Seasonal BGM #270: Halloween ostinato + #277 hooks (`data-season-audio`, `AudioSys.seasonId`, `sf-season-change`). Geen season-UI. v1.18.166 / SW 376. |
 | 2026-09-14 | — | Audio harden #270: soft replay, sidecar, geen stacked SFX, classic raw SONGS. v1.18.165 / SW 375. |

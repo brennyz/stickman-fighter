@@ -1005,7 +1005,12 @@ function renderAdvSatanCard(heat, diff) {
 
 const UI = {
   screens: ['menuScreen', 'modeHubScreen', 'levelScreen', 'gambleScreen', 'summonScreen', 'weaponScreen', 'petScreen', 'styleScreen', 'gearScreen', 'upgradeScreen', 'skillScreen', 'settingsScreen', 'missionsScreen', 'charSelectScreen', 'dexScreen', 'helpScreen', 'installScreen', 'resultScreen', 'pauseScreen'],
-  gearSlotFilter: 'head',
+  gearSlotPick: 'head',
+  gearFilter: 'all',
+  gearFilterQ: '',
+  _gearFilterBound: false,
+  _gearPickerScroll: 0,
+  gearItemPick: null,
   modeHubId: 'arcade',
   charPickStep: 1,
   charSagaFilter: 'all',
@@ -1046,7 +1051,7 @@ const UI = {
   resetInnerScrolls(screenEl) {
     if (!screenEl) return;
     const scrollables = screenEl.querySelectorAll(
-      '.char-grid-scroll, .menu-landing-scroll, .mode-hub-body, .island-bar, .grid, #weaponList, .skill-grid-scroll, [data-scroll-reset]'
+      '.char-grid-scroll, .menu-landing-scroll, .mode-hub-body, .island-bar, .grid, #weaponList, .skill-grid-scroll, .gear-picker, [data-scroll-reset]'
     );
     scrollables.forEach((el) => {
       try {
@@ -1928,9 +1933,10 @@ const UI = {
         : t('ui.hubStatPetsEmpty', { total: PET_ROSTER.length }));
       const stylesN = STYLES.filter(s => styleUnlocked(s)).length;
       setStat('hubStatStyle', t('ui.hubStatOutfits', { n: stylesN, total: STYLES.length }));
-      if (typeof gearOwnedCount === 'function' && typeof gearCatalogCount === 'function') {
-        setStat('hubStatGear', t('ui.hubStatGear', { n: gearOwnedCount(), total: gearCatalogCount() }));
-      }
+      const gearN = typeof gearEquippedCount === 'function' ? gearEquippedCount() : 0;
+      setStat('hubStatGear', typeof tOr === 'function'
+        ? tOr('gear.hubStat', '{n}/5', { n: gearN })
+        : (gearN + '/5'));
       const skillsN = skillUnlockedCount();
       const activeSk = skillById(save.skill || 'spiral_orb');
       const activeSp = equippedSuper();
@@ -4155,112 +4161,354 @@ const UI = {
     }
   },
 
-  renderGear() {
-    const slots = (typeof GEAR_SLOT_IDS !== 'undefined') ? GEAR_SLOT_IDS : ['head', 'chest', 'hands', 'legs', 'back'];
-    if (!slots.includes(this.gearSlotFilter)) this.gearSlotFilter = slots[0];
-    const ownedN = typeof gearOwnedCount === 'function' ? gearOwnedCount() : 0;
-    const totalN = typeof gearCatalogCount === 'function' ? gearCatalogCount() : 0;
-    const sumEl = document.getElementById('gearSummary');
-    if (sumEl) {
-      sumEl.style.display = 'block';
-      const mods = typeof gearCombatMods === 'function' ? gearCombatMods() : null;
-      const hp = mods && mods.maxHp ? ` · +${mods.maxHp} HP` : '';
-      sumEl.innerHTML = t('ui.hubStatGear', { n: ownedN, total: totalN }) + hp;
+  renderGear(opts) {
+    const pickerOnly = !!(opts && opts.pickerOnly);
+    const esc = (s) => String(s == null ? '' : s)
+      .split('&').join('&amp;')
+      .split('<').join('&lt;')
+      .split('>').join('&gt;')
+      .split('"').join('&quot;')
+      .split("'").join('&#39;');
+    const slots = typeof listGearSlots === 'function' ? listGearSlots() : [];
+    const eq = typeof getEquippedGear === 'function' ? getEquippedGear() : {};
+    if (!this.gearSlotPick || !slots.some((s) => s.id === this.gearSlotPick)) {
+      this.gearSlotPick = (slots[0] && slots[0].id) || 'head';
     }
-    const row = document.getElementById('gearSlotRow');
-    if (row) {
-      row.innerHTML = '';
+    if (!this.gearFilter || (typeof GEAR_UI_FILTERS !== 'undefined' && GEAR_UI_FILTERS.indexOf(this.gearFilter) < 0)) {
+      this.gearFilter = 'all';
+    }
+    if (!this.gearRarity) this.gearRarity = 'all';
+    const pickSlot = this.gearSlotPick;
+    const items = typeof listGearItems === 'function' ? listGearItems(pickSlot) : [];
+    let shown = typeof gearFilterItems === 'function'
+      ? gearFilterItems(items, this.gearFilter, this.gearFilterQ, this.gearRarity)
+      : items;
+    if (typeof gearSortItems === 'function') shown = gearSortItems(shown, eq);
+    if (this.gearItemPick && !items.some((it) => it.id === this.gearItemPick)) this.gearItemPick = null;
+    if (!this.gearItemPick) {
+      this.gearItemPick = eq[pickSlot] || (items.find((it) => {
+        const u = typeof gearUnlockState === 'function' ? gearUnlockState(it) : { unlocked: true };
+        return u.unlocked;
+      }) || items[0] || {}).id || null;
+    }
+
+    const pillFor = (item, unlock) => {
+      if (item && unlock && !unlock.unlocked) {
+        return `<span class="gear-pill gear-pill-lock">${esc(unlock.label || tOr('gear.pillLock', 'LOCK'))}</span>`;
+      }
+      const stat = item && (typeof gearHasStats === 'function' ? gearHasStats(item) : !!(item.hasStats && item.vanity !== true));
+      if (stat) return `<span class="gear-pill gear-pill-stat">${esc(tOr('gear.pillStat', 'STAT'))}</span>`;
+      if (item) return `<span class="gear-pill gear-pill-vanity">${esc(tOr('gear.pillVanity', 'LOOK'))}</span>`;
+      return `<span class="gear-pill">${esc(tOr('gear.empty', 'Leeg'))}</span>`;
+    };
+
+    const sumEl = document.getElementById('gearSummary');
+    if (!pickerOnly && sumEl) {
+      const filled = slots.filter((s) => eq[s.id]).length;
+      const statN = slots.reduce((n, s) => {
+        const it = typeof gearItemById === 'function' ? gearItemById(eq[s.id]) : null;
+        return n + (it && gearHasStats(it) ? 1 : 0);
+      }, 0);
+      const catalogN = (typeof GEAR_ITEMS !== 'undefined' && Array.isArray(GEAR_ITEMS)) ? GEAR_ITEMS.length : items.length;
+      sumEl.innerHTML =
+        `${tOr('gear.summarySlots', '<b>{n}</b>/5', { n: filled })} · ` +
+        `<span class="gear-pill gear-pill-stat">${esc(tOr('gear.pillStat', 'STAT'))} ${statN}</span> ` +
+        `<span class="gear-pill gear-pill-vanity">${esc(tOr('gear.pillVanity', 'LOOK'))} ${Math.max(0, filled - statN)}</span>` +
+        `<span class="gear-pill">${esc(tOr('gear.catalogN', '{n} items', { n: catalogN }))}</span>`;
+    }
+    const legend = document.getElementById('gearLegend');
+    if (!pickerOnly && legend) {
+      legend.innerHTML =
+        `<span class="gear-pill gear-pill-vanity">${esc(tOr('gear.pillVanity', 'LOOK'))}</span>` +
+        `<span class="gear-pill gear-pill-stat">${esc(tOr('gear.pillStat', 'STAT'))}</span>` +
+        `<span class="gear-pill gear-pill-lock">${esc(tOr('gear.pillLock', 'LOCK'))}</span>`;
+    }
+
+    const slotList = document.getElementById('gearSlotList');
+    if (!pickerOnly && slotList) {
+      slotList.innerHTML = '';
       for (const slot of slots) {
-        const eq = typeof gearEquippedItem === 'function' ? gearEquippedItem(slot) : null;
+        const sid = slot.id;
+        const rawItem = typeof gearItemById === 'function' ? gearItemById(eq[sid]) : null;
+        const item = (typeof contractGearItem === 'function' && rawItem) ? contractGearItem(rawItem) : rawItem;
+        const unlock = item && typeof gearUnlockState === 'function' ? gearUnlockState(item) : { unlocked: true };
         const btn = document.createElement('button');
         btn.type = 'button';
-        btn.className = 'gear-slot-btn' + (this.gearSlotFilter === slot ? ' active' : '');
-        btn.dataset.slot = slot;
-        btn.setAttribute('role', 'tab');
-        btn.setAttribute('aria-selected', this.gearSlotFilter === slot ? 'true' : 'false');
-        const name = document.createElement('span');
-        name.className = 'gear-slot-name';
-        name.textContent = typeof gearSlotLabel === 'function' ? gearSlotLabel(slot) : slot;
-        const itemEl = document.createElement('span');
-        itemEl.className = 'gear-slot-item';
-        itemEl.textContent = eq
-          ? (typeof gearItemLabel === 'function' ? gearItemLabel(eq) : eq.name)
-          : t('gear.empty');
-        btn.appendChild(name);
-        btn.appendChild(itemEl);
+        btn.className = 'gear-slot-card'
+          + (sid === pickSlot ? ' sel' : '')
+          + (item && unlock.unlocked && gearHasStats(item) ? ' kind-stat' : '')
+          + (item && !unlock.unlocked ? ' locked' : '')
+          + (!item ? ' empty' : '');
+        btn.setAttribute('data-gear-slot', sid);
+        btn.setAttribute('data-slot', sid);
+        btn.setAttribute('role', 'listitem');
+        btn.setAttribute('aria-pressed', sid === pickSlot ? 'true' : 'false');
+        const tint = (item && item.look && item.look.tint) || (item && item.color) || slot.color || '#1c2940';
+        const rar = item && item.rarity ? String(item.rarity) : '';
+        const sub = !item
+          ? tOr('gear.empty', 'Leeg')
+          : (!unlock.unlocked
+            ? (unlock.label || tOr('gear.pillLock', 'LOCK'))
+            : (gearItemName(item) + (rar ? ' · ' + rar : '')));
+        btn.innerHTML =
+          `<span class="gear-slot-swatch" style="background:${esc(tint)}"></span>` +
+          `<span class="gear-slot-copy">` +
+          `<span class="gear-slot-title">${esc(gearSlotName(sid))}</span>` +
+          `<span class="gear-slot-sub">${esc(sub)}</span>` +
+          `</span>` +
+          pillFor(item, unlock);
         bindPress(btn, () => {
-          this.gearSlotFilter = slot;
-          this.renderGear();
-        });
-        row.appendChild(btn);
-      }
-    }
-    const list = document.getElementById('gearList');
-    if (!list || typeof GEAR_ITEMS === 'undefined') return;
-    list.innerHTML = '';
-    const items = typeof gearItemsForSlot === 'function'
-      ? gearItemsForSlot(this.gearSlotFilter)
-      : GEAR_ITEMS.filter((it) => it.slot === this.gearSlotFilter);
-    for (const item of items) {
-      const tip = typeof gearTooltipModel === 'function' ? gearTooltipModel(item) : null;
-      const owned = tip ? tip.owned : false;
-      const gated = tip ? !tip.gate.ok : true;
-      const equipped = tip ? tip.equipped : false;
-      const el = document.createElement('div');
-      el.className = 'gear-card' + (equipped ? ' sel' : '') + ((owned && !gated) ? '' : ' locked');
-      el.dataset.gearId = item.id;
-      el.dataset.slot = item.slot;
-      const lines = typeof gearTooltipLines === 'function' ? gearTooltipLines(item) : [item.name];
-      el.title = lines.join(' · ');
-      const top = document.createElement('div');
-      top.className = 'gear-card-top';
-      const name = document.createElement('div');
-      name.className = 'gear-card-name';
-      name.textContent = typeof gearItemLabel === 'function' ? gearItemLabel(item) : item.name;
-      const flag = document.createElement('span');
-      flag.className = 'gear-flag ' + (item.kind === 'armour' ? 'armour' : (item.vanity ? 'vanity' : 'stats'));
-      flag.textContent = item.kind === 'armour'
-        ? t('gear.flagArmour')
-        : (item.vanity ? t('gear.flagVanity') : t('gear.flagStats'));
-      top.appendChild(name);
-      top.appendChild(flag);
-      el.appendChild(top);
-      const desc = document.createElement('div');
-      desc.className = 'gear-card-desc';
-      desc.textContent = typeof gearItemLabel === 'function' ? gearItemLabel(item, 'desc') : (item.desc || '');
-      el.appendChild(desc);
-      const meta = document.createElement('div');
-      meta.className = 'gear-card-meta';
-      const combat = typeof gearCombatLine === 'function' ? gearCombatLine(item) : '';
-      if (owned && equipped) meta.textContent = t('gear.equipped');
-      else if (owned && !gated) meta.textContent = combat || t('gear.equip');
-      else if (!tip || !tip.gate.levelOk) meta.textContent = t('gear.needLvl', { n: item.unlockLvl });
-      else if (tip && !tip.gate.timeOk) meta.textContent = t('gear.needDays', { n: item.unlockDays });
-      else meta.textContent = combat || '';
-      el.appendChild(meta);
-      if (owned && !gated) {
-        bindPress(el, () => {
           safeUiAction(() => {
-            if (equipped) {
-              const r = gearUnequipSlot(item.slot);
-              if (!r || !r.ok) return;
-              AudioSys.sfx('select');
-              this.renderGear();
-              this.renderMenu();
-              UI.toast(t('toast.gearUnequipped', { slot: gearSlotLabel(item.slot) }), 1800);
-              return;
-            }
-            const r = gearEquipItem(item.id);
-            if (!r || !r.ok) return;
-            if (!persistOrToast('gear')) return;
+            this.gearSlotPick = sid;
+            this.gearItemPick = null;
+            this._gearPickerScroll = 0;
             AudioSys.sfx('select');
             this.renderGear();
+          }, 'gearSlot/' + sid, 'Slot kiezen mislukt');
+        });
+        slotList.appendChild(btn);
+      }
+    }
+
+    const aside = document.getElementById('gearWeaponAside');
+    if (!pickerOnly && aside) {
+      const w = typeof weaponById === 'function' ? weaponById(save.weapon) : null;
+      const wName = w && typeof weaponLabel === 'function' ? weaponLabel(w) : (save.weapon || '—');
+      aside.innerHTML =
+        `<b>${esc(tOr('gear.weaponAside', 'Wapen'))}</b> · ${esc(wName)}` +
+        `<div class="gear-detail-sub">${esc(tOr('gear.weaponAsideHint', 'Blijft in Collectie → Wapens — geen 6e slot.'))}</div>`;
+    }
+
+    const cv = document.getElementById('gearDollCanvas');
+    if (!pickerOnly && cv && typeof drawGearHeroDoll === 'function') {
+      drawGearHeroDoll(cv, save);
+    } else if (!pickerOnly && cv && typeof Fighter === 'function') {
+      const cc = cv.getContext('2d');
+      cc.clearRect(0, 0, cv.width, cv.height);
+      const st = typeof styleById === 'function' ? styleById(save.style || 'classic') : { body: '#f2f5ff' };
+      cc.save();
+      cc.translate(cv.width / 2, cv.height - 18);
+      cc.scale(1.15, 1.15);
+      const preview = new Fighter({ isPlayer: true, x: 0, y: 0, color: st.body, style: st, scale: 1 });
+      preview.animT = 0.35;
+      preview.draw(cc);
+      cc.restore();
+    }
+
+    const detail = document.getElementById('gearDetail');
+    const rawPicked = typeof gearItemById === 'function' ? gearItemById(this.gearItemPick) : null;
+    const picked = (typeof contractGearItem === 'function' && rawPicked) ? contractGearItem(rawPicked) : rawPicked;
+    if (!pickerOnly && detail) {
+      if (!picked) {
+        detail.innerHTML = `<div class="gear-detail-sub">${esc(tOr('gear.pickHint', 'Tik een slot, dan een item.'))}</div>`;
+      } else {
+        const unlock = gearUnlockState(picked);
+        const tip = unlock.model || (typeof gearTooltipModel === 'function' ? gearTooltipModel(picked) : null);
+        const equippedHere = eq[picked.slot] === picked.id || eq[picked.slotId] === picked.id;
+        const kindPill = pillFor(picked, unlock);
+        const lockLine = unlock.unlocked
+          ? ''
+          : `<div class="gear-detail-sub" style="color:#ffd75e;margin-top:6px">${esc(tOr('gear.lockedLine', 'Op slot · {why}', { why: unlock.label || '' }))}</div>`;
+        const bonus = unlock.unlocked
+          ? (tip && tip.desc ? esc(tip.desc) + (tip.combatLine ? ' · ' + esc(tip.combatLine) : '') : esc(gearStatLine(picked)))
+          : esc(tOr('gear.lockNoStats', 'Geen stats tot het slot open is'));
+        const actions = unlock.unlocked
+          ? (`<div class="gear-detail-actions">` +
+            (equippedHere
+              ? `<button type="button" class="btn mode-btn b-gray big-touch" id="gearUnequipBtn"><div>${esc(tOr('gear.unequip', 'Uitdoen'))}</div></button>`
+              : `<button type="button" class="btn mode-btn b-continue big-touch" id="gearEquipBtn"><div>${esc(tOr('gear.equip', 'Aandoen'))}</div></button>`) +
+            `</div>`)
+          : '';
+        detail.innerHTML =
+          `<div class="gear-detail-title">${esc(gearItemName(picked))} ${kindPill}</div>` +
+          `<div class="gear-detail-sub">${bonus}</div>` +
+          lockLine + actions;
+        const eqBtn = document.getElementById('gearEquipBtn');
+        if (eqBtn) bindPress(eqBtn, () => {
+          safeUiAction(() => {
+            const res = (typeof gearEquipItem === 'function') ? gearEquipItem(picked.id) : equipGear(picked.id);
+            if (!res || !res.ok) {
+              const fail = gearUnlockState(picked);
+              UI.toast((res && res.label) || fail.label || tOr('toast.gearLocked', 'Nog op slot'), 1800, { tone: 'warn' });
+              return;
+            }
+            AudioSys.sfx('select');
+            UI.toast(tOr('toast.gearEquipped', '{name} aangedaan', { name: gearItemName(picked) }), 1800, { tone: 'ok' });
+            this.renderGear();
             this.renderMenu();
-            UI.toast(t('toast.gearEquipped', { name: gearItemLabel(item) }), 2000);
-          }, 'pickGear/' + item.id, 'Uitrusting kiezen mislukt');
+          }, 'equipGear/' + picked.id, 'Uitrusten mislukt');
+        });
+        const uqBtn = document.getElementById('gearUnequipBtn');
+        if (uqBtn) bindPress(uqBtn, () => {
+          safeUiAction(() => {
+            const sid = picked.slot || picked.slotId;
+            if (typeof gearUnequipSlot === 'function') gearUnequipSlot(sid);
+            else unequipGear(sid);
+            AudioSys.sfx('select');
+            UI.toast(tOr('toast.gearUnequipped', '{name} uitgedaan', { name: gearItemName(picked) }), 1600);
+            this.renderGear();
+            this.renderMenu();
+          }, 'unequipGear/' + (picked.slot || picked.slotId), 'Uitdoen mislukt');
         });
       }
-      list.appendChild(el);
+    }
+
+    const filterBar = document.getElementById('gearFilterBar');
+    if (filterBar) {
+      const labels = {
+        all: tOr('gear.filterAll', 'Alles'),
+        look: tOr('gear.pillVanity', 'LOOK'),
+        stat: tOr('gear.pillStat', 'STAT'),
+        lock: tOr('gear.pillLock', 'LOCK'),
+        owned: tOr('gear.filterOwned', 'Van jou'),
+      };
+      if (!this._gearFilterBound) {
+        filterBar.innerHTML = '';
+        const keys = (typeof GEAR_UI_FILTERS !== 'undefined') ? GEAR_UI_FILTERS : ['all', 'look', 'stat', 'lock', 'owned'];
+        for (const key of keys) {
+          const chip = document.createElement('button');
+          chip.type = 'button';
+          chip.className = 'gear-filter-btn';
+          chip.setAttribute('data-gear-filter', key);
+          chip.setAttribute('role', 'tab');
+          chip.textContent = labels[key] || key;
+          bindPress(chip, () => {
+            safeUiAction(() => {
+              this.gearFilter = key;
+              this._gearPickerScroll = 0;
+              AudioSys.sfx('select');
+              this.renderGear({ pickerOnly: true });
+            }, 'gearFilter/' + key, 'Filter mislukt');
+          });
+          filterBar.appendChild(chip);
+        }
+        this._gearFilterBound = true;
+      }
+      for (const chip of filterBar.querySelectorAll('[data-gear-filter]')) {
+        const key = chip.getAttribute('data-gear-filter');
+        chip.classList.toggle('sel', key === this.gearFilter);
+        chip.setAttribute('aria-selected', key === this.gearFilter ? 'true' : 'false');
+        chip.textContent = labels[key] || key;
+      }
+    }
+
+    const rarBar = document.getElementById('gearRarityBar');
+    if (rarBar) {
+      const present = (typeof gearRaritiesInList === 'function') ? gearRaritiesInList(items) : [];
+      const keys = ['all'].concat(present);
+      if (this.gearRarity !== 'all' && present.indexOf(this.gearRarity) < 0) this.gearRarity = 'all';
+      const sig = keys.join(',');
+      if (!this._gearRarityBound || rarBar.getAttribute('data-rar-keys') !== sig) {
+        rarBar.innerHTML = '';
+        rarBar.setAttribute('data-rar-keys', sig);
+        for (const key of keys) {
+          const chip = document.createElement('button');
+          chip.type = 'button';
+          chip.className = 'gear-filter-btn' + (key !== 'all' ? ' rar-' + key : '');
+          chip.setAttribute('data-gear-rarity', key);
+          chip.setAttribute('role', 'tab');
+          chip.textContent = key === 'all'
+            ? tOr('gear.filterRarityAll', 'Alle')
+            : tOr('gear.rar.' + key, key);
+          bindPress(chip, () => {
+            safeUiAction(() => {
+              this.gearRarity = key;
+              this._gearPickerScroll = 0;
+              AudioSys.sfx('select');
+              this.renderGear({ pickerOnly: true });
+            }, 'gearRarity/' + key, 'Rarity filter mislukt');
+          });
+          rarBar.appendChild(chip);
+        }
+        this._gearRarityBound = true;
+      }
+      for (const chip of rarBar.querySelectorAll('[data-gear-rarity]')) {
+        const key = chip.getAttribute('data-gear-rarity');
+        chip.classList.toggle('sel', key === this.gearRarity);
+        chip.setAttribute('aria-selected', key === this.gearRarity ? 'true' : 'false');
+      }
+    }
+
+    const qEl = document.getElementById('gearFilterQ');
+    if (qEl) {
+      qEl.placeholder = tOr('gear.filterSearch', 'Zoek in {n}…', { n: items.length });
+      if (qEl.value !== (this.gearFilterQ || '') && document.activeElement !== qEl) qEl.value = this.gearFilterQ || '';
+      if (!qEl.dataset.sfGearQ) {
+        qEl.dataset.sfGearQ = '1';
+        qEl.addEventListener('input', () => {
+          this.gearFilterQ = qEl.value || '';
+          this._gearPickerScroll = 0;
+          if (this._gearSearchT) {
+            try { clearTimeout(this._gearSearchT); } catch (_) {}
+          }
+          this._gearSearchT = setTimeout(() => {
+            this._gearSearchT = null;
+            this.renderGear({ pickerOnly: true });
+          }, 160);
+        });
+      }
+    }
+
+    const countEl = document.getElementById('gearFilterCount');
+    if (countEl) {
+      countEl.textContent = tOr('gear.filterCount', '{shown}/{total} in {slot}', {
+        shown: shown.length,
+        total: items.length,
+        slot: gearSlotName(pickSlot),
+      });
+    }
+
+    const picker = document.getElementById('gearPicker');
+    if (picker) {
+      const keepScroll = this._gearPickerScroll || picker.scrollTop || 0;
+      picker.innerHTML = '';
+      const frag = document.createDocumentFragment();
+      if (!shown.length) {
+        const empty = document.createElement('div');
+        empty.className = 'gear-filter-empty';
+        empty.textContent = tOr('gear.filterEmpty', 'Niets in deze filter');
+        frag.appendChild(empty);
+      }
+      for (const it of shown) {
+        const unlock = gearUnlockState(it);
+        const equippedHere = eq[it.slot] === it.id || eq[it.slotId] === it.id;
+        const el = document.createElement('button');
+        el.type = 'button';
+        el.className = 'gear-card'
+          + (this.gearItemPick === it.id ? ' sel' : '')
+          + (unlock.unlocked ? '' : ' locked')
+          + (equippedHere ? ' equipped' : '');
+        el.setAttribute('data-gear-id', it.id);
+        el.setAttribute('data-rarity', it.rarity || '');
+        el.setAttribute('aria-disabled', unlock.unlocked ? 'false' : 'true');
+        const tint = (it.look && it.look.tint) || it.color || '#333c55';
+        const rar = it.rarity ? String(it.rarity) : '';
+        const rarPill = rar
+          ? `<span class="gear-pill gear-pill-rar rar-${esc(rar)}">${esc(tOr('gear.rar.' + rar, rar))}</span>`
+          : '';
+        const meta = unlock.unlocked
+          ? (gearHasStats(it) ? gearStatLine(it) : tOr('gear.vanityHint', 'Geen stats — alleen look'))
+          : (unlock.label || tOr('gear.pillLock', 'LOCK'));
+        el.innerHTML =
+          `<span class="gear-card-swatch" style="background:${esc(tint)}"></span>` +
+          `<span class="gear-card-body"><span class="gear-card-name">${esc(gearItemName(it))} ${pillFor(it, unlock)} ${rarPill}</span>` +
+          `<span class="gear-card-meta">${esc(meta)}${equippedHere ? ' · ' + esc(tOr('gear.wearing', 'aan')) : ''}</span></span>`;
+        bindPress(el, () => {
+          safeUiAction(() => {
+            this.gearItemPick = it.id;
+            AudioSys.sfx('select');
+            if (!unlock.unlocked) {
+              UI.toast(tOr('toast.gearLocked', 'Nog op slot · {why}', { why: unlock.label || '' }), 1800, { tone: 'warn' });
+            }
+            const p = document.getElementById('gearPicker');
+            this._gearPickerScroll = p ? p.scrollTop : 0;
+            this.renderGear();
+          }, 'gearPick/' + it.id, 'Item kiezen mislukt');
+        });
+        frag.appendChild(el);
+      }
+      picker.appendChild(frag);
+      picker.scrollTop = keepScroll;
     }
   },
 

@@ -30,6 +30,7 @@
   "src/systems/input.js",
   "src/systems/fighter-move.js",
   "src/systems/aim-tutorial.js",
+  "src/systems/gear.js",
   "src/core/canvas.js",
   "src/render/draw-helpers.js",
   "src/render/tide-art.js",

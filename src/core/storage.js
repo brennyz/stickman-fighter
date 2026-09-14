@@ -994,6 +994,37 @@ function readSaveJson(raw) {
     merged.advSatanAt = Object.assign({}, parsed.advSatanAt || {});
     merged.zoneWeapons = Object.assign({}, parsed.zoneWeapons || {});
     merged.chestWeapons = Object.assign({}, parsed.chestWeapons || {});
+    {
+      const emptyEq = { head: null, chest: null, hands: null, legs: null, back: null };
+      const gIn = (parsed.gear && typeof parsed.gear === 'object') ? parsed.gear : {};
+      const eqSrc = (parsed.equipment && typeof parsed.equipment === 'object') ? parsed.equipment : {};
+      const eqOld = (parsed.gearEquipped && typeof parsed.gearEquipped === 'object') ? parsed.gearEquipped : {};
+      const equipped = Object.assign({}, emptyEq, (gIn.equipped && typeof gIn.equipped === 'object') ? gIn.equipped : {});
+      const eqPick = (sid) => {
+        const alias = sid === 'hands' ? 'arms' : (sid === 'back' ? 'aura' : null);
+        const v = equipped[sid] || eqSrc[sid] || (alias && eqSrc[alias]) || eqOld[sid] || (alias && eqOld[alias]);
+        return (typeof v === 'string' && v.trim()) ? String(v).trim().slice(0, 48) : null;
+      };
+      equipped.head = eqPick('head');
+      equipped.chest = eqPick('chest');
+      equipped.hands = eqPick('hands');
+      equipped.legs = eqPick('legs');
+      equipped.back = eqPick('back');
+      const owned = Object.assign({}, (gIn.owned && typeof gIn.owned === 'object') ? gIn.owned : {});
+      const ownOld = Object.assign(
+        {},
+        (parsed.gearOwned && typeof parsed.gearOwned === 'object') ? parsed.gearOwned : {},
+        (parsed.ownedGear && typeof parsed.ownedGear === 'object') ? parsed.ownedGear : {}
+      );
+      for (const [id, v] of Object.entries(ownOld)) {
+        if (!id || owned[id] || !v) continue;
+        owned[id] = (typeof v === 'object')
+          ? { at: Number(v.at) || 0, src: typeof v.src === 'string' ? v.src : 'grant' }
+          : { at: 0, src: 'grant' };
+      }
+      merged.gear = { schema: 1, equipped, owned };
+      if (parsed.createdAt != null) merged.createdAt = parsed.createdAt;
+    }
     if (parsed.chestDaily && typeof parsed.chestDaily === 'object') merged.chestDaily = Object.assign({}, parsed.chestDaily);
     {
       const emptyEq = { head: null, chest: null, hands: null, legs: null, back: null };
@@ -1797,6 +1828,36 @@ function sanitizeSave(s) {
     };
   } else {
     out.daily = null;
+  }
+  {
+    const gearNow = Date.now();
+    try {
+      out.createdAt = typeof sanitizeCreatedAt === 'function'
+        ? sanitizeCreatedAt(out.createdAt, out, gearNow)
+        : (Number(out.createdAt) > 1e11 ? Math.floor(Number(out.createdAt)) : gearNow);
+    } catch (_) {
+      out.createdAt = gearNow;
+    }
+    try {
+      if (typeof migrateFlatGearIntoBag === 'function') migrateFlatGearIntoBag(out);
+      if (typeof sanitizeGearSave === 'function') {
+        out.gear = sanitizeGearSave(out.gear, out, gearNow);
+        if (typeof grantStarterGear === 'function') grantStarterGear(out, gearNow);
+      } else {
+        out.gear = { schema: 1, equipped: { head: null, chest: null, hands: null, legs: null, back: null }, owned: {} };
+      }
+      if (typeof _dropFlatGearKeys === 'function') _dropFlatGearKeys(out);
+      else {
+        delete out.equipment;
+        delete out.ownedGear;
+        delete out.gearEquipped;
+        delete out.gearOwned;
+      }
+    } catch (_) {
+      out.gear = { schema: 1, equipped: { head: null, chest: null, hands: null, legs: null, back: null }, owned: {} };
+      delete out.equipment;
+      delete out.ownedGear;
+    }
   }
   if (!Array.isArray(out.vsPlayedIds)) out.vsPlayedIds = [];
   const played = [];

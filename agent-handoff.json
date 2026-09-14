@@ -734,6 +734,27 @@
       "text": "GEAR SYSTEMS (dual lane): 5-slot loadout, armour+cosmetics (most vanity, some stats), time+level gates, persist. Harden schema/migrate/unlock/save. Expand catalog substantially across head/chest/hands/legs/back. Same PR. No Versus.",
       "status": "done-in-code",
       "updated": "2026-09-14"
+    },
+    {
+      "id": "w-20260914T172800",
+      "from": "user",
+      "text": "SCHEMA DELTA: bind UI to save.gear {schema,equipped,owned} + createdAt. Drop flat save.equipment/ownedGear. Hub tile Uitrusting. Use #280 helpers (gearGateState, gearEquipItem, …).",
+      "status": "done-in-code",
+      "updated": "2026-09-14"
+    },
+    {
+      "id": "w-20260914T172500",
+      "from": "user",
+      "text": "Brendon: gear catalog will be LARGE — UI must scroll/filter/rarity ok with many items per slot, not assume a tiny list.",
+      "status": "done-in-code",
+      "updated": "2026-09-14"
+    },
+    {
+      "id": "w-20260914T172100",
+      "from": "user",
+      "text": "LOCKED gear contract v1: slots head/chest/hands/legs/back; weapon aside; save.equipment + ownedGear; cosmetics may have stats; lock copy Lv/train/dex/date/not found; hub tile equippedCount/5; draw-order back→legs→chest→head→hands→weapon→pet. Wire IDs even if systems PR unmerged.",
+      "status": "done-in-code",
+      "updated": "2026-09-14"
     }
   ],
   "agentRules": [

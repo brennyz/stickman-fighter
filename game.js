@@ -1312,6 +1312,37 @@ function readSaveJson(raw) {
     merged.advSatanAt = Object.assign({}, parsed.advSatanAt || {});
     merged.zoneWeapons = Object.assign({}, parsed.zoneWeapons || {});
     merged.chestWeapons = Object.assign({}, parsed.chestWeapons || {});
+    {
+      const emptyEq = { head: null, chest: null, hands: null, legs: null, back: null };
+      const gIn = (parsed.gear && typeof parsed.gear === 'object') ? parsed.gear : {};
+      const eqSrc = (parsed.equipment && typeof parsed.equipment === 'object') ? parsed.equipment : {};
+      const eqOld = (parsed.gearEquipped && typeof parsed.gearEquipped === 'object') ? parsed.gearEquipped : {};
+      const equipped = Object.assign({}, emptyEq, (gIn.equipped && typeof gIn.equipped === 'object') ? gIn.equipped : {});
+      const eqPick = (sid) => {
+        const alias = sid === 'hands' ? 'arms' : (sid === 'back' ? 'aura' : null);
+        const v = equipped[sid] || eqSrc[sid] || (alias && eqSrc[alias]) || eqOld[sid] || (alias && eqOld[alias]);
+        return (typeof v === 'string' && v.trim()) ? String(v).trim().slice(0, 48) : null;
+      };
+      equipped.head = eqPick('head');
+      equipped.chest = eqPick('chest');
+      equipped.hands = eqPick('hands');
+      equipped.legs = eqPick('legs');
+      equipped.back = eqPick('back');
+      const owned = Object.assign({}, (gIn.owned && typeof gIn.owned === 'object') ? gIn.owned : {});
+      const ownOld = Object.assign(
+        {},
+        (parsed.gearOwned && typeof parsed.gearOwned === 'object') ? parsed.gearOwned : {},
+        (parsed.ownedGear && typeof parsed.ownedGear === 'object') ? parsed.ownedGear : {}
+      );
+      for (const [id, v] of Object.entries(ownOld)) {
+        if (!id || owned[id] || !v) continue;
+        owned[id] = (typeof v === 'object')
+          ? { at: Number(v.at) || 0, src: typeof v.src === 'string' ? v.src : 'grant' }
+          : { at: 0, src: 'grant' };
+      }
+      merged.gear = { schema: 1, equipped, owned };
+      if (parsed.createdAt != null) merged.createdAt = parsed.createdAt;
+    }
     if (parsed.chestDaily && typeof parsed.chestDaily === 'object') merged.chestDaily = Object.assign({}, parsed.chestDaily);
     {
       const emptyEq = { head: null, chest: null, hands: null, legs: null, back: null };
@@ -2116,6 +2147,36 @@ function sanitizeSave(s) {
   } else {
     out.daily = null;
   }
+  {
+    const gearNow = Date.now();
+    try {
+      out.createdAt = typeof sanitizeCreatedAt === 'function'
+        ? sanitizeCreatedAt(out.createdAt, out, gearNow)
+        : (Number(out.createdAt) > 1e11 ? Math.floor(Number(out.createdAt)) : gearNow);
+    } catch (_) {
+      out.createdAt = gearNow;
+    }
+    try {
+      if (typeof migrateFlatGearIntoBag === 'function') migrateFlatGearIntoBag(out);
+      if (typeof sanitizeGearSave === 'function') {
+        out.gear = sanitizeGearSave(out.gear, out, gearNow);
+        if (typeof grantStarterGear === 'function') grantStarterGear(out, gearNow);
+      } else {
+        out.gear = { schema: 1, equipped: { head: null, chest: null, hands: null, legs: null, back: null }, owned: {} };
+      }
+      if (typeof _dropFlatGearKeys === 'function') _dropFlatGearKeys(out);
+      else {
+        delete out.equipment;
+        delete out.ownedGear;
+        delete out.gearEquipped;
+        delete out.gearOwned;
+      }
+    } catch (_) {
+      out.gear = { schema: 1, equipped: { head: null, chest: null, hands: null, legs: null, back: null }, owned: {} };
+      delete out.equipment;
+      delete out.ownedGear;
+    }
+  }
   if (!Array.isArray(out.vsPlayedIds)) out.vsPlayedIds = [];
   const played = [];
   for (const raw of out.vsPlayedIds) {
@@ -2170,7 +2231,7 @@ const I18N = {
     menu: {
       continue: 'Verder spelen', adventure: 'Avontuur', adventureSub: 'Verhaal · eilanden · bazen',
       arcade: 'Arcade', arcadeSub: 'Training · Muur · Muntjes', versus: '2 spelers', versusSub: 'Lokaal',
-      collect: 'Collectie', collectSub: 'Wapens · stijl · boek', music: 'Muziek', missions: 'Missies',
+      collect: 'Collectie', collectSub: 'Wapens · figuur · boek', music: 'Muziek', missions: 'Missies',
       summons: 'Summons', summonsSub: 'Dagelijkse kist · wapen & pet',
       options: 'Opties', tips: 'Tips', fresh: 'Verse versie', install: 'Zet in app-lade', installSub: 'Één icoon, zoals een echte app',
       pressStart: 'insert coin', missionReady: 'missie klaar', dayBonus: 'Dagbonus',
@@ -2184,7 +2245,8 @@ const I18N = {
     hub: {
       step: 'Stap 2 · Kies modus', solo: 'SOLO', collection: 'COLLECTIE',
       arcadeTitle: 'Arcade', arcadeSub: 'Snelle sessies · save blijft hier',
-      collectTitle: 'Collectie', collectSub: 'Wapens · pets · stijl · boek',
+      collectTitle: 'Collectie', collectSub: 'Uitrusting · wapens · pets · stijl',
+      gear: 'Uitrusting', gearSub: 'Slots · look',
       training: 'Training', trainingSub: '1v1 · RabbitRobot · oefenen',
       wall: 'Muur Slopen', wallSub: '60 sec · combo = sneller',
       mats: 'Muntjes', matsSub: '45 sec · munten → pet coins',
@@ -2327,7 +2389,7 @@ const I18N = {
     menu: {
       continue: 'Continue', adventure: 'Adventure', adventureSub: 'Story · islands · bosses',
       arcade: 'Arcade', arcadeSub: 'Training · Wall · Coins', versus: '2 players', versusSub: 'Local',
-      collect: 'Collection', collectSub: 'Weapons · style · book', music: 'Music', missions: 'Missions',
+      collect: 'Collection', collectSub: 'Weapons · figure · book', music: 'Music', missions: 'Missions',
       summons: 'Summons', summonsSub: 'Daily chest · weapon & pet',
       options: 'Options', tips: 'Tips', fresh: 'Fresh version', install: 'Add as app', installSub: 'One icon, like a real app',
       pressStart: 'insert coin', missionReady: 'mission ready', dayBonus: 'Daily bonus',
@@ -2341,7 +2403,8 @@ const I18N = {
     hub: {
       step: 'Step 2 · Pick mode', solo: 'SOLO', collection: 'COLLECTION',
       arcadeTitle: 'Arcade', arcadeSub: 'Quick sessions · save stays here',
-      collectTitle: 'Collection', collectSub: 'Weapons · pets · style · book',
+      collectTitle: 'Collection', collectSub: 'Gear · weapons · pets · style',
+      gear: 'Gear', gearSub: 'Slots · look',
       training: 'Training', trainingSub: '1v1 · RabbitRobot · practice',
       wall: 'Wall Smash', wallSub: '60 sec · combo = faster',
       mats: 'Coins', matsSub: '45 sec · coins → pet coins',
@@ -2498,7 +2561,8 @@ const I18N = {
     hub: {
       step: 'Schritt 2 · Modus wählen', solo: 'SOLO', collection: 'SAMMLUNG',
       arcadeTitle: 'Arcade', arcadeSub: 'Schnelle Runden · Save bleibt hier',
-      collectTitle: 'Sammlung', collectSub: 'Waffen · Pets · Stil · Buch',
+      collectTitle: 'Sammlung', collectSub: 'Ausrüstung · Waffen · Pets · Stil',
+      gear: 'Ausrüstung', gearSub: 'Slots · Look',
       training: 'Training', trainingSub: '1v1 · RabbitRobot · Üben',
       wall: 'Mauer', wallSub: '60 Sek · Combo = schneller',
       mats: 'Münzen', matsSub: '45 Sek · Münzen → Pet-Coins',
@@ -2641,6 +2705,7 @@ const I18N = {
       step: 'Étape 2 · Choisir le mode', solo: 'SOLO', collection: 'COLLECTION',
       arcadeTitle: 'Arcade', arcadeSub: 'Sessions rapides · sauvegarde ici',
       collectTitle: 'Collection', collectSub: 'Armes · pets · style · bestiaire',
+      gear: 'Équipement', gearSub: 'Slots · look',
       training: 'Entraînement', trainingSub: '1v1 · RabbitRobot · pratique',
       wall: 'Mur', wallSub: '60 s · combo = plus vite',
       mats: 'Pièces', matsSub: '45 s · pièces → pet coins',
@@ -2783,6 +2848,7 @@ const I18N = {
       step: 'Paso 2 · Elige modo', solo: 'SOLO', collection: 'COLECCIÓN',
       arcadeTitle: 'Arcade', arcadeSub: 'Sesiones rápidas · partida aquí',
       collectTitle: 'Colección', collectSub: 'Armas · pets · estilo · bestiario',
+      gear: 'Equipo', gearSub: 'Slots · look',
       training: 'Entrenamiento', trainingSub: '1v1 · RabbitRobot · practicar',
       wall: 'Muro', wallSub: '60 s · combo = más rápido',
       mats: 'Monedas', matsSub: '45 s · monedas → pet coins',
@@ -3065,6 +3131,7 @@ function applyLangStaticScreens() {
     ['btnSkills', 'hub.skills', 'hub.skillsSub'],
     ['btnUpgrades', 'hub.upgrades', 'hub.upgradesSub'],
     ['btnDex', 'hub.dex', 'hub.dexSub'],
+    ['btnGear', 'hub.gear', 'hub.gearSub'],
   ];
   for (const [id, titleKey, subKey] of modeRows) {
     const btn = document.getElementById(id);
@@ -3176,8 +3243,8 @@ function applyLangStaticScreens() {
   setText('gambleSub', 'ui.gambleSub');
   setText('styleScreenHead', 'ui.styleHead');
   setText('styleScreenSub', 'ui.styleSub');
-  setText('gearScreenHead', 'gear.title');
-  setText('gearScreenSub', 'gear.sub');
+  setText('gearScreenHead', 'ui.gearHead');
+  setText('gearScreenSub', 'ui.gearSub');
   setText('skillScreenHead', 'ui.skillSummaryHead');
   setText('skillScreenSub', 'ui.skillSub');
   setText('upgradeScreenHead', 'ui.skillHead');
@@ -3372,6 +3439,7 @@ function applyLang() {
     else if (active === 'summonScreen' && typeof UI.renderSummon === 'function') UI.renderSummon();
     else if (active === 'upgradeScreen' && typeof UI.renderUpgrades === 'function') UI.renderUpgrades();
     else if (active === 'styleScreen' && typeof UI.renderStyle === 'function') UI.renderStyle();
+    else if (active === 'gearScreen' && typeof UI.renderGear === 'function') UI.renderGear();
     else if (active === 'skillScreen' && typeof UI.renderSkills === 'function') UI.renderSkills();
     else if (active === 'charSelectScreen' && typeof UI.renderCharSelect === 'function') UI.renderCharSelect();
     else if (active === 'levelScreen' && typeof UI.renderLevels === 'function') UI.renderLevels();
@@ -13819,6 +13887,9 @@ function seedNlGameStrings() {
     eggNone: 'Geen actief ei-pet',
     eggFloat: '{name} zweeft nu mee!',
     styleEquipped: '{name} uitgerust',
+    gearEquipped: '{name} aangedaan',
+    gearUnequipped: '{name} uitgedaan',
+    gearLocked: 'Nog op slot · {why}',
     skillUnlock: 'Nieuwe skill: {name}!',
     skillEquipped: '{name} uitgerust als special',
     superEquipped: '{name} uitgerust als nood-super',
@@ -14133,6 +14204,8 @@ function seedNlGameStrings() {
     gambleGoStart: 'START!',
     styleHead: 'Stijl',
     styleSub: 'Outfits met bonus — level, training, monsterboek · hover voor tooltip',
+    gearHead: 'Uitrusting',
+    gearSub: '5 slots · look vs stats · level- en tijdslot',
     styleActive: 'Actief',
     stylePick: 'Tik om te kiezen',
     styleIslandGate: 'Avontuur-cap Lv {cap} · stijl unlock Lv {need}',
@@ -14604,6 +14677,53 @@ function seedNlFromRuntime() {
       if (m && m.label) I18N.nl.pickup[kind] = m.label;
     }
   }
+  if (!I18N.nl.gear) I18N.nl.gear = {};
+  Object.assign(I18N.nl.gear, {
+    hubStat: '{n}/5',
+    summarySlots: '<b>{n}</b>/5',
+    pillVanity: 'LOOK',
+    pillStat: 'STAT',
+    pillLock: 'LOCK',
+    empty: 'Leeg',
+    pickHint: 'Tik een slot, dan een item.',
+    lockedLine: 'Op slot · {why}',
+    equip: 'Aandoen',
+    unequip: 'Uitdoen',
+    wearing: 'aan',
+    vanityHint: 'Geen stats — alleen look',
+    statHint: 'Met gevechtsbonus',
+    lockLevel: 'Lv {n}',
+    lockTrain: '{n}× training',
+    lockDex: '{n} monsters',
+    lockTime: 'Vanaf {when}',
+    lockTimeDate: 'Vanaf datum',
+    lockDays: '{n} dagen',
+    lockAdv: 'Avontuur Lv {n}',
+    lockDiff: 'Nog niet vrij',
+    lockOwned: 'Nog niet gevonden',
+    lockNoStats: 'Geen stats tot het slot open is',
+    filterAll: 'Alles',
+    filterOwned: 'Van jou',
+    filterSearch: 'Zoek in {n}…',
+    filterEmpty: 'Niets in deze filter',
+    filterRarityAll: 'Alle',
+    filterCount: '{shown}/{total} in {slot}',
+    rar: {
+      common: 'common', uncommon: 'uncommon', rare: 'rare', epic: 'epic',
+      legendary: 'legendary', mythic: 'mythic', nightmare: 'nightmare', hell: 'hell',
+    },
+    catalogN: '{n} items',
+    weaponAside: 'Wapen',
+    weaponAsideHint: 'Blijft in Collectie → Wapens — geen 6e slot.',
+    slot: { head: 'Hoofd', chest: 'Borst', hands: 'Handen', legs: 'Benen', back: 'Rug' },
+    item: {
+      cap_plain: 'Linnen pet', helm_leaf: 'Leaf-helm', helm_iron: 'IJzeren helm', helm_moon: 'Maan-kap', helm_relic: 'Relikwie-helm',
+      shirt_plain: 'Hemd', coat_crimson: 'Rode mantel', vest_hide: 'Huid-vest', plate_dawn: 'Dageraad-plaat',
+      wraps_plain: 'Doek-wraps', bracers_wood: 'Houten braces', gloves_gold: 'Gouden handschoenen',
+      sandals_plain: 'Sandalen', boots_trail: 'Pad-laarzen', greaves_iron: 'IJzeren scheenplaten',
+      cape_dust: 'Stof-cape', cape_ember: 'Ember-cape', cape_void: 'Void-cape',
+    },
+  });
 }
 
 function mergeI18nCatalogs() {
@@ -14620,6 +14740,52 @@ function mergeI18nCatalogs() {
 }
 
 const CATALOG_EN = {
+  gear: {
+    hubStat: '{n}/5',
+    summarySlots: '<b>{n}</b>/5',
+    pillVanity: 'LOOK',
+    pillStat: 'STAT',
+    pillLock: 'LOCK',
+    empty: 'empty',
+    pickHint: 'Tap a slot, then an item.',
+    lockedLine: 'Locked · {why}',
+    equip: 'Equip',
+    unequip: 'Unequip',
+    wearing: 'on',
+    vanityHint: 'No stats — look only',
+    statHint: 'Has a combat bonus',
+    lockLevel: 'Lv {n}',
+    lockTrain: '{n}× training',
+    lockDex: '{n} monsters',
+    lockTime: 'From {when}',
+    lockTimeDate: 'From date',
+    lockDays: '{n} days',
+    lockAdv: 'Adventure Lv {n}',
+    lockDiff: 'Not open yet',
+    lockOwned: 'Not found yet',
+    lockNoStats: 'No stats until unlocked',
+    filterAll: 'All',
+    filterOwned: 'Owned',
+    filterSearch: 'Search {n}…',
+    filterEmpty: 'Nothing in this filter',
+    filterRarityAll: 'All',
+    filterCount: '{shown}/{total} in {slot}',
+    rar: {
+      common: 'common', uncommon: 'uncommon', rare: 'rare', epic: 'epic',
+      legendary: 'legendary', mythic: 'mythic', nightmare: 'nightmare', hell: 'hell',
+    },
+    catalogN: '{n} items',
+    weaponAside: 'Weapon',
+    weaponAsideHint: 'Stays in Collection → Weapons — not a 6th slot.',
+    slot: { head: 'Head', chest: 'Chest', hands: 'Hands', legs: 'Legs', back: 'Back' },
+    item: {
+      cap_plain: 'Linen cap', helm_leaf: 'Leaf helm', helm_iron: 'Iron helm', helm_moon: 'Moon cap', helm_relic: 'Relic helm',
+      shirt_plain: 'Shirt', coat_crimson: 'Crimson coat', vest_hide: 'Hide vest', plate_dawn: 'Dawn plate',
+      wraps_plain: 'Cloth wraps', bracers_wood: 'Wood bracers', gloves_gold: 'Gold gloves',
+      sandals_plain: 'Sandals', boots_trail: 'Trail boots', greaves_iron: 'Iron greaves',
+      cape_dust: 'Dust cape', cape_ember: 'Ember cape', cape_void: 'Void cape',
+    },
+  },
   ach: {
     first_win: { name: 'First triumph', desc: 'Win your first level' },
     lv10: { name: 'Growing ninja', desc: 'Reach fighter Lv 10' },
@@ -14954,6 +15120,9 @@ const CATALOG_EN = {
     eggNone: 'No active egg pet',
     eggFloat: '{name} floats along now!',
     styleEquipped: '{name} equipped',
+    gearEquipped: '{name} equipped',
+    gearUnequipped: '{name} removed',
+    gearLocked: 'Still locked · {why}',
     skillUnlock: 'New skill: {name}!',
     skillEquipped: '{name} equipped as special',
     superEquipped: '{name} equipped as emergency super',
@@ -15136,6 +15305,8 @@ const CATALOG_EN = {
     gambleGoStart: 'START!',
     styleHead: 'Style',
     styleSub: 'Outfits with bonus — level, training, monster book · hover for tooltip',
+    gearHead: 'Gear',
+    gearSub: '5 slots · look vs stats · level and time locks',
     styleActive: 'Active',
     stylePick: 'Tap to equip',
     styleIslandGate: 'Adventure cap Lv {cap} · style unlock Lv {need}',
@@ -22906,6 +23077,446 @@ function drawAimTutorial(c, g) {
   c.textBaseline = 'middle';
   c.fillText(got, gotX + gotW / 2, gotY + gotH / 2);
   c.restore();
+}
+/* --- src/systems/gear.js --- */
+/* ============================== GEAR UI ADAPTER ========================
+ * Char-screen lane. Schema: docs/GEAR-SYSTEM.md (#280).
+ * Save: createdAt + save.gear { schema, equipped, owned:{id:{at,src}} }.
+ * Flat save.equipment / save.ownedGear migrate once then drop.
+ * Do not redeclare GEAR_SLOT_IDS, gearItemById, sanitizeGearSave, gearEquipItem.
+ */
+const GEAR_DRAW_ORDER = ['back', 'legs', 'chest', 'head', 'hands', 'weapon', 'pet'];
+const GEAR_SLOT_DRAW_ORDER = ['back', 'legs', 'chest', 'head', 'hands'];
+const GEAR_UI_FILTERS = ['all', 'look', 'stat', 'lock', 'owned'];
+const GEAR_RARITY_ORDER = ['common', 'uncommon', 'rare', 'epic', 'legendary', 'mythic', 'nightmare', 'hell'];
+const GEAR_RARITY_RANK = {
+  common: 1, uncommon: 2, rare: 3, epic: 4, legendary: 5, mythic: 6, nightmare: 7, hell: 8,
+};
+
+function _gearSlotIds() {
+  return (typeof GEAR_SLOT_IDS !== 'undefined' && Array.isArray(GEAR_SLOT_IDS) && GEAR_SLOT_IDS.length === 5)
+    ? GEAR_SLOT_IDS.slice()
+    : ['head', 'chest', 'hands', 'legs', 'back'];
+}
+
+function listGearSlots() {
+  const colors = { head: '#7cf5ff', chest: '#ffd75e', hands: '#5ad06a', legs: '#c47aff', back: '#ff6b9d' };
+  if (typeof GEAR_SLOTS !== 'undefined' && Array.isArray(GEAR_SLOTS)) {
+    for (const s of GEAR_SLOTS) {
+      if (s && s.id && (s.accent || s.color)) colors[s.id] = s.accent || s.color;
+    }
+  }
+  return _gearSlotIds().map((id) => ({ id, color: colors[id] || '#9db1e3' }));
+}
+
+function _emptyEq() {
+  return { head: null, chest: null, hands: null, legs: null, back: null };
+}
+
+function contractGearItem(raw) {
+  if (!raw || typeof raw !== 'object' || !raw.id) return null;
+  const slotId = raw.slotId || raw.slot || null;
+  if (!slotId || _gearSlotIds().indexOf(slotId) < 0) return null;
+  const mods = (raw.mods && typeof raw.mods === 'object' && !Array.isArray(raw.mods)) ? raw.mods : null;
+  const hasModKeys = !!(mods && Object.keys(mods).length);
+  const vanity = raw.vanity === true;
+  const kind = raw.kind === 'armour' ? 'armour' : 'cosmetic';
+  const isCosmetic = raw.isCosmetic != null ? !!raw.isCosmetic : (kind === 'cosmetic');
+  /* Cosmetic-first often hasStats false; some cosmetics have real mods. Vanity never applies stats. */
+  const hasStats = vanity ? false : (raw.hasStats === true || hasModKeys);
+  return {
+    id: String(raw.id).slice(0, 48),
+    slotId,
+    slot: slotId,
+    kind,
+    isCosmetic,
+    hasStats: !!(hasStats && hasModKeys),
+    rarity: typeof raw.rarity === 'string' ? raw.rarity : 'common',
+    icon: raw.icon || null,
+    needLvl: Math.floor(Number(raw.needLvl || raw.unlockLvl) || 0),
+    needTrain: Math.floor(Number(raw.needTrain) || 0),
+    needDex: Math.floor(Number(raw.needDex) || 0),
+    needTime: typeof raw.needTime === 'string' ? raw.needTime : null,
+    needDays: Math.floor(Number(raw.unlockDays || raw.needDays) || 0),
+    unlockLvl: Math.max(1, Math.floor(Number(raw.unlockLvl || raw.needLvl) || 1)),
+    unlockDays: Math.max(1, Math.floor(Number(raw.unlockDays || raw.needDays) || 1)),
+    needAdvUnlocked: raw.needAdvUnlocked != null ? Math.floor(Number(raw.needAdvUnlocked) || 0) : null,
+    needDiff: raw.needDiff === 'nightmare' || raw.needDiff === 'hell' ? raw.needDiff : null,
+    mods: (hasStats && hasModKeys) ? mods : null,
+    draw: raw.draw || raw.look || null,
+    look: raw.look || null,
+    i18n: raw.i18n || ('gear.item.' + raw.id),
+    name: raw.name || raw.nameEn || raw.id,
+    nameEn: raw.nameEn || raw.name || raw.id,
+    vanity,
+    color: (raw.look && raw.look.tint) || raw.color || '#9db1e3',
+  };
+}
+
+function listGearItems(slotId) {
+  const want = slotId || null;
+  let list = [];
+  if (typeof gearItemsForSlot === 'function') list = gearItemsForSlot(want) || [];
+  else if (typeof GEAR_ITEMS !== 'undefined' && Array.isArray(GEAR_ITEMS)) {
+    list = GEAR_ITEMS.filter((it) => !want || it.slot === want || it.slotId === want);
+  }
+  return list.map(contractGearItem).filter(Boolean);
+}
+
+function _dropFlatGearKeys(st) {
+  if (!st || typeof st !== 'object') return st;
+  delete st.equipment;
+  delete st.ownedGear;
+  delete st.gearEquipped;
+  delete st.gearOwned;
+  return st;
+}
+
+function _ensureGearBag(st) {
+  if (!st || typeof st !== 'object') return st;
+  if (typeof ensureGearSave === 'function') ensureGearSave(st);
+  else {
+    if (!st.gear || typeof st.gear !== 'object' || Array.isArray(st.gear)) {
+      st.gear = { schema: 1, equipped: _emptyEq(), owned: {} };
+    }
+    if (!st.gear.equipped || typeof st.gear.equipped !== 'object') st.gear.equipped = _emptyEq();
+    if (!st.gear.owned || typeof st.gear.owned !== 'object') st.gear.owned = {};
+    st.gear.schema = 1;
+  }
+  _dropFlatGearKeys(st);
+  return st;
+}
+
+function getEquippedGear() {
+  const out = _emptyEq();
+  if (typeof save === 'object' && save) _ensureGearBag(save);
+  for (const sid of _gearSlotIds()) {
+    let id = null;
+    if (typeof gearEquippedId === 'function') id = gearEquippedId(sid);
+    if (!id && typeof save === 'object' && save && save.gear && save.gear.equipped) id = save.gear.equipped[sid];
+    out[sid] = (typeof id === 'string' && id) ? id : null;
+  }
+  return out;
+}
+
+function gearOwned(item) {
+  if (!item) return false;
+  const id = typeof item === 'string' ? item : item.id;
+  if (typeof gearItemOwned === 'function') return !!gearItemOwned(id);
+  if (typeof save === 'object' && save) _ensureGearBag(save);
+  return !!(save && save.gear && save.gear.owned && save.gear.owned[id]);
+}
+
+function _lockCopy(gate, need, when) {
+  if (gate === 'owned') {
+    return typeof tOr === 'function' ? tOr('gear.lockOwned', 'Nog niet gevonden') : 'Nog niet gevonden';
+  }
+  if (gate === 'level') {
+    return typeof tOr === 'function' ? tOr('gear.lockLevel', 'Lv {n}', { n: need }) : ('Lv ' + need);
+  }
+  if (gate === 'train') {
+    return typeof tOr === 'function' ? tOr('gear.lockTrain', '{n}× training', { n: need }) : (need + '× training');
+  }
+  if (gate === 'dex') {
+    return typeof tOr === 'function' ? tOr('gear.lockDex', '{n} monsters', { n: need }) : (need + ' monsters');
+  }
+  if (gate === 'time' || gate === 'days') {
+    if (need != null && need !== '') {
+      return typeof tOr === 'function' ? tOr('gear.lockDays', '{n} dagen', { n: need }) : (need + ' dagen');
+    }
+    return typeof tOr === 'function' ? tOr('gear.lockTime', 'Vanaf {when}', { when: when || 'datum' }) : ('Vanaf ' + (when || 'datum'));
+  }
+  if (gate === 'adventure' || gate === 'adv') {
+    return typeof tOr === 'function' ? tOr('gear.lockAdv', 'Avontuur Lv {n}', { n: need }) : ('Avontuur Lv ' + need);
+  }
+  if (gate === 'diff') {
+    return typeof tOr === 'function' ? tOr('gear.lockDiff', 'Nog niet vrij') : 'Nog niet vrij';
+  }
+  return typeof tOr === 'function' ? tOr('gear.pillLock', 'LOCK') : 'LOCK';
+}
+
+function _dexN() {
+  try {
+    if (typeof dexCount === 'function') return dexCount();
+  } catch (_) {}
+  if (typeof save === 'object' && save && save.dex && typeof save.dex === 'object') {
+    return Object.keys(save.dex).length;
+  }
+  return 0;
+}
+
+function gearUnlockState(item) {
+  const raw = (item && item.id && typeof gearItemById === 'function') ? (gearItemById(item.id) || item) : item;
+  const it = contractGearItem(raw) || raw;
+  if (!it) return { unlocked: true, gate: null, label: '', model: null };
+  if (!gearOwned(it)) {
+    return { unlocked: false, gate: 'owned', label: _lockCopy('owned'), model: null };
+  }
+  if (typeof gearGateState === 'function') {
+    const g = gearGateState(raw && raw.unlockLvl != null ? raw : it);
+    if (g && !g.ok) {
+      const why = (g.reasons && g.reasons[0]) || 'locked';
+      if (why === 'level') return { unlocked: false, gate: 'level', need: g.needLvl, label: _lockCopy('level', g.needLvl), model: g };
+      if (why === 'time') return { unlocked: false, gate: 'time', need: g.needDays, label: _lockCopy('days', g.needDays), model: g };
+      if (why === 'adventure') return { unlocked: false, gate: 'adv', need: it.needAdvUnlocked || g.needLvl, label: _lockCopy('adv', it.needAdvUnlocked || g.needLvl), model: g };
+      if (why === 'diff') return { unlocked: false, gate: 'diff', label: _lockCopy('diff'), model: g };
+      return { unlocked: false, gate: why, label: _lockCopy(why, g.needLvl), model: g };
+    }
+    const tip = typeof gearTooltipModel === 'function' ? gearTooltipModel(raw) : null;
+    return { unlocked: true, gate: null, label: '', model: tip || g };
+  }
+  const lvl = (typeof save === 'object' && save) ? (save.lvl || 1) : 1;
+  if ((it.unlockLvl || it.needLvl) && lvl < (it.unlockLvl || it.needLvl)) {
+    const need = it.unlockLvl || it.needLvl;
+    return { unlocked: false, gate: 'level', need, label: _lockCopy('level', need) };
+  }
+  return { unlocked: true, gate: null, label: '', model: null };
+}
+
+function gearCanWear(item) {
+  if (!item) return { ok: false, reason: 'missing' };
+  if (typeof gearCanEquip === 'function') {
+    const can = gearCanEquip(item.id);
+    if (!can || !can.ok) {
+      const unlock = gearUnlockState(item);
+      return { ok: false, reason: (can && can.reason) || unlock.gate || 'locked', label: unlock.label };
+    }
+    return { ok: true };
+  }
+  const unlock = gearUnlockState(item);
+  if (!unlock.unlocked) return { ok: false, reason: unlock.gate || 'locked', label: unlock.label };
+  return { ok: true };
+}
+
+function gearItemName(item) {
+  if (!item) return '';
+  if (typeof gearItemLabel === 'function') return gearItemLabel(item);
+  if (typeof tOr === 'function') return tOr('gear.item.' + item.id, item.name || item.id);
+  return item.name || item.id;
+}
+
+function gearSlotName(slotId) {
+  if (typeof gearSlotLabel === 'function') return gearSlotLabel(slotId);
+  if (typeof tOr === 'function') return tOr('gear.slot.' + slotId, slotId);
+  return slotId;
+}
+
+function gearHasStats(item) {
+  const it = contractGearItem(item) || item;
+  if (!it) return false;
+  if (it.vanity === true) return false;
+  if (typeof gearItemHasCombatStats === 'function' && (item && item.mods)) {
+    return !!gearItemHasCombatStats(item);
+  }
+  return !!(it.hasStats && it.mods);
+}
+
+function gearStatLine(item) {
+  if (typeof gearTooltipModel === 'function') {
+    const m = gearTooltipModel(item);
+    if (m) {
+      if (!m.appliesStats) {
+        return typeof tOr === 'function' ? tOr('gear.vanityHint', 'Geen stats — alleen look') : 'Geen stats — alleen look';
+      }
+      if (m.combatLine) return m.combatLine;
+    }
+  }
+  if (typeof gearCombatLine === 'function') {
+    const line = gearCombatLine(item);
+    if (line) return line;
+  }
+  return typeof tOr === 'function' ? tOr('gear.vanityHint', 'Geen stats — alleen look') : 'Geen stats — alleen look';
+}
+
+function equipGear(itemId) {
+  const raw = (typeof gearItemById === 'function') ? gearItemById(itemId) : null;
+  const item = contractGearItem(raw) || raw;
+  if (!item) return { ok: false, reason: 'missing' };
+  const can = gearCanWear(item);
+  if (!can.ok) return can;
+  if (typeof gearEquipItem === 'function') {
+    const res = gearEquipItem(itemId);
+    if (!res || !res.ok) {
+      const unlock = gearUnlockState(item);
+      return { ok: false, reason: (res && res.reason) || unlock.gate || 'locked', label: unlock.label, item };
+    }
+    if (typeof save === 'object' && save) _dropFlatGearKeys(save);
+    return { ok: true, item };
+  }
+  if (typeof save === 'object' && save) {
+    _ensureGearBag(save);
+    save.gear.equipped[item.slotId] = item.id;
+    if (!save.gear.owned[item.id]) save.gear.owned[item.id] = { at: Date.now(), src: 'grant' };
+    if (typeof persistOrToast === 'function') persistOrToast('gear');
+    else if (typeof persist === 'function') persist();
+  }
+  return { ok: true, item };
+}
+
+function unequipGear(slotId) {
+  const sid = (slotId && _gearSlotIds().indexOf(slotId) >= 0) ? slotId : null;
+  if (!sid) return { ok: false, reason: 'slot' };
+  if (typeof gearUnequipSlot === 'function') gearUnequipSlot(sid);
+  else if (typeof save === 'object' && save) {
+    _ensureGearBag(save);
+    save.gear.equipped[sid] = null;
+    if (typeof persistOrToast === 'function') persistOrToast('gear');
+    else if (typeof persist === 'function') persist();
+  }
+  if (typeof save === 'object' && save) _dropFlatGearKeys(save);
+  return { ok: true };
+}
+
+function gearEquippedCount() {
+  const eq = getEquippedGear();
+  return _gearSlotIds().reduce((n, sid) => n + (eq[sid] ? 1 : 0), 0);
+}
+
+function gearUiRenderDescriptor(s) {
+  if (typeof gearRenderDescriptor === 'function') return gearRenderDescriptor(s);
+  return { schema: 1, slots: _gearSlotIds().map((id) => ({ slot: id, itemId: null })) };
+}
+
+function drawGearHeroDoll(cv, saveObj) {
+  if (!cv || typeof Fighter !== 'function') return;
+  const cc = cv.getContext('2d');
+  if (!cc) return;
+  const s = saveObj || (typeof save === 'object' ? save : null);
+  cc.clearRect(0, 0, cv.width, cv.height);
+  cc.save();
+  const desc = (typeof gearRenderDescriptor === 'function' && s) ? gearRenderDescriptor(s) : gearUiRenderDescriptor(s);
+  const layers = (desc && desc.slots) ? desc.slots : [];
+  for (const sid of GEAR_SLOT_DRAW_ORDER) {
+    const layer = layers.find((L) => L.slot === sid);
+    const tint = layer && (layer.tint || layer.accent);
+    if (!tint) continue;
+    const g = cc.createRadialGradient(cv.width / 2, cv.height * 0.55, 6, cv.width / 2, cv.height * 0.55, sid === 'back' ? 78 : 52);
+    g.addColorStop(0, String(tint) + (sid === 'back' ? '66' : '33'));
+    g.addColorStop(1, 'rgba(0,0,0,0)');
+    cc.fillStyle = g;
+    cc.fillRect(0, 0, cv.width, cv.height);
+  }
+  cc.translate(cv.width / 2, cv.height - 18);
+  cc.scale(1.15, 1.15);
+  const st = typeof styleById === 'function' ? styleById((s && s.style) || 'classic') : { body: '#f2f5ff' };
+  const wpn = (s && typeof weaponById === 'function') ? weaponById(s.weapon || 'vuist') : null;
+  const preview = new Fighter({
+    isPlayer: true, x: 0, y: 0, color: (st && st.body) || '#f2f5ff', style: st, scale: 1,
+    weapon: wpn || undefined,
+  });
+  preview.animT = 0.35;
+  preview.draw(cc);
+  if (s && s.activePet && typeof drawMonsterArt === 'function') {
+    const def = (typeof activePetDef === 'function') ? activePetDef()
+      : ((typeof petDef === 'function') ? petDef(s.activePet) : null);
+    const sp = def && typeof SPECIES !== 'undefined' ? SPECIES[def.speciesId] : null;
+    if (sp) {
+      cc.save();
+      cc.translate(36, -6);
+      cc.scale(0.36, 0.36);
+      drawMonsterArt(cc, sp, sp.size || 22, 1.1, false, false);
+      cc.restore();
+    }
+  }
+  cc.restore();
+}
+
+function gearRaritiesInList(items) {
+  const seen = {};
+  const out = [];
+  for (const it of items || []) {
+    const r = it && it.rarity ? String(it.rarity) : '';
+    if (!r || seen[r]) continue;
+    seen[r] = true;
+    out.push(r);
+  }
+  out.sort((a, b) => (GEAR_RARITY_RANK[a] || 0) - (GEAR_RARITY_RANK[b] || 0));
+  return out;
+}
+
+function gearFilterItems(items, filter, q, rarity) {
+  const needle = String(q || '').trim().toLowerCase();
+  const want = filter || 'all';
+  const rar = (rarity && rarity !== 'all') ? String(rarity) : '';
+  return (items || []).filter((it) => {
+    if (rar && String(it.rarity || '') !== rar) return false;
+    const unlock = gearUnlockState(it);
+    const look = !gearHasStats(it);
+    if (want === 'look' && !look) return false;
+    if (want === 'stat' && look) return false;
+    if (want === 'lock' && unlock.unlocked) return false;
+    if (want === 'owned' && !gearOwned(it)) return false;
+    if (needle) {
+      const name = String(gearItemName(it) || '').toLowerCase();
+      const id = String(it.id || '').toLowerCase();
+      const rr = String(it.rarity || '').toLowerCase();
+      if (name.indexOf(needle) === -1 && id.indexOf(needle) === -1 && rr.indexOf(needle) === -1) return false;
+    }
+    return true;
+  });
+}
+
+function gearSortItems(items, eq) {
+  const bag = eq || {};
+  return (items || []).slice().sort((a, b) => {
+    const aEq = !!(a && (bag[a.slotId] === a.id || bag[a.slot] === a.id));
+    const bEq = !!(b && (bag[b.slotId] === b.id || bag[b.slot] === b.id));
+    if (aEq !== bEq) return aEq ? -1 : 1;
+    const aOwn = gearOwned(a);
+    const bOwn = gearOwned(b);
+    if (aOwn !== bOwn) return aOwn ? -1 : 1;
+    const ar = GEAR_RARITY_RANK[a && a.rarity] || 0;
+    const br = GEAR_RARITY_RANK[b && b.rarity] || 0;
+    if (ar !== br) return br - ar;
+    const an = String(gearItemName(a) || a.id || '');
+    const bn = String(gearItemName(b) || b.id || '');
+    return an < bn ? -1 : (an > bn ? 1 : 0);
+  });
+}
+
+function migrateFlatGearIntoBag(out) {
+  if (!out || typeof out !== 'object') return out;
+  if (!out.gear || typeof out.gear !== 'object' || Array.isArray(out.gear)) {
+    out.gear = { schema: 1, equipped: { head: null, chest: null, hands: null, legs: null, back: null }, owned: {} };
+  }
+  const bag = out.gear;
+  if (!bag.equipped || typeof bag.equipped !== 'object') {
+    bag.equipped = { head: null, chest: null, hands: null, legs: null, back: null };
+  }
+  if (!bag.owned || typeof bag.owned !== 'object') bag.owned = {};
+  const eqSrc = (out.equipment && typeof out.equipment === 'object') ? out.equipment : {};
+  const eqOld = (out.gearEquipped && typeof out.gearEquipped === 'object') ? out.gearEquipped : {};
+  for (const sid of _gearSlotIds()) {
+    if (bag.equipped[sid]) continue;
+    const alias = sid === 'hands' ? 'arms' : (sid === 'back' ? 'aura' : null);
+    const v = eqSrc[sid] || (alias && eqSrc[alias]) || eqOld[sid] || (alias && eqOld[alias]);
+    if (typeof v === 'string' && v) bag.equipped[sid] = v;
+  }
+  const ownOld = Object.assign(
+    {},
+    (out.gearOwned && typeof out.gearOwned === 'object') ? out.gearOwned : {},
+    (out.ownedGear && typeof out.ownedGear === 'object') ? out.ownedGear : {}
+  );
+  for (const [id, v] of Object.entries(ownOld)) {
+    if (!id || bag.owned[id] || !v) continue;
+    bag.owned[id] = (typeof v === 'object')
+      ? { at: Number(v.at) || 0, src: typeof v.src === 'string' ? v.src : 'grant' }
+      : { at: 0, src: 'grant' };
+  }
+  delete out.gearEquipped;
+  delete out.gearOwned;
+  _dropFlatGearKeys(out);
+  return out;
+}
+
+if (typeof save === 'object' && save) {
+  try {
+    migrateFlatGearIntoBag(save);
+    if (typeof sanitizeGearSave === 'function') {
+      save.gear = sanitizeGearSave(save.gear, save, Date.now());
+    }
+    if (typeof grantStarterGear === 'function') grantStarterGear(save);
+  } catch (_) {}
 }
 /* --- src/core/canvas.js --- */
 /* ============================== CANVAS ================================= */
@@ -37470,7 +38081,12 @@ function renderAdvSatanCard(heat, diff) {
 
 const UI = {
   screens: ['menuScreen', 'modeHubScreen', 'levelScreen', 'gambleScreen', 'summonScreen', 'weaponScreen', 'petScreen', 'styleScreen', 'gearScreen', 'upgradeScreen', 'skillScreen', 'settingsScreen', 'missionsScreen', 'charSelectScreen', 'dexScreen', 'helpScreen', 'installScreen', 'resultScreen', 'pauseScreen'],
-  gearSlotFilter: 'head',
+  gearSlotPick: 'head',
+  gearFilter: 'all',
+  gearFilterQ: '',
+  _gearFilterBound: false,
+  _gearPickerScroll: 0,
+  gearItemPick: null,
   modeHubId: 'arcade',
   charPickStep: 1,
   charSagaFilter: 'all',
@@ -37511,7 +38127,7 @@ const UI = {
   resetInnerScrolls(screenEl) {
     if (!screenEl) return;
     const scrollables = screenEl.querySelectorAll(
-      '.char-grid-scroll, .menu-landing-scroll, .mode-hub-body, .island-bar, .grid, #weaponList, .skill-grid-scroll, [data-scroll-reset]'
+      '.char-grid-scroll, .menu-landing-scroll, .mode-hub-body, .island-bar, .grid, #weaponList, .skill-grid-scroll, .gear-picker, [data-scroll-reset]'
     );
     scrollables.forEach((el) => {
       try {
@@ -38393,9 +39009,10 @@ const UI = {
         : t('ui.hubStatPetsEmpty', { total: PET_ROSTER.length }));
       const stylesN = STYLES.filter(s => styleUnlocked(s)).length;
       setStat('hubStatStyle', t('ui.hubStatOutfits', { n: stylesN, total: STYLES.length }));
-      if (typeof gearOwnedCount === 'function' && typeof gearCatalogCount === 'function') {
-        setStat('hubStatGear', t('ui.hubStatGear', { n: gearOwnedCount(), total: gearCatalogCount() }));
-      }
+      const gearN = typeof gearEquippedCount === 'function' ? gearEquippedCount() : 0;
+      setStat('hubStatGear', typeof tOr === 'function'
+        ? tOr('gear.hubStat', '{n}/5', { n: gearN })
+        : (gearN + '/5'));
       const skillsN = skillUnlockedCount();
       const activeSk = skillById(save.skill || 'spiral_orb');
       const activeSp = equippedSuper();
@@ -40620,112 +41237,354 @@ const UI = {
     }
   },
 
-  renderGear() {
-    const slots = (typeof GEAR_SLOT_IDS !== 'undefined') ? GEAR_SLOT_IDS : ['head', 'chest', 'hands', 'legs', 'back'];
-    if (!slots.includes(this.gearSlotFilter)) this.gearSlotFilter = slots[0];
-    const ownedN = typeof gearOwnedCount === 'function' ? gearOwnedCount() : 0;
-    const totalN = typeof gearCatalogCount === 'function' ? gearCatalogCount() : 0;
-    const sumEl = document.getElementById('gearSummary');
-    if (sumEl) {
-      sumEl.style.display = 'block';
-      const mods = typeof gearCombatMods === 'function' ? gearCombatMods() : null;
-      const hp = mods && mods.maxHp ? ` · +${mods.maxHp} HP` : '';
-      sumEl.innerHTML = t('ui.hubStatGear', { n: ownedN, total: totalN }) + hp;
+  renderGear(opts) {
+    const pickerOnly = !!(opts && opts.pickerOnly);
+    const esc = (s) => String(s == null ? '' : s)
+      .split('&').join('&amp;')
+      .split('<').join('&lt;')
+      .split('>').join('&gt;')
+      .split('"').join('&quot;')
+      .split("'").join('&#39;');
+    const slots = typeof listGearSlots === 'function' ? listGearSlots() : [];
+    const eq = typeof getEquippedGear === 'function' ? getEquippedGear() : {};
+    if (!this.gearSlotPick || !slots.some((s) => s.id === this.gearSlotPick)) {
+      this.gearSlotPick = (slots[0] && slots[0].id) || 'head';
     }
-    const row = document.getElementById('gearSlotRow');
-    if (row) {
-      row.innerHTML = '';
+    if (!this.gearFilter || (typeof GEAR_UI_FILTERS !== 'undefined' && GEAR_UI_FILTERS.indexOf(this.gearFilter) < 0)) {
+      this.gearFilter = 'all';
+    }
+    if (!this.gearRarity) this.gearRarity = 'all';
+    const pickSlot = this.gearSlotPick;
+    const items = typeof listGearItems === 'function' ? listGearItems(pickSlot) : [];
+    let shown = typeof gearFilterItems === 'function'
+      ? gearFilterItems(items, this.gearFilter, this.gearFilterQ, this.gearRarity)
+      : items;
+    if (typeof gearSortItems === 'function') shown = gearSortItems(shown, eq);
+    if (this.gearItemPick && !items.some((it) => it.id === this.gearItemPick)) this.gearItemPick = null;
+    if (!this.gearItemPick) {
+      this.gearItemPick = eq[pickSlot] || (items.find((it) => {
+        const u = typeof gearUnlockState === 'function' ? gearUnlockState(it) : { unlocked: true };
+        return u.unlocked;
+      }) || items[0] || {}).id || null;
+    }
+
+    const pillFor = (item, unlock) => {
+      if (item && unlock && !unlock.unlocked) {
+        return `<span class="gear-pill gear-pill-lock">${esc(unlock.label || tOr('gear.pillLock', 'LOCK'))}</span>`;
+      }
+      const stat = item && (typeof gearHasStats === 'function' ? gearHasStats(item) : !!(item.hasStats && item.vanity !== true));
+      if (stat) return `<span class="gear-pill gear-pill-stat">${esc(tOr('gear.pillStat', 'STAT'))}</span>`;
+      if (item) return `<span class="gear-pill gear-pill-vanity">${esc(tOr('gear.pillVanity', 'LOOK'))}</span>`;
+      return `<span class="gear-pill">${esc(tOr('gear.empty', 'Leeg'))}</span>`;
+    };
+
+    const sumEl = document.getElementById('gearSummary');
+    if (!pickerOnly && sumEl) {
+      const filled = slots.filter((s) => eq[s.id]).length;
+      const statN = slots.reduce((n, s) => {
+        const it = typeof gearItemById === 'function' ? gearItemById(eq[s.id]) : null;
+        return n + (it && gearHasStats(it) ? 1 : 0);
+      }, 0);
+      const catalogN = (typeof GEAR_ITEMS !== 'undefined' && Array.isArray(GEAR_ITEMS)) ? GEAR_ITEMS.length : items.length;
+      sumEl.innerHTML =
+        `${tOr('gear.summarySlots', '<b>{n}</b>/5', { n: filled })} · ` +
+        `<span class="gear-pill gear-pill-stat">${esc(tOr('gear.pillStat', 'STAT'))} ${statN}</span> ` +
+        `<span class="gear-pill gear-pill-vanity">${esc(tOr('gear.pillVanity', 'LOOK'))} ${Math.max(0, filled - statN)}</span>` +
+        `<span class="gear-pill">${esc(tOr('gear.catalogN', '{n} items', { n: catalogN }))}</span>`;
+    }
+    const legend = document.getElementById('gearLegend');
+    if (!pickerOnly && legend) {
+      legend.innerHTML =
+        `<span class="gear-pill gear-pill-vanity">${esc(tOr('gear.pillVanity', 'LOOK'))}</span>` +
+        `<span class="gear-pill gear-pill-stat">${esc(tOr('gear.pillStat', 'STAT'))}</span>` +
+        `<span class="gear-pill gear-pill-lock">${esc(tOr('gear.pillLock', 'LOCK'))}</span>`;
+    }
+
+    const slotList = document.getElementById('gearSlotList');
+    if (!pickerOnly && slotList) {
+      slotList.innerHTML = '';
       for (const slot of slots) {
-        const eq = typeof gearEquippedItem === 'function' ? gearEquippedItem(slot) : null;
+        const sid = slot.id;
+        const rawItem = typeof gearItemById === 'function' ? gearItemById(eq[sid]) : null;
+        const item = (typeof contractGearItem === 'function' && rawItem) ? contractGearItem(rawItem) : rawItem;
+        const unlock = item && typeof gearUnlockState === 'function' ? gearUnlockState(item) : { unlocked: true };
         const btn = document.createElement('button');
         btn.type = 'button';
-        btn.className = 'gear-slot-btn' + (this.gearSlotFilter === slot ? ' active' : '');
-        btn.dataset.slot = slot;
-        btn.setAttribute('role', 'tab');
-        btn.setAttribute('aria-selected', this.gearSlotFilter === slot ? 'true' : 'false');
-        const name = document.createElement('span');
-        name.className = 'gear-slot-name';
-        name.textContent = typeof gearSlotLabel === 'function' ? gearSlotLabel(slot) : slot;
-        const itemEl = document.createElement('span');
-        itemEl.className = 'gear-slot-item';
-        itemEl.textContent = eq
-          ? (typeof gearItemLabel === 'function' ? gearItemLabel(eq) : eq.name)
-          : t('gear.empty');
-        btn.appendChild(name);
-        btn.appendChild(itemEl);
+        btn.className = 'gear-slot-card'
+          + (sid === pickSlot ? ' sel' : '')
+          + (item && unlock.unlocked && gearHasStats(item) ? ' kind-stat' : '')
+          + (item && !unlock.unlocked ? ' locked' : '')
+          + (!item ? ' empty' : '');
+        btn.setAttribute('data-gear-slot', sid);
+        btn.setAttribute('data-slot', sid);
+        btn.setAttribute('role', 'listitem');
+        btn.setAttribute('aria-pressed', sid === pickSlot ? 'true' : 'false');
+        const tint = (item && item.look && item.look.tint) || (item && item.color) || slot.color || '#1c2940';
+        const rar = item && item.rarity ? String(item.rarity) : '';
+        const sub = !item
+          ? tOr('gear.empty', 'Leeg')
+          : (!unlock.unlocked
+            ? (unlock.label || tOr('gear.pillLock', 'LOCK'))
+            : (gearItemName(item) + (rar ? ' · ' + rar : '')));
+        btn.innerHTML =
+          `<span class="gear-slot-swatch" style="background:${esc(tint)}"></span>` +
+          `<span class="gear-slot-copy">` +
+          `<span class="gear-slot-title">${esc(gearSlotName(sid))}</span>` +
+          `<span class="gear-slot-sub">${esc(sub)}</span>` +
+          `</span>` +
+          pillFor(item, unlock);
         bindPress(btn, () => {
-          this.gearSlotFilter = slot;
-          this.renderGear();
-        });
-        row.appendChild(btn);
-      }
-    }
-    const list = document.getElementById('gearList');
-    if (!list || typeof GEAR_ITEMS === 'undefined') return;
-    list.innerHTML = '';
-    const items = typeof gearItemsForSlot === 'function'
-      ? gearItemsForSlot(this.gearSlotFilter)
-      : GEAR_ITEMS.filter((it) => it.slot === this.gearSlotFilter);
-    for (const item of items) {
-      const tip = typeof gearTooltipModel === 'function' ? gearTooltipModel(item) : null;
-      const owned = tip ? tip.owned : false;
-      const gated = tip ? !tip.gate.ok : true;
-      const equipped = tip ? tip.equipped : false;
-      const el = document.createElement('div');
-      el.className = 'gear-card' + (equipped ? ' sel' : '') + ((owned && !gated) ? '' : ' locked');
-      el.dataset.gearId = item.id;
-      el.dataset.slot = item.slot;
-      const lines = typeof gearTooltipLines === 'function' ? gearTooltipLines(item) : [item.name];
-      el.title = lines.join(' · ');
-      const top = document.createElement('div');
-      top.className = 'gear-card-top';
-      const name = document.createElement('div');
-      name.className = 'gear-card-name';
-      name.textContent = typeof gearItemLabel === 'function' ? gearItemLabel(item) : item.name;
-      const flag = document.createElement('span');
-      flag.className = 'gear-flag ' + (item.kind === 'armour' ? 'armour' : (item.vanity ? 'vanity' : 'stats'));
-      flag.textContent = item.kind === 'armour'
-        ? t('gear.flagArmour')
-        : (item.vanity ? t('gear.flagVanity') : t('gear.flagStats'));
-      top.appendChild(name);
-      top.appendChild(flag);
-      el.appendChild(top);
-      const desc = document.createElement('div');
-      desc.className = 'gear-card-desc';
-      desc.textContent = typeof gearItemLabel === 'function' ? gearItemLabel(item, 'desc') : (item.desc || '');
-      el.appendChild(desc);
-      const meta = document.createElement('div');
-      meta.className = 'gear-card-meta';
-      const combat = typeof gearCombatLine === 'function' ? gearCombatLine(item) : '';
-      if (owned && equipped) meta.textContent = t('gear.equipped');
-      else if (owned && !gated) meta.textContent = combat || t('gear.equip');
-      else if (!tip || !tip.gate.levelOk) meta.textContent = t('gear.needLvl', { n: item.unlockLvl });
-      else if (tip && !tip.gate.timeOk) meta.textContent = t('gear.needDays', { n: item.unlockDays });
-      else meta.textContent = combat || '';
-      el.appendChild(meta);
-      if (owned && !gated) {
-        bindPress(el, () => {
           safeUiAction(() => {
-            if (equipped) {
-              const r = gearUnequipSlot(item.slot);
-              if (!r || !r.ok) return;
-              AudioSys.sfx('select');
-              this.renderGear();
-              this.renderMenu();
-              UI.toast(t('toast.gearUnequipped', { slot: gearSlotLabel(item.slot) }), 1800);
-              return;
-            }
-            const r = gearEquipItem(item.id);
-            if (!r || !r.ok) return;
-            if (!persistOrToast('gear')) return;
+            this.gearSlotPick = sid;
+            this.gearItemPick = null;
+            this._gearPickerScroll = 0;
             AudioSys.sfx('select');
             this.renderGear();
+          }, 'gearSlot/' + sid, 'Slot kiezen mislukt');
+        });
+        slotList.appendChild(btn);
+      }
+    }
+
+    const aside = document.getElementById('gearWeaponAside');
+    if (!pickerOnly && aside) {
+      const w = typeof weaponById === 'function' ? weaponById(save.weapon) : null;
+      const wName = w && typeof weaponLabel === 'function' ? weaponLabel(w) : (save.weapon || '—');
+      aside.innerHTML =
+        `<b>${esc(tOr('gear.weaponAside', 'Wapen'))}</b> · ${esc(wName)}` +
+        `<div class="gear-detail-sub">${esc(tOr('gear.weaponAsideHint', 'Blijft in Collectie → Wapens — geen 6e slot.'))}</div>`;
+    }
+
+    const cv = document.getElementById('gearDollCanvas');
+    if (!pickerOnly && cv && typeof drawGearHeroDoll === 'function') {
+      drawGearHeroDoll(cv, save);
+    } else if (!pickerOnly && cv && typeof Fighter === 'function') {
+      const cc = cv.getContext('2d');
+      cc.clearRect(0, 0, cv.width, cv.height);
+      const st = typeof styleById === 'function' ? styleById(save.style || 'classic') : { body: '#f2f5ff' };
+      cc.save();
+      cc.translate(cv.width / 2, cv.height - 18);
+      cc.scale(1.15, 1.15);
+      const preview = new Fighter({ isPlayer: true, x: 0, y: 0, color: st.body, style: st, scale: 1 });
+      preview.animT = 0.35;
+      preview.draw(cc);
+      cc.restore();
+    }
+
+    const detail = document.getElementById('gearDetail');
+    const rawPicked = typeof gearItemById === 'function' ? gearItemById(this.gearItemPick) : null;
+    const picked = (typeof contractGearItem === 'function' && rawPicked) ? contractGearItem(rawPicked) : rawPicked;
+    if (!pickerOnly && detail) {
+      if (!picked) {
+        detail.innerHTML = `<div class="gear-detail-sub">${esc(tOr('gear.pickHint', 'Tik een slot, dan een item.'))}</div>`;
+      } else {
+        const unlock = gearUnlockState(picked);
+        const tip = unlock.model || (typeof gearTooltipModel === 'function' ? gearTooltipModel(picked) : null);
+        const equippedHere = eq[picked.slot] === picked.id || eq[picked.slotId] === picked.id;
+        const kindPill = pillFor(picked, unlock);
+        const lockLine = unlock.unlocked
+          ? ''
+          : `<div class="gear-detail-sub" style="color:#ffd75e;margin-top:6px">${esc(tOr('gear.lockedLine', 'Op slot · {why}', { why: unlock.label || '' }))}</div>`;
+        const bonus = unlock.unlocked
+          ? (tip && tip.desc ? esc(tip.desc) + (tip.combatLine ? ' · ' + esc(tip.combatLine) : '') : esc(gearStatLine(picked)))
+          : esc(tOr('gear.lockNoStats', 'Geen stats tot het slot open is'));
+        const actions = unlock.unlocked
+          ? (`<div class="gear-detail-actions">` +
+            (equippedHere
+              ? `<button type="button" class="btn mode-btn b-gray big-touch" id="gearUnequipBtn"><div>${esc(tOr('gear.unequip', 'Uitdoen'))}</div></button>`
+              : `<button type="button" class="btn mode-btn b-continue big-touch" id="gearEquipBtn"><div>${esc(tOr('gear.equip', 'Aandoen'))}</div></button>`) +
+            `</div>`)
+          : '';
+        detail.innerHTML =
+          `<div class="gear-detail-title">${esc(gearItemName(picked))} ${kindPill}</div>` +
+          `<div class="gear-detail-sub">${bonus}</div>` +
+          lockLine + actions;
+        const eqBtn = document.getElementById('gearEquipBtn');
+        if (eqBtn) bindPress(eqBtn, () => {
+          safeUiAction(() => {
+            const res = (typeof gearEquipItem === 'function') ? gearEquipItem(picked.id) : equipGear(picked.id);
+            if (!res || !res.ok) {
+              const fail = gearUnlockState(picked);
+              UI.toast((res && res.label) || fail.label || tOr('toast.gearLocked', 'Nog op slot'), 1800, { tone: 'warn' });
+              return;
+            }
+            AudioSys.sfx('select');
+            UI.toast(tOr('toast.gearEquipped', '{name} aangedaan', { name: gearItemName(picked) }), 1800, { tone: 'ok' });
+            this.renderGear();
             this.renderMenu();
-            UI.toast(t('toast.gearEquipped', { name: gearItemLabel(item) }), 2000);
-          }, 'pickGear/' + item.id, 'Uitrusting kiezen mislukt');
+          }, 'equipGear/' + picked.id, 'Uitrusten mislukt');
+        });
+        const uqBtn = document.getElementById('gearUnequipBtn');
+        if (uqBtn) bindPress(uqBtn, () => {
+          safeUiAction(() => {
+            const sid = picked.slot || picked.slotId;
+            if (typeof gearUnequipSlot === 'function') gearUnequipSlot(sid);
+            else unequipGear(sid);
+            AudioSys.sfx('select');
+            UI.toast(tOr('toast.gearUnequipped', '{name} uitgedaan', { name: gearItemName(picked) }), 1600);
+            this.renderGear();
+            this.renderMenu();
+          }, 'unequipGear/' + (picked.slot || picked.slotId), 'Uitdoen mislukt');
         });
       }
-      list.appendChild(el);
+    }
+
+    const filterBar = document.getElementById('gearFilterBar');
+    if (filterBar) {
+      const labels = {
+        all: tOr('gear.filterAll', 'Alles'),
+        look: tOr('gear.pillVanity', 'LOOK'),
+        stat: tOr('gear.pillStat', 'STAT'),
+        lock: tOr('gear.pillLock', 'LOCK'),
+        owned: tOr('gear.filterOwned', 'Van jou'),
+      };
+      if (!this._gearFilterBound) {
+        filterBar.innerHTML = '';
+        const keys = (typeof GEAR_UI_FILTERS !== 'undefined') ? GEAR_UI_FILTERS : ['all', 'look', 'stat', 'lock', 'owned'];
+        for (const key of keys) {
+          const chip = document.createElement('button');
+          chip.type = 'button';
+          chip.className = 'gear-filter-btn';
+          chip.setAttribute('data-gear-filter', key);
+          chip.setAttribute('role', 'tab');
+          chip.textContent = labels[key] || key;
+          bindPress(chip, () => {
+            safeUiAction(() => {
+              this.gearFilter = key;
+              this._gearPickerScroll = 0;
+              AudioSys.sfx('select');
+              this.renderGear({ pickerOnly: true });
+            }, 'gearFilter/' + key, 'Filter mislukt');
+          });
+          filterBar.appendChild(chip);
+        }
+        this._gearFilterBound = true;
+      }
+      for (const chip of filterBar.querySelectorAll('[data-gear-filter]')) {
+        const key = chip.getAttribute('data-gear-filter');
+        chip.classList.toggle('sel', key === this.gearFilter);
+        chip.setAttribute('aria-selected', key === this.gearFilter ? 'true' : 'false');
+        chip.textContent = labels[key] || key;
+      }
+    }
+
+    const rarBar = document.getElementById('gearRarityBar');
+    if (rarBar) {
+      const present = (typeof gearRaritiesInList === 'function') ? gearRaritiesInList(items) : [];
+      const keys = ['all'].concat(present);
+      if (this.gearRarity !== 'all' && present.indexOf(this.gearRarity) < 0) this.gearRarity = 'all';
+      const sig = keys.join(',');
+      if (!this._gearRarityBound || rarBar.getAttribute('data-rar-keys') !== sig) {
+        rarBar.innerHTML = '';
+        rarBar.setAttribute('data-rar-keys', sig);
+        for (const key of keys) {
+          const chip = document.createElement('button');
+          chip.type = 'button';
+          chip.className = 'gear-filter-btn' + (key !== 'all' ? ' rar-' + key : '');
+          chip.setAttribute('data-gear-rarity', key);
+          chip.setAttribute('role', 'tab');
+          chip.textContent = key === 'all'
+            ? tOr('gear.filterRarityAll', 'Alle')
+            : tOr('gear.rar.' + key, key);
+          bindPress(chip, () => {
+            safeUiAction(() => {
+              this.gearRarity = key;
+              this._gearPickerScroll = 0;
+              AudioSys.sfx('select');
+              this.renderGear({ pickerOnly: true });
+            }, 'gearRarity/' + key, 'Rarity filter mislukt');
+          });
+          rarBar.appendChild(chip);
+        }
+        this._gearRarityBound = true;
+      }
+      for (const chip of rarBar.querySelectorAll('[data-gear-rarity]')) {
+        const key = chip.getAttribute('data-gear-rarity');
+        chip.classList.toggle('sel', key === this.gearRarity);
+        chip.setAttribute('aria-selected', key === this.gearRarity ? 'true' : 'false');
+      }
+    }
+
+    const qEl = document.getElementById('gearFilterQ');
+    if (qEl) {
+      qEl.placeholder = tOr('gear.filterSearch', 'Zoek in {n}…', { n: items.length });
+      if (qEl.value !== (this.gearFilterQ || '') && document.activeElement !== qEl) qEl.value = this.gearFilterQ || '';
+      if (!qEl.dataset.sfGearQ) {
+        qEl.dataset.sfGearQ = '1';
+        qEl.addEventListener('input', () => {
+          this.gearFilterQ = qEl.value || '';
+          this._gearPickerScroll = 0;
+          if (this._gearSearchT) {
+            try { clearTimeout(this._gearSearchT); } catch (_) {}
+          }
+          this._gearSearchT = setTimeout(() => {
+            this._gearSearchT = null;
+            this.renderGear({ pickerOnly: true });
+          }, 160);
+        });
+      }
+    }
+
+    const countEl = document.getElementById('gearFilterCount');
+    if (countEl) {
+      countEl.textContent = tOr('gear.filterCount', '{shown}/{total} in {slot}', {
+        shown: shown.length,
+        total: items.length,
+        slot: gearSlotName(pickSlot),
+      });
+    }
+
+    const picker = document.getElementById('gearPicker');
+    if (picker) {
+      const keepScroll = this._gearPickerScroll || picker.scrollTop || 0;
+      picker.innerHTML = '';
+      const frag = document.createDocumentFragment();
+      if (!shown.length) {
+        const empty = document.createElement('div');
+        empty.className = 'gear-filter-empty';
+        empty.textContent = tOr('gear.filterEmpty', 'Niets in deze filter');
+        frag.appendChild(empty);
+      }
+      for (const it of shown) {
+        const unlock = gearUnlockState(it);
+        const equippedHere = eq[it.slot] === it.id || eq[it.slotId] === it.id;
+        const el = document.createElement('button');
+        el.type = 'button';
+        el.className = 'gear-card'
+          + (this.gearItemPick === it.id ? ' sel' : '')
+          + (unlock.unlocked ? '' : ' locked')
+          + (equippedHere ? ' equipped' : '');
+        el.setAttribute('data-gear-id', it.id);
+        el.setAttribute('data-rarity', it.rarity || '');
+        el.setAttribute('aria-disabled', unlock.unlocked ? 'false' : 'true');
+        const tint = (it.look && it.look.tint) || it.color || '#333c55';
+        const rar = it.rarity ? String(it.rarity) : '';
+        const rarPill = rar
+          ? `<span class="gear-pill gear-pill-rar rar-${esc(rar)}">${esc(tOr('gear.rar.' + rar, rar))}</span>`
+          : '';
+        const meta = unlock.unlocked
+          ? (gearHasStats(it) ? gearStatLine(it) : tOr('gear.vanityHint', 'Geen stats — alleen look'))
+          : (unlock.label || tOr('gear.pillLock', 'LOCK'));
+        el.innerHTML =
+          `<span class="gear-card-swatch" style="background:${esc(tint)}"></span>` +
+          `<span class="gear-card-body"><span class="gear-card-name">${esc(gearItemName(it))} ${pillFor(it, unlock)} ${rarPill}</span>` +
+          `<span class="gear-card-meta">${esc(meta)}${equippedHere ? ' · ' + esc(tOr('gear.wearing', 'aan')) : ''}</span></span>`;
+        bindPress(el, () => {
+          safeUiAction(() => {
+            this.gearItemPick = it.id;
+            AudioSys.sfx('select');
+            if (!unlock.unlocked) {
+              UI.toast(tOr('toast.gearLocked', 'Nog op slot · {why}', { why: unlock.label || '' }), 1800, { tone: 'warn' });
+            }
+            const p = document.getElementById('gearPicker');
+            this._gearPickerScroll = p ? p.scrollTop : 0;
+            this.renderGear();
+          }, 'gearPick/' + it.id, 'Item kiezen mislukt');
+        });
+        frag.appendChild(el);
+      }
+      picker.appendChild(frag);
+      picker.scrollTop = keepScroll;
     }
   },
 
