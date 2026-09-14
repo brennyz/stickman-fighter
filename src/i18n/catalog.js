@@ -83,13 +83,13 @@ function seedNlGameStrings() {
     heatRising: 'Hitte {n}/{max} — bij 9 gevaar, bij 10 Satan',
     heatDanger: 'GEVAAR! Hitte rood — nog 1 verlies en Satan komt',
     heatSatanNext: 'Satan staat klaar bij de volgende start van dit level',
-    satanAfterClear: 'Adventure gehaald — hitte blijft: 10× falen op één level → Satan (~half scherm, reflect) → Tide-pet',
+    satanAfterClear: 'Avontuur gehaald — hitte blijft: 10× falen op één level → Satan (~half scherm, reflect) → Tide-pet',
     trainComboRecord: 'Combo-trainer: ×{n}{rec}',
     trainComboNewRec: ' — nieuw record!',
     trainDetailWin: 'RabbitRobot verslagen ({p}-{r}) · max combo ×{combo} · {wins}× gewonnen',
     trainDetailLose: 'RabbitRobot was te sterk ({p}-{r}) · max combo ×{combo}',
     trainStyleUnlock: 'Nieuwe stijl vrij: Energie gloed — Instellingen → Stijl!',
-    trainStyleMore: 'Unlock stijlen door meer train-wins!',
+    trainStyleMore: 'Ontgrendel stijlen door meer training te winnen!',
     trainLossTip: 'Spring tijdens LIGHTNING PIERCE — robot mist · spring oor-lasers',
     trainTipDefault: 'Tip: spring lasers · energy vol → Spiral Orb',
     vsRematchTip: 'Opnieuw = rematch · Pauze → Herstart match (0-0)',
@@ -537,12 +537,12 @@ function seedNlGameStrings() {
     charRosterLine: '20 vechters · STR · RNG · mDPS · rDPS',
     charBlurbAll: '20 legends · tik kaart = kiezen · hover = stats preview',
     charEmpty: 'Geen vechters in deze saga — tik Alle',
-    charLocked: 'Locked',
+    charLocked: 'Vergrendeld',
     charIconRow: 'Saga-icons · deel 2 — tik om te kiezen',
     charBig5Title: 'Legends · snel kiezen',
     charBig5Hint: 'Eigen vechters · snel kiezen',
     charArenaPre: 'VERSUS · BEST OF 3',
-    charHead: 'SELECT FIGHTER',
+    charHead: 'KIES VECHTER',
     charBackP1: '← Andere P1',
     charBackMenu: '← Menu',
     charFight: 'VECHT! (best-of-3)',
@@ -604,9 +604,9 @@ function seedNlGameStrings() {
     skillNextUnlockSoon: 'Volgende: <b>{name}</b> (Lv {lvl}) — bijna klaar',
     skillNextIsland: 'Volgende: <b>{name}</b> — eiland-gate tot Lv {cap} in avontuur',
     skillBehAll: 'Alle types',
-    skillSort_level: 'Sort: level',
-    skillSort_dmg: 'Sort: schade',
-    skillSort_name: 'Sort: naam',
+    skillSort_level: 'Sorteer: level',
+    skillSort_dmg: 'Sorteer: schade',
+    skillSort_name: 'Sorteer: naam',
     superHead: 'Nood-super (Kets-slot)',
     superSub: 'Omringd in avontuur — tik midden-symbool of druk E · vervangt KETS-BAM',
     superSummaryHead: 'Nood-super',
@@ -676,7 +676,7 @@ function seedNlGameStrings() {
     helpTrySub: 'Nog niet gespeeld — één hint bovenin, geen extra toast.',
     helpHintSeen: '✓ hint gezien',
     helpHintNot: '· nog niet',
-    helpTouch: 'touch',
+    helpTouch: 'aanraken',
     helpKeyboard: 'toetsenbord',
     helpIslandTitle: 'Eilanden & skill gate',
     helpIslandIntro: 'avontuur is 5×10 levels × Normal/Nightmare/Hell. Per eiland geldt een wapen-cap (nu Lv {cap} op eiland {cur}). Na Normal Lv 50 openen Nightmare & Hell.',
@@ -1061,6 +1061,8 @@ function mergeI18nCatalogs() {
   if (typeof CATALOG_DE_CHROME === 'object') deepMergeI18n(I18N.de, CATALOG_DE_CHROME);
   deepMergeI18n(I18N.fr, CATALOG_FR);
   deepMergeI18n(I18N.es, CATALOG_ES);
+  // Re-apply #283 overlays after DE chrome so coverage keys stay and polish wording wins.
+  if (typeof applyLocaleOverlays === 'function') applyLocaleOverlays();
   try { if (typeof globalThis !== 'undefined') globalThis.__sfI18N = I18N; } catch (_) {}
 }
 
@@ -1512,7 +1514,7 @@ const CATALOG_EN = {
     charLocked: 'Locked',
     charIconRow: 'Saga icons · part 2 — tap to pick',
     charBig5Title: 'Legends · quick pick',
-    charBig5Hint: 'Own fighters · quick pick',
+    charBig5Hint: 'Your fighters · quick pick',
     charArenaPre: 'VERSUS · BEST OF 3',
     charHead: 'SELECT FIGHTER',
     charBackP1: '← Other P1',

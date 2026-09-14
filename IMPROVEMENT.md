@@ -1,3 +1,4 @@
+| 2026-09-14 | **i18n Z→A rebase** | #283 rebased on #273: coverage keys + FR/ES/DE overlays; polish wording wins. **v1.18.165 / SW v375**. |
 | 2026-09-14 | **i18n harden** | Zelfde lane #273: Collectie/Settings leftover Dutch via t(); EN/DE geen NL-markers; Versus-keys vallen terug op EN. **v1.18.165 / SW v375**. |
 | 2026-09-14 | **i18n chrome** | EN/DE/NL: locale in scope (geen NL-fallback op EN/DE); HOME/Collectie/Upgrades/Wapens/Opties/HUD/tips in alle 3 talen. **v1.18.164 / SW v374**. |
 | 2026-09-14 | **locale + toast** | #266: NL VERLOREN, geen raw menu.tips / PICK AN ISLAND; versie-banner stiller + wegklik; rest HOME. **v1.18.163 / SW v373**. |

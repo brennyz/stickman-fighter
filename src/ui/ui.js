@@ -3729,7 +3729,7 @@ const UI = {
       const right = document.createElement('div');
       right.className = 'right';
       right.style.color = rar.color;
-      right.innerHTML = kills ? `${kills}x verslagen<br>+${hpB} max HP` : (canMeet ? 'Speel avontuur' : '');
+      right.innerHTML = kills ? `${t('ui.dexKillsLine', { n: kills })}<br>+${hpB} max HP` : (canMeet ? t('ui.dexPlayAdv') : '');
       el.appendChild(right);
       list.appendChild(el);
     }
