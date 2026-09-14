@@ -37,6 +37,7 @@
   "src/render/cave-scenery.js",
   "src/render/backgrounds.js",
   "src/game/game.js",
+  "src/ui/season-overlay.js",
   "src/ui/ui.js",
   "src/boot/start.js",
   "src/boot/loop.js"

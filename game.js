@@ -323,9 +323,9 @@ const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const VERSION_UPDATE_SAVE_KEY = 'stickfighter_version_update_save_v1';
 const VERSION_UPDATE_FLAG_KEY = 'stickfighter_version_update_flag_v1';
 const SAVE_EXPORT_SCHEMA = 3;
-const APP_VERSION = '1.18.163';
+const APP_VERSION = '1.18.164';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 373;
+const SW_CACHE_REV = 374;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', petCoins: 0, dex: {}, summons: {}, pets: {}, activePet: null,
   eggPets: {}, activeEggPet: null, eggDaily: null,
   chestDaily: null, chestWeapons: {},
@@ -30643,6 +30643,55 @@ class Game {
   }
 }
 
+/* --- src/ui/season-overlay.js --- */
+/* Season overlay — resolve pack token onto body[data-season].
+   Slots + art: docs/season-overlay-slots.md · styles/season-overlays.css
+   No FOMO, no gear, no Versus. Combat hides via CSS (body.is-playing). */
+
+const SEASON_PACKS = { jungle: 1, halloween: 1 };
+
+function calendarSeasonOverlay(now) {
+  const d = now || new Date();
+  const m = d.getMonth();
+  const day = d.getDate();
+  if (m === 9 || (m === 10 && day <= 2)) return 'halloween';
+  return '';
+}
+
+function resolveSeasonOverlay() {
+  try {
+    const q = new URLSearchParams(location.search).get('season');
+    if (q === 'none' || q === 'off' || q === '0') return '';
+    if (q && SEASON_PACKS[q]) return q;
+  } catch (_) {}
+  try {
+    const stored = localStorage.getItem('sfSeason');
+    if (stored === 'none' || stored === '') return '';
+    if (stored && SEASON_PACKS[stored]) return stored;
+  } catch (_) {}
+  return calendarSeasonOverlay();
+}
+
+function applySeasonOverlay() {
+  const season = resolveSeasonOverlay();
+  const body = typeof document !== 'undefined' ? document.body : null;
+  if (!body) return season;
+  if (season) body.setAttribute('data-season', season);
+  else body.removeAttribute('data-season');
+  body.classList.toggle('has-season-overlay', !!season);
+  const host = document.getElementById('seasonOverlay');
+  if (host) host.setAttribute('data-season-pack', season || '');
+  return season;
+}
+
+try { applySeasonOverlay(); } catch (_) {}
+try {
+  window.__sfSeason = {
+    resolve: resolveSeasonOverlay,
+    apply: applySeasonOverlay,
+    packs: Object.keys(SEASON_PACKS),
+  };
+} catch (_) {}
 /* --- src/ui/ui.js --- */
 /* ================================= UI ================================== */
 /** Long-press skip-gamble timers — bump gen on re-render / leave level screen. */

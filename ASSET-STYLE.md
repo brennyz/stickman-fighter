@@ -78,6 +78,9 @@ assets/
     chrome/         ← back, home, claim, pause, settings toggles
   ui/               ← overige UI-SVG (lock, check, saga chips als files)
   forest-floor/     ← scenery samples (bestaand)
+  seasons/          ← seasonal overlay pixel props (jungle + halloween)
+    jungle/         ← vines / leaves / ferns — slot filenames only
+    halloween/      ← pumpkins / cobwebs / bats — same slot filenames
 icons/              ← alleen PWA app-iconen (180/192/512 png)
 ```
 

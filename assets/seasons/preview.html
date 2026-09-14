@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Season overlay preview — Stickman Fighter</title>
+<link rel="stylesheet" href="../../styles/season-overlays.css">
+<style>
+  html, body { margin: 0; background: #0a0d18; color: #e8f0ff; font-family: Nunito, system-ui, sans-serif; }
+  body { padding: 20px 16px 48px; }
+  h1 { font-family: Bangers, cursive; color: #ffd75e; letter-spacing: 2px; margin: 0 0 6px; }
+  .sub { color: #9db1e3; font-size: 14px; margin: 0 0 20px; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px; }
+  .season-preview-frame {
+    position: relative;
+    width: min(100%, 360px);
+    height: 640px;
+    margin: 0 auto;
+    border: 3px solid #333c55;
+    border-radius: 18px;
+    overflow: hidden;
+    background:
+      radial-gradient(ellipse at 20% 10%, rgba(255,167,81,.12), transparent 40%),
+      linear-gradient(180deg, #151b33 0%, #0a0d18 70%);
+  }
+  .season-preview-frame .season-overlay { position: absolute; z-index: 1; }
+  .fake-ui {
+    position: relative; z-index: 2; height: 100%;
+    display: flex; flex-direction: column; align-items: center;
+    padding: 18px 42px 12px; pointer-events: none;
+  }
+  .fake-title { font-family: Bangers, cursive; color: #ffd75e; font-size: 34px; letter-spacing: 2px;
+    text-shadow: 0 3px 0 #c97a20; text-align: center; line-height: 0.95; }
+  .fake-title span { display: block; }
+  .tiles { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; width: 100%; margin-top: 22px; }
+  .tile { background: #162033; border: 2px solid rgba(255,255,255,.16); border-radius: 12px;
+    min-height: 88px; color: #f2efe6; font-weight: 800; display: flex; align-items: center; justify-content: center; }
+  .dock { margin-top: auto; display: flex; gap: 8px; width: 100%; }
+  .dock i { flex: 1; height: 44px; border-radius: 10px; background: #1c2940; border: 1px solid rgba(255,255,255,.12); }
+  .label { text-align: center; margin: 8px 0 0; font-weight: 800; color: #7cf5aa; }
+  .sheets { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px; margin-top: 28px; }
+  .sheets figure { margin: 0; background: #12182a; border-radius: 12px; padding: 12px; }
+  .sheets img { width: 100%; height: auto; image-rendering: pixelated; background: #0a0d18; }
+  .sheets figcaption { color: #9db1e3; font-size: 13px; margin-top: 8px; }
+</style>
+</head>
+<body>
+  <h1>SEASON OVERLAYS</h1>
+  <p class="sub">Jungle + Halloween pixel packs on documented slots. Art sits in corners — fake tiles/dock stay readable. Not Versus.</p>
+  <div class="grid">
+    <div>
+      <div class="season-preview-frame" data-season="jungle">
+        <div class="season-overlay" aria-hidden="true">
+          <div class="season-slot" data-season-slot="corner-tl"></div>
+          <div class="season-slot" data-season-slot="corner-tr"></div>
+          <div class="season-slot" data-season-slot="rail-l"></div>
+          <div class="season-slot" data-season-slot="rail-r"></div>
+          <div class="season-slot" data-season-slot="corner-bl"></div>
+          <div class="season-slot" data-season-slot="corner-br"></div>
+          <div class="season-slot" data-season-slot="crest"></div>
+        </div>
+        <div class="fake-ui">
+          <div class="fake-title">STICKMAN<span>FIGHTER</span></div>
+          <div class="tiles">
+            <div class="tile">Avontuur</div>
+            <div class="tile">Arcade</div>
+            <div class="tile">Collectie</div>
+            <div class="tile">Summons</div>
+          </div>
+          <div class="dock"><i></i><i></i><i></i><i></i></div>
+        </div>
+      </div>
+      <p class="label">jungle</p>
+    </div>
+    <div>
+      <div class="season-preview-frame" data-season="halloween">
+        <div class="season-overlay" aria-hidden="true">
+          <div class="season-slot" data-season-slot="corner-tl"></div>
+          <div class="season-slot" data-season-slot="corner-tr"></div>
+          <div class="season-slot" data-season-slot="rail-l"></div>
+          <div class="season-slot" data-season-slot="rail-r"></div>
+          <div class="season-slot" data-season-slot="corner-bl"></div>
+          <div class="season-slot" data-season-slot="corner-br"></div>
+          <div class="season-slot" data-season-slot="crest"></div>
+        </div>
+        <div class="fake-ui">
+          <div class="fake-title">STICKMAN<span>FIGHTER</span></div>
+          <div class="tiles">
+            <div class="tile">Avontuur</div>
+            <div class="tile">Arcade</div>
+            <div class="tile">Collectie</div>
+            <div class="tile">Summons</div>
+          </div>
+          <div class="dock"><i></i><i></i><i></i><i></i></div>
+        </div>
+      </div>
+      <p class="label" style="color:#ff9a32">halloween</p>
+    </div>
+  </div>
+  <div class="sheets">
+    <figure>
+      <img src="jungle/_sheet.svg" alt="Jungle slot sheet">
+      <figcaption>Jungle slot sheet</figcaption>
+    </figure>
+    <figure>
+      <img src="halloween/_sheet.svg" alt="Halloween slot sheet">
+      <figcaption>Halloween slot sheet</figcaption>
+    </figure>
+  </div>
+</body>
+</html>

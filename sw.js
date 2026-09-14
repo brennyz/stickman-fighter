@@ -2,7 +2,7 @@
  * Nieuwe SW wacht op SF_SKIP_WAITING (menu/idle). Eerste install activeert
  * vanzelf (geen actieve worker). skipWaiting() hier zou midden in een gevecht
  * claimen — dat is de classic “update tijdens combo → startscherm”. */
-const CACHE = 'stickfighter-app-v373';
+const CACHE = 'stickfighter-app-v374';
 
 
 
@@ -16,6 +16,7 @@ const ASSETS = [
   './privacy.html',
   './game.js',
   './styles/main.css',
+  './styles/season-overlays.css',
   './tunnel-check.js',
   './install.js',
   './manifest.webmanifest',
@@ -120,7 +121,21 @@ const ASSETS = [
   './assets/ui/island-nachtmerrie.svg',
   './assets/ui/island-vulkaan.svg',
   './assets/ui/satan.svg',
-  './assets/ui/satan-mark.svg'
+  './assets/ui/satan-mark.svg',
+  './assets/seasons/jungle/corner-tl.svg',
+  './assets/seasons/jungle/corner-tr.svg',
+  './assets/seasons/jungle/rail-l.svg',
+  './assets/seasons/jungle/rail-r.svg',
+  './assets/seasons/jungle/corner-bl.svg',
+  './assets/seasons/jungle/corner-br.svg',
+  './assets/seasons/jungle/crest.svg',
+  './assets/seasons/halloween/corner-tl.svg',
+  './assets/seasons/halloween/corner-tr.svg',
+  './assets/seasons/halloween/rail-l.svg',
+  './assets/seasons/halloween/rail-r.svg',
+  './assets/seasons/halloween/corner-bl.svg',
+  './assets/seasons/halloween/corner-br.svg',
+  './assets/seasons/halloween/crest.svg'
 ];
 
 function offlineFallbackHtml() {
