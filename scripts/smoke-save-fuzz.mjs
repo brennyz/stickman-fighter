@@ -86,6 +86,8 @@ const mutators = [
     s.skillUpgrades = { spiral_orb: { level: 'max', shards: null }, fake: 42 };
     s.itemUpgrades = { weapon: { katana: { level: -3, shards: 'x' } }, hacker: { x: 1 } };
   },
+  (s) => { s.buildings = { schema: 'nope', lastTickAt: -9, byId: { __proto__: { level: 99 }, dojo: { level: 'max', pending: Infinity } } }; },
+  (s) => { s.buildings = 'factory'; },
 ];
 
 let ok = 0;

@@ -48,6 +48,14 @@ const I18N = {
       modes3: '3 snelle modi', fightersLocal: '20 vechters · lokaal', vsRecord: '{w}/{m} gewonnen',
       loadFail: 'Hub laden mislukt',
     },
+    buildings: {
+      collected: '+{n} {res} · {name}',
+      collectedAll: 'Oogst +{n} uit {k} gebouwen',
+      waveHeal: '+{n} HP',
+      dojo: { name: 'Dojo' }, forge: { name: 'Smederij' }, garden: { name: 'Tuin' },
+      tower: { name: 'Toren' }, shrine: { name: 'Schrijn' },
+      res: { focus: 'focus', scrap: 'schroot', rations: 'rantsoen', watch: 'wacht', spirit: 'geest' },
+    },
     modes: { adventure: 'Avontuur', training: 'Training', wall: 'Muur', versus: '2 spelers', coinrun: 'Muntjes' },
     pause: {
       title: 'Pauze', sub: 'Spiral Orb klaar — moto! · voortgang blijft op dit apparaat',
@@ -160,6 +168,14 @@ const I18N = {
       modes3: '3 quick modes', fightersLocal: '20 fighters · local', vsRecord: '{w}/{m} won',
       loadFail: 'Could not load hub',
     },
+    buildings: {
+      collected: '+{n} {res} · {name}',
+      collectedAll: 'Harvest +{n} from {k} buildings',
+      waveHeal: '+{n} HP',
+      dojo: { name: 'Dojo' }, forge: { name: 'Forge' }, garden: { name: 'Garden' },
+      tower: { name: 'Tower' }, shrine: { name: 'Shrine' },
+      res: { focus: 'focus', scrap: 'scrap', rations: 'rations', watch: 'watch', spirit: 'spirit' },
+    },
     modes: { adventure: 'Adventure', training: 'Training', wall: 'Wall', versus: '2 players', coinrun: 'Coins' },
     pause: {
       title: 'Paused', sub: 'Spiral Orb ready — go! · progress stays on this device',
@@ -259,6 +275,14 @@ const I18N = {
       modes3: '3 schnelle Modi', fightersLocal: '20 Kämpfer · lokal', vsRecord: '{w}/{m} Siege',
       loadFail: 'Hub laden fehlgeschlagen',
     },
+    buildings: {
+      collected: '+{n} {res} · {name}',
+      collectedAll: 'Ernte +{n} aus {k} Gebäuden',
+      waveHeal: '+{n} HP',
+      dojo: { name: 'Dojo' }, forge: { name: 'Schmiede' }, garden: { name: 'Garten' },
+      tower: { name: 'Turm' }, shrine: { name: 'Schrein' },
+      res: { focus: 'Fokus', scrap: 'Schrott', rations: 'Rationen', watch: 'Wache', spirit: 'Geist' },
+    },
     modes: { adventure: 'Abenteuer', training: 'Training', wall: 'Mauer', versus: '2 Spieler', coinrun: 'Münzen' },
     pause: {
       title: 'Pause', sub: 'Spiral Orb bereit — los! · Fortschritt bleibt auf diesem Gerät',
@@ -340,6 +364,14 @@ const I18N = {
       modes3: '3 modes rapides', fightersLocal: '20 combattants · local', vsRecord: '{w}/{m} victoires',
       loadFail: 'Hub introuvable',
     },
+    buildings: {
+      collected: '+{n} {res} · {name}',
+      collectedAll: 'Récolte +{n} de {k} bâtiments',
+      waveHeal: '+{n} PV',
+      dojo: { name: 'Dojo' }, forge: { name: 'Forge' }, garden: { name: 'Jardin' },
+      tower: { name: 'Tour' }, shrine: { name: 'Sanctuaire' },
+      res: { focus: 'focus', scrap: 'ferraille', rations: 'rations', watch: 'veille', spirit: 'esprit' },
+    },
     modes: { adventure: 'Aventure', training: 'Entraînement', wall: 'Mur', versus: '2 joueurs', coinrun: 'Pièces' },
     pause: {
       title: 'Pause', sub: 'Spiral Orb prêt — go ! · progrès sur cet appareil',
@@ -420,6 +452,14 @@ const I18N = {
       dex: 'Bestiario', dexSub: '{n} especies · rareza = HP · granja · zoo · mar',
       modes3: '3 modos rápidos', fightersLocal: '20 luchadores · local', vsRecord: '{w}/{m} ganados',
       loadFail: 'No se pudo cargar el hub',
+    },
+    buildings: {
+      collected: '+{n} {res} · {name}',
+      collectedAll: 'Cosecha +{n} de {k} edificios',
+      waveHeal: '+{n} HP',
+      dojo: { name: 'Dojo' }, forge: { name: 'Forja' }, garden: { name: 'Jardín' },
+      tower: { name: 'Torre' }, shrine: { name: 'Santuario' },
+      res: { focus: 'foco', scrap: 'chatarra', rations: 'raciones', watch: 'vigía', spirit: 'espíritu' },
     },
     modes: { adventure: 'Aventura', training: 'Entrenamiento', wall: 'Muro', versus: '2 jugadores', coinrun: 'Monedas' },
     pause: {

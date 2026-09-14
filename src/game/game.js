@@ -153,6 +153,16 @@ class Game {
       this.petCritBonus = 0;
       this.petShieldWave = 0;
       applyPetBonusesToPlayer(this, this.player);
+      this.buildingDmgMul = 1;
+      this.buildingEnergyMul = 1;
+      this.buildingTechniqueMul = 1;
+      this.buildingCritBonus = 0;
+      this.buildingShieldWave = 0;
+      this.buildingDefMul = 1;
+      this.buildingHealBetween = 0;
+      if (typeof applyBuildingPowersToPlayer === 'function') {
+        applyBuildingPowersToPlayer(this, this.player);
+      }
       spawnGamePet(this);
       spawnGameEggPet(this);
       if (mode === 'adventure') this.player.energy = 45;
@@ -388,6 +398,9 @@ class Game {
     }
     if (this.styleShieldWave > 0 && this.player) {
       this.playerShieldT = Math.max(this.playerShieldT, this.styleShieldWave);
+    }
+    if (this.buildingShieldWave > 0 && this.player) {
+      this.playerShieldT = Math.max(this.playerShieldT, this.buildingShieldWave);
     }
     if (bossWave) {
       try {
@@ -758,6 +771,13 @@ class Game {
         this.player.hp = Math.min(this.player.maxhp, this.player.hp + waveHeal);
         this.player.energy = clamp(this.player.energy + 8, 0, 100);
         this.floater(this.player.x, this.player.y - 88, t('banner.waveClear', { heal: waveHeal }), '#6ee06e', 14);
+        if (this.buildingHealBetween > 0 && this.player) {
+          const bHeal = Math.max(1, Math.round(this.player.maxhp * this.buildingHealBetween));
+          this.player.hp = Math.min(this.player.maxhp, this.player.hp + bHeal);
+          this.floater(this.player.x, this.player.y - 100,
+            (typeof tOr === 'function') ? tOr('buildings.waveHeal', '+{n} HP', { n: bHeal }) : ('+' + bHeal + ' HP'),
+            '#6ee06e', 12);
+        }
         if (this.stageHealBetween > 0) {
           const heal = Math.max(8, Math.round(this.player.maxhp * this.stageHealBetween));
           this.player.hp = Math.min(this.player.maxhp, this.player.hp + heal);

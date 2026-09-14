@@ -5,9 +5,9 @@ const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const VERSION_UPDATE_SAVE_KEY = 'stickfighter_version_update_save_v1';
 const VERSION_UPDATE_FLAG_KEY = 'stickfighter_version_update_flag_v1';
 const SAVE_EXPORT_SCHEMA = 3;
-const APP_VERSION = '1.18.163';
+const APP_VERSION = '1.18.164';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 373;
+const SW_CACHE_REV = 374;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', petCoins: 0, dex: {}, summons: {}, pets: {}, activePet: null,
   eggPets: {}, activeEggPet: null, eggDaily: null,
   chestDaily: null, chestWeapons: {},
@@ -28,7 +28,8 @@ const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', petCoins: 0,
   kbLegend: true,
   reducedMotion: false, liteFx: false, highContrast: false, lang: null, playerTag: '', lastPlay: null, tipsSeen: {},
   stats: { kills: 0, advWins: 0, wallBestRun: 0, maxCombo: 0, maxKillStreak: 0, trainMaxCombo: 0, pickups: 0, bossKills: 0, vsMatches: 0, vsWins: 0, matsCoinBest: 0, summonCount: 0, killsSinceSummon: 0, petsTamed: 0, eggsHatched: 0, weaponFinishers: 0, tideBattleWins: 0, skillShards: 0, itemShards: 0, dailyBonusCount: 0 },
-  achievements: {}, daily: null, vsPlayedIds: [], weaponMastery: {}, skillUpgrades: {}, itemUpgrades: {}, activeTechnique: 'spiral_orb', skill: 'spiral_orb', super: 'ketsbam', missionsIntroSeen: false };
+  achievements: {}, daily: null, vsPlayedIds: [], weaponMastery: {}, skillUpgrades: {}, itemUpgrades: {}, activeTechnique: 'spiral_orb', skill: 'spiral_orb', super: 'ketsbam', missionsIntroSeen: false,
+  buildings: null };
 
 const MAX_LEVEL = 70;
 const LEVELS_PER_ISLAND = 10;
@@ -630,6 +631,9 @@ function rollHitDamage(attacker, spec, mult) {
   if (attacker.isPlayer && typeof game !== 'undefined' && game && game.styleCritBonus) {
     critChance += game.styleCritBonus;
   }
+  if (attacker.isPlayer && typeof game !== 'undefined' && game && game.buildingCritBonus) {
+    critChance += game.buildingCritBonus;
+  }
   if (attacker.isPlayer && k === 'weapon' && attacker.weapon && attacker.weapon.upgradeCrit) {
     critChance += attacker.weapon.upgradeCrit;
   }
@@ -647,6 +651,9 @@ function projCritMeta(f) {
   let critChance = prof.crit + (sig.critAdd || 0) + (sig.techniqueCrit || 0);
   const eqSk = fighterEquippedSkill(f);
   if (eqSk && (eqSk.id === 'void_gaze' || eqSk.behavior === 'pull' || eqSk.behavior === 'slash')) critChance += 0.05;
+  if (f && f.isPlayer && typeof game !== 'undefined' && game && game.buildingCritBonus) {
+    critChance += game.buildingCritBonus;
+  }
   return { critChance: clamp(critChance, 0, 0.42), critMul: prof.critMul };
 }
 
@@ -934,6 +941,9 @@ function readSaveJson(raw) {
     }
     // lang: copy raw — SUPPORTED_LANGS may not exist yet (storage loads before i18n)
     if (typeof parsed.lang === 'string') merged.lang = parsed.lang;
+    if (parsed.buildings && typeof parsed.buildings === 'object' && !Array.isArray(parsed.buildings)) {
+      merged.buildings = parsed.buildings;
+    }
     return merged;
   } catch (e) {
     return null;
@@ -1601,6 +1611,13 @@ function sanitizeSave(s) {
     if (typeof VS_ROSTER !== 'undefined' && VS_ROSTER.some(r => r.id === id) && !played.includes(id)) played.push(id);
   }
   out.vsPlayedIds = played.slice(0, 32);
+
+  if (typeof sanitizeBuildingsBag === 'function') {
+    try { out.buildings = sanitizeBuildingsBag(out.buildings); }
+    catch (_) { out.buildings = (typeof emptyBuildingsBag === 'function') ? emptyBuildingsBag() : { schema: 1, lastTickAt: 0, byId: {} }; }
+  } else if (!out.buildings || typeof out.buildings !== 'object' || Array.isArray(out.buildings)) {
+    out.buildings = { schema: 1, lastTickAt: 0, byId: {} };
+  }
 
   const allowedKeys = new Set(Object.keys(DEFAULT_SAVE));
   for (const k of Object.keys(out)) {
