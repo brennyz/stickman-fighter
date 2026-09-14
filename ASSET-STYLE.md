@@ -78,6 +78,7 @@ assets/
     chrome/         ← back, home, claim, pause, settings toggles
   ui/               ← overige UI-SVG (lock, check, saga chips als files)
   forest-floor/     ← scenery samples (bestaand)
+  seasons/          ← optionele PNG-slots (zie docs/SEASON-ASSET-SLOTS.md) — CSS-overlay werkt zonder
 icons/              ← alleen PWA app-iconen (180/192/512 png)
 ```
 

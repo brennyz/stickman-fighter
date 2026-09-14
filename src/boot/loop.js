@@ -839,6 +839,7 @@ function bootGame() {
   safeCall(syncPlayLayer, 'syncPlay');
   safeCall(resize, 'resize');
   safeCall(() => initLang(), 'i18n');
+  safeCall(() => { if (typeof applySeasonTheme === 'function') applySeasonTheme(); }, 'season');
   safeCall(() => UI.renderMenu(), 'menu');
   safeCall(ensureDaily, 'daily');
   safeCall(checkAchievements, 'ach');
@@ -915,6 +916,8 @@ function bootGame() {
     get version() { return APP_VERSION; },
     get state() { return state; },
     get swRev() { return SW_CACHE_REV; },
+    get season() { return typeof getSeasonId === 'function' ? getSeasonId() : 'classic'; },
+    setSeason: typeof setSeason === 'function' ? setSeason : null,
     startGame, save, Game, UI, recoverToMenu, syncPlayLayer,
     enterHub: enterHubFromTitle,
     debug: typeof sfDebugScreen === 'function' ? sfDebugScreen : null,

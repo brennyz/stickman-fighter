@@ -323,9 +323,9 @@ const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const VERSION_UPDATE_SAVE_KEY = 'stickfighter_version_update_save_v1';
 const VERSION_UPDATE_FLAG_KEY = 'stickfighter_version_update_flag_v1';
 const SAVE_EXPORT_SCHEMA = 3;
-const APP_VERSION = '1.18.163';
+const APP_VERSION = '1.18.164';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 373;
+const SW_CACHE_REV = 374;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', petCoins: 0, dex: {}, summons: {}, pets: {}, activePet: null,
   eggPets: {}, activeEggPet: null, eggDaily: null,
   chestDaily: null, chestWeapons: {},
@@ -338,7 +338,7 @@ const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', petCoins: 0,
     nightmare: { unlocked: 1, stars: {}, fails: {}, masterBuff: null, satanAt: {} },
     hell: { unlocked: 1, stars: {}, fails: {}, masterBuff: null, satanAt: {} },
   },
-  bestWall: 0, trainWins: 0, music: true, sfx: true, style: 'classic', stars: {},
+  bestWall: 0, trainWins: 0, music: true, sfx: true, style: 'classic', season: 'classic', stars: {},
   musicVol: 0.85, sfxVol: 1, shake: true, haptics: true, comboHud: true, bigTouch: true,
   /** null/undefined = auto via IS_TOUCH; true = force pads; false = force keyboard */
   showTouchPads: null,
@@ -1485,6 +1485,7 @@ function applyVersionUpdateSave() {
       UI.renderMenu();
       if (UI.renderMissions) UI.renderMissions();
       if (UI.renderSettings) UI.renderSettings();
+      if (typeof applySeasonTheme === 'function') applySeasonTheme();
     }
     return true;
   } catch (err) {
@@ -1868,6 +1869,9 @@ function sanitizeSave(s) {
   if (out.lang != null && typeof SUPPORTED_LANGS !== 'undefined' && !SUPPORTED_LANGS.includes(out.lang)) {
     out.lang = null;
   }
+  const SEASON_OK = ['classic', 'jungle', 'halloween', 'winter', 'summer'];
+  if (typeof normalizeSeasonId === 'function') out.season = normalizeSeasonId(out.season);
+  else out.season = SEASON_OK.includes(out.season) ? out.season : 'classic';
   out.playerTag = sanitizePlayerTag(out.playerTag);
 
   out.stats = Object.assign({}, DEFAULT_SAVE.stats, out.stats || {});
@@ -2033,6 +2037,16 @@ const I18N = {
       ageHint: 'Cartoon-gevecht · tiener+ · geen chat',
       installAge: 'Cartoon-gevechten · tiener+ · geen chat.',
       langChanged: 'Taal: {lang}',
+      season: 'Seizoen',
+      seasonHint: 'Sfeerlaag boven het scherm — geen extra schade, geen gevecht-wijziging. Opgeslagen op dit apparaat.',
+      seasonChanged: 'Seizoen: {name}',
+    },
+    season: {
+      classic: { name: 'Klassiek', flavor: '', story: 'Het oorspronkelijke pad — eilanden, bazen, je save blijft hier.' },
+      jungle: { name: 'Jungle', flavor: 'Het bladerdak sluit zich boven het oude pad.', story: 'Wijnranken over de stenen. Iets ritselt in het bladerdak — dezelfde eilanden, dichter groen.' },
+      halloween: { name: 'Halloween', flavor: 'Pompoenen grijnzen langs het pad.', story: 'Lantaarns en een dunne nevel. De eilanden voelen een beetje spookachtig — gevecht blijft hetzelfde.' },
+      winter: { name: 'Winter', flavor: 'Rijp op de stenen.', story: 'Koude lucht, dezelfde route. Vorst op de randen — alleen sfeer, geen extra schade.' },
+      summer: { name: 'Zomer', flavor: 'Hitte-waas boven het pad.', story: 'Felle lucht, dezelfde eilanden. Een warme rand om het scherm — geen extra damage.' },
     },
     missions: { title: 'Missies & prestaties', sub: '3 missies per dag',
       claimAll: 'Claim alle klaar', claimAllSub: '+XP in één tik', dayBonus: 'Dagbonus', dayBonusSub: '+80 XP · alle 3 geclaimd',
@@ -2145,6 +2159,16 @@ const I18N = {
       ageHint: 'Cartoon combat · teens+ · no chat',
       installAge: 'Cartoon combat · teens+ · no chat.',
       langChanged: 'Language: {lang}',
+      season: 'Season',
+      seasonHint: 'Mood layer on top of the screen — no extra damage, no combat change. Saved on this device.',
+      seasonChanged: 'Season: {name}',
+    },
+    season: {
+      classic: { name: 'Classic', flavor: '', story: 'The original path — islands, bosses, your save stays here.' },
+      jungle: { name: 'Jungle', flavor: 'The canopy closes over the old path.', story: 'Vines on the stones. Something rustles above — same islands, thicker green.' },
+      halloween: { name: 'Halloween', flavor: 'Pumpkins grin along the trail.', story: 'Lanterns and a thin mist. The islands feel a little haunted — combat stays the same.' },
+      winter: { name: 'Winter', flavor: 'Frost on the stones.', story: 'Cold air, same route. Ice on the edges — flavor only, no extra damage.' },
+      summer: { name: 'Summer', flavor: 'Heat haze over the trail.', story: 'Bright sky, same islands. A warm rim on the screen — no extra damage.' },
     },
     missions: { title: 'Missions & achievements', sub: '3 missions a day',
       claimAll: 'Claim all ready', claimAllSub: '+XP in one tap', dayBonus: 'Daily bonus', dayBonusSub: '+80 XP · all 3 claimed',
@@ -2233,6 +2257,9 @@ const I18N = {
       ageHint: 'Cartoon-Kampf · ab Teenager · kein Chat',
       installAge: 'Cartoon-Stockfigur-Kämpfe · Teenager+ · kein Chat.',
       langChanged: 'Sprache: {lang}',
+      season: 'Saison',
+      seasonHint: 'Stimmungsschicht über dem Bildschirm — kein Extra-Schaden. Wird auf diesem Gerät gespeichert.',
+      seasonChanged: 'Saison: {name}',
     },
     missions: { title: 'Missionen & Erfolge', sub: '3 tägliche Missionen · XP abholen',
       claimAll: 'Alle abholen', claimAllSub: '+XP auf einmal', dayBonus: 'Tagesbonus', dayBonusSub: '+80 XP',
@@ -2314,6 +2341,9 @@ const I18N = {
       ageHint: 'Combat cartoon · ados+ · pas de chat',
       installAge: 'Combats stickman cartoon · ados+ · pas de chat.',
       langChanged: 'Langue : {lang}',
+      season: 'Saison',
+      seasonHint: 'Calque d’ambiance au-dessus de l’écran — pas de dégâts en plus. Enregistré sur cet appareil.',
+      seasonChanged: 'Saison : {name}',
     },
     missions: { title: 'Missions & succès', sub: '3 missions quotidiennes · réclamer XP',
       claimAll: 'Tout réclamer', claimAllSub: '+XP en un tap', dayBonus: 'Bonus du jour', dayBonusSub: '+80 XP',
@@ -2395,6 +2425,9 @@ const I18N = {
       ageHint: 'Combate cartoon · teens+ · sin chat',
       installAge: 'Combates stickman cartoon · teens+ · sin chat.',
       langChanged: 'Idioma: {lang}',
+      season: 'Temporada',
+      seasonHint: 'Capa de ambiente encima de la pantalla — sin daño extra. Guardado en este dispositivo.',
+      seasonChanged: 'Temporada: {name}',
     },
     missions: { title: 'Misiones y logros', sub: '3 misiones diarias · reclamar XP',
       claimAll: 'Reclamar todo', claimAllSub: '+XP de una vez', dayBonus: 'Bonus diario', dayBonusSub: '+80 XP',
@@ -2596,7 +2629,11 @@ function applyLangStaticScreens() {
   setText('settingsHead', 'settings.title');
   setText('settingsSub', 'settings.sub');
   setText('setLangLbl', 'settings.lang');
+  setText('setSeasonLbl', 'settings.season');
+  setText('settingsSeasonHint', 'settings.seasonHint');
   setText('settingsA11yTip', 'settings.a11yTip');
+  if (typeof applySeasonTheme === 'function') applySeasonTheme();
+  if (typeof renderSeasonSwitch === 'function') renderSeasonSwitch();
   const setMap = [
     ['setShake', 'settings.shake'], ['setHaptics', 'settings.haptics'], ['setComboHud', 'settings.comboHud'],
     ['setBigTouch', 'settings.bigTouch'], ['setKbLegend', 'settings.kbLegend'], ['setShowTouchPads', 'settings.showTouchPads'],
@@ -9210,6 +9247,244 @@ function fillHudText(c, text, x, y, opts) {
   c.fillStyle = fill;
   c.fillText(text, x, y);
 }
+/* --- src/systems/seasons.js --- */
+/* ============================== SEASONS =============================== */
+/** CSS + flavor overlay only. Never steals taps. Pixel-art partner fills slots later. */
+
+const SEASON_IDS = ['classic', 'jungle', 'halloween', 'winter', 'summer'];
+const SEASON_DEFAULT = 'classic';
+/** Slots the pixel-art partner may drop as PNG (optional; CSS fallbacks always paint). */
+const SEASON_ART_SLOTS = [
+  'corner-tl', 'corner-tr', 'corner-bl', 'corner-br',
+  'banner', 'vignette', 'ground-trim', 'motif',
+];
+const SEASON_THEME_COLORS = {
+  classic: '#151b33',
+  jungle: '#14261a',
+  halloween: '#1a1024',
+  winter: '#121828',
+  summer: '#221a10',
+};
+/** Empty until partner ships files — never prefetch 404 PNGs on Android. */
+const SEASON_ART_PRESENT = {};
+let _seasonIgnoreQuery = false;
+let _seasonPageshowBound = false;
+
+function normalizeSeasonId(id) {
+  return SEASON_IDS.includes(id) ? id : SEASON_DEFAULT;
+}
+
+function seasonIdFromQuery() {
+  if (_seasonIgnoreQuery) return null;
+  try {
+    const q = new URLSearchParams(location.search).get('season');
+    if (q && SEASON_IDS.includes(q)) return q;
+  } catch (_) {}
+  return null;
+}
+
+function getSeasonId() {
+  const q = seasonIdFromQuery();
+  if (q) return q;
+  return normalizeSeasonId(typeof save !== 'undefined' && save && save.season);
+}
+
+function persistedSeasonId() {
+  return normalizeSeasonId(typeof save !== 'undefined' && save && save.season);
+}
+
+function seasonLabel(id) {
+  const sid = normalizeSeasonId(id);
+  if (typeof t === 'function') {
+    const v = t('season.' + sid + '.name');
+    if (v && v !== 'season.' + sid + '.name') return v;
+  }
+  return sid;
+}
+
+function seasonFlavorText(id) {
+  const sid = normalizeSeasonId(id || getSeasonId());
+  if (typeof t === 'function') {
+    const v = t('season.' + sid + '.flavor');
+    if (v && v !== 'season.' + sid + '.flavor') return v;
+  }
+  return '';
+}
+
+function seasonStoryText(id) {
+  const sid = normalizeSeasonId(id || getSeasonId());
+  if (typeof t === 'function') {
+    const v = t('season.' + sid + '.story');
+    if (v && v !== 'season.' + sid + '.story') return v;
+  }
+  return '';
+}
+
+function seasonArtUrl(seasonId, slot) {
+  const sid = normalizeSeasonId(seasonId);
+  if (!SEASON_ART_SLOTS.includes(slot)) return '';
+  if (!SEASON_ART_PRESENT[sid] || !SEASON_ART_PRESENT[sid][slot]) return '';
+  return 'assets/seasons/' + sid + '/' + slot + '.png';
+}
+
+function hardenSeasonPointerEvents(el) {
+  if (!el) return;
+  try {
+    el.setAttribute('aria-hidden', 'true');
+    el.setAttribute('role', 'presentation');
+    el.style.pointerEvents = 'none';
+    el.style.touchAction = 'none';
+    const nodes = el.querySelectorAll('*');
+    for (let i = 0; i < nodes.length; i++) {
+      nodes[i].style.pointerEvents = 'none';
+      nodes[i].setAttribute('aria-hidden', 'true');
+    }
+  } catch (_) {}
+}
+
+function ensureSeasonOverlay() {
+  if (typeof document === 'undefined') return null;
+  let el = document.getElementById('seasonOverlay');
+  if (el) {
+    hardenSeasonPointerEvents(el);
+    return el;
+  }
+  try {
+    el = document.createElement('div');
+    el.id = 'seasonOverlay';
+    el.className = 'season-overlay';
+    el.setAttribute('aria-hidden', 'true');
+    el.innerHTML =
+      '<div class="season-vignette"></div>' +
+      '<div class="season-wash"></div>' +
+      '<div class="season-css-layer">' +
+        '<span class="season-motif season-motif-a"></span>' +
+        '<span class="season-motif season-motif-b"></span>' +
+        '<span class="season-motif season-motif-c"></span>' +
+        '<span class="season-motif season-motif-d"></span>' +
+        '<span class="season-float season-float-1"></span>' +
+        '<span class="season-float season-float-2"></span>' +
+        '<span class="season-float season-float-3"></span>' +
+      '</div>' +
+      '<div class="season-art-slot season-art-tl" data-season-slot="corner-tl"></div>' +
+      '<div class="season-art-slot season-art-tr" data-season-slot="corner-tr"></div>' +
+      '<div class="season-art-slot season-art-bl" data-season-slot="corner-bl"></div>' +
+      '<div class="season-art-slot season-art-br" data-season-slot="corner-br"></div>' +
+      '<div class="season-art-slot season-art-banner" data-season-slot="banner"></div>' +
+      '<div class="season-art-slot season-art-ground" data-season-slot="ground-trim"></div>' +
+      '<div class="season-art-slot season-art-motif" data-season-slot="motif"></div>';
+    const pause = document.getElementById('pauseBtn');
+    if (pause && pause.parentNode) pause.parentNode.insertBefore(el, pause.nextSibling);
+    else if (document.body) document.body.insertBefore(el, document.body.firstChild);
+    hardenSeasonPointerEvents(el);
+  } catch (_) {
+    return null;
+  }
+  return el;
+}
+
+function applySeasonTheme() {
+  const id = getSeasonId();
+  ensureSeasonOverlay();
+  try {
+    document.documentElement.setAttribute('data-season', id);
+    if (document.body) document.body.setAttribute('data-season', id);
+  } catch (_) {}
+  try {
+    const meta = document.querySelector('meta[name="theme-color"]');
+    if (meta) meta.setAttribute('content', SEASON_THEME_COLORS[id] || SEASON_THEME_COLORS.classic);
+  } catch (_) {}
+  try {
+    const root = document.documentElement;
+    if (root && root.style) {
+      root.style.setProperty('--season-id', id);
+      SEASON_ART_SLOTS.forEach((slot) => {
+        const url = seasonArtUrl(id, slot);
+        if (url) root.style.setProperty('--season-art-' + slot, 'url("' + url + '")');
+        else root.style.removeProperty('--season-art-' + slot);
+      });
+    }
+  } catch (_) {}
+  try {
+    document.querySelectorAll('[data-season-flavor]').forEach((el) => {
+      const line = seasonFlavorText(id);
+      el.textContent = line;
+      el.hidden = !line || id === 'classic';
+    });
+    document.querySelectorAll('[data-season-story]').forEach((el) => {
+      const line = seasonStoryText(id);
+      el.textContent = line;
+      if (el.hasAttribute('data-season-story-always')) el.hidden = !line;
+      else el.hidden = !line || id === 'classic';
+    });
+  } catch (_) {}
+  try {
+    if (typeof AudioSys !== 'undefined' && AudioSys) AudioSys.seasonId = id;
+  } catch (_) {}
+  try {
+    if (window.__sf) window.__sf.season = id;
+  } catch (_) {}
+  try {
+    document.dispatchEvent(new CustomEvent('sf-season', { detail: { id } }));
+  } catch (_) {}
+  if (!_seasonPageshowBound && typeof window !== 'undefined') {
+    _seasonPageshowBound = true;
+    try {
+      window.addEventListener('pageshow', () => {
+        try { applySeasonTheme(); } catch (_) {}
+      });
+    } catch (_) {}
+  }
+}
+
+function setSeason(id) {
+  const next = normalizeSeasonId(id);
+  if (typeof save === 'undefined' || !save) return false;
+  _seasonIgnoreQuery = true;
+  save.season = next;
+  let ok = true;
+  if (typeof persist === 'function') {
+    try { ok = persist() !== false; } catch (_) { ok = false; }
+  }
+  applySeasonTheme();
+  return ok;
+}
+
+function renderSeasonSwitch() {
+  const bar = document.getElementById('seasonSwitchBar');
+  if (!bar) return;
+  const cur = getSeasonId();
+  bar.innerHTML = SEASON_IDS.map((code) =>
+    `<button type="button" class="dex-filter-btn season-chip${cur === code ? ' active' : ''}" data-season="${code}">${seasonLabel(code)}</button>`
+  ).join('');
+  bar.querySelectorAll('[data-season]').forEach((btn) => {
+    const code = btn.getAttribute('data-season');
+    if (!code) return;
+    const pick = () => {
+      if (code === persistedSeasonId() && !seasonIdFromQuery()) return;
+      const run = () => {
+        setSeason(code);
+        if (typeof AudioSys !== 'undefined') AudioSys.sfx('select');
+        if (typeof UI !== 'undefined' && UI.toast && typeof t === 'function') {
+          UI.toast(t('settings.seasonChanged', { name: seasonLabel(code) }), 1800, { tone: 'ok' });
+        }
+        if (typeof UI !== 'undefined' && UI.renderSettings) UI.renderSettings();
+      };
+      if (typeof safeUiAction === 'function') {
+        safeUiAction(run, 'setSeason/' + code, (typeof t === 'function' && t('ui.langSwitchFail')) || 'Season switch failed');
+      } else run();
+    };
+    if (typeof bindPress === 'function') bindPress(btn, pick);
+    else btn.addEventListener('click', pick);
+  });
+  const hint = document.getElementById('settingsSeasonHint');
+  if (hint && typeof t === 'function') hint.textContent = t('settings.seasonHint');
+  const story = document.getElementById('settingsSeasonStory');
+  if (story) {
+    story.textContent = seasonStoryText(cur);
+    story.hidden = !story.textContent;
+  }
+}
 /* --- src/systems/versus.js --- */
 /* ========================== VERSUS (retired) ========================== */
 /**
@@ -12662,6 +12937,18 @@ function mergeI18nCatalogs() {
 }
 
 const CATALOG_EN = {
+  settings: {
+    season: 'Season',
+    seasonHint: 'Mood layer on top of the screen — no extra damage, no combat change. Saved on this device.',
+    seasonChanged: 'Season: {name}',
+  },
+  season: {
+    classic: { name: 'Classic', flavor: '', story: 'The original path — islands, bosses, your save stays here.' },
+    jungle: { name: 'Jungle', flavor: 'The canopy closes over the old path.', story: 'Vines on the stones. Something rustles above — same islands, thicker green.' },
+    halloween: { name: 'Halloween', flavor: 'Pumpkins grin along the trail.', story: 'Lanterns and a thin mist. The islands feel a little haunted — combat stays the same.' },
+    winter: { name: 'Winter', flavor: 'Frost on the stones.', story: 'Cold air, same route. Ice on the edges — flavor only, no extra damage.' },
+    summer: { name: 'Summer', flavor: 'Heat haze over the trail.', story: 'Bright sky, same islands. A warm rim on the screen — no extra damage.' },
+  },
   ach: {
     first_win: { name: 'First triumph', desc: 'Win your first level' },
     lv10: { name: 'Growing ninja', desc: 'Reach fighter Lv 10' },
@@ -14325,6 +14612,8 @@ const AudioSys = {
   _sfxVar: 0,
   _sfxPan: 0,
   _combatHeat: 0,
+  /** Audio partner hook — no seasonal beds ship yet. */
+  seasonId: 'classic',
   /** UI feedback SFX allowed while paused (combat hits blocked). */
   _pauseUiSfx: new Set([
     'select', 'bell', 'levelup', 'summon', 'diceRoll', 'claim', 'achieve',
@@ -34825,6 +35114,8 @@ const UI = {
 
   renderSettings() {
     renderLangSwitch();
+    if (typeof applySeasonTheme === 'function') applySeasonTheme();
+    if (typeof renderSeasonSwitch === 'function') renderSeasonSwitch();
     const verEl = document.getElementById('setAppVersion');
     if (verEl) {
       const fps = Perf.emaMs > 0 ? Math.round(1000 / Perf.emaMs) : 0;
@@ -36688,6 +36979,7 @@ function bootGame() {
   safeCall(syncPlayLayer, 'syncPlay');
   safeCall(resize, 'resize');
   safeCall(() => initLang(), 'i18n');
+  safeCall(() => { if (typeof applySeasonTheme === 'function') applySeasonTheme(); }, 'season');
   safeCall(() => UI.renderMenu(), 'menu');
   safeCall(ensureDaily, 'daily');
   safeCall(checkAchievements, 'ach');
@@ -36764,6 +37056,8 @@ function bootGame() {
     get version() { return APP_VERSION; },
     get state() { return state; },
     get swRev() { return SW_CACHE_REV; },
+    get season() { return typeof getSeasonId === 'function' ? getSeasonId() : 'classic'; },
+    setSeason: typeof setSeason === 'function' ? setSeason : null,
     startGame, save, Game, UI, recoverToMenu, syncPlayLayer,
     enterHub: enterHubFromTitle,
     debug: typeof sfDebugScreen === 'function' ? sfDebugScreen : null,

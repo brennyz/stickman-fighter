@@ -24,6 +24,15 @@
     --menu-ink-muted: #c8d0dc;
     --menu-edge: rgba(255, 255, 255, 0.16);
     --menu-accent: #7cf5aa;
+    /* Season overlay tokens — partner art uses --season-art-* */
+    --season-accent: #ffd75e;
+    --season-accent-deep: #c97a20;
+    --season-wash: transparent;
+    --season-vignette: transparent;
+    --season-fog: transparent;
+    --season-safe-top: max(72px, calc(var(--safe-top) + 56px));
+    --season-safe-bottom: max(168px, calc(var(--safe-bottom) + 148px));
+    --season-safe-side: max(10px, var(--safe-left));
   }
   /* Canvas achter UI; geen hits in menu (anders vangt iPad alle tikken) */
   #game { position:fixed; left:0; top:0; width:100%; height:100%; height:100dvh; display:block; touch-action:none;
@@ -2843,3 +2852,272 @@
     color:#7cf5ff; border:1px solid rgba(124,245,255,.35); margin-right:4px; vertical-align:middle; }
   .ach-card.new { border-color:#7cf5ff !important; background:rgba(124,245,255,.1); }
   .ach-card.ach-near { border-color:rgba(255,215,94,.5) !important; background:rgba(255,215,94,.06); }
+
+  /* —— Season overlay (decor only; NEVER a tap lid) ——
+     z 21 = above .screen (20) so the layer sits on the original UI.
+     Below pause (50), toast (40), roll-flash (35). pointer-events none
+     so Android combat + menu tiles keep their hits. */
+  .season-overlay,
+  .season-overlay * {
+    pointer-events: none !important;
+    touch-action: none;
+  }
+  .season-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 21;
+    overflow: hidden;
+    background: none;
+  }
+  html[data-season="classic"] .season-overlay,
+  html:not([data-season]) .season-overlay {
+    opacity: 0;
+    visibility: hidden;
+  }
+  .season-vignette {
+    position: absolute; inset: 0;
+    background:
+      radial-gradient(ellipse at 50% 45%, transparent 46%, var(--season-vignette) 100%);
+    opacity: .72;
+  }
+  .season-wash {
+    position: absolute; inset: 0;
+    background: var(--season-wash);
+    opacity: .55;
+  }
+  body.is-playing .season-vignette { opacity: .42; }
+  body.is-playing .season-wash { opacity: .28; }
+  .season-css-layer { position: absolute; inset: 0; }
+  .season-motif, .season-float {
+    position: absolute;
+    display: block;
+    pointer-events: none !important;
+  }
+  .season-art-slot {
+    position: absolute;
+    background-repeat: no-repeat;
+    background-size: contain;
+    background-position: center;
+    opacity: .92;
+  }
+  .season-art-tl {
+    top: max(6px, var(--safe-top));
+    left: max(6px, var(--safe-left));
+    width: min(22vw, 132px);
+    height: min(18vh, 110px);
+    background-image: var(--season-art-corner-tl, none);
+    background-position: top left;
+  }
+  .season-art-tr {
+    top: max(6px, var(--safe-top));
+    right: max(64px, calc(var(--safe-right) + 56px));
+    width: min(20vw, 120px);
+    height: min(16vh, 100px);
+    background-image: var(--season-art-corner-tr, none);
+    background-position: top right;
+  }
+  .season-art-bl {
+    left: max(6px, var(--safe-left));
+    bottom: var(--season-safe-bottom);
+    width: min(22vw, 132px);
+    height: min(16vh, 96px);
+    background-image: var(--season-art-corner-bl, none);
+    background-position: bottom left;
+  }
+  .season-art-br {
+    right: max(6px, var(--safe-right));
+    bottom: var(--season-safe-bottom);
+    width: min(22vw, 132px);
+    height: min(16vh, 96px);
+    background-image: var(--season-art-corner-br, none);
+    background-position: bottom right;
+  }
+  .season-art-banner {
+    top: max(4px, var(--safe-top));
+    left: 50%;
+    transform: translateX(-50%);
+    width: min(70vw, 420px);
+    height: min(10vh, 64px);
+    background-image: var(--season-art-banner, none);
+  }
+  .season-art-ground {
+    left: 0; right: 0;
+    bottom: var(--season-safe-bottom);
+    height: min(8vh, 56px);
+    background-image: var(--season-art-ground-trim, none);
+    background-size: auto 100%;
+    background-repeat: repeat-x;
+    opacity: .7;
+  }
+  .season-art-motif {
+    top: 18%;
+    right: max(10px, var(--safe-right));
+    width: min(12vw, 72px);
+    height: min(12vw, 72px);
+    background-image: var(--season-art-motif, none);
+    opacity: .35;
+  }
+  body.is-playing .season-art-banner,
+  body.is-playing .season-art-motif { display: none; }
+  body.is-playing .season-art-tl,
+  body.is-playing .season-art-tr {
+    width: min(16vw, 88px);
+    height: min(12vh, 72px);
+  }
+  body.is-playing .season-art-bl,
+  body.is-playing .season-art-br {
+    width: min(14vw, 80px);
+    height: min(11vh, 68px);
+  }
+
+  /* CSS fallbacks — no PNG required */
+  html[data-season="jungle"] {
+    --season-accent: #7cfc8a;
+    --season-accent-deep: #2a7a38;
+    --season-wash: linear-gradient(180deg, rgba(30,80,28,.10), rgba(8,22,12,.06));
+    --season-vignette: rgba(8,28,12,.42);
+  }
+  html[data-season="jungle"] .season-motif-a,
+  html[data-season="jungle"] .season-motif-b,
+  html[data-season="jungle"] .season-motif-c,
+  html[data-season="jungle"] .season-motif-d {
+    width: min(28vw, 160px); height: min(22vh, 130px);
+    background:
+      radial-gradient(ellipse at 20% 80%, rgba(60,160,70,.45) 0 28%, transparent 30%),
+      radial-gradient(ellipse at 70% 30%, rgba(40,120,50,.35) 0 22%, transparent 24%);
+  }
+  html[data-season="jungle"] .season-motif-a { top: 0; left: 0; }
+  html[data-season="jungle"] .season-motif-b { top: 0; right: 0; }
+  html[data-season="jungle"] .season-motif-c { bottom: var(--season-safe-bottom); left: 0; }
+  html[data-season="jungle"] .season-motif-d { bottom: var(--season-safe-bottom); right: 0; }
+  html[data-season="jungle"] .season-float {
+    width: 10px; height: 16px; border-radius: 0 70% 20% 70%;
+    background: rgba(90,200,80,.35);
+    animation: seasonFloat 7s ease-in-out infinite;
+  }
+  html[data-season="jungle"] .season-float-1 { top: 18%; left: 8%; }
+  html[data-season="jungle"] .season-float-2 { top: 28%; right: 12%; animation-delay: 1.4s; }
+  html[data-season="jungle"] .season-float-3 { top: 42%; left: 16%; animation-delay: 2.6s; }
+
+  html[data-season="halloween"] {
+    --season-accent: #ff9a3c;
+    --season-accent-deep: #8a2a10;
+    --season-wash: linear-gradient(180deg, rgba(80,20,90,.12), rgba(20,8,16,.08));
+    --season-vignette: rgba(28,8,32,.48);
+  }
+  html[data-season="halloween"] .season-motif-a,
+  html[data-season="halloween"] .season-motif-d {
+    width: 52px; height: 44px; border-radius: 50% 50% 46% 46%;
+    background:
+      radial-gradient(circle at 35% 42%, #2a1808 0 3px, transparent 4px),
+      radial-gradient(circle at 62% 42%, #2a1808 0 3px, transparent 4px),
+      radial-gradient(ellipse at 50% 70%, #2a1808 0 4px, transparent 5px),
+      #e07a18;
+    box-shadow: 0 0 0 2px #8a3a08;
+  }
+  html[data-season="halloween"] .season-motif-a { top: max(10px, var(--safe-top)); left: 10px; }
+  html[data-season="halloween"] .season-motif-d { bottom: var(--season-safe-bottom); right: 12px; }
+  html[data-season="halloween"] .season-motif-b,
+  html[data-season="halloween"] .season-motif-c {
+    width: 18px; height: 8px; border-radius: 50%;
+    background: #1a1020;
+    box-shadow: 14px 6px 0 #1a1020, -10px 8px 0 #1a1020;
+    opacity: .55;
+  }
+  html[data-season="halloween"] .season-motif-b { top: 14%; right: 18%; }
+  html[data-season="halloween"] .season-motif-c { top: 22%; left: 20%; }
+  html[data-season="halloween"] .season-float {
+    width: 7px; height: 7px; border-radius: 50%;
+    background: rgba(255,160,60,.4);
+    animation: seasonFloat 8s ease-in-out infinite;
+  }
+  html[data-season="halloween"] .season-float-1 { top: 20%; left: 12%; }
+  html[data-season="halloween"] .season-float-2 { top: 32%; right: 16%; animation-delay: 2s; }
+  html[data-season="halloween"] .season-float-3 { top: 16%; left: 40%; animation-delay: 3.2s; }
+
+  html[data-season="winter"] {
+    --season-accent: #b8e0ff;
+    --season-accent-deep: #3a6088;
+    --season-wash: linear-gradient(180deg, rgba(180,210,255,.10), rgba(12,18,32,.06));
+    --season-vignette: rgba(10,18,36,.40);
+  }
+  html[data-season="winter"] .season-motif-a,
+  html[data-season="winter"] .season-motif-b {
+    width: min(30vw, 170px); height: min(16vh, 90px);
+    background: linear-gradient(180deg, rgba(230,240,255,.22), transparent);
+  }
+  html[data-season="winter"] .season-motif-a { top: 0; left: 0; }
+  html[data-season="winter"] .season-motif-b { top: 0; right: 0; }
+  html[data-season="winter"] .season-float {
+    width: 5px; height: 5px; border-radius: 50%;
+    background: rgba(230,240,255,.55);
+    animation: seasonFloat 9s linear infinite;
+  }
+  html[data-season="winter"] .season-float-1 { top: 12%; left: 20%; }
+  html[data-season="winter"] .season-float-2 { top: 24%; right: 22%; animation-delay: 1.8s; }
+  html[data-season="winter"] .season-float-3 { top: 18%; left: 48%; animation-delay: 3.4s; }
+
+  html[data-season="summer"] {
+    --season-accent: #ffd75e;
+    --season-accent-deep: #c97a20;
+    --season-wash: linear-gradient(180deg, rgba(255,200,80,.10), rgba(30,18,8,.05));
+    --season-vignette: rgba(40,22,8,.28);
+  }
+  html[data-season="summer"] .season-motif-a {
+    top: max(8px, var(--safe-top)); right: 18%;
+    width: 56px; height: 56px; border-radius: 50%;
+    background: radial-gradient(circle, rgba(255,220,90,.45), transparent 68%);
+  }
+  html[data-season="summer"] .season-float {
+    width: 8px; height: 8px; border-radius: 50%;
+    background: rgba(255,210,80,.28);
+    animation: seasonFloat 6s ease-in-out infinite;
+  }
+  html[data-season="summer"] .season-float-1 { top: 16%; left: 14%; }
+  html[data-season="summer"] .season-float-2 { top: 26%; right: 20%; animation-delay: 1.2s; }
+  html[data-season="summer"] .season-float-3 { top: 20%; left: 36%; animation-delay: 2.4s; }
+
+  @keyframes seasonFloat {
+    0%, 100% { transform: translateY(0); opacity: .45; }
+    50% { transform: translateY(10px); opacity: .8; }
+  }
+  body.reduced-motion .season-float,
+  body.lite-fx .season-float,
+  html[data-season="classic"] .season-float { animation: none !important; }
+
+  .season-flavor, .season-story-line {
+    pointer-events: none;
+    text-align: center;
+    font-size: var(--type-caption);
+    line-height: 1.35;
+    color: var(--season-accent, #ffd75e);
+    max-width: var(--ui-rail);
+    margin: 4px auto 0;
+    font-weight: 800;
+    opacity: .9;
+  }
+  .season-settings-hint {
+    font-size: 11px; opacity: .72; margin: 6px 0 8px; line-height: 1.4;
+  }
+  .season-settings-story {
+    font-size: 12px; line-height: 1.4; color: #cfe0ff; margin: 0 0 10px;
+  }
+  .season-switch-bar { margin-bottom: 6px; width: 100%; }
+  .season-switch-bar .season-chip {
+    min-height: var(--touch-min);
+    pointer-events: auto;
+    touch-action: manipulation;
+    padding: 8px 12px;
+  }
+  html[data-season="jungle"] h1.title.arcade-logo { color: #e8ffc8; }
+  html[data-season="halloween"] h1.title.arcade-logo { color: #ffc14a; }
+  html[data-season="winter"] h1.title.arcade-logo { color: #e8f4ff; }
+  html[data-season="summer"] h1.title.arcade-logo { color: #ffe259; }
+
+  @media (orientation: landscape) and (max-height: 500px) {
+    .season-flavor, .season-story-line { display: none; }
+    .season-art-banner, .season-float { display: none; }
+    .season-art-tl, .season-art-tr { width: min(12vw, 64px); height: min(10vh, 48px); }
+  }
+  body.high-contrast .season-vignette { opacity: .35; }
+  body.high-contrast .season-wash { opacity: .2; }

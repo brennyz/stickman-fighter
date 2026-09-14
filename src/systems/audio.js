@@ -8,6 +8,8 @@ const AudioSys = {
   _sfxVar: 0,
   _sfxPan: 0,
   _combatHeat: 0,
+  /** Audio partner hook — no seasonal beds ship yet. */
+  seasonId: 'classic',
   /** UI feedback SFX allowed while paused (combat hits blocked). */
   _pauseUiSfx: new Set([
     'select', 'bell', 'levelup', 'summon', 'diceRoll', 'claim', 'achieve',

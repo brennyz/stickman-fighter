@@ -91,6 +91,13 @@
   },
   "userWishlist": [
     {
+      "id": "w-20260914T165100",
+      "from": "user",
+      "text": "SEASONAL story + CSS overlays ONLY (partner pixel-art agent separate). Thematic layers ON TOP of original screen — CSS tweaks + light story/flavor. Reusable season-overlay: classic, jungle, halloween; hooks for winter/summer. Overlay must NOT block taps/UI/combat. CSS variables/tokens. Season selectable + persist. Document asset slot names. No PNGs, no full audio (expose season id), no Versus, no gear.",
+      "status": "active",
+      "updated": "2026-09-14"
+    },
+    {
       "id": "w-20260914T151100",
       "from": "user",
       "text": "ULTRA SPRINT into #266 (draft, no merge): EN-NL consistency (YOU LOST→VERLOREN when NL, kill raw menu.tips / PICK AN ISLAND leftovers); quieter dismissible version toast; remaining screens HOME tiles; name field stays off.",

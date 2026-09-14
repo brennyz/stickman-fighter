@@ -5,9 +5,9 @@ const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const VERSION_UPDATE_SAVE_KEY = 'stickfighter_version_update_save_v1';
 const VERSION_UPDATE_FLAG_KEY = 'stickfighter_version_update_flag_v1';
 const SAVE_EXPORT_SCHEMA = 3;
-const APP_VERSION = '1.18.163';
+const APP_VERSION = '1.18.164';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 373;
+const SW_CACHE_REV = 374;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', petCoins: 0, dex: {}, summons: {}, pets: {}, activePet: null,
   eggPets: {}, activeEggPet: null, eggDaily: null,
   chestDaily: null, chestWeapons: {},
@@ -20,7 +20,7 @@ const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', petCoins: 0,
     nightmare: { unlocked: 1, stars: {}, fails: {}, masterBuff: null, satanAt: {} },
     hell: { unlocked: 1, stars: {}, fails: {}, masterBuff: null, satanAt: {} },
   },
-  bestWall: 0, trainWins: 0, music: true, sfx: true, style: 'classic', stars: {},
+  bestWall: 0, trainWins: 0, music: true, sfx: true, style: 'classic', season: 'classic', stars: {},
   musicVol: 0.85, sfxVol: 1, shake: true, haptics: true, comboHud: true, bigTouch: true,
   /** null/undefined = auto via IS_TOUCH; true = force pads; false = force keyboard */
   showTouchPads: null,
@@ -1167,6 +1167,7 @@ function applyVersionUpdateSave() {
       UI.renderMenu();
       if (UI.renderMissions) UI.renderMissions();
       if (UI.renderSettings) UI.renderSettings();
+      if (typeof applySeasonTheme === 'function') applySeasonTheme();
     }
     return true;
   } catch (err) {
@@ -1550,6 +1551,9 @@ function sanitizeSave(s) {
   if (out.lang != null && typeof SUPPORTED_LANGS !== 'undefined' && !SUPPORTED_LANGS.includes(out.lang)) {
     out.lang = null;
   }
+  const SEASON_OK = ['classic', 'jungle', 'halloween', 'winter', 'summer'];
+  if (typeof normalizeSeasonId === 'function') out.season = normalizeSeasonId(out.season);
+  else out.season = SEASON_OK.includes(out.season) ? out.season : 'classic';
   out.playerTag = sanitizePlayerTag(out.playerTag);
 
   out.stats = Object.assign({}, DEFAULT_SAVE.stats, out.stats || {});

@@ -37,7 +37,7 @@ Van achter naar voren (z-index / stacking):
 | **A · Canvas** | `#game` | `state==='play' && game` → `syncPlayLayer` zet `visibility:visible` + `body.is-playing` | Speelveld (of leeg donker als `game.draw` faalt) |
 | **B · Menu-backdrop paint** | `drawMenuBackdrop(ctx)` in `src/boot/loop.js` | Alleen als `Perf.canvasDrawActive()` én **niet** `state==='play'` (typisch hub) | Donkerblauw `#151b33`-achtig vlak **op de canvas** |
 | **C · `.screen` UI** | `.screen` / `.screen.active` in `styles/main.css` | Exact één (of meer) schermen met class `active` → `display:flex` | Menu/settings/levels — achtergrond **ook** `#151b33` gradient |
-| **D · Overlays** | splash, tunnel, `#levelRollFlash`, toasts, debug-strip | Eigen `hidden` / classes | Kan canvas of UI bedekken |
+| **D · Overlays** | splash, tunnel, `#levelRollFlash`, toasts, debug-strip, `#seasonOverlay` | Eigen `hidden` / classes · season = `pointer-events:none` (geen lid) | Kan canvas of UI bedekken — **season nooit taps** |
 | **E · Menu-stage** *(overhaul PR)* | `#menuScreen .menu-stage` | Alleen hub live; moet weg bij play | Full-bleed vista/video achter menu-chrome |
 
 **Belangrijk onderscheid — twee soorten “blauw”:**

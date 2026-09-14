@@ -15,7 +15,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Bangers&family=Black+Ops+One&family=Nunito:wght@600;800;900&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="styles/main.css?v=373">
+<link rel="stylesheet" href="styles/main.css?v=374">
 
 
 
@@ -32,6 +32,27 @@
 </div>
 
 <div id="toastHost" role="status" aria-live="polite" aria-relevant="additions"></div>
+<!-- Decor only — pointer-events none; never a tap lid. Partner PNGs: docs/SEASON-ASSET-SLOTS.md -->
+<div id="seasonOverlay" class="season-overlay" aria-hidden="true">
+  <div class="season-vignette"></div>
+  <div class="season-wash"></div>
+  <div class="season-css-layer">
+    <span class="season-motif season-motif-a"></span>
+    <span class="season-motif season-motif-b"></span>
+    <span class="season-motif season-motif-c"></span>
+    <span class="season-motif season-motif-d"></span>
+    <span class="season-float season-float-1"></span>
+    <span class="season-float season-float-2"></span>
+    <span class="season-float season-float-3"></span>
+  </div>
+  <div class="season-art-slot season-art-tl" data-season-slot="corner-tl"></div>
+  <div class="season-art-slot season-art-tr" data-season-slot="corner-tr"></div>
+  <div class="season-art-slot season-art-bl" data-season-slot="corner-bl"></div>
+  <div class="season-art-slot season-art-br" data-season-slot="corner-br"></div>
+  <div class="season-art-slot season-art-banner" data-season-slot="banner"></div>
+  <div class="season-art-slot season-art-ground" data-season-slot="ground-trim"></div>
+  <div class="season-art-slot season-art-motif" data-season-slot="motif"></div>
+</div>
 <div id="versionUpdateOverlay" class="version-update-overlay" hidden aria-modal="true" role="dialog" aria-labelledby="versionUpdateTitle">
   <div class="version-update-card">
     <h3 id="versionUpdateTitle" class="version-update-title">Versie ophalen</h3>
@@ -108,7 +129,8 @@
       <div class="arcade-pre" id="menuArcadePre" hidden>KIES JE PAD</div>
       <h1 class="title arcade-logo">STICKMAN<span>FIGHTER</span></h1>
       <p class="press-start" id="pressStartLine" hidden>insert coin</p>
-      <div class="subtitle" id="menuVerLine">v1.18.163</div>
+      <div class="subtitle" id="menuVerLine">v1.18.164</div>
+      <p class="season-flavor" id="seasonFlavorLine" data-season-flavor hidden></p>
     </header>
     <div class="arcade-menu-body menu-landing-body">
       <div class="menu-landing-scroll">
@@ -290,6 +312,7 @@
   <button type="button" class="btn island-help-btn" id="btnIslandHelp" title="Eilanden &amp; skill gate uitleg">?</button>
   <h2 class="head" id="levelScreenHead">Kies een eiland</h2>
   <div class="subtitle" id="levelScreenSub">Normal → Nightmare → Hell · hitte-meter · <b style="color:#ff6b6b">9× = gevaar!</b> · 10× = Satan</div>
+  <p class="season-story-line" id="seasonStoryLine" data-season-story hidden></p>
   <div id="levelDiffBar" class="diff-bar" role="tablist" aria-label="Moeilijkheid"></div>
   <div id="levelDiffBlurb" class="diff-blurb" aria-live="polite"></div>
   <div class="menu-lang-wrap level-lang-wrap" style="margin:0 auto 12px;width:min(94vw,420px);text-align:center">
@@ -463,6 +486,10 @@
   <div class="settings-card">
     <div style="font-weight:900;color:#7cf5ff;margin-bottom:6px" id="setLangLbl">Taal</div>
     <div id="langSwitchBar" class="dex-filter-bar" style="margin-bottom:14px"></div>
+    <div style="font-weight:900;color:#7cf5ff;margin:14px 0 6px" id="setSeasonLbl">Seizoen</div>
+    <div id="seasonSwitchBar" class="dex-filter-bar season-switch-bar" role="group" aria-label="Seizoen"></div>
+    <div id="settingsSeasonHint" class="season-settings-hint">Sfeerlaag boven het scherm — geen extra schade. Opgeslagen op dit apparaat.</div>
+    <div id="settingsSeasonStory" class="season-settings-story" data-season-story data-season-story-always hidden></div>
     <label>Muziek <span id="setMusicVolLbl">85%</span>
       <input type="range" id="setMusicVol" min="0" max="100" value="85">
     </label>
@@ -686,12 +713,12 @@
 
 <script>
 /* HTML↔JS handshake: als oude SW nog oude game.js serveert terwijl menu-HTML nieuw is. */
-window.__SF_EXPECT_REV = 373;
-window.__SF_EXPECT_APP = '1.18.163';
+window.__SF_EXPECT_REV = 374;
+window.__SF_EXPECT_APP = '1.18.164';
 </script>
-<script src="tunnel-check.js?v=373"></script>
-<script src="game.js?v=373"></script>
-<script src="install.js?v=373"></script>
+<script src="tunnel-check.js?v=374"></script>
+<script src="game.js?v=374"></script>
+<script src="install.js?v=374"></script>
 <script>
 (function () {
   function nukeStale(reason) {

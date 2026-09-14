@@ -927,6 +927,18 @@ function mergeI18nCatalogs() {
 }
 
 const CATALOG_EN = {
+  settings: {
+    season: 'Season',
+    seasonHint: 'Mood layer on top of the screen — no extra damage, no combat change. Saved on this device.',
+    seasonChanged: 'Season: {name}',
+  },
+  season: {
+    classic: { name: 'Classic', flavor: '', story: 'The original path — islands, bosses, your save stays here.' },
+    jungle: { name: 'Jungle', flavor: 'The canopy closes over the old path.', story: 'Vines on the stones. Something rustles above — same islands, thicker green.' },
+    halloween: { name: 'Halloween', flavor: 'Pumpkins grin along the trail.', story: 'Lanterns and a thin mist. The islands feel a little haunted — combat stays the same.' },
+    winter: { name: 'Winter', flavor: 'Frost on the stones.', story: 'Cold air, same route. Ice on the edges — flavor only, no extra damage.' },
+    summer: { name: 'Summer', flavor: 'Heat haze over the trail.', story: 'Bright sky, same islands. A warm rim on the screen — no extra damage.' },
+  },
   ach: {
     first_win: { name: 'First triumph', desc: 'Win your first level' },
     lv10: { name: 'Growing ninja', desc: 'Reach fighter Lv 10' },

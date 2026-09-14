@@ -89,6 +89,16 @@ const I18N = {
       ageHint: 'Cartoon-gevecht · tiener+ · geen chat',
       installAge: 'Cartoon-gevechten · tiener+ · geen chat.',
       langChanged: 'Taal: {lang}',
+      season: 'Seizoen',
+      seasonHint: 'Sfeerlaag boven het scherm — geen extra schade, geen gevecht-wijziging. Opgeslagen op dit apparaat.',
+      seasonChanged: 'Seizoen: {name}',
+    },
+    season: {
+      classic: { name: 'Klassiek', flavor: '', story: 'Het oorspronkelijke pad — eilanden, bazen, je save blijft hier.' },
+      jungle: { name: 'Jungle', flavor: 'Het bladerdak sluit zich boven het oude pad.', story: 'Wijnranken over de stenen. Iets ritselt in het bladerdak — dezelfde eilanden, dichter groen.' },
+      halloween: { name: 'Halloween', flavor: 'Pompoenen grijnzen langs het pad.', story: 'Lantaarns en een dunne nevel. De eilanden voelen een beetje spookachtig — gevecht blijft hetzelfde.' },
+      winter: { name: 'Winter', flavor: 'Rijp op de stenen.', story: 'Koude lucht, dezelfde route. Vorst op de randen — alleen sfeer, geen extra schade.' },
+      summer: { name: 'Zomer', flavor: 'Hitte-waas boven het pad.', story: 'Felle lucht, dezelfde eilanden. Een warme rand om het scherm — geen extra damage.' },
     },
     missions: { title: 'Missies & prestaties', sub: '3 missies per dag',
       claimAll: 'Claim alle klaar', claimAllSub: '+XP in één tik', dayBonus: 'Dagbonus', dayBonusSub: '+80 XP · alle 3 geclaimd',
@@ -201,6 +211,16 @@ const I18N = {
       ageHint: 'Cartoon combat · teens+ · no chat',
       installAge: 'Cartoon combat · teens+ · no chat.',
       langChanged: 'Language: {lang}',
+      season: 'Season',
+      seasonHint: 'Mood layer on top of the screen — no extra damage, no combat change. Saved on this device.',
+      seasonChanged: 'Season: {name}',
+    },
+    season: {
+      classic: { name: 'Classic', flavor: '', story: 'The original path — islands, bosses, your save stays here.' },
+      jungle: { name: 'Jungle', flavor: 'The canopy closes over the old path.', story: 'Vines on the stones. Something rustles above — same islands, thicker green.' },
+      halloween: { name: 'Halloween', flavor: 'Pumpkins grin along the trail.', story: 'Lanterns and a thin mist. The islands feel a little haunted — combat stays the same.' },
+      winter: { name: 'Winter', flavor: 'Frost on the stones.', story: 'Cold air, same route. Ice on the edges — flavor only, no extra damage.' },
+      summer: { name: 'Summer', flavor: 'Heat haze over the trail.', story: 'Bright sky, same islands. A warm rim on the screen — no extra damage.' },
     },
     missions: { title: 'Missions & achievements', sub: '3 missions a day',
       claimAll: 'Claim all ready', claimAllSub: '+XP in one tap', dayBonus: 'Daily bonus', dayBonusSub: '+80 XP · all 3 claimed',
@@ -289,6 +309,9 @@ const I18N = {
       ageHint: 'Cartoon-Kampf · ab Teenager · kein Chat',
       installAge: 'Cartoon-Stockfigur-Kämpfe · Teenager+ · kein Chat.',
       langChanged: 'Sprache: {lang}',
+      season: 'Saison',
+      seasonHint: 'Stimmungsschicht über dem Bildschirm — kein Extra-Schaden. Wird auf diesem Gerät gespeichert.',
+      seasonChanged: 'Saison: {name}',
     },
     missions: { title: 'Missionen & Erfolge', sub: '3 tägliche Missionen · XP abholen',
       claimAll: 'Alle abholen', claimAllSub: '+XP auf einmal', dayBonus: 'Tagesbonus', dayBonusSub: '+80 XP',
@@ -370,6 +393,9 @@ const I18N = {
       ageHint: 'Combat cartoon · ados+ · pas de chat',
       installAge: 'Combats stickman cartoon · ados+ · pas de chat.',
       langChanged: 'Langue : {lang}',
+      season: 'Saison',
+      seasonHint: 'Calque d’ambiance au-dessus de l’écran — pas de dégâts en plus. Enregistré sur cet appareil.',
+      seasonChanged: 'Saison : {name}',
     },
     missions: { title: 'Missions & succès', sub: '3 missions quotidiennes · réclamer XP',
       claimAll: 'Tout réclamer', claimAllSub: '+XP en un tap', dayBonus: 'Bonus du jour', dayBonusSub: '+80 XP',
@@ -451,6 +477,9 @@ const I18N = {
       ageHint: 'Combate cartoon · teens+ · sin chat',
       installAge: 'Combates stickman cartoon · teens+ · sin chat.',
       langChanged: 'Idioma: {lang}',
+      season: 'Temporada',
+      seasonHint: 'Capa de ambiente encima de la pantalla — sin daño extra. Guardado en este dispositivo.',
+      seasonChanged: 'Temporada: {name}',
     },
     missions: { title: 'Misiones y logros', sub: '3 misiones diarias · reclamar XP',
       claimAll: 'Reclamar todo', claimAllSub: '+XP de una vez', dayBonus: 'Bonus diario', dayBonusSub: '+80 XP',
@@ -652,7 +681,11 @@ function applyLangStaticScreens() {
   setText('settingsHead', 'settings.title');
   setText('settingsSub', 'settings.sub');
   setText('setLangLbl', 'settings.lang');
+  setText('setSeasonLbl', 'settings.season');
+  setText('settingsSeasonHint', 'settings.seasonHint');
   setText('settingsA11yTip', 'settings.a11yTip');
+  if (typeof applySeasonTheme === 'function') applySeasonTheme();
+  if (typeof renderSeasonSwitch === 'function') renderSeasonSwitch();
   const setMap = [
     ['setShake', 'settings.shake'], ['setHaptics', 'settings.haptics'], ['setComboHud', 'settings.comboHud'],
     ['setBigTouch', 'settings.bigTouch'], ['setKbLegend', 'settings.kbLegend'], ['setShowTouchPads', 'settings.showTouchPads'],

@@ -4179,6 +4179,8 @@ const UI = {
 
   renderSettings() {
     renderLangSwitch();
+    if (typeof applySeasonTheme === 'function') applySeasonTheme();
+    if (typeof renderSeasonSwitch === 'function') renderSeasonSwitch();
     const verEl = document.getElementById('setAppVersion');
     if (verEl) {
       const fps = Perf.emaMs > 0 ? Math.round(1000 / Perf.emaMs) : 0;
