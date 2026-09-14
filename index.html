@@ -151,6 +151,12 @@
               <span class="hub-tile-sub">Dagelijkse kist · wapen &amp; pet</span>
               <span class="hub-tile-stat" data-hub-stat="summon">10 vandaag</span>
             </button>
+            <button type="button" class="hub-tile hub-tile-upgrades" id="btnUpgradesHome" aria-label="Upgrades">
+              <span class="hub-tile-ico"><img src="assets/buttons/modes/upgrades.svg" alt="" width="28" height="28" decoding="async" draggable="false"></span>
+              <span class="hub-tile-title">Upgrades</span>
+              <span class="hub-tile-sub">Shards · technique</span>
+              <span class="hub-tile-stat" data-hub-stat="upgrades"></span>
+            </button>
           </div>
           <p class="menu-hub-hint" id="menuHubHint"></p>
           <button type="button" class="menu-profile-bar" id="menuProfileBar" aria-label="Profiel en missies"></button>
@@ -158,22 +164,13 @@
       </div>
       <!-- E talen + D meta -->
       <footer class="menu-landing-footer menu-utility-row">
-        <div class="menu-lang-wrap menu-lang-compact">
-          <div class="menu-lang-lbl menu-sr-only" id="menuLangLbl">Taal</div>
-          <div id="menuLangBar" class="dex-filter-bar menu-lang-bar" role="group" aria-label="Taal"></div>
-        </div>
         <div class="menu-meta-cluster">
           <div class="menu-dock menu-meta-dock" aria-label="Snelkoppelingen">
             <button class="btn tog" id="togMusic" type="button" title="Muziek"><span class="tog-ico"><img src="assets/buttons/chrome/music.svg" alt="" width="24" height="24" decoding="async" draggable="false"></span>Muziek</button>
             <button class="btn tog" id="btnMissions" type="button" title="Missies"><span class="tog-ico"><img src="assets/buttons/chrome/missions.svg" alt="" width="24" height="24" decoding="async" draggable="false"></span><span id="btnMissionsLbl">Missies</span></button>
             <button class="btn tog" id="btnSettings" type="button" title="Instellingen"><span class="tog-ico"><img src="assets/buttons/chrome/settings.svg" alt="" width="24" height="24" decoding="async" draggable="false"></span>Opties</button>
             <button class="btn tog" id="btnHelp" type="button" title="Tips"><span class="tog-ico"><img src="assets/buttons/chrome/help.svg" alt="" width="24" height="24" decoding="async" draggable="false"></span>Tips</button>
-            <button class="btn tog" id="btnVerseVersie" type="button" title="Oude cache? Forceer verse versie"><span class="tog-ico"><img src="assets/buttons/chrome/refresh.svg" alt="" width="24" height="24" decoding="async" draggable="false"></span>Verse versie</button>
           </div>
-          <button class="btn mode-btn b-install" id="btnInstallApp" type="button">
-            <span class="ico"><img src="assets/buttons/chrome/install.svg" alt="" width="28" height="28" decoding="async" draggable="false"></span>
-            <div id="btnInstallLabel">Zet in app-lade<small>Één icoon op je beginscherm</small></div>
-          </button>
         </div>
         <div class="menu-legal-row" style="width:100%;text-align:center;margin-top:8px;font-size:12px;opacity:.85">
           <a href="privacy.html" id="menuPrivacyLink" style="color:#7cf5ff;font-weight:700;text-decoration:none">Privacy</a>
@@ -190,6 +187,7 @@
         <button class="btn tog" id="btnGuvve" type="button"></button>
         <button class="btn tog" id="btnSharePlay" type="button"></button>
         <button class="btn tog" id="sfForceFresh" type="button"></button>
+        <button class="btn tog" id="btnVerseVersie" type="button" hidden title="Oude cache? Forceer verse versie"><span class="tog-ico"><img src="assets/buttons/chrome/refresh.svg" alt="" width="24" height="24" decoding="async" draggable="false"></span>Vers</button>
       </div>
     </div>
   </div>
@@ -238,11 +236,11 @@
       </button>
     </div>
     <div class="mode-hub-panel hub-tile-grid" data-hub-panel="collect" hidden>
-      <button type="button" class="hub-tile hub-tile-gear hub-tile-featured" id="btnGear" data-hub-badge="">
-        <span class="hub-tile-ico"><img src="assets/buttons/modes/gear.svg" alt="" width="28" height="28" decoding="async" draggable="false"></span>
-        <span class="hub-tile-title">Uitrusting</span>
-        <span class="hub-tile-sub">Slots · look</span>
-        <span class="hub-tile-stat" id="hubStatGear"></span>
+      <button type="button" class="hub-tile hub-tile-upgrades hub-tile-featured" id="btnUpgrades" data-hub-badge="UP">
+        <span class="hub-tile-ico"><img src="assets/buttons/modes/upgrades.svg" alt="" width="28" height="28" decoding="async" draggable="false"></span>
+        <span class="hub-tile-title">Upgrades</span>
+        <span class="hub-tile-sub">Shards · technique uitrusten</span>
+        <span class="hub-tile-stat" id="hubStatUpgrades"></span>
       </button>
       <button type="button" class="hub-tile hub-tile-weapons hub-tile-featured" id="btnWeapons" data-hub-badge="">
         <span class="hub-tile-ico"><img src="assets/buttons/modes/weapons.svg" alt="" width="28" height="28" decoding="async" draggable="false"></span>
@@ -273,12 +271,6 @@
         <span class="hub-tile-title">Skills</span>
         <span class="hub-tile-sub">Energy specials · Spiral Orb · Wave Cannon</span>
         <span class="hub-tile-stat" id="hubStatSkills"></span>
-      </button>
-      <button type="button" class="hub-tile hub-tile-upgrades" id="btnUpgrades">
-        <span class="hub-tile-ico"><img src="assets/buttons/modes/upgrades.svg" alt="" width="28" height="28" decoding="async" draggable="false"></span>
-        <span class="hub-tile-title">Upgrades</span>
-        <span class="hub-tile-sub">Skill &amp; item shards · technique uitrusten</span>
-        <span class="hub-tile-stat" id="hubStatUpgrades"></span>
       </button>
       <button type="button" class="hub-tile hub-tile-dex" id="btnDex">
         <span class="hub-tile-ico"><img src="assets/buttons/modes/dex.svg" alt="" width="28" height="28" decoding="async" draggable="false"></span>
@@ -538,6 +530,11 @@
   <button class="btn back-btn" data-back><img class="back-btn-ico" src="assets/buttons/chrome/back.svg" alt="" width="18" height="18" decoding="async" draggable="false"> Terug</button>
   <h2 class="head" id="settingsHead">Instellingen</h2>
   <div class="subtitle" id="settingsSub">Geluid, trilling &amp; HUD — opgeslagen op dit apparaat</div>
+  <div class="settings-card" id="settingsSaveAutoCard">
+    <div id="settingsSaveAutoTitle" style="font-weight:900;color:#7cf5ff;margin-bottom:6px">Save gaat automatisch mee</div>
+    <div id="saveHealthLine" style="font-size:13px;line-height:1.45;color:#cfe0ff;margin-bottom:8px">Lv … · OK op dit apparaat</div>
+    <div id="settingsSaveAutoHint" style="font-size:12px;opacity:.78;line-height:1.45">Online-save blijft vanzelf bij deze speel-link. Geen extra knop.</div>
+  </div>
   <div class="settings-card" id="settingsSeasonCard">
     <div style="font-weight:900;color:#7cf5ff;margin-bottom:6px" id="setSeasonLbl">Seizoen</div>
     <div id="seasonHint" class="season-hint">Laag boven het originele scherm. Auto volgt de kalender.</div>
@@ -588,17 +585,6 @@
   </div>
   <div class="step-card" id="settingsA11yTip">Minder beweging = rustigere banners. Hoog contrast = dikkere randen. Lite FX = soepeler op telefoon.</div>
   <div id="a11yStatusLine" class="step-card" style="font-size:13px;padding:10px 14px;margin-top:0">Toegankelijkheid laden…</div>
-  <div class="settings-card">
-    <div id="setAppVersion" style="font-size:13px;opacity:.9;margin-bottom:8px">Versie …</div>
-    <div id="setPerfLine" style="font-size:12px;opacity:.75;margin-bottom:10px;line-height:1.45">Perf …</div>
-    <div id="saveHealthLine" style="font-size:13px;line-height:1.45;color:#cfe0ff;margin-bottom:12px">Save-status laden…</div>
-    <button type="button" class="btn tog" id="btnRestoreBackup"><span class="tog-ico"><img src="assets/buttons/chrome/backup.svg" alt="" width="24" height="24" decoding="async" draggable="false"></span>Herstel save uit backup</button>
-    <button type="button" class="btn tog" id="btnSyncBackup" style="margin-top:8px"><span class="tog-ico"><img src="assets/buttons/chrome/sync.svg" alt="" width="24" height="24" decoding="async" draggable="false"></span>Backup bijwerken</button>
-    <div id="settingsSyncHint" style="font-size:11px;opacity:.72;margin:6px 0 10px;line-height:1.4">Zet de backup gelijk aan je huidige voortgang.</div>
-    <button type="button" class="btn tog" id="btnForceFresh" style="margin-top:8px"><span class="tog-ico"><img src="assets/buttons/chrome/refresh.svg" alt="" width="24" height="24" decoding="async" draggable="false"></span>Verse versie</button>
-    <div id="settingsFreshHint" style="font-size:11px;opacity:.72;margin:6px 0 10px;line-height:1.4">Menu reageert niet? Tik hier voor de nieuwste versie.</div>
-    <button type="button" class="btn tog off" id="btnClearSave"><span class="tog-ico"><img src="assets/buttons/chrome/trash.svg" alt="" width="24" height="24" decoding="async" draggable="false"></span>Nieuwe start (dubbel tikken)</button>
-  </div>
   <details class="settings-fold" id="settingsShareFold">
     <summary id="settingsShareFoldSum">Speel-link</summary>
     <div class="settings-card settings-fold-body">
@@ -612,12 +598,13 @@
     </div>
   </details>
   <details class="settings-fold" id="settingsSaveFold">
-    <summary id="settingsSaveFoldSum">Voortgang kopiëren</summary>
+    <summary id="settingsSaveFoldSum">Bestand / offline</summary>
     <div class="settings-card settings-fold-body">
-      <div id="settingsSaveTitle" style="font-weight:900;color:#ffd75e;margin:0 0 6px">Voortgang kopiëren</div>
+      <div id="settingsSaveTitle" style="font-weight:900;color:#ffd75e;margin:0 0 6px">Los pad — alleen als je een bestand wilt</div>
       <div id="savePortDesc" style="font-size:12px;opacity:.85;margin-bottom:8px;line-height:1.4">
-        Kopieer je voortgang (bestand + klembord). Laden: kies een bestand of plak hier — 1× kijken, 2× laden. Je huidige save gaat naar backup.
+        Gewone save blijft automatisch. Dit pad is alleen voor een ander apparaat of een bestand.
       </div>
+      <div id="saveHealthDetail" style="font-size:12px;opacity:.8;margin-bottom:8px;line-height:1.4"></div>
       <div id="saveExportHint" style="font-size:12px;color:#9db1e3;margin-bottom:6px;line-height:1.4"></div>
       <input type="file" id="saveImportFile" accept=".json,application/json,text/plain,.txt" hidden>
       <textarea id="savePortText" rows="4" style="width:100%;margin-top:4px;border-radius:12px;padding:10px;font-size:11px;background:#0a0d18;color:#cfe0ff;border:1px solid rgba(255,255,255,.15)" placeholder="Plak je save hier, of kies een bestand"></textarea>
@@ -625,6 +612,24 @@
       <button type="button" class="btn tog" id="btnExportSave" style="margin-top:8px"><span class="tog-ico"><img src="assets/buttons/chrome/export.svg" alt="" width="24" height="24" decoding="async" draggable="false"></span>Kopieer save</button>
       <button type="button" class="btn tog" id="btnImportSaveFile" style="margin-top:8px"><span class="tog-ico"><img src="assets/buttons/chrome/file.svg" alt="" width="24" height="24" decoding="async" draggable="false"></span>Bestand kiezen</button>
       <button type="button" class="btn tog" id="btnImportSave"><span class="tog-ico"><img src="assets/buttons/chrome/import.svg" alt="" width="24" height="24" decoding="async" draggable="false"></span>Laad save</button>
+      <button type="button" class="btn tog" id="btnRestoreBackup" style="margin-top:12px"><span class="tog-ico"><img src="assets/buttons/chrome/backup.svg" alt="" width="24" height="24" decoding="async" draggable="false"></span>Herstel save uit backup</button>
+      <button type="button" class="btn tog" id="btnSyncBackup" style="margin-top:8px"><span class="tog-ico"><img src="assets/buttons/chrome/sync.svg" alt="" width="24" height="24" decoding="async" draggable="false"></span>Backup bijwerken</button>
+      <div id="settingsSyncHint" style="font-size:11px;opacity:.72;margin:6px 0 10px;line-height:1.4">Zet de backup gelijk aan je huidige voortgang.</div>
+      <button type="button" class="btn tog off" id="btnClearSave"><span class="tog-ico"><img src="assets/buttons/chrome/trash.svg" alt="" width="24" height="24" decoding="async" draggable="false"></span>Nieuwe start (dubbel tikken)</button>
+    </div>
+  </details>
+  <details class="settings-fold" id="settingsHelpFold">
+    <summary id="settingsHelpFoldSum">Hulp</summary>
+    <div class="settings-card settings-fold-body">
+      <div id="settingsHelpTitle" style="font-weight:900;color:#ffd75e;margin:0 0 6px">Vast op een oude versie?</div>
+      <div id="setAppVersion" style="font-size:12px;opacity:.7;margin-bottom:8px">v1.18.166</div>
+      <div id="settingsHelpDesc" style="font-size:12px;opacity:.85;margin-bottom:8px;line-height:1.4">Leegt de cache en laadt opnieuw. Alleen nodig als het spel niet meekomt.</div>
+      <button type="button" class="btn tog" id="btnForceFresh"><span class="tog-ico"><img src="assets/buttons/chrome/refresh.svg" alt="" width="24" height="24" decoding="async" draggable="false"></span>Verse versie</button>
+      <div id="settingsFreshHint" style="font-size:11px;opacity:.72;margin:6px 0 10px;line-height:1.4">Menu reageert niet? Tik hier voor de nieuwste versie.</div>
+      <button class="btn mode-btn b-install" id="btnInstallApp" type="button" style="width:100%;margin-top:10px">
+        <span class="ico"><img src="assets/buttons/chrome/install.svg" alt="" width="28" height="28" decoding="async" draggable="false"></span>
+        <div id="btnInstallLabel">App<small>Lade</small></div>
+      </button>
       <a class="btn tog" id="btnPrivacy" href="privacy.html" target="_blank" rel="noopener" style="margin-top:8px;text-decoration:none"><span class="tog-ico"><img src="assets/buttons/chrome/external.svg" alt="" width="24" height="24" decoding="async" draggable="false"></span>Privacy</a>
     </div>
   </details>
@@ -687,7 +692,7 @@
 
 <div id="installScreen" class="screen">
   <button class="btn back-btn" id="installBack"><img class="back-btn-ico" src="assets/buttons/chrome/back.svg" alt="" width="18" height="18" decoding="async" draggable="false"> Terug</button>
-  <h2 class="head" id="installHead">Zet in app-lade</h2>
+  <h2 class="head" id="installHead">App</h2>
   <div class="install-hero">
     <img src="icons/icon-192.png" alt="Stickman Fighter icoon" width="96" height="96">
     <div class="appname">STICKMAN</div>

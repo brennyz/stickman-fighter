@@ -875,6 +875,14 @@ function hubTileStatLine(hub) {
         return t('buildings.hubStatIdle');
       }
     }
+    case 'upgrades': {
+      try {
+        const ready = typeof countAllUpgradesReady === 'function' ? countAllUpgradesReady() : 0;
+        return ready > 0 ? t('ui.upgradeReady', { n: ready }) : t('ui.hubStatSkillShards');
+      } catch (_) {
+        return t('hub.upgrades');
+      }
+    }
     case 'summon': {
       try {
         ensureChestDaily();
@@ -1994,7 +2002,7 @@ const UI = {
         `<span style="color:${st.accent}">${styleLabel(st)}</span></span>` +
         `<span style="display:block;margin-top:3px;opacity:.82;font-size:11px">${adventureProgressLine()}</span>` +
         `<span class="prof-xp" aria-hidden="true"><span style="width:${pct}%"></span></span>` +
-        `<span class="prof-foot">${save.xp}/${need} XP${missAlert ? ' · ' + t('ui.menuMissionReady') : ''}</span>`;
+        `<span class="prof-foot">${save.xp}/${need} XP · ${tOr('menu.saveSync', 'save OK')}${missAlert ? ' · ' + t('ui.menuMissionReady') : ''}</span>`;
       profileEl.classList.toggle('has-alert', missAlert);
     }
     const statsEl = document.getElementById('menuStats');

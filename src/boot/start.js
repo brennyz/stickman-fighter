@@ -193,11 +193,13 @@ bindPress(document.getElementById('btnWeapons'), () => {
 bindPress(document.getElementById('btnSkills'), () => {
   openCollectionScreen('skillScreen', () => UI.renderSkills());
 });
-bindPress(document.getElementById('btnUpgrades'), () => {
+function openUpgradesHub() {
   AudioSys.init();
   AudioSys.sfx('select');
   UI.openUpgrades('skills');
-});
+}
+bindPress(document.getElementById('btnUpgrades'), openUpgradesHub);
+bindPress(document.getElementById('btnUpgradesHome'), openUpgradesHub);
 bindPress(document.getElementById('btnPets'), () => {
   openCollectionScreen('petScreen', () => UI.renderPets());
 });

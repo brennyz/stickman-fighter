@@ -876,6 +876,27 @@
       "text": "ULTRA SPRINT: max polish. Don't race #266 unify. Take EN-NL + VERLOREN + sticky toast. No merge without «merge». speel.html, no versus/iOS/forbidden CSS.",
       "status": "done-in-code",
       "updated": "2026-09-14"
+    },
+    {
+      "id": "w-20260914T161500",
+      "from": "user",
+      "text": "Full UI/UX scanner package into #269 (no merge): P0 Upgrades HOME 1-tap + online autosave PRIMARY/Options strip; P1 weapons contrast + HOME cards + back-to-menu overlap; P2 drawer trim, install+5 langs off HOME, NL/EN. Acceptance: HOME Upgrades tile; sync status visible; Options not a debug dump.",
+      "status": "done-in-code",
+      "updated": "2026-09-14"
+    },
+    {
+      "id": "w-20260914T160900",
+      "from": "user",
+      "text": "Add to #269: Options cleanup — drop version clutter (keep Verse versie useful, not noisy). Save model: auto/online PRIMARY; offline/local a separate explicit path, not equal choices. Keep upgrades HOME, drawer trim, weapon contrast.",
+      "status": "done-in-code",
+      "updated": "2026-09-14"
+    },
+    {
+      "id": "w-20260914T160200",
+      "from": "user",
+      "text": "NEW OWNER: (1) Upgrades menu not accessible — HOME tile from start/hub. (2) App drawer: drop cluttery words, keep actions. (3) Weapons gray panel contrast + similar. (4) Continue HOME unify. New PR. #263 parked. No silent main.",
+      "status": "done-in-code",
+      "updated": "2026-09-14"
     }
   ],
   "agentRules": [

@@ -29,6 +29,8 @@ if (/Monster Arena/i.test(title[1])) fail('index.html title still says Monster A
 if (!/id="pressStartLine"[^>]*\bhidden\b/.test(html)) fail('insert-coin line must stay hidden');
 if (!/id="menuArcadePre"[^>]*\bhidden\b/.test(html)) fail('KIES JE PAD kicker must stay hidden');
 if (!/id="btnAdventure"/.test(html) || !/Avontuur/.test(html)) fail('Avontuur tile missing — players need a way in');
+if (!/id="btnUpgradesHome"/.test(html)) fail('Upgrades HOME tile missing on start');
+if (/id="btnInstallLabel">Zet in app-lade/.test(html)) fail('install label still uses cluttery app-lade copy');
 if (!/id="sfTitleStart"/.test(html) || !/SPELEN/.test(html)) fail('SPELEN gate missing');
 if (/id="sfTitleName"/.test(html)) fail('optional name field must stay off the title gate');
 if (!/id="sfTitleNote"/.test(html)) fail('quiet save-on-phone note missing');
