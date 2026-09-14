@@ -110,7 +110,7 @@
       "id": "w-20260914T173000",
       "from": "user",
       "text": "Vul P1 art-slots uit editor draft PR #284 (docs/MONSTER-ART-SLOTS.md). Nieuwe IDs — niet herschilderen van classic/farm/zoo/sea/tide/satan of #282 set. Exact: wolf, owl, frog, snake, boar, skeleton, mummy, beetle, wasp, spider, drone, bot, scrapdog, penguin, yeti, crab, turtle, squid.",
-      "status": "in-progress",
+      "status": "done-in-code",
       "updated": "2026-09-14"
     },
     {
@@ -637,6 +637,10 @@
   ],
   "sessionLog": [
     {
+      "at": "2026-09-14T17:28:01Z",
+      "summary": "P1 W2 slots filled: 18 dedicated 32x32 pixels + catalog #284 merge. v1.18.166/SW376."
+    },
+    {
       "at": "2026-09-14T17:40:00Z",
       "summary": "Merge #284 catalog + fill 18 P1 art-slots with dedicated 32×32 pixels. v1.18.166/SW376."
     },
@@ -731,18 +735,6 @@
     {
       "at": "2026-08-17T10:21:10Z",
       "summary": "PC-pull geregeld: pull-main.sh + GITHUB-PUSH is nu pull-kaart; main LIVE"
-    },
-    {
-      "at": "2026-08-17T10:20:50Z",
-      "summary": "pull-main script + GITHUB-PUSH bijwerken zodat de pc één commando kan pullen"
-    },
-    {
-      "at": "2026-08-17T10:18:00Z",
-      "summary": "main LIVE 33d89b6 v1.18.151 — pull-commando voor de pc klaar"
-    },
-    {
-      "at": "2026-08-17T10:03:24Z",
-      "summary": "LIVE gemerged #248–#255 naar main conflictloos · v1.18.151 / SW 361 — pull main op de pc"
     }
   ],
   "implementedFeaturesSummary": "d18 char select deel 1+2 (v1.11.1-2); Mats coinrun + shuriken mik/vliegers + anti-spam (v1.12.0); speel.html (v1.12.2+). Zie HANDOFF-ZOEKINDEX.md en improvement-d20-bag.json userFeatureLog.",
