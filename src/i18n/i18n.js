@@ -117,12 +117,9 @@ const I18N = {
       stick_lighter: { name: 'Stok-Aansteker Fabriek', blurb: 'Scheef schuurtje dat stokken tegen elkaar wrijft tot ze vonken geven.' },
       woodchip_glue: { name: 'Houtsnipper-Lijm Fabriek', blurb: 'Kookt zaagsel tot een pasta die harder plakt dan een combo. Niet likken.' },
       chipping_wood: { name: 'Versnipper-Hout Fabriek', blurb: 'Vrolijke versnipperaar die TIMBER fluistert en nuttige snippers hoest.' },
-      bamboo_boesa_boiler: { name: 'Bamboe-Boesa Ketel', blurb: 'Vuur-ketel die holle boesa-bamboe stoomt tot de stengels fluiten.' },
-      echo_whistle_mill: { name: 'Echo-Fluitmolen', blurb: 'Molenrad dat lucht tot taunts maalt. Het gebouw scheldt terug.' },
-      res: {
-        ember_sticks: 'Gloei-stokjes', glue_pots: 'Lijmpotten', wood_chips: 'Houtsnippers',
-        boesa_steam: 'Boesa-stoom', echo_notes: 'Echo-noten',
-      },
+      bamboo_boesa: { name: 'Bamboe-Boesa Ketel', blurb: 'Vuur-ketel die holle boesa-bamboe stoomt tot de stengels fluiten.' },
+      echo_whistle: { name: 'Echo-Fluitmolen', blurb: 'Molenrad dat lucht tot taunts maalt. Het gebouw scheldt terug.' },
+      res: { spark: 'Vonken', glue: 'Lijm', chip: 'Snippers', steam: 'Stoom', echo: 'Echo' },
     },
     rarity: { common: 'Gewoon', uncommon: 'Ongewoon', rare: 'Zeldzaam', epic: 'Episch', legendary: 'Legendarisch', mythic: 'Mythisch', nightmare: 'Nachtmerrie', hell: 'Hel' },
     audio: {
@@ -247,12 +244,9 @@ const I18N = {
       stick_lighter: { name: 'Stick-Lighter Factory', blurb: 'A lopsided woodshed that rubs sticks together until they sulk into sparks.' },
       woodchip_glue: { name: 'Woodchip-Glue Factory', blurb: 'Boils yesterday’s sawdust into a paste that sticks harder than a combo. Do not lick.' },
       chipping_wood: { name: 'Chipping-Wood Factory', blurb: 'A cheerful chipper that whispers TIMBER and coughs useful chips.' },
-      bamboo_boesa_boiler: { name: 'Bamboo-Boesa Boiler', blurb: 'Fire-island kettle that steams hollow “boesa” bamboo until the stalks whistle.' },
-      echo_whistle_mill: { name: 'Echo-Whistle Mill', blurb: 'A mill wheel that turns air into taunts. The building heckles you back.' },
-      res: {
-        ember_sticks: 'Ember sticks', glue_pots: 'Glue pots', wood_chips: 'Wood chips',
-        boesa_steam: 'Boesa steam', echo_notes: 'Echo notes',
-      },
+      bamboo_boesa: { name: 'Bamboo-Boesa Boiler', blurb: 'Fire-island kettle that steams hollow “boesa” bamboo until the stalks whistle.' },
+      echo_whistle: { name: 'Echo-Whistle Mill', blurb: 'A mill wheel that turns air into taunts. The building heckles you back.' },
+      res: { spark: 'Spark', glue: 'Glue', chip: 'Chip', steam: 'Steam', echo: 'Echo' },
     },
     rarity: { common: 'Common', uncommon: 'Uncommon', rare: 'Rare', epic: 'Epic', legendary: 'Legendary', mythic: 'Mythic', nightmare: 'Nightmare', hell: 'Hell' },
     audio: {

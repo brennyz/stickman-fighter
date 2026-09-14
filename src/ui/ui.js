@@ -3381,12 +3381,14 @@ const UI = {
     if (sub) sub.textContent = (typeof tOr === 'function')
       ? tOr('buildings.sub', 'Eiland-fabrieken · levels · timed resources — stub voor UI/art/powers')
       : 'Eiland-fabrieken · levels · timed resources — stub voor UI/art/powers';
-    if (typeof tickBuildings === 'function') tickBuildings();
-    const rows = (typeof listBuildingsForUi === 'function') ? listBuildingsForUi() : [];
+    if (typeof buildingTickAll === 'function') buildingTickAll();
+    const ids = (typeof BUILDING_IDS !== 'undefined') ? BUILDING_IDS : [];
     if (walletEl) {
       const parts = [];
-      const wallet = (typeof buildingWalletAll === 'function') ? buildingWalletAll() : {};
-      for (const [id, n] of Object.entries(wallet)) {
+      const wallet = (typeof buildingWallet === 'function') ? buildingWallet() : {};
+      const resIds = (typeof buildingResourceIds !== 'undefined') ? buildingResourceIds : Object.keys(wallet);
+      for (const id of resIds) {
+        const n = wallet[id] || 0;
         if (!n) continue;
         const label = (typeof buildingResourceLabel === 'function') ? buildingResourceLabel(id) : id;
         parts.push(label + ' ' + n);
@@ -3396,13 +3398,21 @@ const UI = {
       walletEl.textContent = parts.join(' · ');
     }
     if (!list) return;
-    list.innerHTML = '';
-    for (const row of rows) {
-      const card = document.createElement('div');
-      card.className = 'step-card building-stub-card';
-      card.dataset.buildingId = row.id;
+    const byId = {};
+    list.querySelectorAll('[data-factory-id]').forEach((el) => { byId[el.getAttribute('data-factory-id')] = el; });
+    for (const id of ids) {
+      const row = (typeof buildingTooltipModel === 'function') ? buildingTooltipModel(id) : null;
+      if (!row) continue;
+      let card = byId[id];
+      if (!card) {
+        card = document.createElement('div');
+        card.className = 'step-card building-stub-card';
+        card.setAttribute('data-factory-id', id);
+        list.appendChild(card);
+      }
+      card.innerHTML = '';
       const title = document.createElement('b');
-      title.textContent = row.name + (row.built ? ` · Lv ${row.level}/${row.maxLevel}` : ' · —');
+      title.textContent = row.name + (row.built ? ` · Lv ${row.level}/${row.maxLevel} · rank ${row.powerRank}` : ' · —');
       const meta = document.createElement('div');
       meta.style.cssText = 'margin-top:4px;font-size:13px;line-height:1.4;opacity:.9';
       const lock = row.unlocked
@@ -3421,7 +3431,7 @@ const UI = {
       powers.style.cssText = 'margin-top:4px;font-size:12px;opacity:.8';
       powers.textContent = row.powersUnlocked.length
         ? ('powers: ' + row.powersUnlocked.join(', '))
-        : (row.nextPower ? ('next power @ Lv ' + row.nextPower.atLevel + ': ' + row.nextPower.id) : '');
+        : (row.nextPower ? ('next power @ rank ' + row.nextPower.rank + ': ' + row.nextPower.id) : '');
       card.appendChild(title);
       card.appendChild(meta);
       if (powers.textContent) card.appendChild(powers);
@@ -3438,21 +3448,20 @@ const UI = {
       };
       if (!row.built) {
         addBtn((typeof tOr === 'function') ? tOr('buildings.build', 'Bouwen') : 'Bouwen', row.canBuild, () => {
-          tryBuildBuilding(row.id);
+          buildingBuild(row.id);
           this.renderBuildings();
         });
       } else {
-        addBtn((typeof tOr === 'function') ? tOr('buildings.collect', 'Ophalen') : 'Ophalen', row.pending > 0, () => {
-          collectBuilding(row.id);
+        addBtn((typeof tOr === 'function') ? tOr('buildings.collect', 'Ophalen') : 'Ophalen', row.canCollect, () => {
+          buildingCollect(row.id);
           this.renderBuildings();
         });
         addBtn((typeof tOr === 'function') ? tOr('buildings.upgrade', 'Upgrade') : 'Upgrade', row.canUpgrade, () => {
-          tryUpgradeBuilding(row.id);
+          buildingUpgrade(row.id);
           this.renderBuildings();
         });
       }
       card.appendChild(actions);
-      list.appendChild(card);
     }
   },
 

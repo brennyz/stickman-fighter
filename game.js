@@ -323,9 +323,9 @@ const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const VERSION_UPDATE_SAVE_KEY = 'stickfighter_version_update_save_v1';
 const VERSION_UPDATE_FLAG_KEY = 'stickfighter_version_update_flag_v1';
 const SAVE_EXPORT_SCHEMA = 3;
-const APP_VERSION = '1.18.164';
+const APP_VERSION = '1.18.165';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 374;
+const SW_CACHE_REV = 375;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', petCoins: 0, dex: {}, summons: {}, pets: {}, activePet: null,
   eggPets: {}, activeEggPet: null, eggDaily: null,
   chestDaily: null, chestWeapons: {},
@@ -347,7 +347,7 @@ const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', petCoins: 0,
   reducedMotion: false, liteFx: false, highContrast: false, lang: null, playerTag: '', lastPlay: null, tipsSeen: {},
   stats: { kills: 0, advWins: 0, wallBestRun: 0, maxCombo: 0, maxKillStreak: 0, trainMaxCombo: 0, pickups: 0, bossKills: 0, vsMatches: 0, vsWins: 0, matsCoinBest: 0, summonCount: 0, killsSinceSummon: 0, petsTamed: 0, eggsHatched: 0, weaponFinishers: 0, tideBattleWins: 0, skillShards: 0, itemShards: 0, dailyBonusCount: 0 },
   achievements: {}, daily: null, vsPlayedIds: [], weaponMastery: {}, skillUpgrades: {}, itemUpgrades: {},
-  buildings: {}, buildingRes: {},
+  buildings: { schema: 1, factories: {}, wallet: {} },
   activeTechnique: 'spiral_orb', skill: 'spiral_orb', super: 'ketsbam', missionsIntroSeen: false };
 
 const MAX_LEVEL = 70;
@@ -1097,7 +1097,10 @@ function saveProgressScore(s) {
   }
   const petCoins = Math.floor(Number(s.petCoins) || 0);
   let bLv = 0;
-  if (s.buildings && typeof s.buildings === 'object') {
+  const fac = s.buildings && s.buildings.factories;
+  if (fac && typeof fac === 'object') {
+    for (const v of Object.values(fac)) bLv += Math.floor(Number(v && v.level) || 0);
+  } else if (s.buildings && typeof s.buildings === 'object') {
     for (const v of Object.values(s.buildings)) bLv += Math.floor(Number(v && v.level) || 0);
   }
   return unlocked * 1e12 + lvl * 1e9 + xp * 1e6 + ach * 1e5 + dex * 1e4
@@ -1176,9 +1179,10 @@ function readSaveJson(raw) {
     merged.zoneWeapons = Object.assign({}, parsed.zoneWeapons || {});
     merged.chestWeapons = Object.assign({}, parsed.chestWeapons || {});
     merged.buildings = (parsed.buildings && typeof parsed.buildings === 'object' && !Array.isArray(parsed.buildings))
-      ? Object.assign({}, parsed.buildings) : {};
-    merged.buildingRes = (parsed.buildingRes && typeof parsed.buildingRes === 'object' && !Array.isArray(parsed.buildingRes))
-      ? Object.assign({}, parsed.buildingRes) : {};
+      ? Object.assign({}, parsed.buildings) : { schema: 1, factories: {}, wallet: {} };
+    if (parsed.buildingRes && typeof parsed.buildingRes === 'object' && !Array.isArray(parsed.buildingRes)) {
+      merged.buildingRes = Object.assign({}, parsed.buildingRes);
+    }
     if (parsed.chestDaily && typeof parsed.chestDaily === 'object') merged.chestDaily = Object.assign({}, parsed.chestDaily);
     merged.advCleared = Object.assign(
       { normal: false, nightmare: false, hell: false },
@@ -1437,8 +1441,10 @@ function saveHasProgress(s) {
   if (Object.keys(st.summons || {}).length > 0) return true;
   if (Object.keys(st.pets || {}).length > 0) return true;
   if (st.buildings && typeof st.buildings === 'object') {
-    for (const v of Object.values(st.buildings)) {
-      if (Math.floor(Number(v && v.level) || 0) > 0) return true;
+    const fac = (st.buildings.factories && typeof st.buildings.factories === 'object')
+      ? st.buildings.factories : st.buildings;
+    for (const v of Object.values(fac)) {
+      if (v && typeof v === 'object' && Math.floor(Number(v.level) || 0) > 0) return true;
     }
   }
   return false;
@@ -1882,9 +1888,8 @@ function sanitizeSave(s) {
   if (typeof sanitizeBuildingSave === 'function') sanitizeBuildingSave(out);
   else {
     out.buildings = (out.buildings && typeof out.buildings === 'object' && !Array.isArray(out.buildings))
-      ? out.buildings : {};
-    out.buildingRes = (out.buildingRes && typeof out.buildingRes === 'object' && !Array.isArray(out.buildingRes))
-      ? out.buildingRes : {};
+      ? out.buildings : { schema: 1, factories: {}, wallet: {} };
+    delete out.buildingRes;
   }
 
   out.petCoins = clamp(Math.floor(Number(out.petCoins) || 0), 0, 999999);
@@ -2084,12 +2089,9 @@ const I18N = {
       stick_lighter: { name: 'Stok-Aansteker Fabriek', blurb: 'Scheef schuurtje dat stokken tegen elkaar wrijft tot ze vonken geven.' },
       woodchip_glue: { name: 'Houtsnipper-Lijm Fabriek', blurb: 'Kookt zaagsel tot een pasta die harder plakt dan een combo. Niet likken.' },
       chipping_wood: { name: 'Versnipper-Hout Fabriek', blurb: 'Vrolijke versnipperaar die TIMBER fluistert en nuttige snippers hoest.' },
-      bamboo_boesa_boiler: { name: 'Bamboe-Boesa Ketel', blurb: 'Vuur-ketel die holle boesa-bamboe stoomt tot de stengels fluiten.' },
-      echo_whistle_mill: { name: 'Echo-Fluitmolen', blurb: 'Molenrad dat lucht tot taunts maalt. Het gebouw scheldt terug.' },
-      res: {
-        ember_sticks: 'Gloei-stokjes', glue_pots: 'Lijmpotten', wood_chips: 'Houtsnippers',
-        boesa_steam: 'Boesa-stoom', echo_notes: 'Echo-noten',
-      },
+      bamboo_boesa: { name: 'Bamboe-Boesa Ketel', blurb: 'Vuur-ketel die holle boesa-bamboe stoomt tot de stengels fluiten.' },
+      echo_whistle: { name: 'Echo-Fluitmolen', blurb: 'Molenrad dat lucht tot taunts maalt. Het gebouw scheldt terug.' },
+      res: { spark: 'Vonken', glue: 'Lijm', chip: 'Snippers', steam: 'Stoom', echo: 'Echo' },
     },
     rarity: { common: 'Gewoon', uncommon: 'Ongewoon', rare: 'Zeldzaam', epic: 'Episch', legendary: 'Legendarisch', mythic: 'Mythisch', nightmare: 'Nachtmerrie', hell: 'Hel' },
     audio: {
@@ -2214,12 +2216,9 @@ const I18N = {
       stick_lighter: { name: 'Stick-Lighter Factory', blurb: 'A lopsided woodshed that rubs sticks together until they sulk into sparks.' },
       woodchip_glue: { name: 'Woodchip-Glue Factory', blurb: 'Boils yesterday’s sawdust into a paste that sticks harder than a combo. Do not lick.' },
       chipping_wood: { name: 'Chipping-Wood Factory', blurb: 'A cheerful chipper that whispers TIMBER and coughs useful chips.' },
-      bamboo_boesa_boiler: { name: 'Bamboo-Boesa Boiler', blurb: 'Fire-island kettle that steams hollow “boesa” bamboo until the stalks whistle.' },
-      echo_whistle_mill: { name: 'Echo-Whistle Mill', blurb: 'A mill wheel that turns air into taunts. The building heckles you back.' },
-      res: {
-        ember_sticks: 'Ember sticks', glue_pots: 'Glue pots', wood_chips: 'Wood chips',
-        boesa_steam: 'Boesa steam', echo_notes: 'Echo notes',
-      },
+      bamboo_boesa: { name: 'Bamboo-Boesa Boiler', blurb: 'Fire-island kettle that steams hollow “boesa” bamboo until the stalks whistle.' },
+      echo_whistle: { name: 'Echo-Whistle Mill', blurb: 'A mill wheel that turns air into taunts. The building heckles you back.' },
+      res: { spark: 'Spark', glue: 'Glue', chip: 'Chip', steam: 'Steam', echo: 'Echo' },
     },
     rarity: { common: 'Common', uncommon: 'Uncommon', rare: 'Rare', epic: 'Epic', legendary: 'Legendary', mythic: 'Mythic', nightmare: 'Nightmare', hell: 'Hell' },
     audio: {
@@ -7117,26 +7116,62 @@ function countAllUpgradesReady() {
 }
 /* --- src/data/buildings.js --- */
 /* ============================== BUILDINGS ============================== */
-/** Island factories: catalog + save + unlock/upgrade + timed resources.
- *  Combat application is owned by the powers partner — this file only
- *  unlocks powerIds. Pixel art is owned by the art partner (artHint only).
- *  Bind API: docs/BUILDINGS.md · BUILDING_API */
-const BUILDING_MAX_LEVEL = 5;
+/** Island factories — data + save + unlock/upgrade + timed resources.
+ *  Locked catalog (Brendon). Bind names in docs/BUILDINGS.md.
+ *  Pixels / full UI / combat apply / Versus: other agents. */
+const BUILDINGS_SCHEMA = 1;
+const BUILDING_MAX_LEVEL = 10;
 const BUILDING_OFFLINE_HOURS = 8;
 const BUILDING_MS_PER_HOUR = 3600000;
 const BUILDING_WALLET_CAP = 99999;
 const BUILDING_STORED_CAP_ABS = 9999;
 
-const BUILDING_RESOURCE_IDS = [
-  'ember_sticks',
-  'glue_pots',
-  'wood_chips',
-  'boesa_steam',
-  'echo_notes',
-];
+const buildingResourceIds = ['spark', 'glue', 'chip', 'steam', 'echo'];
+const BUILDING_RESOURCE_IDS = buildingResourceIds;
 
-/** Canonical five — do not rename. List order = island 1..5 unlock. */
-const BUILDING_CATALOG = [
+const BUILDING_ID_ALIASES = {
+  bamboo_boesa_boiler: 'bamboo_boesa',
+  echo_whistle_mill: 'echo_whistle',
+};
+const BUILDING_RES_ALIASES = {
+  ember_sticks: 'spark',
+  glue_pots: 'glue',
+  wood_chips: 'chip',
+  boesa_steam: 'steam',
+  echo_notes: 'echo',
+};
+
+function buildingRateCap(startRate) {
+  const perHour = [];
+  const cap = [];
+  let r = startRate;
+  for (let i = 0; i < BUILDING_MAX_LEVEL; i++) {
+    const rate = Math.max(1, Math.round(r));
+    perHour.push(rate);
+    cap.push(rate * BUILDING_OFFLINE_HOURS);
+    r *= 1.22;
+  }
+  return { perHour, cap };
+}
+
+function buildingCostTrack(buildPc, priorRes, priorN, ownRes, upPc0, upRes0) {
+  const buildResources = {};
+  if (priorRes && priorN) buildResources[priorRes] = priorN;
+  const upgradeCosts = [];
+  for (let i = 0; i < BUILDING_MAX_LEVEL - 1; i++) {
+    const resources = {};
+    const resN = Math.max(1, Math.round(upRes0 * Math.pow(1.38, i)));
+    resources[ownRes] = resN;
+    upgradeCosts.push({
+      petCoins: Math.max(1, Math.round(upPc0 * Math.pow(1.32, i))),
+      resources,
+    });
+  }
+  return { buildCost: { petCoins: buildPc, resources: buildResources }, upgradeCosts };
+}
+
+/** Canonical five. List order = island 1..5. Do not add sawmill/forge/neonlab/shrine/reactor. */
+const BUILDINGS = [
   {
     id: 'stick_lighter',
     name: 'Stick-Lighter Factory',
@@ -7146,36 +7181,22 @@ const BUILDING_CATALOG = [
     maxLevel: BUILDING_MAX_LEVEL,
     accent: '#ff9a4d',
     theme: 'ember',
+    resourceId: 'spark',
     blurb: 'A lopsided woodshed that rubs sticks together until they sulk into sparks.',
-    blurbNl: 'Scheef schuurtje dat stokken tegen elkaar wrijft tot ze vonken geven.',
     artHint: {
-      shape: 'crooked woodshed, spark-coughing chimney, two giant matchsticks crossed',
-      motif: 'match + grind-stone + ember pile',
+      shape: 'crooked woodshed, spark chimney, two giant matchsticks crossed',
+      motif: 'match + grind-stone + ember',
       palette: ['#ff9a4d', '#c97a20', '#5a3a22'],
       iconFile: 'assets/buttons/modes/buildings-stick-lighter.svg',
-      iconHint: 'stroke-first match + spark, viewBox 0 0 24 24, no emoji',
+      iconHint: 'stroke-first match + spark, 24×24, no emoji',
     },
-    resource: {
-      id: 'ember_sticks',
-      name: 'Ember sticks',
-      nameNl: 'Gloei-stokjes',
-      perHour: [8, 14, 22, 34, 50],
-      cap: [64, 112, 176, 272, 400],
-    },
-    buildCost: { petCoins: 20, resources: {} },
-    upgradeCosts: [
-      { petCoins: 40, resources: { ember_sticks: 16 } },
-      { petCoins: 75, resources: { ember_sticks: 32 } },
-      { petCoins: 120, resources: { ember_sticks: 56 } },
-      { petCoins: 180, resources: { ember_sticks: 90 } },
-    ],
+    resource: Object.assign({ id: 'spark', name: 'Spark', nameNl: 'Vonken' }, buildingRateCap(8)),
     powers: [
-      { id: 'spark_kindle', atLevel: 1, kind: 'passive', combatHook: 'onFirstMeleeHit',
-        label: 'Spark Kindle', blurb: 'First melee chip each wave leaves a tiny ember.' },
-      { id: 'kindle_trail', atLevel: 3, kind: 'passive', combatHook: 'onMoveTick',
-        label: 'Kindle Trail', blurb: 'Walking drops brief ember crumbs that tag chasers.' },
-      { id: 'matchstick_storm', atLevel: 5, kind: 'active', combatHook: 'onActiveCast',
-        label: 'Matchstick Storm', blurb: 'Shower of lit sticks — short cone, fire chip.' },
+      { rank: 0, id: 'spark_kindle', kind: 'passive', combatHook: 'onFirstMeleeHit', label: 'Spark Kindle', blurb: 'First melee chip each wave leaves a tiny ember.' },
+      { rank: 1, id: 'kindle_trail', kind: 'passive', combatHook: 'onMoveTick', label: 'Kindle Trail', blurb: 'Walking drops brief ember crumbs.' },
+      { rank: 2, id: 'ember_pocket', kind: 'passive', combatHook: 'onWeaponHit', label: 'Ember Pocket', blurb: 'Weapon hits can pop a spark chip.' },
+      { rank: 3, id: 'flare_step', kind: 'active', combatHook: 'onActiveCast', label: 'Flare Step', blurb: 'Short dash that leaves a burn line.' },
+      { rank: 4, id: 'matchstick_storm', kind: 'active', combatHook: 'onActiveCast', label: 'Matchstick Storm', blurb: 'Shower of lit sticks — short fire cone.' },
     ],
   },
   {
@@ -7187,36 +7208,22 @@ const BUILDING_CATALOG = [
     maxLevel: BUILDING_MAX_LEVEL,
     accent: '#c9a66b',
     theme: 'glue',
+    resourceId: 'glue',
     blurb: 'Boils yesterday’s sawdust into a paste that sticks harder than a combo. Do not lick.',
-    blurbNl: 'Kookt zaagsel tot een pasta die harder plakt dan een combo. Niet likken.',
     artHint: {
       shape: 'vat-works with dripping paddles and a sticky roof',
-      motif: 'glue pot + woodchip swirl + clamp',
+      motif: 'glue pot + chip swirl + clamp',
       palette: ['#c9a66b', '#8a6a3a', '#e8d5a3'],
       iconFile: 'assets/buttons/modes/buildings-woodchip-glue.svg',
       iconHint: 'stroke-first pot + drip, 24×24, no emoji',
     },
-    resource: {
-      id: 'glue_pots',
-      name: 'Glue pots',
-      nameNl: 'Lijmpotten',
-      perHour: [6, 11, 18, 28, 42],
-      cap: [48, 88, 144, 224, 336],
-    },
-    buildCost: { petCoins: 35, resources: { ember_sticks: 8 } },
-    upgradeCosts: [
-      { petCoins: 55, resources: { glue_pots: 14 } },
-      { petCoins: 90, resources: { glue_pots: 28 } },
-      { petCoins: 140, resources: { glue_pots: 48 } },
-      { petCoins: 210, resources: { glue_pots: 80 } },
-    ],
+    resource: Object.assign({ id: 'glue', name: 'Glue', nameNl: 'Lijm' }, buildingRateCap(6)),
     powers: [
-      { id: 'sticky_soles', atLevel: 1, kind: 'passive', combatHook: 'onKnockback',
-        label: 'Sticky Soles', blurb: 'Take less knockback — boots remember the floor.' },
-      { id: 'glue_trap', atLevel: 3, kind: 'active', combatHook: 'onActiveCast',
-        label: 'Glue Trap', blurb: 'Puddle that slows the first monster through it.' },
-      { id: 'chip_golem', atLevel: 5, kind: 'passive', combatHook: 'onWaveStart',
-        label: 'Chip Golem', blurb: 'Start each wave with a thin chip-armor shield.' },
+      { rank: 0, id: 'sticky_soles', kind: 'passive', combatHook: 'onKnockback', label: 'Sticky Soles', blurb: 'Take less knockback — boots remember the floor.' },
+      { rank: 1, id: 'tacky_block', kind: 'passive', combatHook: 'onBlock', label: 'Tacky Block', blurb: 'Block holds a beat longer.' },
+      { rank: 2, id: 'glue_trap', kind: 'active', combatHook: 'onActiveCast', label: 'Glue Trap', blurb: 'Puddle that slows the first monster through it.' },
+      { rank: 3, id: 'paste_armor', kind: 'passive', combatHook: 'onWaveStart', label: 'Paste Armor', blurb: 'Thin glue shield at wave start.' },
+      { rank: 4, id: 'chip_golem', kind: 'passive', combatHook: 'onWaveStart', label: 'Chip Golem', blurb: 'Start each wave with chip-armor.' },
     ],
   },
   {
@@ -7228,40 +7235,26 @@ const BUILDING_CATALOG = [
     maxLevel: BUILDING_MAX_LEVEL,
     accent: '#7cfc8a',
     theme: 'chips',
+    resourceId: 'chip',
     blurb: 'A cheerful chipper that whispers TIMBER and coughs useful chips.',
-    blurbNl: 'Vrolijke versnipperaar die TIMBER fluistert en nuttige snippers hoest.',
     artHint: {
       shape: 'open hopper + spinning teeth, wood-dust halo',
-      motif: 'log in / chips out / tiny timber flag',
+      motif: 'log in / chips out / timber flag',
       palette: ['#7cfc8a', '#4a8a3a', '#c9b691'],
       iconFile: 'assets/buttons/modes/buildings-chipping-wood.svg',
       iconHint: 'stroke-first hopper + chip burst, 24×24, no emoji',
     },
-    resource: {
-      id: 'wood_chips',
-      name: 'Wood chips',
-      nameNl: 'Houtsnippers',
-      perHour: [10, 16, 24, 36, 54],
-      cap: [80, 128, 192, 288, 432],
-    },
-    buildCost: { petCoins: 50, resources: { glue_pots: 6 } },
-    upgradeCosts: [
-      { petCoins: 70, resources: { wood_chips: 20 } },
-      { petCoins: 110, resources: { wood_chips: 40 } },
-      { petCoins: 165, resources: { wood_chips: 70 } },
-      { petCoins: 240, resources: { wood_chips: 110 } },
-    ],
+    resource: Object.assign({ id: 'chip', name: 'Chip', nameNl: 'Snipper' }, buildingRateCap(10)),
     powers: [
-      { id: 'splinter_edge', atLevel: 1, kind: 'passive', combatHook: 'onWeaponHit',
-        label: 'Splinter Edge', blurb: 'Weapon hits fling a bonus splinter chip.' },
-      { id: 'sawdust_cloud', atLevel: 3, kind: 'active', combatHook: 'onActiveCast',
-        label: 'Sawdust Cloud', blurb: 'Brief miss-haze in front of you.' },
-      { id: 'chipper_fury', atLevel: 5, kind: 'passive', combatHook: 'onComboStep',
-        label: 'Chipper Fury', blurb: 'High combos spray extra splinters.' },
+      { rank: 0, id: 'splinter_edge', kind: 'passive', combatHook: 'onWeaponHit', label: 'Splinter Edge', blurb: 'Weapon hits fling a bonus splinter.' },
+      { rank: 1, id: 'chip_spray', kind: 'passive', combatHook: 'onComboStep', label: 'Chip Spray', blurb: 'Combos cough extra chips.' },
+      { rank: 2, id: 'sawdust_cloud', kind: 'active', combatHook: 'onActiveCast', label: 'Sawdust Cloud', blurb: 'Brief miss-haze in front of you.' },
+      { rank: 3, id: 'hopper_guard', kind: 'passive', combatHook: 'onHurt', label: 'Hopper Guard', blurb: 'First hit each wave is a bit softer.' },
+      { rank: 4, id: 'chipper_fury', kind: 'passive', combatHook: 'onComboStep', label: 'Chipper Fury', blurb: 'High combos spray splinters.' },
     ],
   },
   {
-    id: 'bamboo_boesa_boiler',
+    id: 'bamboo_boesa',
     name: 'Bamboo-Boesa Boiler',
     nameNl: 'Bamboe-Boesa Ketel',
     short: 'Boiler',
@@ -7269,40 +7262,26 @@ const BUILDING_CATALOG = [
     maxLevel: BUILDING_MAX_LEVEL,
     accent: '#ff7a4d',
     theme: 'fire-bamboo',
+    resourceId: 'steam',
     blurb: 'Fire-island kettle that steams hollow “boesa” bamboo until the stalks whistle.',
-    blurbNl: 'Vuur-ketel die holle boesa-bamboe stoomt tot de stengels fluiten.',
     artHint: {
       shape: 'fat boiler, bamboo bundle, steam-whistle stack, ember belly',
-      motif: 'bamboo + pressure gauge + flame ring',
+      motif: 'bamboo + gauge + flame ring',
       palette: ['#ff7a4d', '#c97a20', '#5ad06a'],
       iconFile: 'assets/buttons/modes/buildings-bamboo-boesa.svg',
       iconHint: 'stroke-first kettle + bamboo, 24×24, no emoji',
     },
-    resource: {
-      id: 'boesa_steam',
-      name: 'Boesa steam',
-      nameNl: 'Boesa-stoom',
-      perHour: [7, 12, 20, 30, 46],
-      cap: [56, 96, 160, 240, 368],
-    },
-    buildCost: { petCoins: 65, resources: { wood_chips: 10 } },
-    upgradeCosts: [
-      { petCoins: 95, resources: { boesa_steam: 16 } },
-      { petCoins: 145, resources: { boesa_steam: 34 } },
-      { petCoins: 210, resources: { boesa_steam: 58 } },
-      { petCoins: 300, resources: { boesa_steam: 96 } },
-    ],
+    resource: Object.assign({ id: 'steam', name: 'Steam', nameNl: 'Stoom' }, buildingRateCap(7)),
     powers: [
-      { id: 'boiler_hiss', atLevel: 1, kind: 'passive', combatHook: 'onAuraTick',
-        label: 'Boiler Hiss', blurb: 'Close-range heat aura chips foes who crowd you.' },
-      { id: 'bamboo_burst', atLevel: 3, kind: 'active', combatHook: 'onActiveCast',
-        label: 'Bamboo Burst', blurb: 'Steam knock — short cone, heavy shove.' },
-      { id: 'boesa_overheat', atLevel: 5, kind: 'passive', combatHook: 'onLowHp',
-        label: 'Boesa Overheat', blurb: 'Low HP: extra fire chip, you run hotter.' },
+      { rank: 0, id: 'boiler_hiss', kind: 'passive', combatHook: 'onAuraTick', label: 'Boiler Hiss', blurb: 'Close-range heat aura chips crowders.' },
+      { rank: 1, id: 'bamboo_vent', kind: 'passive', combatHook: 'onDash', label: 'Bamboo Vent', blurb: 'Dash puffs a steam shove.' },
+      { rank: 2, id: 'bamboo_burst', kind: 'active', combatHook: 'onActiveCast', label: 'Bamboo Burst', blurb: 'Steam knock — short cone, heavy shove.' },
+      { rank: 3, id: 'pressure_cook', kind: 'passive', combatHook: 'onComboStep', label: 'Pressure Cook', blurb: 'Combos build a heat pip.' },
+      { rank: 4, id: 'boesa_overheat', kind: 'passive', combatHook: 'onLowHp', label: 'Boesa Overheat', blurb: 'Low HP: extra fire chip.' },
     ],
   },
   {
-    id: 'echo_whistle_mill',
+    id: 'echo_whistle',
     name: 'Echo-Whistle Mill',
     nameNl: 'Echo-Fluitmolen',
     short: 'Whistle',
@@ -7310,8 +7289,8 @@ const BUILDING_CATALOG = [
     maxLevel: BUILDING_MAX_LEVEL,
     accent: '#7cf5ff',
     theme: 'echo',
+    resourceId: 'echo',
     blurb: 'A mill wheel that turns air into taunts. The building heckles you back.',
-    blurbNl: 'Molenrad dat lucht tot taunts maalt. Het gebouw scheldt terug.',
     artHint: {
       shape: 'water-wheel mill with horn-bells and ripple rings',
       motif: 'whistle + echo arcs + spinning wheel',
@@ -7319,39 +7298,27 @@ const BUILDING_CATALOG = [
       iconFile: 'assets/buttons/modes/buildings-echo-whistle.svg',
       iconHint: 'stroke-first whistle + echo arcs, 24×24, no emoji',
     },
-    resource: {
-      id: 'echo_notes',
-      name: 'Echo notes',
-      nameNl: 'Echo-noten',
-      perHour: [5, 9, 15, 24, 38],
-      cap: [40, 72, 120, 192, 304],
-    },
-    buildCost: { petCoins: 80, resources: { boesa_steam: 12 } },
-    upgradeCosts: [
-      { petCoins: 120, resources: { echo_notes: 12 } },
-      { petCoins: 175, resources: { echo_notes: 26 } },
-      { petCoins: 250, resources: { echo_notes: 46 } },
-      { petCoins: 360, resources: { echo_notes: 78 } },
-    ],
+    resource: Object.assign({ id: 'echo', name: 'Echo', nameNl: 'Echo' }, buildingRateCap(5)),
     powers: [
-      { id: 'taunt_toot', atLevel: 1, kind: 'taunt', combatHook: 'onActiveCast',
-        label: 'Taunt Toot', blurb: 'Short whistle — nearest foe turns to face you.' },
-      { id: 'echo_ridge', atLevel: 3, kind: 'passive', combatHook: 'onKill',
-        label: 'Echo Ridge', blurb: 'Kills leave a sound-stun ripple.' },
-      { id: 'whistle_chorus', atLevel: 5, kind: 'taunt', combatHook: 'onActiveCast',
-        label: 'Whistle Chorus', blurb: 'Area taunt + brief stun. The mill sings along.' },
+      { rank: 0, id: 'taunt_toot', kind: 'taunt', combatHook: 'onActiveCast', label: 'Taunt Toot', blurb: 'Short whistle — nearest foe faces you.' },
+      { rank: 1, id: 'mill_heckle', kind: 'passive', combatHook: 'onHurt', label: 'Mill Heckle', blurb: 'Taking a hit toots a tiny taunt.' },
+      { rank: 2, id: 'echo_ridge', kind: 'passive', combatHook: 'onKill', label: 'Echo Ridge', blurb: 'Kills leave a sound-stun ripple.' },
+      { rank: 3, id: 'ridge_reply', kind: 'passive', combatHook: 'onBlock', label: 'Ridge Reply', blurb: 'Perfect block echoes a stun pip.' },
+      { rank: 4, id: 'whistle_chorus', kind: 'taunt', combatHook: 'onActiveCast', label: 'Whistle Chorus', blurb: 'Area taunt + brief stun.' },
     ],
   },
 ];
 
-const BUILDING_IDS = BUILDING_CATALOG.map((b) => b.id);
-const BUILDING_BY_ID = Object.fromEntries(BUILDING_CATALOG.map((b) => [b.id, b]));
-const BUILDING_POWERS = BUILDING_CATALOG.flatMap((b) =>
-  (b.powers || []).map((p) => Object.assign({ buildingId: b.id }, p))
-);
-const BUILDING_POWER_BY_ID = Object.fromEntries(BUILDING_POWERS.map((p) => [p.id, p]));
-const BUILDING_RESOURCE_BY_ID = Object.fromEntries(
-  BUILDING_CATALOG.map((b) => [b.resource.id, { buildingId: b.id, resource: b.resource }])
+BUILDINGS[0] = Object.assign(BUILDINGS[0], buildingCostTrack(20, null, 0, 'spark', 40, 16));
+BUILDINGS[1] = Object.assign(BUILDINGS[1], buildingCostTrack(35, 'spark', 8, 'glue', 55, 14));
+BUILDINGS[2] = Object.assign(BUILDINGS[2], buildingCostTrack(50, 'glue', 6, 'chip', 70, 20));
+BUILDINGS[3] = Object.assign(BUILDINGS[3], buildingCostTrack(65, 'chip', 10, 'steam', 95, 16));
+BUILDINGS[4] = Object.assign(BUILDINGS[4], buildingCostTrack(80, 'steam', 12, 'echo', 120, 12));
+
+const BUILDING_IDS = BUILDINGS.map((b) => b.id);
+const BUILDING_BY_ID = Object.fromEntries(BUILDINGS.map((b) => [b.id, b]));
+const BUILDING_POWERS = BUILDINGS.flatMap((b) =>
+  (b.powers || []).map((p) => Object.assign({ buildingId: b.id, atLevel: p.rank * 2 + 1 }, p))
 );
 
 function emptyBuildingSite() {
@@ -7360,22 +7327,12 @@ function emptyBuildingSite() {
 
 function emptyBuildingWallet() {
   const w = {};
-  for (const id of BUILDING_RESOURCE_IDS) w[id] = 0;
+  for (const id of buildingResourceIds) w[id] = 0;
   return w;
 }
 
-function emptyBuildingsBag() {
-  const bag = {};
-  for (const id of BUILDING_IDS) bag[id] = emptyBuildingSite();
-  return bag;
-}
-
-function buildingById(id) {
-  return BUILDING_BY_ID[id] || null;
-}
-
-function buildingPowerById(id) {
-  return BUILDING_POWER_BY_ID[id] || null;
+function emptyBuildingsRoot() {
+  return { schema: BUILDINGS_SCHEMA, factories: {}, wallet: {} };
 }
 
 function buildingNowMs() {
@@ -7391,64 +7348,94 @@ function buildingSaveRef(st) {
   return st && typeof st === 'object' ? st : (typeof save !== 'undefined' ? save : null);
 }
 
+function buildingCanonId(id) {
+  if (!id || typeof id !== 'string') return '';
+  return BUILDING_ID_ALIASES[id] || id;
+}
+
+function buildingCanonRes(id) {
+  if (!id || typeof id !== 'string') return '';
+  return BUILDING_RES_ALIASES[id] || id;
+}
+
 function ensureBuildingSave(st) {
   const s = buildingSaveRef(st);
   if (!s) return null;
-  if (!s.buildings || typeof s.buildings !== 'object' || Array.isArray(s.buildings)) s.buildings = {};
-  if (!s.buildingRes || typeof s.buildingRes !== 'object' || Array.isArray(s.buildingRes)) s.buildingRes = {};
+  if (!s.buildings || typeof s.buildings !== 'object' || Array.isArray(s.buildings)) {
+    s.buildings = emptyBuildingsRoot();
+  }
+  if (!s.buildings.factories || typeof s.buildings.factories !== 'object' || Array.isArray(s.buildings.factories)) {
+    s.buildings.factories = {};
+  }
+  if (!s.buildings.wallet || typeof s.buildings.wallet !== 'object' || Array.isArray(s.buildings.wallet)) {
+    s.buildings.wallet = {};
+  }
+  s.buildings.schema = BUILDINGS_SCHEMA;
   return s;
 }
 
 function buildingSite(id, st) {
-  const def = buildingById(id);
-  if (!def) return null;
+  const canon = buildingCanonId(id);
+  if (!BUILDING_BY_ID[canon]) return null;
   const s = ensureBuildingSave(st);
   if (!s) return emptyBuildingSite();
-  const raw = s.buildings[id];
+  const raw = s.buildings.factories[canon];
   if (!raw || typeof raw !== 'object') {
-    s.buildings[id] = emptyBuildingSite();
-    return s.buildings[id];
+    s.buildings.factories[canon] = emptyBuildingSite();
+    return s.buildings.factories[canon];
   }
   return raw;
 }
 
 function buildingLevel(id, st) {
-  const def = buildingById(id);
+  const def = BUILDING_BY_ID[buildingCanonId(id)];
   if (!def) return 0;
-  const site = buildingSite(id, st);
+  const site = buildingSite(def.id, st);
   return clamp(Math.floor(Number(site && site.level) || 0), 0, def.maxLevel);
 }
 
-function buildingMaxLevel(id) {
-  const def = buildingById(id);
-  return def ? def.maxLevel : BUILDING_MAX_LEVEL;
+function buildingCampaignUnlock(st) {
+  const s = buildingSaveRef(st);
+  if (s && typeof save !== 'undefined' && s === save && typeof advUnlockedLevel === 'function') {
+    try { return clamp(Math.floor(Number(advUnlockedLevel('normal')) || 1), 1, 70); } catch (_) {}
+  }
+  return clamp(Math.floor(Number((s || {}).unlocked) || 1), 1, 70);
 }
 
-function buildingWorldUnlocked(id, st) {
-  const def = buildingById(id);
+function buildingUnlocked(id, st) {
+  const def = BUILDING_BY_ID[buildingCanonId(id)];
   if (!def) return false;
   if (def.worldUnlock <= 1) return true;
-  const s = buildingSaveRef(st);
-  const unlocked = clamp(Math.floor(Number((s || {}).unlocked) || 1), 1, 70);
+  const unlocked = buildingCampaignUnlock(st);
   const per = (typeof LEVELS_PER_ISLAND === 'number') ? LEVELS_PER_ISLAND : 10;
   return unlocked > (def.worldUnlock - 1) * per;
 }
 
-function buildingOwned(id, st) {
+function buildingBuilt(id, st) {
   return buildingLevel(id, st) >= 1;
 }
 
-function buildingWallet(resId, st) {
-  if (!BUILDING_RESOURCE_IDS.includes(resId)) return 0;
-  const s = ensureBuildingSave(st);
-  if (!s) return 0;
-  return clamp(Math.floor(Number(s.buildingRes[resId]) || 0), 0, BUILDING_WALLET_CAP);
+function buildingPowerRank(idOrLevel, st) {
+  const lv = (typeof idOrLevel === 'number')
+    ? clamp(Math.floor(idOrLevel) || 0, 0, BUILDING_MAX_LEVEL)
+    : buildingLevel(idOrLevel, st);
+  if (lv < 1) return -1;
+  return Math.floor((lv - 1) / 2);
 }
 
-function buildingWalletAll(st) {
-  const out = emptyBuildingWallet();
-  for (const id of BUILDING_RESOURCE_IDS) out[id] = buildingWallet(id, st);
-  return out;
+function buildingWallet(resId, st) {
+  const s = ensureBuildingSave(st);
+  if (!s) return resId ? 0 : emptyBuildingWallet();
+  if (resId == null || resId === '') {
+    const all = emptyBuildingWallet();
+    for (const id of buildingResourceIds) {
+      all[id] = clamp(Math.floor(Number(s.buildings.wallet[id]) || 0), 0, BUILDING_WALLET_CAP);
+    }
+    return all;
+  }
+  const canon = buildingCanonRes(resId);
+  if (!buildingResourceIds.includes(canon)) return 0;
+  return clamp(Math.floor(Number(s.buildings.wallet[canon]) || 0), 0, BUILDING_WALLET_CAP);
 }
 
 function buildingOutputAtLevel(def, level) {
@@ -7460,35 +7447,24 @@ function buildingOutputAtLevel(def, level) {
   };
 }
 
-function buildingOutputRate(id, st) {
-  return buildingOutputAtLevel(buildingById(id), buildingLevel(id, st)).perHour;
-}
-
-function buildingStorageCap(id, st) {
-  return buildingOutputAtLevel(buildingById(id), buildingLevel(id, st)).cap;
-}
-
 function buildingCostClone(cost) {
   const out = { petCoins: Math.max(0, Math.floor(Number(cost && cost.petCoins) || 0)), resources: {} };
   const res = (cost && cost.resources && typeof cost.resources === 'object') ? cost.resources : {};
   for (const [k, v] of Object.entries(res)) {
-    if (!BUILDING_RESOURCE_IDS.includes(k)) continue;
+    const id = buildingCanonRes(k);
+    if (!buildingResourceIds.includes(id)) continue;
     const n = Math.max(0, Math.floor(Number(v) || 0));
-    if (n) out.resources[k] = n;
+    if (n) out.resources[id] = n;
   }
   return out;
 }
 
-function buildingBuildCost(id) {
-  const def = buildingById(id);
-  return def ? buildingCostClone(def.buildCost) : null;
-}
-
-function buildingUpgradeCost(id, st) {
-  const def = buildingById(id);
+function buildingNextCost(id, st) {
+  const def = BUILDING_BY_ID[buildingCanonId(id)];
   if (!def) return null;
-  const lv = buildingLevel(id, st);
-  if (lv < 1 || lv >= def.maxLevel) return null;
+  const lv = buildingLevel(def.id, st);
+  if (lv < 1) return buildingCostClone(def.buildCost);
+  if (lv >= def.maxLevel) return null;
   return buildingCostClone(def.upgradeCosts[lv - 1] || def.upgradeCosts[def.upgradeCosts.length - 1]);
 }
 
@@ -7508,71 +7484,86 @@ function buildingPay(cost, st) {
   if (!s || !buildingCanPay(cost, s)) return false;
   s.petCoins = clamp(Math.floor(Number(s.petCoins) || 0) - (cost.petCoins || 0), 0, 999999);
   for (const [res, n] of Object.entries(cost.resources || {})) {
-    s.buildingRes[res] = clamp(buildingWallet(res, s) - n, 0, BUILDING_WALLET_CAP);
+    const id = buildingCanonRes(res);
+    s.buildings.wallet[id] = clamp(buildingWallet(id, s) - n, 0, BUILDING_WALLET_CAP);
   }
   return true;
 }
 
 function buildingCanBuild(id, st) {
-  const def = buildingById(id);
+  const def = BUILDING_BY_ID[buildingCanonId(id)];
   if (!def) return false;
-  if (buildingOwned(id, st)) return false;
-  if (!buildingWorldUnlocked(id, st)) return false;
-  return buildingCanPay(buildingBuildCost(id), st);
+  if (buildingBuilt(def.id, st)) return false;
+  if (!buildingUnlocked(def.id, st)) return false;
+  return buildingCanPay(buildingCostClone(def.buildCost), st);
 }
 
 function buildingCanUpgrade(id, st) {
-  const def = buildingById(id);
+  const def = BUILDING_BY_ID[buildingCanonId(id)];
   if (!def) return false;
-  const lv = buildingLevel(id, st);
+  const lv = buildingLevel(def.id, st);
   if (lv < 1 || lv >= def.maxLevel) return false;
-  if (!buildingWorldUnlocked(id, st)) return false;
-  const cost = buildingUpgradeCost(id, st);
+  if (!buildingUnlocked(def.id, st)) return false;
+  const cost = buildingNextCost(def.id, st);
   return !!(cost && buildingCanPay(cost, st));
 }
 
-function tryBuildBuilding(id, st) {
-  const def = buildingById(id);
+function buildingPendingAmount(id, st) {
+  const def = BUILDING_BY_ID[buildingCanonId(id)];
+  if (!def || !buildingBuilt(def.id, st)) return 0;
+  const s = ensureBuildingSave(st);
+  tickOneBuilding(def.id, buildingNowMs(), s);
+  const site = buildingSite(def.id, s);
+  const cap = buildingOutputAtLevel(def, buildingLevel(def.id, s)).cap;
+  return clamp(Math.floor(Number(site && site.stored) || 0), 0, cap || BUILDING_STORED_CAP_ABS);
+}
+
+function buildingCanCollect(id, st) {
+  return buildingBuilt(id, st) && buildingPendingAmount(id, st) > 0;
+}
+
+function buildingBuild(id, st) {
+  const def = BUILDING_BY_ID[buildingCanonId(id)];
   if (!def) return { ok: false, reason: 'unknown' };
-  if (buildingOwned(id, st)) return { ok: false, reason: 'built' };
-  if (!buildingWorldUnlocked(id, st)) return { ok: false, reason: 'locked' };
-  const cost = buildingBuildCost(id);
+  if (buildingBuilt(def.id, st)) return { ok: false, reason: 'built' };
+  if (!buildingUnlocked(def.id, st)) return { ok: false, reason: 'locked' };
+  const cost = buildingCostClone(def.buildCost);
   if (!buildingCanPay(cost, st)) return { ok: false, reason: 'broke' };
   const s = ensureBuildingSave(st);
   if (!buildingPay(cost, s)) return { ok: false, reason: 'broke' };
-  const site = buildingSite(id, s);
+  const site = buildingSite(def.id, s);
   site.level = 1;
   site.stored = 0;
   site.lastTickAt = buildingNowMs();
-  if (s === save) persistOrToast('building/build/' + id);
-  return { ok: true, level: 1, buildingId: id };
+  if (typeof save !== 'undefined' && s === save) persistOrToast('building/build/' + def.id);
+  return { ok: true, level: 1, buildingId: def.id };
 }
 
-function tryUpgradeBuilding(id, st) {
-  const def = buildingById(id);
+function buildingUpgrade(id, st) {
+  const def = BUILDING_BY_ID[buildingCanonId(id)];
   if (!def) return { ok: false, reason: 'unknown' };
-  const lv = buildingLevel(id, st);
+  const lv = buildingLevel(def.id, st);
   if (lv < 1) return { ok: false, reason: 'unbuilt' };
   if (lv >= def.maxLevel) return { ok: false, reason: 'max' };
-  if (!buildingWorldUnlocked(id, st)) return { ok: false, reason: 'locked' };
-  const cost = buildingUpgradeCost(id, st);
+  if (!buildingUnlocked(def.id, st)) return { ok: false, reason: 'locked' };
+  const cost = buildingNextCost(def.id, st);
   if (!cost || !buildingCanPay(cost, st)) return { ok: false, reason: 'broke' };
   const s = ensureBuildingSave(st);
   if (!buildingPay(cost, s)) return { ok: false, reason: 'broke' };
-  const site = buildingSite(id, s);
+  const site = buildingSite(def.id, s);
   site.level = lv + 1;
-  const cap = buildingStorageCap(id, s);
+  const cap = buildingOutputAtLevel(def, site.level).cap;
   site.stored = clamp(Math.floor(Number(site.stored) || 0), 0, cap);
-  if (s === save) persistOrToast('building/up/' + id);
-  return { ok: true, level: site.level, buildingId: id };
+  if (typeof save !== 'undefined' && s === save) persistOrToast('building/up/' + def.id);
+  return { ok: true, level: site.level, buildingId: def.id };
 }
 
 function tickOneBuilding(id, now, st) {
-  const def = buildingById(id);
+  const def = BUILDING_BY_ID[buildingCanonId(id)];
   if (!def) return false;
-  const lv = buildingLevel(id, st);
+  const lv = buildingLevel(def.id, st);
   if (lv < 1) return false;
-  const site = buildingSite(id, st);
+  const site = buildingSite(def.id, st);
   const out = buildingOutputAtLevel(def, lv);
   if (!out.perHour || !out.cap) return false;
   let last = Math.floor(Number(site.lastTickAt) || 0);
@@ -7587,7 +7578,7 @@ function tickOneBuilding(id, now, st) {
   if (stored >= out.cap) {
     site.lastTickAt = now;
     site.stored = out.cap;
-    return site.stored !== stored || site.lastTickAt !== last;
+    return true;
   }
   const units = Math.floor((elapsed / BUILDING_MS_PER_HOUR) * out.perHour);
   if (units <= 0) return false;
@@ -7598,7 +7589,7 @@ function tickOneBuilding(id, now, st) {
   return true;
 }
 
-function tickBuildings(st, nowMs) {
+function buildingTickAll(st, nowMs) {
   const s = ensureBuildingSave(st);
   if (!s) return false;
   const now = typeof nowMs === 'number' ? nowMs : buildingNowMs();
@@ -7609,199 +7600,164 @@ function tickBuildings(st, nowMs) {
   return changed;
 }
 
-function buildingPendingAmount(id, st) {
+function buildingCollect(id, st) {
+  const def = BUILDING_BY_ID[buildingCanonId(id)];
+  if (!def || !buildingBuilt(def.id, st)) return { ok: false, reason: 'unbuilt', amount: 0 };
   const s = ensureBuildingSave(st);
-  if (!s) return 0;
-  tickOneBuilding(id, buildingNowMs(), s);
-  const site = buildingSite(id, s);
-  const cap = buildingStorageCap(id, s);
-  return clamp(Math.floor(Number(site && site.stored) || 0), 0, cap || BUILDING_STORED_CAP_ABS);
-}
-
-function collectBuilding(id, st) {
-  const def = buildingById(id);
-  if (!def || !buildingOwned(id, st)) return { ok: false, reason: 'unbuilt', amount: 0 };
-  const s = ensureBuildingSave(st);
-  tickOneBuilding(id, buildingNowMs(), s);
-  const site = buildingSite(id, s);
+  tickOneBuilding(def.id, buildingNowMs(), s);
+  const site = buildingSite(def.id, s);
   const amount = clamp(Math.floor(Number(site.stored) || 0), 0, BUILDING_STORED_CAP_ABS);
-  if (amount <= 0) return { ok: true, amount: 0, resourceId: def.resource.id };
+  const res = def.resourceId;
+  if (amount <= 0) return { ok: true, amount: 0, resourceId: res };
   site.stored = 0;
   site.lastTickAt = buildingNowMs();
-  const res = def.resource.id;
-  s.buildingRes[res] = clamp(buildingWallet(res, s) + amount, 0, BUILDING_WALLET_CAP);
-  if (s === save) persistOrToast('building/collect/' + id);
-  return { ok: true, amount, resourceId: res, buildingId: id };
-}
-
-function collectAllBuildings(st) {
-  const gained = {};
-  let total = 0;
-  for (const id of BUILDING_IDS) {
-    const r = collectBuilding(id, st);
-    if (r && r.ok && r.amount > 0) {
-      gained[r.resourceId] = (gained[r.resourceId] || 0) + r.amount;
-      total += r.amount;
-    }
-  }
-  return { ok: true, total, gained };
-}
-
-function buildingUnlockedPowers(st) {
-  const out = [];
-  for (const p of BUILDING_POWERS) {
-    if (buildingLevel(p.buildingId, st) >= p.atLevel) out.push(p.id);
-  }
-  return out;
-}
-
-function buildingHasPower(powerId, st) {
-  const p = buildingPowerById(powerId);
-  if (!p) return false;
-  return buildingLevel(p.buildingId, st) >= p.atLevel;
-}
-
-function buildingNextPower(id, st) {
-  const def = buildingById(id);
-  if (!def) return null;
-  const lv = buildingLevel(id, st);
-  return (def.powers || []).find((p) => p.atLevel > lv) || null;
+  s.buildings.wallet[res] = clamp(buildingWallet(res, s) + amount, 0, BUILDING_WALLET_CAP);
+  if (typeof save !== 'undefined' && s === save) persistOrToast('building/collect/' + def.id);
+  return { ok: true, amount, resourceId: res, buildingId: def.id };
 }
 
 function buildingLabel(id, field) {
-  const def = buildingById(id);
+  const def = BUILDING_BY_ID[buildingCanonId(id)];
   if (!def) return id || '?';
   const f = field || 'name';
-  const key = 'buildings.' + id + '.' + f;
-  if (typeof tOr === 'function') {
-    const fallback = def[f] || def.name;
-    return tOr(key, fallback);
-  }
+  const key = 'buildings.' + def.id + '.' + f;
+  if (typeof tOr === 'function') return tOr(key, def[f] || def.name);
   return def[f] || def.name;
 }
 
 function buildingResourceLabel(resId) {
-  const row = BUILDING_RESOURCE_BY_ID[resId];
-  if (!row) return resId || '?';
-  const key = 'buildings.res.' + resId;
-  if (typeof tOr === 'function') return tOr(key, row.resource.name);
-  return row.resource.name;
+  const canon = buildingCanonRes(resId);
+  const def = BUILDINGS.find((b) => b.resourceId === canon);
+  const fallback = (def && def.resource && def.resource.name) || canon || '?';
+  if (typeof tOr === 'function') return tOr('buildings.res.' + canon, fallback);
+  return fallback;
+}
+
+function buildingTooltipModel(id, st) {
+  const def = BUILDING_BY_ID[buildingCanonId(id)];
+  if (!def) return null;
+  const s = ensureBuildingSave(st);
+  buildingTickAll(s);
+  const lv = buildingLevel(def.id, s);
+  const rank = buildingPowerRank(def.id, s);
+  const out = buildingOutputAtLevel(def, lv);
+  const powersOn = (def.powers || []).filter((p) => rank >= p.rank).map((p) => p.id);
+  const nextPower = (def.powers || []).find((p) => p.rank > rank) || null;
+  return {
+    id: def.id,
+    name: buildingLabel(def.id, 'name'),
+    blurb: buildingLabel(def.id, 'blurb'),
+    short: def.short,
+    worldUnlock: def.worldUnlock,
+    theme: def.theme,
+    accent: def.accent,
+    artHint: def.artHint,
+    unlocked: buildingUnlocked(def.id, s),
+    built: lv >= 1,
+    level: lv,
+    maxLevel: def.maxLevel,
+    powerRank: rank,
+    canBuild: buildingCanBuild(def.id, s),
+    canUpgrade: buildingCanUpgrade(def.id, s),
+    canCollect: buildingCanCollect(def.id, s),
+    nextCost: buildingNextCost(def.id, s),
+    resourceId: def.resourceId,
+    resourceName: buildingResourceLabel(def.resourceId),
+    outputRate: out.perHour,
+    storageCap: out.cap,
+    pending: buildingPendingAmount(def.id, s),
+    wallet: buildingWallet(def.resourceId, s),
+    powers: def.powers || [],
+    powersUnlocked: powersOn,
+    nextPower,
+  };
 }
 
 function countBuildingLevels(st) {
   let n = 0;
   const s = buildingSaveRef(st);
-  const bag = (s && s.buildings && typeof s.buildings === 'object') ? s.buildings : {};
+  const bag = (s && s.buildings && s.buildings.factories && typeof s.buildings.factories === 'object')
+    ? s.buildings.factories : {};
   for (const id of BUILDING_IDS) {
     n += clamp(Math.floor(Number(bag[id] && bag[id].level) || 0), 0, BUILDING_MAX_LEVEL);
   }
   return n;
 }
 
+function migrateLegacyBuildingBag(raw) {
+  const factories = {};
+  const wallet = {};
+  if (!raw || typeof raw !== 'object' || Array.isArray(raw)) {
+    return { factories, wallet };
+  }
+  const facIn = (raw.factories && typeof raw.factories === 'object' && !Array.isArray(raw.factories))
+    ? raw.factories : raw;
+  for (const [k, v] of Object.entries(facIn)) {
+    if (k === 'schema' || k === 'factories' || k === 'wallet') continue;
+    const id = buildingCanonId(k);
+    if (!BUILDING_BY_ID[id] || !v || typeof v !== 'object') continue;
+    const prev = factories[id] || emptyBuildingSite();
+    const lv = Math.max(prev.level, Math.floor(Number(v.level) || 0));
+    const stored = Math.max(prev.stored, Math.floor(Number(v.stored) || 0));
+    const last = Math.max(prev.lastTickAt, Math.floor(Number(v.lastTickAt) || 0));
+    factories[id] = { level: lv, stored, lastTickAt: last };
+  }
+  const walIn = (raw.wallet && typeof raw.wallet === 'object' && !Array.isArray(raw.wallet))
+    ? raw.wallet : {};
+  for (const [k, v] of Object.entries(walIn)) {
+    const id = buildingCanonRes(k);
+    if (!buildingResourceIds.includes(id)) continue;
+    wallet[id] = Math.max(wallet[id] || 0, Math.floor(Number(v) || 0));
+  }
+  return { factories, wallet };
+}
+
 function sanitizeBuildingSave(s) {
   if (!s || typeof s !== 'object') return s;
-  const bagIn = (s.buildings && typeof s.buildings === 'object' && !Array.isArray(s.buildings))
-    ? s.buildings : {};
-  const bag = {};
+  const migrated = migrateLegacyBuildingBag(s.buildings);
+  const legacyRes = (s.buildingRes && typeof s.buildingRes === 'object' && !Array.isArray(s.buildingRes))
+    ? s.buildingRes : {};
+  for (const [k, v] of Object.entries(legacyRes)) {
+    const id = buildingCanonRes(k);
+    if (!buildingResourceIds.includes(id)) continue;
+    migrated.wallet[id] = Math.max(migrated.wallet[id] || 0, Math.floor(Number(v) || 0));
+  }
+  const factories = {};
   for (const id of BUILDING_IDS) {
-    const def = buildingById(id);
-    const raw = bagIn[id];
-    const entry = (raw && typeof raw === 'object' && !Array.isArray(raw)) ? raw : {};
+    const def = BUILDING_BY_ID[id];
+    const entry = migrated.factories[id] || {};
     const lv = clamp(Math.floor(Number(entry.level) || 0), 0, def.maxLevel);
     const cap = lv >= 1 ? (buildingOutputAtLevel(def, lv).cap || BUILDING_STORED_CAP_ABS) : 0;
-    const stored = lv >= 1
-      ? clamp(Math.floor(Number(entry.stored) || 0), 0, cap)
-      : 0;
+    const stored = lv >= 1 ? clamp(Math.floor(Number(entry.stored) || 0), 0, cap) : 0;
     let last = Math.floor(Number(entry.lastTickAt) || 0);
     if (last < 0 || last > 4102444800000) last = 0;
     if (lv <= 0 && stored <= 0 && last <= 0) continue;
-    bag[id] = { level: lv, lastTickAt: last, stored };
+    factories[id] = { level: lv, lastTickAt: last, stored };
   }
-  s.buildings = bag;
-  const resIn = (s.buildingRes && typeof s.buildingRes === 'object' && !Array.isArray(s.buildingRes))
-    ? s.buildingRes : {};
   const wallet = {};
-  for (const id of BUILDING_RESOURCE_IDS) {
-    const n = clamp(Math.floor(Number(resIn[id]) || 0), 0, BUILDING_WALLET_CAP);
+  for (const id of buildingResourceIds) {
+    const n = clamp(Math.floor(Number(migrated.wallet[id]) || 0), 0, BUILDING_WALLET_CAP);
     if (n > 0) wallet[id] = n;
   }
-  s.buildingRes = wallet;
+  s.buildings = { schema: BUILDINGS_SCHEMA, factories, wallet };
+  if ('buildingRes' in s) delete s.buildingRes;
   return s;
 }
 
-function listBuildingsForUi(st) {
-  const s = ensureBuildingSave(st);
-  tickBuildings(s);
-  return BUILDING_CATALOG.map((def) => {
-    const lv = buildingLevel(def.id, s);
-    const unlocked = buildingWorldUnlocked(def.id, s);
-    const out = buildingOutputAtLevel(def, lv);
-    const powersOn = (def.powers || []).filter((p) => lv >= p.atLevel).map((p) => p.id);
-    return {
-      id: def.id,
-      name: buildingLabel(def.id, 'name'),
-      blurb: buildingLabel(def.id, 'blurb'),
-      short: def.short,
-      worldUnlock: def.worldUnlock,
-      theme: def.theme,
-      accent: def.accent,
-      artHint: def.artHint,
-      unlocked,
-      lockedReason: unlocked ? null : 'world',
-      level: lv,
-      maxLevel: def.maxLevel,
-      built: lv >= 1,
-      canBuild: buildingCanBuild(def.id, s),
-      canUpgrade: buildingCanUpgrade(def.id, s),
-      buildCost: buildingBuildCost(def.id),
-      nextCost: lv < 1 ? buildingBuildCost(def.id) : buildingUpgradeCost(def.id, s),
-      resourceId: def.resource.id,
-      resourceName: buildingResourceLabel(def.resource.id),
-      outputRate: out.perHour,
-      storageCap: out.cap,
-      pending: buildingPendingAmount(def.id, s),
-      wallet: buildingWallet(def.resource.id, s),
-      powers: def.powers || [],
-      powersUnlocked: powersOn,
-      nextPower: buildingNextPower(def.id, s),
-    };
-  });
+function buildingHasPower(powerId, st) {
+  const p = BUILDING_POWERS.find((x) => x.id === powerId);
+  if (!p) return false;
+  return buildingPowerRank(p.buildingId, st) >= p.rank;
 }
 
-const BUILDING_API = {
-  catalog: BUILDING_CATALOG,
-  ids: BUILDING_IDS,
-  resources: BUILDING_RESOURCE_IDS,
-  powers: BUILDING_POWERS,
-  byId: buildingById,
-  powerById: buildingPowerById,
-  worldUnlocked: buildingWorldUnlocked,
-  level: buildingLevel,
-  maxLevel: buildingMaxLevel,
-  owned: buildingOwned,
-  canBuild: buildingCanBuild,
-  canUpgrade: buildingCanUpgrade,
-  tryBuild: tryBuildBuilding,
-  tryUpgrade: tryUpgradeBuilding,
-  buildCost: buildingBuildCost,
-  upgradeCost: buildingUpgradeCost,
-  outputRate: buildingOutputRate,
-  storageCap: buildingStorageCap,
-  pending: buildingPendingAmount,
-  tick: tickBuildings,
-  collect: collectBuilding,
-  collectAll: collectAllBuildings,
-  unlockedPowers: buildingUnlockedPowers,
-  hasPower: buildingHasPower,
-  wallet: buildingWallet,
-  walletAll: buildingWalletAll,
-  listForUi: listBuildingsForUi,
-  sanitize: sanitizeBuildingSave,
-  nowMs: buildingNowMs,
-};
-
 try {
-  if (typeof globalThis !== 'undefined') globalThis.BUILDING_API = BUILDING_API;
+  if (typeof globalThis !== 'undefined') {
+    globalThis.BUILDINGS_SCHEMA = BUILDINGS_SCHEMA;
+    globalThis.BUILDING_IDS = BUILDING_IDS;
+    globalThis.BUILDINGS = BUILDINGS;
+    globalThis.BUILDING_BY_ID = BUILDING_BY_ID;
+    globalThis.buildingResourceIds = buildingResourceIds;
+  }
 } catch (_) {}
 /* --- src/data/summons.js --- */
 /* ============================ SUMMONS ================================== */
@@ -34789,12 +34745,14 @@ const UI = {
     if (sub) sub.textContent = (typeof tOr === 'function')
       ? tOr('buildings.sub', 'Eiland-fabrieken · levels · timed resources — stub voor UI/art/powers')
       : 'Eiland-fabrieken · levels · timed resources — stub voor UI/art/powers';
-    if (typeof tickBuildings === 'function') tickBuildings();
-    const rows = (typeof listBuildingsForUi === 'function') ? listBuildingsForUi() : [];
+    if (typeof buildingTickAll === 'function') buildingTickAll();
+    const ids = (typeof BUILDING_IDS !== 'undefined') ? BUILDING_IDS : [];
     if (walletEl) {
       const parts = [];
-      const wallet = (typeof buildingWalletAll === 'function') ? buildingWalletAll() : {};
-      for (const [id, n] of Object.entries(wallet)) {
+      const wallet = (typeof buildingWallet === 'function') ? buildingWallet() : {};
+      const resIds = (typeof buildingResourceIds !== 'undefined') ? buildingResourceIds : Object.keys(wallet);
+      for (const id of resIds) {
+        const n = wallet[id] || 0;
         if (!n) continue;
         const label = (typeof buildingResourceLabel === 'function') ? buildingResourceLabel(id) : id;
         parts.push(label + ' ' + n);
@@ -34804,13 +34762,21 @@ const UI = {
       walletEl.textContent = parts.join(' · ');
     }
     if (!list) return;
-    list.innerHTML = '';
-    for (const row of rows) {
-      const card = document.createElement('div');
-      card.className = 'step-card building-stub-card';
-      card.dataset.buildingId = row.id;
+    const byId = {};
+    list.querySelectorAll('[data-factory-id]').forEach((el) => { byId[el.getAttribute('data-factory-id')] = el; });
+    for (const id of ids) {
+      const row = (typeof buildingTooltipModel === 'function') ? buildingTooltipModel(id) : null;
+      if (!row) continue;
+      let card = byId[id];
+      if (!card) {
+        card = document.createElement('div');
+        card.className = 'step-card building-stub-card';
+        card.setAttribute('data-factory-id', id);
+        list.appendChild(card);
+      }
+      card.innerHTML = '';
       const title = document.createElement('b');
-      title.textContent = row.name + (row.built ? ` · Lv ${row.level}/${row.maxLevel}` : ' · —');
+      title.textContent = row.name + (row.built ? ` · Lv ${row.level}/${row.maxLevel} · rank ${row.powerRank}` : ' · —');
       const meta = document.createElement('div');
       meta.style.cssText = 'margin-top:4px;font-size:13px;line-height:1.4;opacity:.9';
       const lock = row.unlocked
@@ -34829,7 +34795,7 @@ const UI = {
       powers.style.cssText = 'margin-top:4px;font-size:12px;opacity:.8';
       powers.textContent = row.powersUnlocked.length
         ? ('powers: ' + row.powersUnlocked.join(', '))
-        : (row.nextPower ? ('next power @ Lv ' + row.nextPower.atLevel + ': ' + row.nextPower.id) : '');
+        : (row.nextPower ? ('next power @ rank ' + row.nextPower.rank + ': ' + row.nextPower.id) : '');
       card.appendChild(title);
       card.appendChild(meta);
       if (powers.textContent) card.appendChild(powers);
@@ -34846,21 +34812,20 @@ const UI = {
       };
       if (!row.built) {
         addBtn((typeof tOr === 'function') ? tOr('buildings.build', 'Bouwen') : 'Bouwen', row.canBuild, () => {
-          tryBuildBuilding(row.id);
+          buildingBuild(row.id);
           this.renderBuildings();
         });
       } else {
-        addBtn((typeof tOr === 'function') ? tOr('buildings.collect', 'Ophalen') : 'Ophalen', row.pending > 0, () => {
-          collectBuilding(row.id);
+        addBtn((typeof tOr === 'function') ? tOr('buildings.collect', 'Ophalen') : 'Ophalen', row.canCollect, () => {
+          buildingCollect(row.id);
           this.renderBuildings();
         });
         addBtn((typeof tOr === 'function') ? tOr('buildings.upgrade', 'Upgrade') : 'Upgrade', row.canUpgrade, () => {
-          tryUpgradeBuilding(row.id);
+          buildingUpgrade(row.id);
           this.renderBuildings();
         });
       }
       card.appendChild(actions);
-      list.appendChild(card);
     }
   },
 
@@ -37519,7 +37484,7 @@ function bootGame() {
     const hadCorruptPrimary = saveStorageDiagnostics().primaryCorrupt;
     const beforeSave = Object.assign({}, save);
     save = sanitizeSave(save || Object.assign({}, DEFAULT_SAVE));
-    try { if (typeof tickBuildings === 'function') tickBuildings(save); } catch (_) {}
+    try { if (typeof buildingTickAll === 'function') buildingTickAll(save); } catch (_) {}
     const repairNotes = saveSanitizeNotes(beforeSave, save);
     persist();
     if (repairNotes.length && !hadCorruptPrimary && !window.__sfRecoveredBackup) {

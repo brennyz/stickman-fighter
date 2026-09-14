@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-/** Buildings catalog + save + unlock/upgrade + timed resources. */
+/** Locked buildings bind: 5 factories, schema 1, island 1–5, lvl 10, rank. */
 import fs from 'fs';
 import path from 'path';
 import vm from 'vm';
@@ -8,6 +8,7 @@ import { fileURLToPath } from 'url';
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const code = fs.readFileSync(path.join(root, 'game.js'), 'utf8');
 const docs = fs.readFileSync(path.join(root, 'docs/BUILDINGS.md'), 'utf8');
+const html = fs.readFileSync(path.join(root, 'index.html'), 'utf8');
 
 function makeEl(id) {
   return {
@@ -16,8 +17,8 @@ function makeEl(id) {
     children: [], parentElement: null, closest() { return this; },
     addEventListener() {}, removeEventListener() {}, appendChild() {}, remove() {}, focus() {}, select() {},
     querySelector() { return null; }, querySelectorAll() { return []; },
-    getBoundingClientRect() { return { left: 0, top: 0, width: 100, height: 40 }; },
     setAttribute() {}, removeAttribute() {}, getAttribute() { return null; },
+    getBoundingClientRect() { return { left: 0, top: 0, width: 100, height: 40 }; },
     getContext() {
       return new Proxy({}, { get: (_t, p) => (p === 'createLinearGradient' ? () => ({ addColorStop() {} }) : () => undefined) });
     },
@@ -26,18 +27,14 @@ function makeEl(id) {
 
 const byId = new Map();
 const getEl = (id) => { if (!byId.has(id)) byId.set(id, makeEl(id)); return byId.get(id); };
-['menuScreen', 'game', 'toastHost', 'btnAdventure', 'buildingsScreen', 'buildingsList', 'buildingsScreenHead'].forEach(getEl);
+['menuScreen', 'game', 'toastHost', 'buildingsScreen', 'buildingsList', 'buildingsWallet'].forEach(getEl);
 getEl('menuScreen').classList.s.add('active');
 
 const ctx = {
   document: {
-    getElementById: getEl,
-    querySelector: () => null,
-    querySelectorAll: () => [],
-    body: getEl('body'),
-    createElement: (t) => makeEl(t),
-    addEventListener() {},
-    dispatchEvent() {},
+    getElementById: getEl, querySelector: () => null, querySelectorAll: () => [],
+    body: getEl('body'), createElement: (t) => makeEl(t),
+    addEventListener() {}, dispatchEvent() {},
   },
   addEventListener() {},
   matchMedia: () => ({ matches: false, addEventListener() {}, addListener() {} }),
@@ -79,140 +76,132 @@ function setSave(patch) {
   run('save = sanitizeSave(Object.assign({}, DEFAULT_SAVE, globalThis.__patch))');
 }
 
-const MUST_IDS = [
-  'stick_lighter',
-  'woodchip_glue',
-  'chipping_wood',
-  'bamboo_boesa_boiler',
-  'echo_whistle_mill',
-];
+const MUST_IDS = ['stick_lighter', 'woodchip_glue', 'chipping_wood', 'bamboo_boesa', 'echo_whistle'];
 const MUST_NAMES = [
-  'Stick-Lighter Factory',
-  'Woodchip-Glue Factory',
-  'Chipping-Wood Factory',
-  'Bamboo-Boesa Boiler',
-  'Echo-Whistle Mill',
+  'Stick-Lighter Factory', 'Woodchip-Glue Factory', 'Chipping-Wood Factory',
+  'Bamboo-Boesa Boiler', 'Echo-Whistle Mill',
 ];
-const FORBIDDEN = ['sawmill', 'forge', 'neonlab', 'shrine', 'reactor'];
+const MUST_RES = ['spark', 'glue', 'chip', 'steam', 'echo'];
+const FORBIDDEN = ['sawmill', 'forge', 'neonlab', 'shrine', 'reactor', 'bamboo_boesa_boiler', 'echo_whistle_mill'];
 
-const ids = run('BUILDING_IDS.slice()');
-const names = run('BUILDING_CATALOG.map(b => b.name)');
-const worlds = run('BUILDING_CATALOG.map(b => b.worldUnlock)');
-
-assert(ids.length === 5, 'catalog must be exactly 5, got ' + ids.length);
-assert(ids.join(',') === MUST_IDS.join(','), 'ids mismatch: ' + ids.join(','));
-assert(names.join('|') === MUST_NAMES.join('|'), 'names mismatch: ' + names.join('|'));
-assert(worlds.join(',') === '1,2,3,4,5', 'worldUnlock must be islands 1-5 in list order: ' + worlds.join(','));
-for (const bad of FORBIDDEN) {
-  assert(!ids.some((id) => id.includes(bad)), 'forbidden id fragment ' + bad);
+const EXPORTS = [
+  'BUILDINGS_SCHEMA', 'BUILDING_IDS', 'BUILDINGS', 'BUILDING_BY_ID',
+  'buildingUnlocked', 'buildingBuilt', 'buildingCanUpgrade', 'buildingCanCollect',
+  'buildingTickAll', 'buildingCollect', 'buildingBuild', 'buildingUpgrade',
+  'buildingPowerRank', 'buildingWallet', 'buildingResourceIds', 'buildingTooltipModel',
+];
+for (const name of EXPORTS) {
+  assert(run('typeof ' + name + ' !== "undefined"'), 'missing export ' + name);
 }
 
-assert(!!run("buildingById('stick_lighter')"), 'stick_lighter missing');
-assert(!!run("BUILDING_API && BUILDING_API.byId('echo_whistle_mill')"), 'BUILDING_API bind missing');
-assert(docs.includes('BUILDING_API'), 'docs must document BUILDING_API');
-assert(docs.includes('bamboo_boesa_boiler'), 'docs must use canonical boiler id');
-assert(docs.includes('echo_whistle_mill'), 'docs must use canonical mill id');
-assert(/`stick_lighter`/.test(docs) && /`woodchip_glue`/.test(docs) && /`chipping_wood`/.test(docs), 'docs missing canonical ids');
+assert(run('BUILDINGS_SCHEMA') === 1, 'BUILDINGS_SCHEMA must be 1');
+assert(run('BUILDING_IDS.join(",")') === MUST_IDS.join(','), 'BUILDING_IDS mismatch: ' + run('BUILDING_IDS.join(",")'));
+assert(run('BUILDINGS.map(b => b.name).join("|")') === MUST_NAMES.join('|'), 'display names mismatch');
+assert(run('BUILDINGS.map(b => b.resourceId).join(",")') === MUST_RES.join(','), 'resources mismatch');
+assert(run('buildingResourceIds.join(",")') === MUST_RES.join(','), 'buildingResourceIds mismatch');
+assert(run('BUILDINGS.map(b => b.worldUnlock).join(",")') === '1,2,3,4,5', 'islands must be 1-5');
+assert(run('BUILDINGS.every(b => b.maxLevel === 10)'), 'max level must be 10');
+assert(!!run("BUILDING_BY_ID.bamboo_boesa && BUILDING_BY_ID.echo_whistle"), 'BY_ID missing boiler/mill');
+for (const bad of FORBIDDEN) {
+  assert(!MUST_IDS.includes(bad) && !run('BUILDING_IDS').includes(bad), 'forbidden id ' + bad);
+}
 
-// Island 1 always open; later islands follow unlock > (n-1)*10
+assert(/data-factory-id="stick_lighter"/.test(html), 'HTML missing data-factory-id stick_lighter');
+assert(/data-factory-id="echo_whistle"/.test(html), 'HTML missing data-factory-id echo_whistle');
+assert(/id="buildingsWallet"/.test(html), 'HTML missing #buildingsWallet');
+assert(/id="buildingsScreen"/.test(html), 'HTML missing #buildingsScreen');
+assert(docs.includes('buildingTooltipModel'), 'docs missing buildingTooltipModel');
+assert(docs.includes('BUILDINGS_SCHEMA'), 'docs missing BUILDINGS_SCHEMA');
+assert(docs.includes('bamboo_boesa') && docs.includes('echo_whistle'), 'docs missing locked ids');
+
 setSave({ unlocked: 1, petCoins: 200 });
-assert(run("buildingWorldUnlocked('stick_lighter') === true"), 'island 1 always unlocked');
-assert(run("buildingWorldUnlocked('woodchip_glue') === false"), 'island 2 locked at unlock=1');
-assert(run("buildingCanBuild('stick_lighter') === true"), 'can build lighter with coins');
-assert(run("buildingCanBuild('woodchip_glue') === false"), 'cannot build glue while island 2 locked');
-
-const built = run("tryBuildBuilding('stick_lighter')");
-assert(built && built.ok && built.level === 1, 'build lighter failed: ' + JSON.stringify(built));
-assert(run("buildingLevel('stick_lighter') === 1"), 'lighter not level 1 after build');
-assert(run("buildingHasPower('spark_kindle') === true"), 'Lv1 power spark_kindle missing');
-assert(run("buildingHasPower('kindle_trail') === false"), 'Lv3 power should still be locked');
-assert(run("tryBuildBuilding('stick_lighter').reason === 'built'"), 'rebuild must fail');
+assert(run("buildingUnlocked('stick_lighter') === true"), 'island 1 always open');
+assert(run("buildingUnlocked('woodchip_glue') === false"), 'island 2 locked at unlock=1');
+assert(run("buildingCanBuild('stick_lighter') === true"), 'can build lighter');
+assert(run("buildingBuilt('stick_lighter') === false"), 'not built yet');
+const built = run("buildingBuild('stick_lighter')");
+assert(built && built.ok && built.level === 1, 'build failed ' + JSON.stringify(built));
+assert(run("buildingBuilt('stick_lighter') === true"), 'built flag');
+assert(run("buildingPowerRank('stick_lighter') === 0"), 'rank at lv1 is 0');
+assert(run("buildingPowerRank(1) === 0 && buildingPowerRank(2) === 0"), 'rank formula lv1-2');
+assert(run("buildingPowerRank(3) === 1 && buildingPowerRank(10) === 4"), 'rank formula lv3 / lv10');
+assert(run("buildingPowerRank(0) === -1"), 'unbuilt rank -1');
 
 setSave({ unlocked: 10, petCoins: 200 });
-assert(run("buildingWorldUnlocked('woodchip_glue') === false"), 'island 2 still locked at unlock=10');
-setSave({ unlocked: 11, petCoins: 200, buildingRes: { ember_sticks: 20 } });
-assert(run("buildingWorldUnlocked('woodchip_glue') === true"), 'island 2 opens at unlock 11');
-assert(run("buildingWorldUnlocked('chipping_wood') === false"), 'island 3 locked at 11');
+assert(run("buildingUnlocked('woodchip_glue') === false"), 'island 2 still locked at 10');
+setSave({ unlocked: 11, petCoins: 200, buildings: { schema: 1, factories: {}, wallet: { spark: 20 } } });
+assert(run("typeof advUnlockedLevel === 'function' && advUnlockedLevel('normal') === 11"), 'unlock via advUnlockedLevel');
+assert(run("buildingUnlocked('woodchip_glue') === true"), 'island 2 at unlock 11');
+assert(run("buildingUnlocked('chipping_wood') === false"), 'island 3 locked at 11');
 
 setSave({ unlocked: 21, petCoins: 5 });
-assert(run("buildingWorldUnlocked('chipping_wood') === true"), 'island 3 opens at 21');
-assert(run("tryBuildBuilding('chipping_wood').reason === 'broke'"), 'broke build must fail');
+assert(run("buildingUnlocked('chipping_wood') === true"), 'island 3 at 21');
+assert(run("buildingBuild('chipping_wood').reason === 'broke'"), 'broke build');
 
-setSave({ unlocked: 31, petCoins: 500, buildingRes: { wood_chips: 20 } });
-assert(run("buildingWorldUnlocked('bamboo_boesa_boiler') === true"), 'boiler unlocks island 4');
-const boiler = run("tryBuildBuilding('bamboo_boesa_boiler')");
-assert(boiler && boiler.ok, 'boiler build failed: ' + JSON.stringify(boiler));
+setSave({ unlocked: 31, petCoins: 500, buildings: { schema: 1, factories: {}, wallet: { chip: 20 } } });
+assert(run("buildingUnlocked('bamboo_boesa') === true"), 'boiler island 4');
+assert(run("buildingBuild('bamboo_boesa').ok === true"), 'build boiler');
 
-setSave({ unlocked: 41, petCoins: 500, buildingRes: { boesa_steam: 20 } });
-assert(run("buildingWorldUnlocked('echo_whistle_mill') === true"), 'mill unlocks island 5');
-const mill = run("tryBuildBuilding('echo_whistle_mill')");
-assert(mill && mill.ok, 'mill build failed: ' + JSON.stringify(mill));
-assert(run("buildingHasPower('taunt_toot') === true"), 'taunt_toot at mill Lv1');
+setSave({ unlocked: 41, petCoins: 500, buildings: { schema: 1, factories: {}, wallet: { steam: 20 } } });
+assert(run("buildingUnlocked('echo_whistle') === true"), 'mill island 5');
+assert(run("buildingBuild('echo_whistle').ok === true"), 'build mill');
+assert(run("buildingHasPower('taunt_toot') === true"), 'taunt_toot at rank 0');
 
-// Timed hopper: 2 hours at Lv1 lighter = 16 ember sticks, cap respected
 setSave({
   unlocked: 1,
-  petCoins: 0,
-  buildings: { stick_lighter: { level: 1, lastTickAt: 1_000_000, stored: 0 } },
+  buildings: { schema: 1, factories: { stick_lighter: { level: 1, lastTickAt: 1_000_000, stored: 0 } }, wallet: {} },
 });
 run('globalThis.__sfBuildingNow = 1000000 + 2 * 3600000');
-run('tickBuildings(save, globalThis.__sfBuildingNow)');
-assert(run("buildingPendingAmount('stick_lighter') === 16"), '2h * 8/hr should be 16, got ' + run("buildingPendingAmount('stick_lighter')"));
-
+run('buildingTickAll(save, globalThis.__sfBuildingNow)');
+assert(run("buildingPendingAmount('stick_lighter') === 16"), '2h * 8/hr = 16, got ' + run("buildingPendingAmount('stick_lighter')"));
 run('globalThis.__sfBuildingNow = 1000000 + 40 * 3600000');
-run('tickBuildings(save, globalThis.__sfBuildingNow)');
-const pending = run("buildingPendingAmount('stick_lighter')");
-const cap = run("buildingStorageCap('stick_lighter')");
-assert(pending === cap, 'offline/cap should clamp hopper to ' + cap + ' got ' + pending);
-assert(pending === 64, 'Lv1 cap is 64, got ' + pending);
+run('buildingTickAll(save, globalThis.__sfBuildingNow)');
+assert(run("buildingPendingAmount('stick_lighter') === 64"), 'cap 8h*8=64, got ' + run("buildingPendingAmount('stick_lighter')"));
+assert(run("buildingCanCollect('stick_lighter') === true"), 'can collect');
+const got = run("buildingCollect('stick_lighter')");
+assert(got && got.ok && got.amount === 64 && got.resourceId === 'spark', 'collect ' + JSON.stringify(got));
+assert(run("buildingWallet('spark') === 64"), 'wallet spark');
+assert(run("save.buildings.wallet.spark === 64"), 'save.buildings.wallet');
+assert(run("buildingCanCollect('stick_lighter') === false"), 'empty hopper');
 
-const collected = run("collectBuilding('stick_lighter')");
-assert(collected && collected.ok && collected.amount === 64, 'collect amount ' + JSON.stringify(collected));
-assert(run("buildingWallet('ember_sticks') === 64"), 'wallet after collect');
-assert(run("buildingPendingAmount('stick_lighter') === 0"), 'hopper empty after collect');
-
-// Upgrade path + power gates
 setSave({
   unlocked: 1,
-  petCoins: 500,
-  buildingRes: { ember_sticks: 200 },
-  buildings: { stick_lighter: { level: 1, lastTickAt: 1, stored: 0 } },
+  petCoins: 2500,
+  buildings: {
+    schema: 1,
+    factories: { stick_lighter: { level: 1, lastTickAt: 1, stored: 0 } },
+    wallet: { spark: 900 },
+  },
 });
-assert(run("tryUpgradeBuilding('stick_lighter').ok === true"), 'upgrade 1→2');
-assert(run("buildingLevel('stick_lighter') === 2"), 'level 2');
-assert(run("buildingHasPower('kindle_trail') === false"), 'trail still locked at 2');
-assert(run("tryUpgradeBuilding('stick_lighter').ok === true"), 'upgrade 2→3');
-assert(run("buildingLevel('stick_lighter') === 3"), 'level 3');
-assert(run("buildingHasPower('kindle_trail') === true"), 'trail unlocks at 3');
-assert(run("buildingHasPower('matchstick_storm') === false"), 'storm locked before 5');
-assert(run("tryUpgradeBuilding('stick_lighter').ok === true"), 'upgrade 3→4');
-assert(run("tryUpgradeBuilding('stick_lighter').ok === true"), 'upgrade 4→5');
-assert(run("buildingLevel('stick_lighter') === 5"), 'level 5');
-assert(run("buildingHasPower('matchstick_storm') === true"), 'storm at 5');
-assert(run("tryUpgradeBuilding('stick_lighter').reason === 'max'"), 'max upgrade');
+for (let n = 1; n < 10; n++) {
+  const r = run("buildingUpgrade('stick_lighter')");
+  assert(r && r.ok, 'upgrade to ' + (n + 1) + ' failed ' + JSON.stringify(r));
+}
+assert(run("buildingLevel('stick_lighter') === 10"), 'max 10');
+assert(run("buildingPowerRank('stick_lighter') === 4"), 'rank 4 at lv10');
+assert(run("buildingHasPower('matchstick_storm') === true"), 'rank 4 power');
+assert(run("buildingUpgrade('stick_lighter').reason === 'max'"), 'max upgrade');
 
-const powers = run('buildingUnlockedPowers()');
-assert(powers.includes('spark_kindle') && powers.includes('matchstick_storm'), 'unlockedPowers incomplete: ' + powers);
+const tip = run("buildingTooltipModel('stick_lighter')");
+assert(tip && tip.id === 'stick_lighter' && tip.level === 10 && tip.powerRank === 4, 'tooltip model');
+assert(tip.artHint && tip.resourceId === 'spark', 'tooltip art/resource');
 
-// Sanitize junk
 setSave({
   buildings: {
-    sawmill: { level: 9, stored: 99 },
+    sawmill: { level: 9 },
     stick_lighter: { level: 99, stored: -3, lastTickAt: 'nope' },
+    bamboo_boesa_boiler: { level: 2, stored: 4 },
   },
-  buildingRes: { ember_sticks: -8, plutonium: 4, glue_pots: 3 },
+  buildingRes: { ember_sticks: 8, plutonium: 4, glue: 3 },
 });
-assert(run("!save.buildings.sawmill"), 'unknown building must strip');
-assert(run("save.buildings.stick_lighter.level === 5"), 'level clamp 99→5');
-assert(run("save.buildings.stick_lighter.stored === 0"), 'neg stored → 0 at max? stored clamped');
-assert(run("save.buildingRes.ember_sticks == null || save.buildingRes.ember_sticks === 0"), 'neg wallet stripped');
-assert(run("!save.buildingRes.plutonium"), 'unknown resource stripped');
-assert(run("save.buildingRes.glue_pots === 3"), 'valid wallet kept');
-
-const uiRows = run('listBuildingsForUi()');
-assert(Array.isArray(uiRows) && uiRows.length === 5, 'listForUi must return 5 rows');
-assert(uiRows[0].id === 'stick_lighter' && uiRows[4].id === 'echo_whistle_mill', 'ui row order');
-assert(uiRows.every((r) => r.artHint && r.artHint.iconFile), 'artHint bind missing');
+assert(run("save.buildings.schema === 1"), 'schema stamped');
+assert(run("save.buildings.factories.stick_lighter.level === 10"), 'level clamp 99→10');
+assert(run("save.buildings.factories.bamboo_boesa.level === 2"), 'alias boiler → bamboo_boesa');
+assert(run("!save.buildings.factories.sawmill"), 'unknown factory stripped');
+assert(run("save.buildings.wallet.spark === 8"), 'ember_sticks → spark');
+assert(run("save.buildings.wallet.glue === 3"), 'glue kept');
+assert(run("!save.buildings.wallet.plutonium"), 'unknown res stripped');
+assert(run("save.buildingRes == null"), 'legacy buildingRes removed');
 
 run('delete globalThis.__sfBuildingNow');
-console.log('SMOKE_OK buildings: 5 quirky factories, island 1-5, save/tick/powers/sanitize');
+console.log('SMOKE_OK buildings: locked 5 ids, schema 1, factories+wallet, rank, bind exports');
