@@ -323,9 +323,9 @@ const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const VERSION_UPDATE_SAVE_KEY = 'stickfighter_version_update_save_v1';
 const VERSION_UPDATE_FLAG_KEY = 'stickfighter_version_update_flag_v1';
 const SAVE_EXPORT_SCHEMA = 3;
-const APP_VERSION = '1.18.163';
+const APP_VERSION = '1.18.164';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 373;
+const SW_CACHE_REV = 374;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', petCoins: 0, dex: {}, summons: {}, pets: {}, activePet: null,
   eggPets: {}, activeEggPet: null, eggDaily: null,
   chestDaily: null, chestWeapons: {},
@@ -2174,10 +2174,23 @@ const I18N = {
   de: {
     back: { menu: '← Menü', collect: '← Sammlung', levels: '← Level' },
     common: { backHome: 'Zurück zum Menü', ok: 'Verstanden!', offline: 'Offline' },
+    net: {
+      updateReady: 'Neue Version bereit — tippen zum Laden',
+      updateWait: 'Neue Version — lädt im Menü',
+      dismiss: 'Schließen',
+      offlinePlay: 'Offline — spielt aus Cache · Save bleibt hier',
+      offlinePlayHint: 'Offline — aus Cache · Icon in der Leiste = immer spielen',
+      offlineMenu: 'Offline — Menü & Save aus Cache',
+      offlineNeedOnce: 'Offline — 1× online öffnen, danach ohne Netz',
+      backOnline: 'Wieder online',
+      cacheLoading: 'Cache laden… — danach auch offline',
+      offlineReady: 'Bereit offline — Save bleibt hier',
+    },
     menu: {
       continue: 'Weiterspielen', adventure: 'Abenteuer', adventureSub: 'Story · Inseln · Bosse',
       arcade: 'Arcade', arcadeSub: 'Training · Mauer · Münzen', versus: '2 Spieler', versusSub: 'Lokal',
       collect: 'Sammlung', collectSub: 'Waffen · Stil · Buch', music: 'Musik', missions: 'Missionen',
+      summons: 'Summons', summonsSub: 'Tägliche Kiste · Waffe & Pet',
       options: 'Optionen', tips: 'Tipps', fresh: 'Neue Version', install: 'Als App speichern', installSub: 'Ein Icon, wie eine echte App',
       pressStart: 'insert coin', missionReady: 'Mission bereit', dayBonus: 'Tagesbonus',
       choosePath: 'WÄHLE DEINEN WEG', lastPlayed: 'ZULETZT', playHere: 'SPIEL',
@@ -2206,11 +2219,15 @@ const I18N = {
     modes: { adventure: 'Abenteuer', training: 'Training', wall: 'Mauer', versus: '2 Spieler', coinrun: 'Münzen' },
     pause: {
       title: 'Pause', sub: 'Spiral Orb bereit — los! · Fortschritt bleibt auf diesem Gerät',
+      wallTime: '{n}s übrig', wallStones: '{n} Steine', wallCombo: 'Combo ×{n}',
+      wallPaceAhead: '+{n} vs Rekord-Tempo', wallPaceBehind: '−{n} vs Rekord-Tempo',
+      wallGap: 'noch {gap} bis Rekord',
       resume: 'Weiter', music: 'Musik', sfx: 'Sound', quit: 'Menü verlassen',
       quitArcade: 'Stopp & Arcade',
       vsRestart: 'Match neu starten', vsRestartSub: '0-0 · gleiche Kämpfer',
       vsSwap: 'Seite tauschen', vsSwapSub: 'P1 ↔ P2 · gleicher Stand',
-      audioHint: 'Lautstärke in Pause — sync mit Einstellungen',
+      audioHint: 'Lautstärke in Pause — Slider sync mit Einstellungen',
+      audioMuteAll: 'Alles aus', audioRestore: 'Standard', audioSfxOnly: 'Nur Sound',
     },
     result: { again: 'Nochmal', next: 'Nächstes Level', menu: 'Hauptmenü', menuArcade: 'Arcade', rematch: 'Revanche', rematchSub: 'Gleiche Kämpfer',
       xp: '+{xp} XP · jetzt Lv {lvl} ({cur}/{need} XP)' },
@@ -2221,6 +2238,13 @@ const I18N = {
       kbLegend: 'Tastatur-Hilfe', showTouchPads: 'Touch-Tasten immer',
       reducedMotion: 'Weniger Bewegung',
       liteFx: 'Lite FX', highContrast: 'Hoher Kontrast', restoreBackup: 'Save aus Backup',
+      a11yMotionOn: 'Weniger Bewegung: an', a11yMotionOs: 'Weniger Bewegung: über System',
+      a11yContrastOn: 'Hoher Kontrast: an', a11yContrastOs: 'Hoher Kontrast: über System',
+      a11yDefault: 'Barrierefreiheit: Standard — oben oder in den Handy-Einstellungen',
+      a11yTip: 'Weniger Bewegung = ruhigere Banner. Hoher Kontrast = dickere Ränder. Lite FX = flüssiger am Handy.',
+      sfxSamplesOn: 'Soundeffekte: geladen',
+      sfxSamplesLoad: 'Soundeffekte: laden…',
+      sfxSamplesOff: 'Soundeffekte: offline',
       syncBackup: 'Backup aktualisieren', freshCache: 'Neue Version', clearSave: 'Neustart (2× tippen)',
       syncHint: 'Backup auf deinen aktuellen Stand setzen.',
       freshHint: 'Menü hängt? Tippe hier für die neueste Version.',
@@ -2450,7 +2474,10 @@ function setLang(code) {
 
 function t(key, params) {
   const lang = getLang();
-  let s = i18nLookup(I18N[lang], key) || i18nLookup(I18N.nl, key) || i18nLookup(I18N.en, key) || key;
+  // Locale in scope: current lang first. Non-NL never falls through to Dutch chrome.
+  let s = i18nLookup(I18N[lang], key);
+  if (!s && lang !== 'nl') s = i18nLookup(I18N.en, key);
+  if (!s) s = (lang === 'nl' ? i18nLookup(I18N.en, key) : i18nLookup(I18N.nl, key)) || key;
   if (params && typeof params === 'object') {
     for (const [k, v] of Object.entries(params)) {
       s = s.split('{' + k + '}').join(String(v));
@@ -2522,8 +2549,14 @@ function applyLangStaticScreens() {
   const cont = document.getElementById('btnContinue');
   if (cont) {
     const div = cont.querySelector('div');
-    if (div && !save.lastPlay?.mode) div.firstChild && (div.childNodes[0].textContent = t('menu.continue') + '\n');
+    if (div) {
+      const lp = save && save.lastPlay;
+      const modeName = lp && lp.mode ? t('modes.' + lp.mode) : t('ui.continueLastMode');
+      div.innerHTML = t('menu.continue') + '<small>' + modeName + '</small>';
+    }
   }
+  const pauseBtn = document.getElementById('pauseBtn');
+  if (pauseBtn) pauseBtn.setAttribute('aria-label', t('pause.title'));
 
   const hubMap = [
     ['.hub-tile-adventure .hub-tile-title', 'menu.adventure'],
@@ -2682,6 +2715,30 @@ function applyLangStaticScreens() {
   setText('weaponScreenHead', 'ui.weaponHead');
   setText('weaponScreenSub', 'ui.weaponSub');
   setText('helpFirstMinute', 'ui.helpFirstMinute');
+  setText('summonScreenHead', 'ui.summonHead');
+  setText('summonScreenSub', 'ui.summonSub');
+  setText('summonWhereStrip', 'ui.summonWhere');
+  setText('summonStageHint', 'ui.summonHint');
+  setText('summonRevealText', 'ui.summonReveal');
+  const chestPullLbl = document.getElementById('btnChestPull');
+  if (chestPullLbl) {
+    const d = chestPullLbl.querySelector('div');
+    if (d) {
+      const leftSmall = document.getElementById('chestPullLbl');
+      const leftTxt = leftSmall ? leftSmall.textContent : '';
+      d.innerHTML = t('ui.summonPull') + '<small id="chestPullLbl">' + leftTxt + '</small>';
+    }
+  }
+  const gotoW = document.getElementById('btnSummonGotoWeapons');
+  if (gotoW) {
+    const d = gotoW.querySelector('div');
+    if (d) d.innerHTML = t('ui.summonGotoWeapons') + '<small>' + t('ui.summonGotoSub') + '</small>';
+  }
+  const gotoP = document.getElementById('btnSummonGotoPets');
+  if (gotoP) {
+    const d = gotoP.querySelector('div');
+    if (d) d.innerHTML = t('ui.summonGotoPets') + '<small>' + t('ui.summonGotoSub') + '</small>';
+  }
 
   const gambleStartLbl = document.getElementById('gambleStartLbl');
   if (gambleStartLbl) gambleStartLbl.innerHTML = t('ui.gambleStart') + '<small>' + t('ui.gambleStartSub') + '</small>';
@@ -2839,13 +2896,15 @@ function applyLang() {
     else if (active === 'missionsScreen') UI.renderMissions();
     else if (active === 'helpScreen' && typeof UI.renderHelp === 'function') UI.renderHelp();
     else if (active === 'weaponScreen' && typeof UI.renderWeapons === 'function') UI.renderWeapons();
+    else if (active === 'summonScreen' && typeof UI.renderSummon === 'function') UI.renderSummon();
+    else if (active === 'upgradeScreen' && typeof UI.renderUpgrades === 'function') UI.renderUpgrades();
     else if (active === 'styleScreen' && typeof UI.renderStyle === 'function') UI.renderStyle();
     else if (active === 'skillScreen' && typeof UI.renderSkills === 'function') UI.renderSkills();
     else if (active === 'charSelectScreen' && typeof UI.renderCharSelect === 'function') UI.renderCharSelect();
     else if (active === 'levelScreen' && typeof UI.renderLevels === 'function') UI.renderLevels();
     else if (active === 'gambleScreen' && typeof UI.renderGamble === 'function' && pendingAdvLevel) {
       UI.renderGamble(pendingAdvLevel);
-    } else if (active === 'petScreen' && typeof UI.renderDexPets === 'function') UI.renderDexPets();
+    } else if (active === 'petScreen' && typeof UI.renderPets === 'function') UI.renderPets();
     else if (active === 'dexScreen' && typeof UI.renderDex === 'function') UI.renderDex();
     else if (active === 'skillScreen' && typeof UI.renderSkills === 'function') UI.renderSkills();
     else if (active === 'modeHubScreen') UI.renderModeHub();
@@ -12502,6 +12561,74 @@ function seedNlGameStrings() {
     tideBattleOnboardTouch: 'Eerste Tide Battle: versla {name} — geen andere golven tot klaar',
     tideBattleOnboardKb: 'Eerste Tide Battle: versla {name} — golven pauzeren tot klaar',
     langSwitchFail: 'Taal wisselen mislukt',
+    continueLastMode: 'Laatste modus',
+    hubStatArcadeTrain: '{n} train',
+    hubStatArcadeWall: 'muur {n}',
+    hubStatArcadeMats: 'mats {n}',
+    hubStatCollectLine: '{w}/{total} wap · dex {pets} · {coins} pet',
+    hubStatSummonLeft: '{n}× vandaag',
+    hubStatSummonEmpty: 'Op · morgen weer',
+    hubStatSummonDefault: '10 vandaag',
+    hubStatOutfits: '{n}/{total} outfits',
+    hubStatSkills: '{n}/{total} · {skill} · {super}',
+    hubStatSkillsEmpty: '{n} specials',
+    hubStatDexLine: '{n}/{total} · +max HP',
+    summonHead: 'Summons',
+    summonSub: 'Dagelijkse kist · 10× random · wapen of pet',
+    summonWhere: 'Menu → Summons · buit in Collectie → Wapens / Pets (badge Kist)',
+    summonQuota: 'Vandaag: {left}/{total} random summons',
+    summonPull: 'Open kist',
+    summonPullLeft: '{n} over',
+    summonPullEmpty: 'Op',
+    summonAriaPull: 'Open kist, {n} over',
+    summonAriaEmpty: 'Geen summons meer vandaag',
+    summonAriaBusy: 'Kist opent…',
+    summonHint: 'Tik kist om te openen',
+    summonReveal: 'Tik de kist of Open — buit verschijnt in de kist',
+    summonGotoWeapons: 'Naar wapens',
+    summonGotoPets: 'Naar pets',
+    summonGotoSub: 'Collectie',
+    summonLogEmpty: 'Nog geen pulls vandaag.',
+    summonLeftToday: '{n} over vandaag',
+    summonDoneToday: 'op voor vandaag',
+    sharePlayLinkOk: '✓ Speel-link — deel met vrienden (Android)',
+    shareHintAndroid: 'Deel deze link met vrienden. Op Android: Chrome → App installeren.',
+    shareHintGeneric: 'Deel de speel-link hierboven met vrienden.',
+    shareVia: 'Speel via: {kind}',
+    shareKind_pages: 'GitHub Pages',
+    shareKind_tunnel: 'Tunnel (dev)',
+    shareKind_netlify: 'Netlify',
+    shareKind_local: 'Lokaal — deel de speel-link met vrienden',
+    shareKind_file: 'Lokaal bestand — deel GitHub Pages',
+    shareKind_other: 'Online host',
+    shareOpenPages: 'Open GitHub Pages (deel-link)',
+    shareOpenPagesSub: 'Tunnel is alleen thuis-dev',
+    shareOpenStable: 'Open vaste link',
+    shareOpenStableSub: 'speel.html op GitHub Pages',
+    perfAdaptiveHeavy: 'adaptief zwaar · ~{fps} fps',
+    perfAdaptive: 'adaptief · ~{fps} fps',
+    perfSmooth: 'vloeiend · ~{fps} fps',
+    weaponSummary: 'Verzameld {unlocked}/{total} · avontuur {usable} bruikbaar · actief {name} · eiland-skill gate: Lv {cap}',
+    weaponMasteryHead: 'Top stijl-meesterschap',
+    weaponMasteryTiers: 'Tiers: Leerling → Virtuoos (3) → Meester (10) → Legende (25)',
+    weaponStatLine: '{desc} · schade x{dmg} · bereik {range} · snelheid x{speed}',
+    weaponStatSummon: '{desc} · schade x{base} → x{dmg} · bereik {range} · snelheid x{speed}',
+    weaponThrowLine: 'Werp-projectiel — geen melee-combo',
+    weaponPicked: 'gekozen',
+    weaponPick: 'kies',
+    weaponChestBadge: 'Kist',
+    upgradeLevelsTotal: 'Totaal {n} upgrade-levels',
+    upgradeShardsLine: '{skill} skill · {item} item shards',
+    upgradeMaxHint: 'Standaard max Lv {std} · mythische/extreme max Lv {ext}',
+    eggSummary: 'Verzameld {owned}/{total} · actief {active} · {daily}',
+    eggSummaryHint: 'Cosmetisch — geen combat-boost. 1 dag-ei + bonus-ei na je eerste avontuur-win vandaag.',
+    petTamedAssist: 'Getemd · assist in avontuur',
+    petBuyLine: 'Kopen: {cost} pet coins',
+    petTameLine: 'Temmen: {cur}/{need} kills · of {cost}',
+    petActive: 'actief',
+    petEquip: 'uitrusten',
+    styleSummary: 'Outfits {unlocked}/{total} · actief {name}',
+    styleSummaryHint: 'Elke stijl heeft een eigen bonus — hover of lees de tooltip. Cosmetisch + lichte combat-perks.',
   });
   if (!I18N.nl.skill) I18N.nl.skill = {};
   Object.assign(I18N.nl.skill, {
@@ -12657,6 +12784,7 @@ function mergeI18nCatalogs() {
   seedNlGameStrings();
   deepMergeI18n(I18N.en, CATALOG_EN);
   deepMergeI18n(I18N.de, CATALOG_DE);
+  if (typeof CATALOG_DE_CHROME === 'object') deepMergeI18n(I18N.de, CATALOG_DE_CHROME);
   deepMergeI18n(I18N.fr, CATALOG_FR);
   deepMergeI18n(I18N.es, CATALOG_ES);
 }
@@ -13109,7 +13237,7 @@ const CATALOG_EN = {
     charLocked: 'Locked',
     charIconRow: 'Saga icons · part 2 — tap to pick',
     charBig5Title: 'Legends · quick pick',
-    charBig5Hint: 'Eigen vechters · snel kiezen',
+    charBig5Hint: 'Own fighters · quick pick',
     charArenaPre: 'VERSUS · BEST OF 3',
     charHead: 'SELECT FIGHTER',
     charBackP1: '← Other P1',
@@ -13336,6 +13464,74 @@ const CATALOG_EN = {
     tideBattleOnboardTouch: 'First Tide Battle: defeat {name} — no other waves until done',
     tideBattleOnboardKb: 'First Tide Battle: defeat {name} — waves pause until done',
     langSwitchFail: 'Language switch failed',
+    continueLastMode: 'Last mode',
+    hubStatArcadeTrain: '{n} train',
+    hubStatArcadeWall: 'wall {n}',
+    hubStatArcadeMats: 'mats {n}',
+    hubStatCollectLine: '{w}/{total} wpn · dex {pets} · {coins} pet',
+    hubStatSummonLeft: '{n}× today',
+    hubStatSummonEmpty: 'Done · again tomorrow',
+    hubStatSummonDefault: '10 today',
+    hubStatOutfits: '{n}/{total} outfits',
+    hubStatSkills: '{n}/{total} · {skill} · {super}',
+    hubStatSkillsEmpty: '{n} specials',
+    hubStatDexLine: '{n}/{total} · +max HP',
+    summonHead: 'Summons',
+    summonSub: 'Daily chest · 10× random · weapon or pet',
+    summonWhere: 'Menu → Summons · loot in Collection → Weapons / Pets (Chest badge)',
+    summonQuota: 'Today: {left}/{total} random summons',
+    summonPull: 'Open chest',
+    summonPullLeft: '{n} left',
+    summonPullEmpty: 'Done',
+    summonAriaPull: 'Open chest, {n} left',
+    summonAriaEmpty: 'No summons left today',
+    summonAriaBusy: 'Chest opening…',
+    summonHint: 'Tap chest to open',
+    summonReveal: 'Tap the chest or Open — loot appears in the chest',
+    summonGotoWeapons: 'To weapons',
+    summonGotoPets: 'To pets',
+    summonGotoSub: 'Collection',
+    summonLogEmpty: 'No pulls today yet.',
+    summonLeftToday: '{n} left today',
+    summonDoneToday: 'done for today',
+    sharePlayLinkOk: '✓ Play link — share with friends (Android)',
+    shareHintAndroid: 'Share this link with friends. On Android: Chrome → Install app.',
+    shareHintGeneric: 'Share the play link above with friends.',
+    shareVia: 'Play via: {kind}',
+    shareKind_pages: 'GitHub Pages',
+    shareKind_tunnel: 'Tunnel (dev)',
+    shareKind_netlify: 'Netlify',
+    shareKind_local: 'Local — share the play link with friends',
+    shareKind_file: 'Local file — share GitHub Pages',
+    shareKind_other: 'Online host',
+    shareOpenPages: 'Open GitHub Pages (share link)',
+    shareOpenPagesSub: 'Tunnel is home-dev only',
+    shareOpenStable: 'Open stable link',
+    shareOpenStableSub: 'speel.html on GitHub Pages',
+    perfAdaptiveHeavy: 'adaptive heavy · ~{fps} fps',
+    perfAdaptive: 'adaptive · ~{fps} fps',
+    perfSmooth: 'smooth · ~{fps} fps',
+    weaponSummary: 'Collected {unlocked}/{total} · adventure {usable} usable · active {name} · island skill gate: Lv {cap}',
+    weaponMasteryHead: 'Top style mastery',
+    weaponMasteryTiers: 'Tiers: Pupil → Virtuoso (3) → Master (10) → Legend (25)',
+    weaponStatLine: '{desc} · dmg x{dmg} · reach {range} · speed x{speed}',
+    weaponStatSummon: '{desc} · dmg x{base} → x{dmg} · reach {range} · speed x{speed}',
+    weaponThrowLine: 'Throw projectile — no melee combo',
+    weaponPicked: 'chosen',
+    weaponPick: 'pick',
+    weaponChestBadge: 'Chest',
+    upgradeLevelsTotal: 'Total {n} upgrade levels',
+    upgradeShardsLine: '{skill} skill · {item} item shards',
+    upgradeMaxHint: 'Default max Lv {std} · mythic/extreme max Lv {ext}',
+    eggSummary: 'Collected {owned}/{total} · active {active} · {daily}',
+    eggSummaryHint: 'Cosmetic — no combat boost. 1 daily egg + bonus egg after your first adventure win today.',
+    petTamedAssist: 'Tamed · assist in adventure',
+    petBuyLine: 'Buy: {cost} pet coins',
+    petTameLine: 'Tame: {cur}/{need} kills · or {cost}',
+    petActive: 'active',
+    petEquip: 'equip',
+    styleSummary: 'Outfits {unlocked}/{total} · active {name}',
+    styleSummaryHint: 'Each style has its own bonus — hover or read the tooltip. Cosmetic + light combat perks.',
   },
   fighter: {
     energyEmpty: 'Energy not full!', subst: 'Substitution!', dash: 'Dash!',
@@ -13343,6 +13539,8 @@ const CATALOG_EN = {
   },
   egg: { dailyReady: 'Daily egg ready', advBonus: 'Bonus egg: win 1× adventure', tomorrow: 'Egg again tomorrow' },
   skill: {
+    spiral_orb: 'Spiral Orb', lightning_pierce: 'Lightning Pierce', void_gaze: 'Void Gaze',
+    subst: 'Substitution', dash: 'Dash', energy_core: 'Energy',
     behavior: { orb: 'Orb', dash: 'Dash', beam: 'Beam', disc: 'Disc', pull: 'Pull', meteor: 'Meteor', slash: 'Slash' },
     stat: { dmg: 'Damage', wind: 'Windup', spd: 'Speed', kb: 'Knockback' },
     tag: { pierce: 'Pierce', pull: 'Pull' },
@@ -13552,10 +13750,6 @@ const CATALOG_EN = {
     ketsTap: 'Tap!', ketsKey: 'E / tap',
   },
   technique: { spiral_orb: 'SPIRAL ORB!', lightning_pierce: 'LIGHTNING PIERCE!', void_gaze: 'VOID GAZE!' },
-  skill: {
-    spiral_orb: 'Spiraal Orb', lightning_pierce: 'Bliksemprik', void_gaze: 'Leegteblik',
-    subst: 'Substitution', dash: 'Dash', energy_core: 'Energie',
-  },
   gamble: {
     superBoss: 'Bad luck! Super-boss in a random wave',
     miniBoss: 'Risk: extra elite in a wave',
@@ -13983,7 +14177,9 @@ function gambleOutcomeLabelFromKey(g) {
 
 function i18nList(key) {
   const parts = key.split('.');
-  for (const code of [getLang(), 'nl', 'en']) {
+  const lang = getLang();
+  const order = lang === 'nl' ? ['nl', 'en'] : [lang, 'en', 'nl'];
+  for (const code of order) {
     let cur = I18N[code];
     for (const p of parts) {
       if (!cur || typeof cur !== 'object') { cur = null; break; }
@@ -14031,6 +14227,779 @@ function dailyModeLabel(mode) {
   if (mode === 'coinrun') return t('modes.coinrun');
   return mode;
 }
+/* --- src/i18n/catalog-de.js --- */
+/* ============================== I18N DE CHROME ======================== */
+/** Fills DE gaps so t() does not fall back to Dutch UI chrome. Merged in mergeI18nCatalogs. */
+const CATALOG_DE_CHROME = {
+  island: {
+    progress: 'Insel {cur}/7 · {name} · {cleared}/{total} · Lv {unlocked}/{max}',
+    levelsProg: 'Level auf dieser Insel geschafft',
+    starsProg: 'Sterne auf dieser Insel (max 3 pro Level)',
+  },
+  pickup: { heal: '+HP', rage: 'RAGE', energy: 'ENERGY', shield: 'SHIELD' },
+  runLoot: {
+    head: 'Dieser Lauf · Beute neben XP',
+    headAdv: 'Dieser Lauf · Beute neben XP',
+    hudShort: 'Beute: {line}',
+    summonLine: 'Summon: {name} → {rar}',
+    dexLine: 'Buch: {name} ({rar})',
+    hpBonusLine: '+{n} max HP aus Buch',
+    petLine: 'Pet gezähmt: {name}',
+    eggLine: 'Bonus-Ei: {name}',
+    eggDupLine: 'Ei-Doppelt: {name}',
+    pickupLine: '{kind} ×{n}',
+    finishersLine: '{n} Waffen-Finisher',
+    levelUpLine: '{n}× Level-up',
+    weaponLine: 'Neue Waffe: {name}',
+    petCoinsLine: '+{n} Pet-Coins',
+  },
+  result: {
+    advWin: 'GEWONNEN!', advLose: 'VERLOREN', trainWin: 'MEISTER!', trainLose: 'ROBOT GEWINNT...',
+    trainDetailWin: 'RabbitRobot besiegt ({p}-{r}) · max Combo ×{combo} · {wins}× gewonnen',
+    trainDetailLose: 'RabbitRobot war zu stark ({p}-{r}) · max Combo ×{combo}',
+    vsP1Win: 'SPIELER 1 GEWINNT!', vsP2Win: 'SPIELER 2 GEWINNT!', wallRecord: 'NEUER REKORD!', wallTime: 'ZEIT UM!',
+    matsRecord: 'NEUER REKORD!', matsDone: 'Gut gemacht!',
+    perfectRun: 'Perfekter Lauf — HP hoch halten!',
+    pickupsHelp: '{hint} — Pickups helfen',
+    lossBlockTip: 'Tipp: blocken · nach oben zielen auf Flieger · {prog}',
+    lossOrbTip: 'Tipp: grüne Orbs · SUPER vor dem Boss füllen · {prog}',
+    lossGambleTip: 'Erste Niederlage: vor jedem Level würfeln — Verbündeter hilft zwischen Wellen.',
+    heatRising: 'Hitze {n}/{max} — Gefahr bei 9, Satan bei 10',
+    heatDanger: 'GEFAHR! Hitze rot — noch 1 Verlust und Satan kommt',
+    heatSatanNext: 'Satan steht beim nächsten Start dieses Levels bereit',
+    satanAfterClear: 'Abenteuer geschafft — Hitze bleibt: 10× Fail auf einem Level → Satan → Tide-Pet',
+    trainComboRecord: 'Combo-Trainer: ×{n}{rec}',
+    trainComboNewRec: ' — neuer Rekord!',
+    trainStyleUnlock: 'Neuer Stil frei: Energie-Glühen — Einstellungen → Stil!',
+    trainStyleMore: 'Schalte Stile mit mehr Trainings-Siegen frei!',
+    trainLossTip: 'Spring während LIGHTNING PIERCE — Robot verfehlt · Ohr-Laser springen',
+    trainTipDefault: 'Tipp: Laser springen · volle Energy → Spiral Orb',
+    wallRecordShare: 'Neuer Rekord — teile ihn mit einem Freund!',
+    wallComboTip: 'Tipp: Combo halten für schnelleren Bruch',
+    wallGapTip: 'Noch {gap} Steine bis zum Rekord — Combo hilft!',
+    wallNearMiss: 'So nah — noch {gap} bis zum Rekord!',
+    wallComboBarTip: 'Tipp: schnelle Treffer füllen die Combo-Leiste',
+    wallStrongCombo: 'Starke Combo (×{n}) — nächstes Mal Rekord?',
+    wallBehindPace: 'Hinter Rekord-Tempo — versuch Combo ×5+ für mehr Bruch',
+    wallGoodPace: 'Gutes Tempo — nächster Lauf kann Rekord knacken!',
+    matsPetTip: 'Pet-Coins ausgeben in Sammlung → Pets · je 2 Münzen = 1 Pet-Coin',
+    matsControlTip: 'Joystick hoch = höher zielen (Schlag + Wurf) · Shuriken max 3× schnell',
+    masterBuffActive: ' · Meister-Buff aktiv',
+    wavesProg: '{cur}/{total} Wellen',
+    trainDetail: 'RabbitRobot {outcome} ({s}-{r}) · max Combo ×{combo}{wins}{record}{finishers}',
+    trainOutcomeWin: 'besiegt', trainOutcomeLose: 'war zu stark',
+    trainWinsLine: ' · {n}× gewonnen', trainRecordLine: ' · Rekord ×{n}',
+    finishersLine: ' · {n} Finisher',
+    wallDetail: '{score} Steine (~{pace}/min) · Rekord {best} · max Combo ×{combo}{walls}{paceDelta}',
+    wallWallsLine: ' · {n} Mauern zerstört',
+    wallPaceDelta: ' · Tempo {delta} vs Rekord',
+    matsDetail: '{n} Münzen · Rekord {best}{pet}{flyers}',
+    matsPetEarned: ' · +{n} Pet-Coins (gesamt {wallet})',
+    matsFlyers: ' · Flieger = +3 pro Treffer',
+    advDetailWin: 'Level {lv} · {kills} Monster · {stars}★ · max Combo ×{combo}{finishers}{streak}',
+    advDetailLose: 'Level {lv} · {kills} Monster · max Combo ×{combo}{finishers}{streak}',
+    advDiffLine: '{diff} · ',
+    streakLine: ' · Streak ×{n}',
+    gambleLine: ' · Wette: {text}',
+    starGain: '+{n}★',
+    starImproved: 'Neue Sterne! War {prev}★ — jetzt {stars}★ · HP hoch halten',
+  },
+  banner: {
+    levelStart: 'LEVEL {n}',
+    levelStartDiff: '{diff} · LEVEL {n}',
+    levelUp: 'LEVEL UP! Lv {lvl}', newWeapon: 'Neue Waffe: {name}!', masterBuff: 'MEISTER-BUFF +20%',
+    masterSword: 'DAWNBLADE!',
+    bossWave: 'BOSS-WELLE!', eliteWave: 'ELITE-WELLE', superBossWave: 'SUPER-BOSS-WELLE',
+    bossTitle: 'BOSS', superBossTitle: 'SUPER BOSS',
+    bossName: '{name}!', colossalBossName: 'KOLOSSALE {name}!',
+    bossNamed: 'BOSS — {name}!', eliteNamed: 'ELITE — {name}!',
+    flyerWave: 'FLIEGER-WELLE', rushWave: 'RUSH-WELLE', eliteTraitWave: 'ELITE-WELLE', tideWave: 'TIDE-WELLE',
+    ranchWave: 'FARM AMOK', safariWave: 'ZOO-AUSBRUCH',
+    emberWave: 'EMBER-WELLE · 2.0', painWave: 'SCHMERZ-WELLE · 3.0',
+    waveClear: 'Welle klar +{heal} HP', waveN: 'WELLE {n}/{total}',
+    fight: 'KÄMPF!', levelClear: 'LEVEL {n} FERTIG!', won: 'GEWONNEN!', lost: 'VERLOREN',
+    spiral_orbTriple: 'TRIPLE SPIRAL ORB!', spiral_orbDual: 'DUAL SPIRAL ORB!',
+    summon: '✦ SUMMON! ✦', summonAscend: '{name} → {rar}!',
+    newDex: 'Neu {rar}: {name}! +{hp} max HP', pet: 'PET! {name}',
+    matsStart: 'MÜNZEN-BONUS', wallStart: 'ZERSTÖRE DIE MAUER!', bonusDone: 'BONUS FERTIG!',
+    kets: 'KABLAM…', ketsBam: 'KABLAM!', wallTime: 'ZEIT!', wallNewWall: 'MAUER KAPUTT! Neue Mauer...',
+    tideBattle: 'TIDE BATTLE — {name}!', tideBattleWin: 'TIDE BATTLE GEWONNEN!',
+    satan: 'SATAN — {name}!', satanIncoming: 'SATAN KOMMT…', satanWin: 'SATAN BESIEGT!',
+  },
+  gamble: {
+    superBoss: 'Pech! Super-Boss in einer zufälligen Welle',
+    miniBoss: 'Risiko: extra Elite in einer Welle',
+    superAlly: 'Jackpot! Super-Verbündeter: {name} (starker Buff)',
+    ally: 'Glück! Verbündeter: {name} (Buff dieses Level)',
+    neutral: 'Neutral — normales Level (kein Extra-Effekt)',
+  },
+  fighter: {
+    energyEmpty: 'Energy nicht voll!', subst: 'Substitution!', dash: 'Dash!',
+    shield: 'Schild!', parry: 'PARRY!', block: 'BLOCK!', miss: 'MISS!',
+  },
+  egg: { dailyReady: 'Tages-Ei bereit', advBonus: 'Bonus-Ei: 1× Abenteuer gewinnen', tomorrow: 'Ei wieder morgen' },
+  pet: {
+    active: 'Pet · aktiv', tamed: 'Pet · gezähmt', buy: 'Pet · kaufen {cost} PC',
+    killsNeed: 'Pet · {need} Kills', killsProgress: 'Pet · {cur}/{need} Kills',
+  },
+  skill: {
+    spiral_orb: 'Spiral Orb', lightning_pierce: 'Lightning Pierce', void_gaze: 'Void Gaze',
+    subst: 'Substitution', dash: 'Dash', energy_core: 'Energy',
+    behavior: { orb: 'Orb', dash: 'Dash', beam: 'Strahl', disc: 'Disc', pull: 'Zug', meteor: 'Meteor', slash: 'Slash' },
+    stat: { dmg: 'Schaden', wind: 'Ausholen', spd: 'Tempo', kb: 'Knockback' },
+    tag: { pierce: 'Pierce', pull: 'Zug' },
+    saga: {
+      scroll: { blurb: 'Ninja-Schriftrolle — Spiral Orb, Lightning Pierce, Void Gaze & Gravity-Specials.' },
+      ki: { blurb: 'Ki-Wellen — Wave Cannon, Discs, Energy Sphere & Blitz-Dash.' },
+      tide: { blurb: 'Tide-Strahlen — Moon Slash, Void Beam & Blade Ascend.' },
+      fighter: { blurb: 'Street Stretch — Stretch-Dash & Steam Burst.' },
+      cape: { blurb: 'Hero-Specials — Thunder Palm & Heavy Series.' },
+      dawn: { blurb: 'Dawn-Handfläche — Solar-Orbs & Lunar-Zug.' },
+    },
+  },
+  super: {
+    behavior: {
+      blast: 'Explosion', shield: 'Schild', heal: 'Heilung', mind_eye: 'Illusion',
+      lightning: 'Blitz', meteor: 'Meteor', rage: 'Rage', timestop: 'Zeit',
+      clones: 'Klone', void: 'Void',
+    },
+    stat: { pow: 'Kraft', rad: 'Radius', cd: 'Cooldown', charge: 'Laden' },
+    tag: {
+      blast: 'Explosion', knockback: 'Knockback', defense: 'Abwehr', push: 'Schub',
+      heal: 'Heilung', illusion: 'Illusion', pull: 'Zug', slow: 'Slow',
+      lightning: 'Blitz', 'multi-hit': 'Multi-Hit', meteor: 'Meteor', zone: 'Zone',
+      buff: 'Buff', freeze: 'Freeze', burst: 'Burst', rush: 'Rush', void: 'Void',
+    },
+  },
+  technique: { spiral_orb: 'SPIRAL ORB!', lightning_pierce: 'LIGHTNING PIERCE!', void_gaze: 'VOID GAZE!' },
+  menu: { tipList: [
+    'Wähle eine Kachel — Abenteuer · Arcade · Sammlung',
+    '5 Inseln — Boss Lv 10/20/30/40/50 öffnet die nächste Insel',
+    'Skill-Gate — max Waffe pro Insel im Abenteuer',
+    '5× Verlust auf einem Level = Meister-Buff +20%',
+    'Training = Solo-Übung gegen RabbitRobot',
+    'Mauer-Combos = schnellerer Bruch & mehr XP',
+    'Monsterbuch füllen = mehr max HP',
+    'Weiterspielen setzt deinen letzten Modus fort',
+    'Menü-Musik wechselt, wenn du aus einem Modus zurückkommst',
+  ] },
+  toast: {
+    unknownMode: 'Unbekannter Modus', noSession: 'Noch keine Sitzung — wähle einen Modus',
+    missionsIntro: 'Missionen: Spielen → XP holen → Tagesbonus',
+    missionReady1: '1 Mission bereit zum Abholen', missionReadyN: '{n} Missionen bereit zum Abholen',
+    dayBonusReady: 'Tagesbonus +80 XP bereit', noPlayLink: 'Kein Spiel-Link — siehe Einstellungen',
+    pasteSaveFirst: 'Zuerst Save in das Feld einfügen', importPreview: 'Import-Vorschau — nochmal Import zum Laden',
+    invalidSave: 'Ungültiger Save — JSON prüfen', noBackup: 'Kein Backup auf diesem Gerät',
+    backupConfirm: 'Backup Lv {lvl}{drift} — nochmal tippen zum Wiederherstellen',
+    backupDrift: ' (Haupt und Backup unterscheiden sich)',
+    welcome: 'Willkommen! Menü → Tipps · Tipp auf Hinweis zum Schließen · ein Hinweis pro Modus oben',
+    finishFight: 'Kampf zuerst beenden oder pausieren',
+    notDuringCombat: 'Nicht während eines Kampfs',
+    liteFxHint: 'Langsam? Einstellungen → Lite FX',
+    saveAlmostTooBig: 'Save fast zu groß — Export in Einstellungen',
+    saveRestoredSafe: 'Save aus Backup wiederhergestellt — Fortschritt sicher',
+    genericSafeError: 'Etwas ging schief — gespeicherter Fortschritt ist sicher',
+    backupWriteFail: 'Backup fehlgeschlagen — Export in Einstellungen (Haupt-Save OK)',
+    persistPrimaryFail: 'Haupt-Save fehlgeschlagen — Backup aktualisiert (Export in Einstellungen)',
+    persistFail: 'Speichern fehlgeschlagen — Export in Einstellungen',
+    persistFailCtx: 'Speichern fehlgeschlagen ({context}) — Export in Einstellungen',
+    pickFileOrPaste: 'Exportdatei wählen oder Save-JSON einfügen',
+    saveLoadedPreview: 'Save von {src} — Import für Vorschau tippen',
+    filePickerUnavailable: 'Dateiwähler nicht verfügbar',
+    pagesLinkCopied: 'Spiel-Link kopiert — an Freunde senden',
+    pagesLinkCopiedAndroid: 'Spiel-Link kopiert — an Freunde senden (Chrome)',
+    saveFailRetry: 'Speichern fehlgeschlagen — nochmal versuchen',
+    zoneDrop: '{zone}: {name}!',
+    zoneFallback: 'Zone',
+    masteryTier: '{name}: {tier}!',
+    saveRepaired: 'Save repariert: {notes}',
+    saveCorruptOverwritten: 'Kaputter Haupt-Save überschrieben — Export bleibt Sicherheit',
+    saveRestoredAfterLoad: 'Save nach Ladefehler aus Backup wiederhergestellt',
+    saveLoadFailedFresh: 'Save konnte nicht laden — neu gestartet',
+    staleCacheMenu: 'Alter Cache — Menü hängt. Tippe «Neue Version» in der Leiste.',
+    backupRestored: 'Backup wiederhergestellt — Save + Backup im Sync',
+    backupFailed: 'Backup-Wiederherstellung fehlgeschlagen — Save exportieren',
+    syncConfirm: 'Sync überschreibt Backup mit Haupt-Save — nochmal tippen',
+    syncOk: 'Backup mit Haupt-Save synchron', syncFailed: 'Sync fehlgeschlagen — Save als Backup exportieren',
+    clearConfirm: 'Nochmal tippen = Fortschritt löschen (Backup bleibt)', newStart: 'Neustart — Backup noch in Einstellungen',
+    exportCopied: 'Save kopiert + Download · {summary} (~{size})',
+    exportBox: 'Save im Feld + Download · {summary} (~{size})',
+    islandUnlock: '{name} frei! Skill-Gate: Waffen bis Lv {cap}',
+    diffUnlockNightmare: 'Nightmare 2.0 frei! Feuer · wildere Seltenheiten',
+    diffUnlockHell: 'Hell 3.0 frei! Lava · Schmerz · mythische Horden',
+    diffHellCleared: 'Hell 3.0 geschafft — du bist eine Legende!',
+    masterBuffGain: 'Meister-Buff! +20% HP, Tempo & Schaden bis du gewinnst',
+    eggDuplicate: 'Bonus-Ei doppelt: {name} (+10 XP)',
+    eggNew: 'Bonus-Ei! {name} ({rar})',
+    dexDiscover: '{rar}: {name} entdeckt! +{hp} HP',
+    petTamed: '{name} gezähmt — Begleiter! ({cur}/{need} Kills)',
+    styleUnlockTome: 'Neuer Stil: Buchmeister!',
+    styleUnlockCrystal: 'Neuer Stil: Kristallin!',
+    styleUnlock: 'Neuer Stil: {name}!',
+    summon: '✦ Summon! {name} ist jetzt {rar} — Schaden ×{dmg}',
+    tideBattle: 'Tide Battle! {name} erscheint — besiege den Boss!',
+    tideBattleWin: 'Tide Battle gewonnen! +{xp} XP · +{coins} Pet-Coins',
+    satanIncoming: 'Satan erscheint — 10× fest!',
+    satanComingNext: '10× verloren — nächster Versuch: Satan…',
+    satanHeatDanger: 'Gefahr! 9× verloren — Hitze rot · noch eins und Satan kommt!',
+    satanReflectHint: 'Satan reflektiert 85% Schaden — HP im Auge behalten!',
+    satanWinTide: 'Satan besiegt! Belohnung: Tide-Battle-Pet!',
+    satanTideDone: 'Tide-Belohnung fertig — Abenteuer geht weiter',
+    shurikenWait: 'Wurfwaffe auf Cooldown…',
+    shurikenSpam: 'Nicht spammen — max 3 schnelle Würfe',
+    versusRetired: 'Lokales 2-Spieler ist raus — Online später',
+    missionDone: 'Mission erledigt: {text}',
+    claimXp: '+{xp} XP · {text}',
+    noMissionReady: 'Noch keine Mission zum Abholen',
+    claimBatch1: '+{total} XP abgeholt',
+    claimBatchN: '{n} Missionen · +{total} XP',
+    claimPathBonus: 'Tagesbonus +80 jetzt bereit',
+    claimPath1: 'noch 1 Abholen bis Tagesbonus',
+    claimPathN: 'noch {n} Abholen bis Tagesbonus',
+    dayBonusAlready: 'Tagesbonus schon geholt — 3 neue morgen',
+    dayBonusNeed1: 'Noch 1 Mission für Tagesbonus',
+    dayBonusNeedN: 'Noch {n} Missionen für +80 XP Tagesbonus',
+    dayBonusDone: 'Tagesbonus! +80 XP · bis morgen',
+    dayBonusStreak: 'Streak {n}/7 · {left} übrig',
+    dayBonusStreakDone: '{n}× Tagesbonus · Entschlossen!',
+    allClaimedTapBonus: 'Alles geholt — tippe Tagesbonus (+80 XP)',
+    followUp1: '1 weitere Mission bereit (+{xp} XP)',
+    followUpN: '{n} weitere Missionen bereit · +{xp} XP',
+    followUpBonus: 'Schritt 3: Tagesbonus tippen (+80 XP)',
+    followUpDone: 'Tag fertig — neue Missionen in {reset}',
+    achievementUnlock: 'Erfolg: {name} — siehe Missionen',
+    skillUpgradeReady: '{name} bereit zum Upgrade — Sammlung → Upgrades',
+    skillUpgraded: '{name} Lv {lv}! {detail}',
+    techniqueEquipped: '{name} als SUPER-Technik ausgerüstet',
+    itemUpgradeReady: '{name} bereit zum Upgrade — Sammlung → Upgrades',
+    itemUpgraded: '{name} Lv {lv}! {detail}',
+    skipGamble: 'Keine Wette',
+    errGambleStart: 'Wette-Start fehlgeschlagen — nochmal',
+    weaponIslandCap: 'Bereit für Training — im Abenteuer max Lv {cap}',
+    petNone: 'Kein aktives Pet',
+    petFollow: '{name} folgt dir jetzt!',
+    petNoCoins: 'Nicht genug Pet-Coins',
+    petBought: '{name} gekauft! Folgt dir jetzt.',
+    eggAlreadyOpened: 'Tages-Ei schon geöffnet — morgen wieder',
+    eggDuplicateUi: 'Doppel-Ei: {name} (+10 XP)',
+    eggHatch: 'Geschlüpft! {name} ({rarity})',
+    eggNone: 'Kein aktives Ei-Pet',
+    eggFloat: '{name} schwebt jetzt mit!',
+    styleEquipped: '{name} ausgerüstet',
+    skillUnlock: 'Neue Skill: {name}!',
+    skillEquipped: '{name} als Special ausgerüstet',
+    superEquipped: '{name} als Notfall-Super ausgerüstet',
+    superUnlock: 'Neue Notfall-Super: {name}!',
+    versusRetired: 'Lokales 2-Spieler ist raus — Online später',
+  },
+  versionUpdate: {
+    beforeTitle: 'Neue Version holen',
+    beforeBodyProgress: 'Du hast Fortschritt auf diesem Gerät:\n{summary}\n\nSave vor v{version} sichern? Du kannst ihn nach dem Reload nutzen.',
+    beforeBodyFresh: 'Neue Version laden (v{version})?\nKein Fortschritt gefunden — direkt updaten.',
+    backupAndGo: 'Ja — Save sichern & updaten',
+    goWithout: 'Update ohne Extra-Backup',
+    cancel: 'Abbrechen',
+    afterTitle: 'Save gefunden',
+    afterBody: 'Vor dem Update (v{from}) gesichert:\n{stashSummary}\n\nAktueller Save:\n{currentSummary}\n\nDiesen Save in v{to} nutzen?',
+    useStash: 'Ja — gesichertes Backup nutzen',
+    keepCurrent: 'Nein — aktuellen Save behalten',
+    stashOk: 'Save gesichert — Update startet…',
+    stashFail: 'Sichern fehlgeschlagen — Export in Einstellungen',
+    applied: 'Save von v{from} in v{to} geladen · {summary}',
+    applyFail: 'Laden fehlgeschlagen — Backup wiederherstellen in Einstellungen',
+    keptCurrent: 'Aktuellen Save behalten',
+    fail: 'Update fehlgeschlagen — Tab schließen und neu öffnen',
+  },
+  missionsUi: {
+    flowDone: '✓ Tag fertig',
+    flowPlay: 'Spielen', flowPlaySub: '',
+    flowClaim: 'Holen', flowClaimSub: '',
+    flowBonus: 'Tagesbonus', flowBonusSub: '+80',
+    subDayDone: '3 neue morgen',
+    subDayDoneStreak: '3 neue morgen · {streak}',
+    subStep1: '3 Missionen heute',
+    subStep2: 'Holen +{xp} XP',
+    subStep3: 'Tagesbonus +80 bereit',
+    summaryDone: '{done}/3 fertig · {claimed}/3 geholt',
+    summaryReady: '{n} bereit zum Holen',
+    summaryBonusReady: 'Tagesbonus +80 XP bereit',
+    summaryBonusAfter1: 'Tagesbonus nach 1 Holen',
+    summaryBonusAfterN: 'Tagesbonus nach {n} Holen',
+    summaryMax: 'max heute +{xp} XP',
+    claimAllBtn: 'Alle bereiten holen',
+    claimAllAfter1: 'noch 1 bis Tagesbonus',
+    claimAllAfterN: 'noch {n} bis Tagesbonus',
+    claimAllThenBonus: 'dann Tagesbonus',
+    claimCall: '{n} bereit · +{xp} XP',
+    claimCallBonus: 'Tagesbonus +80 bereit',
+    claimPathOpensBonus: 'öffnet Tagesbonus +80',
+    claimPathAfter1: 'dann noch 1 bis Tagesbonus',
+    claimPathAfterN: 'dann noch {n} bis Tagesbonus',
+    dailyClaimed: 'Geholt',
+    dailyReady: 'Bereit',
+    dailyProgress: 'Läuft {cur}/{goal}',
+    dailyReward: 'Belohnung +{xp} XP',
+    dailyClaimBtn: 'Holen +{xp} XP',
+    dailyPlayBtn: '{mode} spielen →',
+    dailyNextUp: 'als Nächstes',
+    dailyAlmost: 'fast',
+    bonusClaimed: 'Tagesbonus in',
+    bonusTomorrow: 'Neu morgen',
+    bonusClaimBtn: 'Tagesbonus',
+    bonusTap: '+80 XP',
+    bonusStreakHint: '{n}×',
+    bonusStreakAlmost: '7× Entschlossen',
+    bonusNeed: 'Tagesbonus',
+    bonusNeed1: 'noch 1 Holen nötig',
+    bonusNeedN: 'noch {n} Holen nötig',
+    achSummary: '{got}/{total} Erfolge',
+    achNear: '{n} nah',
+    filterAll: 'Alle', filterNear: 'Nah', filterOpen: 'Offen', filterDone: 'Erreicht',
+    badgeNew: 'neu', badgeNear: 'nah', stillOpen: 'noch offen',
+    streakDone: '{n}× Tagesbonus · Entschlossen',
+    streakLine: '{n}× Tagesbonus',
+    introLine: 'Drei Missionen. Holen. Tagesbonus.',
+    statusDone: '3 neue Missionen morgen',
+    statusStep2: 'Holen',
+    statusStep3: 'Tagesbonus',
+    statusStep1: 'Spielen',
+    statusReady: 'Holen +{xp} XP',
+    statusAllClaimed: 'Tagesbonus +80 bereit',
+    statusDefault: '{done}/3 Missionen',
+    remainderKills1: '1 Kill übrig',
+    remainderKillsN: '{n} Kills übrig',
+    remainderBricks1: '1 Stein übrig',
+    remainderBricksN: '{n} Steine übrig',
+    remainderCombo: 'Combo ×{n} übrig',
+    remainderPickups1: '1 Pickup übrig',
+    remainderPickupsN: '{n} Pickups übrig',
+    remainderRun: '1 Lauf übrig',
+    remainderGeneric: '{n} übrig',
+    planNow: 'Jetzt:',
+    planEarned: 'Heute +{earned} / max +{max} XP',
+    planXpPct: '{pct}% der max XP heute',
+    planReset: 'Neue Missionen in {reset}',
+    resetSoon: 'bald',
+    resetMinutes: '{m} Min',
+    resetHoursOnly: '{h} Std',
+    resetHours: '{h} Std {m} Min',
+    nextDone: 'Neue Missionen in {reset}',
+    nextClaim1: 'Holen +{xp} XP · {text}',
+    nextClaimN: '{n} Missionen holen · +{xp} XP gesamt',
+    nextBonus: 'Tagesbonus +80',
+    nextPlay: '{mode} spielen · {text}{remainder}',
+    nextPlayGeneric: 'Eine Missions-Modus spielen (Abenteuer / Mauer / Training)',
+    dailyClaimedXp: '+{xp} XP',
+    missionDoneFloater: '✓ Mission: {text}',
+    spotlightTitle: 'Nächster Erfolg (permanent)',
+    spotlightFoot: '{pct}%',
+    spotlightPlayBtn: '{mode} spielen →',
+  },
+  combat: {
+    counter: 'COUNTER!', crit: 'CRIT!', streak3: 'STREAK ×3', streak5: 'ON FIRE!',
+    streak8: 'RAMPAGE!', streak12: 'UNSTOPPABLE!', streakHold: 'STREAK ×{n} fest!',
+    combo3: 'Combo ×3 — weiter!', combo5: 'Combo ×5 — schön!', combo8: 'Combo ×8 — pro!',
+    combo10: 'Combo ×10 — Meister!', comboN: 'COMBO ×{n}!',
+    pickupHp: '+HP', pickupRage: 'RAGE ×1.4', pickupEnergy: 'Energy voll!', pickupShield: 'Schild!',
+    pickupSkillShard: '+1 {name}-Splitter',
+    pickupItemShard: '+1 {name}-Item-Splitter',
+    giant: 'RIESIG!', wallCombo3: 'Combo ×3 · Bruch +{pct}%',
+    wallCombo5: 'Combo ×5 · Bruch +{pct}%', wallCombo8: 'Combo ×8 · Bruch +{pct}%',
+    wallCombo10: 'Combo ×10 · Bruch +{pct}% — Meister-Tempo!',
+    wallTempo: 'MAUER-TEMPO!', wallRecord: 'NEUER REKORD!', bonus5: 'BONUS +5',
+    masterSwordGain: 'Dawnblade — 15s!',
+    masterSwordFade: 'Dawnblade verblasst…',
+    bossWaits: 'DER BOSS WARTET…',
+    bossTag: 'BOSS', superBossTag: 'SUPER BOSS', satanTag: 'SATAN', colossalTag: 'KOLOSSAL',
+    checkpoint: 'CHECKPOINT — TEIL {part}/3',
+    allyHeal: '+{heal} Verbündeter', allyHit: '{name} −{dmg}',
+    tideAllyIntro: '{name} — Tide-Heilung zwischen Wellen',
+    tideHeal: '+{heal} Tide · {name}',
+    tideTraitTip: 'Schnelle Tide-Welle — Verbündeten-Heilung zählt extra',
+    gambleSuperBoss: 'Super-Boss möglich Welle {n}', allyHelps: '{name} hilft dir!',
+    masterBuffFloater: '5× verloren — HP, Tempo & Schaden ↑',
+    satanReflect: 'REFLEKT −{n}',
+    skillGate: 'Insel-Skill-Gate: max Waffen-Lv {cap}',
+    aimUp: 'Joystick hoch = höher zielen',
+    partGateHint: 'Checkpoint: nach rechts laufen — Bild scrollt mit · 3 Teile pro Level',
+    partGateWalk: '→ RECHTS LAUFEN · Teil {part}/3',
+    partGateIntro: 'Level haben 3 Teile — an Checkpoints: rechts halten',
+    partGateIdle: '→ Rechts laufen!',
+    trainIntro: 'Combo-Trainer — 3s Übung, Robot wartet',
+    earLaser: 'Ohr-Laser — spring!', robotActive: 'Robot aktiv — Combo halten!',
+    roundCombo: 'Runden-Combo ×{n}',
+    wallHalf: 'Halbzeit — Combo halten!', wallLast15: 'Letzte 15s — Rekord jagen!',
+    wallLast5: '5s — Vollgas!', wallComboTipShort: 'Tipp: schnelle Treffer füllen Combo',
+    wallComboLost: 'Combo weg — schnell wieder treffen!', wallComboLow: 'Combo fast weg!',
+    wallNearRec: 'Fast Rekord — noch {gap}!',
+    wallNearRecFinal: 'Letzte Chance — {gap} bis Rekord!',
+    wallPaceOk: 'Im Tempo · +{n} vs Rekord',
+    wallPacePush: 'Hinter Tempo · −{n} — Combo!',
+    coinPlus1: '+1 Münze', coinPlus3: '+3 Münzen',
+    spiral_orbCd: 'Spiral Orb CD {s}s',
+    trainLostTip: 'Spring während LIGHTNING PIERCE — Robot verfehlt · Ohr-Laser springen',
+    trainLossTip: 'Spring während LIGHTNING PIERCE — Robot verfehlt · Ohr-Laser springen',
+    trainTipDefault: 'Tipp: Laser springen · volle Energy → Spiral Orb',
+    energyNotFull: 'Energy {have}/{need} — treffen zum Füllen',
+    protected: 'Sicher!', iframe: 'Sicher!',
+    blockChip: 'BLOCK −{n}', parry: 'PARRY!', miss: 'MISS!',
+  },
+  hud: {
+    super: 'SUPER', masterShort: 'MEISTER +20%', masterSword: 'DAWNBLADE {n}s',
+    levelWave: 'Level {n} — Welle {wv}/{total}', islandWeapon: '{name} · Waffe ≤ Lv {cap}',
+    part: 'Teil {cur}/3', waveLine: 'Welle {n}/{total}', wavesTotal: '{total} Wellen',
+    nextWave: 'Nächste Welle', eggPet: 'Ei · {name}', petActive: 'Pet · {name}',
+    petDefault: 'Begleiter', cosmetic: 'Kosmetik',
+    gambleBoss: 'Super-Boss möglich · Welle {n}', starZone: ' · 3★-Zone',
+    tideBattle: '⚔ Tide Battle — besiege {name}!', tideBattleShort: '⚔ Tide Battle',
+    satan: 'Satan — besiege {name}!', satanShort: 'Satan',
+    satanHintTouch: 'Satan reflektiert Schaden — kurze Bursts, Orbs holen',
+    satanHintKb: 'Satan reflektiert 85% — zielen, ausweichen, Orbs',
+    star2: ' · 2★ bei >{pct}% HP', star3: ' · 3★ bei >{pct}% HP', hpPct: '{pct}% HP{hint}',
+    enemiesLeft1: 'Noch 1 Gegner in dieser Welle', enemiesLeftN: 'Noch {n} Gegner in dieser Welle',
+    waveFunnel: '{cleared}/{total} weg · Spawn aktiv',
+    starBeat: '+{n}★ Rekord!', starBest: 'best {n}★',
+    stageClearSec: 'Stage klar — {sec}s',
+    toBoss: 'Zum Boss — {sec}s', walkNext: 'Weiterlaufen… nächste Welle {sec}s',
+    streak: 'STREAK ×{n}', combo: 'COMBO ×{n}', rage: 'RAGE {n}s', shield: 'Schild {n}s',
+    earLaser: 'OHR-LASER — spring!', lightning_pierceTele: 'LIGHTNING PIERCE — Dash/Spring!',
+    lightning_pierceMiss: 'Lightning Pierce verfehlt — Springen wirkt!',
+    kickTele: 'TRITT — spring/block!', punchTele: 'SCHLAG — block/weg!', earLaserShort: 'OHR-LASER',
+    rabbitRobot: 'RABBITROBOT · {pct}%', roundInfo: 'Runde {n} · zuerst 2 · {s}-{r}',
+    dummyGrace: 'Dummy {n}s — Combo üben', goal: 'Ziel ×{n}', record: 'Rekord ×{n}',
+    time: 'ZEIT', wallGen: 'MAUER ×{n}', stones: 'Steine: {n}',
+    recordGap: 'Rekord {best} · noch {gap}',
+    recordBroken: 'Rekord gebrochen · {rec}', recordLine: 'Rekord: {rec}',
+    pace: '~{pace}/min · Projektion ~{proj}', paceAhead: 'Vor Rekord-Tempo +{n}',
+    paceBehind: 'Hinter Rekord-Tempo {n}', comboLabel: 'COMBO',
+    paceProj: 'Auf Kurs zu {proj}', paceProjRecord: 'Auf Kurs zu {proj} · Rekord {best}',
+    comboSmash: '+{pct}% Bruch', comboActive: 'Combo aktiv — noch ein Stein!',
+    coins: 'Münzen: {n}', matsRecord: 'Rekord: {n}',
+    petCoins: 'Pet-Coins: +{pending} · Wallet {wallet}',
+    matsHint: 'Joystick ↑ zielen · Schlag/Wurf höher · Shuriken auf rosa Flieger',
+    spawnFair: 'Spawn · fairer Start', nextRound: 'Nächste Runde',
+    matchOver: 'Match vorbei',
+    hintTouch: 'Links: Joystick laufen · Rechts: Angriffstasten',
+    hintKb: 'A/D laufen · W springen · J Schlag · K Tritt · L Waffe · U Special',
+    partGateTouch: 'CHECKPOINT → Joystick RECHTS halten',
+    partGateKb: 'CHECKPOINT → D oder → halten',
+    partGateTouchShort: 'Stick →',
+    partGateKbShort: 'D / →',
+    teleSlam: 'SLAM — spring!',
+    teleCharge: 'CHARGE — ausweichen!',
+    teleShoot: 'SCHUSS — zur Seite!',
+    teleFire: 'FEUER — zur Seite!',
+    ketsTap: 'Tippen!', ketsKey: 'E / tippen',
+  },
+  ui: {
+    menuMissionReady: 'Mission bereit',
+    menuMissionClaim: 'Holen +{xp} XP',
+    menuMissionBonus: 'Tagesbonus +80',
+    menuMissionStart: '3 Tagesmissionen',
+    menuMissionProgress: '{done}/3 fertig · {claimed}/3 geholt',
+    menuFirstMinuteNext: 'Erste Minute {seen}/{total} · versuch: {next}',
+    menuFirstMinutePartial: 'Erste Minute {seen}/{total} Modi — ein Hinweis pro Modus oben',
+    charSub1: 'Schritt 1 — Karte für Spieler 1 (cyan · linke Hälfte)',
+    charSub2: 'Schritt 2 — andere Karte für Spieler 2 (rosa · rechte Hälfte)',
+    charStep1: 'Schritt 1/2 · Spieler 1 wählt',
+    charStep2: 'Schritt 2/2 · Spieler 2 wählt',
+    charRosterLine: '20 Kämpfer · STR · RNG · mDPS · rDPS',
+    charBlurbAll: '20 Legenden · Karte tippen = wählen · Hover = Stats',
+    charEmpty: 'Keine Kämpfer in dieser Saga — Alle tippen',
+    charLocked: 'Gesperrt',
+    charIconRow: 'Saga-Icons · Teil 2 — tippen zum Wählen',
+    charBig5Title: 'Legenden · schnell wählen',
+    charBig5Hint: 'Eigene Kämpfer · schnell wählen',
+    charArenaPre: 'VERSUS · BEST OF 3',
+    charHead: 'KÄMPFER WÄHLEN',
+    charBackP1: '← Anderer P1',
+    charBackMenu: '← Menü',
+    charFight: 'KÄMPF! (Best-of-3)',
+    charFightSummary: '{p1} vs {p2} · Best-of-3',
+    charFightNeedP1: 'Spieler 1 wählen (cyan) — Karte oben tippen',
+    charFightNeedP2: 'Spieler 2 wählen (rosa) · P1 = {p1}',
+    charFightReady: 'START · {p1} vs {p2}',
+    charFightSamePair: 'Anderen Kämpfer für P2 — {name} ist schon P1',
+    charReplayLast: 'Wiederholen · {p1} vs {p2}',
+    charPickNow1: 'P1',
+    charPickNow2: 'P2',
+    charIpadTip: '',
+    levelHead: 'Insel wählen',
+    levelSub: 'Normal → Nightmare 2.0 → Hell 3.0 · Hitze · 9× = Gefahr! · 10× = Satan',
+    diff: { normal: 'Normal', nightmare: 'Nightmare', hell: 'Hell' },
+    diffTipNormal: 'Standard-Abenteuer · Modell 1.0',
+    diffTipHard: '{name} — härtere Gegner, höhere Seltenheiten & eigene Arena',
+    diffUnlockNightmare: 'Besiege Normal Lv 70 für Nightmare 2.0',
+    diffUnlockHell: 'Besiege Nightmare Lv 70 für Hell 3.0',
+    diffBlurbNormal: 'Modell 1.0 — klassisches Abenteuer',
+    diffBlurbNightmare: 'Modell 2.0 — Feuer-Arena · früheres Enrage · Ember-Wellen',
+    diffBlurbHell: 'Modell 3.0 — Lava · Schmerz · Schmerz-Wellen · mythische Horden',
+    islandDiffTag: ' · {diff}',
+    gambleSub: 'Zwei Würfel: Pech = Super-Boss in zufälliger Welle · Glück = starker Verbündeter',
+    gambleSumDefault: 'Tippe Würfeln & Start — oder ohne Wette überspringen',
+    gambleSumRoll: 'Summe: {d1} + {d2} = {sum}',
+    gambleHead: 'Wette — {island} · Lv {level}',
+    gambleCtx: 'Skill-Gate: Waffen bis Lv {cap} · dann Würfeln für Super-Boss oder Verbündeten',
+    gamblePreview: 'Super-Boss (Summe ≤5) oder Super-Verbündeter (Summe ≥9) kann dieses Level ändern.',
+    gambleStart: 'Würfeln & Start',
+    gambleStartSub: '2× d6 · direkt ins Level',
+    gambleSkip: 'Überspringen',
+    gambleSkipSub: 'Keine Wette — kein Extra-Boss oder Buff',
+    gambleRollNeutral: '{faces} · normales Level',
+    gambleRollOutcome: '{faces} · {label}',
+    gambleGoStart: 'START!',
+    styleHead: 'Stil',
+    styleSub: 'Outfits mit Bonus — Level, Training, Monsterbuch · Hover für Tooltip',
+    styleActive: 'Aktiv',
+    stylePick: 'Tippen zum Ausrüsten',
+    styleIslandGate: 'Abenteuer-Cap Lv {cap} · Stil frei Lv {need}',
+    weaponIslandPick: 'Training ✓ · Abenteuer ≤ Lv {cap}',
+    weaponIslandCapShort: 'Insel-Cap Lv {cap}',
+    skillHead: 'Upgrades',
+    skillSub: 'Splitter im Abenteuer · Skills, Waffen, Pets & Stil · meist max Lv 3 · selten Lv 5',
+    skillSummaryHead: 'Skills',
+    skillSummaryActive: 'aktiv',
+    skillSummarySub: 'Wähle dein Energy-Special für Abenteuer & Solo. Versus nutzt Roster-Specials.',
+    skillActive: 'Aktiv',
+    skillPick: 'Tippen zum Ausrüsten',
+    skillPickHint: 'Tipp = Vorschau · nochmal = ausrüsten',
+    skillEquipBtn: 'Ausrüsten',
+    skillIslandGate: 'Insel-Skill Lv {lvl}',
+    skillNeedLvl: 'Frei ab Lv {lvl}',
+    skillGateLine: 'Insel-Gate Lv {cap}',
+    skillBlurbAll: '24 Energy-Specials — Filter nach Saga oder Typ · Vorschau + Stats',
+    skillEmptyFilter: 'Keine Skills in diesem Filter — Saga oder Typ ändern',
+    skillNextUnlock: 'Nächstes: <b>{name}</b> auf Lv {lvl} · noch {need} Level',
+    skillNextUnlockSoon: 'Nächstes: <b>{name}</b> (Lv {lvl}) — fast soweit',
+    skillNextIsland: 'Nächstes: <b>{name}</b> — Insel-Gate bis Lv {cap} im Abenteuer',
+    skillBehAll: 'Alle Typen',
+    skillSort_level: 'Sort: Level',
+    skillSort_dmg: 'Sort: Schaden',
+    skillSort_name: 'Sort: Name',
+    superHead: 'Notfall-Super (Kets-Slot)',
+    superSub: 'Eingekreist im Abenteuer — Mitte tippen oder E · ersetzt KETS-BAM',
+    superSummaryHead: 'Notfall-Super',
+    superSummaryActive: 'aktiv',
+    superSummarySub: 'Nur Abenteuer — erscheint wenn du umzingelt oder feststeckst.',
+    superActive: 'Aktiv',
+    superPick: 'Tippen zum Ausrüsten',
+    superPickHint: 'Tipp = Vorschau · nochmal = ausrüsten',
+    superEquipBtn: 'Ausrüsten',
+    superIslandGate: 'Insel-Skill Lv {lvl}',
+    superNeedLvl: 'Frei ab Lv {lvl}',
+    superNextUnlock: 'Nächste Super: <b>{name}</b> auf Lv {lvl} · noch {need} Level',
+    superNextUnlockSoon: 'Nächste Super: <b>{name}</b> (Lv {lvl}) — fast soweit',
+    superNextIsland: 'Nächste Super: <b>{name}</b> — Insel-Gate bis Lv {cap}',
+    superStat_pow: 'Kraft',
+    superStat_rad: 'Radius',
+    superStat_cd: 'Cooldown',
+    superStat_charge: 'Laden',
+    superHudCd: 'Notfall-Super {n}s',
+    weaponHead: 'Waffen',
+    weaponSub: 'Summons sind echt · Insel-Skill-Gate: Waffen bis zu deinem Insel-Cap im Abenteuer',
+    skillTabSkills: 'Skills',
+    skillTabWeapons: 'Waffen',
+    skillTabPets: 'Pets',
+    skillTabStyle: 'Stil',
+    upgradeSubSkills: 'Skill-Splitter im Abenteuer · Technik max Lv 5 · Utility max Lv 3',
+    upgradeSubWeapons: 'Item-Splitter für freie Waffen · mythisch max Lv 5',
+    upgradeSubPets: 'Item-Splitter für gezähmte Pets · Passiv, Assist & CD',
+    upgradeSubStyle: 'Item-Splitter für freie Outfits · Bonus, HP & Schild',
+    upgradeEmptyWeapons: 'Zuerst Waffen im Abenteuer freischalten.',
+    upgradeEmptyPets: 'Zuerst ein Pet über Monsterbuch-Kills oder Pet-Coins zähmen.',
+    upgradeEmptyStyle: 'Zuerst Stile über Level, Training oder Monsterbuch freischalten.',
+    upgradeReady: '{n} bereit zum Upgrade',
+    upgradeShardHint: 'Gold = Skill-Splitter · Lila = Waffen/Pet/Stil-Splitter',
+    itemUpgrade: 'Upgrade',
+    itemMax: 'MAX',
+    itemShards: '{cur}/{cost} Splitter',
+    itemLevel: 'Lv {lv}/{max}',
+    itemNow: 'Jetzt',
+    itemNext: 'Nächstes',
+    skillUpgrade: 'Upgrade',
+    skillMax: 'MAX',
+    skillEquip: 'Ausrüsten',
+    skillEquipped: 'Aktiv',
+    skillEquipHint: 'Ausrüsten tippen für SUPER',
+    skillLocked: 'Frei ab Lv {lv} — zuerst upgraden',
+    skillPassiveActive: 'Passiv im Kampf aktiv',
+    skillPassiveLocked: 'Auf Lv {lv} upgraden für Boni',
+    skillShards: '{cur}/{cost} Splitter',
+    skillShardsOnly: '{n} Splitter',
+    skillLevel: 'Lv {lv}/{max}',
+    skillNow: 'Jetzt',
+    skillNext: 'Nächstes',
+    skillGroupTechnique: 'Technik',
+    skillGroupUtility: 'Utility',
+    techniqueActive: 'Aktive Technik: {name}',
+    techniqueActiveBadge: 'AKTIV',
+    techniqueEquip: 'Ausrüsten',
+    techniqueEquipped: 'SUPER in Abenteuer & Training',
+    techniqueTapEquip: 'Ausrüsten für SUPER im Abenteuer',
+    techniqueSelectHint: 'Wähle SUPER (Spiral Orb/Lightning Pierce/Void Gaze) · Skill-Splitter fallen öfter für die aktive Technik',
+    helpFirstMinute: 'Erste Minute — ein kurzer Hinweis pro Modus oben. Abenteuer: Joystick + Tasten · grün = HP · volle Energy = SUPER. Training = Robot · Mauer = Combo.',
+    helpOnboardHead: 'Erste-Minute-Hinweise: {seen}/{total} Modi gesehen · max eine Zeile oben pro Modus',
+    helpTryNext: 'Als Nächstes: {mode}',
+    helpTrySub: 'Noch nicht gespielt — ein Hinweis oben, kein Extra-Toast.',
+    helpHintSeen: '✓ Hinweis gesehen',
+    helpHintNot: '· noch nicht',
+    helpTouch: 'Touch',
+    helpKeyboard: 'Tastatur',
+    helpIslandTitle: 'Inseln & Skill-Gate',
+    helpIslandIntro: 'Abenteuer ist 5×10 Level × Normal/Nightmare/Hell. Pro Insel ein Waffen-Cap (jetzt Lv {cap} auf Insel {cur}). Nach Normal Lv 50 öffnen Nightmare & Hell.',
+    helpMasterBuff: 'Meister-Buff: 5× Verlust auf demselben Level → +20% HP, Tempo & Schaden bis du gewinnst. Boss Lv 10/20/30/40/50 öffnet die nächste Insel.',
+    helpIslandLocked: 'Gesperrt — Boss Lv {lv} besiegen',
+    helpIslandProg: '{cleared}/{total} Level · {stars}/{maxStars}★ · Skill-Gate Waffen Lv {cap}',
+    helpIslandBtnTitle: 'Inseln & Skill-Gate Hilfe',
+    islandInfoSub: 'Waffen bis Lv {cap} · {cleared}/{total} geschafft · {stars}★',
+    islandBossGate: ' · Boss Lv {lv} → nächste Insel',
+    masterBuffChip: 'Meister-Buff Lv {lv} · +20%',
+    islandFirstHint: 'Hitze: 5× Verlust = Meister-Buff · 9× = Gefahr! · 10× = Satan (Reflekt)',
+    starHint: '3★ >{three}% HP · 2★ >{two}% · 1★ = Sieg',
+    levelTipWaves: '{waves} Wellen · {starHint}',
+    levelTipIslandBoss: ' · Insel-Boss — öffnet nächste Insel',
+    levelTipMidBoss: ' · Zwischen-Boss',
+    levelTipYourStars: ' · deine {stars}{empty}',
+    levelTipFails: ' · {n}× verloren',
+    levelTipMasterActive: ' · Meister-Buff aktiv',
+    levelTipSatan: ' · 10×+ = Satan (Reflekt)',
+    levelTipSatanDanger: ' · GEFAHR! fast Satan',
+    levelTipSatanRising: ' · Hitze steigt → Satan bei 10',
+    levelTipTap: ' · Tipp = Würfeln & Start · Halten = ohne Wette',
+    heatTitle: 'Hitze',
+    heatIdle: 'Kühl', heatCool: 'Kühl', heatWarm: 'Warm', heatHot: 'Heiß',
+    heatDanger: 'Gefahr!', heatSatanReady: 'Satan kommt',
+    heatTipIdle: 'Verluste füllen die Leiste. Satan bei 10.',
+    heatTipFails: 'Lv {lv}: {n}/{max} · 5 Meister · 9 Gefahr · 10 Satan',
+    heatTipDanger: 'Lv {lv}: noch 1 Verlust bis Satan.',
+    heatTipSatan: 'Lv {lv}: Satan beim nächsten Start.',
+    heatChipSatan: 'Satan bereit · nächster Start',
+    heatChipDanger: 'Gefahr! · 9× verloren',
+    satanCardTitle: 'Satan',
+    satanCardIdle: '10× Verlust auf diesem Level → Satan. Schlag zurückwerfen oder du fällst.',
+    satanCardHeat: 'Hitze {n}/{max}. Noch ein paar Verluste und Satan kommt.',
+    satanCardDanger: 'Noch 1 Verlust. Dann kämpfst du gegen Satan.',
+    satanCardReady: 'Nächster Start: Satan. Wirf seinen Angriff zurück.',
+    satanCardAfterClear: 'Auch nach dem Finale: 10× Fail auf einem Level ruft Satan.',
+    diffBlurbSatanAfterClear: 'Hitze/Satan bleibt aktiv wenn du feststeckst',
+    helpSatanHeat: 'Hitze: Verluste stapeln auf einem Level. 5× = Meister-Buff (+20%). 9× = rote Gefahr. 10× = Satan (85% Reflekt); Satan gewinnen → Tide-Pet.',
+    errPickIsland: 'Insel wählen fehlgeschlagen',
+    errStart: 'Start fehlgeschlagen',
+    errLevelStart: 'Level starten fehlgeschlagen',
+    hubStatNotPlayed: 'Noch nicht gespielt',
+    hubStatTrainWins: '{wins} Siege{rec}',
+    hubStatTrainRecOnly: 'Rekord-Combo ×{n}',
+    hubStatWallRec: 'Rekord {n}',
+    hubStatWallEmpty: 'Noch kein Score',
+    hubStatCoinsBest: 'Best {n} Münzen{pet}',
+    hubStatCoinsPet: ' · {n} Pet-PC',
+    hubStatCoinsEmpty: 'Münzen → Pet-Coins',
+    hubStatWeapons: '{n}/{total} frei',
+    hubStatSkillLv: 'Lv {n} gesamt',
+    hubStatSkillShards: 'Splitter im Abenteuer',
+    hubStatPetsFull: 'Dex {pets}/{total} · {coins} PC · Ei {eggs}/{eggTotal}',
+    hubStatPetsEmpty: '{total} Dex · Münzen → Pet-Coins',
+    hubStatStyle: '{n}/{total} Outfits',
+    hubStatDex: '{n}/{total} · +max HP',
+    petCoinTip: 'Spiel <b>Münzen-Bonus</b> für Pet-Coins (2 Gold = 1 PC). Pets hier kaufen oder über Monsterbuch zähmen.',
+    petSummaryTamed: 'Gezähmt <b>{tamed}/{total}</b> · aktiv <b>{active}</b> · <b>{wallet} Pet-Coins</b>',
+    petNone: 'keine',
+    installSub: 'Ein Icon, wie eine echte App',
+    boss: 'BOSS',
+    topHunter: 'Top-Jäger',
+    modeAdventure: '5 Inseln × 10 Level · Hitze · 9× = Gefahr! · 10× = Satan · Meister-Buff · Wette',
+    modeTraining: 'Combo-Trainer ×5/×8/×10 · 3s Dummy · Laser · Lightning Pierce',
+    modeWall: '60s · Combo ×3/×5/×8 · Rekord-Tempo + Projektion im HUD',
+    modeVersus: 'P1 links P2 rechts · Best-of-3 · Rematch in Pause',
+    modeCoinrun: '45s Münzen · 2 Münzen = 1 Pet-Coin · zielen ↑ · Flieger +3',
+    firstMinuteAdventure: 'Erste Minute: links laufen · rechts schlagen · Joy ↑ Flieger · volle Energy = SUPER',
+    firstMinuteTraining: 'Erste Minute: roten Laser springen · nah blocken · volle Energy → SUPER',
+    firstMinuteWall: '60s · Combo ×3/×5/×8 · Rekord-Tempo + Projektion im HUD',
+    firstMinuteVersus: 'Erste Minute: P1 links · P2 rechts',
+    firstMinuteCoinrun: '45s Münzen · Joy ↑ zielen · rosa Flieger = +3 · max 3 Shuriken schnell',
+    firstMinuteAdventureKb: 'Erste Minute: A/D laufen · W springen · J/K/L · U Technik · Shift Subst',
+    firstMinuteTrainingKb: 'Erste Minute: Laser springen · Shift = Subst · volle Energy → U',
+    firstMinuteWallKb: '60s · Combo-Meilensteine · A/D · J/K/L · Rekord-Tempo im HUD',
+    firstMinuteVersusKb: 'Erste Minute: P1 WASD+JKL · P2 Pfeile+1-5 · Best-of-3',
+    firstMinuteCoinrunKb: 'Münzen holen · W/↑ höher zielen · J/K Shuriken · max 3 schnell',
+    weaponComboHint: 'Waffe 3× = ①②③ · ①+② treffen → goldenes ③',
+    gambleOnboardTouch: 'Erste Wette: niedrige Summe = Super-Boss · hohe = Verbündeter · Skip = normal',
+    gambleOnboardKb: 'Erstes Mal: Summe ≤5 Super-Boss · ≥9 Verbündeter · Skip = keine Wette',
+    ketsbamOnboardTouch: 'Umzingelt? Mitte tippen — Ketsbam-Flucht · 9s Cooldown',
+    ketsbamOnboardKb: 'Umzingelt? E oder Mitte = Ketsbam · 9s Cooldown',
+    tideBattleOnboardTouch: 'Erste Tide Battle: {name} besiegen — keine anderen Wellen bis fertig',
+    tideBattleOnboardKb: 'Erste Tide Battle: {name} besiegen — Wellen pausieren',
+    langSwitchFail: 'Sprache wechseln fehlgeschlagen',
+    continueLastMode: 'Letzter Modus',
+    hubStatArcadeTrain: '{n} Train',
+    hubStatArcadeWall: 'Mauer {n}',
+    hubStatArcadeMats: 'Mats {n}',
+    hubStatCollectLine: '{w}/{total} Waf · Dex {pets} · {coins} Pet',
+    hubStatSummonLeft: '{n}× heute',
+    hubStatSummonEmpty: 'Leer · morgen wieder',
+    hubStatSummonDefault: '10 heute',
+    hubStatOutfits: '{n}/{total} Outfits',
+    hubStatSkills: '{n}/{total} · {skill} · {super}',
+    hubStatSkillsEmpty: '{n} Specials',
+    hubStatDexLine: '{n}/{total} · +max HP',
+    summonHead: 'Summons',
+    summonSub: 'Tägliche Kiste · 10× random · Waffe oder Pet',
+    summonWhere: 'Menü → Summons · Beute in Sammlung → Waffen / Pets (Kisten-Badge)',
+    summonQuota: 'Heute: {left}/{total} Random-Summons',
+    summonPull: 'Kiste öffnen',
+    summonPullLeft: '{n} übrig',
+    summonPullEmpty: 'Leer',
+    summonAriaPull: 'Kiste öffnen, {n} übrig',
+    summonAriaEmpty: 'Keine Summons mehr heute',
+    summonAriaBusy: 'Kiste öffnet…',
+    summonHint: 'Kiste tippen zum Öffnen',
+    summonReveal: 'Kiste oder Öffnen tippen — Beute erscheint in der Kiste',
+    summonGotoWeapons: 'Zu Waffen',
+    summonGotoPets: 'Zu Pets',
+    summonGotoSub: 'Sammlung',
+    summonLogEmpty: 'Heute noch keine Pulls.',
+    summonLeftToday: '{n} übrig heute',
+    summonDoneToday: 'für heute leer',
+    sharePlayLinkOk: '✓ Spiel-Link — mit Freunden teilen (Android)',
+    shareHintAndroid: 'Teile diesen Link mit Freunden. Auf Android: Chrome → App installieren.',
+    shareHintGeneric: 'Teile den Spiel-Link oben mit Freunden.',
+    shareVia: 'Spielen über: {kind}',
+    shareKind_pages: 'GitHub Pages',
+    shareKind_tunnel: 'Tunnel (Dev)',
+    shareKind_netlify: 'Netlify',
+    shareKind_local: 'Lokal — Spiel-Link mit Freunden teilen',
+    shareKind_file: 'Lokale Datei — GitHub Pages teilen',
+    shareKind_other: 'Online-Host',
+    shareOpenPages: 'GitHub Pages öffnen (Teilen-Link)',
+    shareOpenPagesSub: 'Tunnel ist nur Home-Dev',
+    shareOpenStable: 'Festen Link öffnen',
+    shareOpenStableSub: 'speel.html auf GitHub Pages',
+    perfAdaptiveHeavy: 'adaptiv schwer · ~{fps} fps',
+    perfAdaptive: 'adaptiv · ~{fps} fps',
+    perfSmooth: 'flüssig · ~{fps} fps',
+    weaponSummary: 'Gesammelt {unlocked}/{total} · Abenteuer {usable} nutzbar · aktiv {name} · Insel-Skill-Gate: Lv {cap}',
+    weaponMasteryHead: 'Top Stil-Meisterschaft',
+    weaponMasteryTiers: 'Stufen: Schüler → Virtuose (3) → Meister (10) → Legende (25)',
+    weaponStatLine: '{desc} · Schaden x{dmg} · Reichweite {range} · Tempo x{speed}',
+    weaponStatSummon: '{desc} · Schaden x{base} → x{dmg} · Reichweite {range} · Tempo x{speed}',
+    weaponThrowLine: 'Wurf-Projektil — keine Melee-Combo',
+    weaponPicked: 'gewählt',
+    weaponPick: 'wählen',
+    weaponChestBadge: 'Kiste',
+    upgradeLevelsTotal: 'Gesamt {n} Upgrade-Level',
+    upgradeShardsLine: '{skill} Skill · {item} Item-Splitter',
+    upgradeMaxHint: 'Standard max Lv {std} · mythisch/extrem max Lv {ext}',
+    eggSummary: 'Gesammelt {owned}/{total} · aktiv {active} · {daily}',
+    eggSummaryHint: 'Kosmetik — kein Kampfbonus. 1 Tages-Ei + Bonus-Ei nach dem ersten Abenteuer-Sieg heute.',
+    petTamedAssist: 'Gezähmt · Assist im Abenteuer',
+    petBuyLine: 'Kaufen: {cost} Pet-Coins',
+    petTameLine: 'Zähmen: {cur}/{need} Kills · oder {cost}',
+    petActive: 'aktiv',
+    petEquip: 'ausrüsten',
+    styleSummary: 'Outfits {unlocked}/{total} · aktiv {name}',
+    styleSummaryHint: 'Jeder Stil hat einen eigenen Bonus — Hover oder Tooltip. Kosmetik + leichte Kampf-Perks.',
+  },
+};
 /* --- src/systems/audio-samples.js --- */
 /* ========================= ONLINE SFX SAMPLES (CC0) ======================
    Kenney.nl game audio — CC0 1.0 · mirror: ETdoFresh/kenney.nl via jsDelivr.
@@ -31491,24 +32460,27 @@ function hubTileStatLine(hub) {
     }
     case 'arcade': {
       const bits = [];
-      if (save.trainWins > 0) bits.push(`${save.trainWins} train`);
-      if (save.bestWall > 0) bits.push(`muur ${save.bestWall}`);
+      if (save.trainWins > 0) bits.push(t('ui.hubStatArcadeTrain', { n: save.trainWins }));
+      if (save.bestWall > 0) bits.push(t('ui.hubStatArcadeWall', { n: save.bestWall }));
       const mats = save.stats?.matsCoinBest || 0;
-      if (mats > 0) bits.push(`mats ${mats}`);
+      if (mats > 0) bits.push(t('ui.hubStatArcadeMats', { n: mats }));
       const pc = petCoinsBalance();
       if (pc > 0) bits.push(`${pc} pet ${SVG_COIN_ICON}`);
       return bits.length ? bits.join(' · ') : t('hub.modes3');
     }
     case 'collect':
-      return `${weaponUnlockedCount()}/${WEAPONS.length} wap · dex ${petTamedCount()} · ${petCoinsBalance()} pet ${SVG_COIN_ICON}`;
+      return t('ui.hubStatCollectLine', {
+        w: weaponUnlockedCount(), total: WEAPONS.length,
+        pets: petTamedCount(), coins: petCoinsBalance(),
+      }) + ` ${SVG_COIN_ICON}`;
     case 'summon': {
       try {
         ensureChestDaily();
         const n = typeof chestSummonsLeft === 'function' ? chestSummonsLeft() : 0;
-        if (n <= 0) return 'Op · morgen weer';
-        return `${n}× vandaag`;
+        if (n <= 0) return t('ui.hubStatSummonEmpty');
+        return t('ui.hubStatSummonLeft', { n });
       } catch (_) {
-        return '10 vandaag';
+        return t('ui.hubStatSummonDefault');
       }
     }
     default:
@@ -31905,10 +32877,10 @@ const UI = {
     const prog = onboardingProgress();
     const next = nextUntriedMode();
     const modes = [
-      { id: 'adventure', label: 'Avontuur', tip: t('ui.modeAdventure') },
-      { id: 'training', label: 'Training', tip: 'Combo-trainer ×5/×8/×10 · lasers · Lightning Pierce-telegraph' },
-      { id: 'wall', label: 'Muur', tip: '60s · combo ×3/×5/×8 hints · record-tempo + projectie in HUD · 5s waarschuwing' },
-      { id: 'coinrun', label: 'Mats', tip: '45s munten · mik ↑ · vliegers +3' },
+      { id: 'adventure', label: t('modes.adventure'), tip: t('ui.modeAdventure') },
+      { id: 'training', label: t('modes.training'), tip: t('ui.modeTraining') },
+      { id: 'wall', label: t('modes.wall'), tip: t('ui.modeWall') },
+      { id: 'coinrun', label: t('modes.coinrun'), tip: t('ui.modeCoinrun') },
     ];
     let html = `<div style="font-size:12px;opacity:.85;margin-bottom:8px">${t('ui.helpOnboardHead', { seen: prog.seen, total: prog.total })}</div>`;
     if (next) {
@@ -32569,14 +33541,14 @@ const UI = {
         ? t('ui.hubStatPetsFull', { pets: petsN, total: PET_ROSTER.length, coins: pc, eggs: eggsN, eggTotal: EGG_ROSTER.length })
         : t('ui.hubStatPetsEmpty', { total: PET_ROSTER.length }));
       const stylesN = STYLES.filter(s => styleUnlocked(s)).length;
-      setStat('hubStatStyle', `${stylesN}/${STYLES.length} outfits`);
+      setStat('hubStatStyle', t('ui.hubStatOutfits', { n: stylesN, total: STYLES.length }));
       const skillsN = skillUnlockedCount();
       const activeSk = skillById(save.skill || 'spiral_orb');
       const activeSp = equippedSuper();
       setStat('hubStatSkills', skillsN > 0
-        ? `${skillsN}/${SKILLS.length} · ${skillLabel(activeSk)} · ${superLabel(activeSp)}`
-        : `${SKILLS.length} specials`);
-      setStat('hubStatDex', `${dexCount()}/${SPECIES_ORDER.length} · +max HP`);
+        ? t('ui.hubStatSkills', { n: skillsN, total: SKILLS.length, skill: skillLabel(activeSk), super: superLabel(activeSp) })
+        : t('ui.hubStatSkillsEmpty', { n: SKILLS.length }));
+      setStat('hubStatDex', t('ui.hubStatDexLine', { n: dexCount(), total: SPECIES_ORDER.length }));
     }
   },
 
@@ -32644,8 +33616,8 @@ const UI = {
       try { left = typeof chestSummonsLeft === 'function' ? chestSummonsLeft() : 0; } catch (_) {}
       summonTile.classList.toggle('has-summons', left > 0);
       summonTile.setAttribute('aria-label', left > 0
-        ? `${tOr('menu.summons', 'Summons')} · ${left} over vandaag`
-        : `${tOr('menu.summons', 'Summons')} · op voor vandaag`);
+        ? `${tOr('menu.summons', 'Summons')} · ${t('ui.summonLeftToday', { n: left })}`
+        : `${tOr('menu.summons', 'Summons')} · ${t('ui.summonDoneToday')}`);
     }
     document.getElementById('togMusic')?.classList.toggle('off', !save.music);
     document.getElementById('togSfx')?.classList.toggle('off', !save.sfx);
@@ -32685,7 +33657,7 @@ const UI = {
     const playLinkEl = document.getElementById('menuPlayLink');
     if (playLinkEl) {
       if (location.hostname.endsWith('.github.io')) {
-        playLinkEl.textContent = '✓ Speel-link — deel met vrienden (Android)';
+        playLinkEl.textContent = t('ui.sharePlayLinkOk');
       } else if (!playLinkEl.dataset.loaded) {
         playLinkEl.dataset.loaded = '1';
         loadHostingBundle().then(({ hosting }) => {
@@ -32716,16 +33688,16 @@ const UI = {
       const left = typeof chestSummonsLeft === 'function' ? chestSummonsLeft() : 0;
       const quota = document.getElementById('summonQuota');
       if (quota) {
-        quota.textContent = `Vandaag: ${left}/${CHEST_DAILY_TOTAL} random summons`;
+        quota.textContent = t('ui.summonQuota', { left, total: CHEST_DAILY_TOTAL });
       }
       const pullBtn = document.getElementById('btnChestPull');
       const pullLbl = document.getElementById('chestPullLbl');
-      if (pullLbl) pullLbl.textContent = left > 0 ? `${left} over` : 'Op';
+      if (pullLbl) pullLbl.textContent = left > 0 ? t('ui.summonPullLeft', { n: left }) : t('ui.summonPullEmpty');
       if (pullBtn) {
         pullBtn.disabled = left <= 0 || !!this._chestPullBusy;
         pullBtn.setAttribute('aria-label', left > 0
-          ? `Open kist, ${left} over`
-          : 'Geen summons meer vandaag');
+          ? t('ui.summonAriaPull', { n: left })
+          : t('ui.summonAriaEmpty'));
       }
       const stage = document.getElementById('summonStage');
       if (stage) {
@@ -32733,8 +33705,8 @@ const UI = {
         stage.classList.toggle('is-pullable', canPull);
         stage.setAttribute('aria-disabled', canPull ? 'false' : 'true');
         stage.setAttribute('aria-label', canPull
-          ? `Open kist, ${left} over`
-          : (left <= 0 ? 'Geen summons meer vandaag' : 'Kist opent…'));
+          ? t('ui.summonAriaPull', { n: left })
+          : (left <= 0 ? t('ui.summonAriaEmpty') : t('ui.summonAriaBusy')));
         stage.tabIndex = canPull ? 0 : -1;
       }
       const hint = document.getElementById('summonStageHint');
@@ -32745,7 +33717,7 @@ const UI = {
         const pulls = (save.chestDaily && Array.isArray(save.chestDaily.pulls))
           ? save.chestDaily.pulls.slice().reverse() : [];
         if (!pulls.length) {
-          logEl.textContent = 'Nog geen pulls vandaag.';
+          logEl.textContent = t('ui.summonLogEmpty');
         } else {
           logEl.innerHTML = pulls.slice(0, 8).map((p) => {
             const tag = p.nice ? '✦' : '·';
@@ -33392,7 +34364,7 @@ const UI = {
         const short = (u) => String(u || '').replace(/^https:\/\//, '');
         if (stable && !isTunnelHostUrl(stable)) {
           linkEl.innerHTML =
-            `<div style="opacity:.8;margin-bottom:4px">Speel-link — deel deze met vrienden</div>` +
+            `<div style="opacity:.8;margin-bottom:4px">${t('settings.hosting')} — ${t('ui.shareHintGeneric')}</div>` +
             `<a href="${stable}" style="color:#7cf5ff;font-weight:800" rel="noopener">${short(stable)}</a>`;
         } else {
           linkEl.textContent = withShareRevParam('https://brennyz.github.io/stickman-fighter/speel.html', SW_CACHE_REV);
@@ -33400,12 +34372,12 @@ const UI = {
         const kind = playHostKind();
         if (badgeEl) {
           const labels = {
-            pages: 'Stabiele speel-link',
-            tunnel: 'Thuis-test — deel deze URL niet',
-            netlify: 'Andere host — kopieer je save bij wissel',
-            local: 'Lokaal — deel de speel-link met vrienden',
-            file: 'Lokaal bestand — deel GitHub Pages',
-            other: 'Online host',
+            pages: t('ui.shareKind_pages'),
+            tunnel: t('ui.shareKind_tunnel'),
+            netlify: t('ui.shareKind_netlify'),
+            local: t('ui.shareKind_local'),
+            file: t('ui.shareKind_file'),
+            other: t('ui.shareKind_other'),
           };
           const colors = {
             pages: '#6ee06e',
@@ -33416,15 +34388,15 @@ const UI = {
             other: '#cfe0ff',
           };
           badgeEl.innerHTML =
-            `<span style="display:inline-block;padding:4px 10px;border-radius:999px;font-size:12px;font-weight:800;color:${colors[kind] || '#cfe0ff'};background:rgba(0,0,0,.28);border:1px solid ${colors[kind] || '#cfe0ff'}55">Speel via: ${labels[kind] || kind}</span>`;
+            `<span style="display:inline-block;padding:4px 10px;border-radius:999px;font-size:12px;font-weight:800;color:${colors[kind] || '#cfe0ff'};background:rgba(0,0,0,.28);border:1px solid ${colors[kind] || '#cfe0ff'}55">${t('ui.shareVia', { kind: labels[kind] || kind })}</span>`;
         }
         if (openBtn) {
           openBtn.classList.toggle('tog-alert', kind === 'tunnel');
           const lab = openBtn.querySelector('div');
           if (lab) {
             lab.innerHTML = kind === 'tunnel'
-              ? 'Open GitHub Pages (deel-link)<small>Tunnel is alleen thuis-dev</small>'
-              : 'Open vaste link<small>speel.html op GitHub Pages</small>';
+              ? t('ui.shareOpenPages') + '<small>' + t('ui.shareOpenPagesSub') + '</small>'
+              : t('ui.shareOpenStable') + '<small>' + t('ui.shareOpenStableSub') + '</small>';
           }
         }
         const onTunnel = onTunnelHost();
@@ -33443,10 +34415,10 @@ const UI = {
         let hint = hosting.stableHint || '';
         if (!hint) {
           if (stable && String(stable).includes('github.io')) {
-            hint = 'Deel deze link met vrienden. Op Android: Chrome → App installeren.';
-          } else if (location.hostname.endsWith('.github.io')) hint = 'Deel deze link met vrienden. Op Android: Chrome → App installeren.';
-          else if (location.hostname.endsWith('.netlify.app')) hint = 'Deel de speel-link hierboven met vrienden.';
-          else hint = 'Deel de speel-link hierboven met vrienden.';
+            hint = t('ui.shareHintAndroid');
+          } else if (location.hostname.endsWith('.github.io')) hint = t('ui.shareHintAndroid');
+          else if (location.hostname.endsWith('.netlify.app')) hint = t('ui.shareHintGeneric');
+          else hint = t('ui.shareHintGeneric');
         }
         if (onTunnel) {
           hint += ' Tunnel offline/503? Open de vaste GitHub Pages-link (primair).';
@@ -33461,7 +34433,7 @@ const UI = {
       })
       .catch(() => {
         linkEl.textContent = 'https://brennyz.github.io/stickman-fighter/speel.html';
-        if (hintEl) hintEl.textContent = 'Deel deze link met vrienden. Op Android: Chrome → App installeren.';
+        if (hintEl) hintEl.textContent = t('ui.shareHintAndroid');
       });
   },
 
@@ -33775,9 +34747,13 @@ const UI = {
       }).filter(Boolean).join(' ');
       sumEl.style.display = 'block';
       sumEl.innerHTML =
-        `Verzameld <b>${unlocked}/${WEAPONS.length}</b> · avontuur <b>${advUsable}</b> bruikbaar` +
-        ` · actief <b>${weaponLabel(save.weapon)}</b>` +
-        ` · eiland-skill gate: Lv <b>${adventureWeaponCap()}</b>` +
+        t('ui.weaponSummary', {
+          unlocked: `<b>${unlocked}</b>`,
+          total: `<b>${WEAPONS.length}</b>`,
+          usable: `<b>${advUsable}</b>`,
+          name: `<b>${weaponLabel(save.weapon)}</b>`,
+          cap: `<b>${adventureWeaponCap()}</b>`,
+        }) +
         ((save.stats.weaponFinishers || 0) > 0 ? ` · finishers <b>${save.stats.weaponFinishers}</b>` : '') +
         (tierChips ? `<div style="margin-top:6px;line-height:1.7">${tierChips}</div>` : '') +
         weaponNextUnlockHtml();
@@ -33790,12 +34766,12 @@ const UI = {
         mastEl.innerHTML = '';
       } else {
         mastEl.style.display = 'block';
-        mastEl.innerHTML = '<div style="font-size:12px;opacity:.85;margin-bottom:6px">Top stijl-meesterschap</div>' +
+        mastEl.innerHTML = `<div style="font-size:12px;opacity:.85;margin-bottom:6px">${t('ui.weaponMasteryHead')}</div>` +
           top.map(e =>
             `<span class="rar-pill" style="color:${e.tier.color};border-color:${e.tier.color};margin:2px 4px 2px 0">` +
             `${e.name} · ${e.tier.name} · ${e.finishers}×</span>`
           ).join('') +
-          '<div style="font-size:11px;opacity:.65;margin-top:6px">Tiers: Leerling → Virtuoos (3) → Meester (10) → Legende (25)</div>';
+          `<div style="font-size:11px;opacity:.65;margin-top:6px">${t('ui.weaponMasteryTiers')}</div>`;
       }
     }
     const previewId = this.weaponPreviewId || save.weapon || 'vuist';
@@ -33842,14 +34818,20 @@ const UI = {
         : '';
       const chestSk = typeof chestWeaponSkillOf === 'function' ? chestWeaponSkillOf(w.id) : null;
       const chestBadge = chestSk
-        ? ` <span class="rar-pill" style="color:#ffd75e;border-color:#ffd75e">Kist</span>`
+        ? ` <span class="rar-pill" style="color:#ffd75e;border-color:#ffd75e">${t('ui.weaponChestBadge')}</span>`
         : '';
       const chestSkillLine = chestSk
         ? `<div class="cinfo" style="opacity:.9;font-size:12px;margin-top:3px;color:#ffd75e">✦ ${chestSk}</div>`
         : '';
       const statLine = w.summoned
-        ? `${weaponDesc(w)} · schade x${base.dmg} → <b style="color:${rar.color}">x${w.dmg}</b> · bereik ${w.range} · snelheid x${w.speed}`
-        : `${weaponDesc(w)} · schade x${w.dmg} · bereik ${w.range} · snelheid x${w.speed}`;
+        ? t('ui.weaponStatSummon', {
+            desc: weaponDesc(w), base: base.dmg,
+            dmg: `<b style="color:${rar.color}">${w.dmg}</b>`,
+            range: w.range, speed: w.speed,
+          })
+        : t('ui.weaponStatLine', {
+            desc: weaponDesc(w), dmg: w.dmg, range: w.range, speed: w.speed,
+          });
       const labels = weaponMoveLabels(w.id);
       const mast = (save.weaponMastery || {})[w.id];
       const finCount = mast && mast.finishers ? mast.finishers : 0;
@@ -33868,7 +34850,7 @@ const UI = {
         : '';
       const moveLine = labels
         ? `① ${labels[0]} · ② ${labels[1]} · ③ ${labels[2]} finisher${mastLine}`
-        : (isThrowWeapon(w.id) ? 'Werp-projectiel — geen melee-combo' : '');
+        : (isThrowWeapon(w.id) ? t('ui.weaponThrowLine') : '');
       const islandLine = islandLocked && !lvlLocked
         ? `<div class="cinfo" style="opacity:.82;font-size:12px;margin-top:3px;color:#ffd75e">${t('ui.weaponIslandPick', { cap: adventureWeaponCap() })}</div>`
         : '';
@@ -33898,7 +34880,7 @@ const UI = {
         ? (zoneMeta ? `${SVG_LOCK_ICON} ${zoneMeta.name}` : `${SVG_LOCK_ICON} Lv ${base.unlock}`)
         : (islandLocked
           ? t('ui.weaponIslandCapShort', { cap: adventureWeaponCap() })
-          : (selected ? '&#10004; gekozen' : 'kies'));
+          : (selected ? '&#10004; ' + t('ui.weaponPicked') : t('ui.weaponPick')));
       el.appendChild(right);
       el.addEventListener('pointerenter', () => {
         if (locked) return;
@@ -34060,18 +35042,18 @@ const UI = {
         const activeName = `<b style="color:${SKILL_DEFS[activeJ]?.color || '#7cf5ff'}">${skillLabel(activeJ)}</b>`;
         sumEl.innerHTML =
           `${t('ui.techniqueActive', { name: activeName })} · ` +
-          `Totaal <b>${totalAllUpgradeLevels()}</b> upgrade-levels · ` +
-          `<b>${skillShards}</b> skill · <b>${itemShards}</b> item shards` +
+          `${t('ui.upgradeLevelsTotal', { n: '<b>' + totalAllUpgradeLevels() + '</b>' })} · ` +
+          t('ui.upgradeShardsLine', { skill: '<b>' + skillShards + '</b>', item: '<b>' + itemShards + '</b>' }) +
           (ready > 0 ? ` · <b style="color:#ffd75e">${t('ui.upgradeReady', { n: ready })}</b>` : '') +
           `<div class="upgrade-shard-hint">${t('ui.upgradeShardHint')}</div>` +
           `<div style="font-size:11px;opacity:.72;margin-top:4px">${t('ui.techniqueSelectHint')}</div>`;
       } else {
         sumEl.innerHTML =
-          `Totaal <b>${totalAllUpgradeLevels()}</b> upgrade-levels · ` +
-          `<b>${skillShards}</b> skill · <b>${itemShards}</b> item shards` +
+          `${t('ui.upgradeLevelsTotal', { n: '<b>' + totalAllUpgradeLevels() + '</b>' })} · ` +
+          t('ui.upgradeShardsLine', { skill: '<b>' + skillShards + '</b>', item: '<b>' + itemShards + '</b>' }) +
           (ready > 0 ? ` · <b style="color:#ffd75e">${t('ui.upgradeReady', { n: ready })}</b>` : '') +
           `<div class="upgrade-shard-hint">${t('ui.upgradeShardHint')}</div>` +
-          `<div style="font-size:11px;opacity:.72;margin-top:4px">Standaard max Lv ${UPGRADE_MAX_STANDARD} · mythische/extreme max Lv ${UPGRADE_MAX_EXTREME}</div>`;
+          `<div style="font-size:11px;opacity:.72;margin-top:4px">${t('ui.upgradeMaxHint', { std: UPGRADE_MAX_STANDARD, ext: UPGRADE_MAX_EXTREME })}</div>`;
       }
     }
     if (tab === 'skills') this.renderUpgradeSkills();
@@ -34459,17 +35441,17 @@ const UI = {
         `<div class="cinfo">${def.perk}</div>` +
         (chestPetSk ? `<div class="cinfo" style="opacity:.9;font-size:12px;margin-top:3px;color:#ffd75e">✦ ${chestPetSk}</div>` : '') +
         `<div class="cinfo" style="opacity:.78;font-size:12px;margin-top:3px">${tamed
-          ? 'Getemd · assist in avontuur'
+          ? t('ui.petTamedAssist')
           : (canBuy
-            ? `Kopen: ${cost} pet coins`
-            : `Temmen: ${Math.min(kills, need)}/${need} kills · of ${cost} ${SVG_COIN_ICON}`)}</div>` +
+            ? t('ui.petBuyLine', { cost })
+            : t('ui.petTameLine', { cur: Math.min(kills, need), need, cost }) + ` ${SVG_COIN_ICON}`)}</div>` +
         (tamed && (upLv > 0 || itemUpgradeShards('pet', def.id) > 0)
           ? `<div class="cinfo" style="opacity:.82;font-size:12px;margin-top:3px">${petUpgradeSummary(def.id)}</div>` : '');
       el.appendChild(info);
       const right = document.createElement('div');
       right.className = 'right';
       if (tamed) {
-        right.innerHTML = active ? `${SVG_CHECK_MINI} actief` : 'uitrusten';
+        right.innerHTML = active ? `${SVG_CHECK_MINI} ${t('ui.petActive')}` : t('ui.petEquip');
       } else if (canBuy) {
         right.innerHTML = `kopen<br>${cost} ${SVG_COIN_ICON}`;
         right.style.color = '#ff9ad5';
@@ -34517,8 +35499,11 @@ const UI = {
     if (sumEl) {
       sumEl.style.display = 'block';
       sumEl.innerHTML =
-        `Verzameld <b>${sum.owned}/${sum.total}</b> · actief <b>${sum.activeName}</b> · <b>${sum.daily}</b>` +
-        `<div style="margin-top:6px;font-size:12px;opacity:.85">Cosmetisch — geen combat-boost. 1 dag-ei + bonus-ei na je eerste avontuur-win vandaag.</div>`;
+        t('ui.eggSummary', {
+          owned: `<b>${sum.owned}</b>`, total: `<b>${sum.total}</b>`,
+          active: `<b>${sum.activeName}</b>`, daily: `<b>${sum.daily}</b>`,
+        }) +
+        `<div style="margin-top:6px;font-size:12px;opacity:.85">${t('ui.eggSummaryHint')}</div>`;
     }
     const crackBtn = document.getElementById('eggCrackBtn');
     if (crackBtn) {
@@ -34604,8 +35589,11 @@ const UI = {
       const active = styleById(save.style || 'classic');
       sumEl.style.display = 'block';
       sumEl.innerHTML =
-        `Outfits <b>${unlocked}/${STYLES.length}</b> · actief <b>${styleLabel(active)}</b>` +
-        `<div style="margin-top:6px;font-size:12px;opacity:.85">Elke stijl heeft een eigen bonus — hover of lees de tooltip. Cosmetisch + lichte combat-perks.</div>`;
+        t('ui.styleSummary', {
+          unlocked: `<b>${unlocked}</b>`, total: `<b>${STYLES.length}</b>`,
+          name: `<b>${styleLabel(active)}</b>`,
+        }) +
+        `<div style="margin-top:6px;font-size:12px;opacity:.85">${t('ui.styleSummaryHint')}</div>`;
     }
     const grid = document.getElementById('styleGrid');
     if (!grid) return;
@@ -34830,7 +35818,7 @@ const UI = {
       const fps = Perf.emaMs > 0 ? Math.round(1000 / Perf.emaMs) : 0;
       const perfNote = save.liteFx
         ? 'Lite FX'
-        : (Perf.tier >= 2 ? `adaptief zwaar · ~${fps} fps` : Perf.tier >= 1 ? `adaptief · ~${fps} fps` : `vloeiend · ~${fps} fps`);
+        : (Perf.tier >= 2 ? t('ui.perfAdaptiveHeavy', { fps }) : Perf.tier >= 1 ? t('ui.perfAdaptive', { fps }) : t('ui.perfSmooth', { fps }));
       verEl.textContent = `v${APP_VERSION} · SW v${SW_CACHE_REV} · ${perfNote}`;
     }
     const perfEl = document.getElementById('setPerfLine');
@@ -36498,7 +37486,7 @@ function syncTitleGateCopy() {
   if (contLbl) {
     const modeName = lp && typeof t === 'function' && lp.mode ? t('modes.' + lp.mode) : '';
     contLbl.innerHTML = (typeof t === 'function' ? t('menu.continue') : 'Verder spelen') +
-      '<small>' + (modeName || (typeof t === 'function' ? t('menu.startSub') : 'Laatste modus')) + '</small>';
+      '<small>' + (modeName || (typeof t === 'function' ? t('ui.continueLastMode') : 'Laatste modus')) + '</small>';
   }
   if (greet) {
     greet.textContent = tag && typeof t === 'function'

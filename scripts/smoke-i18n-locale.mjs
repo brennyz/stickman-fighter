@@ -49,4 +49,44 @@ if (!/__sfNetQuietUpdate/.test(loop)) fail('dismiss must quiet the update banner
 if (!/body\.is-playing #netStatus\.sw-update/.test(css)) fail('update banner must hide during play');
 if (!/id="sfTitleStart"/.test(html) || /id="sfTitleName"/.test(html)) fail('name field must stay off the title gate');
 
-console.log('SMOKE_OK i18n-locale: Tips label, VERLOREN, no PICK AN ISLAND, quiet version banner');
+const deChrome = fs.readFileSync(path.join(root, 'src/i18n/catalog-de.js'), 'utf8');
+const manifest = fs.readFileSync(path.join(root, 'src/manifest.json'), 'utf8');
+if (!manifest.includes('src/i18n/catalog-de.js')) fail('manifest must load catalog-de.js');
+if (!/CATALOG_DE_CHROME/.test(catalog)) fail('mergeI18nCatalogs must merge CATALOG_DE_CHROME');
+if (!/const CATALOG_DE_CHROME/.test(deChrome)) fail('CATALOG_DE_CHROME missing');
+for (const ns of ['ui:', 'hud:', 'combat:', 'toast:', 'missionsUi:']) {
+  if (!deChrome.includes(ns)) fail('DE chrome missing namespace ' + ns);
+}
+if (!/lang !== 'nl'/.test(i18n)) fail('t() must prefer EN over NL when locale is not Dutch');
+if (!/summons: 'Summons'/.test(i18n) || !/summonsSub: 'Tägliche Kiste/.test(i18n)) {
+  fail('DE menu.summons chrome missing');
+}
+if (!/setText\('summonScreenHead', 'ui\.summonHead'\)/.test(i18n)) fail('applyLang must set summon chrome');
+if (!/renderSummon/.test(i18n) || !/renderUpgrades/.test(i18n)) {
+  fail('applyLang must re-render summon and upgrades on locale switch');
+}
+
+if (/charBig5Hint: 'Eigen vechters/.test(catalog.split('const CATALOG_EN')[1] || '')) {
+  fail('EN catalog still has Dutch charBig5Hint');
+}
+if (/spiral_orb: 'Spiraal Orb'/.test(catalog.split('const CATALOG_EN')[1] || '')) {
+  fail('EN catalog still has Dutch Spiraal Orb skill name');
+}
+if (!/continueLastMode: 'Laatste modus'/.test(catalog)) fail('NL continueLastMode missing');
+if (!/continueLastMode: 'Last mode'/.test(catalog)) fail('EN continueLastMode missing');
+if (!/continueLastMode: 'Letzter Modus'/.test(deChrome)) fail('DE continueLastMode missing');
+
+if (/muur \$\{save\.bestWall\}/.test(ui)) fail('HOME arcade tile still hardcodes muur');
+if (/n\}× vandaag/.test(ui) || /Op · morgen weer/.test(ui)) fail('HOME summon tile still hardcodes Dutch');
+if (/label: 'Avontuur'/.test(ui)) fail('help/tutorial chips still hardcode Avontuur');
+if (!/t\('modes\.adventure'\)/.test(ui)) fail('help chips must use modes.adventure');
+if (!/ui\.summonQuota/.test(ui)) fail('summon quota must use t()');
+if (!/ui\.weaponSummary/.test(ui)) fail('weapon summary must use t()');
+if (!/ui\.upgradeLevelsTotal/.test(ui)) fail('upgrade summary must use t()');
+if (!/ui\.hubStatOutfits/.test(ui)) fail('collection hub outfits must use t()');
+if (/Vandaag: \$\{left\}/.test(ui)) fail('summon quota still hardcoded Dutch');
+if (/Verzameld <b>/.test(ui)) fail('collection summary still hardcoded Dutch Verzameld');
+if (!/ui\.eggSummary/.test(ui)) fail('egg summary must use t()');
+if (!/ui\.styleSummary/.test(ui)) fail('style summary must use t()');
+
+console.log('SMOKE_OK i18n-locale: Tips, VERLOREN, EN/DE chrome catalogs, no leftover Dutch tiles');

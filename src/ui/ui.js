@@ -845,24 +845,27 @@ function hubTileStatLine(hub) {
     }
     case 'arcade': {
       const bits = [];
-      if (save.trainWins > 0) bits.push(`${save.trainWins} train`);
-      if (save.bestWall > 0) bits.push(`muur ${save.bestWall}`);
+      if (save.trainWins > 0) bits.push(t('ui.hubStatArcadeTrain', { n: save.trainWins }));
+      if (save.bestWall > 0) bits.push(t('ui.hubStatArcadeWall', { n: save.bestWall }));
       const mats = save.stats?.matsCoinBest || 0;
-      if (mats > 0) bits.push(`mats ${mats}`);
+      if (mats > 0) bits.push(t('ui.hubStatArcadeMats', { n: mats }));
       const pc = petCoinsBalance();
       if (pc > 0) bits.push(`${pc} pet ${SVG_COIN_ICON}`);
       return bits.length ? bits.join(' · ') : t('hub.modes3');
     }
     case 'collect':
-      return `${weaponUnlockedCount()}/${WEAPONS.length} wap · dex ${petTamedCount()} · ${petCoinsBalance()} pet ${SVG_COIN_ICON}`;
+      return t('ui.hubStatCollectLine', {
+        w: weaponUnlockedCount(), total: WEAPONS.length,
+        pets: petTamedCount(), coins: petCoinsBalance(),
+      }) + ` ${SVG_COIN_ICON}`;
     case 'summon': {
       try {
         ensureChestDaily();
         const n = typeof chestSummonsLeft === 'function' ? chestSummonsLeft() : 0;
-        if (n <= 0) return 'Op · morgen weer';
-        return `${n}× vandaag`;
+        if (n <= 0) return t('ui.hubStatSummonEmpty');
+        return t('ui.hubStatSummonLeft', { n });
       } catch (_) {
-        return '10 vandaag';
+        return t('ui.hubStatSummonDefault');
       }
     }
     default:
@@ -1259,10 +1262,10 @@ const UI = {
     const prog = onboardingProgress();
     const next = nextUntriedMode();
     const modes = [
-      { id: 'adventure', label: 'Avontuur', tip: t('ui.modeAdventure') },
-      { id: 'training', label: 'Training', tip: 'Combo-trainer ×5/×8/×10 · lasers · Lightning Pierce-telegraph' },
-      { id: 'wall', label: 'Muur', tip: '60s · combo ×3/×5/×8 hints · record-tempo + projectie in HUD · 5s waarschuwing' },
-      { id: 'coinrun', label: 'Mats', tip: '45s munten · mik ↑ · vliegers +3' },
+      { id: 'adventure', label: t('modes.adventure'), tip: t('ui.modeAdventure') },
+      { id: 'training', label: t('modes.training'), tip: t('ui.modeTraining') },
+      { id: 'wall', label: t('modes.wall'), tip: t('ui.modeWall') },
+      { id: 'coinrun', label: t('modes.coinrun'), tip: t('ui.modeCoinrun') },
     ];
     let html = `<div style="font-size:12px;opacity:.85;margin-bottom:8px">${t('ui.helpOnboardHead', { seen: prog.seen, total: prog.total })}</div>`;
     if (next) {
@@ -1923,14 +1926,14 @@ const UI = {
         ? t('ui.hubStatPetsFull', { pets: petsN, total: PET_ROSTER.length, coins: pc, eggs: eggsN, eggTotal: EGG_ROSTER.length })
         : t('ui.hubStatPetsEmpty', { total: PET_ROSTER.length }));
       const stylesN = STYLES.filter(s => styleUnlocked(s)).length;
-      setStat('hubStatStyle', `${stylesN}/${STYLES.length} outfits`);
+      setStat('hubStatStyle', t('ui.hubStatOutfits', { n: stylesN, total: STYLES.length }));
       const skillsN = skillUnlockedCount();
       const activeSk = skillById(save.skill || 'spiral_orb');
       const activeSp = equippedSuper();
       setStat('hubStatSkills', skillsN > 0
-        ? `${skillsN}/${SKILLS.length} · ${skillLabel(activeSk)} · ${superLabel(activeSp)}`
-        : `${SKILLS.length} specials`);
-      setStat('hubStatDex', `${dexCount()}/${SPECIES_ORDER.length} · +max HP`);
+        ? t('ui.hubStatSkills', { n: skillsN, total: SKILLS.length, skill: skillLabel(activeSk), super: superLabel(activeSp) })
+        : t('ui.hubStatSkillsEmpty', { n: SKILLS.length }));
+      setStat('hubStatDex', t('ui.hubStatDexLine', { n: dexCount(), total: SPECIES_ORDER.length }));
     }
   },
 
@@ -1998,8 +2001,8 @@ const UI = {
       try { left = typeof chestSummonsLeft === 'function' ? chestSummonsLeft() : 0; } catch (_) {}
       summonTile.classList.toggle('has-summons', left > 0);
       summonTile.setAttribute('aria-label', left > 0
-        ? `${tOr('menu.summons', 'Summons')} · ${left} over vandaag`
-        : `${tOr('menu.summons', 'Summons')} · op voor vandaag`);
+        ? `${tOr('menu.summons', 'Summons')} · ${t('ui.summonLeftToday', { n: left })}`
+        : `${tOr('menu.summons', 'Summons')} · ${t('ui.summonDoneToday')}`);
     }
     document.getElementById('togMusic')?.classList.toggle('off', !save.music);
     document.getElementById('togSfx')?.classList.toggle('off', !save.sfx);
@@ -2039,7 +2042,7 @@ const UI = {
     const playLinkEl = document.getElementById('menuPlayLink');
     if (playLinkEl) {
       if (location.hostname.endsWith('.github.io')) {
-        playLinkEl.textContent = '✓ Speel-link — deel met vrienden (Android)';
+        playLinkEl.textContent = t('ui.sharePlayLinkOk');
       } else if (!playLinkEl.dataset.loaded) {
         playLinkEl.dataset.loaded = '1';
         loadHostingBundle().then(({ hosting }) => {
@@ -2070,16 +2073,16 @@ const UI = {
       const left = typeof chestSummonsLeft === 'function' ? chestSummonsLeft() : 0;
       const quota = document.getElementById('summonQuota');
       if (quota) {
-        quota.textContent = `Vandaag: ${left}/${CHEST_DAILY_TOTAL} random summons`;
+        quota.textContent = t('ui.summonQuota', { left, total: CHEST_DAILY_TOTAL });
       }
       const pullBtn = document.getElementById('btnChestPull');
       const pullLbl = document.getElementById('chestPullLbl');
-      if (pullLbl) pullLbl.textContent = left > 0 ? `${left} over` : 'Op';
+      if (pullLbl) pullLbl.textContent = left > 0 ? t('ui.summonPullLeft', { n: left }) : t('ui.summonPullEmpty');
       if (pullBtn) {
         pullBtn.disabled = left <= 0 || !!this._chestPullBusy;
         pullBtn.setAttribute('aria-label', left > 0
-          ? `Open kist, ${left} over`
-          : 'Geen summons meer vandaag');
+          ? t('ui.summonAriaPull', { n: left })
+          : t('ui.summonAriaEmpty'));
       }
       const stage = document.getElementById('summonStage');
       if (stage) {
@@ -2087,8 +2090,8 @@ const UI = {
         stage.classList.toggle('is-pullable', canPull);
         stage.setAttribute('aria-disabled', canPull ? 'false' : 'true');
         stage.setAttribute('aria-label', canPull
-          ? `Open kist, ${left} over`
-          : (left <= 0 ? 'Geen summons meer vandaag' : 'Kist opent…'));
+          ? t('ui.summonAriaPull', { n: left })
+          : (left <= 0 ? t('ui.summonAriaEmpty') : t('ui.summonAriaBusy')));
         stage.tabIndex = canPull ? 0 : -1;
       }
       const hint = document.getElementById('summonStageHint');
@@ -2099,7 +2102,7 @@ const UI = {
         const pulls = (save.chestDaily && Array.isArray(save.chestDaily.pulls))
           ? save.chestDaily.pulls.slice().reverse() : [];
         if (!pulls.length) {
-          logEl.textContent = 'Nog geen pulls vandaag.';
+          logEl.textContent = t('ui.summonLogEmpty');
         } else {
           logEl.innerHTML = pulls.slice(0, 8).map((p) => {
             const tag = p.nice ? '✦' : '·';
@@ -2746,7 +2749,7 @@ const UI = {
         const short = (u) => String(u || '').replace(/^https:\/\//, '');
         if (stable && !isTunnelHostUrl(stable)) {
           linkEl.innerHTML =
-            `<div style="opacity:.8;margin-bottom:4px">Speel-link — deel deze met vrienden</div>` +
+            `<div style="opacity:.8;margin-bottom:4px">${t('settings.hosting')} — ${t('ui.shareHintGeneric')}</div>` +
             `<a href="${stable}" style="color:#7cf5ff;font-weight:800" rel="noopener">${short(stable)}</a>`;
         } else {
           linkEl.textContent = withShareRevParam('https://brennyz.github.io/stickman-fighter/speel.html', SW_CACHE_REV);
@@ -2754,12 +2757,12 @@ const UI = {
         const kind = playHostKind();
         if (badgeEl) {
           const labels = {
-            pages: 'Stabiele speel-link',
-            tunnel: 'Thuis-test — deel deze URL niet',
-            netlify: 'Andere host — kopieer je save bij wissel',
-            local: 'Lokaal — deel de speel-link met vrienden',
-            file: 'Lokaal bestand — deel GitHub Pages',
-            other: 'Online host',
+            pages: t('ui.shareKind_pages'),
+            tunnel: t('ui.shareKind_tunnel'),
+            netlify: t('ui.shareKind_netlify'),
+            local: t('ui.shareKind_local'),
+            file: t('ui.shareKind_file'),
+            other: t('ui.shareKind_other'),
           };
           const colors = {
             pages: '#6ee06e',
@@ -2770,15 +2773,15 @@ const UI = {
             other: '#cfe0ff',
           };
           badgeEl.innerHTML =
-            `<span style="display:inline-block;padding:4px 10px;border-radius:999px;font-size:12px;font-weight:800;color:${colors[kind] || '#cfe0ff'};background:rgba(0,0,0,.28);border:1px solid ${colors[kind] || '#cfe0ff'}55">Speel via: ${labels[kind] || kind}</span>`;
+            `<span style="display:inline-block;padding:4px 10px;border-radius:999px;font-size:12px;font-weight:800;color:${colors[kind] || '#cfe0ff'};background:rgba(0,0,0,.28);border:1px solid ${colors[kind] || '#cfe0ff'}55">${t('ui.shareVia', { kind: labels[kind] || kind })}</span>`;
         }
         if (openBtn) {
           openBtn.classList.toggle('tog-alert', kind === 'tunnel');
           const lab = openBtn.querySelector('div');
           if (lab) {
             lab.innerHTML = kind === 'tunnel'
-              ? 'Open GitHub Pages (deel-link)<small>Tunnel is alleen thuis-dev</small>'
-              : 'Open vaste link<small>speel.html op GitHub Pages</small>';
+              ? t('ui.shareOpenPages') + '<small>' + t('ui.shareOpenPagesSub') + '</small>'
+              : t('ui.shareOpenStable') + '<small>' + t('ui.shareOpenStableSub') + '</small>';
           }
         }
         const onTunnel = onTunnelHost();
@@ -2797,10 +2800,10 @@ const UI = {
         let hint = hosting.stableHint || '';
         if (!hint) {
           if (stable && String(stable).includes('github.io')) {
-            hint = 'Deel deze link met vrienden. Op Android: Chrome → App installeren.';
-          } else if (location.hostname.endsWith('.github.io')) hint = 'Deel deze link met vrienden. Op Android: Chrome → App installeren.';
-          else if (location.hostname.endsWith('.netlify.app')) hint = 'Deel de speel-link hierboven met vrienden.';
-          else hint = 'Deel de speel-link hierboven met vrienden.';
+            hint = t('ui.shareHintAndroid');
+          } else if (location.hostname.endsWith('.github.io')) hint = t('ui.shareHintAndroid');
+          else if (location.hostname.endsWith('.netlify.app')) hint = t('ui.shareHintGeneric');
+          else hint = t('ui.shareHintGeneric');
         }
         if (onTunnel) {
           hint += ' Tunnel offline/503? Open de vaste GitHub Pages-link (primair).';
@@ -2815,7 +2818,7 @@ const UI = {
       })
       .catch(() => {
         linkEl.textContent = 'https://brennyz.github.io/stickman-fighter/speel.html';
-        if (hintEl) hintEl.textContent = 'Deel deze link met vrienden. Op Android: Chrome → App installeren.';
+        if (hintEl) hintEl.textContent = t('ui.shareHintAndroid');
       });
   },
 
@@ -3129,9 +3132,13 @@ const UI = {
       }).filter(Boolean).join(' ');
       sumEl.style.display = 'block';
       sumEl.innerHTML =
-        `Verzameld <b>${unlocked}/${WEAPONS.length}</b> · avontuur <b>${advUsable}</b> bruikbaar` +
-        ` · actief <b>${weaponLabel(save.weapon)}</b>` +
-        ` · eiland-skill gate: Lv <b>${adventureWeaponCap()}</b>` +
+        t('ui.weaponSummary', {
+          unlocked: `<b>${unlocked}</b>`,
+          total: `<b>${WEAPONS.length}</b>`,
+          usable: `<b>${advUsable}</b>`,
+          name: `<b>${weaponLabel(save.weapon)}</b>`,
+          cap: `<b>${adventureWeaponCap()}</b>`,
+        }) +
         ((save.stats.weaponFinishers || 0) > 0 ? ` · finishers <b>${save.stats.weaponFinishers}</b>` : '') +
         (tierChips ? `<div style="margin-top:6px;line-height:1.7">${tierChips}</div>` : '') +
         weaponNextUnlockHtml();
@@ -3144,12 +3151,12 @@ const UI = {
         mastEl.innerHTML = '';
       } else {
         mastEl.style.display = 'block';
-        mastEl.innerHTML = '<div style="font-size:12px;opacity:.85;margin-bottom:6px">Top stijl-meesterschap</div>' +
+        mastEl.innerHTML = `<div style="font-size:12px;opacity:.85;margin-bottom:6px">${t('ui.weaponMasteryHead')}</div>` +
           top.map(e =>
             `<span class="rar-pill" style="color:${e.tier.color};border-color:${e.tier.color};margin:2px 4px 2px 0">` +
             `${e.name} · ${e.tier.name} · ${e.finishers}×</span>`
           ).join('') +
-          '<div style="font-size:11px;opacity:.65;margin-top:6px">Tiers: Leerling → Virtuoos (3) → Meester (10) → Legende (25)</div>';
+          `<div style="font-size:11px;opacity:.65;margin-top:6px">${t('ui.weaponMasteryTiers')}</div>`;
       }
     }
     const previewId = this.weaponPreviewId || save.weapon || 'vuist';
@@ -3196,14 +3203,20 @@ const UI = {
         : '';
       const chestSk = typeof chestWeaponSkillOf === 'function' ? chestWeaponSkillOf(w.id) : null;
       const chestBadge = chestSk
-        ? ` <span class="rar-pill" style="color:#ffd75e;border-color:#ffd75e">Kist</span>`
+        ? ` <span class="rar-pill" style="color:#ffd75e;border-color:#ffd75e">${t('ui.weaponChestBadge')}</span>`
         : '';
       const chestSkillLine = chestSk
         ? `<div class="cinfo" style="opacity:.9;font-size:12px;margin-top:3px;color:#ffd75e">✦ ${chestSk}</div>`
         : '';
       const statLine = w.summoned
-        ? `${weaponDesc(w)} · schade x${base.dmg} → <b style="color:${rar.color}">x${w.dmg}</b> · bereik ${w.range} · snelheid x${w.speed}`
-        : `${weaponDesc(w)} · schade x${w.dmg} · bereik ${w.range} · snelheid x${w.speed}`;
+        ? t('ui.weaponStatSummon', {
+            desc: weaponDesc(w), base: base.dmg,
+            dmg: `<b style="color:${rar.color}">${w.dmg}</b>`,
+            range: w.range, speed: w.speed,
+          })
+        : t('ui.weaponStatLine', {
+            desc: weaponDesc(w), dmg: w.dmg, range: w.range, speed: w.speed,
+          });
       const labels = weaponMoveLabels(w.id);
       const mast = (save.weaponMastery || {})[w.id];
       const finCount = mast && mast.finishers ? mast.finishers : 0;
@@ -3222,7 +3235,7 @@ const UI = {
         : '';
       const moveLine = labels
         ? `① ${labels[0]} · ② ${labels[1]} · ③ ${labels[2]} finisher${mastLine}`
-        : (isThrowWeapon(w.id) ? 'Werp-projectiel — geen melee-combo' : '');
+        : (isThrowWeapon(w.id) ? t('ui.weaponThrowLine') : '');
       const islandLine = islandLocked && !lvlLocked
         ? `<div class="cinfo" style="opacity:.82;font-size:12px;margin-top:3px;color:#ffd75e">${t('ui.weaponIslandPick', { cap: adventureWeaponCap() })}</div>`
         : '';
@@ -3252,7 +3265,7 @@ const UI = {
         ? (zoneMeta ? `${SVG_LOCK_ICON} ${zoneMeta.name}` : `${SVG_LOCK_ICON} Lv ${base.unlock}`)
         : (islandLocked
           ? t('ui.weaponIslandCapShort', { cap: adventureWeaponCap() })
-          : (selected ? '&#10004; gekozen' : 'kies'));
+          : (selected ? '&#10004; ' + t('ui.weaponPicked') : t('ui.weaponPick')));
       el.appendChild(right);
       el.addEventListener('pointerenter', () => {
         if (locked) return;
@@ -3414,18 +3427,18 @@ const UI = {
         const activeName = `<b style="color:${SKILL_DEFS[activeJ]?.color || '#7cf5ff'}">${skillLabel(activeJ)}</b>`;
         sumEl.innerHTML =
           `${t('ui.techniqueActive', { name: activeName })} · ` +
-          `Totaal <b>${totalAllUpgradeLevels()}</b> upgrade-levels · ` +
-          `<b>${skillShards}</b> skill · <b>${itemShards}</b> item shards` +
+          `${t('ui.upgradeLevelsTotal', { n: '<b>' + totalAllUpgradeLevels() + '</b>' })} · ` +
+          t('ui.upgradeShardsLine', { skill: '<b>' + skillShards + '</b>', item: '<b>' + itemShards + '</b>' }) +
           (ready > 0 ? ` · <b style="color:#ffd75e">${t('ui.upgradeReady', { n: ready })}</b>` : '') +
           `<div class="upgrade-shard-hint">${t('ui.upgradeShardHint')}</div>` +
           `<div style="font-size:11px;opacity:.72;margin-top:4px">${t('ui.techniqueSelectHint')}</div>`;
       } else {
         sumEl.innerHTML =
-          `Totaal <b>${totalAllUpgradeLevels()}</b> upgrade-levels · ` +
-          `<b>${skillShards}</b> skill · <b>${itemShards}</b> item shards` +
+          `${t('ui.upgradeLevelsTotal', { n: '<b>' + totalAllUpgradeLevels() + '</b>' })} · ` +
+          t('ui.upgradeShardsLine', { skill: '<b>' + skillShards + '</b>', item: '<b>' + itemShards + '</b>' }) +
           (ready > 0 ? ` · <b style="color:#ffd75e">${t('ui.upgradeReady', { n: ready })}</b>` : '') +
           `<div class="upgrade-shard-hint">${t('ui.upgradeShardHint')}</div>` +
-          `<div style="font-size:11px;opacity:.72;margin-top:4px">Standaard max Lv ${UPGRADE_MAX_STANDARD} · mythische/extreme max Lv ${UPGRADE_MAX_EXTREME}</div>`;
+          `<div style="font-size:11px;opacity:.72;margin-top:4px">${t('ui.upgradeMaxHint', { std: UPGRADE_MAX_STANDARD, ext: UPGRADE_MAX_EXTREME })}</div>`;
       }
     }
     if (tab === 'skills') this.renderUpgradeSkills();
@@ -3813,17 +3826,17 @@ const UI = {
         `<div class="cinfo">${def.perk}</div>` +
         (chestPetSk ? `<div class="cinfo" style="opacity:.9;font-size:12px;margin-top:3px;color:#ffd75e">✦ ${chestPetSk}</div>` : '') +
         `<div class="cinfo" style="opacity:.78;font-size:12px;margin-top:3px">${tamed
-          ? 'Getemd · assist in avontuur'
+          ? t('ui.petTamedAssist')
           : (canBuy
-            ? `Kopen: ${cost} pet coins`
-            : `Temmen: ${Math.min(kills, need)}/${need} kills · of ${cost} ${SVG_COIN_ICON}`)}</div>` +
+            ? t('ui.petBuyLine', { cost })
+            : t('ui.petTameLine', { cur: Math.min(kills, need), need, cost }) + ` ${SVG_COIN_ICON}`)}</div>` +
         (tamed && (upLv > 0 || itemUpgradeShards('pet', def.id) > 0)
           ? `<div class="cinfo" style="opacity:.82;font-size:12px;margin-top:3px">${petUpgradeSummary(def.id)}</div>` : '');
       el.appendChild(info);
       const right = document.createElement('div');
       right.className = 'right';
       if (tamed) {
-        right.innerHTML = active ? `${SVG_CHECK_MINI} actief` : 'uitrusten';
+        right.innerHTML = active ? `${SVG_CHECK_MINI} ${t('ui.petActive')}` : t('ui.petEquip');
       } else if (canBuy) {
         right.innerHTML = `kopen<br>${cost} ${SVG_COIN_ICON}`;
         right.style.color = '#ff9ad5';
@@ -3871,8 +3884,11 @@ const UI = {
     if (sumEl) {
       sumEl.style.display = 'block';
       sumEl.innerHTML =
-        `Verzameld <b>${sum.owned}/${sum.total}</b> · actief <b>${sum.activeName}</b> · <b>${sum.daily}</b>` +
-        `<div style="margin-top:6px;font-size:12px;opacity:.85">Cosmetisch — geen combat-boost. 1 dag-ei + bonus-ei na je eerste avontuur-win vandaag.</div>`;
+        t('ui.eggSummary', {
+          owned: `<b>${sum.owned}</b>`, total: `<b>${sum.total}</b>`,
+          active: `<b>${sum.activeName}</b>`, daily: `<b>${sum.daily}</b>`,
+        }) +
+        `<div style="margin-top:6px;font-size:12px;opacity:.85">${t('ui.eggSummaryHint')}</div>`;
     }
     const crackBtn = document.getElementById('eggCrackBtn');
     if (crackBtn) {
@@ -3958,8 +3974,11 @@ const UI = {
       const active = styleById(save.style || 'classic');
       sumEl.style.display = 'block';
       sumEl.innerHTML =
-        `Outfits <b>${unlocked}/${STYLES.length}</b> · actief <b>${styleLabel(active)}</b>` +
-        `<div style="margin-top:6px;font-size:12px;opacity:.85">Elke stijl heeft een eigen bonus — hover of lees de tooltip. Cosmetisch + lichte combat-perks.</div>`;
+        t('ui.styleSummary', {
+          unlocked: `<b>${unlocked}</b>`, total: `<b>${STYLES.length}</b>`,
+          name: `<b>${styleLabel(active)}</b>`,
+        }) +
+        `<div style="margin-top:6px;font-size:12px;opacity:.85">${t('ui.styleSummaryHint')}</div>`;
     }
     const grid = document.getElementById('styleGrid');
     if (!grid) return;
@@ -4184,7 +4203,7 @@ const UI = {
       const fps = Perf.emaMs > 0 ? Math.round(1000 / Perf.emaMs) : 0;
       const perfNote = save.liteFx
         ? 'Lite FX'
-        : (Perf.tier >= 2 ? `adaptief zwaar · ~${fps} fps` : Perf.tier >= 1 ? `adaptief · ~${fps} fps` : `vloeiend · ~${fps} fps`);
+        : (Perf.tier >= 2 ? t('ui.perfAdaptiveHeavy', { fps }) : Perf.tier >= 1 ? t('ui.perfAdaptive', { fps }) : t('ui.perfSmooth', { fps }));
       verEl.textContent = `v${APP_VERSION} · SW v${SW_CACHE_REV} · ${perfNote}`;
     }
     const perfEl = document.getElementById('setPerfLine');
