@@ -731,6 +731,27 @@ class Fighter {
       return [ex, ey];
     };
 
+    const bones = {
+      head: { x: headX, y: headY - 9 },
+      shoulder: { x: shX, y: shY },
+      hip: { x: hipX, y: hipY },
+      hand: null,
+      lean: P.lean,
+      animT: this.animT,
+    };
+    let looks = [];
+    if (this.isPlayer && typeof resolveFighterLooks === 'function') {
+      try { looks = resolveFighterLooks(this) || []; } catch (_) { looks = []; }
+    }
+    if (!Array.isArray(looks)) looks = [];
+    const paintLook = (layer) => {
+      if (!looks.length) return;
+      if (typeof safeDrawEquipLayer === 'function') safeDrawEquipLayer(c, looks, layer, bones, this);
+      else if (typeof drawEquipLayer === 'function') {
+        try { drawEquipLayer(c, looks, layer, bones, this); } catch (_) {}
+      }
+    };
+
     // achterste ledematen (donkerder)
     c.save();
     c.globalAlpha *= 0.75;
@@ -738,10 +759,14 @@ class Fighter {
     drawLimb(shX, shY, P.arms[0][0], P.arms[0][1], armL, armL);
     c.restore();
 
+    paintLook('back');
+
     // romp
     c.beginPath(); c.moveTo(hipX, hipY); c.lineTo(shX, shY); c.stroke();
     // voorste been
     drawLimb(hipX, hipY, P.legs[1][0], P.legs[1][1], legL, legL);
+    paintLook('legs');
+    paintLook('chest');
     // hoofd
     if (this.bald) {
       c.fillStyle = '#ffe8c8';
@@ -764,13 +789,19 @@ class Fighter {
         c.fillRect(shX - 16, shY - 2, 6, 18);
       }
     }
-    if (this.isPlayer && this.style) this.drawStyleExtras(c, headX, headY - 9, shX, shY, hipX, hipY);
+    if (looks.length) {
+      paintLook('head');
+    } else if (this.isPlayer && this.style) {
+      try { this.drawStyleExtras(c, headX, headY - 9, shX, shY, hipX, hipY); } catch (_) {}
+    }
     if (this.isRobot) this.drawRobotHead(c, headX, headY - 9);
 
     // voorste arm + wapen
     const [hx, hy] = drawLimb(shX, shY, P.arms[1][0], P.arms[1][1], armL, armL);
     c.fillStyle = this.color;
     c.beginPath(); c.arc(hx, hy, 3.4, 0, TAU); c.fill();
+    bones.hand = { x: hx, y: hy };
+    paintLook('hands');
 
     if (this.isPlayer && this.weapon.id !== 'vuist' && !this._boomerOut && !(this.attack && this.attack.kind === 'special')) {
       const aimLift = (this._aimAtAttack && (this.attack?.kind === 'weapon' || this.attack?.kind === 'punch' || this.attack?.kind === 'kick'))
@@ -867,109 +898,17 @@ class Fighter {
   }
 
   drawStyleExtras(c, hx, hy, shX, shY, hipX, hipY) {
-    const st = this.style;
-    if (st.glow) {
-      c.save();
-      c.shadowColor = st.accent;
-      c.shadowBlur = motionReduced() ? 10 : (10 + Math.sin(this.animT * 5) * 4);
-      c.strokeStyle = st.accent;
-      c.lineWidth = 2;
-      c.beginPath(); c.arc(hx, hy, 12, 0, TAU); c.stroke();
-      c.restore();
-    }
-    if (st.bandana) {
-      c.fillStyle = st.bandana;
-      c.fillRect(hx - 11, hy - 17, 22, 7);
-      if (st.plate) {
-        c.fillStyle = st.plate;
-        c.fillRect(hx - 5, hy - 16, 10, 5);
-      }
-      c.strokeStyle = 'rgba(0,0,0,.25)'; c.lineWidth = 1;
-      c.beginPath(); c.moveTo(hx + 9, hy - 14); c.lineTo(hx + 18, hy - 10); c.stroke();
-    }
-    if (st.coat) {
-      c.fillStyle = 'rgba(224,79,79,.32)';
-      c.beginPath();
-      c.moveTo(hipX - 14, hipY - 8); c.lineTo(hipX + 14, hipY - 8);
-      c.lineTo(shX + 18, shY - 4); c.lineTo(shX - 18, shY - 4);
-      c.closePath(); c.fill();
-      c.strokeStyle = st.accent; c.lineWidth = 2;
-      c.beginPath(); c.moveTo(0, shY - 6); c.lineTo(0, hipY + 4); c.stroke();
-    }
-    if (st.duck) {
-      c.fillStyle = '#ffe259';
-      c.beginPath(); c.moveTo(hx + 8, hy + 2); c.lineTo(hx + 16, hy + 4); c.lineTo(hx + 8, hy + 6); c.closePath(); c.fill();
-    }
-    if (st.fox) {
-      c.fillStyle = st.accent;
-      c.beginPath(); c.moveTo(hx - 10, hy - 16); c.lineTo(hx - 14, hy - 26); c.lineTo(hx - 6, hy - 18); c.closePath(); c.fill();
-      c.beginPath(); c.moveTo(hx + 4, hy - 16); c.lineTo(hx + 8, hy - 26); c.lineTo(hx + 2, hy - 18); c.closePath(); c.fill();
-    }
-    if (st.visor) {
-      c.fillStyle = '#7cf5ff';
-      c.globalAlpha = 0.85;
-      c.fillRect(hx - 9, hy - 5, 18, 6);
-      c.globalAlpha = 1;
-    }
-    if (st.topknot) {
-      c.strokeStyle = st.accent; c.lineWidth = 3;
-      c.beginPath(); c.moveTo(hx, hy - 18); c.lineTo(hx, hy - 30); c.stroke();
-      c.fillStyle = st.accent;
-      c.beginPath(); c.arc(hx, hy - 32, 4.5, 0, TAU); c.fill();
-    }
-    if (st.hunter) {
-      c.fillStyle = 'rgba(61,92,50,.55)';
-      c.beginPath();
-      c.moveTo(hipX - 16, hipY - 6); c.lineTo(hipX + 16, hipY - 6);
-      c.lineTo(shX + 20, shY - 2); c.lineTo(shX - 20, shY - 2);
-      c.closePath(); c.fill();
-      c.fillStyle = st.accent;
-      c.beginPath(); c.arc(hx - 14, hy - 8, 3, 0, TAU); c.fill();
-    }
-    if (st.crystal) {
-      c.fillStyle = st.accent;
-      c.globalAlpha = 0.9;
-      c.beginPath();
-      c.moveTo(hx + 10, hy - 6); c.lineTo(hx + 16, hy - 12); c.lineTo(hx + 22, hy - 6); c.lineTo(hx + 16, hy); c.closePath();
-      c.fill();
-      c.globalAlpha = 1;
-    }
-    if (st.tome) {
-      c.fillStyle = st.accent;
-      c.fillRect(hx - 18, hy - 2, 7, 10);
-      c.fillStyle = '#fff8e8';
-      c.fillRect(hx - 16.5, hy, 4, 6);
-      c.strokeStyle = st.bandana || '#6b5344';
-      c.lineWidth = 1.2;
-      c.strokeRect(hx - 18, hy - 2, 7, 10);
-    }
-    if (st.lightning && !motionReduced()) {
-      const pulse = Math.sin(this.animT * 14) * 0.5 + 0.5;
-      if (pulse > 0.35 || st.id === 'cyber') {
-        c.save();
-        c.strokeStyle = st.id === 'cyber' ? '#7cf5ff' : '#6fd7ff';
-        c.shadowColor = st.id === 'cyber' ? '#4ecf6a' : '#7cf5ff';
-        c.shadowBlur = st.id === 'cyber' ? 10 : 6;
-        c.lineWidth = st.id === 'cyber' ? 2 : 1.4;
-        c.globalAlpha = 0.55 + pulse * 0.35;
-        const lx = hx + (st.id === 'cyber' ? 14 : -12);
-        const ly = hy - 8;
-        c.beginPath();
-        c.moveTo(hx, hy - 10);
-        c.lineTo(hx + 4, hy - 4);
-        c.lineTo(hx - 2, hy + 2);
-        c.lineTo(lx, ly);
-        c.stroke();
-        if (st.id === 'cyber' && pulse > 0.6) {
-          c.beginPath();
-          c.moveTo(hx - 6, hy - 14);
-          c.lineTo(hx + 8, hy - 18);
-          c.lineTo(hx + 2, hy - 6);
-          c.stroke();
-        }
-        c.restore();
-      }
-    }
+    if (typeof drawEquipLooks !== 'function' || typeof resolveFighterLooks !== 'function') return;
+    try {
+      const bones = {
+        head: { x: hx, y: hy },
+        shoulder: { x: shX, y: shY },
+        hip: { x: hipX, y: hipY },
+        hand: null,
+        animT: this.animT,
+      };
+      drawEquipLooks(c, resolveFighterLooks(this), bones, this);
+    } catch (_) {}
   }
 
   drawRobotHead(c, hx, hy) {

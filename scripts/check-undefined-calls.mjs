@@ -22,6 +22,7 @@ const REGRESSION_MUST_DEFINE = [
   'padDigitalMove', 'joyMoveAxis', 'applyFighterMove', 'clampFighterX',
   'fighterMoveXBounds', 'refreshA11yUi', 'motionReduced',
   'combatEntryFor', 'applySignatureToSpec', 'trackVsRosterUse', 'vsRosterName', 'weaponLightFx', 'spawnWeaponLightHit',
+  'resolveFighterLooks', 'drawEquipLayer', 'safeDrawEquipLayer',
   'speciesBlurb', 'speciesBiomeId', 'dexBiomeDiscovered',
   'listGearSlots', 'equipGear', 'unequipGear', 'getEquippedGear',
   'gearEquipItem', 'gearTooltipModel', 'gearRenderDescriptor',

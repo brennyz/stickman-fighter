@@ -755,6 +755,13 @@
       "text": "LOCKED gear contract v1: slots head/chest/hands/legs/back; weapon aside; save.equipment + ownedGear; cosmetics may have stats; lock copy Lv/train/dex/date/not found; hub tile equippedCount/5; draw-order back→legs→chest→head→hands→weapon→pet. Wire IDs even if systems PR unmerged.",
       "status": "done-in-code",
       "updated": "2026-09-14"
+    },
+    {
+      "id": "w-20260914T165900",
+      "from": "user",
+      "text": "Gear contract v1 draw order back→front: back, legs, chest, head, hands, weapon-hold, pet. Item.draw.layer + offsets; one item per slot. Align fine-tune to slotIds head/chest/hands/legs/back.",
+      "status": "done-in-code",
+      "updated": "2026-09-14"
     }
   ],
   "agentRules": [

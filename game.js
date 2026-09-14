@@ -8140,6 +8140,495 @@ function gearOwnedCount(s) {
 function gearCatalogCount() {
   return GEAR_ITEMS.length;
 }
+/* --- src/data/equip-look.js --- */
+/* ============================ EQUIP LOOK =============================== */
+/**
+ * Look-only. Gear contract v1 (no economy):
+ *   slotIds: head · chest · hands · legs · back   (one item per slot)
+ *   draw order back→front: back, legs, chest, head, hands, weapon-hold, pet
+ *   Item.draw.layer + Item.draw offsets (ox/oy/scale).
+ * weapon-hold + pet are pipeline stages (existing weapon / pet draw).
+ */
+const EQUIP_LOOK_SLOTS = ['head', 'chest', 'hands', 'legs', 'back'];
+const EQUIP_LOOK_LAYERS = ['back', 'legs', 'chest', 'head', 'hands', 'weapon-hold', 'pet'];
+const EQUIP_LOOK_PAINT = ['back', 'legs', 'chest', 'head', 'hands'];
+const EQUIP_LOOK_MAX = 5;
+const EQUIP_LOOK_OX_MAX = 48;
+const EQUIP_LOOK_SCALE_MIN = 0.35;
+const EQUIP_LOOK_SCALE_MAX = 1.75;
+
+const EQUIP_LAYER_ALIAS = {
+  under: 'back', behind: 'back', underbody: 'back', cape: 'back', cloak: 'back',
+  torso: 'chest', body: 'chest', bodyover: 'chest', vest: 'chest',
+  shin: 'legs', boots: 'legs',
+  over: 'head', headover: 'head', overlay: 'head', aura: 'head',
+  front: 'hands', fg: 'hands', foreground: 'hands', gloves: 'hands',
+  weapon: 'weapon-hold', hold: 'weapon-hold',
+  companion: 'pet',
+};
+
+const EQUIP_SLOT_ALIAS = {
+  helmet: 'head', hat: 'head', bandana: 'head', visor: 'head',
+  armor: 'chest', coat: 'chest', chestplate: 'chest', vest: 'chest',
+  boots: 'legs', greaves: 'legs', shin: 'legs',
+  cape: 'back', cloak: 'back', tome: 'back',
+  gloves: 'hands', bracers: 'hands', wrists: 'hands',
+  /* #280: charm / accessory / aura migrate → back. trinket / ring stay hands. */
+  accessory: 'back', aura: 'back', charm: 'back',
+  trinket: 'hands', ring: 'hands',
+};
+
+const EQUIP_LOOK_DEFAULTS = {
+  bandana: { slot: 'head', layer: 'head', ox: 0, oy: -1, scale: 1 },
+  visor: { slot: 'head', layer: 'head', ox: 0, oy: 1, scale: 1 },
+  fox: { slot: 'head', layer: 'head', ox: 0, oy: -1, scale: 1 },
+  duck: { slot: 'head', layer: 'head', ox: 1, oy: 1, scale: 1 },
+  topknot: { slot: 'head', layer: 'head', ox: 0, oy: -1, scale: 1 },
+  helmet: { slot: 'head', layer: 'head', ox: 0, oy: -1, scale: 1 },
+  glow: { slot: 'head', layer: 'head', ox: 0, oy: 0, scale: 1 },
+  lightning: { slot: 'head', layer: 'head', ox: 0, oy: 0, scale: 1 },
+  charm: { slot: 'head', layer: 'head', ox: 0, oy: 2, scale: 1 },
+  coat: { slot: 'back', layer: 'back', ox: 0, oy: 1, scale: 1 },
+  cape: { slot: 'back', layer: 'back', ox: 0, oy: 2, scale: 1 },
+  tome: { slot: 'back', layer: 'back', ox: -1, oy: 2, scale: 1 },
+  vest: { slot: 'chest', layer: 'chest', ox: 0, oy: 0, scale: 1 },
+  chestplate: { slot: 'chest', layer: 'chest', ox: 0, oy: 0, scale: 1 },
+  crystal: { slot: 'chest', layer: 'chest', ox: 1, oy: 0, scale: 1 },
+  wrap: { slot: 'legs', layer: 'legs', ox: 0, oy: 0, scale: 1 },
+  greaves: { slot: 'legs', layer: 'legs', ox: 0, oy: 1, scale: 1 },
+  gloves: { slot: 'hands', layer: 'hands', ox: 0, oy: 0, scale: 1 },
+  horns: { slot: 'head', layer: 'head', ox: 0, oy: -2, scale: 1 },
+  halo: { slot: 'head', layer: 'head', ox: 0, oy: -4, scale: 1 },
+  wings: { slot: 'back', layer: 'back', ox: 0, oy: 0, scale: 1 },
+  tail: { slot: 'back', layer: 'back', ox: 2, oy: 4, scale: 1 },
+};
+
+/** #280 catalog suffixes → draw kind (131 ids). More specific first. */
+const GEAR_ID_KIND_RULES = [
+  [/bandana|wrap_cloth|head_wrap/, 'bandana'],
+  [/visor/, 'visor'],
+  [/mask_fox/, 'fox'],
+  [/tail_/, 'tail'],
+  [/horns/, 'horns'],
+  [/halo|circlet/, 'halo'],
+  [/aura_glow|hood_void/, 'glow'],
+  [/mask_/, 'visor'],
+  [/helm|beanie|hat_|crown|hood|pumpkin/, 'helmet'],
+  [/gaunt|bracer|mittens|cuffs|fists|claws|gloves|hands_wrap|wraps_monk|wraps_gold|wraps_dream/, 'gloves'],
+  [/rings_/, 'charm'],
+  [/greaves|boots_|sneakers/, 'greaves'],
+  [/legs_wrap|socks|shorts|pants|tabi|bells/, 'wrap'],
+  [/wings_|wing_/, 'wings'],
+  [/cape|scarf|banner|kite|capelet/, 'cape'],
+  [/backpack|pack_|shell|plate_back|banner_iron/, 'tome'],
+  [/crystal_shard|void_spine/, 'crystal'],
+  [/pin_|balloon|back_leaf\b|back_void\b/, 'charm'],
+  [/plate_|mail_|cuirass/, 'chestplate'],
+  [/vest_|shirt_|hoodie|gi_|tunic|sash|jacket|robe|coat_|poncho/, 'vest'],
+];
+
+function lookKindFromGearId(itemId, slot) {
+  const id = typeof itemId === 'string' ? itemId.toLowerCase() : '';
+  for (let i = 0; i < GEAR_ID_KIND_RULES.length; i++) {
+    if (GEAR_ID_KIND_RULES[i][0].test(id)) return GEAR_ID_KIND_RULES[i][1];
+  }
+  if (slot === 'head') return /wrap/.test(id) ? 'bandana' : 'helmet';
+  if (slot === 'chest') return 'vest';
+  if (slot === 'hands') return 'gloves';
+  if (slot === 'legs') return /wrap|sock/.test(id) ? 'wrap' : 'greaves';
+  if (slot === 'back') return 'cape';
+  return 'vest';
+}
+
+/** Optional registry: item id → look. Gear systems can add rows without touching draw code. */
+const EQUIP_LOOK = Object.create(null);
+
+/**
+ * Per-style pieces with tuned offsets. Colors fall back to the style’s
+ * bandana / accent / plate when omitted.
+ */
+const EQUIP_LOOK_BY_STYLE = {
+  classic: [],
+  leaf_band: [
+    { kind: 'bandana', ox: 0, oy: -1, scale: 1.04 },
+  ],
+  energy_glow: [
+    { kind: 'glow', scale: 1.05 },
+    { kind: 'bandana', oy: -0.5, scale: 0.96 },
+  ],
+  crimson_pact: [
+    { kind: 'coat', oy: 1, scale: 1.06, fill: 'rgba(224,79,79,.46)' },
+    { kind: 'bandana', oy: -1, scale: 1.02 },
+  ],
+  shadow: [
+    { kind: 'cape', oy: 2, scale: 1.02, fill: 'rgba(42,24,64,.42)' },
+    { kind: 'bandana', oy: -1, scale: 1.0 },
+  ],
+  guvve: [
+    { kind: 'bandana', oy: -1, scale: 1.02 },
+    { kind: 'duck', ox: 1, oy: 1.5, scale: 1.08 },
+  ],
+  gold: [
+    { kind: 'glow', scale: 1.12 },
+    { kind: 'bandana', oy: -1, scale: 1.04 },
+  ],
+  sand: [
+    { kind: 'vest', fill: 'rgba(201,122,32,.34)', oy: 0, scale: 1.02 },
+    { kind: 'wrap', fill: 'rgba(138,96,48,.55)', scale: 1.0 },
+    { kind: 'bandana', oy: -0.5, scale: 1.0 },
+  ],
+  samurai: [
+    { kind: 'topknot', oy: -1.5, scale: 1.06 },
+    { kind: 'bandana', oy: 0, scale: 0.94 },
+  ],
+  cyber: [
+    { kind: 'visor', oy: 1.5, scale: 1.04 },
+    { kind: 'bandana', oy: -2, scale: 0.92 },
+    { kind: 'lightning', ox: 1, oy: -1 },
+  ],
+  fox: [
+    { kind: 'fox', oy: -1.5, scale: 1.08 },
+    { kind: 'bandana', oy: 0.5, scale: 0.94 },
+  ],
+  storm: [
+    { kind: 'glow', scale: 1.08 },
+    { kind: 'bandana', oy: -1, scale: 1.0 },
+    { kind: 'lightning', ox: -1, oy: -1 },
+  ],
+  void: [
+    { kind: 'coat', oy: 1, scale: 1.08, fill: 'rgba(90,16,64,.50)' },
+    { kind: 'bandana', oy: -1, scale: 1.02 },
+  ],
+  hunter: [
+    { kind: 'vest', fill: 'rgba(61,92,50,.58)', oy: 0, scale: 1.04 },
+    { kind: 'bandana', oy: -1, scale: 1.0 },
+    { kind: 'charm', ox: -12, oy: -6, scale: 1.0 },
+  ],
+  crystal: [
+    { kind: 'glow', scale: 1.04 },
+    { kind: 'bandana', oy: -1, scale: 1.0 },
+    { kind: 'crystal', anchor: 'shoulder', ox: 12, oy: -2, scale: 1.08 },
+  ],
+  tome: [
+    { kind: 'tome', ox: -2, oy: 3, scale: 1.1 },
+    { kind: 'bandana', oy: -0.5, scale: 0.98 },
+  ],
+};
+
+function canonEquipSlot(slot) {
+  if (!slot) return null;
+  const key = String(slot).toLowerCase();
+  if (EQUIP_LOOK_SLOTS.includes(key)) return key;
+  const aliased = EQUIP_SLOT_ALIAS[key];
+  return aliased || null;
+}
+
+function canonEquipLayer(layer, fallback) {
+  const map = (v) => {
+    if (!v) return null;
+    const key = String(v).toLowerCase();
+    if (EQUIP_LOOK_LAYERS.includes(key)) return key;
+    return EQUIP_LAYER_ALIAS[key] || null;
+  };
+  return map(layer) || map(fallback) || 'chest';
+}
+
+function lookSnap(v) {
+  const n = Number(v);
+  if (!Number.isFinite(n)) return 0;
+  return Math.round(n);
+}
+
+function lookNum(v, fallback, min, max) {
+  const n = Number(v);
+  if (!Number.isFinite(n)) return fallback;
+  if (min != null && n < min) return min;
+  if (max != null && n > max) return max;
+  return n;
+}
+
+function lookColor(v, fallback) {
+  if (typeof v !== 'string') return fallback;
+  const s = v.trim();
+  if (!s || s.length > 48 || /[\n\r<>]/.test(s)) return fallback;
+  return s;
+}
+
+function isPlainGear(gear) {
+  return !!gear && typeof gear === 'object' && !Array.isArray(gear);
+}
+
+function mergeItemDraw(base, draw) {
+  if (!draw || typeof draw !== 'object' || Array.isArray(draw)) return base;
+  const out = Object.assign({}, base);
+  if (draw.kind) out.kind = draw.kind;
+  if (draw.slot) out.slot = draw.slot;
+  if (draw.layer) out.layer = draw.layer;
+  if (draw.anchor) out.anchor = draw.anchor;
+  ['ox', 'oy', 'scale', 'rot', 'color', 'accent', 'plate', 'fill'].forEach((k) => {
+    if (draw[k] != null) out[k] = draw[k];
+  });
+  return out;
+}
+
+function hydrateEquipLook(piece, style) {
+  if (!piece || typeof piece !== 'object') return null;
+  piece = mergeItemDraw(piece, piece.draw);
+  if (typeof piece.kind !== 'string' || !piece.kind) return null;
+  if (piece.kind === '__proto__' || piece.kind === 'constructor' || piece.kind === 'prototype') return null;
+  const defaults = EQUIP_LOOK_DEFAULTS[piece.kind] || { slot: 'chest', layer: 'chest', ox: 0, oy: 0, scale: 1 };
+  const st = style && typeof style === 'object' ? style : {};
+  const slot = canonEquipSlot(piece.slot || defaults.slot) || canonEquipSlot(defaults.slot) || 'chest';
+  const layerHint = piece.layer || defaults.layer || slot;
+  return {
+    id: typeof piece.id === 'string' ? piece.id : (st.id ? st.id + ':' + piece.kind : piece.kind),
+    kind: piece.kind,
+    slot: EQUIP_LOOK_SLOTS.includes(slot) ? slot : 'chest',
+    layer: canonEquipLayer(layerHint, slot),
+    anchor: typeof piece.anchor === 'string' ? piece.anchor : (defaults.anchor || null),
+    ox: lookNum(piece.ox != null ? piece.ox : defaults.ox, 0, -EQUIP_LOOK_OX_MAX, EQUIP_LOOK_OX_MAX),
+    oy: lookNum(piece.oy != null ? piece.oy : defaults.oy, 0, -EQUIP_LOOK_OX_MAX, EQUIP_LOOK_OX_MAX),
+    scale: lookNum(piece.scale != null ? piece.scale : defaults.scale, 1, EQUIP_LOOK_SCALE_MIN, EQUIP_LOOK_SCALE_MAX),
+    rot: lookNum(piece.rot, 0, -3, 3),
+    color: lookColor(piece.color, lookColor(st.bandana, lookColor(st.accent, '#8fa3d9'))),
+    accent: lookColor(piece.accent, lookColor(st.accent, '#7cf5ff')),
+    plate: lookColor(piece.plate, lookColor(st.plate, null)),
+    fill: lookColor(piece.fill, null),
+    styleId: st.id || piece.styleId || null,
+  };
+}
+
+function looksForStyle(st) {
+  if (!st) return [];
+  if (typeof st === 'string') {
+    st = typeof styleById === 'function' ? styleById(st) : { id: st };
+  }
+  if (!st || typeof st !== 'object') return [];
+  const rows = EQUIP_LOOK_BY_STYLE[st.id];
+  if (Array.isArray(rows)) return rows.map((p) => hydrateEquipLook(p, st)).filter(Boolean);
+  return looksFromStyleFlags(st);
+}
+
+function looksFromStyleFlags(st) {
+  if (!st) return [];
+  const out = [];
+  if (st.glow) out.push(hydrateEquipLook({ kind: 'glow' }, st));
+  if (st.coat) out.push(hydrateEquipLook({ kind: 'coat' }, st));
+  if (st.hunter) out.push(hydrateEquipLook({ kind: 'vest' }, st));
+  if (st.bandana) out.push(hydrateEquipLook({ kind: 'bandana' }, st));
+  if (st.visor) out.push(hydrateEquipLook({ kind: 'visor' }, st));
+  if (st.fox) out.push(hydrateEquipLook({ kind: 'fox' }, st));
+  if (st.duck) out.push(hydrateEquipLook({ kind: 'duck' }, st));
+  if (st.topknot) out.push(hydrateEquipLook({ kind: 'topknot' }, st));
+  if (st.crystal) out.push(hydrateEquipLook({ kind: 'crystal' }, st));
+  if (st.tome) out.push(hydrateEquipLook({ kind: 'tome' }, st));
+  if (st.lightning) out.push(hydrateEquipLook({ kind: 'lightning' }, st));
+  return out.filter(Boolean);
+}
+
+function registerEquipLook(id, def) {
+  if (typeof id !== 'string' || !id || !def || typeof def !== 'object') return;
+  if (id === '__proto__' || id === 'constructor' || id === 'prototype') return;
+  EQUIP_LOOK[id] = def;
+}
+
+function lookForItemId(id, slot, src) {
+  if (!id) return [];
+  const registered = EQUIP_LOOK[id];
+  if (registered) {
+    const piece = mergeItemDraw(Object.assign({}, registered, { id, slot: slot || registered.slot }), registered.draw);
+    const one = hydrateEquipLook(piece, src || registered);
+    return one ? [one] : [];
+  }
+  if (typeof styleById === 'function') {
+    const st = styleById(id);
+    if (st && st.id === id) {
+      const all = looksForStyle(st);
+      const want = canonEquipSlot(slot);
+      return want ? all.filter((l) => l.slot === want) : all;
+    }
+  }
+  return [];
+}
+
+function looksForGear(gear) {
+  if (!isPlainGear(gear)) return [];
+  const out = [];
+  const seen = new Set();
+  const visit = (slotKey, val) => {
+    if (val == null || val === false || out.length >= EQUIP_LOOK_MAX) return;
+    const slot = canonEquipSlot(slotKey);
+    if (!slot || !EQUIP_LOOK_SLOTS.includes(slot)) return;
+    if (typeof val === 'string') {
+      const found = lookForItemId(val, slot);
+      const one = found.find((l) => l.slot === slot) || found[0];
+      if (one) out.push(one);
+      return;
+    }
+    if (typeof val !== 'object' || Array.isArray(val)) return;
+    const fromDraw = isPlainGear(val.draw) || isPlainGear(val.look);
+    if (fromDraw || val.kind) {
+      const merged = mergeItemDraw(Object.assign({ id: val.id, kind: val.kind, slot: val.slot || slot }, val.look || {}), val.draw);
+      if (!merged.kind && val.id) {
+        const found = lookForItemId(val.id, slot, val);
+        const one = found[0];
+        if (one) {
+          const over = hydrateEquipLook(mergeItemDraw(Object.assign({}, one, { slot }), val.draw), val);
+          out.push(over || one);
+        }
+        return;
+      }
+      const piece = hydrateEquipLook(Object.assign({ slot }, merged), val);
+      if (piece) out.push(piece);
+      return;
+    }
+    if (val.id) {
+      const found = lookForItemId(val.id, slot, val);
+      const one = found.find((l) => l.slot === slot) || found[0];
+      if (one) out.push(one);
+    }
+  };
+  const keys = EQUIP_LOOK_SLOTS.concat(Object.keys(EQUIP_SLOT_ALIAS));
+  for (const key of keys) {
+    if (!Object.prototype.hasOwnProperty.call(gear, key)) continue;
+    const slot = canonEquipSlot(key);
+    if (!slot || seen.has(slot)) continue;
+    seen.add(slot);
+    visit(slot, gear[key]);
+    if (out.length >= EQUIP_LOOK_MAX) break;
+  }
+  return out.filter(Boolean);
+}
+
+/** #280 `_gearLook` defaulted layer to `body` — never relocate a slotted item. */
+const EQUIP_GENERIC_LAYERS = ['body', 'torso', 'under', 'over', 'front', 'fg', 'overlay'];
+
+function lookPieceFromDescriptorRow(row) {
+  if (!row || !row.itemId) return null;
+  const slot = canonEquipSlot(row.slot) || canonEquipSlot(row.layer);
+  if (!slot) return null;
+  const rawLayer = row.layer != null ? String(row.layer).toLowerCase() : '';
+  const layer = (rawLayer && EQUIP_GENERIC_LAYERS.includes(rawLayer)) ? slot : (row.layer || slot);
+  const kind = lookKindFromGearId(row.itemId, slot);
+  return hydrateEquipLook({
+    id: row.itemId,
+    kind,
+    slot,
+    layer,
+    color: row.tint,
+    accent: row.accent,
+  });
+}
+
+function looksFromGearDescriptor(desc) {
+  if (!desc || !Array.isArray(desc.slots)) return [];
+  const bySlot = Object.create(null);
+  for (let i = 0; i < desc.slots.length; i++) {
+    const piece = lookPieceFromDescriptorRow(desc.slots[i]);
+    if (!piece) continue;
+    bySlot[piece.slot] = piece;
+  }
+  const out = [];
+  for (let i = 0; i < EQUIP_LOOK_SLOTS.length; i++) {
+    const piece = bySlot[EQUIP_LOOK_SLOTS[i]];
+    if (piece) out.push(piece);
+  }
+  return out;
+}
+
+function looksFromEquippedIds(equipped) {
+  if (!isPlainGear(equipped)) return [];
+  const slots = [];
+  for (let i = 0; i < EQUIP_LOOK_SLOTS.length; i++) {
+    const slot = EQUIP_LOOK_SLOTS[i];
+    const raw = equipped[slot];
+    const itemId = typeof raw === 'string' ? raw : (raw && raw.id);
+    if (!itemId) continue;
+    let tint = null, accent = null, layer = slot;
+    if (typeof gearItemById === 'function') {
+      try {
+        const item = gearItemById(itemId);
+        if (item && item.look) {
+          tint = item.look.tint;
+          accent = item.look.accent;
+          layer = item.look.layer || slot;
+        }
+      } catch (_) {}
+    }
+    slots.push({ slot, itemId, tint, accent, layer });
+  }
+  return looksFromGearDescriptor({ slots });
+}
+
+function resolveGearLooks(fighter) {
+  if (fighter && fighter.gearDescriptor) {
+    const fromDesc = looksFromGearDescriptor(fighter.gearDescriptor);
+    if (fromDesc.length) return fromDesc;
+  }
+  /* Style / upgrade cards are ephemeral previews — do not steal the live loadout. */
+  const preview = !!(fighter && fighter._preview);
+  const store = (fighter && fighter.save)
+    || (!preview && fighter && fighter.isPlayer && typeof save !== 'undefined' ? save : null);
+  if (typeof gearRenderDescriptor === 'function' && store) {
+    try {
+      const fromApi = looksFromGearDescriptor(gearRenderDescriptor(store));
+      if (fromApi.length) return fromApi;
+    } catch (_) {}
+  }
+  if (store && isPlainGear(store.gear) && isPlainGear(store.gear.equipped)) {
+    const fromEq = looksFromEquippedIds(store.gear.equipped);
+    if (fromEq.length) return fromEq;
+  }
+  let gear = fighter && fighter.gear;
+  if (!isPlainGear(gear) && fighter && fighter.isPlayer && store && isPlainGear(store.gear) && !store.gear.equipped) {
+    gear = store.gear;
+  }
+  return looksForGear(gear);
+}
+
+function resolveFighterLooks(fighter) {
+  if (!fighter) return [];
+  let styleLooks = [];
+  try { styleLooks = looksForStyle(fighter.style) || []; } catch (_) { styleLooks = []; }
+  let gearLooks = [];
+  try { gearLooks = resolveGearLooks(fighter) || []; } catch (_) { gearLooks = []; }
+  if (!gearLooks.length) return styleLooks.slice(0, 12);
+  const blocked = new Set(gearLooks.map((l) => l.slot).filter(Boolean));
+  return styleLooks.filter((l) => !blocked.has(l.slot)).concat(gearLooks).slice(0, 12);
+}
+
+function looksOnLayer(looks, layer) {
+  if (!looks || !looks.length) return [];
+  return looks.filter((l) => l.layer === layer);
+}
+
+/** Menu-card camera: leave crown room so bandana / ears / topknot do not clip. */
+function applyEquipLookPreview(cc, w, h) {
+  if (!cc || typeof cc.translate !== 'function') return;
+  const width = Number.isFinite(w) && w > 0 ? w : 80;
+  const height = Number.isFinite(h) && h > 0 ? h : 86;
+  cc.translate(width * 0.5, height * 0.87);
+  cc.scale(0.78, 0.78);
+}
+
+const EquipLookApi = {
+  slots: EQUIP_LOOK_SLOTS,
+  layers: EQUIP_LOOK_LAYERS,
+  paint: EQUIP_LOOK_PAINT,
+  resolve: resolveFighterLooks,
+  forStyle: looksForStyle,
+  forGear: looksForGear,
+  fromDescriptor: looksFromGearDescriptor,
+  kindFromId: lookKindFromGearId,
+  register: registerEquipLook,
+  snap: lookSnap,
+  preview: applyEquipLookPreview,
+  canonSlot: canonEquipSlot,
+  canonLayer: canonEquipLayer,
+  max: EQUIP_LOOK_MAX,
+};
+
+if (typeof globalThis !== 'undefined') globalThis.EquipLookApi = EquipLookApi;
 /* --- src/data/upgrades.js --- */
 /* ========================== ITEM UPGRADE ENGINE ========================= */
 /** Shared upgrade tracks: weapons, pets, styles (skills stay in skills.js).
@@ -24768,6 +25257,519 @@ function drawPixelJoyKnob(c, cx, cy, r, color, alpha) {
   c.imageSmoothingEnabled = prev;
 }
 
+/* --- src/render/equip-look.js --- */
+/* ======================== EQUIP LOOK DRAW ============================== */
+function lookPx(v) {
+  return typeof lookSnap === 'function' ? lookSnap(v) : (Number.isFinite(v) ? Math.round(v) : 0);
+}
+
+function lookBoneOk(p) {
+  return !!(p && Number.isFinite(p.x) && Number.isFinite(p.y));
+}
+
+function lookUseShadow() {
+  if (typeof motionReduced === 'function' && motionReduced()) return false;
+  if (typeof fxLite === 'function' && fxLite()) return false;
+  return true;
+}
+
+function lookShadow(c, color, blur) {
+  if (!c || !lookUseShadow()) return;
+  const cap = (typeof IS_TOUCH !== 'undefined' && IS_TOUCH) ? 5 : 12;
+  c.shadowColor = color;
+  c.shadowBlur = Math.min(Math.max(0, blur || 0), cap);
+}
+
+function lookAnchor(bones, slot, look) {
+  if (!bones) return { x: 0, y: 0 };
+  const key = (look && look.anchor) || slot;
+  let p = null;
+  if (key === 'head') p = bones.head;
+  else if (key === 'hand' || key === 'hands' || key === 'weapon-hold') p = bones.hand || bones.shoulder;
+  else if (key === 'shoulder' || key === 'chest' || key === 'back') p = bones.shoulder;
+  else if (key === 'hip' || key === 'legs') p = bones.hip;
+  else if (key === 'pet') p = bones.hip || bones.shoulder;
+  else p = bones.head;
+  return lookBoneOk(p) ? p : (lookBoneOk(bones.head) ? bones.head : { x: 0, y: 0 });
+}
+
+function drawEquipLayer(c, looks, layer, bones, fighter) {
+  if (!c || !looks || !looks.length) return;
+  const want = typeof canonEquipLayer === 'function' ? canonEquipLayer(layer, layer) : layer;
+  const rows = typeof looksOnLayer === 'function' ? looksOnLayer(looks, want) : looks.filter((l) => l.layer === want);
+  for (const look of rows) {
+    try { drawEquipPiece(c, look, bones, fighter); } catch (_) { /* one piece must not stall combat */ }
+  }
+}
+
+function safeDrawEquipLayer(c, looks, layer, bones, fighter) {
+  if (!c || !looks || !looks.length) return;
+  try { drawEquipLayer(c, looks, layer, bones, fighter); } catch (_) {}
+}
+
+function drawEquipLooks(c, looks, bones, fighter, opts) {
+  const layers = (opts && opts.layers) || EQUIP_LOOK_LAYERS;
+  for (const layer of layers) safeDrawEquipLayer(c, looks, layer, bones, fighter);
+}
+
+function drawEquipPiece(c, look, bones, fighter) {
+  if (!c || !look || typeof look.kind !== 'string') return;
+  const fn = Object.prototype.hasOwnProperty.call(EQUIP_LOOK_DRAW, look.kind) ? EQUIP_LOOK_DRAW[look.kind] : null;
+  if (typeof fn !== 'function') return;
+  const anchor = lookAnchor(bones, look.slot, look);
+  if (!lookBoneOk(anchor)) return;
+  const x = lookPx(anchor.x + (look.ox || 0));
+  const y = lookPx(anchor.y + (look.oy || 0));
+  const sc = Number.isFinite(look.scale) && look.scale > 0 ? look.scale : 1;
+  c.save();
+  try {
+    if (look.rot) {
+      c.translate(x, y);
+      c.rotate(look.rot);
+      c.translate(-x, -y);
+    }
+    fn(c, look, x, y, sc, bones, fighter);
+  } catch (_) {
+    /* isolate bad piece / Android canvas quirk */
+  } finally {
+    c.restore();
+  }
+}
+
+function drawLookBandana(c, look, x, y, sc) {
+  const r = 10.5 * sc;
+  const y0 = y - r * 0.28;
+  const h = 5.6 * sc;
+  c.fillStyle = look.color;
+  c.beginPath();
+  c.moveTo(x - r * 0.98, y0);
+  c.quadraticCurveTo(x - r * 1.08, y - r * 0.82, x - r * 0.52, y - r * 0.96);
+  c.quadraticCurveTo(x, y - r * 1.06, x + r * 0.52, y - r * 0.96);
+  c.quadraticCurveTo(x + r * 1.08, y - r * 0.82, x + r * 0.98, y0);
+  c.lineTo(x + r * 0.9, y0 + h);
+  c.quadraticCurveTo(x, y0 + h + 1.2 * sc, x - r * 0.9, y0 + h);
+  c.closePath();
+  c.fill();
+  c.strokeStyle = 'rgba(0,0,0,.28)';
+  c.lineWidth = 1;
+  c.stroke();
+  if (look.plate) {
+    c.fillStyle = look.plate;
+    const pw = 9.2 * sc, ph = 4.4 * sc;
+    c.beginPath();
+    c.rect(x - pw / 2, y0 + 0.4, pw, ph);
+    c.fill();
+    c.strokeStyle = 'rgba(0,0,0,.22)';
+    c.lineWidth = 0.8;
+    c.stroke();
+  }
+  // Tails stream behind the head (−x) so they do not sit on the face.
+  c.strokeStyle = look.color;
+  c.lineCap = 'round';
+  c.lineWidth = 2.5 * sc;
+  c.beginPath();
+  c.moveTo(x - r * 0.86, y0 + 1.6);
+  c.quadraticCurveTo(x - r * 1.45, y0 + 5, x - r * 1.62, y0 + 13 * sc);
+  c.stroke();
+  c.lineWidth = 1.8 * sc;
+  c.beginPath();
+  c.moveTo(x - r * 0.8, y0 + 2.4);
+  c.quadraticCurveTo(x - r * 1.28, y0 + 7, x - r * 1.38, y0 + 15 * sc);
+  c.stroke();
+}
+
+function drawLookVisor(c, look, x, y, sc) {
+  const w = 18.5 * sc, h = 5.6 * sc;
+  c.fillStyle = look.color || look.accent || '#7cf5ff';
+  c.globalAlpha = 0.9;
+  c.beginPath();
+  c.moveTo(x - w / 2, y);
+  c.quadraticCurveTo(x, y + 2.2 * sc, x + w / 2, y);
+  c.lineTo(x + w / 2 - 0.8, y + h);
+  c.quadraticCurveTo(x, y + h + 1.4 * sc, x - w / 2 + 0.8, y + h);
+  c.closePath();
+  c.fill();
+  c.globalAlpha = 0.45;
+  c.fillStyle = '#e8ffff';
+  c.fillRect(x - w / 2 + 2, y + 1.1 * sc, w * 0.38, 1.6 * sc);
+  c.globalAlpha = 1;
+}
+
+function drawLookFox(c, look, x, y, sc) {
+  const col = look.accent || look.color;
+  c.fillStyle = col;
+  c.beginPath();
+  c.moveTo(x - 9 * sc, y - 15 * sc);
+  c.lineTo(x - 14 * sc, y - 27 * sc);
+  c.lineTo(x - 4.5 * sc, y - 17 * sc);
+  c.closePath();
+  c.fill();
+  c.beginPath();
+  c.moveTo(x + 9 * sc, y - 15 * sc);
+  c.lineTo(x + 14 * sc, y - 27 * sc);
+  c.lineTo(x + 4.5 * sc, y - 17 * sc);
+  c.closePath();
+  c.fill();
+  c.fillStyle = '#fff4d6';
+  c.beginPath();
+  c.moveTo(x - 8.2 * sc, y - 16.2 * sc);
+  c.lineTo(x - 12.2 * sc, y - 24.2 * sc);
+  c.lineTo(x - 6.2 * sc, y - 17.2 * sc);
+  c.closePath();
+  c.fill();
+  c.beginPath();
+  c.moveTo(x + 8.2 * sc, y - 16.2 * sc);
+  c.lineTo(x + 12.2 * sc, y - 24.2 * sc);
+  c.lineTo(x + 6.2 * sc, y - 17.2 * sc);
+  c.closePath();
+  c.fill();
+}
+
+function drawLookDuck(c, look, x, y, sc) {
+  c.fillStyle = look.accent || '#ffe259';
+  c.beginPath();
+  c.moveTo(x + 8 * sc, y + 1 * sc);
+  c.lineTo(x + 18 * sc, y + 4 * sc);
+  c.lineTo(x + 8 * sc, y + 7 * sc);
+  c.closePath();
+  c.fill();
+  c.fillStyle = '#c97a20';
+  c.fillRect(x + 10 * sc, y + 3.2 * sc, 6 * sc, 1.2 * sc);
+}
+
+function drawLookTopknot(c, look, x, y, sc) {
+  c.strokeStyle = look.accent || look.color;
+  c.lineCap = 'round';
+  c.lineWidth = 3.1 * sc;
+  c.beginPath();
+  c.moveTo(x, y - 17 * sc);
+  c.lineTo(x + 1 * sc, y - 29 * sc);
+  c.stroke();
+  c.fillStyle = look.accent || look.color;
+  c.beginPath();
+  c.arc(x + 1 * sc, y - 32 * sc, 4.6 * sc, 0, TAU);
+  c.fill();
+  c.fillStyle = 'rgba(255,255,255,.28)';
+  c.beginPath();
+  c.arc(x - 0.4 * sc, y - 33.2 * sc, 1.6 * sc, 0, TAU);
+  c.fill();
+}
+
+function drawLookHelmet(c, look, x, y, sc) {
+  const r = 11.2 * sc;
+  c.fillStyle = look.color;
+  c.beginPath();
+  c.arc(x, y - 1, r, Math.PI, 0);
+  c.lineTo(x + r, y + 1.5 * sc);
+  c.quadraticCurveTo(x, y + 3.2 * sc, x - r, y + 1.5 * sc);
+  c.closePath();
+  c.fill();
+  c.strokeStyle = look.accent || 'rgba(0,0,0,.3)';
+  c.lineWidth = 1.2;
+  c.stroke();
+}
+
+function drawLookCoat(c, look, x, y, sc, bones) {
+  const sh = lookBoneOk(bones && bones.shoulder) ? bones.shoulder : { x, y };
+  const hip = lookBoneOk(bones && bones.hip) ? bones.hip : { x, y: y + 32 };
+  const flare = 17 * sc;
+  c.fillStyle = look.fill || look.color;
+  c.beginPath();
+  c.moveTo(lookPx(hip.x - 5), lookPx(hip.y + 10 * sc));
+  c.quadraticCurveTo(hip.x - flare - 2, hip.y + 3, hip.x - flare, hip.y - 6);
+  c.lineTo(lookPx(sh.x - 16 * sc), lookPx(sh.y - 5));
+  c.quadraticCurveTo(sh.x, sh.y - 12 * sc, sh.x + 16 * sc, sh.y - 5);
+  c.lineTo(lookPx(hip.x + flare), lookPx(hip.y - 6));
+  c.quadraticCurveTo(hip.x + flare + 2, hip.y + 3, hip.x + 5, hip.y + 10 * sc);
+  c.quadraticCurveTo(hip.x, hip.y + 6 * sc, hip.x - 5, hip.y + 10 * sc);
+  c.closePath();
+  c.fill();
+  c.strokeStyle = look.accent;
+  c.lineWidth = 2;
+  c.beginPath();
+  c.moveTo(sh.x - 7 * sc, sh.y - 1);
+  c.lineTo(0, hip.y + 3);
+  c.lineTo(sh.x + 7 * sc, sh.y - 1);
+  c.stroke();
+}
+
+function drawLookCape(c, look, x, y, sc, bones) {
+  const sh = lookBoneOk(bones && bones.shoulder) ? bones.shoulder : { x, y };
+  const hip = lookBoneOk(bones && bones.hip) ? bones.hip : { x, y: y + 32 };
+  c.fillStyle = look.fill || look.color;
+  c.beginPath();
+  c.moveTo(sh.x - 12 * sc, sh.y - 4);
+  c.quadraticCurveTo(sh.x - 22 * sc, hip.y - 4, hip.x - 14 * sc, hip.y + 12 * sc);
+  c.quadraticCurveTo(hip.x, hip.y + 8 * sc, hip.x + 6 * sc, hip.y + 10 * sc);
+  c.lineTo(sh.x + 4 * sc, sh.y - 2);
+  c.quadraticCurveTo(sh.x, sh.y - 8 * sc, sh.x - 12 * sc, sh.y - 4);
+  c.closePath();
+  c.fill();
+}
+
+function drawLookVest(c, look, x, y, sc, bones) {
+  const sh = lookBoneOk(bones && bones.shoulder) ? bones.shoulder : { x, y };
+  const hip = lookBoneOk(bones && bones.hip) ? bones.hip : { x, y: y + 32 };
+  c.fillStyle = look.fill || look.color;
+  c.beginPath();
+  c.moveTo(lookPx(sh.x - 13 * sc), lookPx(sh.y - 3));
+  c.lineTo(lookPx(sh.x + 13 * sc), lookPx(sh.y - 3));
+  c.lineTo(lookPx(hip.x + 11 * sc), lookPx(hip.y - 4));
+  c.lineTo(lookPx(hip.x - 11 * sc), lookPx(hip.y - 4));
+  c.closePath();
+  c.fill();
+  c.strokeStyle = look.accent;
+  c.lineWidth = 1.6;
+  c.beginPath();
+  c.moveTo(sh.x - 3 * sc, sh.y);
+  c.lineTo(0, hip.y - 6);
+  c.lineTo(sh.x + 3 * sc, sh.y);
+  c.stroke();
+}
+
+function drawLookChestplate(c, look, x, y, sc, bones) {
+  drawLookVest(c, look, x, y, sc, bones);
+  const sh = lookBoneOk(bones && bones.shoulder) ? bones.shoulder : { x, y };
+  c.fillStyle = look.accent || '#dfe8ff';
+  c.globalAlpha = 0.45;
+  c.fillRect(lookPx(sh.x - 6 * sc), lookPx(sh.y + 2), 12 * sc, 4 * sc);
+  c.globalAlpha = 1;
+}
+
+function drawLookWrap(c, look, x, y, sc, bones) {
+  const hip = lookBoneOk(bones && bones.hip) ? bones.hip : { x, y };
+  c.fillStyle = look.fill || look.color;
+  c.globalAlpha = 0.8;
+  c.beginPath();
+  if (typeof c.ellipse === 'function') {
+    c.ellipse(hip.x, hip.y + 10 * sc, 15 * sc, 5.2 * sc, 0, 0, TAU);
+  } else {
+    c.save();
+    c.translate(hip.x, hip.y + 10 * sc);
+    c.scale(15 * sc, 5.2 * sc);
+    c.arc(0, 0, 1, 0, TAU);
+    c.restore();
+  }
+  c.fill();
+  c.globalAlpha = 1;
+}
+
+function drawLookGreaves(c, look, x, y, sc, bones) {
+  const hip = lookBoneOk(bones && bones.hip) ? bones.hip : { x, y };
+  c.fillStyle = look.color;
+  c.fillRect(lookPx(hip.x - 14 * sc), lookPx(hip.y + 14 * sc), 7 * sc, 11 * sc);
+  c.fillRect(lookPx(hip.x + 7 * sc), lookPx(hip.y + 14 * sc), 7 * sc, 11 * sc);
+  c.strokeStyle = look.accent || 'rgba(0,0,0,.25)';
+  c.lineWidth = 1;
+  c.strokeRect(lookPx(hip.x - 14 * sc), lookPx(hip.y + 14 * sc), 7 * sc, 11 * sc);
+  c.strokeRect(lookPx(hip.x + 7 * sc), lookPx(hip.y + 14 * sc), 7 * sc, 11 * sc);
+}
+
+function drawLookTome(c, look, x, y, sc) {
+  const bx = lookPx(x - 15 * sc);
+  const by = lookPx(y + 1 * sc);
+  const w = 8.5 * sc, h = 12 * sc;
+  c.fillStyle = look.accent || look.color;
+  c.fillRect(bx, by, w, h);
+  c.fillStyle = '#fff8e8';
+  c.fillRect(bx + 1.6 * sc, by + 2.2 * sc, w - 3.2 * sc, h - 4.4 * sc);
+  c.strokeStyle = look.color;
+  c.lineWidth = 1.2;
+  c.strokeRect(bx, by, w, h);
+  c.strokeStyle = 'rgba(107,83,68,.45)';
+  c.beginPath();
+  c.moveTo(bx + w / 2, by + 2.4 * sc);
+  c.lineTo(bx + w / 2, by + h - 2.4 * sc);
+  c.stroke();
+}
+
+function drawLookCrystal(c, look, x, y, sc) {
+  const cx = lookPx(x);
+  const cy = lookPx(y);
+  c.fillStyle = look.accent || look.color;
+  c.globalAlpha = 0.92;
+  c.beginPath();
+  c.moveTo(cx, cy - 7 * sc);
+  c.lineTo(cx + 6 * sc, cy);
+  c.lineTo(cx, cy + 6 * sc);
+  c.lineTo(cx - 6 * sc, cy);
+  c.closePath();
+  c.fill();
+  c.globalAlpha = 0.55;
+  c.fillStyle = '#e8ffff';
+  c.beginPath();
+  c.moveTo(cx - 1, cy - 4 * sc);
+  c.lineTo(cx + 2.4 * sc, cy - 1);
+  c.lineTo(cx - 1.6 * sc, cy + 1);
+  c.closePath();
+  c.fill();
+  c.globalAlpha = 1;
+}
+
+function drawLookGlow(c, look, x, y, sc, bones, fighter) {
+  const t = fighter && Number.isFinite(fighter.animT) ? fighter.animT : 0;
+  lookShadow(c, look.accent || look.color, 10 + Math.sin(t * 5) * 3);
+  c.strokeStyle = look.accent || look.color;
+  c.lineWidth = 2;
+  c.beginPath();
+  c.arc(x, y, 12.2 * sc, 0, TAU);
+  c.stroke();
+}
+
+function drawLookLightning(c, look, x, y, sc, bones, fighter) {
+  if (typeof motionReduced === 'function' && motionReduced()) return;
+  if (typeof fxLite === 'function' && fxLite()) return;
+  const t = fighter && Number.isFinite(fighter.animT) ? fighter.animT : 0;
+  const pulse = Math.sin(t * 14) * 0.5 + 0.5;
+  const cyber = look.styleId === 'cyber';
+  if (pulse <= 0.32 && !cyber) return;
+  c.strokeStyle = cyber ? '#7cf5ff' : (look.accent || '#6fd7ff');
+  lookShadow(c, cyber ? '#4ecf6a' : '#7cf5ff', cyber ? 10 : 6);
+  c.lineWidth = cyber ? 2 : 1.4;
+  c.globalAlpha = 0.55 + pulse * 0.35;
+  const lx = x + (cyber ? 14 : -12) * sc;
+  const ly = y - 8 * sc;
+  c.beginPath();
+  c.moveTo(x, y - 10 * sc);
+  c.lineTo(x + 4 * sc, y - 4 * sc);
+  c.lineTo(x - 2 * sc, y + 2 * sc);
+  c.lineTo(lx, ly);
+  c.stroke();
+  if (cyber && pulse > 0.6) {
+    c.beginPath();
+    c.moveTo(x - 6 * sc, y - 14 * sc);
+    c.lineTo(x + 8 * sc, y - 18 * sc);
+    c.lineTo(x + 2 * sc, y - 6 * sc);
+    c.stroke();
+  }
+}
+
+function drawLookHorns(c, look, x, y, sc) {
+  c.fillStyle = look.color || look.accent;
+  c.beginPath();
+  c.moveTo(x - 8 * sc, y - 14 * sc);
+  c.lineTo(x - 13 * sc, y - 28 * sc);
+  c.lineTo(x - 4 * sc, y - 16 * sc);
+  c.closePath();
+  c.fill();
+  c.beginPath();
+  c.moveTo(x + 8 * sc, y - 14 * sc);
+  c.lineTo(x + 13 * sc, y - 28 * sc);
+  c.lineTo(x + 4 * sc, y - 16 * sc);
+  c.closePath();
+  c.fill();
+}
+
+function drawLookHalo(c, look, x, y, sc) {
+  c.strokeStyle = look.accent || look.color || '#ffe259';
+  c.lineWidth = 2.2 * sc;
+  c.beginPath();
+  c.ellipse ? c.ellipse(x, y - 20 * sc, 9 * sc, 3.2 * sc, 0, 0, TAU)
+    : c.arc(x, y - 20 * sc, 8 * sc, 0, TAU);
+  c.stroke();
+}
+
+function drawLookTail(c, look, x, y, sc, bones) {
+  const hip = lookBoneOk(bones && bones.hip) ? bones.hip : { x, y };
+  c.strokeStyle = look.color || look.accent || '#c97a20';
+  c.lineCap = 'round';
+  c.lineWidth = 4.4 * sc;
+  c.beginPath();
+  c.moveTo(hip.x + 3 * sc, hip.y + 2 * sc);
+  c.quadraticCurveTo(hip.x + 16 * sc, hip.y + 6 * sc, hip.x + 14 * sc, hip.y + 18 * sc);
+  c.stroke();
+  c.fillStyle = look.accent || '#fff4d6';
+  c.beginPath();
+  c.arc(hip.x + 14 * sc, hip.y + 18 * sc, 3.2 * sc, 0, TAU);
+  c.fill();
+}
+
+function drawLookWings(c, look, x, y, sc, bones) {
+  const sh = lookBoneOk(bones && bones.shoulder) ? bones.shoulder : { x, y };
+  c.fillStyle = look.fill || look.color || 'rgba(200,208,220,.55)';
+  c.beginPath();
+  c.moveTo(sh.x - 6 * sc, sh.y);
+  c.quadraticCurveTo(sh.x - 28 * sc, sh.y - 18 * sc, sh.x - 22 * sc, sh.y + 16 * sc);
+  c.quadraticCurveTo(sh.x - 12 * sc, sh.y + 8 * sc, sh.x - 6 * sc, sh.y + 4 * sc);
+  c.closePath();
+  c.fill();
+  c.beginPath();
+  c.moveTo(sh.x + 4 * sc, sh.y);
+  c.quadraticCurveTo(sh.x + 26 * sc, sh.y - 16 * sc, sh.x + 20 * sc, sh.y + 16 * sc);
+  c.quadraticCurveTo(sh.x + 10 * sc, sh.y + 8 * sc, sh.x + 4 * sc, sh.y + 4 * sc);
+  c.closePath();
+  c.fill();
+}
+
+function drawLookGloves(c, look, x, y, sc, bones) {
+  const hand = lookBoneOk(bones && bones.hand) ? bones.hand : { x, y };
+  c.fillStyle = look.color || look.accent || '#8fa3d9';
+  c.beginPath();
+  c.arc(hand.x, hand.y, 4.8 * sc, 0, TAU);
+  c.fill();
+  c.strokeStyle = look.accent || 'rgba(0,0,0,.28)';
+  c.lineWidth = 1.2;
+  c.stroke();
+}
+
+function drawLookCharm(c, look, x, y, sc) {
+  c.fillStyle = look.accent || look.color;
+  c.beginPath();
+  c.arc(x, y, 3.1 * sc, 0, TAU);
+  c.fill();
+  c.fillStyle = 'rgba(255,255,255,.4)';
+  c.beginPath();
+  c.arc(x - 0.8 * sc, y - 0.8 * sc, 1.1 * sc, 0, TAU);
+  c.fill();
+}
+
+function drawEquipLookPreview(c, styleId, gear) {
+  if (!c) return null;
+  try {
+    const st = typeof styleById === 'function' ? styleById(styleId) : { id: 'classic', body: '#f2f5ff' };
+    const f = new Fighter({
+      isPlayer: true, x: 0, y: 0, color: st.body || '#f2f5ff', style: st, scale: 1,
+      gear: gear || null,
+      _preview: true,
+    });
+    f.animT = 0.4;
+    f.draw(c);
+    return f;
+  } catch (_) {
+    return null;
+  }
+}
+
+if (typeof EquipLookApi !== 'undefined') {
+  EquipLookApi.drawPreview = drawEquipLookPreview;
+  EquipLookApi.drawLayer = drawEquipLayer;
+  EquipLookApi.safeDrawLayer = safeDrawEquipLayer;
+}
+
+const EQUIP_LOOK_DRAW = {
+  bandana: drawLookBandana,
+  visor: drawLookVisor,
+  fox: drawLookFox,
+  duck: drawLookDuck,
+  topknot: drawLookTopknot,
+  helmet: drawLookHelmet,
+  coat: drawLookCoat,
+  cape: drawLookCape,
+  vest: drawLookVest,
+  chestplate: drawLookChestplate,
+  wrap: drawLookWrap,
+  greaves: drawLookGreaves,
+  tome: drawLookTome,
+  crystal: drawLookCrystal,
+  glow: drawLookGlow,
+  lightning: drawLookLightning,
+  charm: drawLookCharm,
+  gloves: drawLookGloves,
+  horns: drawLookHorns,
+  halo: drawLookHalo,
+  wings: drawLookWings,
+  tail: drawLookTail,
+};
 /* --- src/render/tide-art.js --- */
 /* ============================== TIDE BOSS ART ========================== */
 function tideArtOutline(c, lw) {
@@ -26285,6 +27287,27 @@ class Fighter {
       return [ex, ey];
     };
 
+    const bones = {
+      head: { x: headX, y: headY - 9 },
+      shoulder: { x: shX, y: shY },
+      hip: { x: hipX, y: hipY },
+      hand: null,
+      lean: P.lean,
+      animT: this.animT,
+    };
+    let looks = [];
+    if (this.isPlayer && typeof resolveFighterLooks === 'function') {
+      try { looks = resolveFighterLooks(this) || []; } catch (_) { looks = []; }
+    }
+    if (!Array.isArray(looks)) looks = [];
+    const paintLook = (layer) => {
+      if (!looks.length) return;
+      if (typeof safeDrawEquipLayer === 'function') safeDrawEquipLayer(c, looks, layer, bones, this);
+      else if (typeof drawEquipLayer === 'function') {
+        try { drawEquipLayer(c, looks, layer, bones, this); } catch (_) {}
+      }
+    };
+
     // achterste ledematen (donkerder)
     c.save();
     c.globalAlpha *= 0.75;
@@ -26292,10 +27315,14 @@ class Fighter {
     drawLimb(shX, shY, P.arms[0][0], P.arms[0][1], armL, armL);
     c.restore();
 
+    paintLook('back');
+
     // romp
     c.beginPath(); c.moveTo(hipX, hipY); c.lineTo(shX, shY); c.stroke();
     // voorste been
     drawLimb(hipX, hipY, P.legs[1][0], P.legs[1][1], legL, legL);
+    paintLook('legs');
+    paintLook('chest');
     // hoofd
     if (this.bald) {
       c.fillStyle = '#ffe8c8';
@@ -26318,13 +27345,19 @@ class Fighter {
         c.fillRect(shX - 16, shY - 2, 6, 18);
       }
     }
-    if (this.isPlayer && this.style) this.drawStyleExtras(c, headX, headY - 9, shX, shY, hipX, hipY);
+    if (looks.length) {
+      paintLook('head');
+    } else if (this.isPlayer && this.style) {
+      try { this.drawStyleExtras(c, headX, headY - 9, shX, shY, hipX, hipY); } catch (_) {}
+    }
     if (this.isRobot) this.drawRobotHead(c, headX, headY - 9);
 
     // voorste arm + wapen
     const [hx, hy] = drawLimb(shX, shY, P.arms[1][0], P.arms[1][1], armL, armL);
     c.fillStyle = this.color;
     c.beginPath(); c.arc(hx, hy, 3.4, 0, TAU); c.fill();
+    bones.hand = { x: hx, y: hy };
+    paintLook('hands');
 
     if (this.isPlayer && this.weapon.id !== 'vuist' && !this._boomerOut && !(this.attack && this.attack.kind === 'special')) {
       const aimLift = (this._aimAtAttack && (this.attack?.kind === 'weapon' || this.attack?.kind === 'punch' || this.attack?.kind === 'kick'))
@@ -26421,109 +27454,17 @@ class Fighter {
   }
 
   drawStyleExtras(c, hx, hy, shX, shY, hipX, hipY) {
-    const st = this.style;
-    if (st.glow) {
-      c.save();
-      c.shadowColor = st.accent;
-      c.shadowBlur = motionReduced() ? 10 : (10 + Math.sin(this.animT * 5) * 4);
-      c.strokeStyle = st.accent;
-      c.lineWidth = 2;
-      c.beginPath(); c.arc(hx, hy, 12, 0, TAU); c.stroke();
-      c.restore();
-    }
-    if (st.bandana) {
-      c.fillStyle = st.bandana;
-      c.fillRect(hx - 11, hy - 17, 22, 7);
-      if (st.plate) {
-        c.fillStyle = st.plate;
-        c.fillRect(hx - 5, hy - 16, 10, 5);
-      }
-      c.strokeStyle = 'rgba(0,0,0,.25)'; c.lineWidth = 1;
-      c.beginPath(); c.moveTo(hx + 9, hy - 14); c.lineTo(hx + 18, hy - 10); c.stroke();
-    }
-    if (st.coat) {
-      c.fillStyle = 'rgba(224,79,79,.32)';
-      c.beginPath();
-      c.moveTo(hipX - 14, hipY - 8); c.lineTo(hipX + 14, hipY - 8);
-      c.lineTo(shX + 18, shY - 4); c.lineTo(shX - 18, shY - 4);
-      c.closePath(); c.fill();
-      c.strokeStyle = st.accent; c.lineWidth = 2;
-      c.beginPath(); c.moveTo(0, shY - 6); c.lineTo(0, hipY + 4); c.stroke();
-    }
-    if (st.duck) {
-      c.fillStyle = '#ffe259';
-      c.beginPath(); c.moveTo(hx + 8, hy + 2); c.lineTo(hx + 16, hy + 4); c.lineTo(hx + 8, hy + 6); c.closePath(); c.fill();
-    }
-    if (st.fox) {
-      c.fillStyle = st.accent;
-      c.beginPath(); c.moveTo(hx - 10, hy - 16); c.lineTo(hx - 14, hy - 26); c.lineTo(hx - 6, hy - 18); c.closePath(); c.fill();
-      c.beginPath(); c.moveTo(hx + 4, hy - 16); c.lineTo(hx + 8, hy - 26); c.lineTo(hx + 2, hy - 18); c.closePath(); c.fill();
-    }
-    if (st.visor) {
-      c.fillStyle = '#7cf5ff';
-      c.globalAlpha = 0.85;
-      c.fillRect(hx - 9, hy - 5, 18, 6);
-      c.globalAlpha = 1;
-    }
-    if (st.topknot) {
-      c.strokeStyle = st.accent; c.lineWidth = 3;
-      c.beginPath(); c.moveTo(hx, hy - 18); c.lineTo(hx, hy - 30); c.stroke();
-      c.fillStyle = st.accent;
-      c.beginPath(); c.arc(hx, hy - 32, 4.5, 0, TAU); c.fill();
-    }
-    if (st.hunter) {
-      c.fillStyle = 'rgba(61,92,50,.55)';
-      c.beginPath();
-      c.moveTo(hipX - 16, hipY - 6); c.lineTo(hipX + 16, hipY - 6);
-      c.lineTo(shX + 20, shY - 2); c.lineTo(shX - 20, shY - 2);
-      c.closePath(); c.fill();
-      c.fillStyle = st.accent;
-      c.beginPath(); c.arc(hx - 14, hy - 8, 3, 0, TAU); c.fill();
-    }
-    if (st.crystal) {
-      c.fillStyle = st.accent;
-      c.globalAlpha = 0.9;
-      c.beginPath();
-      c.moveTo(hx + 10, hy - 6); c.lineTo(hx + 16, hy - 12); c.lineTo(hx + 22, hy - 6); c.lineTo(hx + 16, hy); c.closePath();
-      c.fill();
-      c.globalAlpha = 1;
-    }
-    if (st.tome) {
-      c.fillStyle = st.accent;
-      c.fillRect(hx - 18, hy - 2, 7, 10);
-      c.fillStyle = '#fff8e8';
-      c.fillRect(hx - 16.5, hy, 4, 6);
-      c.strokeStyle = st.bandana || '#6b5344';
-      c.lineWidth = 1.2;
-      c.strokeRect(hx - 18, hy - 2, 7, 10);
-    }
-    if (st.lightning && !motionReduced()) {
-      const pulse = Math.sin(this.animT * 14) * 0.5 + 0.5;
-      if (pulse > 0.35 || st.id === 'cyber') {
-        c.save();
-        c.strokeStyle = st.id === 'cyber' ? '#7cf5ff' : '#6fd7ff';
-        c.shadowColor = st.id === 'cyber' ? '#4ecf6a' : '#7cf5ff';
-        c.shadowBlur = st.id === 'cyber' ? 10 : 6;
-        c.lineWidth = st.id === 'cyber' ? 2 : 1.4;
-        c.globalAlpha = 0.55 + pulse * 0.35;
-        const lx = hx + (st.id === 'cyber' ? 14 : -12);
-        const ly = hy - 8;
-        c.beginPath();
-        c.moveTo(hx, hy - 10);
-        c.lineTo(hx + 4, hy - 4);
-        c.lineTo(hx - 2, hy + 2);
-        c.lineTo(lx, ly);
-        c.stroke();
-        if (st.id === 'cyber' && pulse > 0.6) {
-          c.beginPath();
-          c.moveTo(hx - 6, hy - 14);
-          c.lineTo(hx + 8, hy - 18);
-          c.lineTo(hx + 2, hy - 6);
-          c.stroke();
-        }
-        c.restore();
-      }
-    }
+    if (typeof drawEquipLooks !== 'function' || typeof resolveFighterLooks !== 'function') return;
+    try {
+      const bones = {
+        head: { x: hx, y: hy },
+        shoulder: { x: shX, y: shY },
+        hip: { x: hipX, y: hipY },
+        hand: null,
+        animT: this.animT,
+      };
+      drawEquipLooks(c, resolveFighterLooks(this), bones, this);
+    } catch (_) {}
   }
 
   drawRobotHead(c, hx, hy) {
@@ -37127,6 +38068,20 @@ function itemUpgradeCardParts(cat, id, color) {
   };
 }
 
+function drawStyleLookPreview(cc, st, w, h) {
+  if (!cc || !st) return;
+  try {
+    if (typeof applyEquipLookPreview === 'function') applyEquipLookPreview(cc, w, h);
+    else {
+      cc.translate((w || 80) * 0.5, (h || 86) * 0.87);
+      cc.scale(0.78, 0.78);
+    }
+    const preview = new Fighter({ isPlayer: true, x: 0, y: 0, color: st.body, style: st, scale: 0.9, _preview: true });
+    preview.animT = 0.4;
+    preview.draw(cc);
+  } catch (_) { /* one card must not blank the style grid on Android */ }
+}
+
 function drawUpgradeItemIcon(cat, id, cv) {
   if (!cv) return;
   const cc = cv.getContext('2d');
@@ -37153,11 +38108,7 @@ function drawUpgradeItemIcon(cat, id, cv) {
     drawMonsterArt(cc, sp, sp.size, 1.2, false, false);
   } else if (cat === 'style') {
     const st = styleById(id);
-    cc.translate(36, 58);
-    cc.scale(0.85, 0.85);
-    const preview = new Fighter({ isPlayer: true, x: 0, y: 0, color: st.body, style: st, scale: 0.9 });
-    preview.animT = 0.4;
-    preview.draw(cc);
+    drawStyleLookPreview(cc, st, 64, 64);
   }
 }
 
@@ -41186,12 +42137,9 @@ const UI = {
       el.style.borderColor = ok ? st.accent + '88' : '';
       el.title = styleLabel(st, 'tooltip') || styleLabel(st, 'hint') || styleLabel(st);
       const cv = document.createElement('canvas');
-      cv.width = 72; cv.height = 72;
+      cv.width = 80; cv.height = 86;
       const cc = cv.getContext('2d');
-      cc.translate(36, 58); cc.scale(0.85, 0.85);
-      const preview = new Fighter({ isPlayer: true, x: 0, y: 0, color: st.body, style: st, scale: 0.9 });
-      preview.animT = 0.4;
-      preview.draw(cc);
+      drawStyleLookPreview(cc, st, 80, 86);
       el.appendChild(cv);
       const cap = document.createElement('div');
       cap.style.fontSize = '13px';
@@ -43769,6 +44717,7 @@ function bootGame() {
       setPref: typeof setSeasonPref === 'function' ? setSeasonPref : null,
     } : null,
     enterHub: enterHubFromTitle,
+    equipLook: typeof EquipLookApi !== 'undefined' ? EquipLookApi : null,
     debug: typeof sfDebugScreen === 'function' ? sfDebugScreen : null,
     fixPlayLayer: () => (typeof sfDebugScreen === 'function' ? sfDebugScreen({ fix: true }) : null),
     goMenu: () => recoverToMenu({ force: true }),
