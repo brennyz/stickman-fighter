@@ -193,10 +193,11 @@ try {
 await Promise.resolve();
 const api = ctx.EquipLookApi;
 if (!api) fail('EquipLookApi not on globalThis');
-if (!api.slots || api.slots.join(',') !== 'head,chest,legs,back,trinket') fail('5 slots must be head,chest,legs,back,trinket');
-if (!api.layers || api.layers[0] !== 'under' || api.layers[api.layers.length - 1] !== 'front') {
-  fail('layers must start under and end front');
+if (!api.slots || api.slots.join(',') !== 'head,chest,hands,legs,back') fail('slotIds must be head,chest,hands,legs,back');
+if (!api.layers || api.layers.join(',') !== 'back,legs,chest,head,hands,weapon-hold,pet') {
+  fail('draw order must be back,legs,chest,head,hands,weapon-hold,pet');
 }
+if (!api.paint || api.paint.join(',') !== 'back,legs,chest,head,hands') fail('paint layers must skip weapon-hold/pet');
 
 const expectKind = {
   classic: [],
@@ -275,19 +276,42 @@ if (clamped[0].scale > 1.75) fail('scale must clamp');
 if (!api.layers.includes(clamped[0].layer)) fail('unknown layer must canon to a real layer');
 
 if (api.canonSlot && api.canonSlot('helmet') !== 'head') fail('helmet alias');
+if (api.canonSlot && api.canonSlot('trinket') !== 'hands') fail('trinket alias → hands');
 if (api.canonSlot && api.canonSlot('nope') != null) fail('unknown slot must be null');
-if (api.canonLayer && api.canonLayer('behind', 'front') !== 'under') fail('behind → under');
+if (api.canonLayer && api.canonLayer('behind', 'head') !== 'back') fail('behind → back');
+if (api.canonLayer && api.canonLayer('under', 'chest') !== 'back') fail('under → back');
 if (api.canonLayer && !api.layers.includes(api.canonLayer('NOPE', 'head'))) fail('bad layer fallback');
+
+const viaDraw = api.forGear({
+  chest: { kind: 'vest', draw: { layer: 'chest', ox: 2, oy: -1, scale: 1.1, color: '#446688' } },
+});
+if (!viaDraw.length || viaDraw[0].layer !== 'chest' || viaDraw[0].ox !== 2 || viaDraw[0].oy !== -1) {
+  fail('Item.draw.layer + offsets');
+}
+
+const oneSlot = api.forGear({
+  head: { kind: 'helmet', color: '#aaa' },
+  hat: { kind: 'bandana', color: '#bbb' },
+});
+if (oneSlot.filter((l) => l.slot === 'head').length !== 1) fail('one item per slot');
+
+const hands = api.forGear({
+  hands: { kind: 'gloves', color: '#ccc' },
+  trinket: { kind: 'charm', color: '#ddd' },
+});
+if (!hands.some((l) => l.slot === 'hands' && l.kind === 'gloves')) fail('hands slot');
+if (hands.filter((l) => l.slot === 'hands').length !== 1) fail('alias must not stack a second hands item');
 
 const flooded = api.forGear({
   head: { kind: 'helmet', color: '#aaa' },
   chest: { kind: 'chestplate', color: '#aaa' },
+  hands: { kind: 'gloves', color: '#aaa' },
   legs: { kind: 'greaves', color: '#aaa' },
   back: { kind: 'cape', color: '#aaa' },
-  trinket: { kind: 'charm', color: '#aaa' },
   hat: { kind: 'helmet', color: '#bbb' },
 });
-if (flooded.length > (api.max || 8)) fail('gear piece cap');
+if (flooded.length !== 5) fail('one item × 5 slots');
+if (flooded.length > (api.max || 5)) fail('gear piece cap');
 
 try {
   api.resolve({ isPlayer: true, style: { id: 'leaf_band', bandana: 12, accent: { x: 1 } }, gear: { head: { kind: 9, ox: 'nope' } } });

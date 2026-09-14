@@ -1,3 +1,4 @@
+| 2026-09-14 | **equip look** | Gear contract v1: slotIds head/chest/hands/legs/back; draw back→legs→chest→head→hands (weapon-hold/pet existing); Item.draw.layer + offsets; one item per slot. **v1.18.166 / SW v376**. |
 | 2026-09-14 | **equip look** | Harden: clamp offsets/scale, canon layers, isolate piece draw (try/finally), skip junk gear keys, cheaper Android shadows, no roundRect. Combat cannot hiccup on a bad look. **v1.18.165 / SW v375**. |
 | 2026-09-14 | **equip look** | Worn outfits: data-driven slots (head/chest/legs/back/trinket), layer order, tuned offsets. Bandana wraps the head, tails behind the face; menu preview no longer clips crown gear. Look-only — no economy. **v1.18.164 / SW v374**. |
 | 2026-09-14 | **locale + toast** | #266: NL VERLOREN, geen raw menu.tips / PICK AN ISLAND; versie-banner stiller + wegklik; rest HOME. **v1.18.163 / SW v373**. |

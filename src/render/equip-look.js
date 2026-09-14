@@ -25,10 +25,10 @@ function lookAnchor(bones, slot, look) {
   const key = (look && look.anchor) || slot;
   let p = null;
   if (key === 'head') p = bones.head;
-  else if (key === 'hand') p = bones.hand || bones.shoulder;
+  else if (key === 'hand' || key === 'hands' || key === 'weapon-hold') p = bones.hand || bones.shoulder;
   else if (key === 'shoulder' || key === 'chest' || key === 'back') p = bones.shoulder;
   else if (key === 'hip' || key === 'legs') p = bones.hip;
-  else if (key === 'trinket') p = bones.head || bones.shoulder;
+  else if (key === 'pet') p = bones.hip || bones.shoulder;
   else p = bones.head;
   return lookBoneOk(p) ? p : (lookBoneOk(bones.head) ? bones.head : { x: 0, y: 0 });
 }
@@ -384,6 +384,17 @@ function drawLookLightning(c, look, x, y, sc, bones, fighter) {
   }
 }
 
+function drawLookGloves(c, look, x, y, sc, bones) {
+  const hand = lookBoneOk(bones && bones.hand) ? bones.hand : { x, y };
+  c.fillStyle = look.color || look.accent || '#8fa3d9';
+  c.beginPath();
+  c.arc(hand.x, hand.y, 4.8 * sc, 0, TAU);
+  c.fill();
+  c.strokeStyle = look.accent || 'rgba(0,0,0,.28)';
+  c.lineWidth = 1.2;
+  c.stroke();
+}
+
 function drawLookCharm(c, look, x, y, sc) {
   c.fillStyle = look.accent || look.color;
   c.beginPath();
@@ -435,4 +446,5 @@ const EQUIP_LOOK_DRAW = {
   glow: drawLookGlow,
   lightning: drawLookLightning,
   charm: drawLookCharm,
+  gloves: drawLookGloves,
 };

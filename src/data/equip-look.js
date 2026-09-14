@@ -1,27 +1,27 @@
 /* ============================ EQUIP LOOK =============================== */
 /**
- * Look-only attachment table for worn outfits / future 5-slot gear.
- * Does not unlock, drop, price, or invent an economy.
- *
- * Slots (stable names for the parallel gear-systems lane):
- *   head · chest · legs · back · trinket
- *
- * Layers (draw order in Fighter.draw):
- *   under → body → legs → head → over → front
+ * Look-only. Gear contract v1 (no economy):
+ *   slotIds: head · chest · hands · legs · back   (one item per slot)
+ *   draw order back→front: back, legs, chest, head, hands, weapon-hold, pet
+ *   Item.draw.layer + Item.draw offsets (ox/oy/scale).
+ * weapon-hold + pet are pipeline stages (existing weapon / pet draw).
  */
-const EQUIP_LOOK_SLOTS = ['head', 'chest', 'legs', 'back', 'trinket'];
-const EQUIP_LOOK_LAYERS = ['under', 'body', 'legs', 'head', 'over', 'front'];
-const EQUIP_LOOK_MAX = 8;
+const EQUIP_LOOK_SLOTS = ['head', 'chest', 'hands', 'legs', 'back'];
+const EQUIP_LOOK_LAYERS = ['back', 'legs', 'chest', 'head', 'hands', 'weapon-hold', 'pet'];
+const EQUIP_LOOK_PAINT = ['back', 'legs', 'chest', 'head', 'hands'];
+const EQUIP_LOOK_MAX = 5;
 const EQUIP_LOOK_OX_MAX = 48;
 const EQUIP_LOOK_SCALE_MIN = 0.35;
 const EQUIP_LOOK_SCALE_MAX = 1.75;
 
 const EQUIP_LAYER_ALIAS = {
-  behind: 'under', underbody: 'under',
-  torso: 'body', bodyover: 'body',
+  under: 'back', behind: 'back', underbody: 'back', cape: 'back', cloak: 'back',
+  torso: 'chest', body: 'chest', bodyover: 'chest', vest: 'chest',
   shin: 'legs', boots: 'legs',
-  headover: 'over', overlay: 'over', aura: 'over',
-  fg: 'front', foreground: 'front',
+  over: 'head', headover: 'head', overlay: 'head', aura: 'head',
+  front: 'hands', fg: 'hands', foreground: 'hands', gloves: 'hands',
+  weapon: 'weapon-hold', hold: 'weapon-hold',
+  companion: 'pet',
 };
 
 const EQUIP_SLOT_ALIAS = {
@@ -29,7 +29,8 @@ const EQUIP_SLOT_ALIAS = {
   armor: 'chest', coat: 'chest', chestplate: 'chest', vest: 'chest',
   boots: 'legs', greaves: 'legs', shin: 'legs',
   cape: 'back', cloak: 'back', tome: 'back',
-  accessory: 'trinket', charm: 'trinket', aura: 'trinket', ring: 'trinket',
+  gloves: 'hands', bracers: 'hands', wrists: 'hands',
+  accessory: 'hands', trinket: 'hands', charm: 'hands', ring: 'hands', aura: 'hands',
 };
 
 const EQUIP_LOOK_DEFAULTS = {
@@ -39,17 +40,18 @@ const EQUIP_LOOK_DEFAULTS = {
   duck: { slot: 'head', layer: 'head', ox: 1, oy: 1, scale: 1 },
   topknot: { slot: 'head', layer: 'head', ox: 0, oy: -1, scale: 1 },
   helmet: { slot: 'head', layer: 'head', ox: 0, oy: -1, scale: 1 },
-  coat: { slot: 'back', layer: 'under', ox: 0, oy: 1, scale: 1 },
-  cape: { slot: 'back', layer: 'under', ox: 0, oy: 2, scale: 1 },
-  vest: { slot: 'chest', layer: 'body', ox: 0, oy: 0, scale: 1 },
-  chestplate: { slot: 'chest', layer: 'body', ox: 0, oy: 0, scale: 1 },
+  glow: { slot: 'head', layer: 'head', ox: 0, oy: 0, scale: 1 },
+  lightning: { slot: 'head', layer: 'head', ox: 0, oy: 0, scale: 1 },
+  charm: { slot: 'head', layer: 'head', ox: 0, oy: 2, scale: 1 },
+  coat: { slot: 'back', layer: 'back', ox: 0, oy: 1, scale: 1 },
+  cape: { slot: 'back', layer: 'back', ox: 0, oy: 2, scale: 1 },
+  tome: { slot: 'back', layer: 'back', ox: -1, oy: 2, scale: 1 },
+  vest: { slot: 'chest', layer: 'chest', ox: 0, oy: 0, scale: 1 },
+  chestplate: { slot: 'chest', layer: 'chest', ox: 0, oy: 0, scale: 1 },
+  crystal: { slot: 'chest', layer: 'chest', ox: 1, oy: 0, scale: 1 },
   wrap: { slot: 'legs', layer: 'legs', ox: 0, oy: 0, scale: 1 },
   greaves: { slot: 'legs', layer: 'legs', ox: 0, oy: 1, scale: 1 },
-  tome: { slot: 'back', layer: 'under', ox: -1, oy: 2, scale: 1 },
-  crystal: { slot: 'trinket', layer: 'front', ox: 1, oy: 0, scale: 1 },
-  glow: { slot: 'trinket', layer: 'over', ox: 0, oy: 0, scale: 1 },
-  lightning: { slot: 'trinket', layer: 'over', ox: 0, oy: 0, scale: 1 },
-  charm: { slot: 'trinket', layer: 'front', ox: 0, oy: 2, scale: 1 },
+  gloves: { slot: 'hands', layer: 'hands', ox: 0, oy: 0, scale: 1 },
 };
 
 /** Optional registry: item id → look. Gear systems can add rows without touching draw code. */
@@ -136,11 +138,13 @@ function canonEquipSlot(slot) {
 }
 
 function canonEquipLayer(layer, fallback) {
-  const fb = fallback && EQUIP_LOOK_LAYERS.includes(fallback) ? fallback : 'front';
-  if (!layer) return fb;
-  const key = String(layer).toLowerCase();
-  if (EQUIP_LOOK_LAYERS.includes(key)) return key;
-  return EQUIP_LAYER_ALIAS[key] || fb;
+  const map = (v) => {
+    if (!v) return null;
+    const key = String(v).toLowerCase();
+    if (EQUIP_LOOK_LAYERS.includes(key)) return key;
+    return EQUIP_LAYER_ALIAS[key] || null;
+  };
+  return map(layer) || map(fallback) || 'chest';
 }
 
 function lookSnap(v) {
@@ -168,17 +172,33 @@ function isPlainGear(gear) {
   return !!gear && typeof gear === 'object' && !Array.isArray(gear);
 }
 
+function mergeItemDraw(base, draw) {
+  if (!draw || typeof draw !== 'object' || Array.isArray(draw)) return base;
+  const out = Object.assign({}, base);
+  if (draw.kind) out.kind = draw.kind;
+  if (draw.slot) out.slot = draw.slot;
+  if (draw.layer) out.layer = draw.layer;
+  if (draw.anchor) out.anchor = draw.anchor;
+  ['ox', 'oy', 'scale', 'rot', 'color', 'accent', 'plate', 'fill'].forEach((k) => {
+    if (draw[k] != null) out[k] = draw[k];
+  });
+  return out;
+}
+
 function hydrateEquipLook(piece, style) {
-  if (!piece || typeof piece.kind !== 'string' || !piece.kind) return null;
+  if (!piece || typeof piece !== 'object') return null;
+  piece = mergeItemDraw(piece, piece.draw);
+  if (typeof piece.kind !== 'string' || !piece.kind) return null;
   if (piece.kind === '__proto__' || piece.kind === 'constructor' || piece.kind === 'prototype') return null;
-  const defaults = EQUIP_LOOK_DEFAULTS[piece.kind] || { slot: 'trinket', layer: 'front', ox: 0, oy: 0, scale: 1 };
+  const defaults = EQUIP_LOOK_DEFAULTS[piece.kind] || { slot: 'chest', layer: 'chest', ox: 0, oy: 0, scale: 1 };
   const st = style && typeof style === 'object' ? style : {};
-  const slot = canonEquipSlot(piece.slot || defaults.slot) || defaults.slot || 'trinket';
+  const slot = canonEquipSlot(piece.slot || defaults.slot) || canonEquipSlot(defaults.slot) || 'chest';
+  const layerHint = piece.layer || defaults.layer || slot;
   return {
     id: typeof piece.id === 'string' ? piece.id : (st.id ? st.id + ':' + piece.kind : piece.kind),
     kind: piece.kind,
-    slot: EQUIP_LOOK_SLOTS.includes(slot) ? slot : 'trinket',
-    layer: canonEquipLayer(piece.layer || defaults.layer, defaults.layer),
+    slot: EQUIP_LOOK_SLOTS.includes(slot) ? slot : 'chest',
+    layer: canonEquipLayer(layerHint, slot),
     anchor: typeof piece.anchor === 'string' ? piece.anchor : (defaults.anchor || null),
     ox: lookNum(piece.ox != null ? piece.ox : defaults.ox, 0, -EQUIP_LOOK_OX_MAX, EQUIP_LOOK_OX_MAX),
     oy: lookNum(piece.oy != null ? piece.oy : defaults.oy, 0, -EQUIP_LOOK_OX_MAX, EQUIP_LOOK_OX_MAX),
@@ -230,8 +250,9 @@ function lookForItemId(id, slot, src) {
   if (!id) return [];
   const registered = EQUIP_LOOK[id];
   if (registered) {
-    const piece = Object.assign({}, registered, { id, slot: slot || registered.slot });
-    return [hydrateEquipLook(piece, src || registered)].filter(Boolean);
+    const piece = mergeItemDraw(Object.assign({}, registered, { id, slot: slot || registered.slot }), registered.draw);
+    const one = hydrateEquipLook(piece, src || registered);
+    return one ? [one] : [];
   }
   if (typeof styleById === 'function') {
     const st = styleById(id);
@@ -253,21 +274,33 @@ function looksForGear(gear) {
     const slot = canonEquipSlot(slotKey);
     if (!slot || !EQUIP_LOOK_SLOTS.includes(slot)) return;
     if (typeof val === 'string') {
-      lookForItemId(val, slot).forEach((l) => { if (out.length < EQUIP_LOOK_MAX) out.push(l); });
+      const found = lookForItemId(val, slot);
+      const one = found.find((l) => l.slot === slot) || found[0];
+      if (one) out.push(one);
       return;
     }
     if (typeof val !== 'object' || Array.isArray(val)) return;
-    if (val.look && val.look.kind) {
-      const piece = hydrateEquipLook(Object.assign({ id: val.id, slot: val.slot || slot }, val.look), val);
+    const fromDraw = isPlainGear(val.draw) || isPlainGear(val.look);
+    if (fromDraw || val.kind) {
+      const merged = mergeItemDraw(Object.assign({ id: val.id, kind: val.kind, slot: val.slot || slot }, val.look || {}), val.draw);
+      if (!merged.kind && val.id) {
+        const found = lookForItemId(val.id, slot, val);
+        const one = found[0];
+        if (one) {
+          const over = hydrateEquipLook(mergeItemDraw(Object.assign({}, one, { slot }), val.draw), val);
+          out.push(over || one);
+        }
+        return;
+      }
+      const piece = hydrateEquipLook(Object.assign({ slot }, merged), val);
       if (piece) out.push(piece);
       return;
     }
-    if (val.kind) {
-      const piece = hydrateEquipLook(Object.assign({ slot }, val), val);
-      if (piece) out.push(piece);
-      return;
+    if (val.id) {
+      const found = lookForItemId(val.id, slot, val);
+      const one = found.find((l) => l.slot === slot) || found[0];
+      if (one) out.push(one);
     }
-    if (val.id) lookForItemId(val.id, slot, val).forEach((l) => { if (out.length < EQUIP_LOOK_MAX) out.push(l); });
   };
   const keys = EQUIP_LOOK_SLOTS.concat(Object.keys(EQUIP_SLOT_ALIAS));
   for (const key of keys) {
@@ -313,6 +346,7 @@ function applyEquipLookPreview(cc, w, h) {
 const EquipLookApi = {
   slots: EQUIP_LOOK_SLOTS,
   layers: EQUIP_LOOK_LAYERS,
+  paint: EQUIP_LOOK_PAINT,
   resolve: resolveFighterLooks,
   forStyle: looksForStyle,
   forGear: looksForGear,

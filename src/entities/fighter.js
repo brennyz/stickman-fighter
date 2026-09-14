@@ -759,14 +759,14 @@ class Fighter {
     drawLimb(shX, shY, P.arms[0][0], P.arms[0][1], armL, armL);
     c.restore();
 
-    paintLook('under');
+    paintLook('back');
 
     // romp
     c.beginPath(); c.moveTo(hipX, hipY); c.lineTo(shX, shY); c.stroke();
     // voorste been
     drawLimb(hipX, hipY, P.legs[1][0], P.legs[1][1], legL, legL);
-    paintLook('body');
     paintLook('legs');
+    paintLook('chest');
     // hoofd
     if (this.bald) {
       c.fillStyle = '#ffe8c8';
@@ -791,7 +791,6 @@ class Fighter {
     }
     if (looks.length) {
       paintLook('head');
-      paintLook('over');
     } else if (this.isPlayer && this.style) {
       try { this.drawStyleExtras(c, headX, headY - 9, shX, shY, hipX, hipY); } catch (_) {}
     }
@@ -801,6 +800,8 @@ class Fighter {
     const [hx, hy] = drawLimb(shX, shY, P.arms[1][0], P.arms[1][1], armL, armL);
     c.fillStyle = this.color;
     c.beginPath(); c.arc(hx, hy, 3.4, 0, TAU); c.fill();
+    bones.hand = { x: hx, y: hy };
+    paintLook('hands');
 
     if (this.isPlayer && this.weapon.id !== 'vuist' && !this._boomerOut && !(this.attack && this.attack.kind === 'special')) {
       const aimLift = (this._aimAtAttack && (this.attack?.kind === 'weapon' || this.attack?.kind === 'punch' || this.attack?.kind === 'kick'))
@@ -874,8 +875,6 @@ class Fighter {
         drawTechniqueOrb(c, hx + 14, hy, 8 + g * 16, this.animT * (8 + g * 20), kind, 0.55 + g * 0.45);
       }
     }
-    bones.hand = { x: hx, y: hy };
-    paintLook('front');
     c.restore();
 
     // afterimages (substitutie)
