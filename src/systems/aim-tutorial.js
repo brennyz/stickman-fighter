@@ -64,9 +64,6 @@ function beginAimTutorial(g) {
     demoNy: -0.55,
   };
   g.hint = 0;
-  try {
-    if (g.player) g.player.invulnT = Math.max(g.player.invulnT || 0, 5.5);
-  } catch (_) {}
   return true;
 }
 
