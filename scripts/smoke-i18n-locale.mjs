@@ -152,4 +152,20 @@ if (!/ui\.dexPlayAdv/.test(ui)) fail('dex card still hardcodes Speel avontuur');
 if (!/ui\.errLoadAdventure/.test(start)) fail('adventure load error still hardcoded Dutch');
 if (!/ui\.errLoadHelp/.test(start)) fail('help load error still hardcoded Dutch');
 
+if (!/function welcomeToastOnHub/.test(missions)) fail('welcome toast must gate on HOME hub');
+if (!/screen\.active:not\(#menuScreen\)/.test(missions)) fail('welcome toast must skip other screens');
+if (/userToast\(t\('toast\.welcome'\), 3800\)/.test(missions)) fail('welcome toast still uses 3800ms overlay');
+
+if (/this\.banner\('TRIPLE SPIRAL ORB!'/.test(game)) fail('triple orb banner still hardcoded EN');
+if (/this\.banner\('DUAL SPIRAL ORB!'/.test(game)) fail('dual orb banner still hardcoded EN');
+if (/const lbl = j === 'lightning_pierce' \? 'LIGHTNING PIERCE!'/.test(game)) fail('enemy technique floater still hardcoded EN');
+if (!/tOr\('technique\.' \+ j/.test(game)) fail('enemy technique floater must use technique.* i18n');
+if (!/wave_cannon: 'WAVE CANNON!'/.test(catalog) && !/wave_cannon: 'GOLFKANON!'/.test(catalog)) {
+  fail('technique.wave_cannon missing from catalog');
+}
+if (!/summonNoMore:/.test(catalog) && !/summonPullEmpty:/.test(catalog)) fail('summon empty copy must be i18n');
+if (!/summonQuota:/.test(catalog)) fail('summon quota copy must be i18n');
+if (!/ui\.summonQuota/.test(ui)) fail('renderSummon quota must use i18n');
+if (!/ui\.summonLogEmpty/.test(ui) && !/ui\.summonNoPulls/.test(ui)) fail('summon log empty state must use i18n');
+
 console.log('SMOKE_OK i18n-locale: Tips/VERLOREN + #273 coverage + #283 overlays (EN-first, no Dutch leak stubs)');

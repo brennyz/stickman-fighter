@@ -143,6 +143,7 @@ Schrijf **1–3 regels** per sessie: datum, d#, wat, versie.
 
 | Datum (UTC) | d# | Update |
 |-------------|-----|--------|
+| 2026-09-14 | — | MERGE MAIN #266 → v1.18.163 / SW 373. Daarna: welcome alleen HOME, technique-banners + summons i18n. v1.18.164 / SW 374. Draft. |
 | 2026-09-14 | — | Training ghost-HP + goud-flash + RABBIT n/max. Hit-reg ongemoeid. v1.18.160 / SW 370. |
 | 2026-09-14 | — | Season pixel overlays: jungle + halloween packs on documented slots; pointer-events none; hidden in combat. v1.18.164 / SW 374. |
 | 2026-09-14 | — | **LIVE main** mega-merge #293 `470bd4e` — listed PRs minus #279. v1.18.166 / SW 376. Pages ~1–3 min → speel.html. |

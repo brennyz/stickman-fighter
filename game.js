@@ -3600,6 +3600,21 @@ function applyLangStaticScreens() {
 
   setText('petScreenHead', 'pets.title');
   setText('petScreenSub', 'pets.sub');
+  setText('summonScreenHead', 'menu.summons');
+  setText('summonScreenSub', 'ui.summonSub');
+  setText('summonWhereStrip', 'ui.summonWhere');
+  setText('summonStageHint', 'ui.summonHint');
+  setText('summonRevealText', 'ui.summonRevealHint');
+  const gotoW = document.getElementById('btnSummonGotoWeapons');
+  if (gotoW) {
+    const d = gotoW.querySelector('div');
+    if (d) d.innerHTML = t('ui.summonGotoWeapons') + '<small>' + t('ui.summonCollect') + '</small>';
+  }
+  const gotoP = document.getElementById('btnSummonGotoPets');
+  if (gotoP) {
+    const d = gotoP.querySelector('div');
+    if (d) d.innerHTML = t('ui.summonGotoPets') + '<small>' + t('ui.summonCollect') + '</small>';
+  }
   const eggBtn = document.getElementById('eggCrackBtn');
   if (eggBtn) {
     const d = eggBtn.querySelector('div');
@@ -3836,6 +3851,7 @@ function applyLang() {
     else if (active === 'dexScreen' && typeof UI.renderDex === 'function') UI.renderDex();
     else if (active === 'skillScreen' && typeof UI.renderSkills === 'function') UI.renderSkills();
     else if (active === 'modeHubScreen') UI.renderModeHub();
+    else if (active === 'summonScreen' && typeof UI.renderSummon === 'function') UI.renderSummon();
     else if (active === 'resultScreen' && UI.lastResult && typeof UI.showResult === 'function') {
       try { UI.showResult(!!UI.lastResult.win, UI.lastResult); } catch (_) {}
     }
@@ -6820,6 +6836,22 @@ function gambleOnboardHintLine() {
       : 'Eerste keer: sum ≤5 super-baas · sum ≥9 ally buff · Skip = geen gok');
 }
 
+/** Welcome only on HOME hub — never chase Adventure/Settings/title. */
+function welcomeToastOnHub() {
+  try {
+    if (typeof state !== 'undefined' && (state === 'play' || state === 'pause')) return false;
+    const splash = document.getElementById('sfSplash');
+    if (splash && !splash.classList.contains('is-done')) return false;
+    const menu = document.getElementById('menuScreen');
+    if (!menu || !menu.classList.contains('active')) return false;
+    const other = document.querySelector('.screen.active:not(#menuScreen)');
+    if (other) return false;
+    return true;
+  } catch (_) {
+    return false;
+  }
+}
+
 function maybeWelcomeToast() {
   ensureTipsSeen();
   if (save.tipsSeen.welcome) return;
@@ -6829,19 +6861,35 @@ function maybeWelcomeToast() {
     persist();
     return;
   }
-  save.tipsSeen.welcome = 1;
-  persist();
-  setTimeout(() => {
-    if (state === 'play') return;
-    if (onboardingProgress().seen > 0) return;
+  let tries = 0;
+  const tick = () => {
+    if (save.tipsSeen.welcome) return;
+    if (onboardingProgress().seen > 0 || save.lvl > 1) {
+      save.tipsSeen.welcome = 1;
+      persist();
+      return;
+    }
+    if (welcomeToastOnHub()) {
+      save.tipsSeen.welcome = 1;
+      persist();
+      try { userToast(t('toast.welcome'), 2200); } catch (_) {}
+      return;
+    }
+    tries++;
+    let onSplash = false;
     try {
-      const lvl = document.getElementById('levelScreen');
-      if (lvl && lvl.classList.contains('active')) return;
+      const splash = document.getElementById('sfSplash');
+      onSplash = !!(splash && !splash.classList.contains('is-done'));
     } catch (_) {}
-    const splash = document.getElementById('sfSplash');
-    if (splash && !splash.classList.contains('is-done')) return;
-    userToast(t('toast.welcome'), 3800);
-  }, 2800);
+    // Still on title/splash — wait for HOME. Left hub already — don't follow.
+    if (onSplash && tries < 24) {
+      setTimeout(tick, 350);
+      return;
+    }
+    save.tipsSeen.welcome = 1;
+    persist();
+  };
+  setTimeout(tick, 400);
 }
 
 /** Level-pacing v1.14.3: iets rustiger — +15% vroeg, oplopend tot +50% vanaf ~Lv 18. */
@@ -12284,6 +12332,11 @@ function applyPlayerSkill(fighter) {
 }
 
 function skillBanner(sk) {
+  const id = sk && sk.id;
+  if (id && typeof tOr === 'function') {
+    const via = tOr('technique.' + id, '');
+    if (via) return via;
+  }
   return (sk && sk.banner) || 'SPECIAL!';
 }
 
@@ -17660,8 +17713,14 @@ function sanitizeChestWeapons(raw) {
 
 function chestResultToast(res) {
   if (!res || !res.ok) {
-    if (res && res.reason === 'empty') return 'Geen summons meer vandaag';
-    return 'Summon mislukt — probeer opnieuw';
+    if (res && res.reason === 'empty') {
+      return (typeof tOr === 'function')
+        ? tOr('ui.summonNoMore', 'Geen summons meer vandaag')
+        : 'Geen summons meer vandaag';
+    }
+    return (typeof tOr === 'function')
+      ? tOr('ui.summonFail', 'Summon mislukt — probeer opnieuw')
+      : 'Summon mislukt — probeer opnieuw';
   }
   if (res.type === 'weapon_unlock') {
     return `✦ ${res.name} ontgrendeld! · ${rarityLabel(res.rarity)}${res.skill ? ' · ' + res.skill : ''}`;
@@ -17983,6 +18042,15 @@ function seedNlGameStrings() {
     satan: 'SATAN — {name}!',
     satanIncoming: 'SATAN KOMT…',
     satanWin: 'SATAN VERSLAGEN!',
+    spiral_orbTriple: 'DRIEVOUDIGE SPIRAAL ORB!',
+    spiral_orbDual: 'DUBBELE SPIRAAL ORB!',
+  });
+  if (!I18N.nl.technique) I18N.nl.technique = {};
+  Object.assign(I18N.nl.technique, {
+    spiral_orb: 'SPIRAAL ORB!',
+    lightning_pierce: 'BLIKSEMPRIK!',
+    wave_cannon: 'GOLFKANON!',
+    void_gaze: 'LEEGTEBLIK!',
   });
   if (!I18N.nl.result) I18N.nl.result = {};
   Object.assign(I18N.nl.result, {
@@ -18223,7 +18291,7 @@ function seedNlGameStrings() {
     skillEquipped: '{name} uitgerust als special',
     superEquipped: '{name} uitgerust als nood-super',
     superUnlock: 'Nieuwe nood-super: {name}!',
-    welcome: 'Welkom! Menu → Tips · tik een melding weg · per modus één hint bovenin',
+    welcome: 'Welkom — tik een melding weg · Tips in het menu',
     unknownMode: 'Onbekende modus',
     noSession: 'Nog geen sessie — kies een modus',
     noPlayLink: 'Geen speel-link gevonden — zie Instellingen',
@@ -18701,6 +18769,15 @@ function seedNlGameStrings() {
     petSummaryTamed: 'Getemd <b>{tamed}/{total}</b> · actief <b>{active}</b> · <b>{wallet} pet coins</b>',
     petNone: 'geen',
     installSub: 'Lade · beginscherm',
+    summonQuota: 'Vandaag: {left}/{total} random summons',
+    summonLeft: '{n} over',
+    summonDone: 'Op',
+    summonOpen: 'Open kist',
+    summonOpenAria: 'Open kist, {n} over',
+    summonNoMore: 'Geen summons meer vandaag',
+    summonOpening: 'Kist opent…',
+    summonNoPulls: 'Nog geen pulls vandaag.',
+    summonFail: 'Summon mislukt — probeer opnieuw',
     boss: 'BAAS',
     topHunter: 'Top jager',
     modeAdventure: '5 eilanden × 10 levels · hitte-meter · 9× = gevaar! · 10× = Satan · Meester-buff · dobbel-gok',
@@ -19367,7 +19444,7 @@ const CATALOG_EN = {
     invalidSave: 'Invalid save — check JSON', noBackup: 'No backup found on this device',
     backupConfirm: 'Backup Lv {lvl}{drift} — tap again to restore',
     backupDrift: ' (main and backup differ)',
-    welcome: 'Welcome! Menu → Tips · tap a notice to dismiss · one hint per mode at top',
+    welcome: 'Welcome — tap a notice away · Tips in the menu',
     finishFight: 'Finish or pause the fight first',
     notDuringCombat: 'Not during a fight',
     liteFxHint: 'Running slow? Settings → Lite FX',
@@ -19826,6 +19903,15 @@ const CATALOG_EN = {
     petSummaryTamed: 'Tamed <b>{tamed}/{total}</b> · active <b>{active}</b> · <b>{wallet} pet coins</b>',
     petNone: 'none',
     installSub: 'Home screen',
+    summonQuota: 'Today: {left}/{total} random summons',
+    summonLeft: '{n} left',
+    summonDone: 'Done',
+    summonOpen: 'Open chest',
+    summonOpenAria: 'Open chest, {n} left',
+    summonNoMore: 'No more summons today',
+    summonOpening: 'Chest opening…',
+    summonNoPulls: 'No pulls yet today.',
+    summonFail: 'Summon failed — try again',
     boss: 'BOSS',
     topHunter: 'Top hunter',
     modeAdventure: '5 islands × 10 levels · heat meter · 9× = danger! · 10× = Satan · Master buff · gamble',
@@ -20201,7 +20287,7 @@ const CATALOG_EN = {
     teleFire: 'FIRE — side-step!',
     ketsTap: 'Tap!', ketsKey: 'E / tap',
   },
-  technique: { spiral_orb: 'SPIRAL ORB!', lightning_pierce: 'LIGHTNING PIERCE!', void_gaze: 'VOID GAZE!' },
+  technique: { spiral_orb: 'SPIRAL ORB!', lightning_pierce: 'LIGHTNING PIERCE!', wave_cannon: 'WAVE CANNON!', void_gaze: 'VOID GAZE!' },
   gamble: {
     superBoss: 'Bad luck! Super-boss in a random wave',
     miniBoss: 'Risk: extra elite in a wave',
@@ -38843,16 +38929,12 @@ class Game {
         fireProj(0, 0, 1.05, { curl: 0 });
         fireProj(face * 8, -14, 0.92, { curl: -1, vy0: -120, curlAccel: 480, curlMaxVy: 300 });
         fireProj(face * 8, 14, 0.92, { curl: 1, vy0: 120, curlAccel: 480, curlMaxVy: 300 });
-        try { this.banner(t('banner.spiral_orbTriple'), 1.15, col, 36); } catch (_) {
-          this.banner('TRIPLE SPIRAL ORB!', 1.15, col, 36);
-        }
+        this.banner(tOr('banner.spiral_orbTriple', 'TRIPLE SPIRAL ORB!'), 1.15, col, 36);
       } else if (mode === 'dual') {
         // ↑ + ↓ krul — start al met verticale snelheid zodat beide lanes zichtbaar zijn
         fireProj(face * 6, -12, 0.96, { curl: -1, vy0: -100, curlAccel: 440, curlMaxVy: 280 });
         fireProj(face * 6, 12, 0.96, { curl: 1, vy0: 100, curlAccel: 440, curlMaxVy: 280 });
-        try { this.banner(t('banner.spiral_orbDual'), 1.0, col, 32); } catch (_) {
-          this.banner('DUAL SPIRAL ORB!', 1.0, col, 32);
-        }
+        this.banner(tOr('banner.spiral_orbDual', 'DUAL SPIRAL ORB!'), 1.0, col, 32);
       } else {
         fireProj(0, 0, 1, { curl: 0 });
       }
@@ -38979,7 +39061,8 @@ class Game {
     const j = m.enemyTechnique;
     const dmg = Math.round(m.dmg * (j === 'wave_cannon' ? 2.15 : j === 'lightning_pierce' ? 1.75 : 1.55));
     const y0 = m.y - m.size * 0.55;
-    const lbl = j === 'lightning_pierce' ? 'LIGHTNING PIERCE!' : j === 'wave_cannon' ? 'WAVE CANNON!' : 'SPIRAL ORB!';
+    const fallback = j === 'lightning_pierce' ? 'LIGHTNING PIERCE!' : j === 'wave_cannon' ? 'WAVE CANNON!' : 'SPIRAL ORB!';
+    const lbl = (typeof tOr === 'function') ? tOr('technique.' + j, fallback) : fallback;
     const col = j === 'lightning_pierce' ? '#a8e0ff' : j === 'wave_cannon' ? '#7cf5ff' : '#7cf5ff';
     try {
       this.floater(m.x, m.y - m.size - 24, lbl, col, 14);
@@ -44727,6 +44810,13 @@ const UI = {
       if (pullLbl) pullLbl.textContent = left > 0 ? t('ui.summonPullLeft', { n: left }) : t('ui.summonPullEmpty');
       if (pullBtn) {
         pullBtn.disabled = left <= 0 || !!this._chestPullBusy;
+        const titleEl = pullBtn.querySelector('div');
+        if (titleEl) {
+          const small = titleEl.querySelector('small');
+          titleEl.textContent = '';
+          titleEl.appendChild(document.createTextNode(tOr('ui.summonOpen', 'Open kist')));
+          if (small) titleEl.appendChild(small);
+        }
         pullBtn.setAttribute('aria-label', left > 0
           ? t('ui.summonAriaPull', { n: left })
           : t('ui.summonAriaEmpty'));
@@ -44742,7 +44832,10 @@ const UI = {
         stage.tabIndex = canPull ? 0 : -1;
       }
       const hint = document.getElementById('summonStageHint');
-      if (hint) hint.style.display = (left > 0 && !this._chestPullBusy) ? '' : 'none';
+      if (hint) {
+        hint.textContent = tOr('ui.summonHint', 'Tik kist om te openen');
+        hint.style.display = (left > 0 && !this._chestPullBusy) ? '' : 'none';
+      }
 
       const logEl = document.getElementById('summonLog');
       if (logEl) {
@@ -45104,10 +45197,10 @@ const UI = {
         this._chestPullLeftSnap = null;
       }
       const text = document.getElementById('summonRevealText');
-      const msg = typeof chestResultToast === 'function' ? chestResultToast(res) : (res && res.ok ? 'Summon!' : 'Mislukt');
+      const msg = typeof chestResultToast === 'function' ? chestResultToast(res) : (res && res.ok ? 'Summon!' : tOr('ui.summonFail', 'Mislukt'));
       // Never spoil via toast/text during the open — only after card
       this._summonPendingMsg = (res && res.ok) ? msg : null;
-      if (text) text.textContent = (res && res.ok) ? 'Kist opent…' : msg;
+      if (text) text.textContent = (res && res.ok) ? tOr('ui.summonOpening', 'Kist opent…') : msg;
 
       if (!res || !res.ok) {
         this._chestPullBusy = false;
