@@ -374,10 +374,20 @@ function spawnTop20ForTest(game, spId) {
   let id = (spId && SPECIES[spId] && isTop20StrongestSpecies(spId)) ? spId : null;
   if (!id) id = ids[0];
   if (!id || !SPECIES[id]) return null;
-  const maxX = (game.maxX != null) ? game.maxX : (typeof W === 'number' ? W - 40 : 760);
-  const x = Math.min(maxX - 20, (typeof W === 'number' ? W : 800) * 0.78);
+  const mid = (typeof W === 'number') ? W * 0.58 : 420;
+  const maxX = (game.maxX != null) ? game.maxX : mid;
+  const x = clamp(mid, (game.minX != null ? game.minX : 40) + 40, maxX - 20);
   const mon = new Monster(id, x, game, {});
+  // Keep the preview on-stage (flyers otherwise sit high and can clip the HUD).
+  if (mon.flying || mon.swimming) {
+    mon.y = game.ground - Math.max(72, mon.size * 2.2);
+  }
   if (game.monsters) game.monsters.push(mon);
+  try {
+    if (typeof game.floater === 'function' && mon.sp && mon.sp.name) {
+      game.floater(mon.x, mon.y - mon.size - 18, mon.sp.name, '#ffd75e', 14);
+    }
+  } catch (_) {}
   return mon;
 }
 

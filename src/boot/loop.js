@@ -962,9 +962,7 @@ function bootGame() {
             startGame('training');
             if (top20 != null && typeof spawnTop20ForTest === 'function') {
               const pick = (top20 === '1' || top20 === '' || top20 === 'true') ? null : top20;
-              setTimeout(() => {
-                try { spawnTop20ForTest(game, pick); } catch (_) {}
-              }, 90);
+              try { spawnTop20ForTest(game, pick); } catch (_) {}
             }
           } else if (mode === 'versus') {
             try { toastVersusRetired(); } catch (_) {}
