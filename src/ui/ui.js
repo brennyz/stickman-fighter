@@ -855,6 +855,13 @@ function hubTileStatLine(hub) {
     }
     case 'collect':
       return `${weaponUnlockedCount()}/${WEAPONS.length} wap · dex ${petTamedCount()} · ${petCoinsBalance()} pet ${SVG_COIN_ICON}`;
+    case 'buildings': {
+      try {
+        return (typeof buildingsHubStat === 'function') ? buildingsHubStat() : t('buildings.hubStatIdle');
+      } catch (_) {
+        return t('buildings.hubStatIdle');
+      }
+    }
     case 'summon': {
       try {
         ensureChestDaily();
@@ -1001,7 +1008,7 @@ function renderAdvSatanCard(heat, diff) {
 }
 
 const UI = {
-  screens: ['menuScreen', 'modeHubScreen', 'levelScreen', 'gambleScreen', 'summonScreen', 'weaponScreen', 'petScreen', 'styleScreen', 'upgradeScreen', 'skillScreen', 'settingsScreen', 'missionsScreen', 'charSelectScreen', 'dexScreen', 'helpScreen', 'installScreen', 'resultScreen', 'pauseScreen'],
+  screens: ['menuScreen', 'modeHubScreen', 'levelScreen', 'gambleScreen', 'buildingsScreen', 'summonScreen', 'weaponScreen', 'petScreen', 'styleScreen', 'upgradeScreen', 'skillScreen', 'settingsScreen', 'missionsScreen', 'charSelectScreen', 'dexScreen', 'helpScreen', 'installScreen', 'resultScreen', 'pauseScreen'],
   modeHubId: 'arcade',
   charPickStep: 1,
   charSagaFilter: 'all',
@@ -1320,6 +1327,12 @@ const UI = {
         this.show('menuScreen');
         return;
       }
+      if (active === 'buildingsScreen') {
+        try { this.stopBuildingsTick(); } catch (_) {}
+        this.renderMenu();
+        this.show('menuScreen');
+        return;
+      }
       if (active === 'levelScreen') {
         bumpLevelHoldGen();
         try { cancelGambleStart(); } catch (_) {}
@@ -1546,6 +1559,7 @@ const UI = {
       state = 'menu';
       window.__sfLoopErr = false;
       try { this.clearSummonRevealTimers(); } catch (_) {}
+      try { this.stopBuildingsTick(); } catch (_) {}
       this._chestPullBusy = false;
       try { Input.releaseAll(); } catch (_) {}
       Input.dualMode = false;

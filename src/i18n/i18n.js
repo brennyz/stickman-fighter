@@ -23,6 +23,7 @@ const I18N = {
       arcade: 'Arcade', arcadeSub: 'Training · Muur · Muntjes', versus: '2 spelers', versusSub: 'Lokaal',
       collect: 'Collectie', collectSub: 'Wapens · stijl · boek', music: 'Muziek', missions: 'Missies',
       summons: 'Summons', summonsSub: 'Dagelijkse kist · wapen & pet',
+      buildings: 'Fabrieken', buildingsSub: 'Werken · oogst · upgrade',
       options: 'Opties', tips: 'Tips', fresh: 'Verse versie', install: 'Zet in app-lade', installSub: 'Één icoon, zoals een echte app',
       pressStart: 'insert coin', missionReady: 'missie klaar', dayBonus: 'Dagbonus',
       choosePath: 'KIES JE PAD', lastPlayed: 'LAATST', playHere: 'SPEEL',
@@ -47,6 +48,28 @@ const I18N = {
       dex: 'Monsterboek', dexSub: '{n} soorten · rariteit = HP · boerderij · zoo · zee',
       modes3: '3 snelle modi', fightersLocal: '20 vechters · lokaal', vsRecord: '{w}/{m} gewonnen',
       loadFail: 'Hub laden mislukt',
+    },
+    buildings: {
+      title: 'Fabrieken', sub: 'Vijf werken · oogst op tijd · upgrade',
+      hubStatReady: '{n} klaar om te oogsten', hubStatIdle: '5 werken',
+      hubStatLocked: '{n}/{total} open',
+      level: 'Lv {n}', locked: 'Op slot',
+      lockWorld: 'Open {name} (wereld {n})',
+      collect: 'Oogsten', collectSub: '{n} {res} klaar', collectEmpty: 'Nog niks klaar',
+      collectDone: '+{n} {res}',
+      upgrade: 'Upgrade', upgradeSub: '{cost} pet coins · Lv {next}',
+      upgradeMax: 'Max level', upgradeNeed: 'Nog {need} pet coins',
+      upgradeOk: '{name} → Lv {lv}',
+      nextIn: 'Volgende over {t}', stored: '{n}/{cap} opgeslagen',
+      stubNote: 'Systems-API nog niet gemerged — stub-productie',
+      liveNote: 'Live systems-API',
+      loadFail: 'Fabrieken laden mislukt',
+      mill: 'Dojo-molen', millSub: 'XP-stof · Oost-eiland',
+      forge: 'Wapensmederij', forgeSub: 'Shards · Vuur-eiland',
+      ranch: 'Pet-ranch', ranchSub: 'Pet coins · Neon-eiland',
+      shrine: 'Tempel-altaar', shrineSub: 'Kist-stof · Tempel-eiland',
+      foundry: 'Hel-gieterij', foundrySub: 'Ember · Hel',
+      resXp: 'XP', resShard: 'shards', resPet: 'pet coins', resDust: 'kist-stof', resEmber: 'ember',
     },
     modes: { adventure: 'Avontuur', training: 'Training', wall: 'Muur', versus: '2 spelers', coinrun: 'Muntjes' },
     pause: {
@@ -135,6 +158,7 @@ const I18N = {
       arcade: 'Arcade', arcadeSub: 'Training · Wall · Coins', versus: '2 players', versusSub: 'Local',
       collect: 'Collection', collectSub: 'Weapons · style · book', music: 'Music', missions: 'Missions',
       summons: 'Summons', summonsSub: 'Daily chest · weapon & pet',
+      buildings: 'Buildings', buildingsSub: 'Factories · collect · upgrade',
       options: 'Options', tips: 'Tips', fresh: 'Fresh version', install: 'Add as app', installSub: 'One icon, like a real app',
       pressStart: 'insert coin', missionReady: 'mission ready', dayBonus: 'Daily bonus',
       choosePath: 'CHOOSE YOUR PATH', lastPlayed: 'LAST', playHere: 'PLAY',
@@ -159,6 +183,28 @@ const I18N = {
       dex: 'Monster book', dexSub: '{n} species · rarity = HP · farm · zoo · sea',
       modes3: '3 quick modes', fightersLocal: '20 fighters · local', vsRecord: '{w}/{m} won',
       loadFail: 'Could not load hub',
+    },
+    buildings: {
+      title: 'Buildings', sub: 'Five factories · timed collect · upgrade',
+      hubStatReady: '{n} ready to collect', hubStatIdle: '5 factories',
+      hubStatLocked: '{n}/{total} open',
+      level: 'Lv {n}', locked: 'Locked',
+      lockWorld: 'Clear {name} (world {n})',
+      collect: 'Collect', collectSub: '{n} {res} ready', collectEmpty: 'Nothing ready yet',
+      collectDone: '+{n} {res}',
+      upgrade: 'Upgrade', upgradeSub: '{cost} pet coins · Lv {next}',
+      upgradeMax: 'Max level', upgradeNeed: 'Need {need} more pet coins',
+      upgradeOk: '{name} → Lv {lv}',
+      nextIn: 'Next in {t}', stored: '{n}/{cap} stored',
+      stubNote: 'Systems API not merged yet — stub production',
+      liveNote: 'Live systems API',
+      loadFail: 'Could not load buildings',
+      mill: 'Dojo mill', millSub: 'XP dust · East island',
+      forge: 'Weapon forge', forgeSub: 'Shards · Fire island',
+      ranch: 'Pet ranch', ranchSub: 'Pet coins · Neon island',
+      shrine: 'Temple shrine', shrineSub: 'Chest dust · Temple island',
+      foundry: 'Hell foundry', foundrySub: 'Ember · Hell',
+      resXp: 'XP', resShard: 'shards', resPet: 'pet coins', resDust: 'chest dust', resEmber: 'ember',
     },
     modes: { adventure: 'Adventure', training: 'Training', wall: 'Wall', versus: '2 players', coinrun: 'Coins' },
     pause: {
@@ -233,7 +279,9 @@ const I18N = {
     menu: {
       continue: 'Weiterspielen', adventure: 'Abenteuer', adventureSub: 'Story · Inseln · Bosse',
       arcade: 'Arcade', arcadeSub: 'Training · Mauer · Münzen', versus: '2 Spieler', versusSub: 'Lokal',
-      collect: 'Sammlung', collectSub: 'Waffen · Stil · Buch', music: 'Musik', missions: 'Missionen',
+      collect: 'Sammlung', collectSub: 'Waffen · Stil · Buch',
+      buildings: 'Fabriken', buildingsSub: 'Werke · ernten · upgrade',
+      music: 'Musik', missions: 'Missionen',
       options: 'Optionen', tips: 'Tipps', fresh: 'Neue Version', install: 'Als App speichern', installSub: 'Ein Icon, wie eine echte App',
       pressStart: 'insert coin', missionReady: 'Mission bereit', dayBonus: 'Tagesbonus',
       choosePath: 'WÄHLE DEINEN WEG', lastPlayed: 'ZULETZT', playHere: 'SPIEL',
@@ -314,7 +362,9 @@ const I18N = {
     menu: {
       continue: 'Continuer', adventure: 'Aventure', adventureSub: 'Histoire · îles · boss',
       arcade: 'Arcade', arcadeSub: 'Entraînement · Mur · Pièces', versus: '2 joueurs', versusSub: 'Local',
-      collect: 'Collection', collectSub: 'Armes · style · bestiaire', music: 'Musique', missions: 'Missions',
+      collect: 'Collection', collectSub: 'Armes · style · bestiaire',
+      buildings: 'Usines', buildingsSub: 'Usines · récolte · upgrade',
+      music: 'Musique', missions: 'Missions',
       options: 'Options', tips: 'Astuces', fresh: 'Version fraîche', install: 'Ajouter comme app', installSub: 'Une icône, comme une vraie app',
       pressStart: 'insert coin', missionReady: 'mission prête', dayBonus: 'Bonus du jour',
       choosePath: 'CHOISIS TON CHEMIN', lastPlayed: 'DERNIER', playHere: 'JOUER',
@@ -395,7 +445,9 @@ const I18N = {
     menu: {
       continue: 'Continuar', adventure: 'Aventura', adventureSub: 'Historia · islas · jefes',
       arcade: 'Arcade', arcadeSub: 'Entrenamiento · Muro · Monedas', versus: '2 jugadores', versusSub: 'Local',
-      collect: 'Colección', collectSub: 'Armas · estilo · bestiario', music: 'Música', missions: 'Misiones',
+      collect: 'Colección', collectSub: 'Armas · estilo · bestiario',
+      buildings: 'Fábricas', buildingsSub: 'Obras · recolectar · mejorar',
+      music: 'Música', missions: 'Misiones',
       options: 'Opciones', tips: 'Consejos', fresh: 'Versión nueva', install: 'Añadir como app', installSub: 'Un icono, como una app real',
       pressStart: 'insert coin', missionReady: 'misión lista', dayBonus: 'Bonus diario',
       choosePath: 'ELIGE TU CAMINO', lastPlayed: 'ÚLTIMO', playHere: 'JUEGA',
@@ -588,6 +640,8 @@ function applyLangStaticScreens() {
     ['.hub-tile-arcade .hub-tile-sub', 'menu.arcadeSub'],
     ['.hub-tile-collect .hub-tile-title', 'menu.collect'],
     ['.hub-tile-collect .hub-tile-sub', 'menu.collectSub'],
+    ['.hub-tile-buildings .hub-tile-title', 'menu.buildings'],
+    ['.hub-tile-buildings .hub-tile-sub', 'menu.buildingsSub'],
     ['.hub-tile-summon .hub-tile-title', 'menu.summons'],
     ['.hub-tile-summon .hub-tile-sub', 'menu.summonsSub'],
   ];
@@ -737,6 +791,8 @@ function applyLangStaticScreens() {
   setText('superSectionSub', 'ui.superSub');
   setText('weaponScreenHead', 'ui.weaponHead');
   setText('weaponScreenSub', 'ui.weaponSub');
+  setText('buildingsScreenHead', 'buildings.title');
+  setText('buildingsScreenSub', 'buildings.sub');
   setText('helpFirstMinute', 'ui.helpFirstMinute');
 
   const gambleStartLbl = document.getElementById('gambleStartLbl');

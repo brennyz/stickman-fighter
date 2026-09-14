@@ -122,7 +122,9 @@ const get = (id) => {
 };
 
 [
-  'menuScreen', 'levelScreen', 'gambleScreen', 'weaponScreen', 'styleScreen', 'skillScreen', 'settingsScreen',
+  'menuScreen', 'levelScreen', 'gambleScreen', 'buildingsScreen', 'buildingsList', 'buildingsDetail',
+  'btnBuildings', 'btnBuildingCollect', 'btnBuildingUpgrade',
+  'weaponScreen', 'styleScreen', 'skillScreen', 'settingsScreen',
   'missionsScreen', 'charSelectScreen', 'dexScreen', 'helpScreen', 'installScreen',
   'resultScreen', 'pauseScreen', 'game', 'toastHost', 'pauseBtn', 'menuStats',
   'menuDailyHint', 'menuTipLine', 'menuPlayLink', 'togMusic', 'togSfx',

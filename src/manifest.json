@@ -17,6 +17,7 @@
   "src/data/tide-battle.js",
   "src/data/satan-encounter.js",
   "src/data/pets.js",
+  "src/systems/buildings-bridge.js",
   "src/data/egg-pets.js",
   "src/data/chest-summons.js",
   "src/i18n/catalog.js",
@@ -38,6 +39,7 @@
   "src/render/backgrounds.js",
   "src/game/game.js",
   "src/ui/ui.js",
+  "src/ui/buildings-ui.js",
   "src/boot/start.js",
   "src/boot/loop.js"
 ]

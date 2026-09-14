@@ -134,6 +134,8 @@ document.querySelectorAll('[data-hub]').forEach((el) => {
       try { toastVersusRetired(); } catch (_) {}
     } else if (hub === 'summon') {
       UI.openSummonHub();
+    } else if (hub === 'buildings') {
+      if (typeof UI.openBuildings === 'function') UI.openBuildings();
     } else {
       UI.openModeHub(hub);
     }
