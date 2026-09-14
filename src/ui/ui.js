@@ -4381,6 +4381,7 @@ const UI = {
     const lblS = document.getElementById('setSfxVolLbl');
     if (lblM) lblM.textContent = mPct + '%';
     if (lblS) lblS.textContent = sPct + '%';
+    try { if (typeof syncAimPrefControls === 'function') syncAimPrefControls(); } catch (_) {}
     ['setShake', 'setHaptics', 'setComboHud', 'setBigTouch', 'setKbLegend', 'setShowTouchPads', 'setReducedMotion', 'setLiteFx', 'setHighContrast'].forEach((id, i) => {
       const el = document.getElementById(id);
       if (!el) return;

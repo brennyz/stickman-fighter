@@ -66,6 +66,8 @@ const I18N = {
     settings: {
       title: 'Instellingen', sub: 'Geluid, trilling & HUD — opgeslagen op dit apparaat',
       lang: 'Taal', music: 'Muziek', sfx: 'Effecten', shake: 'Schermschok', haptics: 'Trillen',
+      aimHead: 'Mik-indicator', aimHint: 'Kleur en grootte van de straal als je omhoog of omlaag mikt met de beweegbalk.',
+      aimColor: 'Kleur', aimRadius: 'Grootte', aimPick: 'Kies zelf',
       comboHud: 'Combo-HUD', bigTouch: 'Grote knoppen',
       kbLegend: 'Toetsenbord-hulp', showTouchPads: 'Touch-knoppen altijd',
       reducedMotion: 'Minder beweging',
@@ -193,6 +195,8 @@ const I18N = {
     settings: {
       title: 'Settings', sub: 'Sound, haptics & HUD — saved on this device',
       lang: 'Language', music: 'Music', sfx: 'Effects', shake: 'Screen shake', haptics: 'Haptics',
+      aimHead: 'Aim indicator', aimHint: 'Color and size of the beam when you aim high or low with the move bar.',
+      aimColor: 'Color', aimRadius: 'Size', aimPick: 'Custom',
       comboHud: 'Combo HUD', bigTouch: 'Big buttons',
       kbLegend: 'Keyboard help', showTouchPads: 'Always show touch pads',
       reducedMotion: 'Reduce motion',
@@ -320,6 +324,8 @@ const I18N = {
     settings: {
       title: 'Einstellungen', sub: 'Sound, Vibration & HUD — auf diesem Gerät gespeichert',
       lang: 'Sprache', music: 'Musik', sfx: 'Effekte', shake: 'Bildschirmshake', haptics: 'Vibration',
+      aimHead: 'Zielanzeige', aimHint: 'Farbe und Größe des Strahls beim Zielen nach oben oder unten.',
+      aimColor: 'Farbe', aimRadius: 'Größe', aimPick: 'Eigene Farbe',
       comboHud: 'Combo-HUD', bigTouch: 'Große Tasten',
       kbLegend: 'Tastatur-Hilfe', showTouchPads: 'Touch-Tasten immer',
       reducedMotion: 'Weniger Bewegung',
@@ -439,6 +445,8 @@ const I18N = {
     settings: {
       title: 'Options', sub: 'Son, vibrations & HUD — sauvegardé sur cet appareil',
       lang: 'Langue', music: 'Musique', sfx: 'Effets', shake: 'Secousse écran', haptics: 'Vibration',
+      aimHead: 'Viseur', aimHint: 'Couleur et taille du rayon quand tu vises haut ou bas avec la barre de déplacement.',
+      aimColor: 'Couleur', aimRadius: 'Taille', aimPick: 'Personnaliser',
       comboHud: 'HUD combo', bigTouch: 'Gros boutons',
       kbLegend: 'Aide clavier', showTouchPads: 'Toujours boutons tactile',
       reducedMotion: 'Moins de mouvement',
@@ -558,6 +566,8 @@ const I18N = {
     settings: {
       title: 'Opciones', sub: 'Sonido, vibración y HUD — guardado en este dispositivo',
       lang: 'Idioma', music: 'Música', sfx: 'Efectos', shake: 'Sacudida pantalla', haptics: 'Vibración',
+      aimHead: 'Indicador de mira', aimHint: 'Color y tamaño del rayo al apuntar arriba o abajo con la barra de movimiento.',
+      aimColor: 'Color', aimRadius: 'Tamaño', aimPick: 'Elegir',
       comboHud: 'HUD combo', bigTouch: 'Botones grandes',
       kbLegend: 'Ayuda de teclado', showTouchPads: 'Siempre botones táctiles',
       reducedMotion: 'Menos movimiento',
@@ -806,6 +816,11 @@ function applyLangStaticScreens() {
   setText('settingsHead', 'settings.title');
   setText('settingsSub', 'settings.sub');
   setText('setLangLbl', 'settings.lang');
+  setText('setAimHead', 'settings.aimHead');
+  setText('setAimHint', 'settings.aimHint');
+  setText('setAimColorLbl', 'settings.aimColor');
+  setText('setAimRadiusName', 'settings.aimRadius');
+  setText('setAimPickLbl', 'settings.aimPick');
   setText('settingsA11yTip', 'settings.a11yTip');
   const setMap = [
     ['setShake', 'settings.shake'], ['setHaptics', 'settings.haptics'], ['setComboHud', 'settings.comboHud'],

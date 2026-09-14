@@ -143,6 +143,7 @@ Schrijf **1–3 regels** per sessie: datum, d#, wat, versie.
 
 | Datum (UTC) | d# | Update |
 |-------------|-----|--------|
+| 2026-09-14 | — | Options: mik-indicator kleur + radius (beweegbalk). Persist + live preview. Combat-math ongemoeid. v1.18.164 / SW 374. Draft. |
 | 2026-09-14 | — | Seasonal BGM #270: Halloween ostinato + #277 hooks (`data-season-audio`, `AudioSys.seasonId`, `sf-season-change`). Geen season-UI. v1.18.166 / SW 376. |
 | 2026-09-14 | — | Audio harden #270: soft replay, sidecar, geen stacked SFX, classic raw SONGS. v1.18.165 / SW 375. |
 | 2026-09-14 | — | Audio themes: classic pack blijft; Jungle + Vuur-bamboe/Boesa BGM/SFX + lichte scenery-tint; save.audioTheme persist; switch Instellingen + Pauze. v1.18.164 / SW 374. i18n aparte agent. |

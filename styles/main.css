@@ -2182,6 +2182,27 @@
       border-radius:16px; padding:16px 18px; margin:10px 0; color:#d5e0ff; font-size:15px; }
   .settings-card label { display:flex; justify-content:space-between; align-items:center; gap:12px; margin:8px 0; flex-wrap:wrap; }
   .settings-card input[type=range] { flex:1; min-width:120px; accent-color:#ffd75e; }
+  .aim-pref-head { font-weight:900; color:#7cf5ff; margin:14px 0 4px; letter-spacing:.02em; }
+  .aim-pref-hint { font-size:12px; line-height:1.4; opacity:.78; margin:0 0 10px; color:#cfe0ff; }
+  .aim-pref-lbl { font-weight:800; font-size:13px; margin:8px 0 6px; color:#e8f0ff; }
+  .aim-pref-preview { display:block; width:min(100%,180px); height:72px; margin:0 0 10px; border-radius:10px;
+    background:#0a0d18; border:1px solid rgba(255,255,255,.14); }
+  .aim-color-swatches { display:flex; flex-wrap:wrap; gap:8px; margin:0 0 8px; }
+  .aim-color-swatch { width:40px; height:40px; min-width:40px; min-height:40px; padding:0; border-radius:50%;
+    border:2px solid rgba(255,255,255,.28); box-shadow:inset 0 0 0 2px rgba(0,0,0,.28); cursor:pointer; }
+  .aim-color-swatch[data-aim-color="#7cf5ff"] { background:#7cf5ff; }
+  .aim-color-swatch[data-aim-color="#ffd75e"] { background:#ffd75e; }
+  .aim-color-swatch[data-aim-color="#7cfc8a"] { background:#7cfc8a; }
+  .aim-color-swatch[data-aim-color="#ffb06a"] { background:#ffb06a; }
+  .aim-color-swatch[data-aim-color="#ffb0b8"] { background:#ffb0b8; }
+  .aim-color-swatch[data-aim-color="#c792ff"] { background:#c792ff; }
+  .aim-color-swatch[data-aim-color="#e8f0ff"] { background:#e8f0ff; }
+  .aim-color-swatch.on { border-color:#fff; outline:3px solid #7cf5ff; outline-offset:2px;
+    box-shadow:0 0 0 2px rgba(0,0,0,.45), inset 0 0 0 2px rgba(0,0,0,.28); }
+  #setAimRadiusLbl { margin-left:8px; font-variant-numeric:tabular-nums; min-width:1.4em; display:inline-block; }
+  .aim-color-picker-lab { display:flex; align-items:center; justify-content:space-between; gap:12px; margin:6px 0 10px; }
+  .aim-color-picker-lab input[type=color] { width:48px; height:36px; padding:0; border:1px solid rgba(255,255,255,.2);
+    border-radius:8px; background:transparent; cursor:pointer; }
   .pause-audio-vol { width:min(92vw,400px); margin:0 auto 10px; padding:10px 14px 6px;
       background:rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.1); border-radius:14px; font-size:14px; color:#c8d4f0; }
   .pause-audio-vol label { display:flex; justify-content:space-between; align-items:center; gap:10px; margin:6px 0; flex-wrap:wrap; }
