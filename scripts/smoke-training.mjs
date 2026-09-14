@@ -103,8 +103,10 @@ async function run() {
         g.player.hurtT = 0;
         g.player.invulnT = 0;
         g.player.alive = true;
+        g.player.state = 'idle';
         g.freezeT = 0;
         g.shakeT = 0;
+        g.projectiles = [];
         if (typeof W === 'number' && W > 0) g.robot.x = W * 0.75;
         g.robot.y = g.ground;
         g.robot.vy = 0;
