@@ -323,9 +323,9 @@ const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const VERSION_UPDATE_SAVE_KEY = 'stickfighter_version_update_save_v1';
 const VERSION_UPDATE_FLAG_KEY = 'stickfighter_version_update_flag_v1';
 const SAVE_EXPORT_SCHEMA = 3;
-const APP_VERSION = '1.18.166';
+const APP_VERSION = '1.18.167';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 376;
+const SW_CACHE_REV = 377;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', petCoins: 0, dex: {}, summons: {}, pets: {}, activePet: null,
   eggPets: {}, activeEggPet: null, eggDaily: null,
   chestDaily: null, chestWeapons: {},
@@ -3600,29 +3600,12 @@ function applyLangStaticScreens() {
 
   setText('petScreenHead', 'pets.title');
   setText('petScreenSub', 'pets.sub');
-  setText('summonScreenHead', 'menu.summons');
-  setText('summonScreenSub', 'ui.summonSub');
-  setText('summonWhereStrip', 'ui.summonWhere');
-  setText('summonStageHint', 'ui.summonHint');
-  setText('summonRevealText', 'ui.summonRevealHint');
-  const gotoW = document.getElementById('btnSummonGotoWeapons');
-  if (gotoW) {
-    const d = gotoW.querySelector('div');
-    if (d) d.innerHTML = t('ui.summonGotoWeapons') + '<small>' + t('ui.summonCollect') + '</small>';
-  }
-  const gotoP = document.getElementById('btnSummonGotoPets');
-  if (gotoP) {
-    const d = gotoP.querySelector('div');
-    if (d) d.innerHTML = t('ui.summonGotoPets') + '<small>' + t('ui.summonCollect') + '</small>';
-  }
   const eggBtn = document.getElementById('eggCrackBtn');
   if (eggBtn) {
     const d = eggBtn.querySelector('div');
     if (d) d.innerHTML = t('pets.crackEgg') + '<small>' + t('pets.crackEggSub') + '</small>';
   }
 
-  setText('buildingsScreenHead', 'buildings.title');
-  setText('buildingsScreenSub', 'buildings.sub');
   setText('dexScreenHead', 'dex.title');
   setText('dexScreenSub', 'dex.sub', typeof SPECIES_ORDER !== 'undefined' ? { n: SPECIES_ORDER.length } : undefined);
   setText('helpHead', 'help.title');
@@ -21239,7 +21222,9 @@ const CATALOG_DE_CHROME = {
     earLaser: 'OHR-LASER — spring!', lightning_pierceTele: 'LIGHTNING PIERCE — Dash/Spring!',
     lightning_pierceMiss: 'Lightning Pierce verfehlt — Springen wirkt!',
     kickTele: 'TRITT — spring/block!', punchTele: 'SCHLAG — block/weg!', earLaserShort: 'OHR-LASER',
-    rabbitRobot: 'RABBITROBOT · {pct}%', roundInfo: 'Runde {n} · zuerst 2 · {s}-{r}',
+    rabbitRobot: 'RABBITROBOT · {pct}%',
+    rabbitRobotHp: 'RABBIT {hp}/{max}',
+    roundInfo: 'Runde {n} · zuerst 2 · {s}-{r}',
     dummyGrace: 'Dummy {n}s — Combo üben', goal: 'Ziel ×{n}', record: 'Rekord ×{n}',
     time: 'ZEIT', wallGen: 'MAUER ×{n}', stones: 'Steine: {n}',
     recordGap: 'Rekord {best} · noch {gap}',
@@ -21523,6 +21508,14 @@ const CATALOG_DE_CHROME = {
     summonSub: 'Tägliche Kiste · 10× random · Waffe oder Pet',
     summonWhere: 'Menü → Summons · Beute in Sammlung → Waffen / Pets (Kisten-Badge)',
     summonQuota: 'Heute: {left}/{total} Random-Summons',
+    summonLeft: '{n} übrig',
+    summonDone: 'Leer',
+    summonOpen: 'Kiste öffnen',
+    summonOpenAria: 'Kiste öffnen, {n} übrig',
+    summonNoMore: 'Keine Summons mehr heute',
+    summonOpening: 'Kiste öffnet…',
+    summonNoPulls: 'Heute noch keine Pulls.',
+    summonFail: 'Summon fehlgeschlagen — nochmal versuchen',
     summonPull: 'Kiste öffnen',
     summonPullLeft: '{n} übrig',
     summonPullEmpty: 'Leer',
@@ -42498,84 +42491,90 @@ class Game {
 /* Season overlay — resolve pack token onto body[data-season].
    Slot contract matches CSS pair #279: docs/SEASON-ASSET-SLOTS.md
    Art files: assets/seasons/<id>/<slot>.png
-   Combat hides via CSS (body.is-playing). No gear, no FOMO. */
+   Combat hides via CSS (body.is-playing). No gear, no FOMO.
 
-const SEASON_PACKS = { jungle: 1, halloween: 1 };
-const SEASON_ART_SLOTS = [
-  'corner-tl', 'corner-tr', 'corner-bl', 'corner-br',
-  'banner', 'vignette', 'ground-trim', 'motif',
-];
-const SEASON_ART_PRESENT = {
-  jungle: { 'corner-tl': 1, 'corner-tr': 1, 'corner-bl': 1, 'corner-br': 1, banner: 1, vignette: 1, 'ground-trim': 1, motif: 1 },
-  halloween: { 'corner-tl': 1, 'corner-tr': 1, 'corner-bl': 1, 'corner-br': 1, banner: 1, vignette: 1, 'ground-trim': 1, motif: 1 },
-};
+   IIFE so mega-merge with src/systems/seasons.js does not redeclare
+   const SEASON_ART_SLOTS (that module owns calendar/pref theme). */
+(function (root) {
+  'use strict';
 
-function calendarSeasonOverlay(now) {
-  const d = now || new Date();
-  const m = d.getMonth();
-  const day = d.getDate();
-  if (m === 9 || (m === 10 && day <= 2)) return 'halloween';
-  return '';
-}
-
-function resolveSeasonOverlay() {
-  try {
-    const q = new URLSearchParams(location.search).get('season');
-    if (q === 'none' || q === 'off' || q === '0' || q === 'classic') return '';
-    if (q && SEASON_PACKS[q]) return q;
-  } catch (_) {}
-  try {
-    const stored = localStorage.getItem('sfSeason');
-    if (stored === 'none' || stored === '' || stored === 'classic') return '';
-    if (stored && SEASON_PACKS[stored]) return stored;
-  } catch (_) {}
-  return calendarSeasonOverlay();
-}
-
-function seasonArtUrl(sid, slot) {
-  if (!SEASON_ART_SLOTS.includes(slot)) return '';
-  if (!SEASON_ART_PRESENT[sid] || !SEASON_ART_PRESENT[sid][slot]) return '';
-  return 'assets/seasons/' + sid + '/' + slot + '.png';
-}
-
-function applySeasonOverlay() {
-  const season = resolveSeasonOverlay();
-  const body = typeof document !== 'undefined' ? document.body : null;
-  const root = typeof document !== 'undefined' ? document.documentElement : null;
-  if (body) {
-    if (season) body.setAttribute('data-season', season);
-    else body.removeAttribute('data-season');
-    body.classList.toggle('has-season-overlay', !!season);
-  }
-  if (root) {
-    if (season) root.setAttribute('data-season', season);
-    else root.removeAttribute('data-season');
-    SEASON_ART_SLOTS.forEach((slot) => {
-      const url = season ? seasonArtUrl(season, slot) : '';
-      if (url) root.style.setProperty('--season-art-' + slot, 'url("' + url + '")');
-      else root.style.removeProperty('--season-art-' + slot);
-    });
-  }
-  const host = document.getElementById('seasonOverlay');
-  if (host) {
-    host.setAttribute('data-season-pack', season || '');
-    host.setAttribute('aria-hidden', 'true');
-    host.style.pointerEvents = 'none';
-  }
-  return season;
-}
-
-try { applySeasonOverlay(); } catch (_) {}
-try {
-  window.__sfSeason = {
-    resolve: resolveSeasonOverlay,
-    apply: applySeasonOverlay,
-    packs: Object.keys(SEASON_PACKS),
-    slots: SEASON_ART_SLOTS,
-    present: SEASON_ART_PRESENT,
+  const SEASON_PACKS = { jungle: 1, halloween: 1 };
+  const SEASON_ART_SLOTS = [
+    'corner-tl', 'corner-tr', 'corner-bl', 'corner-br',
+    'banner', 'vignette', 'ground-trim', 'motif',
+  ];
+  const SEASON_ART_PRESENT = {
+    jungle: { 'corner-tl': 1, 'corner-tr': 1, 'corner-bl': 1, 'corner-br': 1, banner: 1, vignette: 1, 'ground-trim': 1, motif: 1 },
+    halloween: { 'corner-tl': 1, 'corner-tr': 1, 'corner-bl': 1, 'corner-br': 1, banner: 1, vignette: 1, 'ground-trim': 1, motif: 1 },
   };
-  window.__sfSeasonArtPresent = SEASON_ART_PRESENT;
-} catch (_) {}
+
+  function calendarSeasonOverlay(now) {
+    const d = now || new Date();
+    const m = d.getMonth();
+    const day = d.getDate();
+    if (m === 9 || (m === 10 && day <= 2)) return 'halloween';
+    return '';
+  }
+
+  function resolveSeasonOverlay() {
+    try {
+      const q = new URLSearchParams(location.search).get('season');
+      if (q === 'none' || q === 'off' || q === '0' || q === 'classic') return '';
+      if (q && SEASON_PACKS[q]) return q;
+    } catch (_) {}
+    try {
+      const stored = localStorage.getItem('sfSeason');
+      if (stored === 'none' || stored === '' || stored === 'classic') return '';
+      if (stored && SEASON_PACKS[stored]) return stored;
+    } catch (_) {}
+    return calendarSeasonOverlay();
+  }
+
+  function seasonArtUrl(sid, slot) {
+    if (!SEASON_ART_SLOTS.includes(slot)) return '';
+    if (!SEASON_ART_PRESENT[sid] || !SEASON_ART_PRESENT[sid][slot]) return '';
+    return 'assets/seasons/' + sid + '/' + slot + '.png';
+  }
+
+  function applySeasonOverlay() {
+    const season = resolveSeasonOverlay();
+    const body = typeof document !== 'undefined' ? document.body : null;
+    const rootEl = typeof document !== 'undefined' ? document.documentElement : null;
+    if (body) {
+      if (season) body.setAttribute('data-season', season);
+      else body.removeAttribute('data-season');
+      body.classList.toggle('has-season-overlay', !!season);
+    }
+    if (rootEl) {
+      if (season) rootEl.setAttribute('data-season', season);
+      else rootEl.removeAttribute('data-season');
+      SEASON_ART_SLOTS.forEach((slot) => {
+        const url = season ? seasonArtUrl(season, slot) : '';
+        if (url) rootEl.style.setProperty('--season-art-' + slot, 'url("' + url + '")');
+        else rootEl.style.removeProperty('--season-art-' + slot);
+      });
+    }
+    const host = document.getElementById('seasonOverlay');
+    if (host) {
+      host.setAttribute('data-season-pack', season || '');
+      host.setAttribute('aria-hidden', 'true');
+      host.style.pointerEvents = 'none';
+    }
+    return season;
+  }
+
+  try { applySeasonOverlay(); } catch (_) {}
+  try {
+    root.__sfSeason = {
+      resolve: resolveSeasonOverlay,
+      apply: applySeasonOverlay,
+      packs: Object.keys(SEASON_PACKS),
+      slots: SEASON_ART_SLOTS,
+      present: SEASON_ART_PRESENT,
+    };
+    root.__sfSeasonArtPresent = SEASON_ART_PRESENT;
+  } catch (_) {}
+})(typeof window !== 'undefined' ? window : this);
 /* --- src/ui/ui.js --- */
 /* ================================= UI ================================== */
 /** Long-press skip-gamble timers — bump gen on re-render / leave level screen. */

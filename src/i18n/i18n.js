@@ -1303,29 +1303,12 @@ function applyLangStaticScreens() {
 
   setText('petScreenHead', 'pets.title');
   setText('petScreenSub', 'pets.sub');
-  setText('summonScreenHead', 'menu.summons');
-  setText('summonScreenSub', 'ui.summonSub');
-  setText('summonWhereStrip', 'ui.summonWhere');
-  setText('summonStageHint', 'ui.summonHint');
-  setText('summonRevealText', 'ui.summonRevealHint');
-  const gotoW = document.getElementById('btnSummonGotoWeapons');
-  if (gotoW) {
-    const d = gotoW.querySelector('div');
-    if (d) d.innerHTML = t('ui.summonGotoWeapons') + '<small>' + t('ui.summonCollect') + '</small>';
-  }
-  const gotoP = document.getElementById('btnSummonGotoPets');
-  if (gotoP) {
-    const d = gotoP.querySelector('div');
-    if (d) d.innerHTML = t('ui.summonGotoPets') + '<small>' + t('ui.summonCollect') + '</small>';
-  }
   const eggBtn = document.getElementById('eggCrackBtn');
   if (eggBtn) {
     const d = eggBtn.querySelector('div');
     if (d) d.innerHTML = t('pets.crackEgg') + '<small>' + t('pets.crackEggSub') + '</small>';
   }
 
-  setText('buildingsScreenHead', 'buildings.title');
-  setText('buildingsScreenSub', 'buildings.sub');
   setText('dexScreenHead', 'dex.title');
   setText('dexScreenSub', 'dex.sub', typeof SPECIES_ORDER !== 'undefined' ? { n: SPECIES_ORDER.length } : undefined);
   setText('helpHead', 'help.title');
