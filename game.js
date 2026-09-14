@@ -726,85 +726,193 @@ function drawTechniqueMiniIcon(c, kind, x, y, color) {
   c.restore();
 }
 
-/** Getekend touch-knop-icoon (art-upgrade 4/4) — vervangt emoji-labels. */
+/** Combat-HUD ink (ASSET-STYLE) — white-on-color that still reads on Android. */
+function touchIconInk() {
+  return (typeof a11yHighContrast === 'function' && a11yHighContrast()) ? '#ffffff' : '#e8f0ff';
+}
+
+function touchIconHi() {
+  return typeof a11yHighContrast === 'function' && a11yHighContrast();
+}
+
+/** Stroke-behind fill so glyphs stay readable on red/blue/purple discs. */
+function touchIconTrace(c, drawPath, opts) {
+  opts = opts || {};
+  const ink = opts.ink || touchIconInk();
+  const outline = opts.outline || 'rgba(8,12,22,.9)';
+  const fill = opts.fill !== false;
+  const lw = opts.lineWidth || 2.2;
+  c.save();
+  c.lineJoin = 'round';
+  c.lineCap = 'round';
+  c.lineWidth = lw + 2.6;
+  c.strokeStyle = outline;
+  drawPath();
+  c.stroke();
+  if (fill) {
+    c.fillStyle = ink;
+    drawPath();
+    c.fill();
+  }
+  c.lineWidth = lw;
+  c.strokeStyle = ink;
+  drawPath();
+  c.stroke();
+  c.restore();
+}
+
+/**
+ * Punch / kick / weapon chip next to telegraph copy — same glyphs as the pads.
+ * Size is CSS-px on the game canvas; keep ≥10 so the silhouette still reads.
+ */
+function drawStrikeHudChip(c, id, x, y, r) {
+  if (!c || !id) return false;
+  r = Math.max(9, r || 12);
+  const bg = id === 'punch' ? '#e24a36'
+    : id === 'kick' ? '#2d8ae6'
+    : id === 'weapon' ? '#a24ee0'
+    : id === 'jump' ? '#2f9a4a'
+    : '#333c55';
+  c.save();
+  c.globalAlpha = 1;
+  c.fillStyle = 'rgba(8,12,22,.82)';
+  c.beginPath();
+  c.arc(x, y, r + 2, 0, TAU);
+  c.fill();
+  c.fillStyle = bg;
+  c.beginPath();
+  c.arc(x, y, r, 0, TAU);
+  c.fill();
+  c.strokeStyle = 'rgba(232,240,255,.88)';
+  c.lineWidth = touchIconHi() ? 2.2 : 1.7;
+  c.stroke();
+  const ok = drawTouchBtnIcon(c, id, x, y, r * 0.95);
+  c.restore();
+  return ok;
+}
+
+/** Getekend touch-knop-icoon — stroke-first, chunky, no emoji. */
 function drawTouchBtnIcon(c, id, x, y, r, techniqueKind) {
-  const s = r * 0.52;
+  const hi = touchIconHi();
+  const s = r * (hi ? 0.66 : 0.62);
+  const ink = touchIconInk();
+  const lw = Math.max(hi ? 2.4 : 2.1, r * (hi ? 0.15 : 0.13));
   c.save();
   c.translate(x, y);
-  c.strokeStyle = '#fff';
-  c.fillStyle = '#fff';
-  c.lineWidth = Math.max(2, r * 0.13);
+  c.strokeStyle = ink;
+  c.fillStyle = ink;
+  c.lineWidth = lw;
   c.lineCap = 'round';
   c.lineJoin = 'round';
   switch (id) {
     case 'punch': {
-      // vuist: blok + knokkels
-      c.beginPath();
-      if (c.roundRect) c.roundRect(-s * 0.75, -s * 0.55, s * 1.5, s * 1.1, s * 0.3);
-      else c.rect(-s * 0.75, -s * 0.55, s * 1.5, s * 1.1);
-      c.fill();
-      c.strokeStyle = 'rgba(0,0,0,.35)';
-      c.lineWidth = Math.max(1.4, r * 0.08);
+      // Fist facing right + gold hit ticks — reads as STRIKE, not a pill.
+      const fist = () => {
+        c.beginPath();
+        c.moveTo(-s * 0.82, -s * 0.08);
+        c.quadraticCurveTo(-s * 0.86, -s * 0.7, -s * 0.28, -s * 0.78);
+        c.quadraticCurveTo(s * 0.12, -s * 0.98, s * 0.48, -s * 0.58);
+        c.quadraticCurveTo(s * 0.88, -s * 0.28, s * 0.84, s * 0.08);
+        c.quadraticCurveTo(s * 0.8, s * 0.48, s * 0.22, s * 0.58);
+        c.quadraticCurveTo(-s * 0.22, s * 0.78, -s * 0.58, s * 0.4);
+        c.quadraticCurveTo(-s * 0.96, s * 0.16, -s * 0.82, -s * 0.08);
+        c.closePath();
+      };
+      touchIconTrace(c, fist, { lineWidth: Math.max(1.6, r * 0.08) });
+      c.strokeStyle = 'rgba(13,18,28,.55)';
+      c.lineWidth = Math.max(1.5, r * 0.07);
       c.beginPath();
       for (let i = -1; i <= 1; i++) {
-        c.moveTo(i * s * 0.38, -s * 0.55);
-        c.lineTo(i * s * 0.38, -s * 0.1);
+        c.moveTo(i * s * 0.22 - s * 0.02, -s * 0.58);
+        c.lineTo(i * s * 0.22 + s * 0.08, -s * 0.08);
       }
+      c.stroke();
+      c.strokeStyle = '#ffd75e';
+      c.lineWidth = Math.max(2, r * 0.1);
+      c.beginPath();
+      c.moveTo(s * 0.72, -s * 0.72); c.lineTo(s * 1.08, -s * 1.02);
+      c.moveTo(s * 0.92, -s * 0.22); c.lineTo(s * 1.22, -s * 0.28);
+      c.moveTo(s * 0.78, s * 0.22); c.lineTo(s * 1.1, s * 0.42);
       c.stroke();
       break;
     }
     case 'kick': {
-      // laars
+      // Side boot + gold sole — distinct from the fist blob.
+      const boot = () => {
+        c.beginPath();
+        c.moveTo(-s * 0.42, -s * 0.95);
+        c.lineTo(s * 0.18, -s * 0.95);
+        c.lineTo(s * 0.22, s * 0.18);
+        c.lineTo(s * 1.02, s * 0.38);
+        c.quadraticCurveTo(s * 1.12, s * 0.92, s * 0.58, s * 0.95);
+        c.lineTo(-s * 0.48, s * 0.95);
+        c.quadraticCurveTo(-s * 0.62, s * 0.55, -s * 0.42, s * 0.18);
+        c.closePath();
+      };
+      touchIconTrace(c, boot, { lineWidth: Math.max(1.6, r * 0.08) });
+      c.strokeStyle = '#ffd75e';
+      c.lineWidth = Math.max(2.2, r * 0.11);
       c.beginPath();
-      c.moveTo(-s * 0.45, -s * 0.9);
-      c.lineTo(s * 0.15, -s * 0.9);
-      c.lineTo(s * 0.15, s * 0.25);
-      c.lineTo(s * 0.95, s * 0.45);
-      c.quadraticCurveTo(s * 1.05, s * 0.9, s * 0.6, s * 0.9);
-      c.lineTo(-s * 0.45, s * 0.9);
-      c.closePath();
-      c.fill();
+      c.moveTo(-s * 0.4, s * 0.78);
+      c.lineTo(s * 0.72, s * 0.78);
+      c.stroke();
       break;
     }
     case 'weapon': {
-      // kling + greep
+      // Thick blade + gold guard — not a 1px diagonal.
+      const blade = () => {
+        c.beginPath();
+        c.moveTo(-s * 0.78, s * 0.62);
+        c.lineTo(s * 0.42, -s * 0.62);
+        c.lineTo(s * 0.88, -s * 0.08);
+        c.lineTo(-s * 0.36, s * 1.02);
+        c.closePath();
+      };
+      touchIconTrace(c, blade, { lineWidth: Math.max(1.5, r * 0.07) });
+      c.fillStyle = ink;
       c.beginPath();
-      c.moveTo(-s * 0.85, s * 0.85);
-      c.lineTo(s * 0.7, -s * 0.7);
-      c.stroke();
-      c.beginPath();
-      c.moveTo(s * 0.25, -s * 1.0);
-      c.lineTo(s * 1.0, -s * 0.25);
-      c.lineTo(s * 0.7, -s * 0.7);
+      c.moveTo(s * 0.28, -s * 0.98);
+      c.lineTo(s * 1.02, -s * 0.22);
+      c.lineTo(s * 0.62, -s * 0.58);
       c.closePath();
       c.fill();
+      c.strokeStyle = '#ffd75e';
+      c.lineWidth = Math.max(2.4, r * 0.12);
       c.beginPath();
-      c.moveTo(-s * 0.5, s * 0.2);
-      c.lineTo(-s * 0.05, s * 0.65);
+      c.moveTo(-s * 0.42, s * 0.08);
+      c.lineTo(s * 0.08, s * 0.58);
       c.stroke();
+      c.fillStyle = ink;
+      c.beginPath();
+      c.arc(-s * 0.78, s * 0.78, s * 0.16, 0, TAU);
+      c.fill();
       break;
     }
     case 'special': {
-      const sk = skillById(techniqueKind);
-      const behavior = sk.behavior || 'orb';
+      const sk = typeof skillById === 'function' ? skillById(techniqueKind) : null;
+      const behavior = (sk && sk.behavior) || 'orb';
       if (behavior === 'dash') {
-        c.beginPath();
-        c.moveTo(s * 0.35, -s);
-        c.lineTo(-s * 0.55, s * 0.15);
-        c.lineTo(s * 0.05, s * 0.15);
-        c.lineTo(-s * 0.3, s);
-        c.lineTo(s * 0.65, -s * 0.2);
-        c.lineTo(s * 0.1, -s * 0.2);
-        c.closePath();
-        c.fill();
+        const bolt = () => {
+          c.beginPath();
+          c.moveTo(s * 0.35, -s);
+          c.lineTo(-s * 0.55, s * 0.15);
+          c.lineTo(s * 0.05, s * 0.15);
+          c.lineTo(-s * 0.3, s);
+          c.lineTo(s * 0.65, -s * 0.2);
+          c.lineTo(s * 0.1, -s * 0.2);
+          c.closePath();
+        };
+        touchIconTrace(c, bolt, { lineWidth: Math.max(1.5, r * 0.07) });
       } else if (behavior === 'slash') {
-        c.beginPath();
-        c.moveTo(-s, 0);
-        c.lineTo(-s * 0.35, -s * 0.35);
-        c.lineTo(0, 0);
-        c.lineTo(s * 0.35, s * 0.35);
-        c.lineTo(s, 0);
-        c.stroke();
+        const slash = () => {
+          c.beginPath();
+          c.moveTo(-s, 0);
+          c.lineTo(-s * 0.35, -s * 0.35);
+          c.lineTo(0, 0);
+          c.lineTo(s * 0.35, s * 0.35);
+          c.lineTo(s, 0);
+        };
+        touchIconTrace(c, slash, { fill: false, lineWidth: lw });
         c.beginPath();
         c.moveTo(-s * 0.85, s * 0.25);
         c.lineTo(0, 0);
@@ -814,14 +922,16 @@ function drawTouchBtnIcon(c, id, x, y, r, techniqueKind) {
         c.arc(0, 0, s * 0.22, 0, TAU);
         c.fill();
       } else if (behavior === 'pull' || behavior === 'meteor') {
-        c.beginPath(); c.ellipse(0, 0, s, s * 0.62, 0, 0, TAU); c.stroke();
+        const orb = () => { c.beginPath(); c.ellipse(0, 0, s, s * 0.62, 0, 0, TAU); };
+        touchIconTrace(c, orb, { fill: false, lineWidth: lw });
         c.beginPath(); c.arc(0, 0, s * 0.3, 0, TAU); c.fill();
       } else if (behavior === 'beam' || behavior === 'disc') {
-        c.beginPath(); c.ellipse(0, 0, s * 1.05, s * 0.45, 0, 0, TAU); c.stroke();
+        const disc = () => { c.beginPath(); c.ellipse(0, 0, s * 1.05, s * 0.45, 0, 0, TAU); };
+        touchIconTrace(c, disc, { fill: false, lineWidth: lw });
         c.beginPath(); c.arc(0, 0, s * 0.25, 0, TAU); c.fill();
       } else {
-        // spiral_orb: orb + spiraal
-        c.beginPath(); c.arc(0, 0, s * 0.95, 0, TAU); c.stroke();
+        const ring = () => { c.beginPath(); c.arc(0, 0, s * 0.95, 0, TAU); };
+        touchIconTrace(c, ring, { fill: false, lineWidth: lw });
         c.beginPath();
         for (let a = 0; a < TAU * 1.35; a += 0.3) {
           const rr = s * 0.12 + a * s * 0.12;
@@ -833,30 +943,31 @@ function drawTouchBtnIcon(c, id, x, y, r, techniqueKind) {
       break;
     }
     case 'subst': {
-      // rookwolk
+      const puff = () => {
+        c.beginPath();
+        c.arc(-s * 0.45, s * 0.2, s * 0.42, 0, TAU);
+        c.arc(0, -s * 0.15, s * 0.55, 0, TAU);
+        c.arc(s * 0.5, s * 0.25, s * 0.4, 0, TAU);
+      };
+      touchIconTrace(c, puff, { lineWidth: Math.max(1.5, r * 0.07) });
+      c.strokeStyle = '#ffd75e';
+      c.lineWidth = Math.max(1.6, r * 0.08);
       c.beginPath();
-      c.arc(-s * 0.45, s * 0.2, s * 0.42, 0, TAU);
-      c.arc(0, -s * 0.15, s * 0.55, 0, TAU);
-      c.arc(s * 0.5, s * 0.25, s * 0.4, 0, TAU);
-      c.fill();
-      c.strokeStyle = 'rgba(255,255,255,.7)';
-      c.lineWidth = Math.max(1.4, r * 0.08);
-      c.beginPath();
-      c.moveTo(s * 0.85, -s * 0.55); c.lineTo(s * 1.15, -s * 0.65);
-      c.moveTo(s * 0.75, -s * 0.2); c.lineTo(s * 1.2, -s * 0.25);
+      c.moveTo(s * 0.85, -s * 0.55); c.lineTo(s * 1.18, -s * 0.72);
+      c.moveTo(s * 0.78, -s * 0.12); c.lineTo(s * 1.22, -s * 0.18);
       c.stroke();
       break;
     }
     case 'jump': {
-      c.beginPath();
-      c.moveTo(0, s * 0.9);
-      c.lineTo(0, -s * 0.5);
-      c.stroke();
-      c.beginPath();
-      c.moveTo(-s * 0.7, -s * 0.1);
-      c.lineTo(0, -s * 0.95);
-      c.lineTo(s * 0.7, -s * 0.1);
-      c.stroke();
+      const arrow = () => {
+        c.beginPath();
+        c.moveTo(0, s * 0.95);
+        c.lineTo(0, -s * 0.28);
+        c.moveTo(-s * 0.72, -s * 0.02);
+        c.lineTo(0, -s * 0.98);
+        c.lineTo(s * 0.72, -s * 0.02);
+      };
+      touchIconTrace(c, arrow, { fill: false, lineWidth: lw });
       break;
     }
     default:
@@ -19945,12 +20056,12 @@ function nearAnyTouchButton(buttons, x, y, extra) {
 }
 
 const TOUCH_BTN_META = {
-  punch: { label: '\u{1F44A}', color: '#e0533f' },
-  kick: { label: '\u{1F9B6}', color: '#3f8fe0' },
-  weapon: { label: '\u{1F52A}', color: '#9b59d0' },
-  special: { label: '\u{1F300}', color: '#3db8ff' },
+  punch: { label: '\u{1F44A}', color: '#e24a36' },
+  kick: { label: '\u{1F9B6}', color: '#2d8ae6' },
+  weapon: { label: '\u{1F52A}', color: '#a24ee0' },
+  special: { label: '\u{1F300}', color: '#2eb4f0' },
   subst: { label: '\u{1F4A8}', color: '#c9a66b' },
-  jump: { label: '\u2B06\uFE0F', color: '#43b25b' },
+  jump: { label: '\u2B06\uFE0F', color: '#2f9a4a' },
 };
 
 function touchBtn(id, x, y, rad) {
@@ -28632,13 +28743,13 @@ function adventureTelegraphHud(m) {
     if (m.sp.type === 'tank') {
       return {
         label: (typeof t === 'function' ? t('hud.teleSlam') : 'SLAM — spring!'),
-        color: '#ff9a3d', frac: m.telegraphT / max, max,
+        color: '#ff9a3d', frac: m.telegraphT / max, max, icon: 'jump',
       };
     }
     if (m.sp.type === 'charge' || (m.sp.type === 'swim' && m.sp.art === 'shark')) {
       return {
         label: (typeof t === 'function' ? t('hud.teleCharge') : 'CHARGE — uit de weg!'),
-        color: '#ffdd66', frac: m.telegraphT / max, max,
+        color: '#ffdd66', frac: m.telegraphT / max, max, icon: 'jump',
       };
     }
   }
@@ -28663,6 +28774,9 @@ function drawTelegraphBar(c, game, tele, y) {
   c.fillStyle = 'rgba(0,0,0,.62)';
   game.rr(c, bx - 8, y - 20, barW + 16, 34, 10);
   c.fill();
+  if (tele.icon && typeof drawStrikeHudChip === 'function') {
+    drawStrikeHudChip(c, tele.icon, bx + 10, y - 2, 11);
+  }
   c.font = '900 15px sans-serif';
   c.textAlign = 'center';
   if (typeof fillHudText === 'function') {
@@ -33667,6 +33781,7 @@ class Game {
               frac: this.trainMeleeTelegraphT / (this.trainMeleeTelegraphMax || 0.32),
               color: '#ffb347',
               max: this.trainMeleeTelegraphMax || 0.32,
+              icon: this.trainTelegraphKind === 'kick' ? 'kick' : 'punch',
             }
             : null));
       if (tele) {
@@ -33675,6 +33790,9 @@ class Game {
         c.fillStyle = 'rgba(0,0,0,.4)';
         this.rr(c, bx - 4, 88, barW + 8, 22, 8);
         c.fill();
+        if (tele.icon && typeof drawStrikeHudChip === 'function') {
+          drawStrikeHudChip(c, tele.icon, bx + 12, 99, 10);
+        }
         c.font = '800 11px sans-serif';
         c.textAlign = 'center';
         fillHudText(c, tele.label, W / 2, 102, { fill: tele.color, strokeW: a11yHighContrast() ? 3 : 0 });
@@ -33687,14 +33805,19 @@ class Game {
       }
       if (this.trainMeleeTelegraphT > 0 && r.alive && !this.trainLaserTelegraph && !this.trainTelegraphT) {
         const dir = Math.sign(this.player.x - r.x) || -1;
+        const ix = r.x + dir * 28;
+        const iy = r.y - 28;
         c.save();
         c.globalAlpha = motionReduced() ? 0.38 : (0.3 + Math.sin(this.t * 22) * 0.15);
         c.strokeStyle = '#ffb347';
         c.lineWidth = 3;
         c.beginPath();
-        c.arc(r.x + dir * 28, r.y - 28, 22, 0, TAU);
+        c.arc(ix, iy, 22, 0, TAU);
         c.stroke();
         c.restore();
+        if (typeof drawStrikeHudChip === 'function') {
+          drawStrikeHudChip(c, this.trainTelegraphKind === 'kick' ? 'kick' : 'punch', ix, iy, 13);
+        }
       }
       if (this.trainTelegraphT > 0 && r.alive) {
         c.save();
@@ -34303,18 +34426,27 @@ class Game {
     c.translate(b.x, b.y + xf.dy);
     c.scale(xf.sx, xf.sy);
     if (b.id === 'special') this.drawSpecialBtnMeter(c, b, fighter, accent || '#3db8ff');
-    const heldA = opts.dual ? 0.85 : 0.85;
-    const idleA = opts.dual ? 0.42 : 0.45;
+    const strike = b.id === 'punch' || b.id === 'kick' || b.id === 'weapon';
+    const hi = typeof a11yHighContrast === 'function' && a11yHighContrast();
+    const heldA = hi ? 1 : 0.96;
+    const idleA = hi ? 0.94 : (opts.dual ? (strike ? 0.7 : 0.5) : (strike ? 0.84 : 0.64));
+    c.globalAlpha = hi ? 0.9 : 0.74;
+    c.fillStyle = 'rgba(6,10,22,.84)';
+    c.beginPath(); c.arc(0, 0, b.r, 0, TAU); c.fill();
     c.globalAlpha = idleA + (heldA - idleA) * (xf.p || 0);
     c.fillStyle = b.color;
-    c.beginPath(); c.arc(0, 0, b.r, 0, TAU); c.fill();
+    c.beginPath(); c.arc(0, 0, Math.max(5, b.r - 2.2), 0, TAU); c.fill();
+    c.globalAlpha = hi ? 0.98 : (strike ? 0.86 : 0.64);
+    c.strokeStyle = hi ? '#ffffff' : (strike ? '#e8f0ff' : (accent || 'rgba(232,240,255,.78)'));
+    c.lineWidth = hi ? 2.6 : (strike ? 2.2 : 1.8);
+    c.beginPath(); c.arc(0, 0, b.r - 1.15, 0, TAU); c.stroke();
     if (xf.p > 0.08) {
-      c.globalAlpha = (opts.dual ? 0.55 : 0.6) * xf.p;
+      c.globalAlpha = (opts.dual ? 0.6 : 0.72) * xf.p;
       c.strokeStyle = accent || '#fff';
-      c.lineWidth = opts.dual ? 2 : 2.5;
+      c.lineWidth = opts.dual ? 2 : 2.6;
       c.beginPath(); c.arc(0, 0, b.r + 3, 0, TAU); c.stroke();
     }
-    c.globalAlpha = opts.dual ? 0.9 : (0.85 + 0.15 * (xf.p || 0));
+    c.globalAlpha = 1;
     const jk = b.id === 'special'
       ? (fighter ? fighterTechniqueKind(fighter) : 'spiral_orb')
       : null;
