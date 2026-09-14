@@ -91,6 +91,13 @@
   },
   "userWishlist": [
     {
+      "id": "w-20260914T170300",
+      "from": "user",
+      "text": "Systems PR READY #280 — use gearRenderDescriptor / draw layers for all 5 slots. Large catalog.",
+      "status": "done-in-code",
+      "updated": "2026-09-14"
+    },
+    {
       "id": "w-20260914T165900",
       "from": "user",
       "text": "Gear contract v1 draw order back→front: back, legs, chest, head, hands, weapon-hold, pet. Item.draw.layer + offsets; one item per slot. Align fine-tune to slotIds head/chest/hands/legs/back.",
@@ -628,6 +635,10 @@
   ],
   "sessionLog": [
     {
+      "at": "2026-09-14T17:06:31Z",
+      "summary": "Consume #280 gearRenderDescriptor for all 5 slots; 131-id kind map + tint/layer. v1.18.167/SW377."
+    },
+    {
       "at": "2026-09-14T17:02:15Z",
       "summary": "Align equip-look to Gear contract v1: slotIds head/chest/hands/legs/back, draw back→legs→chest→head→hands, Item.draw + one item/slot. v1.18.166/SW376."
     },
@@ -722,10 +733,6 @@
     {
       "at": "2026-08-17T10:20:50Z",
       "summary": "pull-main script + GITHUB-PUSH bijwerken zodat de pc één commando kan pullen"
-    },
-    {
-      "at": "2026-08-17T10:18:00Z",
-      "summary": "main LIVE 33d89b6 v1.18.151 — pull-commando voor de pc klaar"
     }
   ],
   "implementedFeaturesSummary": "d18 char select deel 1+2 (v1.11.1-2); Mats coinrun + shuriken mik/vliegers + anti-spam (v1.12.0); speel.html (v1.12.2+). Zie HANDOFF-ZOEKINDEX.md en improvement-d20-bag.json userFeatureLog.",

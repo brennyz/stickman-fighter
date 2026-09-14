@@ -52,7 +52,46 @@ const EQUIP_LOOK_DEFAULTS = {
   wrap: { slot: 'legs', layer: 'legs', ox: 0, oy: 0, scale: 1 },
   greaves: { slot: 'legs', layer: 'legs', ox: 0, oy: 1, scale: 1 },
   gloves: { slot: 'hands', layer: 'hands', ox: 0, oy: 0, scale: 1 },
+  horns: { slot: 'head', layer: 'head', ox: 0, oy: -2, scale: 1 },
+  halo: { slot: 'head', layer: 'head', ox: 0, oy: -4, scale: 1 },
+  wings: { slot: 'back', layer: 'back', ox: 0, oy: 0, scale: 1 },
 };
+
+/** #280 catalog suffixes → draw kind (131 ids). More specific first. */
+const GEAR_ID_KIND_RULES = [
+  [/bandana|wrap_cloth|head_wrap/, 'bandana'],
+  [/visor/, 'visor'],
+  [/mask_fox/, 'fox'],
+  [/horns/, 'horns'],
+  [/halo|circlet/, 'halo'],
+  [/aura_glow|hood_void/, 'glow'],
+  [/mask_/, 'visor'],
+  [/helm|beanie|hat_|crown|hood|pumpkin/, 'helmet'],
+  [/gaunt|bracer|mittens|cuffs|fists|claws|gloves|hands_wrap|wraps_monk|wraps_gold|wraps_dream/, 'gloves'],
+  [/rings_/, 'charm'],
+  [/greaves|boots_|sneakers/, 'greaves'],
+  [/legs_wrap|socks|shorts|pants|tabi|bells|legs_wrap/, 'wrap'],
+  [/wings_|wing_/, 'wings'],
+  [/cape|scarf|banner|kite|capelet/, 'cape'],
+  [/backpack|pack_|shell|plate_back|banner_iron/, 'tome'],
+  [/crystal_shard/, 'crystal'],
+  [/pin_|balloon|back_leaf\b|back_void\b/, 'charm'],
+  [/plate_|mail_|cuirass/, 'chestplate'],
+  [/vest_|shirt_|hoodie|gi_|tunic|sash|jacket|robe|coat_|poncho/, 'vest'],
+];
+
+function lookKindFromGearId(itemId, slot) {
+  const id = typeof itemId === 'string' ? itemId.toLowerCase() : '';
+  for (let i = 0; i < GEAR_ID_KIND_RULES.length; i++) {
+    if (GEAR_ID_KIND_RULES[i][0].test(id)) return GEAR_ID_KIND_RULES[i][1];
+  }
+  if (slot === 'head') return /wrap/.test(id) ? 'bandana' : 'helmet';
+  if (slot === 'chest') return 'vest';
+  if (slot === 'hands') return 'gloves';
+  if (slot === 'legs') return /wrap|sock/.test(id) ? 'wrap' : 'greaves';
+  if (slot === 'back') return 'cape';
+  return 'vest';
+}
 
 /** Optional registry: item id → look. Gear systems can add rows without touching draw code. */
 const EQUIP_LOOK = Object.create(null);
@@ -314,19 +353,93 @@ function looksForGear(gear) {
   return out.filter(Boolean);
 }
 
+function lookPieceFromDescriptorRow(row) {
+  if (!row || !row.itemId) return null;
+  const slot = canonEquipSlot(row.slot) || canonEquipSlot(row.layer);
+  if (!slot) return null;
+  const kind = lookKindFromGearId(row.itemId, slot);
+  return hydrateEquipLook({
+    id: row.itemId,
+    kind,
+    slot,
+    layer: row.layer || slot,
+    color: row.tint,
+    accent: row.accent,
+  });
+}
+
+function looksFromGearDescriptor(desc) {
+  if (!desc || !Array.isArray(desc.slots)) return [];
+  const bySlot = Object.create(null);
+  for (let i = 0; i < desc.slots.length; i++) {
+    const piece = lookPieceFromDescriptorRow(desc.slots[i]);
+    if (!piece) continue;
+    bySlot[piece.slot] = piece;
+  }
+  const out = [];
+  for (let i = 0; i < EQUIP_LOOK_SLOTS.length; i++) {
+    const piece = bySlot[EQUIP_LOOK_SLOTS[i]];
+    if (piece) out.push(piece);
+  }
+  return out;
+}
+
+function looksFromEquippedIds(equipped) {
+  if (!isPlainGear(equipped)) return [];
+  const slots = [];
+  for (let i = 0; i < EQUIP_LOOK_SLOTS.length; i++) {
+    const slot = EQUIP_LOOK_SLOTS[i];
+    const raw = equipped[slot];
+    const itemId = typeof raw === 'string' ? raw : (raw && raw.id);
+    if (!itemId) continue;
+    let tint = null, accent = null, layer = slot;
+    if (typeof gearItemById === 'function') {
+      try {
+        const item = gearItemById(itemId);
+        if (item && item.look) {
+          tint = item.look.tint;
+          accent = item.look.accent;
+          layer = item.look.layer || slot;
+        }
+      } catch (_) {}
+    }
+    slots.push({ slot, itemId, tint, accent, layer });
+  }
+  return looksFromGearDescriptor({ slots });
+}
+
+function resolveGearLooks(fighter) {
+  if (fighter && fighter.gearDescriptor) {
+    const fromDesc = looksFromGearDescriptor(fighter.gearDescriptor);
+    if (fromDesc.length) return fromDesc;
+  }
+  const store = (fighter && fighter.save) || (typeof save !== 'undefined' ? save : null);
+  if (typeof gearRenderDescriptor === 'function' && store) {
+    try {
+      const fromApi = looksFromGearDescriptor(gearRenderDescriptor(store));
+      if (fromApi.length) return fromApi;
+    } catch (_) {}
+  }
+  if (store && isPlainGear(store.gear) && isPlainGear(store.gear.equipped)) {
+    const fromEq = looksFromEquippedIds(store.gear.equipped);
+    if (fromEq.length) return fromEq;
+  }
+  let gear = fighter && fighter.gear;
+  if (!isPlainGear(gear) && fighter && fighter.isPlayer && store && isPlainGear(store.gear) && !store.gear.equipped) {
+    gear = store.gear;
+  }
+  return looksForGear(gear);
+}
+
 function resolveFighterLooks(fighter) {
   if (!fighter) return [];
   let styleLooks = [];
   try { styleLooks = looksForStyle(fighter.style) || []; } catch (_) { styleLooks = []; }
-  let gear = fighter.gear;
-  if (!isPlainGear(gear) && fighter.isPlayer && typeof save !== 'undefined' && save && isPlainGear(save.gear)) {
-    gear = save.gear;
-  }
   let gearLooks = [];
-  try { gearLooks = looksForGear(gear) || []; } catch (_) { gearLooks = []; }
-  if (!gearLooks.length) return styleLooks.slice(0, EQUIP_LOOK_MAX);
+  try { gearLooks = resolveGearLooks(fighter) || []; } catch (_) { gearLooks = []; }
+  if (!gearLooks.length) return styleLooks.slice(0, 12);
   const blocked = new Set(gearLooks.map((l) => l.slot).filter(Boolean));
-  return styleLooks.filter((l) => !blocked.has(l.slot)).concat(gearLooks).slice(0, EQUIP_LOOK_MAX);
+  return styleLooks.filter((l) => !blocked.has(l.slot)).concat(gearLooks).slice(0, 12);
 }
 
 function looksOnLayer(looks, layer) {
@@ -350,6 +463,8 @@ const EquipLookApi = {
   resolve: resolveFighterLooks,
   forStyle: looksForStyle,
   forGear: looksForGear,
+  fromDescriptor: looksFromGearDescriptor,
+  kindFromId: lookKindFromGearId,
   register: registerEquipLook,
   snap: lookSnap,
   preview: applyEquipLookPreview,

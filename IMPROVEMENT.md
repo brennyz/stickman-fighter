@@ -1,3 +1,4 @@
+| 2026-09-14 | **equip look** | Consume #280 `gearRenderDescriptor` for all 5 slots; 131-id kind map + tint/layer. **v1.18.167 / SW v377**. |
 | 2026-09-14 | **equip look** | Gear contract v1: slotIds head/chest/hands/legs/back; draw back→legs→chest→head→hands (weapon-hold/pet existing); Item.draw.layer + offsets; one item per slot. **v1.18.166 / SW v376**. |
 | 2026-09-14 | **equip look** | Harden: clamp offsets/scale, canon layers, isolate piece draw (try/finally), skip junk gear keys, cheaper Android shadows, no roundRect. Combat cannot hiccup on a bad look. **v1.18.165 / SW v375**. |
 | 2026-09-14 | **equip look** | Worn outfits: data-driven slots (head/chest/legs/back/trinket), layer order, tuned offsets. Bandana wraps the head, tails behind the face; menu preview no longer clips crown gear. Look-only — no economy. **v1.18.164 / SW v374**. |

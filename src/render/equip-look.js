@@ -384,6 +384,48 @@ function drawLookLightning(c, look, x, y, sc, bones, fighter) {
   }
 }
 
+function drawLookHorns(c, look, x, y, sc) {
+  c.fillStyle = look.color || look.accent;
+  c.beginPath();
+  c.moveTo(x - 8 * sc, y - 14 * sc);
+  c.lineTo(x - 13 * sc, y - 28 * sc);
+  c.lineTo(x - 4 * sc, y - 16 * sc);
+  c.closePath();
+  c.fill();
+  c.beginPath();
+  c.moveTo(x + 8 * sc, y - 14 * sc);
+  c.lineTo(x + 13 * sc, y - 28 * sc);
+  c.lineTo(x + 4 * sc, y - 16 * sc);
+  c.closePath();
+  c.fill();
+}
+
+function drawLookHalo(c, look, x, y, sc) {
+  c.strokeStyle = look.accent || look.color || '#ffe259';
+  c.lineWidth = 2.2 * sc;
+  c.beginPath();
+  c.ellipse ? c.ellipse(x, y - 20 * sc, 9 * sc, 3.2 * sc, 0, 0, TAU)
+    : c.arc(x, y - 20 * sc, 8 * sc, 0, TAU);
+  c.stroke();
+}
+
+function drawLookWings(c, look, x, y, sc, bones) {
+  const sh = lookBoneOk(bones && bones.shoulder) ? bones.shoulder : { x, y };
+  c.fillStyle = look.fill || look.color || 'rgba(200,208,220,.55)';
+  c.beginPath();
+  c.moveTo(sh.x - 6 * sc, sh.y);
+  c.quadraticCurveTo(sh.x - 28 * sc, sh.y - 18 * sc, sh.x - 22 * sc, sh.y + 16 * sc);
+  c.quadraticCurveTo(sh.x - 12 * sc, sh.y + 8 * sc, sh.x - 6 * sc, sh.y + 4 * sc);
+  c.closePath();
+  c.fill();
+  c.beginPath();
+  c.moveTo(sh.x + 4 * sc, sh.y);
+  c.quadraticCurveTo(sh.x + 26 * sc, sh.y - 16 * sc, sh.x + 20 * sc, sh.y + 16 * sc);
+  c.quadraticCurveTo(sh.x + 10 * sc, sh.y + 8 * sc, sh.x + 4 * sc, sh.y + 4 * sc);
+  c.closePath();
+  c.fill();
+}
+
 function drawLookGloves(c, look, x, y, sc, bones) {
   const hand = lookBoneOk(bones && bones.hand) ? bones.hand : { x, y };
   c.fillStyle = look.color || look.accent || '#8fa3d9';
@@ -447,4 +489,7 @@ const EQUIP_LOOK_DRAW = {
   lightning: drawLookLightning,
   charm: drawLookCharm,
   gloves: drawLookGloves,
+  horns: drawLookHorns,
+  halo: drawLookHalo,
+  wings: drawLookWings,
 };

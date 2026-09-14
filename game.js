@@ -323,9 +323,9 @@ const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const VERSION_UPDATE_SAVE_KEY = 'stickfighter_version_update_save_v1';
 const VERSION_UPDATE_FLAG_KEY = 'stickfighter_version_update_flag_v1';
 const SAVE_EXPORT_SCHEMA = 3;
-const APP_VERSION = '1.18.166';
+const APP_VERSION = '1.18.167';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 376;
+const SW_CACHE_REV = 377;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', petCoins: 0, dex: {}, summons: {}, pets: {}, activePet: null,
   eggPets: {}, activeEggPet: null, eggDaily: null,
   chestDaily: null, chestWeapons: {},
@@ -6557,7 +6557,46 @@ const EQUIP_LOOK_DEFAULTS = {
   wrap: { slot: 'legs', layer: 'legs', ox: 0, oy: 0, scale: 1 },
   greaves: { slot: 'legs', layer: 'legs', ox: 0, oy: 1, scale: 1 },
   gloves: { slot: 'hands', layer: 'hands', ox: 0, oy: 0, scale: 1 },
+  horns: { slot: 'head', layer: 'head', ox: 0, oy: -2, scale: 1 },
+  halo: { slot: 'head', layer: 'head', ox: 0, oy: -4, scale: 1 },
+  wings: { slot: 'back', layer: 'back', ox: 0, oy: 0, scale: 1 },
 };
+
+/** #280 catalog suffixes → draw kind (131 ids). More specific first. */
+const GEAR_ID_KIND_RULES = [
+  [/bandana|wrap_cloth|head_wrap/, 'bandana'],
+  [/visor/, 'visor'],
+  [/mask_fox/, 'fox'],
+  [/horns/, 'horns'],
+  [/halo|circlet/, 'halo'],
+  [/aura_glow|hood_void/, 'glow'],
+  [/mask_/, 'visor'],
+  [/helm|beanie|hat_|crown|hood|pumpkin/, 'helmet'],
+  [/gaunt|bracer|mittens|cuffs|fists|claws|gloves|hands_wrap|wraps_monk|wraps_gold|wraps_dream/, 'gloves'],
+  [/rings_/, 'charm'],
+  [/greaves|boots_|sneakers/, 'greaves'],
+  [/legs_wrap|socks|shorts|pants|tabi|bells|legs_wrap/, 'wrap'],
+  [/wings_|wing_/, 'wings'],
+  [/cape|scarf|banner|kite|capelet/, 'cape'],
+  [/backpack|pack_|shell|plate_back|banner_iron/, 'tome'],
+  [/crystal_shard/, 'crystal'],
+  [/pin_|balloon|back_leaf\b|back_void\b/, 'charm'],
+  [/plate_|mail_|cuirass/, 'chestplate'],
+  [/vest_|shirt_|hoodie|gi_|tunic|sash|jacket|robe|coat_|poncho/, 'vest'],
+];
+
+function lookKindFromGearId(itemId, slot) {
+  const id = typeof itemId === 'string' ? itemId.toLowerCase() : '';
+  for (let i = 0; i < GEAR_ID_KIND_RULES.length; i++) {
+    if (GEAR_ID_KIND_RULES[i][0].test(id)) return GEAR_ID_KIND_RULES[i][1];
+  }
+  if (slot === 'head') return /wrap/.test(id) ? 'bandana' : 'helmet';
+  if (slot === 'chest') return 'vest';
+  if (slot === 'hands') return 'gloves';
+  if (slot === 'legs') return /wrap|sock/.test(id) ? 'wrap' : 'greaves';
+  if (slot === 'back') return 'cape';
+  return 'vest';
+}
 
 /** Optional registry: item id → look. Gear systems can add rows without touching draw code. */
 const EQUIP_LOOK = Object.create(null);
@@ -6819,19 +6858,93 @@ function looksForGear(gear) {
   return out.filter(Boolean);
 }
 
+function lookPieceFromDescriptorRow(row) {
+  if (!row || !row.itemId) return null;
+  const slot = canonEquipSlot(row.slot) || canonEquipSlot(row.layer);
+  if (!slot) return null;
+  const kind = lookKindFromGearId(row.itemId, slot);
+  return hydrateEquipLook({
+    id: row.itemId,
+    kind,
+    slot,
+    layer: row.layer || slot,
+    color: row.tint,
+    accent: row.accent,
+  });
+}
+
+function looksFromGearDescriptor(desc) {
+  if (!desc || !Array.isArray(desc.slots)) return [];
+  const bySlot = Object.create(null);
+  for (let i = 0; i < desc.slots.length; i++) {
+    const piece = lookPieceFromDescriptorRow(desc.slots[i]);
+    if (!piece) continue;
+    bySlot[piece.slot] = piece;
+  }
+  const out = [];
+  for (let i = 0; i < EQUIP_LOOK_SLOTS.length; i++) {
+    const piece = bySlot[EQUIP_LOOK_SLOTS[i]];
+    if (piece) out.push(piece);
+  }
+  return out;
+}
+
+function looksFromEquippedIds(equipped) {
+  if (!isPlainGear(equipped)) return [];
+  const slots = [];
+  for (let i = 0; i < EQUIP_LOOK_SLOTS.length; i++) {
+    const slot = EQUIP_LOOK_SLOTS[i];
+    const raw = equipped[slot];
+    const itemId = typeof raw === 'string' ? raw : (raw && raw.id);
+    if (!itemId) continue;
+    let tint = null, accent = null, layer = slot;
+    if (typeof gearItemById === 'function') {
+      try {
+        const item = gearItemById(itemId);
+        if (item && item.look) {
+          tint = item.look.tint;
+          accent = item.look.accent;
+          layer = item.look.layer || slot;
+        }
+      } catch (_) {}
+    }
+    slots.push({ slot, itemId, tint, accent, layer });
+  }
+  return looksFromGearDescriptor({ slots });
+}
+
+function resolveGearLooks(fighter) {
+  if (fighter && fighter.gearDescriptor) {
+    const fromDesc = looksFromGearDescriptor(fighter.gearDescriptor);
+    if (fromDesc.length) return fromDesc;
+  }
+  const store = (fighter && fighter.save) || (typeof save !== 'undefined' ? save : null);
+  if (typeof gearRenderDescriptor === 'function' && store) {
+    try {
+      const fromApi = looksFromGearDescriptor(gearRenderDescriptor(store));
+      if (fromApi.length) return fromApi;
+    } catch (_) {}
+  }
+  if (store && isPlainGear(store.gear) && isPlainGear(store.gear.equipped)) {
+    const fromEq = looksFromEquippedIds(store.gear.equipped);
+    if (fromEq.length) return fromEq;
+  }
+  let gear = fighter && fighter.gear;
+  if (!isPlainGear(gear) && fighter && fighter.isPlayer && store && isPlainGear(store.gear) && !store.gear.equipped) {
+    gear = store.gear;
+  }
+  return looksForGear(gear);
+}
+
 function resolveFighterLooks(fighter) {
   if (!fighter) return [];
   let styleLooks = [];
   try { styleLooks = looksForStyle(fighter.style) || []; } catch (_) { styleLooks = []; }
-  let gear = fighter.gear;
-  if (!isPlainGear(gear) && fighter.isPlayer && typeof save !== 'undefined' && save && isPlainGear(save.gear)) {
-    gear = save.gear;
-  }
   let gearLooks = [];
-  try { gearLooks = looksForGear(gear) || []; } catch (_) { gearLooks = []; }
-  if (!gearLooks.length) return styleLooks.slice(0, EQUIP_LOOK_MAX);
+  try { gearLooks = resolveGearLooks(fighter) || []; } catch (_) { gearLooks = []; }
+  if (!gearLooks.length) return styleLooks.slice(0, 12);
   const blocked = new Set(gearLooks.map((l) => l.slot).filter(Boolean));
-  return styleLooks.filter((l) => !blocked.has(l.slot)).concat(gearLooks).slice(0, EQUIP_LOOK_MAX);
+  return styleLooks.filter((l) => !blocked.has(l.slot)).concat(gearLooks).slice(0, 12);
 }
 
 function looksOnLayer(looks, layer) {
@@ -6855,6 +6968,8 @@ const EquipLookApi = {
   resolve: resolveFighterLooks,
   forStyle: looksForStyle,
   forGear: looksForGear,
+  fromDescriptor: looksFromGearDescriptor,
+  kindFromId: lookKindFromGearId,
   register: registerEquipLook,
   snap: lookSnap,
   preview: applyEquipLookPreview,
@@ -19117,6 +19232,48 @@ function drawLookLightning(c, look, x, y, sc, bones, fighter) {
   }
 }
 
+function drawLookHorns(c, look, x, y, sc) {
+  c.fillStyle = look.color || look.accent;
+  c.beginPath();
+  c.moveTo(x - 8 * sc, y - 14 * sc);
+  c.lineTo(x - 13 * sc, y - 28 * sc);
+  c.lineTo(x - 4 * sc, y - 16 * sc);
+  c.closePath();
+  c.fill();
+  c.beginPath();
+  c.moveTo(x + 8 * sc, y - 14 * sc);
+  c.lineTo(x + 13 * sc, y - 28 * sc);
+  c.lineTo(x + 4 * sc, y - 16 * sc);
+  c.closePath();
+  c.fill();
+}
+
+function drawLookHalo(c, look, x, y, sc) {
+  c.strokeStyle = look.accent || look.color || '#ffe259';
+  c.lineWidth = 2.2 * sc;
+  c.beginPath();
+  c.ellipse ? c.ellipse(x, y - 20 * sc, 9 * sc, 3.2 * sc, 0, 0, TAU)
+    : c.arc(x, y - 20 * sc, 8 * sc, 0, TAU);
+  c.stroke();
+}
+
+function drawLookWings(c, look, x, y, sc, bones) {
+  const sh = lookBoneOk(bones && bones.shoulder) ? bones.shoulder : { x, y };
+  c.fillStyle = look.fill || look.color || 'rgba(200,208,220,.55)';
+  c.beginPath();
+  c.moveTo(sh.x - 6 * sc, sh.y);
+  c.quadraticCurveTo(sh.x - 28 * sc, sh.y - 18 * sc, sh.x - 22 * sc, sh.y + 16 * sc);
+  c.quadraticCurveTo(sh.x - 12 * sc, sh.y + 8 * sc, sh.x - 6 * sc, sh.y + 4 * sc);
+  c.closePath();
+  c.fill();
+  c.beginPath();
+  c.moveTo(sh.x + 4 * sc, sh.y);
+  c.quadraticCurveTo(sh.x + 26 * sc, sh.y - 16 * sc, sh.x + 20 * sc, sh.y + 16 * sc);
+  c.quadraticCurveTo(sh.x + 10 * sc, sh.y + 8 * sc, sh.x + 4 * sc, sh.y + 4 * sc);
+  c.closePath();
+  c.fill();
+}
+
 function drawLookGloves(c, look, x, y, sc, bones) {
   const hand = lookBoneOk(bones && bones.hand) ? bones.hand : { x, y };
   c.fillStyle = look.color || look.accent || '#8fa3d9';
@@ -19180,6 +19337,9 @@ const EQUIP_LOOK_DRAW = {
   lightning: drawLookLightning,
   charm: drawLookCharm,
   gloves: drawLookGloves,
+  horns: drawLookHorns,
+  halo: drawLookHalo,
+  wings: drawLookWings,
 };
 /* --- src/render/tide-art.js --- */
 /* ============================== TIDE BOSS ART ========================== */

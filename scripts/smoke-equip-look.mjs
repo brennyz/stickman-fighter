@@ -319,6 +319,85 @@ try {
   fail('bad colors/kind must not throw: ' + e.message);
 }
 
+if (typeof api.fromDescriptor !== 'function' || typeof api.kindFromId !== 'function') {
+  fail('gearRenderDescriptor consumer missing');
+}
+const desc = api.fromDescriptor({
+  schema: 1,
+  slots: [
+    { slot: 'head', itemId: 'head_helm_iron', tint: '#9aa8bc', accent: '#7cf5ff', layer: 'head' },
+    { slot: 'chest', itemId: 'chest_plate_knight', tint: '#c9d6e8', accent: '#8fa3d9', layer: 'chest' },
+    { slot: 'hands', itemId: 'hands_gauntlet_steel', tint: '#b8c4d4', accent: '#6a5030', layer: 'hands' },
+    { slot: 'legs', itemId: 'legs_greaves_iron', tint: '#8fa3d9', accent: '#5a6474', layer: 'legs' },
+    { slot: 'back', itemId: 'back_cape_red', tint: '#e04f4f', accent: '#c97a20', layer: 'back' },
+  ],
+});
+if (desc.length !== 5) fail('descriptor must yield 5 slots');
+if (desc.map((l) => l.slot).join(',') !== 'head,chest,hands,legs,back') fail('descriptor slot order');
+if (desc[0].kind !== 'helmet' || desc[1].kind !== 'chestplate' || desc[2].kind !== 'gloves') fail('catalog kind map');
+if (desc[3].kind !== 'greaves' || desc[4].kind !== 'cape') fail('legs/back kind map');
+if (desc[0].color !== '#9aa8bc' || desc[4].color !== '#e04f4f') fail('descriptor tint → color');
+
+const viaFighter = api.resolve({
+  isPlayer: true,
+  style: { id: 'leaf_band', bandana: '#2d6b36', plate: '#dfe8ff', accent: '#43b25b' },
+  gearDescriptor: { slots: [{ slot: 'head', itemId: 'head_helm_tin', tint: '#aaa', layer: 'head' }] },
+});
+if (!viaFighter.some((l) => l.kind === 'helmet')) fail('descriptor must drive resolve');
+if (viaFighter.some((l) => l.kind === 'bandana')) fail('equipped head slot replaces style head');
+
+const catalogIds = [
+  ['head', 'wrap_cloth'], ['head', 'bandana_blue'], ['head', 'beanie_wool'], ['head', 'hat_paper'],
+  ['head', 'crown_cardboard'], ['head', 'mask_fox'], ['head', 'horns_foam'], ['head', 'hat_chef'],
+  ['head', 'hood_rain'], ['head', 'helm_pumpkin'], ['head', 'halo_wire'], ['head', 'visor_toy'],
+  ['head', 'hood_void_paint'], ['head', 'mask_dream'], ['head', 'horns_sulfur'], ['head', 'visor_neon'],
+  ['head', 'circlet_focus'], ['head', 'helm_lucky'], ['head', 'helm_tin'], ['head', 'helm_bronze'],
+  ['head', 'helm_iron'], ['head', 'helm_steel'], ['head', 'helm_knight'], ['head', 'helm_crystal'],
+  ['head', 'helm_void'], ['head', 'helm_nightmare'], ['head', 'helm_hell'],
+  ['chest', 'shirt_plain'], ['chest', 'hoodie_gray'], ['chest', 'vest_denim'], ['chest', 'coat_red'],
+  ['chest', 'gi_white'], ['chest', 'jacket_bomber'], ['chest', 'tunic_leaf'], ['chest', 'shirt_stripe'],
+  ['chest', 'poncho_rain'], ['chest', 'robe_star'], ['chest', 'capelet_gold'], ['chest', 'jacket_void_paint'],
+  ['chest', 'coat_dream'], ['chest', 'robe_ash'], ['chest', 'vest_lucky'], ['chest', 'sash_energy'],
+  ['chest', 'coat_shadow_stat'], ['chest', 'vest_padded'], ['chest', 'mail_copper'], ['chest', 'plate_iron'],
+  ['chest', 'cuirass_steel'], ['chest', 'plate_knight'], ['chest', 'vest_crystal'], ['chest', 'plate_void'],
+  ['chest', 'plate_nightmare'], ['chest', 'plate_hell'],
+  ['hands', 'wrap'], ['hands', 'mittens_wool'], ['hands', 'rings_plastic'], ['hands', 'gloves_sparkle'],
+  ['hands', 'claws_toy'], ['hands', 'gloves_chef'], ['hands', 'wraps_gold'], ['hands', 'gloves_pixel'],
+  ['hands', 'cuffs_bell'], ['hands', 'gloves_opera'], ['hands', 'claws_void_paint'], ['hands', 'wraps_dream'],
+  ['hands', 'gaunt_ash_paint'], ['hands', 'gloves_tape'], ['hands', 'bracer_focus'], ['hands', 'wraps_monk'],
+  ['hands', 'gloves_grip'], ['hands', 'bracer_leather'], ['hands', 'gauntlet_iron'], ['hands', 'gauntlet_steel'],
+  ['hands', 'fists_spike'], ['hands', 'gauntlet_crystal'], ['hands', 'gauntlet_void'], ['hands', 'gauntlet_nightmare'],
+  ['hands', 'gauntlet_hell'],
+  ['legs', 'wrap'], ['legs', 'socks_plain'], ['legs', 'shorts_stripe'], ['legs', 'socks_lucky'],
+  ['legs', 'pants_baggy'], ['legs', 'boots_clown'], ['legs', 'tabi_white'], ['legs', 'sneakers_check'],
+  ['legs', 'wrap_gold'], ['legs', 'bells_ankle'], ['legs', 'boots_platform'], ['legs', 'wraps_void_paint'],
+  ['legs', 'socks_dream'], ['legs', 'boots_ash_paint'], ['legs', 'boots_sprint'], ['legs', 'greaves_steady'],
+  ['legs', 'boots_dash'], ['legs', 'boots_soft'], ['legs', 'greaves_leather'], ['legs', 'greaves_iron'],
+  ['legs', 'boots_steel'], ['legs', 'greaves_knight'], ['legs', 'greaves_crystal'], ['legs', 'greaves_void'],
+  ['legs', 'greaves_nightmare'], ['legs', 'greaves_hell'],
+  ['back', 'pin_dot'], ['back', 'pin_star'], ['back', 'backpack_school'], ['back', 'scarf_long'],
+  ['back', 'cape_red'], ['back', 'tail_fox'], ['back', 'banner_leaf'], ['back', 'kite_paper'],
+  ['back', 'balloon_party'], ['back', 'wings_cardboard'], ['back', 'aura_glow'], ['back', 'cape_shadow'],
+  ['back', 'cape_void_paint'], ['back', 'wings_dream'], ['back', 'wings_ash'], ['back', 'leaf'],
+  ['back', 'cape_lucky'], ['back', 'void'], ['back', 'pack_leather'], ['back', 'plate_back'],
+  ['back', 'shell_turtle'], ['back', 'banner_iron'], ['back', 'wing_steel'], ['back', 'crystal_shard'],
+  ['back', 'void_spine'], ['back', 'wings_nightmare'], ['back', 'wings_hell'],
+];
+if (catalogIds.length !== 131) fail('catalog snapshot must stay 131');
+const drawable = new Set(['bandana', 'visor', 'fox', 'horns', 'halo', 'glow', 'helmet', 'gloves', 'charm', 'greaves', 'wrap', 'wings', 'cape', 'tome', 'crystal', 'chestplate', 'vest']);
+for (const [slot, suf] of catalogIds) {
+  const id = slot + '_' + suf;
+  const kind = api.kindFromId(id, slot);
+  if (!drawable.has(kind)) fail('undrawable kind for ' + id + ' → ' + kind);
+}
+
+if (typeof api.drawPreview === 'function') {
+  const rec5 = recordingContext();
+  api.drawPreview(rec5, 'classic', null);
+  const f = api.drawPreview(rec5, 'classic');
+  void f;
+}
+
 if (typeof api.drawPreview !== 'function') fail('drawPreview missing');
 const rec = recordingContext();
 try {
