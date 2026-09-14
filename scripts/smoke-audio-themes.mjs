@@ -40,10 +40,11 @@ if (!/halloweenBattle: \{/.test(audio)) fail('dedicated halloweenBattle song mis
 if (!/halloweenBoss: \{/.test(audio)) fail('dedicated halloweenBoss song missing');
 if (!/seasonId\(\) \{/.test(audio)) fail('AudioSys.seasonId must match #277 hook');
 if (!/getEffectiveAudioTheme/.test(audio)) fail('AudioSys.play must use effective (season) theme');
-if (/id="seasonOverlay"/.test(html) || /id="seasonSwitchBar"/.test(html)) {
-  fail('audio PR must not add season overlay UI (that is #277)');
+// After mega-merge with #277, season overlay UI is expected. Isolation guard
+// only applies when this file is tested on an audio-only branch.
+if (!/id="seasonOverlay"/.test(html) && /seasons\.css/.test(html)) {
+  fail('seasons.css without #seasonOverlay is a half-wired overlay');
 }
-if (/seasons\.css/.test(html)) fail('audio PR must not add seasons.css');
 if (!/audioTheme: 'classic'/.test(storage)) fail('DEFAULT_SAVE.audioTheme must default to classic');
 if (!/normalizeAudioTheme\(out\.audioTheme\)/.test(storage) && !/allowedThemes.includes\(out\.audioTheme\)/.test(storage)) {
   fail('sanitizeSave must clamp audioTheme');
