@@ -94,22 +94,23 @@
       "id": "w-20260914T170727",
       "from": "user",
       "text": "Season expansion: Halloween/spooky BGM; switch pack on #277 season ids; keep classic; audio-only.",
-      "status": "open",
+      "status": "done-in-code",
+      "notes": "Shipped on #270 v1.18.166. Halloween ostinato + overlay BGM switch. No CSS overlays.",
       "updated": "2026-09-14"
     },
     {
       "id": "w-20260914T170300",
       "from": "user",
       "text": "Season expansion: Halloween/spooky BGM + switch pack when #277 season overlay id is halloween/jungle/etc. Wire html[data-season-audio], AudioSys.seasonId(), sf-season-change. Keep classic usable. No season CSS/UI (integrate with #277). Audio-only.",
-      "status": "in-progress",
-      "notes": "On #270. Player chips stay classic/jungle/fire-bamboo/halloween. Overlay classic falls back to player pack.",
+      "status": "done-in-code",
+      "notes": "Shipped on #270 v1.18.166. Player chips classic/jungle/fire-bamboo/halloween. Overlay classic keeps player pack.",
       "updated": "2026-09-14"
     },
     {
       "id": "w-20260914T164100",
       "from": "user",
       "text": "Audio themes only (separate i18n agent): keep classic pack; add jungle + fire-bamboo-boesa BGM/SFX + light scenery tint; persist; Settings/pause switcher. No Versus, no i18n, no combat icons/tutorials. Entry speel.html.",
-      "status": "in-progress",
+      "status": "done-in-code",
       "notes": "Harden #270: soft BGM replay, sidecar persist, classic raw SONGS, no stacked SFX. v1.18.165. Extended with seasonal BGM.",
       "updated": "2026-09-14"
     },
@@ -637,6 +638,10 @@
   ],
   "sessionLog": [
     {
+      "at": "2026-09-14T17:09:00Z",
+      "summary": "Season expansion already on #270: Halloween ostinato + BGM follows jungle/halloween/winter/summer overlay ids; classic/fire-bamboo stay player-usable. No CSS overlays."
+    },
+    {
       "at": "2026-09-14T17:07:27Z",
       "summary": "Seasonal BGM on #270: Halloween ostinato + #277 hooks (data-season-audio, AudioSys.seasonId, sf-season-change). No season UI. v1.18.166."
     },
@@ -731,10 +736,6 @@
     {
       "at": "2026-08-17T10:20:50Z",
       "summary": "pull-main script + GITHUB-PUSH bijwerken zodat de pc één commando kan pullen"
-    },
-    {
-      "at": "2026-08-17T10:18:00Z",
-      "summary": "main LIVE 33d89b6 v1.18.151 — pull-commando voor de pc klaar"
     }
   ],
   "implementedFeaturesSummary": "d18 char select deel 1+2 (v1.11.1-2); Mats coinrun + shuriken mik/vliegers + anti-spam (v1.12.0); speel.html (v1.12.2+). Zie HANDOFF-ZOEKINDEX.md en improvement-d20-bag.json userFeatureLog.",
