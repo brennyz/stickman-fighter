@@ -600,6 +600,10 @@
   ],
   "sessionLog": [
     {
+      "at": "2026-09-14T13:50:58Z",
+      "summary": "Same PR #264: EN tooltips + SW-banner follow game lang; Arcade pick already HOME tiles."
+    },
+    {
       "at": "2026-09-14T13:49:29Z",
       "summary": "Arcade pick-mode HOME-tegels + chrome i18n volgt taal. PR #264. #263 geparkeerd. Niet stil main."
     },
@@ -694,10 +698,6 @@
     {
       "at": "2026-08-17T09:10:12Z",
       "summary": "Achtste d20-worp geclaimd via CLI"
-    },
-    {
-      "at": "2026-08-17T09:08:04Z",
-      "summary": "d7: Import undo via Backup; SAVE_KEY ongewijzigd"
     }
   ],
   "implementedFeaturesSummary": "d18 char select deel 1+2 (v1.11.1-2); Mats coinrun + shuriken mik/vliegers + anti-spam (v1.12.0); speel.html (v1.12.2+). Zie HANDOFF-ZOEKINDEX.md en improvement-d20-bag.json userFeatureLog.",
