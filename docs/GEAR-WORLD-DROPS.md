@@ -18,8 +18,10 @@ save.ownedGear = { [id]: { gearId, at } }   // contract v1 mirror
 
 Gates on every lootable item: **`unlockLvl` + `unlockDays`**. Optional `needAdvUnlocked`, `needDiff` (`nightmare`|`hell`).
 
-- **World rolls** use `gearItemLootable` / `rollGearDrop` (gates on).
-- **Grant is can-own-locked** — `_gearGrantInto` does not re-check gates. Equip still requires gates.
+Contract v1 (Grok): `ownedGear[id] = { gearId, at }`. Catalog IDs are **#280**, not provisional `g_*`.
+
+- **World rolls** use `gearItemLootableForDrop` — level + time + adv, plus **zone** (`adventureDropZoneForLevel`) may satisfy `needDiff`.
+- **Grant is can-own-locked** — `_gearGrantInto` does not re-check gates. Equip / UI still uses `gearGateState`.
 - Island-boss / super-boss rolls may set `allowLocked` so a locked piece can land as owned.
 - Starters (`droppable: false`) are never world-dropped.
 
@@ -38,6 +40,7 @@ Gates on every lootable item: **`unlockLvl` + `unlockDays`**. Optional `needAdvU
 | Adventure kill | `rollGearWorldDrop` → ground pickup (`kind:'gear'`) |
 | Island-boss stage clear (`n % 10 === 0`) | `rollGearStageClearDrop` (`allowLocked`) |
 | Daily chest consolation | ~16% `rollGearChestPull` (gated only) |
+| Zone (NM island 51–60 / Hell 61–70, or 2.0/3.0 tab) | `needDiff` pieces enter the roll pool |
 
 Android: max 3 gear orbs, skip Satan/Tide, 58px touch grab, canvas pixels (`imageSmoothingEnabled = false`).
 

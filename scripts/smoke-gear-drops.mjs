@@ -141,11 +141,32 @@ if (run("gearGateOpen(gearById('head_helm_nightmare'), { zone: 'nightmare' })") 
   fail('nightmare helm open after normal-clear / nightmare zone');
 }
 
+run(`
+  save.lvl = 55; save.unlocked = 51;
+  save.createdAt = Date.now() - 40 * 86400000;
+  save.advCleared = { normal: false, nightmare: false, hell: false };
+  save.gear.owned = {}; save.ownedGear = {};
+`);
+const noZone = run("gearDropPool({ lvl: 55, days: 41, zone: null }).map(x => x.id)");
+if (noZone.includes('head_helm_nightmare')) fail('nightmare helm must not drop outside zone without clear');
+const nmZone = run("gearDropPool({ lvl: 55, days: 41, zone: 'nightmare' }).map(x => x.id)");
+if (!nmZone.includes('head_helm_nightmare')) fail('nightmare helm should zone-drop: ' + JSON.stringify(nmZone.slice(0, 12)));
+if (nmZone.includes('head_helm_hell')) fail('hell helm leaked into nightmare zone');
+run('save.lvl = 66; save.unlocked = 61; save.createdAt = Date.now() - 50 * 86400000');
+const hellZone = run("gearDropPool({ lvl: 66, days: 51, zone: 'hell' }).map(x => x.id)");
+if (!hellZone.includes('head_helm_hell')) fail('hell helm should zone-drop on hell island');
+
 run('save.gear.owned = {}; save.ownedGear = {}');
 if (!run("grantGearItem('head_bandana_blue', { silent: true, src: 'drop' })")) fail('grant failed');
 if (!run("gearOwned('head_bandana_blue')")) fail('gearOwned false after grant');
 if (!run("!!save.gear.owned.head_bandana_blue.at")) fail('owned payload missing at');
 if (!run("save.ownedGear.head_bandana_blue.gearId === 'head_bandana_blue'")) fail('ownedGear contract mirror missing');
+if (!run("typeof save.ownedGear.head_bandana_blue.at === 'number' && save.ownedGear.head_bandana_blue.at > 0")) {
+  fail('ownedGear payload missing at');
+}
+if (run("Object.keys(save.ownedGear.head_bandana_blue).sort().join(',')") !== 'at,gearId') {
+  fail('ownedGear payload must be { gearId, at }');
+}
 if (run("grantGearItem('head_bandana_blue', { silent: true })")) fail('duplicate grant should be false');
 
 /* can-own-locked: hell piece at day 1 / lvl 1 */

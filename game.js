@@ -7286,39 +7286,59 @@ const GEAR_DROP_WEIGHT = {
   legendary: 0.05, mythic: 0.035, nightmare: 0.022, hell: 0.016,
 };
 
-function gearDropWeight(item) {
-  return GEAR_DROP_WEIGHT[item && item.rarity] || 0.2;
+function gearDropWeight(item, zone) {
+  let w = GEAR_DROP_WEIGHT[item && item.rarity] || 0.2;
+  if (zone && item && item.needDiff === zone) w *= 2.4;
+  else if (zone === 'hell' && item && item.needDiff === 'nightmare') w *= 1.25;
+  return w;
 }
 
-function pickWeightedGearItem(list) {
+function pickWeightedGearItem(list, zone) {
   if (!list || !list.length) return null;
   let total = 0;
-  for (const it of list) total += gearDropWeight(it);
+  for (const it of list) total += gearDropWeight(it, zone);
   if (!(total > 0)) return list[0];
   let r = Math.random() * total;
   for (const it of list) {
-    r -= gearDropWeight(it);
+    r -= gearDropWeight(it, zone);
     if (r <= 0) return it;
   }
   return list[0];
+}
+
+/** Zone may satisfy needDiff for a *drop* (can-own-locked). Equip still uses gearGateState. */
+function gearZoneSatisfiesDiff(item, zone) {
+  if (!item || !item.needDiff) return true;
+  if (item.needDiff === 'nightmare') return zone === 'nightmare' || zone === 'hell';
+  if (item.needDiff === 'hell') return zone === 'hell';
+  return false;
+}
+
+function gearItemLootableForDrop(item, s, now, zone) {
+  if (!item) return false;
+  const gate = gearGateState(item, s, now);
+  if (!gate.levelOk || !gate.timeOk || !gate.advOk) return false;
+  if (gate.diffOk) return true;
+  return gearZoneSatisfiesDiff(item, zone);
 }
 
 function rollGearDrop(ctx) {
   ctx = ctx || {};
   const st = ctx.save || (typeof save !== 'undefined' ? save : null);
   const now = ctx.now;
+  const zone = ctx.zone === 'nightmare' || ctx.zone === 'hell' ? ctx.zone : null;
   const exclude = ctx.excludeIds && typeof ctx.excludeIds === 'object' ? ctx.excludeIds : null;
   const list = [];
   for (const item of GEAR_ITEMS) {
     if (!item.droppable) continue;
     if (exclude && (exclude[item.id] || (exclude.indexOf && exclude.indexOf(item.id) !== -1))) continue;
     if (!ctx.allowOwned && gearItemOwned(item.id, st)) continue;
-    if (!ctx.allowLocked && !gearItemLootable(item, st, now)) continue;
+    if (!ctx.allowLocked && !gearItemLootableForDrop(item, st, now, zone)) continue;
     if (ctx.slot && item.slot !== gearCanonSlot(ctx.slot) && item.slot !== ctx.slot) continue;
     if (ctx.kind && item.kind !== ctx.kind) continue;
     list.push(item);
   }
-  return pickWeightedGearItem(list);
+  return pickWeightedGearItem(list, zone);
 }
 
 function gearRenderDescriptor(s) {
@@ -7676,11 +7696,6 @@ function gearDropPool(opts) {
     const have = Math.max(1, Math.floor(Number(opts.days) || 1));
     st.createdAt = Date.now() - (have - 1) * 86400000;
   }
-  if (opts.zone === 'nightmare') st.advCleared.normal = true;
-  if (opts.zone === 'hell') {
-    st.advCleared.normal = true;
-    st.advCleared.nightmare = true;
-  }
   return (typeof rollGearDrop === 'function')
     ? (function () {
       const list = [];
@@ -7691,7 +7706,15 @@ function gearDropPool(opts) {
         if (!item.droppable && !opts.allowStarter) continue;
         if (item.starter && !opts.allowStarter) continue;
         if (!opts.allowOwned && typeof gearItemOwned === 'function' && gearItemOwned(item.id, st)) continue;
-        if (!opts.allowLocked && typeof gearItemLootable === 'function' && !gearItemLootable(item, st, opts.now)) continue;
+        if (!opts.allowLocked) {
+          const zone = opts.zone === 'nightmare' || opts.zone === 'hell' ? opts.zone : null;
+          const lootFn = typeof gearItemLootableForDrop === 'function' ? gearItemLootableForDrop : null;
+          if (lootFn) {
+            if (!lootFn(item, st, opts.now, zone)) continue;
+          } else if (typeof gearItemLootable === 'function' && !gearItemLootable(item, st, opts.now)) {
+            continue;
+          }
+        }
         list.push(item);
       }
       return list;
@@ -7819,18 +7842,25 @@ function rollGearWorldDrop(gameRef, monster) {
     }
   } catch (_) {}
   if (!islandBoss && Math.random() > chance) return null;
+  const diff = gameRef.advDiff || (gameRef.level && gameRef.level.diff) || 'normal';
+  const zone = typeof adventureDropZoneForLevel === 'function'
+    ? adventureDropZoneForLevel(n, diff)
+    : null;
   return rollGearDrop({
     allowLocked: !!(islandBoss || (monster && monster.superBoss)),
     excludeIds: exclude,
+    zone,
   });
 }
 
 function rollGearStageClearDrop(levelN, diffId) {
-  void diffId;
   const n = Math.floor(Number(levelN) || 0);
   if (!(n > 0 && n % 10 === 0)) return null;
   if (typeof rollGearDrop !== 'function') return null;
-  return rollGearDrop({ allowLocked: true });
+  const zone = typeof adventureDropZoneForLevel === 'function'
+    ? adventureDropZoneForLevel(n, diffId)
+    : null;
+  return rollGearDrop({ allowLocked: true, zone });
 }
 
 function rollGearChestPull() {

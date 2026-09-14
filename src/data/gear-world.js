@@ -328,11 +328,6 @@ function gearDropPool(opts) {
     const have = Math.max(1, Math.floor(Number(opts.days) || 1));
     st.createdAt = Date.now() - (have - 1) * 86400000;
   }
-  if (opts.zone === 'nightmare') st.advCleared.normal = true;
-  if (opts.zone === 'hell') {
-    st.advCleared.normal = true;
-    st.advCleared.nightmare = true;
-  }
   return (typeof rollGearDrop === 'function')
     ? (function () {
       const list = [];
@@ -343,7 +338,15 @@ function gearDropPool(opts) {
         if (!item.droppable && !opts.allowStarter) continue;
         if (item.starter && !opts.allowStarter) continue;
         if (!opts.allowOwned && typeof gearItemOwned === 'function' && gearItemOwned(item.id, st)) continue;
-        if (!opts.allowLocked && typeof gearItemLootable === 'function' && !gearItemLootable(item, st, opts.now)) continue;
+        if (!opts.allowLocked) {
+          const zone = opts.zone === 'nightmare' || opts.zone === 'hell' ? opts.zone : null;
+          const lootFn = typeof gearItemLootableForDrop === 'function' ? gearItemLootableForDrop : null;
+          if (lootFn) {
+            if (!lootFn(item, st, opts.now, zone)) continue;
+          } else if (typeof gearItemLootable === 'function' && !gearItemLootable(item, st, opts.now)) {
+            continue;
+          }
+        }
         list.push(item);
       }
       return list;
@@ -471,18 +474,25 @@ function rollGearWorldDrop(gameRef, monster) {
     }
   } catch (_) {}
   if (!islandBoss && Math.random() > chance) return null;
+  const diff = gameRef.advDiff || (gameRef.level && gameRef.level.diff) || 'normal';
+  const zone = typeof adventureDropZoneForLevel === 'function'
+    ? adventureDropZoneForLevel(n, diff)
+    : null;
   return rollGearDrop({
     allowLocked: !!(islandBoss || (monster && monster.superBoss)),
     excludeIds: exclude,
+    zone,
   });
 }
 
 function rollGearStageClearDrop(levelN, diffId) {
-  void diffId;
   const n = Math.floor(Number(levelN) || 0);
   if (!(n > 0 && n % 10 === 0)) return null;
   if (typeof rollGearDrop !== 'function') return null;
-  return rollGearDrop({ allowLocked: true });
+  const zone = typeof adventureDropZoneForLevel === 'function'
+    ? adventureDropZoneForLevel(n, diffId)
+    : null;
+  return rollGearDrop({ allowLocked: true, zone });
 }
 
 function rollGearChestPull() {
