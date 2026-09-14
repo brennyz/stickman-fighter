@@ -1,0 +1,343 @@
+/* Seasonal CSS overlays — decorative only. Never capture taps.
+   Pixel-art agent: set --season-art-* to url('../assets/seasons/<id>/<slot>.png').
+   See SEASON-OVERLAY.md. */
+
+:root {
+  --season-safe-top: max(var(--safe-top), 8px);
+  --season-safe-right: max(var(--safe-right), 8px);
+  --season-safe-bottom: max(var(--safe-bottom), 8px);
+  --season-safe-left: max(var(--safe-left), 8px);
+  --season-inset-top: var(--season-safe-top);
+  --season-inset-right: var(--season-safe-right);
+  --season-inset-bottom: var(--season-safe-bottom);
+  --season-inset-left: var(--season-safe-left);
+  --season-corner-w: min(26vw, 132px);
+  --season-corner-h: min(20vh, 112px);
+  --season-vignette-alpha: 0.22;
+  --season-play-vignette: 0.14;
+  --season-art-vignette: none;
+  --season-art-motif: none;
+  --season-art-corner-tl: none;
+  --season-art-corner-tr: none;
+  --season-art-corner-bl: none;
+  --season-art-corner-br: none;
+  --season-art-banner: none;
+  --season-wash-a: transparent;
+  --season-wash-b: transparent;
+  --season-wash-c: transparent;
+}
+
+html[data-season="jungle"] {
+  --menu-accent: #8ef0a4;
+  --season-vignette-alpha: 0.26;
+  --season-play-vignette: 0.16;
+  --season-wash-a: rgba(46, 140, 62, 0.22);
+  --season-wash-b: rgba(18, 70, 36, 0.18);
+  --season-wash-c: rgba(90, 170, 50, 0.14);
+  --season-art-corner-tl: url('../assets/seasons/season-jungle-corner-tl.png');
+  --season-art-corner-tr: url('../assets/seasons/season-jungle-corner-tr.png');
+  --season-art-corner-bl: url('../assets/seasons/season-jungle-corner-bl.png');
+  --season-art-corner-br: url('../assets/seasons/season-jungle-corner-br.png');
+  --season-art-banner: url('../assets/seasons/season-jungle-banner.png');
+}
+
+html[data-season="halloween"] {
+  --menu-accent: #ffb14a;
+  --season-vignette-alpha: 0.3;
+  --season-play-vignette: 0.18;
+  --season-wash-a: rgba(255, 120, 32, 0.2);
+  --season-wash-b: rgba(88, 28, 120, 0.2);
+  --season-wash-c: rgba(40, 10, 28, 0.22);
+  --season-art-corner-tl: url('../assets/seasons/season-halloween-corner-tl.png');
+  --season-art-corner-tr: url('../assets/seasons/season-halloween-corner-tr.png');
+  --season-art-corner-bl: url('../assets/seasons/season-halloween-corner-bl.png');
+  --season-art-corner-br: url('../assets/seasons/season-halloween-corner-br.png');
+  --season-art-banner: url('../assets/seasons/season-halloween-banner.png');
+}
+
+html[data-season="winter"] {
+  --menu-accent: #b8e8ff;
+  --season-vignette-alpha: 0.2;
+  --season-play-vignette: 0.12;
+  --season-wash-a: rgba(180, 220, 255, 0.16);
+  --season-wash-b: rgba(90, 140, 190, 0.14);
+  --season-wash-c: rgba(230, 245, 255, 0.1);
+  /* --season-art-vignette: url('../assets/seasons/winter/vignette.png'); */
+  /* --season-art-motif: url('../assets/seasons/winter/motif.png'); */
+  /* --season-art-corner-tl: url('../assets/seasons/winter/corner-tl.png'); */
+  /* --season-art-corner-tr: url('../assets/seasons/winter/corner-tr.png'); */
+  /* --season-art-corner-bl: url('../assets/seasons/winter/corner-bl.png'); */
+  /* --season-art-corner-br: url('../assets/seasons/winter/corner-br.png'); */
+  /* --season-art-banner: url('../assets/seasons/winter/banner.png'); */
+}
+
+html[data-season="summer"] {
+  --menu-accent: #ffd36a;
+  --season-vignette-alpha: 0.18;
+  --season-play-vignette: 0.1;
+  --season-wash-a: rgba(255, 190, 60, 0.16);
+  --season-wash-b: rgba(255, 120, 40, 0.1);
+  --season-wash-c: rgba(80, 180, 220, 0.08);
+  /* --season-art-vignette: url('../assets/seasons/summer/vignette.png'); */
+  /* --season-art-motif: url('../assets/seasons/summer/motif.png'); */
+  /* --season-art-corner-tl: url('../assets/seasons/summer/corner-tl.png'); */
+  /* --season-art-corner-tr: url('../assets/seasons/summer/corner-tr.png'); */
+  /* --season-art-corner-bl: url('../assets/seasons/summer/corner-bl.png'); */
+  /* --season-art-corner-br: url('../assets/seasons/summer/corner-br.png'); */
+  /* --season-art-banner: url('../assets/seasons/summer/banner.png'); */
+}
+
+.season-overlay,
+.season-overlay *,
+.season-flavor-chip,
+.season-menu-blurb {
+  pointer-events: none !important;
+}
+
+.season-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 22;
+  overflow: hidden;
+  contain: strict;
+}
+
+html[data-season="classic"] .season-overlay {
+  opacity: 0;
+  visibility: hidden;
+}
+
+.season-layer {
+  position: absolute;
+  pointer-events: none !important;
+  background-repeat: no-repeat;
+}
+
+.season-vignette {
+  inset: 0;
+  background-image: var(--season-art-vignette);
+  background-size: cover;
+  background-position: center;
+  box-shadow:
+    inset 0 0 80px 12px var(--season-wash-c),
+    inset 0 -40px 70px var(--season-wash-a),
+    inset 0 50px 80px var(--season-wash-b);
+  opacity: var(--season-vignette-alpha);
+}
+
+body.is-playing {
+  --season-safe-top: max(var(--safe-top), 64px);
+  --season-safe-right: max(var(--safe-right), 76px);
+  --season-safe-bottom: max(var(--safe-bottom), 132px);
+  --season-safe-left: max(var(--safe-left), 12px);
+}
+
+body.is-playing .season-vignette {
+  opacity: var(--season-play-vignette);
+}
+
+/* Settings/hub: keep the card rail clear — no pumpkins on toggles */
+body:not(.is-playing) .season-corner-bl,
+body:not(.is-playing) .season-corner-br {
+  visibility: hidden;
+}
+
+body:not(.is-playing) .season-vignette {
+  opacity: calc(var(--season-vignette-alpha) * 0.5);
+}
+
+#seasonSwitchBar .dex-filter-btn {
+  white-space: nowrap;
+}
+
+.season-motif {
+  inset:
+    var(--season-inset-top)
+    var(--season-inset-right)
+    var(--season-inset-bottom)
+    var(--season-inset-left);
+  background-image: var(--season-art-motif);
+  background-repeat: repeat;
+  background-size: 64px 64px;
+  opacity: 0.18;
+}
+
+.season-corner {
+  width: var(--season-corner-w);
+  height: var(--season-corner-h);
+  background-size: contain;
+}
+
+.season-corner-tl {
+  top: var(--season-inset-top);
+  left: var(--season-inset-left);
+  background-image: var(--season-art-corner-tl);
+  background-position: top left;
+}
+
+.season-corner-tr {
+  top: var(--season-inset-top);
+  right: var(--season-inset-right);
+  background-image: var(--season-art-corner-tr);
+  background-position: top right;
+}
+
+.season-corner-bl {
+  bottom: var(--season-inset-bottom);
+  left: var(--season-inset-left);
+  background-image: var(--season-art-corner-bl);
+  background-position: bottom left;
+}
+
+.season-corner-br {
+  bottom: var(--season-inset-bottom);
+  right: var(--season-inset-right);
+  background-image: var(--season-art-corner-br);
+  background-position: bottom right;
+}
+
+.season-banner {
+  left: 50%;
+  top: var(--season-inset-top);
+  transform: translateX(-50%);
+  width: min(42vw, 220px);
+  height: 36px;
+  background-image: var(--season-art-banner);
+  background-size: contain;
+  background-position: center;
+}
+.season-banner[hidden] { display: none !important; }
+html[data-season="jungle"] .season-banner[hidden],
+html[data-season="halloween"] .season-banner[hidden] {
+  display: block !important;
+}
+
+/* Jungle — vines / canopy without PNGs */
+html[data-season="jungle"] .season-corner-tl {
+  background-image: var(--season-art-corner-tl),
+    radial-gradient(ellipse at 0 0, rgba(36, 120, 48, 0.55), transparent 72%),
+    repeating-linear-gradient(128deg, transparent 0 11px, rgba(70, 170, 80, 0.28) 11px 13px);
+}
+html[data-season="jungle"] .season-corner-tr {
+  background-image: var(--season-art-corner-tr),
+    radial-gradient(ellipse at 100% 0, rgba(20, 90, 40, 0.5), transparent 72%),
+    repeating-linear-gradient(-128deg, transparent 0 11px, rgba(40, 140, 70, 0.26) 11px 13px);
+}
+html[data-season="jungle"] .season-corner-bl {
+  background-image: var(--season-art-corner-bl),
+    radial-gradient(ellipse at 0 100%, rgba(30, 90, 36, 0.48), transparent 70%);
+}
+html[data-season="jungle"] .season-corner-br {
+  background-image: var(--season-art-corner-br),
+    radial-gradient(ellipse at 100% 100%, rgba(24, 80, 32, 0.46), transparent 70%);
+}
+html[data-season="jungle"] .season-corner-tl::after,
+html[data-season="jungle"] .season-corner-tr::after {
+  content: '';
+  position: absolute;
+  width: 42%;
+  height: 70%;
+  top: 4%;
+  border-radius: 40% 20% 60% 30%;
+  background: rgba(48, 150, 64, 0.35);
+}
+html[data-season="jungle"] .season-corner-tl::after { left: 6%; }
+html[data-season="jungle"] .season-corner-tr::after { right: 6%; }
+
+/* Halloween — pumpkins / dusk without PNGs */
+html[data-season="halloween"] .season-corner-bl::after,
+html[data-season="halloween"] .season-corner-br::after {
+  content: '';
+  position: absolute;
+  bottom: 8%;
+  width: 54px;
+  height: 46px;
+  border-radius: 48% 48% 42% 42%;
+  background:
+    radial-gradient(circle at 32% 42%, #2a1608 3px, transparent 4px),
+    radial-gradient(circle at 68% 42%, #2a1608 3px, transparent 4px),
+    linear-gradient(180deg, #f08a20, #c45a12);
+  box-shadow: 0 -8px 0 -2px #3a6a20;
+}
+html[data-season="halloween"] .season-corner-bl::after { left: 12%; }
+html[data-season="halloween"] .season-corner-br::after { right: 12%; }
+html[data-season="halloween"] .season-corner-tl {
+  background-image: var(--season-art-corner-tl),
+    radial-gradient(ellipse at 0 0, rgba(255, 110, 20, 0.32), transparent 70%),
+    radial-gradient(circle at 18% 22%, rgba(20, 8, 28, 0.45) 0 8px, transparent 9px);
+}
+html[data-season="halloween"] .season-corner-tr {
+  background-image: var(--season-art-corner-tr),
+    radial-gradient(ellipse at 100% 0, rgba(90, 20, 110, 0.34), transparent 70%),
+    radial-gradient(circle at 80% 18%, rgba(12, 6, 20, 0.42) 0 7px, transparent 8px);
+}
+
+/* Winter / summer hooks — light CSS until pixel art lands */
+html[data-season="winter"] .season-corner-tl {
+  background-image: var(--season-art-corner-tl),
+    radial-gradient(ellipse at top left, rgba(220, 240, 255, 0.35), transparent 72%);
+}
+html[data-season="winter"] .season-corner-tr {
+  background-image: var(--season-art-corner-tr),
+    radial-gradient(ellipse at top right, rgba(220, 240, 255, 0.35), transparent 72%);
+}
+html[data-season="winter"] .season-motif {
+  background-image: var(--season-art-motif),
+    radial-gradient(circle, rgba(255, 255, 255, 0.45) 0 1.2px, transparent 1.6px);
+  background-size: 28px 28px;
+  opacity: 0.28;
+}
+html[data-season="summer"] .season-corner-tr {
+  background-image: var(--season-art-corner-tr),
+    radial-gradient(circle at 88% 12%, rgba(255, 220, 80, 0.45), transparent 58%);
+}
+html[data-season="summer"] .season-vignette {
+  box-shadow:
+    inset 0 0 90px 8px rgba(255, 180, 50, 0.12),
+    inset 0 -30px 60px rgba(255, 140, 40, 0.1);
+}
+
+.season-menu-blurb {
+  margin: 4px 12px 0;
+  max-width: min(92vw, 420px);
+  text-align: center;
+  font-size: var(--type-caption);
+  line-height: 1.35;
+  color: var(--menu-ink-muted);
+  font-weight: 700;
+}
+.season-menu-blurb[hidden] { display: none !important; }
+
+.season-hint,
+.season-auto-hint,
+.season-blurb {
+  font-size: 12px;
+  line-height: 1.4;
+  opacity: 0.82;
+  margin: 0 0 8px;
+}
+.season-blurb {
+  color: #ffd75e;
+  font-weight: 800;
+  opacity: 0.95;
+  margin: 8px 0 0;
+}
+
+body.is-playing .season-menu-blurb { display: none !important; }
+
+body.reduced-motion .season-overlay,
+body.lite-fx .season-overlay {
+  animation: none !important;
+}
+body.reduced-motion .season-layer::after,
+body.lite-fx .season-layer::after {
+  animation: none !important;
+}
+body.lite-fx .season-motif { opacity: 0.08; }
+body.high-contrast .season-vignette { opacity: 0.1; }
+
+@media (prefers-reduced-motion: reduce) {
+  .season-overlay,
+  .season-layer,
+  .season-layer::after { animation: none !important; }
+}

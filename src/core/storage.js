@@ -31,7 +31,10 @@ const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', petCoins: 0,
   showTouchPads: null,
   /** Keyboard legend on PC / when pads off (default on) */
   kbLegend: true,
-  reducedMotion: false, liteFx: false, highContrast: false, lang: null, playerTag: '', lastPlay: null, tipsSeen: {},
+  reducedMotion: false, liteFx: false, highContrast: false, lang: null,
+  /** auto | classic | jungle | halloween | winter | summer — CSS overlay pref */
+  seasonPref: 'auto',
+  playerTag: '', lastPlay: null, tipsSeen: {},
   stats: { kills: 0, advWins: 0, wallBestRun: 0, maxCombo: 0, maxKillStreak: 0, trainMaxCombo: 0, pickups: 0, bossKills: 0, vsMatches: 0, vsWins: 0, matsCoinBest: 0, summonCount: 0, killsSinceSummon: 0, petsTamed: 0, eggsHatched: 0, weaponFinishers: 0, tideBattleWins: 0, skillShards: 0, itemShards: 0, dailyBonusCount: 0, dailyStreak: 0, dailyStreakBest: 0, lastDayBonusDate: null },
   fomo: { ritualSeenDate: null, lastOpenDate: null, lastComebackDate: null, dailyShardDate: null, arcadeStampDate: null, sneakWeekKey: null, sneakCleared: false, starChestWeekKey: null, featureIds: null },
   achievements: {}, daily: null, vsPlayedIds: [], weaponMastery: {}, skillUpgrades: {}, itemUpgrades: {}, activeTechnique: 'spiral_orb', skill: 'spiral_orb', super: 'ketsbam', missionsIntroSeen: false };
@@ -1491,6 +1494,11 @@ function sanitizeSave(s) {
   out.reducedMotion = !!out.reducedMotion;
   out.liteFx = !!out.liteFx;
   out.highContrast = !!out.highContrast;
+  out.seasonPref = (typeof normalizeSeasonPref === 'function')
+    ? normalizeSeasonPref(out.seasonPref)
+    : (['auto', 'classic', 'jungle', 'halloween', 'winter', 'summer', 'default'].includes(String(out.seasonPref || '').toLowerCase())
+      ? (String(out.seasonPref).toLowerCase() === 'default' ? 'classic' : String(out.seasonPref).toLowerCase())
+      : 'auto');
   out.tipsSeen = sanitizeTipsSeen(out.tipsSeen);
   out.missionsIntroSeen = !!out.missionsIntroSeen;
   if (out.lastPlay && typeof out.lastPlay === 'object') {

@@ -844,6 +844,7 @@ function bootGame() {
     if (typeof initAudioThemeFromStorage === 'function') initAudioThemeFromStorage();
     else if (typeof applyAudioThemeDom === 'function') applyAudioThemeDom();
   }, 'audioTheme');
+  safeCall(() => { if (typeof initSeasonTheme === 'function') initSeasonTheme(); }, 'season');
   safeCall(() => UI.renderMenu(), 'menu');
   safeCall(ensureDaily, 'daily');
   safeCall(checkAchievements, 'ach');
@@ -923,6 +924,12 @@ function bootGame() {
     startGame, save, Game, UI, recoverToMenu, syncPlayLayer,
     resetAimTutorial: typeof resetAimTutorialFlag === 'function' ? resetAimTutorialFlag : null,
     aimTutorialSeen: typeof aimTutorialSeen === 'function' ? aimTutorialSeen : null,
+    season: (typeof seasonSnapshot === 'function') ? {
+      get id() { return currentSeasonId(); },
+      get pref() { return currentSeasonPref(); },
+      snapshot: seasonSnapshot,
+      setPref: typeof setSeasonPref === 'function' ? setSeasonPref : null,
+    } : null,
     enterHub: enterHubFromTitle,
     debug: typeof sfDebugScreen === 'function' ? sfDebugScreen : null,
     fixPlayLayer: () => (typeof sfDebugScreen === 'function' ? sfDebugScreen({ fix: true }) : null),

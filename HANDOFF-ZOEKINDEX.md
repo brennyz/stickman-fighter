@@ -19,6 +19,7 @@ rg -l "handoff|coinrun|projAimVelocity|charSelectScreen|ASSET-STYLE" .
 
 | Gebruiker vroeg | Versie | Commit | Waar in code |
 |-----------------|--------|--------|----------------|
+| **Season overlay (CSS + story)** | 1.18.164 | — | `SEASON-OVERLAY.md`, `src/systems/seasons.js`, `styles/seasons.css` |
 | **Mik-indicator** kleur + radius (Options) | 1.18.164 | — | `save.aimColor` / `save.aimRadius`, `drawPlayerAimIndicator` |
 | **FOMO / retention gaps** | docs | — | `docs/FOMO-GAPS.md` (P0–P3 loops, accept criteria) |
 | **Asset / knop-stijl (leidend)** | docs | — | `ASSET-STYLE.md`, `assets/buttons/` |

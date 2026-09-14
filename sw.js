@@ -16,6 +16,7 @@ const ASSETS = [
   './privacy.html',
   './game.js',
   './styles/main.css',
+  './styles/seasons.css',
   './tunnel-check.js',
   './install.js',
   './manifest.webmanifest',
@@ -120,7 +121,17 @@ const ASSETS = [
   './assets/ui/island-nachtmerrie.svg',
   './assets/ui/island-vulkaan.svg',
   './assets/ui/satan.svg',
-  './assets/ui/satan-mark.svg'
+  './assets/ui/satan-mark.svg',
+  './assets/seasons/season-jungle-corner-tl.png',
+  './assets/seasons/season-jungle-corner-tr.png',
+  './assets/seasons/season-jungle-corner-bl.png',
+  './assets/seasons/season-jungle-corner-br.png',
+  './assets/seasons/season-jungle-banner.png',
+  './assets/seasons/season-halloween-corner-tl.png',
+  './assets/seasons/season-halloween-corner-tr.png',
+  './assets/seasons/season-halloween-corner-bl.png',
+  './assets/seasons/season-halloween-corner-br.png',
+  './assets/seasons/season-halloween-banner.png'
 ];
 
 function offlineFallbackHtml() {
@@ -154,6 +165,7 @@ function isNetworkFirstPath(pathname) {
     p.endsWith('/privacy.html') ||
     p.endsWith('/game.js') ||
     p.endsWith('/styles/main.css') ||
+    p.endsWith('/styles/seasons.css') ||
     p.endsWith('/tunnel-check.js') ||
     p.endsWith('/install.js') ||
     p.endsWith('/sw.js') ||
@@ -231,6 +243,7 @@ self.addEventListener('fetch', (event) => {
               const path = url.pathname;
               if (path.endsWith('/game.js')) await c.put('./game.js', forCanon);
               else if (path.endsWith('/styles/main.css')) await c.put('./styles/main.css', forCanon);
+              else if (path.endsWith('/styles/seasons.css')) await c.put('./styles/seasons.css', forCanon);
               else if (path.endsWith('/install.js')) await c.put('./install.js', forCanon);
               else if (path.endsWith('/speel.html')) await c.put('./speel.html', forCanon);
               else if (path.endsWith('/ipad.html')) await c.put('./ipad.html', forCanon);

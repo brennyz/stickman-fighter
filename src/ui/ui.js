@@ -2008,6 +2008,7 @@ const UI = {
     document.getElementById('togSfx')?.classList.toggle('off', !save.sfx);
     const verLine = document.getElementById('menuVerLine');
     if (verLine) verLine.textContent = 'v' + APP_VERSION;
+    try { if (typeof syncSeasonFlavorUi === 'function') syncSeasonFlavorUi(); } catch (_) {}
     const missEl = document.getElementById('menuDailyHint');
     const hubHintEl = document.getElementById('menuHubHint');
     const dailyLine = dailyStatusLine();
@@ -4307,6 +4308,8 @@ const UI = {
 
   renderSettings() {
     renderLangSwitch();
+    try { if (typeof renderSeasonSwitch === 'function') renderSeasonSwitch(); } catch (_) {}
+    try { if (typeof syncSeasonFlavorUi === 'function') syncSeasonFlavorUi(); } catch (_) {}
     const verEl = document.getElementById('setAppVersion');
     if (verEl) {
       const fps = Perf.emaMs > 0 ? Math.round(1000 / Perf.emaMs) : 0;

@@ -720,6 +720,13 @@
       "text": "Options: aim-indicator color + radius ONLY. Persist prefs. Defaults feel good. Respect existing move-bar aim. No Versus/iOS/audio/i18n catalogs/gear/FOMO/Upgrades HOME.",
       "status": "done-in-code",
       "updated": "2026-09-14"
+    },
+    {
+      "id": "w-20260914T165100",
+      "from": "user",
+      "text": "SEASONAL story + CSS overlays ONLY: reusable season-overlay (classic/jungle/halloween + winter/summer hooks). pointer-events none, tokens, persist + optional calendar auto, i18n blurbs, art-slot hooks for pixel-art agent, season id for audio. No PNGs, no audio synth, no Versus, no gear.",
+      "status": "done-in-code",
+      "updated": "2026-09-14"
     }
   ],
   "agentRules": [
