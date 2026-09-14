@@ -323,9 +323,9 @@ const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const VERSION_UPDATE_SAVE_KEY = 'stickfighter_version_update_save_v1';
 const VERSION_UPDATE_FLAG_KEY = 'stickfighter_version_update_flag_v1';
 const SAVE_EXPORT_SCHEMA = 3;
-const APP_VERSION = '1.18.163';
+const APP_VERSION = '1.18.164';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 373;
+const SW_CACHE_REV = 374;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', petCoins: 0, dex: {}, summons: {}, pets: {}, activePet: null,
   eggPets: {}, activeEggPet: null, eggDaily: null,
   chestDaily: null, chestWeapons: {},
@@ -9609,6 +9609,87 @@ function speciesPowerScore(spId) {
   return rarityOf(sp.rarity).order * 100 + sp.hp + sp.dmg * 5;
 }
 
+/**
+ * Top-20 strongest creatures — spawn sting + light shudder.
+ *
+ * Sort key (same as speciesPowerScore, the monster-book “how hard is this”):
+ *   score = rarity.order * 100 + hp + dmg * 5
+ *   rarity.order: common 0 … mythic 5 … hell 7  (see RARITIES)
+ * Ties: higher XP, then species id A–Z.
+ *
+ * Dynamic: re-ranks the full SPECIES roster when it grows (cache keyed on
+ * species count). Not elite/boss flags, not giant mul — base species only.
+ * Special encounters (Satan, Tide) still count if their SPECIES row ranks in.
+ */
+const TOP20_STRONGEST_COUNT = 20;
+const TOP20_SPAWN_SHUDDER_MAG = 4;
+const TOP20_SPAWN_SHUDDER_DUR = 0.16;
+const TOP20_SPAWN_FX_GAP = 0.32;
+let _speciesTop20N = -1;
+let _speciesTop20Ids = null;
+let _speciesTop20Set = null;
+
+function speciesTop20Ranked() {
+  const n = Object.keys(SPECIES).length;
+  if (_speciesTop20Ids && _speciesTop20N === n) return _speciesTop20Ids;
+  const ranked = Object.keys(SPECIES).map((id) => {
+    const sp = SPECIES[id];
+    return { id, score: speciesPowerScore(id), xp: (sp && sp.xp) || 0 };
+  }).sort((a, b) => {
+    if (b.score !== a.score) return b.score - a.score;
+    if (b.xp !== a.xp) return b.xp - a.xp;
+    return a.id.localeCompare(b.id);
+  });
+  _speciesTop20Ids = ranked.slice(0, TOP20_STRONGEST_COUNT).map((r) => r.id);
+  _speciesTop20N = n;
+  _speciesTop20Set = new Set(_speciesTop20Ids);
+  return _speciesTop20Ids;
+}
+
+function isTop20StrongestSpecies(spId) {
+  if (!spId) return false;
+  speciesTop20Ranked();
+  return !!( _speciesTop20Set && _speciesTop20Set.has(spId) );
+}
+
+/** Entrance FX for a top-20 species spawn. Other creatures: no-op. */
+function triggerTop20SpawnFx(game, monster) {
+  if (!game || !monster || !isTop20StrongestSpecies(monster.spId)) return false;
+  const now = Number(game.t) || 0;
+  if (game._top20SpawnFxAt != null && now >= game._top20SpawnFxAt
+    && (now - game._top20SpawnFxAt) < TOP20_SPAWN_FX_GAP) {
+    return false;
+  }
+  game._top20SpawnFxAt = now;
+  try {
+    if (typeof AudioSys !== 'undefined' && AudioSys.sfx) AudioSys.sfx('top20Spawn');
+  } catch (_) {}
+  // Boss / elite / Satan / Tide already have their own heavier intro shake.
+  const heavyIntro = !!(monster.bossCore || monster.superBoss || monster.satanBoss
+    || monster.tideBoss || monster.elite);
+  let shook = false;
+  if (!heavyIntro && typeof game.shake === 'function') {
+    // game.shake no-ops when save.shake === false or motionReduced().
+    try { game.shake(TOP20_SPAWN_SHUDDER_MAG, TOP20_SPAWN_SHUDDER_DUR); shook = true; } catch (_) {}
+  }
+  game._lastTop20SpawnFx = { id: monster.spId, t: now, shook, heavyIntro };
+  return true;
+}
+
+/** Dev / QA: inject one top-20 creature into the current fight (training or adventure). */
+function spawnTop20ForTest(game, spId) {
+  if (!game || typeof Monster !== 'function') return null;
+  const ids = speciesTop20Ranked();
+  let id = (spId && SPECIES[spId] && isTop20StrongestSpecies(spId)) ? spId : null;
+  if (!id) id = ids[0];
+  if (!id || !SPECIES[id]) return null;
+  const maxX = (game.maxX != null) ? game.maxX : (typeof W === 'number' ? W - 40 : 760);
+  const x = Math.min(maxX - 20, (typeof W === 'number' ? W : 800) * 0.78);
+  const mon = new Monster(id, x, game, {});
+  if (game.monsters) game.monsters.push(mon);
+  return mon;
+}
+
 let _speciesTop10Threshold = null;
 function speciesTop10Threshold() {
   if (_speciesTop10Threshold != null) return _speciesTop10Threshold;
@@ -14312,6 +14393,8 @@ function collectSampleUrls() {
 }
 
 function sampleMapForSfx(name) {
+  // top20Spawn is procedural-only (AudioSys switch) — do not add a pack mapping.
+  if (name === 'top20Spawn') return null;
   return SFX_SAMPLE_MAP[name] || SKILL_SFX_SAMPLES[name] || SUPER_SFX_SAMPLES[name] || null;
 }
 /* --- src/systems/audio.js --- */
@@ -14627,7 +14710,8 @@ const AudioSys = {
   sfx(name) {
     if (!this.ctx || !save.sfx || this._sfxBlockedInPause(name)) return;
     try { if (this.ctx.state === 'suspended') this.ctx.resume(); } catch (_) {}
-    if (this._playSample(name)) return;
+    // top20Spawn stays procedural (funny self-made) — never a downloaded sample.
+    if (name !== 'top20Spawn' && this._playSample(name)) return;
     const lite = save.liteFx || (typeof Perf !== 'undefined' && Perf.tier >= 1);
     const v = (n) => n * (lite ? 0.72 : 0.88);
     const d = (n) => n * (lite ? 0.78 : 0.9);
@@ -15127,6 +15211,21 @@ const AudioSys = {
         });
         N(0.04, 0.1, 3400, true, now);
         break;
+      // Self-made cartoon sting — NOT in audio-samples.js (no downloaded packs).
+      // Slide-whistle whoop + rubber boing + tiny duck honk (~0.28s).
+      case 'top20Spawn': {
+        const a = A();
+        T(190 + a * 20, 760 + a * 40, 0.08, 'sine', 0.15, now);
+        T(760 + a * 30, 240 + a * 20, 0.07, 'triangle', 0.12, now + 0.07);
+        T(150 + a * 12, 98 + a * 8, 0.1, 'square', 0.08, now + 0.12);
+        T(430 + a * 25, 690 + a * 30, 0.055, 'sine', 0.11, now + 0.16);
+        T(690 + a * 20, 210 + a * 15, 0.075, 'triangle', 0.09, now + 0.20);
+        if (!lite) {
+          N(0.035, 0.055, 2000 + a * 200, true, now + 0.13);
+          T(88, 52, 0.07, 'sine', 0.06, now + 0.22);
+        }
+        break;
+      }
     }
   },
 
@@ -20233,6 +20332,10 @@ class Monster {
     if (this.bossCore && typeof BOSS_SAFETY_DUR === 'number') {
       this.safetyT = BOSS_SAFETY_DUR * (this.colossal ? 1.35 : 1);
     }
+    // Top-20 strongest: funny procedural sting + light shudder (spawn/entrance only).
+    try {
+      if (typeof triggerTop20SpawnFx === 'function') triggerTop20SpawnFx(game, this);
+    } catch (_) {}
   }
   get alive() { return this.hp > 0; }
 
@@ -36770,6 +36873,14 @@ function bootGame() {
     fixPlayLayer: () => (typeof sfDebugScreen === 'function' ? sfDebugScreen({ fix: true }) : null),
     goMenu: () => recoverToMenu({ force: true }),
     forcePlay: () => (typeof forcePlayCanvasVisible === 'function' ? forcePlayCanvasVisible('__sf') : null),
+    top20Ids: () => (typeof speciesTop20Ranked === 'function' ? speciesTop20Ranked().slice() : []),
+    isTop20: (id) => (typeof isTop20StrongestSpecies === 'function' ? isTop20StrongestSpecies(id) : false),
+    spawnTop20: (id) => (typeof spawnTop20ForTest === 'function' ? spawnTop20ForTest(game, id) : null),
+    previewTop20Spawn: () => {
+      try { AudioSys.init(); AudioSys.sfx('top20Spawn'); } catch (_) {}
+      try { if (game && typeof game.shake === 'function') game.shake(4, 0.16); } catch (_) {}
+      return game && game._lastTop20SpawnFx;
+    },
   };
   // install.js mag hierop pas herladen: nooit tijdens gevecht, level-keuze of dobbelworp.
   window.__sfSafeToReload = () => {
@@ -36790,20 +36901,32 @@ function bootGame() {
 
   (function handleLaunchShortcut() {
     try {
-      const mode = new URLSearchParams(location.search).get('mode');
-      if (!mode) return;
+      const q = new URLSearchParams(location.search);
+      const mode = q.get('mode');
+      const top20 = q.get('top20');
+      if (!mode && top20 == null) return;
       AudioSys.init();
       setTimeout(() => {
         try {
           if (mode === 'adventure') {
             UI.safeOpen('levelScreen', () => UI.renderLevels());
-          } else if (mode === 'training') startGame('training');
-          else if (mode === 'versus') {
+          } else if (mode === 'training') {
+            startGame('training');
+            if (top20 != null && typeof spawnTop20ForTest === 'function') {
+              const pick = (top20 === '1' || top20 === '' || top20 === 'true') ? null : top20;
+              setTimeout(() => {
+                try { spawnTop20ForTest(game, pick); } catch (_) {}
+              }, 90);
+            }
+          } else if (mode === 'versus') {
             try { toastVersusRetired(); } catch (_) {}
           } else if (mode === 'wall') startGame('wall');
           else if (mode === 'coinrun') startGame('coinrun');
+          else if (top20 != null && typeof AudioSys !== 'undefined') {
+            try { AudioSys.sfx('top20Spawn'); } catch (_) {}
+          }
         } catch (err) {
-          sfReportError('shortcut/' + mode, err);
+          sfReportError('shortcut/' + (mode || 'top20'), err);
           recoverToMenu();
         }
       }, 120);

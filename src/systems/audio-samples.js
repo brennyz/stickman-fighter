@@ -278,5 +278,7 @@ function collectSampleUrls() {
 }
 
 function sampleMapForSfx(name) {
+  // top20Spawn is procedural-only (AudioSys switch) — do not add a pack mapping.
+  if (name === 'top20Spawn') return null;
   return SFX_SAMPLE_MAP[name] || SKILL_SFX_SAMPLES[name] || SUPER_SFX_SAMPLES[name] || null;
 }

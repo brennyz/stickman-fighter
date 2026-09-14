@@ -310,7 +310,8 @@ const AudioSys = {
   sfx(name) {
     if (!this.ctx || !save.sfx || this._sfxBlockedInPause(name)) return;
     try { if (this.ctx.state === 'suspended') this.ctx.resume(); } catch (_) {}
-    if (this._playSample(name)) return;
+    // top20Spawn stays procedural (funny self-made) — never a downloaded sample.
+    if (name !== 'top20Spawn' && this._playSample(name)) return;
     const lite = save.liteFx || (typeof Perf !== 'undefined' && Perf.tier >= 1);
     const v = (n) => n * (lite ? 0.72 : 0.88);
     const d = (n) => n * (lite ? 0.78 : 0.9);
@@ -810,6 +811,21 @@ const AudioSys = {
         });
         N(0.04, 0.1, 3400, true, now);
         break;
+      // Self-made cartoon sting — NOT in audio-samples.js (no downloaded packs).
+      // Slide-whistle whoop + rubber boing + tiny duck honk (~0.28s).
+      case 'top20Spawn': {
+        const a = A();
+        T(190 + a * 20, 760 + a * 40, 0.08, 'sine', 0.15, now);
+        T(760 + a * 30, 240 + a * 20, 0.07, 'triangle', 0.12, now + 0.07);
+        T(150 + a * 12, 98 + a * 8, 0.1, 'square', 0.08, now + 0.12);
+        T(430 + a * 25, 690 + a * 30, 0.055, 'sine', 0.11, now + 0.16);
+        T(690 + a * 20, 210 + a * 15, 0.075, 'triangle', 0.09, now + 0.20);
+        if (!lite) {
+          N(0.035, 0.055, 2000 + a * 200, true, now + 0.13);
+          T(88, 52, 0.07, 'sine', 0.06, now + 0.22);
+        }
+        break;
+      }
     }
   },
 

@@ -89,6 +89,10 @@ class Monster {
     if (this.bossCore && typeof BOSS_SAFETY_DUR === 'number') {
       this.safetyT = BOSS_SAFETY_DUR * (this.colossal ? 1.35 : 1);
     }
+    // Top-20 strongest: funny procedural sting + light shudder (spawn/entrance only).
+    try {
+      if (typeof triggerTop20SpawnFx === 'function') triggerTop20SpawnFx(game, this);
+    } catch (_) {}
   }
   get alive() { return this.hp > 0; }
 

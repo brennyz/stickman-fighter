@@ -26,6 +26,7 @@ rg -l "handoff|coinrun|projAimVelocity|charSelectScreen|ASSET-STYLE" .
 | **Mikken** shuriken (hoog/vliegers) | 1.12.0 | `f6c86bf` | `projAimVelocity`, `drawTouchControls` aim-lijn |
 | Shuriken anti-spam | 1.12.0 | `f6c86bf` | `canThrowShuriken`, `SHURIKEN_BURST_*` |
 | speel.html delen | 1.12.2+ | `0a63376`+ | `speel.html`, `resolveSharePlayUrl` |
+| Top-20 spawn FX | 1.18.164 | this PR | `speciesTop20Ranked`, `triggerTop20SpawnFx`, `AudioSys` `top20Spawn` |
 | Agent handoff docs | — | `4de8d95`+ | `agent-handoff.json`, `AGENTS.md` |
 
 ## d20 (Ralph bag)
