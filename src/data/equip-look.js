@@ -422,6 +422,12 @@ function resolveGearLooks(fighter) {
     const fromDesc = looksFromGearDescriptor(fighter.gearDescriptor);
     if (fromDesc.length) return fromDesc;
   }
+  /* Explicit look-map on the fighter (preview / #276 smoke) wins over live save.gear. */
+  const direct = fighter && fighter.gear;
+  if (isPlainGear(direct) && !direct.equipped && !direct.owned && direct.schema == null) {
+    const fromLook = looksForGear(direct);
+    if (fromLook.length) return fromLook;
+  }
   /* Style / upgrade cards are ephemeral previews — do not steal the live loadout. */
   const preview = !!(fighter && fighter._preview);
   const store = (fighter && fighter.save)
