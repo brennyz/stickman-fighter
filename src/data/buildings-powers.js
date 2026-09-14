@@ -8,9 +8,11 @@
  *   save.buildings = {
  *     schema: 1,
  *     lastTickAt: epoch_ms,
- *     byId: { dojo: { level, pending, stock, lastCollectAt }, ... }
+ *     byId: { stick_lighter: { level, pending, stock, lastCollectAt }, ... }
  *   }
- * Also accepts systems-shaped { levels, pending, stock } and flat { dojo: {lv} }.
+ * Locked systems ids: stick_lighter, woodchip_glue, chipping_wood,
+ * bamboo_boesa, echo_whistle. Also accepts kebab / longer pixel names
+ * and systems-shaped { levels, pending, stock }.
  * Never throws. Clock rollback = no refund. Versus untouched.
  */
 const BUILDINGS_SCHEMA = 1;
@@ -18,53 +20,67 @@ const BUILDING_LEVEL_MAX = 10;
 const BUILDING_POWER_TIER_MAX = 5;
 const BUILDING_OFFLINE_MAX_MS = 48 * 3600 * 1000;
 const BUILDING_PENDING_HOURS = 4;
+const BUILDING_STARTER_ID = 'stick_lighter';
 
-const BUILDING_FACTORY_IDS = ['dojo', 'forge', 'garden', 'tower', 'shrine'];
+/** Exact systems catalog (FINAL lock). */
+const BUILDING_FACTORY_IDS = [
+  'stick_lighter',
+  'woodchip_glue',
+  'chipping_wood',
+  'bamboo_boesa',
+  'echo_whistle',
+];
 
 const BUILDING_ID_ALIASES = {
-  dojo: 'dojo', hall: 'dojo', training: 'dojo', factory_dojo: 'dojo', dojo_factory: 'dojo',
-  chippingwood: 'dojo', factorychippingwood: 'dojo',
-  forge: 'forge', smith: 'forge', workshop: 'forge', factory_forge: 'forge', forge_factory: 'forge',
-  sticklighter: 'forge', factorysticklighter: 'forge',
-  garden: 'garden', farm: 'garden', mill: 'garden', kitchen: 'garden', factory_garden: 'garden',
-  bambooboesaboiler: 'garden', bambooboiler: 'garden', boesa: 'garden',
-  tower: 'tower', watch: 'tower', barracks: 'tower', factory_tower: 'tower',
-  woodchipglue: 'tower', factorywoodchipglue: 'tower',
-  shrine: 'shrine', well: 'shrine', temple: 'shrine', factory_shrine: 'shrine',
-  echowhistlemill: 'shrine', whistlemill: 'shrine',
+  stick_lighter: 'stick_lighter', sticklighter: 'stick_lighter',
+  factory_stick_lighter: 'stick_lighter', factorysticklighter: 'stick_lighter',
+  forge: 'stick_lighter', smith: 'stick_lighter',
+  woodchip_glue: 'woodchip_glue', woodchipglue: 'woodchip_glue',
+  factory_woodchip_glue: 'woodchip_glue', factorywoodchipglue: 'woodchip_glue',
+  tower: 'woodchip_glue', barracks: 'woodchip_glue',
+  chipping_wood: 'chipping_wood', chippingwood: 'chipping_wood',
+  factory_chipping_wood: 'chipping_wood', factorychippingwood: 'chipping_wood',
+  dojo: 'chipping_wood', hall: 'chipping_wood', training: 'chipping_wood',
+  bamboo_boesa: 'bamboo_boesa', bambooboesa: 'bamboo_boesa',
+  bamboo_boesa_boiler: 'bamboo_boesa', bambooboesaboiler: 'bamboo_boesa',
+  bambooboiler: 'bamboo_boesa', boesa: 'bamboo_boesa',
+  garden: 'bamboo_boesa', farm: 'bamboo_boesa', kitchen: 'bamboo_boesa',
+  echo_whistle: 'echo_whistle', echowhistle: 'echo_whistle',
+  echo_whistle_mill: 'echo_whistle', echowhistlemill: 'echo_whistle',
+  whistlemill: 'echo_whistle', shrine: 'echo_whistle', well: 'echo_whistle',
 };
 
 const BUILDING_RESOURCE = {
-  dojo:   { id: 'focus',   basePerHour: 12, stepPerHour: 4, stockCap: 240 },
-  forge:  { id: 'scrap',   basePerHour: 10, stepPerHour: 3, stockCap: 200 },
-  garden: { id: 'rations', basePerHour: 16, stepPerHour: 5, stockCap: 320 },
-  tower:  { id: 'watch',   basePerHour:  8, stepPerHour: 3, stockCap: 160 },
-  shrine: { id: 'spirit',  basePerHour:  6, stepPerHour: 2, stockCap: 120 },
+  stick_lighter:  { id: 'embers',  basePerHour: 10, stepPerHour: 3, stockCap: 200 },
+  woodchip_glue:  { id: 'glue',    basePerHour:  8, stepPerHour: 3, stockCap: 160 },
+  chipping_wood:  { id: 'chips',   basePerHour: 12, stepPerHour: 4, stockCap: 240 },
+  bamboo_boesa:   { id: 'steam',   basePerHour: 16, stepPerHour: 5, stockCap: 320 },
+  echo_whistle:   { id: 'echoes',  basePerHour:  6, stepPerHour: 2, stockCap: 120 },
 };
 
 /** Power tiers: index 0 unused; [1]=lv1, [3]=lv3, [5]=lv5. Higher lv keeps lv5. */
 const BUILDING_POWER_TIERS = {
-  dojo: {
-    1: { dmgMul: 1.02 },
-    3: { dmgMul: 1.04 },
-    5: { dmgMul: 1.06, speedMul: 1.02 },
-  },
-  forge: {
+  stick_lighter: {
     1: { critBonus: 0.01 },
     3: { critBonus: 0.02 },
     5: { critBonus: 0.03, dmgMul: 1.02 },
   },
-  garden: {
-    1: { maxHp: 4 },
-    3: { maxHp: 8 },
-    5: { maxHp: 12, healBetween: 0.02 },
-  },
-  tower: {
+  woodchip_glue: {
     1: { shieldWave: 0.35 },
     3: { shieldWave: 0.70 },
     5: { shieldWave: 1.00, defMul: 0.96 },
   },
-  shrine: {
+  chipping_wood: {
+    1: { dmgMul: 1.02 },
+    3: { dmgMul: 1.04 },
+    5: { dmgMul: 1.06, speedMul: 1.02 },
+  },
+  bamboo_boesa: {
+    1: { maxHp: 4 },
+    3: { maxHp: 8 },
+    5: { maxHp: 12, healBetween: 0.02 },
+  },
+  echo_whistle: {
     1: { energyMul: 1.04 },
     3: { energyMul: 1.08 },
     5: { energyMul: 1.10, techniqueMul: 1.04 },
@@ -72,11 +88,11 @@ const BUILDING_POWER_TIERS = {
 };
 
 const BUILDING_META = {
-  dojo:   { name: 'Dojo',   accent: '#7cf5ff' },
-  forge:  { name: 'Forge',  accent: '#ff9a6a' },
-  garden: { name: 'Garden', accent: '#6ee06e' },
-  tower:  { name: 'Tower',  accent: '#9fd8ff' },
-  shrine: { name: 'Shrine', accent: '#c792ff' },
+  stick_lighter: { name: 'Stick-Lighter', accent: '#ffd75e' },
+  woodchip_glue: { name: 'Woodchip-Glue', accent: '#b8e986' },
+  chipping_wood: { name: 'Chipping-Wood', accent: '#7cf5ff' },
+  bamboo_boesa:  { name: 'Bamboo-Boesa', accent: '#6ee06e' },
+  echo_whistle:  { name: 'Echo-Whistle', accent: '#c792ff' },
 };
 
 function emptyBuildingSlot(level) {
@@ -85,7 +101,7 @@ function emptyBuildingSlot(level) {
 
 function emptyBuildingsBag() {
   const byId = {};
-  for (const id of BUILDING_FACTORY_IDS) byId[id] = emptyBuildingSlot(id === 'dojo' ? 1 : 0);
+  for (const id of BUILDING_FACTORY_IDS) byId[id] = emptyBuildingSlot(id === BUILDING_STARTER_ID ? 1 : 0);
   return { schema: BUILDINGS_SCHEMA, lastTickAt: 0, byId };
 }
 
@@ -198,14 +214,14 @@ function buildingSlot(id, s) {
   const bag = ensureBuildingsBag(s);
   if (!bag.byId || typeof bag.byId !== 'object') bag.byId = {};
   if (!bag.byId[canon] || typeof bag.byId[canon] !== 'object') {
-    bag.byId[canon] = emptyBuildingSlot(canon === 'dojo' ? 1 : 0);
+    bag.byId[canon] = emptyBuildingSlot(canon === BUILDING_STARTER_ID ? 1 : 0);
   }
   return bag.byId[canon];
 }
 
 function readBuildingSlotLoose(raw, id) {
   const canon = buildingCanonId(id);
-  if (!canon || !raw || typeof raw !== 'object') return emptyBuildingSlot(canon === 'dojo' ? 1 : 0);
+  if (!canon || !raw || typeof raw !== 'object') return emptyBuildingSlot(canon === BUILDING_STARTER_ID ? 1 : 0);
   const byId = (raw.byId && typeof raw.byId === 'object') ? raw.byId : raw;
   const levels = (raw.levels && typeof raw.levels === 'object') ? raw.levels : null;
   const pendingBag = (raw.pending && typeof raw.pending === 'object') ? raw.pending : null;
@@ -215,7 +231,13 @@ function readBuildingSlotLoose(raw, id) {
   for (const key of aliases) {
     if (byId[key] && typeof byId[key] === 'object' && !Array.isArray(byId[key])) { src = byId[key]; break; }
   }
-  const slot = emptyBuildingSlot(canon === 'dojo' ? 1 : 0);
+  if (!src) {
+    for (const key of Object.keys(byId)) {
+      if (buildingCanonId(key) !== canon) continue;
+      if (byId[key] && typeof byId[key] === 'object' && !Array.isArray(byId[key])) { src = byId[key]; break; }
+    }
+  }
+  const slot = emptyBuildingSlot(canon === BUILDING_STARTER_ID ? 1 : 0);
   if (src) {
     slot.level = buildingLevelOf(src);
     slot.pending = clamp(Number(src.pending) || 0, 0, 99999);
@@ -248,14 +270,14 @@ function sanitizeBuildingsBag(raw) {
   out.lastTickAt = (last > 0 && last <= now + 60000) ? last : 0;
   out.schema = BUILDINGS_SCHEMA;
   const ids = BUILDING_FACTORY_IDS;
-  const hadAny = !!(src.byId || src.levels || src.dojo || src.forge);
+  const hadAny = !!(src.byId || src.levels || src.stick_lighter || src.dojo || src.chipping_wood);
   for (const id of ids) {
     const slot = readBuildingSlotLoose(src, id);
     const cap = buildingPendingCap(id, slot.level);
     const stockCap = (BUILDING_RESOURCE[id] && BUILDING_RESOURCE[id].stockCap) || 0;
     slot.pending = clamp(Number(slot.pending) || 0, 0, cap || 0);
     slot.stock = clamp(Math.floor(Number(slot.stock) || 0), 0, stockCap || 0);
-    if (!hadAny && id === 'dojo' && slot.level < 1) slot.level = 1;
+    if (!hadAny && id === BUILDING_STARTER_ID && slot.level < 1) slot.level = 1;
     out.byId[id] = slot;
   }
   return out;

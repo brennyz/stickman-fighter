@@ -85,125 +85,125 @@ assert(run('BUILDINGS_SCHEMA === 1'), 'schema 1');
 
 run('save = sanitizeSave(Object.assign({}, DEFAULT_SAVE))');
 assert(run('save.buildings && save.buildings.schema === 1'), 'sanitize seeds bag');
-assert(run('save.buildings.byId.dojo.level === 1'), 'starter dojo Lv1');
-assert(run('save.buildings.byId.forge.level === 0'), 'forge locked at 0');
-assert(run('buildingRatePerHour("dojo", 1) === 12'), 'dojo lv1 = 12/h');
-assert(run('buildingRatePerHour("forge", 0) === 0'), 'lv0 produces nothing');
-assert(run('buildingPendingCap("dojo", 1) === 48'), 'dojo pending cap 4h × 12');
-assert(run('buildingPowerBonus().dmgMul === 1.02'), 'starter dojo +2% dmg');
-assert(run('buildingPowerBonus().maxHp === 0'), 'no garden HP at lv0');
+assert(run('save.buildings.byId.stick_lighter.level === 1'), 'starter stick_lighter Lv1');
+assert(run('save.buildings.byId.woodchip_glue.level === 0'), 'glue locked at 0');
+assert(run('buildingRatePerHour("stick_lighter", 1) === 10'), 'lighter lv1 = 10/h');
+assert(run('buildingRatePerHour("woodchip_glue", 0) === 0'), 'lv0 produces nothing');
+assert(run('buildingPendingCap("stick_lighter", 1) === 40'), 'lighter pending cap 4h × 10');
+assert(run('buildingPowerBonus().critBonus === 0.01'), 'starter lighter +1% crit');
+assert(run('buildingPowerBonus().dmgMul === 1'), 'starter does not touch DMG');
+assert(run('buildingPowerBonus().maxHp === 0'), 'no boiler HP at lv0');
 
 run(`
   save.buildings = sanitizeBuildingsBag({
     schema: 1,
     lastTickAt: 1,
-    levels: { dojo: 5, forge: 5, garden: 5, tower: 5, shrine: 5 },
-    pending: { dojo: 9999 },
-    stock: { dojo: 9999 },
+    levels: { stick_lighter: 5, woodchip_glue: 5, chipping_wood: 5, bamboo_boesa: 5, echo_whistle: 5 },
+    pending: { chipping_wood: 9999 },
+    stock: { chipping_wood: 9999 },
   });
 `);
-assert(run('save.buildings.byId.dojo.level === 5'), 'systems levels bag accepted');
-assert(run('save.buildings.byId.dojo.pending <= 112.001'), 'pending capped at 4h of lv5 rate');
-assert(run('save.buildings.byId.dojo.stock === 240'), 'stock capped');
-assert(run('buildingRatePerHour("dojo", 5) === 28'), 'dojo lv5 = 28/h');
+assert(run('save.buildings.byId.chipping_wood.level === 5'), 'systems levels bag accepted');
+assert(run('save.buildings.byId.chipping_wood.pending <= 112.001'), 'pending capped at 4h of lv5 chips rate');
+assert(run('save.buildings.byId.chipping_wood.stock === 240'), 'chips stock capped');
+assert(run('buildingRatePerHour("chipping_wood", 5) === 28'), 'chips lv5 = 28/h');
 
 const bonus = run('JSON.stringify(buildingPowerBonus())');
 const b = JSON.parse(bonus);
 assert(b.dmgMul > 1.07 && b.dmgMul <= 1.12, 'stacked dmg within cap, got ' + b.dmgMul);
-assert(b.critBonus >= 0.029 && b.critBonus <= 0.05, 'forge crit, got ' + b.critBonus);
-assert(b.maxHp === 12, 'garden +12 HP');
-assert(b.energyMul >= 1.09 && b.energyMul <= 1.16, 'shrine energy, got ' + b.energyMul);
-assert(b.healBetween > 0, 'garden adventure heal');
-assert(b.defMul < 1 && b.defMul >= 0.92, 'tower def, got ' + b.defMul);
+assert(b.critBonus >= 0.029 && b.critBonus <= 0.05, 'lighter crit, got ' + b.critBonus);
+assert(b.maxHp === 12, 'boiler +12 HP');
+assert(b.energyMul >= 1.09 && b.energyMul <= 1.16, 'whistle energy, got ' + b.energyMul);
+assert(b.healBetween > 0, 'boiler adventure heal');
+assert(b.defMul < 1 && b.defMul >= 0.92, 'glue def, got ' + b.defMul);
 
 run(`
   save.buildings = sanitizeBuildingsBag({
     lastTickAt: 1_700_000_000_000,
     byId: {
-      dojo: { level: 1, pending: 0, stock: 0 },
-      forge: { level: 1, pending: 0, stock: 0 },
-      garden: { level: 1, pending: 0, stock: 0 },
-      tower: { level: 1, pending: 0, stock: 0 },
-      shrine: { level: 1, pending: 0, stock: 0 },
+      stick_lighter: { level: 1, pending: 0, stock: 0 },
+      woodchip_glue: { level: 1, pending: 0, stock: 0 },
+      chipping_wood: { level: 1, pending: 0, stock: 0 },
+      bamboo_boesa: { level: 1, pending: 0, stock: 0 },
+      echo_whistle: { level: 1, pending: 0, stock: 0 },
     },
   });
 `);
 const t0 = 1_700_000_000_000;
 const oneHour = run('tickBuildingResources(' + (t0 + 3600000) + ', { skipPersist: true })');
 assert(oneHour && oneHour.hours > 0.99 && oneHour.hours < 1.01, '1h delta');
-assert(run('Math.floor(save.buildings.byId.dojo.pending) === 12'), 'dojo +12 after 1h');
-assert(run('Math.floor(save.buildings.byId.forge.pending) === 10'), 'forge +10 after 1h');
+assert(run('Math.floor(save.buildings.byId.stick_lighter.pending) === 10'), 'lighter +10 after 1h');
+assert(run('Math.floor(save.buildings.byId.chipping_wood.pending) === 12'), 'chips +12 after 1h');
 
 run('tickBuildingResources(' + (t0 + 3600000 + 20 * 3600000) + ', { skipPersist: true })');
-assert(run('save.buildings.byId.dojo.pending <= 48.001'), 'pending cap after long online tick');
+assert(run('save.buildings.byId.stick_lighter.pending <= 40.001'), 'pending cap after long online tick');
 
 run(`
   save.buildings.lastTickAt = 1_700_000_000_000;
-  save.buildings.byId.dojo.pending = 0;
+  save.buildings.byId.chipping_wood.pending = 0;
 `);
 run('tickBuildingResources(' + (t0 + 72 * 3600000) + ', { skipPersist: true })');
-assert(run('save.buildings.byId.dojo.pending <= 48.001'), 'offline 72h still pending-capped (48h wall then 4h cap)');
+assert(run('save.buildings.byId.chipping_wood.pending <= 48.001'), 'offline 72h still pending-capped');
 
 run(`
   const _now = Date.now();
   save.buildings.lastTickAt = _now + 30000;
-  save.buildings.byId.dojo.pending = 5;
+  save.buildings.byId.stick_lighter.pending = 5;
   globalThis.__rb = tickBuildingResources(_now, { skipPersist: true });
 `);
 assert(run('globalThis.__rb && globalThis.__rb.rollback'), 'clock rollback flagged');
-assert(run('save.buildings.byId.dojo.pending === 5'), 'rollback does not refund');
+assert(run('save.buildings.byId.stick_lighter.pending === 5'), 'rollback does not refund');
 
 run(`
   save.buildings = sanitizeBuildingsBag({
     lastTickAt: Date.now(),
-    byId: { dojo: { level: 1, pending: 20.8, stock: 230 } },
+    byId: { stick_lighter: { level: 1, pending: 20.8, stock: 190 } },
   });
 `);
-const col = run('collectBuildingResource("dojo", { silent: true, skipPersist: true })');
+const col = run('collectBuildingResource("stick_lighter", { silent: true, skipPersist: true })');
 assert(col && col.ok && col.amount === 10, 'collect fills remaining stock room, got ' + (col && col.amount));
-assert(run('save.buildings.byId.dojo.stock === 240'), 'stock at cap after collect');
-assert(run('Math.floor(save.buildings.byId.dojo.pending) === 10'), 'remainder stays pending');
+assert(run('save.buildings.byId.stick_lighter.stock === 200'), 'stock at cap after collect');
+assert(run('Math.floor(save.buildings.byId.stick_lighter.pending) === 10'), 'remainder stays pending');
 
 run(`
-  save.buildings.byId.dojo.pending = 0.4;
-  save.buildings.byId.dojo.stock = 0;
+  save.buildings.byId.stick_lighter.pending = 0.4;
+  save.buildings.byId.stick_lighter.stock = 0;
 `);
-const empty = run('collectBuildingResource("dojo", { silent: true, skipPersist: true })');
+const empty = run('collectBuildingResource("stick_lighter", { silent: true, skipPersist: true })');
 assert(empty && !empty.ok, 'sub-1 pending is not collectable');
 
 run(`
   save.buildings = sanitizeBuildingsBag({
     constructor: { level: 9 },
     __proto__: { level: 9 },
-    byId: { __proto__: { level: 9 }, dojo: { level: "max", pending: Infinity, stock: -4 } },
+    byId: { __proto__: { level: 9 }, stick_lighter: { level: "max", pending: Infinity, stock: -4 } },
   });
 `);
-assert(run('save.buildings.byId.dojo.level >= 0 && save.buildings.byId.dojo.level <= 10'), 'corrupt level clamped');
-assert(run('Number.isFinite(save.buildings.byId.dojo.pending)'), 'pending finite');
-assert(run('!Object.prototype.hasOwnProperty.call(save.buildings.byId, "__proto__") || save.buildings.byId.__proto__ === Object.prototype || true'), 'proto bag safe');
+assert(run('save.buildings.byId.stick_lighter.level >= 0 && save.buildings.byId.stick_lighter.level <= 10'), 'corrupt level clamped');
+assert(run('Number.isFinite(save.buildings.byId.stick_lighter.pending)'), 'pending finite');
 
 run(`
-  save.buildings = sanitizeBuildingsBag({ dojo: { lv: 3, pending: 2 }, factory_forge: { level: 2 } });
+  save.buildings = sanitizeBuildingsBag({ chipping_wood: { lv: 3, pending: 2 }, "stick-lighter": { level: 2 } });
 `);
-assert(run('save.buildings.byId.dojo.level === 3'), 'flat lv + alias');
-assert(run('save.buildings.byId.forge.level === 2'), 'factory_forge alias');
+assert(run('save.buildings.byId.chipping_wood.level === 3'), 'flat lv');
+assert(run('save.buildings.byId.stick_lighter.level === 2'), 'kebab alias');
 
 run(`
   save.buildings = sanitizeBuildingsBag({
-    byId: { dojo: { level: 5 }, forge: { level: 0 }, garden: { level: 0 }, tower: { level: 0 }, shrine: { level: 0 } },
+    byId: { chipping_wood: { level: 5 }, stick_lighter: { level: 0 }, woodchip_glue: { level: 0 }, bamboo_boesa: { level: 0 }, echo_whistle: { level: 0 } },
   });
   globalThis.__player = { maxhp: 100, hp: 100, baseDmg: 10, speed: 260 };
   globalThis.__game = {};
   applyBuildingPowersToPlayer(globalThis.__game, globalThis.__player);
 `);
-assert(run('globalThis.__player.baseDmg === 11'), 'dojo lv5 ×1.06 → 11 dmg (10*1.06 rounded)');
-assert(run('globalThis.__player.maxhp === 100'), 'no garden HP');
+assert(run('globalThis.__player.baseDmg === 11'), 'chipping_wood lv5 ×1.06 → 11 dmg');
+assert(run('globalThis.__player.maxhp === 100'), 'no boiler HP');
 assert(run('globalThis.__game.buildingDmgMul === 1.06'), 'game dmg mul set');
-assert(run('globalThis.__game.buildingCritBonus === 0'), 'no forge crit');
+assert(run('globalThis.__game.buildingCritBonus === 0'), 'no lighter crit');
 
 run(`
   save.buildings = sanitizeBuildingsBag({
-    byId: { dojo: { level: 0 }, forge: { level: 0 }, garden: { level: 0 }, tower: { level: 0 }, shrine: { level: 0 } },
+    byId: { stick_lighter: { level: 0 }, woodchip_glue: { level: 0 }, chipping_wood: { level: 0 }, bamboo_boesa: { level: 0 }, echo_whistle: { level: 0 } },
   });
   globalThis.__player2 = { maxhp: 100, hp: 100, baseDmg: 10, speed: 260 };
   globalThis.__game2 = {};
@@ -211,13 +211,16 @@ run(`
 `);
 assert(run('globalThis.__player2.baseDmg === 10 && globalThis.__player2.maxhp === 100'), 'all-zero buildings do not change combat');
 
-assert(run('buildingCanonId("chipping-wood") === "dojo"'), 'pixel chipping-wood → dojo');
-assert(run('buildingCanonId("stick-lighter") === "forge"'), 'pixel stick-lighter → forge');
-assert(run('buildingCanonId("bamboo-boesa-boiler") === "garden"'), 'pixel boiler → garden');
-assert(run('buildingCanonId("woodchip-glue") === "tower"'), 'pixel woodchip-glue → tower');
-assert(run('buildingCanonId("echo-whistle-mill") === "shrine"'), 'pixel whistle-mill → shrine');
+assert(run('buildingCanonId("stick_lighter") === "stick_lighter"'), 'locked stick_lighter');
+assert(run('buildingCanonId("woodchip_glue") === "woodchip_glue"'), 'locked woodchip_glue');
+assert(run('buildingCanonId("chipping_wood") === "chipping_wood"'), 'locked chipping_wood');
+assert(run('buildingCanonId("bamboo_boesa") === "bamboo_boesa"'), 'locked bamboo_boesa');
+assert(run('buildingCanonId("echo_whistle") === "echo_whistle"'), 'locked echo_whistle');
+assert(run('buildingCanonId("bamboo-boesa-boiler") === "bamboo_boesa"'), 'long pixel boiler');
+assert(run('buildingCanonId("echo-whistle-mill") === "echo_whistle"'), 'long pixel mill');
+assert(run('buildingCanonId("dojo") === "chipping_wood"'), 'legacy dojo alias');
 
 const ids = run('BUILDING_FACTORY_IDS.join(",")');
-assert(ids === 'dojo,forge,garden,tower,shrine', 'stable ids');
+assert(ids === 'stick_lighter,woodchip_glue,chipping_wood,bamboo_boesa,echo_whistle', 'locked systems ids');
 
-console.log('SMOKE_OK buildings-powers · 5 factories · starter dojo Lv1 · offline delta · caps · collect · powers');
+console.log('SMOKE_OK buildings-powers · 5 factories · starter stick_lighter Lv1 · offline delta · caps · collect · powers');
