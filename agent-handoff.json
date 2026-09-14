@@ -638,6 +638,10 @@
   ],
   "sessionLog": [
     {
+      "at": "2026-09-14T17:31:40Z",
+      "summary": "Editor pivot: abandoned unique P1 drawers; all 36 W2 arts alias onto #282 maps. Catalog merge kept."
+    },
+    {
       "at": "2026-09-14T17:28:01Z",
       "summary": "P1 W2 slots filled: 18 dedicated 32x32 pixels + catalog #284 merge. v1.18.166/SW376."
     },
@@ -732,10 +736,6 @@
     {
       "at": "2026-08-17T14:01:21Z",
       "summary": "GitHub-sync: PC==main; wachtlijst + vraag-bij-upload; tracking nog lokaal"
-    },
-    {
-      "at": "2026-08-17T10:21:10Z",
-      "summary": "PC-pull geregeld: pull-main.sh + GITHUB-PUSH is nu pull-kaart; main LIVE"
     }
   ],
   "implementedFeaturesSummary": "d18 char select deel 1+2 (v1.11.1-2); Mats coinrun + shuriken mik/vliegers + anti-spam (v1.12.0); speel.html (v1.12.2+). Zie HANDOFF-ZOEKINDEX.md en improvement-d20-bag.json userFeatureLog.",
