@@ -307,6 +307,97 @@ function speciesPowerScore(spId) {
   return rarityOf(sp.rarity).order * 100 + sp.hp + sp.dmg * 5;
 }
 
+/**
+ * Top-20 strongest creatures — spawn sting + light shudder.
+ *
+ * Sort key (same as speciesPowerScore, the monster-book “how hard is this”):
+ *   score = rarity.order * 100 + hp + dmg * 5
+ *   rarity.order: common 0 … mythic 5 … hell 7  (see RARITIES)
+ * Ties: higher XP, then species id A–Z.
+ *
+ * Dynamic: re-ranks the full SPECIES roster when it grows (cache keyed on
+ * species count). Not elite/boss flags, not giant mul — base species only.
+ * Special encounters (Satan, Tide) still count if their SPECIES row ranks in.
+ */
+const TOP20_STRONGEST_COUNT = 20;
+const TOP20_SPAWN_SHUDDER_MAG = 4;
+const TOP20_SPAWN_SHUDDER_DUR = 0.16;
+const TOP20_SPAWN_FX_GAP = 0.32;
+let _speciesTop20N = -1;
+let _speciesTop20Ids = null;
+let _speciesTop20Set = null;
+
+function speciesTop20Ranked() {
+  const n = Object.keys(SPECIES).length;
+  if (_speciesTop20Ids && _speciesTop20N === n) return _speciesTop20Ids;
+  const ranked = Object.keys(SPECIES).map((id) => {
+    const sp = SPECIES[id];
+    return { id, score: speciesPowerScore(id), xp: (sp && sp.xp) || 0 };
+  }).sort((a, b) => {
+    if (b.score !== a.score) return b.score - a.score;
+    if (b.xp !== a.xp) return b.xp - a.xp;
+    return a.id.localeCompare(b.id);
+  });
+  _speciesTop20Ids = ranked.slice(0, TOP20_STRONGEST_COUNT).map((r) => r.id);
+  _speciesTop20N = n;
+  _speciesTop20Set = new Set(_speciesTop20Ids);
+  return _speciesTop20Ids;
+}
+
+function isTop20StrongestSpecies(spId) {
+  if (!spId) return false;
+  speciesTop20Ranked();
+  return !!( _speciesTop20Set && _speciesTop20Set.has(spId) );
+}
+
+/** Entrance FX for a top-20 species spawn. Other creatures: no-op. */
+function triggerTop20SpawnFx(game, monster) {
+  if (!game || !monster || !isTop20StrongestSpecies(monster.spId)) return false;
+  const now = Number(game.t) || 0;
+  if (game._top20SpawnFxAt != null && now >= game._top20SpawnFxAt
+    && (now - game._top20SpawnFxAt) < TOP20_SPAWN_FX_GAP) {
+    return false;
+  }
+  game._top20SpawnFxAt = now;
+  try {
+    if (typeof AudioSys !== 'undefined' && AudioSys.sfx) AudioSys.sfx('top20Spawn');
+  } catch (_) {}
+  // Boss / elite / Satan / Tide already have their own heavier intro shake.
+  const heavyIntro = !!(monster.bossCore || monster.superBoss || monster.satanBoss
+    || monster.tideBoss || monster.elite);
+  let shook = false;
+  if (!heavyIntro && typeof game.shake === 'function') {
+    // game.shake no-ops when save.shake === false or motionReduced().
+    try { game.shake(TOP20_SPAWN_SHUDDER_MAG, TOP20_SPAWN_SHUDDER_DUR); shook = true; } catch (_) {}
+  }
+  game._lastTop20SpawnFx = { id: monster.spId, t: now, shook, heavyIntro };
+  return true;
+}
+
+/** Dev / QA: inject one top-20 creature into the current fight (training or adventure). */
+function spawnTop20ForTest(game, spId) {
+  if (!game || typeof Monster !== 'function') return null;
+  const ids = speciesTop20Ranked();
+  let id = (spId && SPECIES[spId] && isTop20StrongestSpecies(spId)) ? spId : null;
+  if (!id) id = ids[0];
+  if (!id || !SPECIES[id]) return null;
+  const mid = (typeof W === 'number') ? W * 0.58 : 420;
+  const maxX = (game.maxX != null) ? game.maxX : mid;
+  const x = clamp(mid, (game.minX != null ? game.minX : 40) + 40, maxX - 20);
+  const mon = new Monster(id, x, game, {});
+  // Keep the preview on-stage (flyers otherwise sit high and can clip the HUD).
+  if (mon.flying || mon.swimming) {
+    mon.y = game.ground - Math.max(72, mon.size * 2.2);
+  }
+  if (game.monsters) game.monsters.push(mon);
+  try {
+    if (typeof game.floater === 'function' && mon.sp && mon.sp.name) {
+      game.floater(mon.x, mon.y - mon.size - 18, mon.sp.name, '#ffd75e', 14);
+    }
+  } catch (_) {}
+  return mon;
+}
+
 let _speciesTop10Threshold = null;
 function speciesTop10Threshold() {
   if (_speciesTop10Threshold != null) return _speciesTop10Threshold;

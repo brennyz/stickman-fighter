@@ -936,6 +936,14 @@ function bootGame() {
     fixPlayLayer: () => (typeof sfDebugScreen === 'function' ? sfDebugScreen({ fix: true }) : null),
     goMenu: () => recoverToMenu({ force: true }),
     forcePlay: () => (typeof forcePlayCanvasVisible === 'function' ? forcePlayCanvasVisible('__sf') : null),
+    top20Ids: () => (typeof speciesTop20Ranked === 'function' ? speciesTop20Ranked().slice() : []),
+    isTop20: (id) => (typeof isTop20StrongestSpecies === 'function' ? isTop20StrongestSpecies(id) : false),
+    spawnTop20: (id) => (typeof spawnTop20ForTest === 'function' ? spawnTop20ForTest(game, id) : null),
+    previewTop20Spawn: () => {
+      try { AudioSys.init(); AudioSys.sfx('top20Spawn'); } catch (_) {}
+      try { if (game && typeof game.shake === 'function') game.shake(4, 0.16); } catch (_) {}
+      return game && game._lastTop20SpawnFx;
+    },
   };
   // install.js mag hierop pas herladen: nooit tijdens gevecht, level-keuze of dobbelworp.
   window.__sfSafeToReload = () => {
@@ -956,20 +964,30 @@ function bootGame() {
 
   (function handleLaunchShortcut() {
     try {
-      const mode = new URLSearchParams(location.search).get('mode');
-      if (!mode) return;
+      const q = new URLSearchParams(location.search);
+      const mode = q.get('mode');
+      const top20 = q.get('top20');
+      if (!mode && top20 == null) return;
       AudioSys.init();
       setTimeout(() => {
         try {
           if (mode === 'adventure') {
             UI.safeOpen('levelScreen', () => UI.renderLevels());
-          } else if (mode === 'training') startGame('training');
-          else if (mode === 'versus') {
+          } else if (mode === 'training') {
+            startGame('training');
+            if (top20 != null && typeof spawnTop20ForTest === 'function') {
+              const pick = (top20 === '1' || top20 === '' || top20 === 'true') ? null : top20;
+              try { spawnTop20ForTest(game, pick); } catch (_) {}
+            }
+          } else if (mode === 'versus') {
             try { toastVersusRetired(); } catch (_) {}
           } else if (mode === 'wall') startGame('wall');
           else if (mode === 'coinrun') startGame('coinrun');
+          else if (top20 != null && typeof AudioSys !== 'undefined') {
+            try { AudioSys.sfx('top20Spawn'); } catch (_) {}
+          }
         } catch (err) {
-          sfReportError('shortcut/' + mode, err);
+          sfReportError('shortcut/' + (mode || 'top20'), err);
           recoverToMenu();
         }
       }, 120);
