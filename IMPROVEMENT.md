@@ -1,3 +1,4 @@
+| 2026-09-14 | **hit-feel** | Training first punch connects (pixel-capped spawn) + ghost HP + RABBIT n/max + whiff sparks. Live hole: punches felt broken. **v1.18.158 / SW v368**. |
 | 2026-09-14 | **playtest P1** | Android-first: landing fold + NL-first hub; trainLostTip + energy/iframe copy; opener 2-mob + robot block/HP readable. **v1.18.153 / SW v363**. |
 | 2026-08-17 | **merge** | Mega-merge: #247 light-FX + #246 versus-stubs + #240 dawnblade (roster blijft retired) · **v1.18.152 / SW v362**. |
 | 2026-08-17 | **merge** | LIVE FF: d8 PWA + d20 health + d13 missies + d2 training + d11 nav + d19 muur + d7 save + d14 FX · **v1.18.151 / SW v361**. |

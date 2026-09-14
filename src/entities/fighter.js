@@ -402,6 +402,10 @@ class Fighter {
     }
     if (this.invulnT > 0) this.invulnT -= dt;
     if (this.hitFlashT > 0) this.hitFlashT -= dt;
+    if (this.hpGhostT > 0) {
+      this.hpGhostT -= dt;
+      if (this.hpGhostT <= 0) this.hpGhost = this.hp;
+    }
     if (this._shurikenCd > 0) this._shurikenCd -= dt;
     for (const a of this.afterimages) a.life -= dt;
     this.afterimages = this.afterimages.filter(a => a.life > 0);
@@ -493,6 +497,9 @@ class Fighter {
       }
       if (a.kind !== 'special' && !a.hasHit && a.t >= a.windup && a.t <= a.windup + a.active) {
         if (game.tryMelee(this, a)) a.hasHit = true;
+      } else if (this.isPlayer && a.kind !== 'special' && !a.hasHit && !a._whiffed && a.t > a.windup + a.active) {
+        a._whiffed = true;
+        if (typeof game.noteMeleeWhiff === 'function') game.noteMeleeWhiff(this, a);
       }
       if (a.t >= a.windup + a.active + a.recover) {
         if (a.kind === 'weapon' && !isThrowWeapon(this.weapon.id)) {
@@ -573,7 +580,11 @@ class Fighter {
         spawnFxRing(game, this.x, this.y - 42, parry ? '#ffd75e' : '#9fd8ff', fxLite() ? 6 : 10);
       }
       if (save.haptics !== false) haptic(parry ? 9 : 4);
+      const hpBefore = this.hp;
       this.hp -= dmg;
+      if ((this.hpGhostT || 0) <= 0) this.hpGhost = hpBefore;
+      this.hpGhost = Math.max(this.hpGhost || hpBefore, hpBefore);
+      this.hpGhostT = 0.45;
       return dmg;
     }
     if (this.isPlayer && game && game.playerShieldT > 0) {
@@ -584,7 +595,11 @@ class Fighter {
     if (this.isPlayer && game && game.styleDefMul && game.styleDefMul !== 1) {
       dmg = Math.max(1, Math.round(dmg * game.styleDefMul));
     }
+    const hpBefore = this.hp;
     this.hp -= dmg;
+    if ((this.hpGhostT || 0) <= 0) this.hpGhost = hpBefore;
+    this.hpGhost = Math.max(this.hpGhost || hpBefore, hpBefore);
+    this.hpGhostT = 0.55;
     if (this.isPlayer && game) {
       if (game.mode === 'training' || game.mode === 'adventure') {
         game.combo = 0;

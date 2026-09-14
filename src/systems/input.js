@@ -121,6 +121,21 @@ function projAimVelocity(f, baseSpeed) {
 }
 
 /** Melee-hitpunt: joy/toets ↑ tilts de slag omhoog (flying + hoge vijanden). */
+function meleeHitsBody(hx, hy, r, tgt, slack) {
+  if (!tgt) return false;
+  slack = slack || 0;
+  const dx = hx - tgt.bodyX;
+  const dy = (hy - tgt.bodyY) * 0.7;
+  const rad = r + (tgt.bodyR || 30) + slack;
+  return dx * dx + dy * dy < rad * rad;
+}
+
+/** Training spawn gap (px). First punch must connect on phone AND desktop. */
+function trainingStartGap(width) {
+  const w = width > 0 ? width : (typeof W !== 'undefined' ? W : 390);
+  return clamp(Math.min(w * 0.24, 104), 84, 104);
+}
+
 function meleeHitPoint(f, spec) {
   const aim = (f && f._aimAtAttack) || fighterAimNorm(f);
   const range = (spec && spec.range) || 40;

@@ -1435,7 +1435,7 @@ class Game {
       weapon: weaponById('vuist'),
     });
     this.robot.aiDiff = diff;
-    this.robotMaxHp = Math.round(88 + save.lvl * 8 + Math.min(save.trainWins, 12) * 14);
+    this.robotMaxHp = Math.round(72 + save.lvl * 6 + Math.min(save.trainWins, 12) * 12);
     this.trainTelegraphT = 0;
     this.trainPierceTeleMax = 0.42;
     this.trainMeleeTelegraphT = 0;
@@ -1456,11 +1456,15 @@ class Game {
     this.roundTimer = 60;
     const st = playerStats();
     this.player.hp = this.player.maxhp = st.maxhp;
-    this.player.x = W * 0.25; this.player.y = this.ground; this.player.vx = 0; this.player.face = 1;
+    const mid = W * 0.5;
+    const gap = typeof trainingStartGap === 'function' ? trainingStartGap(W) : clamp(Math.min(W * 0.24, 104), 84, 104);
+    this.player.x = mid - gap / 2; this.player.y = this.ground; this.player.vx = 0; this.player.face = 1;
     this.player.attack = null; this.player.hurtT = 0; this.player.energy = 45;
     resetWeaponCombo(this.player);
     this.robot.hp = this.robot.maxhp = this.robotMaxHp;
-    this.robot.x = W * 0.75; this.robot.y = this.ground; this.robot.vx = 0; this.robot.face = -1;
+    this.robot.x = mid + gap / 2; this.robot.y = this.ground; this.robot.vx = 0; this.robot.face = -1;
+    this.robot.hpGhost = this.robot.hp;
+    this.robot.hpGhostT = 0;
     this.robot.attack = null; this.robot.hurtT = 0; this.robot.deadT = 0;
     resetWeaponCombo(this.robot);
     this.phase = 'intro'; this.phaseT = 0;
@@ -2650,7 +2654,10 @@ class Game {
     }
     for (const tgt of targets) {
       if (!tgt.alive) continue;
-      if ((hx - tgt.bodyX) ** 2 + (hy - tgt.bodyY) ** 2 < (r + tgt.bodyR) ** 2) {
+      const slack = (this.mode === 'training' && f.isPlayer) ? 22 : (f.isPlayer ? 10 : 0);
+      if (typeof meleeHitsBody === 'function'
+        ? meleeHitsBody(hx, hy, r, tgt, slack)
+        : ((hx - tgt.bodyX) ** 2 + (hy - tgt.bodyY) ** 2 < (r + tgt.bodyR + slack) ** 2)) {
         const hitRoll = rollHitDamage(f, spec, 1);
         const kbHit = scaleKnockback(f.face * spec.kb, hitRoll.dmg, { crit: hitRoll.crit, kind: spec.kind });
         const counter = isCounterHitWindow(tgt);
@@ -2682,9 +2689,11 @@ class Game {
         if (hitRoll.crit) applyCritFx(this, tgt.x, tgt.y);
         const col = tgt.playerSlot === 2 ? '#ffb0b8' : (tgt.isPlayer ? '#ff8080' : '#ffe680');
         if (!tgt.blocking) {
-          this.floater(tgt.x, tgt.y - 115, (counter ? t('combat.counter') + ' ' : '') + '-' + dmg, col, 16);
+          this.floater(tgt.x, tgt.y - 128, (counter ? t('combat.counter') + ' ' : '') + '-' + dmg, col, tgt.isRobot ? 22 : 17);
         }
-        this.burst(tgt.bodyX, tgt.bodyY, col, 7);
+        this.burst(tgt.bodyX, tgt.bodyY, col, tgt.isRobot ? 11 : 7);
+        this.hitReadT = 0.45;
+        this.hitReadDmg = dmg;
         applyHitConfirmFx(this, hx, hy, spec, counter ? { counter: true } : null);
         if (spec.kind === 'weapon') bumpWeaponComboWindow(f, 0.1);
         if (spec.kind === 'weapon' && !isThrowWeapon(f.weapon.id) && spec.moveIdx < 2) {
@@ -2707,12 +2716,18 @@ class Game {
         applyHitStop(this, spec, { crit: hitRoll.crit, combo: this.combo, heavy: hitRoll.dmg >= 18 });
         if (counter) this.freezeT = Math.max(this.freezeT, 0.014);
         this.shake(spec.dmg > 20 ? 4 : 3, 0.12);
-        if ((f.isPlayer || f.playerSlot) && save.haptics !== false) haptic(5);
+        if ((f.isPlayer || f.playerSlot) && save.haptics !== false) haptic(tgt.isRobot ? 9 : 5);
         try { AudioSys.sfxAt(weaponHitSfx(f.weapon, hitRoll.dmg), tgt.x); } catch (_) {}
         hit = true;
       }
     }
     return hit;
+  }
+
+  noteMeleeWhiff(f, spec) {
+    if (!f || !f.isPlayer || this.over) return;
+    const { hx, hy } = meleeHitPoint(f, spec || {});
+    this.burst(hx, hy, 'rgba(255,255,255,.45)', 4, { kind: 'spark', size: 1.4 });
   }
 
   update(dt) {
@@ -2721,6 +2736,7 @@ class Game {
       try { Input.dualMode = false; Input.layout(W, H); } catch (_) {}
     }
     if (this.playerHurtCd > 0) this.playerHurtCd -= dt;
+    if (this.hitReadT > 0) this.hitReadT -= dt;
     let ketsJustFinished = false;
     if (this.ketsbamChargeT > 0) {
       if (this.over || !this.player?.alive) {
@@ -5105,15 +5121,24 @@ class Game {
         fillHudText(c, t('hud.earLaserShort'), W / 2, ly - 10, { fill: '#ffb0b8' });
         c.restore();
       }
-      // robotbalk rechtsboven
-      c.fillStyle = 'rgba(0,0,0,.45)'; this.rr(c, W - half - 20, by - 4, half + 8, 30, 10); c.fill();
-      c.fillStyle = '#333c55'; this.rr(c, W - half - 16, by, half, 15, 6); c.fill();
-      c.fillStyle = '#ff8080';
-      const frac = clamp(r.hp / r.maxhp, 0, 1);
-      this.rr(c, W - 16 - half * frac, by, half * frac, 15, 6); c.fill();
-      c.font = '800 13px sans-serif'; c.textAlign = 'right'; c.fillStyle = '#fff';
-      const rPct = Math.round(frac * 100);
-      c.fillText(t('hud.rabbitRobot', { pct: rPct }), W - 20, by + 30);
+      // robotbalk rechtsboven — ghost + echte HP (hits moeten tikken)
+      const maxHp = Math.max(1, r.maxhp || 1);
+      const frac = clamp(r.hp / maxHp, 0, 1);
+      const ghostFrac = clamp((r.hpGhost != null ? r.hpGhost : r.hp) / maxHp, 0, 1);
+      const reading = (this.hitReadT || 0) > 0;
+      c.fillStyle = 'rgba(0,0,0,.5)'; this.rr(c, W - half - 20, by - 6, half + 8, 36, 10); c.fill();
+      c.fillStyle = '#333c55'; this.rr(c, W - half - 16, by, half, 18, 6); c.fill();
+      if (ghostFrac > frac) {
+        c.fillStyle = '#ffd0a8';
+        this.rr(c, W - 16 - half * ghostFrac, by, half * ghostFrac, 18, 6); c.fill();
+      }
+      c.fillStyle = reading ? '#ffd75e' : '#ff6b6b';
+      this.rr(c, W - 16 - half * frac, by, half * frac, 18, 6); c.fill();
+      c.font = reading ? '900 15px sans-serif' : '800 13px sans-serif';
+      c.textAlign = 'right';
+      c.fillStyle = reading ? '#ffd75e' : '#fff';
+      const hpNow = Math.max(0, Math.round(r.hp));
+      c.fillText(tOr('hud.rabbitRobotHp', 'RABBIT {hp}/{max}', { hp: hpNow, max: Math.round(maxHp), pct: Math.round(frac * 100) }), W - 20, by + 34);
       // timer + rondepunten
       c.textAlign = 'center';
       c.font = '800 12px sans-serif';

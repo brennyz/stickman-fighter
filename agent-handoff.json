@@ -91,6 +91,13 @@
   },
   "userWishlist": [
     {
+      "id": "w-20260914T125300",
+      "from": "user",
+      "text": "Je bent een gamer, je verwacht een game, wat mist deze game, ontwikkel dat direct (2026-09-14). Training live: Rabbit 100% HP / geen hit-feedback. Geen versus/nuclear CSS/iOS/share-URL.",
+      "status": "active",
+      "updated": "2026-09-14"
+    },
+    {
       "id": "w-20260914T105000",
       "from": "user",
       "text": "Android-first playtest P1 batch (2026-09-14): (1) production startscherm — SPELEN/Avontuur first, fold install/debug, consistent NL cards; (2) combat feel/feedback + opener survival; (3) fix combat.trainLostTip i18n leak. Do not touch Versus/nuclear CSS/share-URL/iOS/secrets.",
