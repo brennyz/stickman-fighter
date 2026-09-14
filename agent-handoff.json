@@ -621,6 +621,14 @@
   ],
   "sessionLog": [
     {
+      "at": "2026-09-14T17:13:01Z",
+      "summary": "Coordinator 10 PNGs (season-jungle/halloween-corner-*.png + banners) wired to #277 --season-art-*. No new overlay CSS."
+    },
+    {
+      "at": "2026-09-14T17:09:10Z",
+      "summary": "Art-only: jungle+halloween PNGs on #277 SEASON-OVERLAY slots; --season-art-* uncommented. #278 stacked on #277."
+    },
+    {
       "at": "2026-09-14T17:02:42Z",
       "summary": "Season overlay: classic/jungle/halloween CSS + story, persist/auto, art slots. PR #277. v1.18.164/SW374."
     },
@@ -711,14 +719,6 @@
     {
       "at": "2026-08-17T10:20:50Z",
       "summary": "pull-main script + GITHUB-PUSH bijwerken zodat de pc één commando kan pullen"
-    },
-    {
-      "at": "2026-08-17T10:18:00Z",
-      "summary": "main LIVE 33d89b6 v1.18.151 — pull-commando voor de pc klaar"
-    },
-    {
-      "at": "2026-08-17T10:03:24Z",
-      "summary": "LIVE gemerged #248–#255 naar main conflictloos · v1.18.151 / SW 361 — pull main op de pc"
     }
   ],
   "implementedFeaturesSummary": "d18 char select deel 1+2 (v1.11.1-2); Mats coinrun + shuriken mik/vliegers + anti-spam (v1.12.0); speel.html (v1.12.2+). Zie HANDOFF-ZOEKINDEX.md en improvement-d20-bag.json userFeatureLog.",
