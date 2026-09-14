@@ -1,3 +1,4 @@
+| 2026-09-14 | **ghost-hp** | Training feel only: ghost balk + gold flash + RABBIT n/max. Geen spawn/capsule — #259 blijft hit-reg. **v1.18.159 / SW v369**. |
 | 2026-09-14 | **parked** | #259 P1 landing (SPELEN + SATAN + floaters + train hit-reg + VERLOREN). Hit-reg owned here — geen rewrite t.o.v. draft #261. Wacht «merge». **v1.18.158 / SW v368**. |
 | 2026-09-14 | **train hit-reg** | Training: capsule-hurtbox + face-naar-robot zodat W/joy-up J/K/L/U RabbitRobot raken; floaters niet links clippen; resultaat VERLOREN / YOU LOST. **v1.18.158 / SW v368**. |
 | 2026-09-14 | **P1 entry** | speel.html: alleen het install-blok van dit apparaat; Android ziet geen iPad. SPELEN blijft hero. **v1.18.157 / SW v367**. |

@@ -323,9 +323,9 @@ const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const VERSION_UPDATE_SAVE_KEY = 'stickfighter_version_update_save_v1';
 const VERSION_UPDATE_FLAG_KEY = 'stickfighter_version_update_flag_v1';
 const SAVE_EXPORT_SCHEMA = 3;
-const APP_VERSION = '1.18.158';
+const APP_VERSION = '1.18.159';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 368;
+const SW_CACHE_REV = 369;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', petCoins: 0, dex: {}, summons: {}, pets: {}, activePet: null,
   eggPets: {}, activeEggPet: null, eggDaily: null,
   chestDaily: null, chestWeapons: {},
@@ -12368,7 +12368,9 @@ function seedNlGameStrings() {
     earLaser: 'OOR-LASER — spring!', lightning_pierceTele: 'LIGHTNING PIERCE — dash/spring!',
     lightning_pierceMiss: 'Lightning Pierce gemist — spring werkt!',
     kickTele: 'TRAP — spring/blok!', punchTele: 'SLA — blok/weg!', earLaserShort: 'OOR-LASER',
-    rabbitRobot: 'RABBITROBOT · {pct}%', roundInfo: 'Ronde {n} · eerst 2 wint · {s}-{r}',
+    rabbitRobot: 'RABBITROBOT · {pct}%',
+    rabbitRobotHp: 'RABBIT {hp}/{max}',
+    roundInfo: 'Ronde {n} · eerst 2 wint · {s}-{r}',
     dummyGrace: 'Dummy {n}s — oefen combo', goal: 'doel ×{n}', record: 'record ×{n}',
     time: 'TIJD', wallGen: 'MUUR ×{n}', stones: 'Stenen: {n}',
     recordGap: 'Record {best} · nog {gap} te gaan',
@@ -13317,7 +13319,9 @@ const CATALOG_EN = {
     earLaser: 'EAR-LASER — jump!', lightning_pierceTele: 'LIGHTNING PIERCE — dash/jump!',
     lightning_pierceMiss: 'Lightning Pierce missed — jump works!',
     kickTele: 'KICK — jump/block!', punchTele: 'PUNCH — block/dodge!', earLaserShort: 'EAR-LASER',
-    rabbitRobot: 'RABBITROBOT · {pct}%', roundInfo: 'Round {n} · first to 2 · {s}-{r}',
+    rabbitRobot: 'RABBITROBOT · {pct}%',
+    rabbitRobotHp: 'RABBIT {hp}/{max}',
+    roundInfo: 'Round {n} · first to 2 · {s}-{r}',
     dummyGrace: 'Dummy {n}s — practice combo', goal: 'goal ×{n}', record: 'record ×{n}',
     time: 'TIME', wallGen: 'WALL ×{n}', stones: 'Stones: {n}',
     recordGap: 'Record {best} · {gap} to go',
@@ -19370,6 +19374,10 @@ class Fighter {
     }
     if (this.invulnT > 0) this.invulnT -= dt;
     if (this.hitFlashT > 0) this.hitFlashT -= dt;
+    if (this.hpGhostT > 0) {
+      this.hpGhostT -= dt;
+      if (this.hpGhostT <= 0) this.hpGhost = this.hp;
+    }
     if (this._shurikenCd > 0) this._shurikenCd -= dt;
     for (const a of this.afterimages) a.life -= dt;
     this.afterimages = this.afterimages.filter(a => a.life > 0);
@@ -19541,7 +19549,11 @@ class Fighter {
         spawnFxRing(game, this.x, this.y - 42, parry ? '#ffd75e' : '#9fd8ff', fxLite() ? 6 : 10);
       }
       if (save.haptics !== false) haptic(parry ? 9 : 4);
+      const hpBefore = this.hp;
       this.hp -= dmg;
+      if ((this.hpGhostT || 0) <= 0) this.hpGhost = hpBefore;
+      this.hpGhost = Math.max(this.hpGhost || hpBefore, hpBefore);
+      this.hpGhostT = 0.45;
       return dmg;
     }
     if (this.isPlayer && game && game.playerShieldT > 0) {
@@ -19552,7 +19564,11 @@ class Fighter {
     if (this.isPlayer && game && game.styleDefMul && game.styleDefMul !== 1) {
       dmg = Math.max(1, Math.round(dmg * game.styleDefMul));
     }
+    const hpBefore = this.hp;
     this.hp -= dmg;
+    if ((this.hpGhostT || 0) <= 0) this.hpGhost = hpBefore;
+    this.hpGhost = Math.max(this.hpGhost || hpBefore, hpBefore);
+    this.hpGhostT = 0.55;
     if (this.isPlayer && game) {
       if (game.mode === 'training' || game.mode === 'adventure') {
         game.combo = 0;
@@ -26059,6 +26075,8 @@ class Game {
     resetWeaponCombo(this.player);
     this.robot.hp = this.robot.maxhp = this.robotMaxHp;
     this.robot.x = W * 0.75; this.robot.y = this.ground; this.robot.vx = 0; this.robot.face = -1;
+    this.robot.hpGhost = this.robot.hp;
+    this.robot.hpGhostT = 0;
     this.robot.attack = null; this.robot.hurtT = 0; this.robot.deadT = 0;
     resetWeaponCombo(this.robot);
     this.phase = 'intro'; this.phaseT = 0;
@@ -27287,6 +27305,8 @@ class Game {
           this.floater(tgt.x, tgt.y - 115, (counter ? t('combat.counter') + ' ' : '') + '-' + dmg, col, 16);
         }
         this.burst(tgt.bodyX, tgt.bodyY, col, 7);
+        this.hitReadT = 0.45;
+        this.hitReadDmg = dmg;
         applyHitConfirmFx(this, hx, hy, spec, counter ? { counter: true } : null);
         if (spec.kind === 'weapon') bumpWeaponComboWindow(f, 0.1);
         if (spec.kind === 'weapon' && !isThrowWeapon(f.weapon.id) && spec.moveIdx < 2) {
@@ -27323,6 +27343,7 @@ class Game {
       try { Input.dualMode = false; Input.layout(W, H); } catch (_) {}
     }
     if (this.playerHurtCd > 0) this.playerHurtCd -= dt;
+    if (this.hitReadT > 0) this.hitReadT -= dt;
     let ketsJustFinished = false;
     if (this.ketsbamChargeT > 0) {
       if (this.over || !this.player?.alive) {
@@ -29711,15 +29732,24 @@ class Game {
         fillHudText(c, t('hud.earLaserShort'), W / 2, ly - 10, { fill: '#ffb0b8' });
         c.restore();
       }
-      // robotbalk rechtsboven
-      c.fillStyle = 'rgba(0,0,0,.45)'; this.rr(c, W - half - 20, by - 4, half + 8, 30, 10); c.fill();
-      c.fillStyle = '#333c55'; this.rr(c, W - half - 16, by, half, 15, 6); c.fill();
-      c.fillStyle = '#ff8080';
-      const frac = clamp(r.hp / r.maxhp, 0, 1);
-      this.rr(c, W - 16 - half * frac, by, half * frac, 15, 6); c.fill();
-      c.font = '800 13px sans-serif'; c.textAlign = 'right'; c.fillStyle = '#fff';
-      const rPct = Math.round(frac * 100);
-      c.fillText(t('hud.rabbitRobot', { pct: rPct }), W - 20, by + 30);
+      // robotbalk rechtsboven — ghost + cijfers (hit-reg blijft #259)
+      const maxHp = Math.max(1, r.maxhp || 1);
+      const frac = clamp(r.hp / maxHp, 0, 1);
+      const ghostFrac = clamp((r.hpGhost != null ? r.hpGhost : r.hp) / maxHp, 0, 1);
+      const reading = (this.hitReadT || 0) > 0;
+      c.fillStyle = 'rgba(0,0,0,.5)'; this.rr(c, W - half - 20, by - 6, half + 8, 36, 10); c.fill();
+      c.fillStyle = '#333c55'; this.rr(c, W - half - 16, by, half, 18, 6); c.fill();
+      if (ghostFrac > frac) {
+        c.fillStyle = '#ffd0a8';
+        this.rr(c, W - 16 - half * ghostFrac, by, half * ghostFrac, 18, 6); c.fill();
+      }
+      c.fillStyle = reading ? '#ffd75e' : '#ff6b6b';
+      this.rr(c, W - 16 - half * frac, by, half * frac, 18, 6); c.fill();
+      c.font = reading ? '900 15px sans-serif' : '800 13px sans-serif';
+      c.textAlign = 'right';
+      c.fillStyle = reading ? '#ffd75e' : '#fff';
+      const hpNow = Math.max(0, Math.round(r.hp));
+      c.fillText(tOr('hud.rabbitRobotHp', 'RABBIT {hp}/{max}', { hp: hpNow, max: Math.round(maxHp), pct: Math.round(frac * 100) }), W - 20, by + 34);
       // timer + rondepunten
       c.textAlign = 'center';
       c.font = '800 12px sans-serif';
