@@ -100,6 +100,13 @@
   },
   "userWishlist": [
     {
+      "id": "w-20260914T191029",
+      "from": "user",
+      "text": "Stickman Fighter mega-merge conflict-resolve. FREEZE: geen nieuwe features, alleen conflicts oplossen en mergen volgens Brendon-regel (geen solo losse merges buiten deze stack). Order: #274+#286, #270, #271/#272/#275, #277+#278, #280+#285+#276+#287, #282+#284, #288, #292+#289+#290+#291 (factory ids), #267+#269. SKIP #279.",
+      "status": "active",
+      "updated": "2026-09-14"
+    },
+    {
       "id": "w-20260914T170700",
       "from": "user",
       "text": "Heads-up: Brendon added a separate LANGUAGE FACTCHECK agent (Z→A polish). Stay on EN/DE/NL scope coverage; avoid fighting their PR on the same strings. Prefer additive catalog keys and note conflicts in PR.",
@@ -651,6 +658,10 @@
   ],
   "sessionLog": [
     {
+      "at": "2026-09-14T19:10:29Z",
+      "summary": "Mega-merge FREEZE: resolve conflicts and stack PRs onto main (#273+#283 already in). No new features."
+    },
+    {
       "at": "2026-09-14T17:20:02Z",
       "summary": "#283 rebased onto #273: coverage keys + overlays; polish wording wins. v1.18.165 / SW 375. Not silent main."
     },
@@ -745,10 +756,6 @@
     {
       "at": "2026-08-17T14:31:25Z",
       "summary": "Mega-merge op main: light-FX + versus-stubs + dawnblade · v1.18.152 / SW 362"
-    },
-    {
-      "at": "2026-08-17T14:01:21Z",
-      "summary": "GitHub-sync: PC==main; wachtlijst + vraag-bij-upload; tracking nog lokaal"
     }
   ],
   "implementedFeaturesSummary": "d18 char select deel 1+2 (v1.11.1-2); Mats coinrun + shuriken mik/vliegers + anti-spam (v1.12.0); speel.html (v1.12.2+). Zie HANDOFF-ZOEKINDEX.md en improvement-d20-bag.json userFeatureLog.",
