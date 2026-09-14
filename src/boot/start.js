@@ -268,6 +268,32 @@ if (dailyBonusBtn) bindPress(dailyBonusBtn, () => {
     sfReportError('dayBonus', err, 'Dagbonus mislukt — probeer opnieuw');
   }
 });
+bindPress(document.getElementById('fomoRitualDismiss'), () => {
+  try { AudioSys.sfx('select'); dismissFomoRitual(); } catch (err) {
+    sfReportError('fomoDismiss', err, 'Kon overzicht sluiten');
+  }
+});
+bindPress(document.getElementById('fomoRitualBackdrop'), () => {
+  try { dismissFomoRitual(); } catch (err) {
+    sfReportError('fomoDismiss', err, 'Kon overzicht sluiten');
+  }
+});
+bindPress(document.getElementById('fomoRitualCta'), () => {
+  try {
+    AudioSys.init(); AudioSys.sfx('select');
+    UI.runFomoRitualCta();
+  } catch (err) {
+    sfReportError('fomoCta', err, 'Kon actie niet openen');
+  }
+});
+bindPress(document.getElementById('fomoRitualReopen'), () => {
+  try {
+    AudioSys.init(); AudioSys.sfx('select');
+    reopenFomoRitual();
+  } catch (err) {
+    sfReportError('fomoReopen', err, 'Kon dagoverzicht niet openen');
+  }
+});
 const btnCopyLink = document.getElementById('btnCopyLink');
 if (btnCopyLink) btnCopyLink.addEventListener('click', () => copyPlayLink());
 const btnOpenPlayLink = document.getElementById('btnOpenPlayLink');

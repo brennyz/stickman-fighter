@@ -27,7 +27,8 @@ const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', petCoins: 0,
   /** Keyboard legend on PC / when pads off (default on) */
   kbLegend: true,
   reducedMotion: false, liteFx: false, highContrast: false, lang: null, playerTag: '', lastPlay: null, tipsSeen: {},
-  stats: { kills: 0, advWins: 0, wallBestRun: 0, maxCombo: 0, maxKillStreak: 0, trainMaxCombo: 0, pickups: 0, bossKills: 0, vsMatches: 0, vsWins: 0, matsCoinBest: 0, summonCount: 0, killsSinceSummon: 0, petsTamed: 0, eggsHatched: 0, weaponFinishers: 0, tideBattleWins: 0, skillShards: 0, itemShards: 0, dailyBonusCount: 0 },
+  stats: { kills: 0, advWins: 0, wallBestRun: 0, maxCombo: 0, maxKillStreak: 0, trainMaxCombo: 0, pickups: 0, bossKills: 0, vsMatches: 0, vsWins: 0, matsCoinBest: 0, summonCount: 0, killsSinceSummon: 0, petsTamed: 0, eggsHatched: 0, weaponFinishers: 0, tideBattleWins: 0, skillShards: 0, itemShards: 0, dailyBonusCount: 0, dailyStreak: 0, dailyStreakBest: 0, lastDayBonusDate: null },
+  fomo: { ritualSeenDate: null, lastOpenDate: null, lastComebackDate: null, dailyShardDate: null, arcadeStampDate: null, sneakWeekKey: null, sneakCleared: false, starChestWeekKey: null, featureIds: null },
   achievements: {}, daily: null, vsPlayedIds: [], weaponMastery: {}, skillUpgrades: {}, itemUpgrades: {}, activeTechnique: 'spiral_orb', skill: 'spiral_orb', super: 'ketsbam', missionsIntroSeen: false };
 
 const MAX_LEVEL = 70;
@@ -862,6 +863,9 @@ function readSaveJson(raw) {
     };
     if (typeof parsed.advDiff === 'string') merged.advDiff = parsed.advDiff;
     if (parsed.eggDaily && typeof parsed.eggDaily === 'object') merged.eggDaily = Object.assign({}, parsed.eggDaily);
+    if (parsed.fomo && typeof parsed.fomo === 'object' && !Array.isArray(parsed.fomo)) {
+      merged.fomo = Object.assign({}, DEFAULT_SAVE.fomo, parsed.fomo);
+    }
     if (typeof parsed.activePet === 'string') merged.activePet = parsed.activePet;
     if (typeof parsed.activeEggPet === 'string') merged.activeEggPet = parsed.activeEggPet;
     // Legacy key migration (hex-encoded tokens — store greps stay clean)
@@ -1455,9 +1459,10 @@ function sanitizeSave(s) {
       const w = Math.max(0, Math.min(5, Math.floor(Number(out.chestDaily.wLeft) || 0)));
       const p = Math.max(0, Math.min(5, Math.floor(Number(out.chestDaily.pLeft) || 0)));
       const leftRaw = out.chestDaily.left != null ? Number(out.chestDaily.left) : (w + p);
+      const leftCap = (typeof CHEST_DAILY_LEFT_CAP === 'number') ? CHEST_DAILY_LEFT_CAP : 12;
       out.chestDaily = {
         date: today,
-        left: Math.max(0, Math.min(10, Math.floor(Number.isFinite(leftRaw) ? leftRaw : 10))),
+        left: Math.max(0, Math.min(leftCap, Math.floor(Number.isFinite(leftRaw) ? leftRaw : 10))),
         pulls: [],
       };
     } else out.chestDaily = null;
@@ -1554,10 +1559,24 @@ function sanitizeSave(s) {
 
   out.stats = Object.assign({}, DEFAULT_SAVE.stats, out.stats || {});
   const cleanStats = {};
+  const statDateKeys = new Set(['lastDayBonusDate']);
   for (const key of Object.keys(DEFAULT_SAVE.stats)) {
+    if (statDateKeys.has(key)) {
+      const raw = out.stats[key];
+      cleanStats[key] = (typeof raw === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(raw.slice(0, 10)))
+        ? raw.slice(0, 10)
+        : null;
+      continue;
+    }
     cleanStats[key] = clamp(Math.floor(Number(out.stats[key]) || 0), 0, 9999999);
   }
   out.stats = cleanStats;
+
+  if (typeof sanitizeFomoBag === 'function') {
+    out.fomo = sanitizeFomoBag(out.fomo);
+  } else {
+    out.fomo = Object.assign({}, DEFAULT_SAVE.fomo, (out.fomo && typeof out.fomo === 'object') ? out.fomo : {});
+  }
 
   const cleanAch = {};
   for (const [k, v] of Object.entries(out.achievements || {})) {

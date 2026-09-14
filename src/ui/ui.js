@@ -2056,9 +2056,116 @@ const UI = {
       }
     }
     if (typeof renderLangSwitch === 'function') renderLangSwitch();
+    try {
+      if (typeof ensureFomo === 'function') {
+        ensureFomo();
+        const today = typeof todayKey === 'function' ? todayKey() : null;
+        if (today && save.fomo.lastOpenDate !== today) {
+          save.fomo.lastOpenDate = today;
+          persist();
+        }
+      }
+      if (typeof fomoRitualHubReady === 'function' && !fomoRitualHubReady()) this.hideFomoRitual();
+      else if (this._fomoRitualHide) this.hideFomoRitual();
+      else if (this._fomoRitualForce || (typeof fomoRitualPending === 'function' && fomoRitualPending())) {
+        this.showFomoRitual(!!this._fomoRitualForce);
+      } else {
+        this.hideFomoRitual();
+      }
+    } catch (_) {}
     } catch (err) {
       sfReportError('renderMenu', err, 'Menu kon niet ververst worden');
     }
+  },
+
+  hideFomoRitual() {
+    const el = document.getElementById('fomoRitual');
+    if (el) el.hidden = true;
+  },
+
+  showFomoRitual(force) {
+    const el = document.getElementById('fomoRitual');
+    if (!el) return;
+    if (!force && this._fomoRitualHide) { el.hidden = true; return; }
+    if (!force && typeof fomoRitualPending === 'function' && !fomoRitualPending()) {
+      el.hidden = true;
+      return;
+    }
+    const rows = document.getElementById('fomoRitualRows');
+    const title = document.getElementById('fomoRitualTitle');
+    const reset = document.getElementById('fomoRitualReset');
+    const ctaLbl = document.getElementById('fomoRitualCtaLbl');
+    if (title) title.textContent = tOr('fomo.ritualTitle', 'Vandaag');
+    let html = '';
+    let left = 0;
+    try { left = typeof chestSummonsLeft === 'function' ? chestSummonsLeft() : 0; } catch (_) {}
+    const total = (typeof CHEST_DAILY_TOTAL === 'number') ? CHEST_DAILY_TOTAL : 10;
+    html += `<div class="fomo-ritual-row">${tOr('fomo.rowSummons', 'Summons {left}/{total}', { left, total })}</div>`;
+    try {
+      if (typeof ensureDaily === 'function') ensureDaily();
+      const tasks = (save.daily && Array.isArray(save.daily.tasks)) ? save.daily.tasks : [];
+      for (const task of tasks) {
+        const def = typeof dailyDef === 'function' ? dailyDef(task.id) : null;
+        if (!def) continue;
+        const text = typeof dailyText === 'function' ? dailyText(task.id) : def.text;
+        html += `<div class="fomo-ritual-row">${text}<small>${task.progress}/${def.goal}</small></div>`;
+      }
+    } catch (_) {}
+    if (typeof fomoRitualEggVisible === 'function' && fomoRitualEggVisible()) {
+      let eggReady = false;
+      try { eggReady = typeof canCrackDailyEgg === 'function' && canCrackDailyEgg(); } catch (_) {}
+      html += `<div class="fomo-ritual-row">${eggReady
+        ? tOr('fomo.rowEggReady', 'Dag-ei klaar')
+        : tOr('fomo.rowEggDone', 'Dag-ei al open')}</div>`;
+    }
+    const streak = typeof dailyStreakLine === 'function' ? dailyStreakLine() : '';
+    if (streak) html += `<div class="fomo-ritual-row">${streak}</div>`;
+    if (rows) rows.innerHTML = html;
+    const resetLine = typeof dailyResetCountdown === 'function' ? dailyResetCountdown() : '';
+    if (reset) reset.textContent = tOr('fomo.resetIn', 'Nieuw over {reset}', { reset: resetLine });
+    let ctaKind = 'adv';
+    if (left > 0) ctaKind = 'summon';
+    else {
+      try {
+        if (typeof ensureDaily === 'function') ensureDaily();
+        const undone = (save.daily && save.daily.tasks || []).find(t => !t.done && typeof dailyDef === 'function' && dailyDef(t.id));
+        if (undone) ctaKind = 'mission';
+      } catch (_) {}
+    }
+    this._fomoRitualCta = ctaKind;
+    if (ctaLbl) {
+      ctaLbl.textContent = ctaKind === 'summon'
+        ? tOr('fomo.ritualCtaSummon', 'Naar summons')
+        : (ctaKind === 'mission'
+          ? tOr('fomo.ritualCtaMission', 'Speel missie')
+          : tOr('fomo.ritualCtaAdv', 'Naar avontuur'));
+    }
+    const dismiss = document.getElementById('fomoRitualDismiss');
+    if (dismiss) dismiss.setAttribute('aria-label', tOr('fomo.ritualDismiss', 'Sluiten'));
+    el.hidden = false;
+  },
+
+  runFomoRitualCta() {
+    const kind = this._fomoRitualCta || 'adv';
+    if (typeof dismissFomoRitual === 'function') dismissFomoRitual();
+    else this.hideFomoRitual();
+    if (kind === 'summon') {
+      this.openSummonHub();
+      return;
+    }
+    if (kind === 'mission') {
+      try {
+        if (typeof ensureDaily === 'function') ensureDaily();
+        const undone = (save.daily && save.daily.tasks || []).find(t => !t.done && typeof dailyDef === 'function' && dailyDef(t.id));
+        if (undone && typeof goDailyPlayTarget === 'function') {
+          goDailyPlayTarget(undone.id);
+          return;
+        }
+      } catch (_) {}
+    }
+    const adv = document.getElementById('btnAdventure');
+    if (adv) adv.click();
+    else this.safeOpen('levelScreen', () => this.renderLevels());
   },
 
   renderSummon() {

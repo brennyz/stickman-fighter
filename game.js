@@ -345,7 +345,8 @@ const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', petCoins: 0,
   /** Keyboard legend on PC / when pads off (default on) */
   kbLegend: true,
   reducedMotion: false, liteFx: false, highContrast: false, lang: null, playerTag: '', lastPlay: null, tipsSeen: {},
-  stats: { kills: 0, advWins: 0, wallBestRun: 0, maxCombo: 0, maxKillStreak: 0, trainMaxCombo: 0, pickups: 0, bossKills: 0, vsMatches: 0, vsWins: 0, matsCoinBest: 0, summonCount: 0, killsSinceSummon: 0, petsTamed: 0, eggsHatched: 0, weaponFinishers: 0, tideBattleWins: 0, skillShards: 0, itemShards: 0, dailyBonusCount: 0 },
+  stats: { kills: 0, advWins: 0, wallBestRun: 0, maxCombo: 0, maxKillStreak: 0, trainMaxCombo: 0, pickups: 0, bossKills: 0, vsMatches: 0, vsWins: 0, matsCoinBest: 0, summonCount: 0, killsSinceSummon: 0, petsTamed: 0, eggsHatched: 0, weaponFinishers: 0, tideBattleWins: 0, skillShards: 0, itemShards: 0, dailyBonusCount: 0, dailyStreak: 0, dailyStreakBest: 0, lastDayBonusDate: null },
+  fomo: { ritualSeenDate: null, lastOpenDate: null, lastComebackDate: null, dailyShardDate: null, arcadeStampDate: null, sneakWeekKey: null, sneakCleared: false, starChestWeekKey: null, featureIds: null },
   achievements: {}, daily: null, vsPlayedIds: [], weaponMastery: {}, skillUpgrades: {}, itemUpgrades: {}, activeTechnique: 'spiral_orb', skill: 'spiral_orb', super: 'ketsbam', missionsIntroSeen: false };
 
 const MAX_LEVEL = 70;
@@ -1180,6 +1181,9 @@ function readSaveJson(raw) {
     };
     if (typeof parsed.advDiff === 'string') merged.advDiff = parsed.advDiff;
     if (parsed.eggDaily && typeof parsed.eggDaily === 'object') merged.eggDaily = Object.assign({}, parsed.eggDaily);
+    if (parsed.fomo && typeof parsed.fomo === 'object' && !Array.isArray(parsed.fomo)) {
+      merged.fomo = Object.assign({}, DEFAULT_SAVE.fomo, parsed.fomo);
+    }
     if (typeof parsed.activePet === 'string') merged.activePet = parsed.activePet;
     if (typeof parsed.activeEggPet === 'string') merged.activeEggPet = parsed.activeEggPet;
     // Legacy key migration (hex-encoded tokens — store greps stay clean)
@@ -1773,9 +1777,10 @@ function sanitizeSave(s) {
       const w = Math.max(0, Math.min(5, Math.floor(Number(out.chestDaily.wLeft) || 0)));
       const p = Math.max(0, Math.min(5, Math.floor(Number(out.chestDaily.pLeft) || 0)));
       const leftRaw = out.chestDaily.left != null ? Number(out.chestDaily.left) : (w + p);
+      const leftCap = (typeof CHEST_DAILY_LEFT_CAP === 'number') ? CHEST_DAILY_LEFT_CAP : 12;
       out.chestDaily = {
         date: today,
-        left: Math.max(0, Math.min(10, Math.floor(Number.isFinite(leftRaw) ? leftRaw : 10))),
+        left: Math.max(0, Math.min(leftCap, Math.floor(Number.isFinite(leftRaw) ? leftRaw : 10))),
         pulls: [],
       };
     } else out.chestDaily = null;
@@ -1872,10 +1877,24 @@ function sanitizeSave(s) {
 
   out.stats = Object.assign({}, DEFAULT_SAVE.stats, out.stats || {});
   const cleanStats = {};
+  const statDateKeys = new Set(['lastDayBonusDate']);
   for (const key of Object.keys(DEFAULT_SAVE.stats)) {
+    if (statDateKeys.has(key)) {
+      const raw = out.stats[key];
+      cleanStats[key] = (typeof raw === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(raw.slice(0, 10)))
+        ? raw.slice(0, 10)
+        : null;
+      continue;
+    }
     cleanStats[key] = clamp(Math.floor(Number(out.stats[key]) || 0), 0, 9999999);
   }
   out.stats = cleanStats;
+
+  if (typeof sanitizeFomoBag === 'function') {
+    out.fomo = sanitizeFomoBag(out.fomo);
+  } else {
+    out.fomo = Object.assign({}, DEFAULT_SAVE.fomo, (out.fomo && typeof out.fomo === 'object') ? out.fomo : {});
+  }
 
   const cleanAch = {};
   for (const [k, v] of Object.entries(out.achievements || {})) {
@@ -2037,6 +2056,21 @@ const I18N = {
     missions: { title: 'Missies & prestaties', sub: '3 missies per dag',
       claimAll: 'Claim alle klaar', claimAllSub: '+XP in één tik', dayBonus: 'Dagbonus', dayBonusSub: '+80 XP · alle 3 geclaimd',
       achievements: 'Prestaties' },
+    fomo: {
+      ritualTitle: 'Vandaag',
+      ritualCtaSummon: 'Naar summons',
+      ritualCtaMission: 'Speel missie',
+      ritualCtaAdv: 'Naar avontuur',
+      ritualDismiss: 'Sluiten',
+      ritualReopen: 'Dagoverzicht',
+      resetIn: 'Nieuw over {reset}',
+      rowSummons: 'Summons {left}/{total}',
+      rowEggReady: 'Dag-ei klaar',
+      rowEggDone: 'Dag-ei al open',
+      streakReward3: '+1 summon',
+      streakReward7: '+ei of summons',
+      streakReward14: '+120 XP',
+    },
     pets: { title: 'Pets · Metgezels', sub: 'Dex-pets via monsterboek · Ei-pets via dagelijkse arcade-pull',
       crackEgg: 'Dag-ei openen', crackEggSub: 'Gratis arcade-pull' },
     dex: { title: 'Monsterboek', sub: '{n} soorten · rariteit = HP · boerderij / dierentuin / zee-filters · 4 rariteiten = Kristallijn' },
@@ -2149,6 +2183,21 @@ const I18N = {
     missions: { title: 'Missions & achievements', sub: '3 missions a day',
       claimAll: 'Claim all ready', claimAllSub: '+XP in one tap', dayBonus: 'Daily bonus', dayBonusSub: '+80 XP · all 3 claimed',
       achievements: 'Achievements' },
+    fomo: {
+      ritualTitle: 'Today',
+      ritualCtaSummon: 'Open summons',
+      ritualCtaMission: 'Play mission',
+      ritualCtaAdv: 'Play adventure',
+      ritualDismiss: 'Close',
+      ritualReopen: 'Day overview',
+      resetIn: 'Resets in {reset}',
+      rowSummons: 'Summons {left}/{total}',
+      rowEggReady: 'Daily egg ready',
+      rowEggDone: 'Daily egg already opened',
+      streakReward3: '+1 summon',
+      streakReward7: '+egg or summons',
+      streakReward14: '+120 XP',
+    },
     pets: { title: 'Pets · Companions', sub: 'Dex pets via monster book · Egg pets via daily arcade pull',
       crackEgg: 'Open daily egg', crackEggSub: 'Free arcade pull' },
     dex: { title: 'Monster book', sub: '{n} species · rarity = HP · farm / zoo / sea filters · 4 rarities = Crystalline' },
@@ -2261,6 +2310,13 @@ const I18N = {
     missions: { title: 'Missionen & Erfolge', sub: '3 tägliche Missionen · XP abholen',
       claimAll: 'Alle abholen', claimAllSub: '+XP auf einmal', dayBonus: 'Tagesbonus', dayBonusSub: '+80 XP',
       achievements: 'Erfolge' },
+    fomo: {
+      ritualTitle: 'Today', ritualCtaSummon: 'Open summons', ritualCtaMission: 'Play mission',
+      ritualCtaAdv: 'Play adventure', ritualDismiss: 'Close', ritualReopen: 'Day overview',
+      resetIn: 'Resets in {reset}', rowSummons: 'Summons {left}/{total}',
+      rowEggReady: 'Daily egg ready', rowEggDone: 'Daily egg already opened',
+      streakReward3: '+1 summon', streakReward7: '+egg or summons', streakReward14: '+120 XP',
+    },
     pets: { title: 'Pets · Begleiter', sub: 'Dex-Pets & Ei-Pets', crackEgg: 'Tages-Ei öffnen', crackEggSub: 'Kostenloser Arcade-Zug' },
     dex: { title: 'Monsterbuch', sub: '{n} Arten · Seltenheit = HP · Farm / Zoo / Meer' },
     help: { title: 'Tipps & Steuerung' },
@@ -2373,6 +2429,13 @@ const I18N = {
     missions: { title: 'Missions & succès', sub: '3 missions quotidiennes · réclamer XP',
       claimAll: 'Tout réclamer', claimAllSub: '+XP en un tap', dayBonus: 'Bonus du jour', dayBonusSub: '+80 XP',
       achievements: 'Succès' },
+    fomo: {
+      ritualTitle: 'Today', ritualCtaSummon: 'Open summons', ritualCtaMission: 'Play mission',
+      ritualCtaAdv: 'Play adventure', ritualDismiss: 'Close', ritualReopen: 'Day overview',
+      resetIn: 'Resets in {reset}', rowSummons: 'Summons {left}/{total}',
+      rowEggReady: 'Daily egg ready', rowEggDone: 'Daily egg already opened',
+      streakReward3: '+1 summon', streakReward7: '+egg or summons', streakReward14: '+120 XP',
+    },
     pets: { title: 'Pets · Compagnons', sub: 'Pets dex & œufs arcade', crackEgg: 'Ouvrir l\'œuf du jour', crackEggSub: 'Tir gratuit' },
     dex: { title: 'Bestiaire', sub: '{n} espèces · rareté = PV · ferme / zoo / mer' },
     help: { title: 'Astuces & contrôles' },
@@ -2485,6 +2548,13 @@ const I18N = {
     missions: { title: 'Misiones y logros', sub: '3 misiones diarias · reclamar XP',
       claimAll: 'Reclamar todo', claimAllSub: '+XP de una vez', dayBonus: 'Bonus diario', dayBonusSub: '+80 XP',
       achievements: 'Logros' },
+    fomo: {
+      ritualTitle: 'Today', ritualCtaSummon: 'Open summons', ritualCtaMission: 'Play mission',
+      ritualCtaAdv: 'Play adventure', ritualDismiss: 'Close', ritualReopen: 'Day overview',
+      resetIn: 'Resets in {reset}', rowSummons: 'Summons {left}/{total}',
+      rowEggReady: 'Daily egg ready', rowEggDone: 'Daily egg already opened',
+      streakReward3: '+1 summon', streakReward7: '+egg or summons', streakReward14: '+120 XP',
+    },
     pets: { title: 'Pets · Compañeros', sub: 'Pets dex y huevos arcade', crackEgg: 'Abrir huevo diario', crackEggSub: 'Tirada gratis' },
     dex: { title: 'Bestiario', sub: '{n} especies · rareza = HP · granja / zoo / mar' },
     help: { title: 'Consejos y controles' },
@@ -2735,6 +2805,11 @@ function applyLangStaticScreens() {
 
   setText('missionsHead', 'missions.title');
   setText('missionsSub', 'missions.sub');
+  setText('fomoRitualReopenLbl', 'fomo.ritualReopen');
+  setText('fomoRitualTitle', 'fomo.ritualTitle');
+  setTitle('fomoRitualDismiss', 'fomo.ritualDismiss');
+  setTitle('fomoRitualBackdrop', 'fomo.ritualDismiss');
+  setTitle('fomoRitualReopen', 'fomo.ritualReopen');
   const claimAll = document.getElementById('dailyClaimAllBtn');
   if (claimAll) {
     const d = claimAll.querySelector('div');
@@ -3231,13 +3306,125 @@ const ACHIEVEMENTS = [
     test: s => s.unlocked >= 70 },
   { id: 'zoneWeapons10', name: 'Zone-verzamelaar', desc: 'Verzamel 10 Nachtmerrie/Hel-wapens',
     test: s => Object.keys(s.zoneWeapons || {}).length >= 10 },
-  { id: 'daily7', name: 'Vastberaden', desc: '7 dagen dagbonus geclaimd',
-    test: s => (s.stats.dailyBonusCount || 0) >= 7 },
+  { id: 'daily7', name: 'Vastberaden', desc: '7 dagen op rij dagbonus geclaimd',
+    test: s => (s.stats.dailyStreakBest || 0) >= 7 },
   // Local versus retired — vs achievements removed (online MP later).
 ];
 
+/** Local calendar day — must match dailyResetCountdown() midnight. See docs/FOMO-GAPS.md F0. */
 function todayKey() {
-  return new Date().toISOString().slice(0, 10);
+  const d = new Date();
+  return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+}
+
+function weekKey(d) {
+  d = d || new Date();
+  const tmp = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+  const day = (tmp.getDay() + 6) % 7; // Mon=0
+  tmp.setDate(tmp.getDate() - day);
+  const jan1 = new Date(tmp.getFullYear(), 0, 1);
+  const wk = 1 + Math.floor((tmp - jan1) / 86400000 / 7);
+  return tmp.getFullYear() + '-W' + String(wk).padStart(2, '0');
+}
+
+function daysBetweenKeys(a, b) {
+  if (!a || !b) return 99;
+  return Math.round((Date.parse(b + 'T12:00:00') - Date.parse(a + 'T12:00:00')) / 86400000);
+}
+
+function defaultFomoBag() {
+  return {
+    ritualSeenDate: null, lastOpenDate: null, lastComebackDate: null,
+    dailyShardDate: null, arcadeStampDate: null,
+    sneakWeekKey: null, sneakCleared: false,
+    starChestWeekKey: null, featureIds: null,
+  };
+}
+
+function sanitizeFomoBag(raw) {
+  const d = defaultFomoBag();
+  const src = (raw && typeof raw === 'object' && !Array.isArray(raw)) ? raw : {};
+  const dateOrNull = (v) => (typeof v === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(v.slice(0, 10))) ? v.slice(0, 10) : null;
+  const weekOrNull = (v) => (typeof v === 'string' && /^\d{4}-W\d{2}$/.test(v)) ? v : null;
+  d.ritualSeenDate = dateOrNull(src.ritualSeenDate);
+  d.lastOpenDate = dateOrNull(src.lastOpenDate);
+  d.lastComebackDate = dateOrNull(src.lastComebackDate);
+  d.dailyShardDate = dateOrNull(src.dailyShardDate);
+  d.arcadeStampDate = dateOrNull(src.arcadeStampDate);
+  d.sneakWeekKey = weekOrNull(src.sneakWeekKey);
+  d.sneakCleared = !!src.sneakCleared;
+  d.starChestWeekKey = weekOrNull(src.starChestWeekKey);
+  d.featureIds = null;
+  return d;
+}
+
+function ensureFomo() {
+  if (typeof save === 'undefined' || !save) return defaultFomoBag();
+  save.fomo = sanitizeFomoBag(save.fomo);
+  return save.fomo;
+}
+
+function dailyDayBonusReady() {
+  ensureDaily();
+  const tasks = (save.daily && Array.isArray(save.daily.tasks)) ? save.daily.tasks : [];
+  return tasks.length > 0 && tasks.every(t => t.claimed) && !save.daily.dayBonusClaimed;
+}
+
+/** F1: egg row only after first adventure win. */
+function fomoRitualEggVisible() {
+  return !!(save && save.stats && (save.stats.advWins || 0) >= 1);
+}
+
+function fomoRitualHubReady() {
+  try {
+    const splash = document.getElementById('sfSplash');
+    if (splash && !splash.classList.contains('is-done')) return false;
+  } catch (_) {}
+  return true;
+}
+
+function fomoRitualPending() {
+  if (typeof save === 'undefined' || !save) return false;
+  ensureFomo();
+  const today = todayKey();
+  if (save.fomo.ritualSeenDate === today) return false;
+  try {
+    if (typeof chestSummonsLeft === 'function' && chestSummonsLeft() > 0) return true;
+  } catch (_) {}
+  try {
+    if (typeof claimableDailyTasks === 'function' && claimableDailyTasks().length) return true;
+  } catch (_) {}
+  if (dailyDayBonusReady()) return true;
+  try {
+    if (typeof canCrackDailyEgg === 'function' && canCrackDailyEgg()) return true;
+  } catch (_) {}
+  return false;
+}
+
+function dismissFomoRitual() {
+  ensureFomo();
+  save.fomo.ritualSeenDate = todayKey();
+  if (typeof UI !== 'undefined') {
+    UI._fomoRitualHide = true;
+    UI._fomoRitualForce = false;
+  }
+  persist();
+  if (typeof UI !== 'undefined' && UI.hideFomoRitual) UI.hideFomoRitual();
+}
+
+function reopenFomoRitual() {
+  ensureFomo();
+  save.fomo.ritualSeenDate = null;
+  if (typeof UI !== 'undefined') {
+    UI._fomoRitualHide = false;
+    UI._fomoRitualForce = true;
+  }
+  persist();
+  if (typeof UI !== 'undefined') {
+    try { UI.show('menuScreen'); } catch (_) {}
+    try { UI.renderMenu(); } catch (_) {}
+    if (UI.showFomoRitual) UI.showFomoRitual(true);
+  }
 }
 function ensureDaily() {
   const dk = todayKey();
@@ -3361,19 +3548,60 @@ function claimDailyDayBonus() {
       : t('toast.dayBonusNeedN', { n: left }), 3000);
     return;
   }
+  const today = todayKey();
+  const prevDate = save.stats.lastDayBonusDate || null;
+  const prevStreak = save.stats.dailyStreak || 0;
+  const prevBest = save.stats.dailyStreakBest || 0;
+  const nextStreak = daysBetweenKeys(prevDate, today) === 1 ? (prevStreak + 1) : 1;
+  const nextBest = Math.max(prevBest, nextStreak);
   const snap = {
     xp: save.xp,
     lvl: save.lvl,
     dayBonusClaimed: save.daily.dayBonusClaimed,
     dailyBonusCount: save.stats.dailyBonusCount || 0,
+    dailyStreak: prevStreak,
+    dailyStreakBest: prevBest,
+    lastDayBonusDate: prevDate,
+    chestLeft: save.chestDaily && save.chestDaily.left,
+    eggCracked: save.eggDaily && save.eggDaily.dailyCracked,
   };
   save.daily.dayBonusClaimed = true;
   save.stats.dailyBonusCount = snap.dailyBonusCount + 1;
+  save.stats.dailyStreak = nextStreak;
+  save.stats.dailyStreakBest = nextBest;
+  save.stats.lastDayBonusDate = today;
   grantMetaXP(80, { deferPersist: true });
+  if (nextStreak === 3) {
+    if (typeof ensureChestDaily === 'function') ensureChestDaily();
+    if (save.chestDaily) {
+      const cap = (typeof CHEST_DAILY_LEFT_CAP === 'number') ? CHEST_DAILY_LEFT_CAP : 12;
+      save.chestDaily.left = Math.min((save.chestDaily.left || 0) + 1, cap);
+    }
+  }
+  if (nextStreak === 7) {
+    if (typeof eggOwnedCount === 'function' && eggOwnedCount() < 12) {
+      if (typeof ensureEggDaily === 'function') ensureEggDaily();
+      if (save.eggDaily) save.eggDaily.dailyCracked = false;
+    } else {
+      if (typeof ensureChestDaily === 'function') ensureChestDaily();
+      if (save.chestDaily) {
+        const cap = (typeof CHEST_DAILY_LEFT_CAP === 'number') ? CHEST_DAILY_LEFT_CAP : 12;
+        save.chestDaily.left = Math.min((save.chestDaily.left || 0) + 2, cap);
+      }
+    }
+  }
+  if (nextStreak >= 14) {
+    grantMetaXP(120, { deferPersist: true });
+  }
   AudioSys.sfx('win');
   if (!persistOrToast('dagbonus')) {
     save.daily.dayBonusClaimed = snap.dayBonusClaimed;
     save.stats.dailyBonusCount = snap.dailyBonusCount;
+    save.stats.dailyStreak = snap.dailyStreak;
+    save.stats.dailyStreakBest = snap.dailyStreakBest;
+    save.stats.lastDayBonusDate = snap.lastDayBonusDate;
+    if (save.chestDaily && snap.chestLeft != null) save.chestDaily.left = snap.chestLeft;
+    if (save.eggDaily && snap.eggCracked != null) save.eggDaily.dailyCracked = snap.eggCracked;
     save.xp = snap.xp;
     save.lvl = snap.lvl;
     return;
@@ -3382,7 +3610,11 @@ function claimDailyDayBonus() {
   checkAchievements();
   UI.renderMissions();
   UI.renderMenu();
-  UI.toast(t('toast.dayBonusDone'), 3200);
+  let msg = t('toast.dayBonusDone');
+  if (nextStreak === 3) msg += ' · ' + tOr('fomo.streakReward3', '+1 summon');
+  else if (nextStreak === 7) msg += ' · ' + tOr('fomo.streakReward7', '+ei of summons');
+  else if (nextStreak >= 14) msg += ' · ' + tOr('fomo.streakReward14', '+120 XP');
+  UI.toast(msg, 3200);
 }
 
 function grantMetaXP(n, opts) {
@@ -3555,7 +3787,7 @@ function achievementProgressFrac(ach) {
     case 'streak10': return Math.min(s.stats.maxKillStreak || 0, 10) / 10;
     case 'trainCombo10': return Math.min(s.stats.trainMaxCombo || 0, 10) / 10;
     case 'lv50': return Math.min(s.unlocked, 50) / 50;
-    case 'daily7': return Math.min(s.stats.dailyBonusCount || 0, 7) / 7;
+    case 'daily7': return Math.min(s.stats.dailyStreakBest || 0, 7) / 7;
     default: return 0;
   }
 }
@@ -3591,13 +3823,13 @@ function achievementProgressHint(ach) {
     case 'streak10': return `streak ×${Math.min(s.stats.maxKillStreak || 0, 10)}/10`;
     case 'trainCombo10': return `train ×${Math.min(s.stats.trainMaxCombo || 0, 10)}/10`;
     case 'lv50': return `Unlock Lv ${Math.min(s.unlocked, 50)}/50`;
-    case 'daily7': return `${Math.min(s.stats.dailyBonusCount || 0, 7)}/7 dagbonussen`;
+    case 'daily7': return `${Math.min(s.stats.dailyStreakBest || 0, 7)}/7 dagen op rij`;
     default: return '';
   }
 }
 
 function dailyStreakLine() {
-  const n = save.stats.dailyBonusCount || 0;
+  const n = save.stats.dailyStreak || 0;
   if (n <= 0) return '';
   return n >= 7 ? t('missionsUi.streakDone', { n }) : t('missionsUi.streakLine', { n });
 }
@@ -11387,6 +11619,8 @@ function eggProgressSummary() {
  *  Bestaande save.summons (ascend epic/legendary) blijft apart. */
 
 const CHEST_DAILY_TOTAL = 10;
+/** F3 streak extras may raise today's leftover to 12; reset still uses TOTAL. */
+const CHEST_DAILY_LEFT_CAP = 12;
 /** Jackpot / “leuk” roll — was 5%, nu ~14%. */
 const CHEST_NICE_CHANCE = 0.14;
 /** Op non-jackpot: kans op mid-tier unlock i.p.v. alleen coins/junk. */
@@ -11463,11 +11697,11 @@ function clampChestLeft(n, max) {
 function migrateChestLeftFields(raw) {
   if (!raw || typeof raw !== 'object') return CHEST_DAILY_TOTAL;
   if (raw.left != null && raw.left !== '') {
-    return clampChestLeft(raw.left, CHEST_DAILY_TOTAL);
+    return clampChestLeft(raw.left, CHEST_DAILY_LEFT_CAP);
   }
   const w = clampChestLeft(raw.wLeft, 5);
   const p = clampChestLeft(raw.pLeft, 5);
-  return clampChestLeft(w + p, CHEST_DAILY_TOTAL);
+  return clampChestLeft(w + p, CHEST_DAILY_LEFT_CAP);
 }
 
 function ensureChestDaily() {
@@ -12225,6 +12459,22 @@ function seedNlGameStrings() {
     keptCurrent: 'Huidige save behouden',
     fail: 'Update mislukt — sluit tab en open opnieuw',
   });
+  if (!I18N.nl.fomo) I18N.nl.fomo = {};
+  Object.assign(I18N.nl.fomo, {
+    ritualTitle: 'Vandaag',
+    ritualCtaSummon: 'Naar summons',
+    ritualCtaMission: 'Speel missie',
+    ritualCtaAdv: 'Naar avontuur',
+    ritualDismiss: 'Sluiten',
+    ritualReopen: 'Dagoverzicht',
+    resetIn: 'Nieuw over {reset}',
+    rowSummons: 'Summons {left}/{total}',
+    rowEggReady: 'Dag-ei klaar',
+    rowEggDone: 'Dag-ei al open',
+    streakReward3: '+1 summon',
+    streakReward7: '+ei of summons',
+    streakReward14: '+120 XP',
+  });
   if (!I18N.nl.missionsUi) I18N.nl.missionsUi = {};
   Object.assign(I18N.nl.missionsUi, {
     flowDone: '✓ Dag rond',
@@ -12955,7 +13205,7 @@ const CATALOG_EN = {
     streak10: { name: 'Unstoppable', desc: 'Kill streak ×10 in adventure' },
     trainCombo10: { name: 'Dummy master', desc: 'Training combo ×10' },
     lv50: { name: 'Legend', desc: 'Unlock level 50' },
-    daily7: { name: 'Determined', desc: 'Claim 7 daily bonuses' },
+    daily7: { name: 'Determined', desc: 'Claim 7 daily bonuses in a row' },
     vs5: { name: 'Duelist', desc: 'Play 5× 2-player duels' },
     vsFatality1: { name: 'Finish him!', desc: 'Land a versus fatality on match KO' },
     vs_roster: { name: 'Full roster', desc: 'Play 10+ different fighters (2P)' },
@@ -13276,6 +13526,21 @@ const CATALOG_EN = {
     applyFail: 'Load failed — try Restore backup in Settings',
     keptCurrent: 'Kept current save',
     fail: 'Update failed — close tab and reopen',
+  },
+  fomo: {
+    ritualTitle: 'Today',
+    ritualCtaSummon: 'Open summons',
+    ritualCtaMission: 'Play mission',
+    ritualCtaAdv: 'Play adventure',
+    ritualDismiss: 'Close',
+    ritualReopen: 'Day overview',
+    resetIn: 'Resets in {reset}',
+    rowSummons: 'Summons {left}/{total}',
+    rowEggReady: 'Daily egg ready',
+    rowEggDone: 'Daily egg already opened',
+    streakReward3: '+1 summon',
+    streakReward7: '+egg or summons',
+    streakReward14: '+120 XP',
   },
   missionsUi: {
     flowDone: '✓ Day done',
@@ -13986,7 +14251,7 @@ const CATALOG_DE = {
     streak10: { name: 'Unaufhaltsam', desc: 'Kill-Streak ×10 im Abenteuer' },
     trainCombo10: { name: 'Dummy-Meister', desc: 'Training-Combo ×10' },
     lv50: { name: 'Legende', desc: 'Level 50 freischalten' },
-    daily7: { name: 'Entschlossen', desc: '7 Tagesboni abgeholt' },
+    daily7: { name: 'Entschlossen', desc: '7 Tagesboni in Folge' },
     vs5: { name: 'Duellant', desc: '5× 2-Spieler-Duell gespielt' },
     vs_roster: { name: 'Volles Roster', desc: '10+ verschiedene Kämpfer (2P)' },
     saga_icons: { name: 'Saga-Legenden', desc: '2P mit allen 7 Legend-Picks' },
@@ -14087,7 +14352,7 @@ const CATALOG_FR = {
     streak10: { name: 'Impossible à arrêter', desc: 'Série ×10 en aventure' },
     trainCombo10: { name: 'Maître du dummy', desc: 'Combo entraînement ×10' },
     lv50: { name: 'Légende', desc: 'Débloquer niveau 50' },
-    daily7: { name: 'Déterminé', desc: '7 bonus quotidiens réclamés' },
+    daily7: { name: 'Déterminé', desc: '7 bonus quotidiens d\'affilée' },
     vs5: { name: 'Duelliste', desc: '5× duels 2 joueurs' },
     vs_roster: { name: 'Roster complet', desc: '10+ combattants différents (2P)' },
     saga_icons: { name: 'Légendes saga', desc: '2P avec les 7 légendes' },
@@ -14188,7 +14453,7 @@ const CATALOG_ES = {
     streak10: { name: 'Imparable', desc: 'Racha ×10 en aventura' },
     trainCombo10: { name: 'Maestro del dummy', desc: 'Combo entrenamiento ×10' },
     lv50: { name: 'Leyenda', desc: 'Desbloquear nivel 50' },
-    daily7: { name: 'Determinado', desc: '7 bonos diarios reclamados' },
+    daily7: { name: 'Determinado', desc: '7 bonos diarios seguidos' },
     vs5: { name: 'Duelista', desc: '5× duelos a 2 jugadores' },
     vs_roster: { name: 'Roster completo', desc: '10+ luchadores distintos (2P)' },
     saga_icons: { name: 'Leyendas saga', desc: '2P con las 7 leyendas' },
@@ -35454,9 +35719,116 @@ const UI = {
       }
     }
     if (typeof renderLangSwitch === 'function') renderLangSwitch();
+    try {
+      if (typeof ensureFomo === 'function') {
+        ensureFomo();
+        const today = typeof todayKey === 'function' ? todayKey() : null;
+        if (today && save.fomo.lastOpenDate !== today) {
+          save.fomo.lastOpenDate = today;
+          persist();
+        }
+      }
+      if (typeof fomoRitualHubReady === 'function' && !fomoRitualHubReady()) this.hideFomoRitual();
+      else if (this._fomoRitualHide) this.hideFomoRitual();
+      else if (this._fomoRitualForce || (typeof fomoRitualPending === 'function' && fomoRitualPending())) {
+        this.showFomoRitual(!!this._fomoRitualForce);
+      } else {
+        this.hideFomoRitual();
+      }
+    } catch (_) {}
     } catch (err) {
       sfReportError('renderMenu', err, 'Menu kon niet ververst worden');
     }
+  },
+
+  hideFomoRitual() {
+    const el = document.getElementById('fomoRitual');
+    if (el) el.hidden = true;
+  },
+
+  showFomoRitual(force) {
+    const el = document.getElementById('fomoRitual');
+    if (!el) return;
+    if (!force && this._fomoRitualHide) { el.hidden = true; return; }
+    if (!force && typeof fomoRitualPending === 'function' && !fomoRitualPending()) {
+      el.hidden = true;
+      return;
+    }
+    const rows = document.getElementById('fomoRitualRows');
+    const title = document.getElementById('fomoRitualTitle');
+    const reset = document.getElementById('fomoRitualReset');
+    const ctaLbl = document.getElementById('fomoRitualCtaLbl');
+    if (title) title.textContent = tOr('fomo.ritualTitle', 'Vandaag');
+    let html = '';
+    let left = 0;
+    try { left = typeof chestSummonsLeft === 'function' ? chestSummonsLeft() : 0; } catch (_) {}
+    const total = (typeof CHEST_DAILY_TOTAL === 'number') ? CHEST_DAILY_TOTAL : 10;
+    html += `<div class="fomo-ritual-row">${tOr('fomo.rowSummons', 'Summons {left}/{total}', { left, total })}</div>`;
+    try {
+      if (typeof ensureDaily === 'function') ensureDaily();
+      const tasks = (save.daily && Array.isArray(save.daily.tasks)) ? save.daily.tasks : [];
+      for (const task of tasks) {
+        const def = typeof dailyDef === 'function' ? dailyDef(task.id) : null;
+        if (!def) continue;
+        const text = typeof dailyText === 'function' ? dailyText(task.id) : def.text;
+        html += `<div class="fomo-ritual-row">${text}<small>${task.progress}/${def.goal}</small></div>`;
+      }
+    } catch (_) {}
+    if (typeof fomoRitualEggVisible === 'function' && fomoRitualEggVisible()) {
+      let eggReady = false;
+      try { eggReady = typeof canCrackDailyEgg === 'function' && canCrackDailyEgg(); } catch (_) {}
+      html += `<div class="fomo-ritual-row">${eggReady
+        ? tOr('fomo.rowEggReady', 'Dag-ei klaar')
+        : tOr('fomo.rowEggDone', 'Dag-ei al open')}</div>`;
+    }
+    const streak = typeof dailyStreakLine === 'function' ? dailyStreakLine() : '';
+    if (streak) html += `<div class="fomo-ritual-row">${streak}</div>`;
+    if (rows) rows.innerHTML = html;
+    const resetLine = typeof dailyResetCountdown === 'function' ? dailyResetCountdown() : '';
+    if (reset) reset.textContent = tOr('fomo.resetIn', 'Nieuw over {reset}', { reset: resetLine });
+    let ctaKind = 'adv';
+    if (left > 0) ctaKind = 'summon';
+    else {
+      try {
+        if (typeof ensureDaily === 'function') ensureDaily();
+        const undone = (save.daily && save.daily.tasks || []).find(t => !t.done && typeof dailyDef === 'function' && dailyDef(t.id));
+        if (undone) ctaKind = 'mission';
+      } catch (_) {}
+    }
+    this._fomoRitualCta = ctaKind;
+    if (ctaLbl) {
+      ctaLbl.textContent = ctaKind === 'summon'
+        ? tOr('fomo.ritualCtaSummon', 'Naar summons')
+        : (ctaKind === 'mission'
+          ? tOr('fomo.ritualCtaMission', 'Speel missie')
+          : tOr('fomo.ritualCtaAdv', 'Naar avontuur'));
+    }
+    const dismiss = document.getElementById('fomoRitualDismiss');
+    if (dismiss) dismiss.setAttribute('aria-label', tOr('fomo.ritualDismiss', 'Sluiten'));
+    el.hidden = false;
+  },
+
+  runFomoRitualCta() {
+    const kind = this._fomoRitualCta || 'adv';
+    if (typeof dismissFomoRitual === 'function') dismissFomoRitual();
+    else this.hideFomoRitual();
+    if (kind === 'summon') {
+      this.openSummonHub();
+      return;
+    }
+    if (kind === 'mission') {
+      try {
+        if (typeof ensureDaily === 'function') ensureDaily();
+        const undone = (save.daily && save.daily.tasks || []).find(t => !t.done && typeof dailyDef === 'function' && dailyDef(t.id));
+        if (undone && typeof goDailyPlayTarget === 'function') {
+          goDailyPlayTarget(undone.id);
+          return;
+        }
+      } catch (_) {}
+    }
+    const adv = document.getElementById('btnAdventure');
+    if (adv) adv.click();
+    else this.safeOpen('levelScreen', () => this.renderLevels());
   },
 
   renderSummon() {
@@ -38191,6 +38563,32 @@ if (dailyBonusBtn) bindPress(dailyBonusBtn, () => {
     AudioSys.sfx('select'); claimDailyDayBonus();
   } catch (err) {
     sfReportError('dayBonus', err, 'Dagbonus mislukt — probeer opnieuw');
+  }
+});
+bindPress(document.getElementById('fomoRitualDismiss'), () => {
+  try { AudioSys.sfx('select'); dismissFomoRitual(); } catch (err) {
+    sfReportError('fomoDismiss', err, 'Kon overzicht sluiten');
+  }
+});
+bindPress(document.getElementById('fomoRitualBackdrop'), () => {
+  try { dismissFomoRitual(); } catch (err) {
+    sfReportError('fomoDismiss', err, 'Kon overzicht sluiten');
+  }
+});
+bindPress(document.getElementById('fomoRitualCta'), () => {
+  try {
+    AudioSys.init(); AudioSys.sfx('select');
+    UI.runFomoRitualCta();
+  } catch (err) {
+    sfReportError('fomoCta', err, 'Kon actie niet openen');
+  }
+});
+bindPress(document.getElementById('fomoRitualReopen'), () => {
+  try {
+    AudioSys.init(); AudioSys.sfx('select');
+    reopenFomoRitual();
+  } catch (err) {
+    sfReportError('fomoReopen', err, 'Kon dagoverzicht niet openen');
   }
 });
 const btnCopyLink = document.getElementById('btnCopyLink');

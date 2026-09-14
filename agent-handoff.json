@@ -661,6 +661,20 @@
       "status": "done-in-code",
       "updated": "2026-09-14",
       "notes": "docs/FOMO-GAPS.md — P0 clock/ritual/pity/streak; P1 weekly/shard/NM sneak/banner. Design only."
+    },
+    {
+      "id": "w-20260914T171747",
+      "from": "user",
+      "text": "FOMO PR-A ONLY: F0 local todayKey + F1 first-open ritual sheet + F3 consecutive streak. Spec docs/FOMO-GAPS.md (#274).",
+      "status": "done-in-code",
+      "updated": "2026-09-14"
+    },
+    {
+      "id": "w-20260914T170200",
+      "from": "user",
+      "text": "FOMO PR-A ONLY: F0 local todayKey + F1 first-open ritual sheet + F3 consecutive streak. Spec docs/FOMO-GAPS.md (#274). No F2/F4/F5/F6/F7, no Versus, no gear/audio/season.",
+      "status": "done-in-code",
+      "updated": "2026-09-14"
     }
   ],
   "agentRules": [
