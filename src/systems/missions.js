@@ -2626,6 +2626,10 @@ function maybeWelcomeToast() {
   setTimeout(() => {
     if (state === 'play') return;
     if (onboardingProgress().seen > 0) return;
+    try {
+      const lvl = document.getElementById('levelScreen');
+      if (lvl && lvl.classList.contains('active')) return;
+    } catch (_) {}
     userToast(t('toast.welcome'), 3800);
   }, 2800);
 }

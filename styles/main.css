@@ -1890,13 +1890,17 @@
       text-shadow:0 3px 0 #a86818; }
   #resultScreen .btn { margin-top:8px; }
 
-  #levelScreen.active ~ #toastHost,
-  body:has(#levelScreen.active) #toastHost { display:none; }
-  #toastHost { position:fixed; left:50%; top:max(70px, calc(env(safe-area-inset-top) + 56px));
-      transform:translateX(-50%); z-index:40; pointer-events:none; display:flex; flex-direction:column; gap:8px; align-items:center; }
+  /* Android Chrome/TWA: zelfde HTML-toast, onder statusbalk, geen tik-blokkade. Eén tegelijk (JS-queue). */
+  #toastHost { position:fixed; left:50%; top:max(12px, calc(env(safe-area-inset-top, 0px) + 10px));
+      transform:translateX(-50%); z-index:40; pointer-events:none;
+      display:flex; flex-direction:column; gap:0; align-items:center;
+      width:min(92vw, 420px); max-width:calc(100vw - 24px); }
+  body:not(.is-playing) #toastHost { top:max(70px, calc(env(safe-area-inset-top, 0px) + 56px)); }
   .toast { background:rgba(15,20,40,.92); border:1px solid rgba(255,215,94,.45); color:#fff;
-      padding:10px 18px; border-radius:14px; font-weight:800; font-size:14px;
-      box-shadow:0 8px 24px rgba(0,0,0,.4); animation: toastIn .35s ease; max-width:90vw; text-align:center; }
+      padding:12px 16px; border-radius:14px; font-weight:800; font-size:15px; line-height:1.35;
+      box-shadow:0 8px 24px rgba(0,0,0,.4); animation: toastIn .35s ease; width:100%; box-sizing:border-box;
+      text-align:center; word-spacing:.04em; user-select:none; -webkit-user-select:none;
+      -webkit-text-size-adjust:100%; text-size-adjust:100%; }
   @keyframes toastIn { from { opacity:0; transform:translateY(-12px); } to { opacity:1; transform:none; } }
 
   .version-update-overlay { position:fixed; inset:0; z-index:55; display:flex; align-items:center; justify-content:center;

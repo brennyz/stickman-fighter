@@ -57,7 +57,8 @@ must(!/Aura-ringen/.test(satanSvg), 'satan.svg must not use aura rings (read as 
 must(/url\("\.\.\/assets\/ui\/satan\.svg"\)/.test(css), 'card-face CSS fallback path wrong (must be ../assets)');
 must(/width:104px/.test(css) && /height:128px/.test(css), 'satan card face should be larger (104x128)');
 must(/adv-heat\.bare/.test(css), 'bare heat meter style missing');
-must(/toastHost/.test(css) && /levelScreen\.active/.test(css), 'hide welcome toast on island screen');
+must(/toastHost/.test(css) && /safe-area-inset-top/.test(css), 'toast host must clear Android status bar');
+must(!/#levelScreen\.active ~ #toastHost/.test(css), 'do not hide all toasts on the island screen');
 must(/url\("\.\.\/assets\/ui\/satan-mark\.svg"\)/.test(css), 'heat-face CSS fallback path wrong');
 must(/satan-portrait-art\.sf-icon-broken/.test(css), 'CSS must neutralize broken outline on satan art');
 

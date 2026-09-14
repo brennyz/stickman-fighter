@@ -320,9 +320,9 @@ const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const VERSION_UPDATE_SAVE_KEY = 'stickfighter_version_update_save_v1';
 const VERSION_UPDATE_FLAG_KEY = 'stickfighter_version_update_flag_v1';
 const SAVE_EXPORT_SCHEMA = 3;
-const APP_VERSION = '1.18.155';
+const APP_VERSION = '1.18.156';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 365;
+const SW_CACHE_REV = 366;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', petCoins: 0, dex: {}, summons: {}, pets: {}, activePet: null,
   eggPets: {}, activeEggPet: null, eggDaily: null,
   chestDaily: null, chestWeapons: {},
@@ -5504,6 +5504,10 @@ function maybeWelcomeToast() {
   setTimeout(() => {
     if (state === 'play') return;
     if (onboardingProgress().seen > 0) return;
+    try {
+      const lvl = document.getElementById('levelScreen');
+      if (lvl && lvl.classList.contains('active')) return;
+    } catch (_) {}
     userToast(t('toast.welcome'), 3800);
   }, 2800);
 }
@@ -31625,10 +31629,6 @@ const UI = {
         if (id === 'levelScreen') {
           if (!this.advIslandPick) this.advIslandPick = currentAdvIsland();
           try { applyIslandOnboarding(); } catch (_) {}
-          try {
-            const host = document.getElementById('toastHost');
-            if (host) host.innerHTML = '';
-          } catch (_) {}
         }
       } else if (game?.mode === 'versus') {
         try { this.refreshPauseSubtitle(); } catch (_) {}
@@ -31772,23 +31772,79 @@ const UI = {
     }
   },
 
+  /** Eén zichtbare toast. Rest in de rij — Android Chrome/TWA = dezelfde HTML, geen native Toast. */
   toast(msg, ms) {
+    msg = String(msg == null ? '' : msg);
+    let i = 0;
+    while (i < msg.length && msg.charAt(i) <= ' ') i++;
+    let j = msg.length;
+    while (j > i && msg.charAt(j - 1) <= ' ') j--;
+    msg = msg.slice(i, j);
+    if (!msg) return;
+    if (!(ms > 0)) ms = 2800;
+    if (ms < 1200) ms = 1200;
+    if (ms > 7000) ms = 7000;
+    try {
+      const host = document.getElementById('toastHost');
+      if (host && host.querySelector('.sf-boot-fail')) return;
+    } catch (_) {}
+    if (this._toastCur === msg) return;
+    const q = this._toastQ || (this._toastQ = []);
+    for (let k = 0; k < q.length; k++) if (q[k].msg === msg) return;
+    if (q.length >= 4) q.shift();
+    q.push({ msg: msg, ms: ms });
+    this._pumpToast();
+  },
+
+  _pumpToast() {
+    if (this._toastBusy) return;
+    const q = this._toastQ || (this._toastQ = []);
+    const next = q.shift();
+    if (!next) return;
+    this._showToastNow(next.msg, next.ms);
+  },
+
+  _showToastNow(msg, ms) {
     const host = document.getElementById('toastHost');
-    if (!host) return;
+    if (!host) {
+      this._toastBusy = false;
+      return;
+    }
+    if (host.querySelector('.sf-boot-fail')) {
+      this._toastBusy = false;
+      return;
+    }
+    this._toastBusy = true;
+    this._toastCur = msg;
     if (this._toastHide) {
       clearTimeout(this._toastHide);
       this._toastHide = null;
     }
-    if (typeof host.replaceChildren === 'function') host.replaceChildren();
-    else host.innerHTML = '';
+    if (this._toastGap) {
+      clearTimeout(this._toastGap);
+      this._toastGap = null;
+    }
+    const old = host.querySelectorAll('.toast');
+    for (let n = 0; n < old.length; n++) {
+      if (old[n].classList.contains('sf-boot-fail')) continue;
+      try { old[n].remove(); } catch (_) {}
+    }
     const el = document.createElement('div');
     el.className = 'toast';
+    el.setAttribute('role', 'status');
     el.textContent = msg;
     host.appendChild(el);
+    const self = this;
     this._toastHide = setTimeout(() => {
-      el.remove();
-      this._toastHide = null;
-    }, ms || 2800);
+      try { el.remove(); } catch (_) {}
+      self._toastHide = null;
+      self._toastCur = '';
+      self._toastGap = setTimeout(() => {
+        self._toastGap = null;
+        self._toastBusy = false;
+        self._pumpToast();
+      }, 220);
+    }, ms);
   },
 
   goMenu(opts) {

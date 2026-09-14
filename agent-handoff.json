@@ -22,8 +22,8 @@
     "shareUrl": "https://brennyz.github.io/stickman-fighter/speel.html",
     "localMainHead": "0d3bffff3dd7e6f723c524d238d050c218bc0e9c",
     "remoteMainHead": "0d3bffff3dd7e6f723c524d238d050c218bc0e9c",
-    "note": "Post-merge polish v1.18.154 / SW 364 — HEAT/SATAN portraits + floater spread. PR, not silent main.",
-    "updated": "2026-09-14T12:20:00Z"
+    "note": "SATAN card look pass v1.18.155 / SW 365 — thicker devil, bigger portrait, shorter copy. PR #259, not silent main.",
+    "updated": "2026-09-14T12:35:00Z"
   },
   "githubSync": {
     "policy": "Trigger van de user: «merge main» = commit (als nodig) + push origin/main. Daarna GitHub Pages (~1–3 min) → speel.html is LIVE. Niet stil pushen. Houd pendingUpload bij tot origin/main gelijk is.",
@@ -90,6 +90,13 @@
     "pendingMerge": []
   },
   "userWishlist": [
+    {
+      "id": "w-20260914T124128",
+      "from": "user",
+      "text": "Toasts niet door elkaar (één wachtrij). Uitleggen hoe dit op Android (Chrome/TWA) werkt. Geen Versus/nuclear CSS/share-URL/iOS/secrets.",
+      "status": "done-in-code",
+      "updated": "2026-09-14"
+    },
     {
       "id": "w-20260914T123131",
       "from": "user",
@@ -551,6 +558,14 @@
   ],
   "sessionLog": [
     {
+      "at": "2026-09-14T12:44:05Z",
+      "summary": "Toast-wachtrij: één tegelijk, Android Chrome/TWA zelfde HTML onder statusbalk · v1.18.156 / SW 366"
+    },
+    {
+      "at": "2026-09-14T12:41:28Z",
+      "summary": "Start toast-wachtrij: één tegelijk, Android Chrome/TWA"
+    },
+    {
       "at": "2026-09-14T12:35:18Z",
       "summary": "SATAN-kaart dikkere duivel, groter portret, korte copy, hitte-balk zonder dubbele tekst · v1.18.155 / SW 365"
     },
@@ -641,14 +656,6 @@
     {
       "at": "2026-08-17T08:20:19Z",
       "summary": "Vierde d20-worp geclaimd via CLI"
-    },
-    {
-      "at": "2026-08-17T08:04:39Z",
-      "summary": "d13 missies: Dagbonus-copy, geen dubbele toast — klaar voor super-merge"
-    },
-    {
-      "at": "2026-08-17T07:17:45Z",
-      "summary": "Derde d20-worp geclaimd via CLI"
     }
   ],
   "implementedFeaturesSummary": "d18 char select deel 1+2 (v1.11.1-2); Mats coinrun + shuriken mik/vliegers + anti-spam (v1.12.0); speel.html (v1.12.2+). Zie HANDOFF-ZOEKINDEX.md en improvement-d20-bag.json userFeatureLog.",
