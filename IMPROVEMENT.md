@@ -1,3 +1,4 @@
+| 2026-09-14 | **equip look** | Worn outfits: data-driven slots (head/chest/legs/back/trinket), layer order, tuned offsets. Bandana wraps the head, tails behind the face; menu preview no longer clips crown gear. Look-only — no economy. **v1.18.164 / SW v374**. |
 | 2026-09-14 | **locale + toast** | #266: NL VERLOREN, geen raw menu.tips / PICK AN ISLAND; versie-banner stiller + wegklik; rest HOME. **v1.18.163 / SW v373**. |
 | 2026-09-14 | **unify polish** | Start: geen naamveld, SPELEN-first; alle schermen HOME-tegels. #265 folded. **v1.18.162 / SW v372**. |
 | 2026-09-14 | **arcade pick** | STEP 2 pick-mode = HOME hub-tegels; chrome/toasts volgen game-taal. **v1.18.161 / SW v371**. |

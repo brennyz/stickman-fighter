@@ -77,8 +77,8 @@ function drawUpgradeItemIcon(cat, id, cv) {
     drawMonsterArt(cc, sp, sp.size, 1.2, false, false);
   } else if (cat === 'style') {
     const st = styleById(id);
-    cc.translate(36, 58);
-    cc.scale(0.85, 0.85);
+    if (typeof applyEquipLookPreview === 'function') applyEquipLookPreview(cc, 64, 64);
+    else { cc.translate(32, 56); cc.scale(0.72, 0.72); }
     const preview = new Fighter({ isPlayer: true, x: 0, y: 0, color: st.body, style: st, scale: 0.9 });
     preview.animT = 0.4;
     preview.draw(cc);
@@ -3971,9 +3971,10 @@ const UI = {
       el.style.borderColor = ok ? st.accent + '88' : '';
       el.title = styleLabel(st, 'tooltip') || styleLabel(st, 'hint') || styleLabel(st);
       const cv = document.createElement('canvas');
-      cv.width = 72; cv.height = 72;
+      cv.width = 80; cv.height = 86;
       const cc = cv.getContext('2d');
-      cc.translate(36, 58); cc.scale(0.85, 0.85);
+      if (typeof applyEquipLookPreview === 'function') applyEquipLookPreview(cc, 80, 86);
+      else { cc.translate(40, 75); cc.scale(0.78, 0.78); }
       const preview = new Fighter({ isPlayer: true, x: 0, y: 0, color: st.body, style: st, scale: 0.9 });
       preview.animT = 0.4;
       preview.draw(cc);

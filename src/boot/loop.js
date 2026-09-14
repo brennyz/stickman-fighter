@@ -917,6 +917,7 @@ function bootGame() {
     get swRev() { return SW_CACHE_REV; },
     startGame, save, Game, UI, recoverToMenu, syncPlayLayer,
     enterHub: enterHubFromTitle,
+    equipLook: typeof EquipLookApi !== 'undefined' ? EquipLookApi : null,
     debug: typeof sfDebugScreen === 'function' ? sfDebugScreen : null,
     fixPlayLayer: () => (typeof sfDebugScreen === 'function' ? sfDebugScreen({ fix: true }) : null),
     goMenu: () => recoverToMenu({ force: true }),

@@ -91,6 +91,13 @@
   },
   "userWishlist": [
     {
+      "id": "w-20260914T164800",
+      "from": "user",
+      "text": "EQUIP LOOK fine-tune ONLY. Third lane after gear systems/UI/art — how worn armour/cosmetics sit on the stickman (menu + combat): layer order, offsets, scale, color, pixel alignment. Data-driven offsets per item. No economy/aim/audio/i18n. No Versus.",
+      "status": "active",
+      "updated": "2026-09-14"
+    },
+    {
       "id": "w-20260914T151100",
       "from": "user",
       "text": "ULTRA SPRINT into #266 (draft, no merge): EN-NL consistency (YOU LOST→VERLOREN when NL, kill raw menu.tips / PICK AN ISLAND leftovers); quieter dismissible version toast; remaining screens HOME tiles; name field stays off.",
