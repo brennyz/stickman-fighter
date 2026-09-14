@@ -23043,8 +23043,8 @@ function paintSplashStripCanvas(cv, t, opts) {
   const roadLo = P ? P.roadLo : '#484642';
   const straw = P ? P.straw : '#a88850';
 
-  const roadH = Math.max(14, Math.round(h * (compact ? 0.22 : 0.2)));
-  const fieldH = Math.max(16, Math.round(h * (compact ? 0.26 : 0.3)));
+  const roadH = Math.max(14, Math.round(h * (compact ? 0.22 : hero ? 0.18 : 0.2)));
+  const fieldH = Math.max(16, Math.round(h * (compact ? 0.26 : hero ? 0.24 : 0.3)));
   const roadY = h - roadH;
   const fieldY = roadY - fieldH;
   const horizonY = fieldY;
@@ -23096,7 +23096,7 @@ function paintSplashStripCanvas(cv, t, opts) {
   const oakBase = roadY - 2;
   if (typeof drawPixelOakTree === 'function' && !compact) {
     const sway = calm ? 0 : Math.sin((t || 0) * 1.4) * 1.5;
-    drawPixelOakTree(c, oakX, oakBase, hero ? 0.82 : 0.55, sway);
+    drawPixelOakTree(c, oakX, oakBase, hero ? 1.05 : 0.55, sway);
   } else {
     c.fillStyle = '#3a3024';
     c.fillRect(oakX - 3, oakBase - 28, 6, 28);
@@ -23178,7 +23178,7 @@ function paintSplashStripCanvas(cv, t, opts) {
     c.restore();
   };
   const stroll = calm ? 0 : Math.sin((t || 0) * 0.7) * 10;
-  const sc = compact ? 0.85 : hero ? 2.35 : 1;
+  const sc = compact ? 0.85 : hero ? 4.4 : 1;
   if (hero) {
     drawSplashStick(w * 0.42 + stroll, 1, '#d0d4da', sc);
     drawSplashStick(w * 0.58 + stroll * 0.45, -1, '#ffd75e', sc * 1.08);
@@ -36210,6 +36210,14 @@ function paintSplashTargets(t, progress) {
   const root = document.getElementById('sfSplash');
   const hero = !!(root && root.classList.contains('is-title'));
   const main = document.getElementById('sfSplashCanvas');
+  if (main && hero) {
+    const w = Math.max(480, Math.round(main.clientWidth || 720));
+    const h = Math.max(220, Math.round(main.clientHeight || 360));
+    if (main.width !== w || main.height !== h) {
+      main.width = w;
+      main.height = h;
+    }
+  }
   if (main) paintSplashStripCanvas(main, t, { progress, hero });
   const tunnel = document.getElementById('tunnelBootStrip');
   const ov = document.getElementById('tunnelBootOverlay');
@@ -36280,6 +36288,7 @@ function enterHubFromTitle(opts) {
   saveTitlePlayerTag();
   dismissSplashOverlay();
   try { AudioSys.init(); AudioSys.sfx('select'); } catch (_) {}
+  try { if (typeof UI !== 'undefined' && UI.renderMenu) UI.renderMenu(); } catch (_) {}
   if (opts.resume) {
     try {
       if (typeof resumeLastPlay === 'function' && resumeLastPlay()) return;

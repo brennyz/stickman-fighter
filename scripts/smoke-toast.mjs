@@ -77,7 +77,7 @@ must(!/meta\.key stickfighter/.test(index), 'settings still shows save schema ke
 must(/id="sfTitleGate"/.test(index), 'title gate missing');
 must(/id="sfTitleStart"/.test(index), 'title SPELEN button missing');
 must(/id="sfTitleName"/.test(index), 'title name field missing');
-must(/width="720" height="280"/.test(index), 'splash canvas should be larger hero size');
+must(/width="720" height="360"/.test(index), 'splash canvas should be larger hero size');
 must(/classList.contains\('is-title'\)/.test(index), 'failsafe must keep title gate');
 must(/startGame: 'SPELEN'/.test(i18n), 'title start label missing');
 must(/playerTag: ''/.test(storage), 'save should store local playerTag');

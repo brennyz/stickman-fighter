@@ -566,6 +566,14 @@ function paintSplashTargets(t, progress) {
   const root = document.getElementById('sfSplash');
   const hero = !!(root && root.classList.contains('is-title'));
   const main = document.getElementById('sfSplashCanvas');
+  if (main && hero) {
+    const w = Math.max(480, Math.round(main.clientWidth || 720));
+    const h = Math.max(220, Math.round(main.clientHeight || 360));
+    if (main.width !== w || main.height !== h) {
+      main.width = w;
+      main.height = h;
+    }
+  }
   if (main) paintSplashStripCanvas(main, t, { progress, hero });
   const tunnel = document.getElementById('tunnelBootStrip');
   const ov = document.getElementById('tunnelBootOverlay');
@@ -636,6 +644,7 @@ function enterHubFromTitle(opts) {
   saveTitlePlayerTag();
   dismissSplashOverlay();
   try { AudioSys.init(); AudioSys.sfx('select'); } catch (_) {}
+  try { if (typeof UI !== 'undefined' && UI.renderMenu) UI.renderMenu(); } catch (_) {}
   if (opts.resume) {
     try {
       if (typeof resumeLastPlay === 'function' && resumeLastPlay()) return;
