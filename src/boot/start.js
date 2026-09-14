@@ -238,6 +238,9 @@ const btnStyle = document.getElementById('btnStyle');
 bindPress(btnStyle, () => {
   openCollectionScreen('styleScreen', () => UI.renderStyle());
 });
+bindPress(document.getElementById('btnGear'), () => {
+  openCollectionScreen('gearScreen', () => UI.renderGear());
+});
 const btnSettings = document.getElementById('btnSettings');
 bindPress(btnSettings, () => {
   AudioSys.init(); AudioSys.sfx('select');

@@ -42,6 +42,7 @@ const I18N = {
       weapons: 'Wapens', weaponsSub: '26 wapens · summon ascends',
       pets: 'Pets', petsSub: 'Muntjes · dex temmen · ei arcade',
       style: 'Stijl', styleSub: 'Bandana & outfit unlocks',
+      gear: 'Uitrusting', gearSub: '5 slots · pantser & cosmetics',
       skills: 'Skills', skillsSub: 'Energy specials · Spiral Orb · Wave Cannon',
       upgrades: 'Upgrades', upgradesSub: 'Shards · technique uitrusten',
       dex: 'Monsterboek', dexSub: '{n} soorten · rariteit = HP · boerderij · zoo · zee',
@@ -134,6 +135,13 @@ const I18N = {
       crackEgg: 'Dag-ei openen', crackEggSub: 'Gratis arcade-pull' },
     dex: { title: 'Monsterboek', sub: '{n} soorten · rariteit = HP · boerderij / dierentuin / zee-filters · 4 rariteiten = Kristallijn' },
     help: { title: 'Tips & controls' },
+    gear: {
+      title: 'Uitrusting', sub: '5 slots · pantser & cosmetics · level + tijd-gate',
+      flagVanity: 'Alleen look — geen stats', flagStats: '+ stats', flagArmour: 'Pantser',
+      needLvl: 'Vrij vanaf Lv {n}', needDays: 'Vrij vanaf dag {n}',
+      equip: 'Uitrusten', equipped: 'Aan', empty: 'Leeg',
+      slot: { head: 'Hoofd', chest: 'Borst', hands: 'Handen', legs: 'Benen', back: 'Rug' },
+    },
     install: { title: 'Zet in app-lade', sub: 'Één icoon, zoals een echte app' },
     island: {
       1: { name: 'Oost-eiland', sub: 'Lv 1–10' }, 2: { name: 'Vuur-eiland', sub: 'Lv 11–20' },
@@ -191,6 +199,7 @@ const I18N = {
       weapons: 'Weapons', weaponsSub: '26 weapons · summon ascends',
       pets: 'Pets', petsSub: 'Coins · dex tame · egg arcade',
       style: 'Style', styleSub: 'Bandana & outfit unlocks',
+      gear: 'Loadout', gearSub: '5 slots · armour & cosmetics',
       skills: 'Skills', skillsSub: 'Energy specials · Spiral Orb · Wave Cannon',
       upgrades: 'Upgrades', upgradesSub: 'Shards · equip a technique',
       dex: 'Monster book', dexSub: '{n} species · rarity = HP · farm · zoo · sea',
@@ -283,6 +292,13 @@ const I18N = {
       crackEgg: 'Open daily egg', crackEggSub: 'Free arcade pull' },
     dex: { title: 'Monster book', sub: '{n} species · rarity = HP · farm / zoo / sea filters · 4 rarities = Crystalline' },
     help: { title: 'Tips & controls' },
+    gear: {
+      title: 'Loadout', sub: '5 slots · armour & cosmetics · level + time gate',
+      flagVanity: 'Look only — no stats', flagStats: '+ stats', flagArmour: 'Armour',
+      needLvl: 'Unlocks at Lv {n}', needDays: 'Unlocks on day {n}',
+      equip: 'Equip', equipped: 'On', empty: 'Empty',
+      slot: { head: 'Head', chest: 'Chest', hands: 'Hands', legs: 'Legs', back: 'Back' },
+    },
     install: { title: 'Add as app', sub: 'One icon, like a real app' },
     island: {
       1: { name: 'East island', sub: 'Lv 1–10' }, 2: { name: 'Fire island', sub: 'Lv 11–20' },
@@ -340,6 +356,7 @@ const I18N = {
       weapons: 'Waffen', weaponsSub: '26 Waffen · Summons',
       pets: 'Pets', petsSub: 'Münzen · Dex zähmen',
       style: 'Stil', styleSub: 'Outfit-Freischaltungen',
+      gear: 'Ausrüstung', gearSub: '5 Slots · Rüstung & Kosmetik',
       skills: 'Skills', skillsSub: 'Energy specials · Spiral Orb · Wave Cannon',
       upgrades: 'Upgrades', upgradesSub: 'Splitter · Technik ausrüsten',
       dex: 'Monsterbuch', dexSub: '{n} Arten · Seltenheit = HP · Farm · Zoo · Meer',
@@ -481,6 +498,7 @@ const I18N = {
       weapons: 'Armes', weaponsSub: '26 armes · invocations',
       pets: 'Pets', petsSub: 'Pièces · dex · œufs',
       style: 'Style', styleSub: 'Déblocages tenues',
+      gear: 'Équipement', gearSub: '5 emplacements · armure & cosmétique',
       skills: 'Skills', skillsSub: 'Spéciaux énergie · Spiral Orb · Wave Cannon',
       upgrades: 'Améliorations', upgradesSub: 'Éclats · équiper une technique',
       dex: 'Bestiaire', dexSub: '{n} espèces · rareté = PV · ferme · zoo · mer',
@@ -622,6 +640,7 @@ const I18N = {
       weapons: 'Armas', weaponsSub: '26 armas · invocaciones',
       pets: 'Pets', petsSub: 'Monedas · dex · huevos',
       style: 'Estilo', styleSub: 'Desbloqueos de outfit',
+      gear: 'Equipo', gearSub: '5 huecos · armadura y cosméticos',
       skills: 'Skills', skillsSub: 'Especiales energía · Spiral Orb · Wave Cannon',
       upgrades: 'Mejoras', upgradesSub: 'Fragmentos · equipar técnica',
       dex: 'Bestiario', dexSub: '{n} especies · rareza = HP · granja · zoo · mar',
@@ -893,6 +912,7 @@ function applyLangStaticScreens() {
     ['btnWeapons', 'hub.weapons', 'hub.weaponsSub'],
     ['btnPets', 'hub.pets', 'hub.petsSub'],
     ['btnStyle', 'hub.style', 'hub.styleSub'],
+    ['btnGear', 'hub.gear', 'hub.gearSub'],
     ['btnSkills', 'hub.skills', 'hub.skillsSub'],
     ['btnUpgrades', 'hub.upgrades', 'hub.upgradesSub'],
     ['btnDex', 'hub.dex', 'hub.dexSub'],
@@ -1007,6 +1027,8 @@ function applyLangStaticScreens() {
   setText('gambleSub', 'ui.gambleSub');
   setText('styleScreenHead', 'ui.styleHead');
   setText('styleScreenSub', 'ui.styleSub');
+  setText('gearScreenHead', 'gear.title');
+  setText('gearScreenSub', 'gear.sub');
   setText('skillScreenHead', 'ui.skillSummaryHead');
   setText('skillScreenSub', 'ui.skillSub');
   setText('upgradeScreenHead', 'ui.skillHead');
@@ -1143,6 +1165,7 @@ function applyLangStaticScreens() {
     weaponScreen: t('back.collect'),
     petScreen: t('back.collect'),
     styleScreen: t('back.collect'),
+    gearScreen: t('back.collect'),
     skillScreen: t('back.collect'),
     upgradeScreen: t('back.collect'),
     dexScreen: t('back.collect'),

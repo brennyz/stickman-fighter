@@ -876,6 +876,9 @@ function saveExportSummaryLine(s) {
   }
   const pc = Math.max(0, Math.floor(Number(st.petCoins) || 0));
   if (pc) line += ` · ${pc} pet coins`;
+  const gearN = st.gear && st.gear.owned && typeof st.gear.owned === 'object'
+    ? Object.keys(st.gear.owned).length : 0;
+  if (gearN) line += ` · gear ${gearN}`;
   return line;
 }
 

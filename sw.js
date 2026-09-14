@@ -69,6 +69,7 @@ const ASSETS = [
   './assets/buttons/hub/summons.svg',
   './assets/buttons/hub/versus.svg',
   './assets/buttons/modes/dex.svg',
+  './assets/buttons/modes/gear.svg',
   './assets/buttons/modes/mats.svg',
   './assets/buttons/modes/pets.svg',
   './assets/buttons/modes/skills.svg',

@@ -250,6 +250,12 @@
         <span class="hub-tile-sub">Bandana &amp; outfit unlocks</span>
         <span class="hub-tile-stat" id="hubStatStyle"></span>
       </button>
+      <button type="button" class="hub-tile hub-tile-gear" id="btnGear">
+        <span class="hub-tile-ico"><img src="assets/buttons/modes/gear.svg" alt="" width="28" height="28" decoding="async" draggable="false"></span>
+        <span class="hub-tile-title">Uitrusting</span>
+        <span class="hub-tile-sub">5 slots · pantser &amp; cosmetics</span>
+        <span class="hub-tile-stat" id="hubStatGear"></span>
+      </button>
       <button type="button" class="hub-tile hub-tile-skills" id="btnSkills">
         <span class="hub-tile-ico"><img src="assets/buttons/modes/skills.svg" alt="" width="28" height="28" decoding="async" draggable="false"></span>
         <span class="hub-tile-title">Skills</span>
@@ -423,6 +429,16 @@
   <div class="subtitle" id="styleScreenSub">Outfits met bonus — level, training, monsterboek · hover voor tooltip</div>
   <div id="styleSummary" class="statbar" style="display:none"></div>
   <div class="style-grid" id="styleGrid"></div>
+  <div class="sub-home-bar"><button type="button" class="btn mode-btn b-gray big-touch sub-home-btn" data-back-home><span class="ico"><img src="assets/buttons/chrome/home.svg" alt="" width="28" height="28" decoding="async" draggable="false"></span><span class="sub-home-label">Terug naar menu</span></button></div>
+</div>
+
+<div id="gearScreen" class="screen">
+  <button class="btn back-btn" data-back><img class="back-btn-ico" src="assets/buttons/chrome/back.svg" alt="" width="18" height="18" decoding="async" draggable="false"> Terug</button>
+  <h2 class="head" id="gearScreenHead">Uitrusting</h2>
+  <div class="subtitle" id="gearScreenSub">5 slots · pantser &amp; cosmetics · level + tijd-gate</div>
+  <div id="gearSummary" class="statbar" style="display:none"></div>
+  <div id="gearSlotRow" class="gear-slot-row" role="tablist" aria-label="Gear slots"></div>
+  <div id="gearList" class="gear-list" data-scroll-reset></div>
   <div class="sub-home-bar"><button type="button" class="btn mode-btn b-gray big-touch sub-home-btn" data-back-home><span class="ico"><img src="assets/buttons/chrome/home.svg" alt="" width="28" height="28" decoding="async" draggable="false"></span><span class="sub-home-label">Terug naar menu</span></button></div>
 </div>
 

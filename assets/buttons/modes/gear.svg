@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
+     stroke="#e8f0ff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+     aria-hidden="true">
+  <!-- Uitrusting: helm + borstplaat -->
+  <path d="M7 10.2c0-3.1 2.2-5.2 5-5.2s5 2.1 5 5.2v1.4H7z" fill="rgba(232,240,255,.12)"/>
+  <path d="M8.2 13.4h7.6v5.2c0 .7-.6 1.3-1.3 1.3H9.5c-.7 0-1.3-.6-1.3-1.3z" fill="rgba(255,215,94,.16)" stroke="#ffd75e"/>
+  <path d="M9.2 9.4h5.6"/>
+</svg>

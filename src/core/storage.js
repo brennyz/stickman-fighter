@@ -35,6 +35,10 @@ const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', petCoins: 0,
   /** auto | classic | jungle | halloween | winter | summer — CSS overlay pref */
   seasonPref: 'auto',
   playerTag: '', lastPlay: null, tipsSeen: {},
+  /** Epoch ms — set once in sanitizeSave. Time gates use account age from this. */
+  createdAt: 0,
+  /** 5-slot loadout — see src/data/gear.js + docs/GEAR-SYSTEM.md */
+  gear: { schema: 1, equipped: { head: null, chest: null, hands: null, legs: null, back: null }, owned: {} },
   stats: { kills: 0, advWins: 0, wallBestRun: 0, maxCombo: 0, maxKillStreak: 0, trainMaxCombo: 0, pickups: 0, bossKills: 0, vsMatches: 0, vsWins: 0, matsCoinBest: 0, summonCount: 0, killsSinceSummon: 0, petsTamed: 0, eggsHatched: 0, weaponFinishers: 0, tideBattleWins: 0, skillShards: 0, itemShards: 0, dailyBonusCount: 0, dailyStreak: 0, dailyStreakBest: 0, lastDayBonusDate: null },
   fomo: { ritualSeenDate: null, lastOpenDate: null, lastComebackDate: null, dailyShardDate: null, arcadeStampDate: null, sneakWeekKey: null, sneakCleared: false, starChestWeekKey: null, featureIds: null },
   achievements: {}, daily: null, vsPlayedIds: [], weaponMastery: {}, skillUpgrades: {}, itemUpgrades: {}, activeTechnique: 'spiral_orb', skill: 'spiral_orb', super: 'ketsbam', missionsIntroSeen: false };
@@ -991,6 +995,16 @@ function readSaveJson(raw) {
     merged.zoneWeapons = Object.assign({}, parsed.zoneWeapons || {});
     merged.chestWeapons = Object.assign({}, parsed.chestWeapons || {});
     if (parsed.chestDaily && typeof parsed.chestDaily === 'object') merged.chestDaily = Object.assign({}, parsed.chestDaily);
+    {
+      const emptyEq = { head: null, chest: null, hands: null, legs: null, back: null };
+      const gIn = (parsed.gear && typeof parsed.gear === 'object') ? parsed.gear : {};
+      merged.gear = {
+        schema: 1,
+        equipped: Object.assign({}, emptyEq, (gIn.equipped && typeof gIn.equipped === 'object') ? gIn.equipped : {}),
+        owned: Object.assign({}, (gIn.owned && typeof gIn.owned === 'object') ? gIn.owned : {}),
+      };
+      if (parsed.createdAt != null) merged.createdAt = parsed.createdAt;
+    }
     merged.advCleared = Object.assign(
       { normal: false, nightmare: false, hell: false },
       (parsed.advCleared && typeof parsed.advCleared === 'object') ? parsed.advCleared : {}
@@ -1250,6 +1264,9 @@ function saveHasProgress(s) {
   if (Object.keys(st.achievements || {}).length > 0) return true;
   if (Object.keys(st.summons || {}).length > 0) return true;
   if (Object.keys(st.pets || {}).length > 0) return true;
+  const gearOwned = st.gear && st.gear.owned && typeof st.gear.owned === 'object'
+    ? Object.keys(st.gear.owned).length : 0;
+  if (gearOwned > 5) return true;
   return false;
 }
 
@@ -1704,6 +1721,27 @@ function sanitizeSave(s) {
     out.lang = null;
   }
   out.playerTag = sanitizePlayerTag(out.playerTag);
+
+  {
+    const gearNow = Date.now();
+    try {
+      out.createdAt = typeof sanitizeCreatedAt === 'function'
+        ? sanitizeCreatedAt(out.createdAt, out, gearNow)
+        : (Number(out.createdAt) > 1e11 ? Math.floor(Number(out.createdAt)) : gearNow);
+    } catch (_) {
+      out.createdAt = gearNow;
+    }
+    try {
+      if (typeof sanitizeGearSave === 'function') {
+        out.gear = sanitizeGearSave(out.gear, out, gearNow);
+        if (typeof grantStarterGear === 'function') grantStarterGear(out, gearNow);
+      } else {
+        out.gear = { schema: 1, equipped: { head: null, chest: null, hands: null, legs: null, back: null }, owned: {} };
+      }
+    } catch (_) {
+      out.gear = { schema: 1, equipped: { head: null, chest: null, hands: null, legs: null, back: null }, owned: {} };
+    }
+  }
 
   out.stats = Object.assign({}, DEFAULT_SAVE.stats, out.stats || {});
   const cleanStats = {};

@@ -147,5 +147,6 @@ function applyStyleToSpec(fighter, spec) {
     spec.r = (spec.r || 24) * Math.sqrt(m.weaponRange);
   }
   if (m.techniqueMul && spec.kind === 'special') spec.dmg = Math.round(spec.dmg * m.techniqueMul);
+  if (typeof applyGearToSpec === 'function') return applyGearToSpec(fighter, spec);
   return spec;
 }
