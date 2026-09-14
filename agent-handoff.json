@@ -799,6 +799,27 @@
       "text": "BUILDINGS SYSTEMS (1 of 4): catalog of exactly 5 quirky factories (Stick-Lighter, Woodchip-Glue, Chipping-Wood, Bamboo-Boesa Boiler, Echo-Whistle Mill). Data model + save + unlock-by-world + upgrade helpers + docs/BUILDINGS.md. Android-first, no Versus, draft PR, DO NOT merge main (mega-merge batch).",
       "status": "done-in-code",
       "updated": "2026-09-14"
+    },
+    {
+      "id": "w-20260914T172600",
+      "from": "user",
+      "text": "Systems PR READY #292 — wire pixel art to stick_lighter, woodchip_glue, chipping_wood, bamboo_boesa, echo_whistle. Mega-merge only.",
+      "status": "done-in-code",
+      "updated": "2026-09-14"
+    },
+    {
+      "id": "w-20260914T172200",
+      "from": "user",
+      "text": "Locked building art ids/names: stick_lighter, woodchip_glue, chipping_wood, bamboo_boesa_boiler, echo_whistle_mill — quirky factories, not generic sawmill/forge.",
+      "status": "done-in-code",
+      "updated": "2026-09-14"
+    },
+    {
+      "id": "w-20260914T171300",
+      "from": "user",
+      "text": "BUILDINGS PIXEL ART (3 of 4). Mega-merge batch — DO NOT merge to main. Pixel art for 5 quirky factories: Stick-Lighter, Woodchip-Glue, Chipping-Wood, Bamboo-Boesa Boiler, Echo-Whistle Mill. Stickman-pixel style, small files, icons for HOME tile + building cards. Wire to buildingIds from systems docs. Success: assets + wire map; draft PR with previews.",
+      "status": "done-in-code",
+      "updated": "2026-09-14"
     }
   ],
   "agentRules": [

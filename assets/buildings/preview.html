@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="nl"><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Stickman Fighter — building pixels</title>
+<style>
+  html,body{margin:0;background:#0e1424;color:#e8f0ff;font-family:system-ui,sans-serif}
+  body{padding:24px 20px 40px}
+  h1{font-family:Georgia,serif;color:#ffd75e;font-size:24px;margin:0 0 4px}
+  .sub{opacity:.7;margin:0 0 18px;font-size:13px}
+  h2{font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:#9db1e3;margin:22px 0 10px}
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:14px}
+  figure{margin:0;display:flex;flex-direction:column;align-items:center;gap:8px}
+  .zoom{width:112px;height:112px;border-radius:16px;background:linear-gradient(180deg,#2a3348,#1a2030);
+    box-shadow:0 6px 0 #0a0d18, inset 0 0 0 1px rgba(255,255,255,.08);
+    display:flex;align-items:center;justify-content:center;image-rendering:pixelated}
+  .zoom img{width:96px;height:96px;image-rendering:pixelated}
+  figcaption{font-size:12px;font-weight:700;text-align:center}
+  figcaption small{display:block;font-weight:600;opacity:.6;margin-top:2px}
+  .hub{background:linear-gradient(180deg,#3a3040,#1a2030)}
+</style>
+</head><body>
+<h1>Fabrieken — stickman pixel</h1>
+<p class="sub">Locked ids (#292): stick_lighter · woodchip_glue · chipping_wood · bamboo_boesa · echo_whistle · not the share URL</p>
+<h2>HOME tile</h2>
+<div class="grid">
+<figure data-id="buildings">
+  <div class="zoom hub"><img src="hub-buildings.svg" alt="Buildings" width="96" height="96"></div>
+  <figcaption>Buildings<small>buildings · hub pixel</small></figcaption>
+</figure>
+<figure data-id="buildings-stroke">
+  <div class="zoom hub"><img src="../buttons/hub/buildings.svg" alt="Buildings stroke" width="48" height="48"></div>
+  <figcaption>HOME stroke<small>assets/buttons/hub/buildings.svg</small></figcaption>
+</figure>
+</div>
+<h2>Building cards (5 factories)</h2>
+<div class="grid">
+<figure data-id="stick_lighter">
+  <div class="zoom"><img src="stick_lighter.svg" alt="Stick-Lighter Factory" width="96" height="96"></div>
+  <figcaption>Stick-Lighter Factory<small>stick_lighter</small></figcaption>
+</figure>
+<figure data-id="woodchip_glue">
+  <div class="zoom"><img src="woodchip_glue.svg" alt="Woodchip-Glue Factory" width="96" height="96"></div>
+  <figcaption>Woodchip-Glue Factory<small>woodchip_glue</small></figcaption>
+</figure>
+<figure data-id="chipping_wood">
+  <div class="zoom"><img src="chipping_wood.svg" alt="Chipping-Wood Factory" width="96" height="96"></div>
+  <figcaption>Chipping-Wood Factory<small>chipping_wood</small></figcaption>
+</figure>
+<figure data-id="bamboo_boesa">
+  <div class="zoom"><img src="bamboo_boesa.svg" alt="Bamboo-Boesa Boiler" width="96" height="96"></div>
+  <figcaption>Bamboo-Boesa Boiler<small>bamboo_boesa</small></figcaption>
+</figure>
+<figure data-id="echo_whistle">
+  <div class="zoom"><img src="echo_whistle.svg" alt="Echo-Whistle Mill" width="96" height="96"></div>
+  <figcaption>Echo-Whistle Mill<small>echo_whistle</small></figcaption>
+</figure></div>
+</body></html>
