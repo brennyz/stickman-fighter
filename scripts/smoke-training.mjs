@@ -103,6 +103,9 @@ async function run() {
         g.player.hurtT = 0;
         g.player.invulnT = 0;
         g.player.alive = true;
+        g.freezeT = 0;
+        g.shakeT = 0;
+        if (typeof W === 'number' && W > 0) g.robot.x = W * 0.75;
         g.robot.y = g.ground;
         g.robot.vy = 0;
         g.robot.vx = 0;
@@ -125,7 +128,10 @@ async function run() {
         }
         const hp0 = g.robot.hp;
         g.player.startAttack(kind, g);
-        for (let i = 0; i < 28; i++) g.update(1 / 60);
+        for (let i = 0; i < 40; i++) {
+          g.freezeT = 0;
+          g.update(1 / 60);
+        }
         if (typeof Input !== 'undefined' && Input.keys) {
           Input.keys.w = false;
           Input.keys.arrowup = false;
