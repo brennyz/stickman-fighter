@@ -33,6 +33,15 @@ function drawPickupIcon(c, kind, x, y, tint) {
       if (a === 0) c.moveTo(sx, sy); else c.lineTo(sx, sy);
     }
     c.stroke();
+  } else if (kind === 'gear') {
+    const fill = tint || '#c792ff';
+    c.fillStyle = fill;
+    c.fillRect(-6, -7, 12, 14);
+    c.strokeStyle = '#0a0d18';
+    c.lineWidth = 1.6;
+    c.strokeRect(-6, -7, 12, 14);
+    c.fillStyle = '#0a0d18';
+    c.fillRect(-3, -3, 6, 4);
   } else if (kind === 'skill_shard' || kind === 'item_shard') {
     const fill = tint || (kind === 'item_shard' ? '#c792ff' : '#ffd75e');
     c.fillStyle = fill;

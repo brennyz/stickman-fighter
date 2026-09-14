@@ -323,13 +323,18 @@ const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const VERSION_UPDATE_SAVE_KEY = 'stickfighter_version_update_save_v1';
 const VERSION_UPDATE_FLAG_KEY = 'stickfighter_version_update_flag_v1';
 const SAVE_EXPORT_SCHEMA = 3;
-const APP_VERSION = '1.18.163';
+const APP_VERSION = '1.18.164';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 373;
+const SW_CACHE_REV = 374;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', petCoins: 0, dex: {}, summons: {}, pets: {}, activePet: null,
   eggPets: {}, activeEggPet: null, eggDaily: null,
   chestDaily: null, chestWeapons: {},
   zoneWeapons: {},
+  createdAt: 0,
+  /** Gear-systems schema (bc-e509fd59). World drops write owned[{id}]={at,src}. */
+  gear: { schema: 1, equipped: { head: null, chest: null, hands: null, legs: null, back: null }, owned: {} },
+  ownedGear: {},
+  equipment: {},
   advIsland: 0, advFails: {}, advMasterBuff: null, advSatanAt: {},
   /** Normal / Nightmare / Hell — Epic Seven-stijl endgame tiers */
   advDiff: 'normal',
@@ -345,7 +350,7 @@ const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', petCoins: 0,
   /** Keyboard legend on PC / when pads off (default on) */
   kbLegend: true,
   reducedMotion: false, liteFx: false, highContrast: false, lang: null, playerTag: '', lastPlay: null, tipsSeen: {},
-  stats: { kills: 0, advWins: 0, wallBestRun: 0, maxCombo: 0, maxKillStreak: 0, trainMaxCombo: 0, pickups: 0, bossKills: 0, vsMatches: 0, vsWins: 0, matsCoinBest: 0, summonCount: 0, killsSinceSummon: 0, petsTamed: 0, eggsHatched: 0, weaponFinishers: 0, tideBattleWins: 0, skillShards: 0, itemShards: 0, dailyBonusCount: 0 },
+  stats: { kills: 0, advWins: 0, wallBestRun: 0, maxCombo: 0, maxKillStreak: 0, trainMaxCombo: 0, pickups: 0, bossKills: 0, vsMatches: 0, vsWins: 0, matsCoinBest: 0, summonCount: 0, killsSinceSummon: 0, petsTamed: 0, eggsHatched: 0, weaponFinishers: 0, tideBattleWins: 0, skillShards: 0, itemShards: 0, dailyBonusCount: 0, playSec: 0 },
   achievements: {}, daily: null, vsPlayedIds: [], weaponMastery: {}, skillUpgrades: {}, itemUpgrades: {}, activeTechnique: 'spiral_orb', skill: 'spiral_orb', super: 'ketsbam', missionsIntroSeen: false };
 
 const MAX_LEVEL = 70;
@@ -1426,6 +1431,7 @@ function saveHasProgress(s) {
   if (Object.keys(st.achievements || {}).length > 0) return true;
   if (Object.keys(st.summons || {}).length > 0) return true;
   if (Object.keys(st.pets || {}).length > 0) return true;
+  if (st.gear && st.gear.owned && Object.keys(st.gear.owned).length > 0) return true;
   return false;
 }
 
@@ -1706,6 +1712,45 @@ function sanitizeSave(s) {
   }
   out.zoneWeapons = cleanZone;
 
+  const gearNow = Date.now();
+  if (out.ownedGear && typeof out.ownedGear === 'object' && !Array.isArray(out.ownedGear)) {
+    if (!out.gear || typeof out.gear !== 'object' || Array.isArray(out.gear)) {
+      out.gear = { schema: 1, equipped: {}, owned: {} };
+    }
+    if (!out.gear.owned || typeof out.gear.owned !== 'object') out.gear.owned = {};
+    for (const [k, v] of Object.entries(out.ownedGear)) {
+      const id = typeof gearCanonItemId === 'function' ? gearCanonItemId((v && v.gearId) || k) : ((v && v.gearId) || k);
+      if (!id || out.gear.owned[id]) continue;
+      const at = (v && typeof v === 'object' && v.at) ? v.at : gearNow;
+      out.gear.owned[id] = { at: Math.floor(Number(at) || gearNow), src: 'drop' };
+    }
+  }
+  if (typeof sanitizeCreatedAt === 'function') {
+    out.createdAt = sanitizeCreatedAt(out.createdAt, out, gearNow);
+  } else if (!out.createdAt || !Number.isFinite(Number(out.createdAt))) {
+    const veteran = (out.lvl >= 5) || ((out.stats && out.stats.kills) >= 20) || saveHasProgress(out);
+    out.createdAt = Date.now() - (veteran ? 90 : 0) * 86400000;
+  } else {
+    out.createdAt = Math.floor(Number(out.createdAt));
+  }
+  if (typeof sanitizeGearSave === 'function') {
+    out.gear = sanitizeGearSave(out.gear, out, gearNow);
+    if (typeof grantStarterGear === 'function') grantStarterGear(out, gearNow);
+  } else if (typeof mergeLegacyGearOwned === 'function') {
+    mergeLegacyGearOwned(out);
+  } else {
+    out.gear = { schema: 1, equipped: { head: null, chest: null, hands: null, legs: null, back: null }, owned: {} };
+  }
+  const ownedGearMirror = {};
+  if (out.gear && out.gear.owned && typeof out.gear.owned === 'object') {
+    for (const [id, row] of Object.entries(out.gear.owned)) {
+      ownedGearMirror[id] = { gearId: id, at: (row && row.at) || 0 };
+    }
+  }
+  out.ownedGear = ownedGearMirror;
+  out.equipment = (out.equipment && typeof out.equipment === 'object') ? out.equipment : {};
+  delete out.gearOwned;
+
   out.chestWeapons = typeof sanitizeChestWeapons === 'function'
     ? sanitizeChestWeapons(out.chestWeapons)
     : {};
@@ -1939,6 +1984,7 @@ const PICKUP_META = {
   shield: { color: '#9fd8ff', label: 'SCHILD' },
   skill_shard: { color: '#ffd75e', label: 'SKILL' },
   item_shard: { color: '#c792ff', label: 'ITEM' },
+  gear: { color: '#c792ff', label: 'GEAR' },
 };
 
 /* --- src/i18n/i18n.js --- */
@@ -2903,6 +2949,15 @@ function drawPickupIcon(c, kind, x, y, tint) {
       if (a === 0) c.moveTo(sx, sy); else c.lineTo(sx, sy);
     }
     c.stroke();
+  } else if (kind === 'gear') {
+    const fill = tint || '#c792ff';
+    c.fillStyle = fill;
+    c.fillRect(-6, -7, 12, 14);
+    c.strokeStyle = '#0a0d18';
+    c.lineWidth = 1.6;
+    c.strokeRect(-6, -7, 12, 14);
+    c.fillStyle = '#0a0d18';
+    c.fillRect(-3, -3, 6, 4);
   } else if (kind === 'skill_shard' || kind === 'item_shard') {
     const fill = tint || (kind === 'item_shard' ? '#c792ff' : '#ffd75e');
     c.fillStyle = fill;
@@ -3731,6 +3786,7 @@ function createRunLoot() {
     hpBonus: 0,
     levelUps: 0,
     weapons: [],
+    gear: [],
     finishers: 0,
   };
 }
@@ -3777,10 +3833,17 @@ function noteRunLootWeapon(loot, weaponId) {
   if (!loot.weapons.includes(weaponId)) loot.weapons.push(weaponId);
 }
 
+function noteRunLootGear(loot, gearId) {
+  if (!loot || !gearId) return;
+  if (!loot.gear) loot.gear = [];
+  if (!loot.gear.includes(gearId)) loot.gear.push(gearId);
+}
+
 function runLootHasItems(loot) {
   if (!loot) return false;
   if (loot.summons.length || loot.dex.length || loot.pets.length || loot.eggs.length) return true;
   if (loot.petCoins > 0 || loot.hpBonus > 0 || loot.levelUps > 0 || loot.weapons.length) return true;
+  if (loot.gear && loot.gear.length) return true;
   if (loot.finishers > 0) return true;
   const pk = loot.pickups || {};
   return (pk.heal || 0) + (pk.rage || 0) + (pk.energy || 0) + (pk.shield || 0) > 0;
@@ -3799,6 +3862,7 @@ function runLootSummaryShort(loot) {
   if (loot.finishers) parts.push(`③${loot.finishers}`);
   if (loot.levelUps) parts.push(`↑${loot.levelUps}`);
   if (loot.weapons && loot.weapons.length) parts.push(`⚔${loot.weapons.length}`);
+  if (loot.gear && loot.gear.length) parts.push(`G${loot.gear.length}`);
   if (loot.petCoins) parts.push(`PC${loot.petCoins}`);
   return parts.join(' · ');
 }
@@ -3846,6 +3910,13 @@ function formatRunLootHtml(loot, mode) {
     }
   }
   if (loot.petCoins) push('PC', t('runLoot.petCoinsLine', { n: loot.petCoins }), '#ffd75e');
+  if (loot.gear && loot.gear.length) {
+    for (const gid of loot.gear) {
+      const name = typeof gearLabel === 'function' ? gearLabel(gid) : gid;
+      const col = typeof gearAccent === 'function' ? gearAccent(gearById(gid)) : '#c792ff';
+      push('G', t('runLoot.gearLine', { name }), col);
+    }
+  }
   if (!rows.length) return '';
   const head = mode === 'adventure' ? t('runLoot.headAdv') : t('runLoot.head');
   return `<div class="run-loot-head">${escRunLootHtml(head)}</div><div class="run-loot-lines">${rows.join('')}</div>`;
@@ -6349,6 +6420,1496 @@ function tickWeaponStatusEffects(game, dt) {
       if (q.left <= 0) game._wpnFlutterQueue.splice(i, 1);
     }
   }
+}
+/* --- src/data/gear.js --- */
+/* ============================== GEAR LOADOUT =========================== */
+/**
+ * Stickman character loadout — systems API (stable IDs for the gear-UI lane).
+ *
+ * Slots (5): head · chest · hands · legs · back
+ * Save bag (schema 1): { schema, equipped:{slot:id|null}, owned:{id:{at,src}} }
+ * Legacy: slot `charm` and `charm_*` ids migrate → `back` / `back_*`.
+ *
+ * Flags (explicit, never infer from kind alone):
+ *   vanity   — true  → combat MUST ignore mods
+ *   hasStats — true  → may carry combat mods
+ * Rule: gearItemHasCombatStats === hasStats && !vanity && mods
+ *
+ * MOST cosmetics are vanity. SOME cosmetics have stats. Armour has stats.
+ * Every lootable item has BOTH unlockLvl (save.lvl) AND unlockDays (account age).
+ *
+ * World-drop lane (this PR, sibling src/data/gear-world.js):
+ *   grant is can-own-locked (gates not re-checked); rolls use lootable / allowLocked.
+ *   rollGearDrop is implemented here so systems + spawners share one picker.
+ */
+const GEAR_SCHEMA = 1;
+const GEAR_MS_PER_DAY = 86400000;
+const GEAR_CREATED_MIN_MS = 1704067200000; /* 2024-01-01 */
+const GEAR_VETERAN_BACKDATE_DAYS = 90;
+const GEAR_OWNED_CAP = 240;
+const GEAR_SRC_MAX = 16;
+const GEAR_SLOT_IDS = ['head', 'chest', 'hands', 'legs', 'back'];
+const GEAR_SLOT_ALIASES = { charm: 'back', accessory: 'back', aura: 'back' };
+const GEAR_ID_ALIASES = {
+  charm_pin_dot: 'back_pin_dot',
+  charm_pin_star: 'back_pin_star',
+  charm_leaf: 'back_leaf',
+  charm_aura_glow: 'back_aura_glow',
+  charm_cape_shadow: 'back_cape_shadow',
+  charm_void: 'back_void',
+  g_head_cloth: 'head_wrap_cloth',
+  g_body_iron: 'chest_plate_iron',
+  g_hands_tape: 'hands_gloves_tape',
+  g_feet_wraps: 'legs_wrap',
+  g_cosmetic_shadowcloak: 'back_cape_shadow',
+};
+const GEAR_SLOTS = [
+  { id: 'head',  name: 'Hoofd',  nameEn: 'Head',  kindHint: 'armour',   accent: '#7cf5ff' },
+  { id: 'chest', name: 'Borst',  nameEn: 'Chest', kindHint: 'armour',   accent: '#ffd75e' },
+  { id: 'hands', name: 'Handen', nameEn: 'Hands', kindHint: 'armour',   accent: '#5ad06a' },
+  { id: 'legs',  name: 'Benen',  nameEn: 'Legs',  kindHint: 'armour',   accent: '#c47aff' },
+  { id: 'back',  name: 'Rug',    nameEn: 'Back',  kindHint: 'cosmetic', accent: '#ff6b9d' },
+];
+const GEAR_KINDS = ['armour', 'cosmetic'];
+const GEAR_MOD_KEYS = [
+  'maxHp', 'dmgMul', 'defMul', 'energyMul', 'critBonus', 'kbMul',
+  'techniqueMul', 'shieldWave', 'blockMul', 'xpMul', 'speedMul',
+  'weaponRange', 'advDmgMul',
+];
+const GEAR_BALANCE = {
+  schema: 1,
+  maxHpCap: 24,
+  dmgMulCap: 1.12,
+  defMulFloor: 0.88,
+  energyMulCap: 1.10,
+  critBonusCap: 0.06,
+  kbMulCap: 1.10,
+  techniqueMulCap: 1.10,
+  shieldWaveCap: 1.2,
+  blockMulFloor: 0.80,
+  xpMulCap: 1.08,
+  speedMulCap: 1.08,
+  weaponRangeCap: 1.08,
+  advDmgMulCap: 1.10,
+};
+const GEAR_RARITY_LOOK = {
+  common:    ['#c8d0dc', '#9db1e3'],
+  uncommon:  ['#8fd98a', '#2d6b36'],
+  rare:      ['#7eb6ff', '#2a7fc0'],
+  epic:      ['#c792ff', '#6b3aa0'],
+  legendary: ['#ffd75e', '#c97a20'],
+  mythic:    ['#ff6b9d', '#8a2048'],
+  nightmare: ['#c47aff', '#4a2068'],
+  hell:      ['#ff6a3d', '#8a2010'],
+};
+
+function emptyGearEquipped() {
+  const o = {};
+  for (const id of GEAR_SLOT_IDS) o[id] = null;
+  return o;
+}
+function emptyGearBag() {
+  return { schema: GEAR_SCHEMA, equipped: emptyGearEquipped(), owned: {} };
+}
+function gearSlotById(id) {
+  const canon = GEAR_SLOT_ALIASES[id] || id;
+  return GEAR_SLOTS.find((s) => s.id === canon) || null;
+}
+function gearCanonSlot(id) {
+  if (GEAR_SLOT_IDS.includes(id)) return id;
+  return GEAR_SLOT_ALIASES[id] || null;
+}
+function gearCanonItemId(id) {
+  if (typeof id !== 'string') return '';
+  const trimmed = id.slice(0, 48);
+  return GEAR_ID_ALIASES[trimmed] || trimmed;
+}
+
+function _gearLook(tint, accent, layer) {
+  return { tint: tint || '#c8d0dc', accent: accent || tint || '#9db1e3', layer: layer || 'body' };
+}
+
+function _gearItem(def) {
+  const vanity = def.vanity === true;
+  const rawMods = (!vanity && def.mods && typeof def.mods === 'object' && !Array.isArray(def.mods))
+    ? def.mods : null;
+  const mods = rawMods ? {} : null;
+  if (rawMods) {
+    for (const k of GEAR_MOD_KEYS) {
+      if (rawMods[k] == null) continue;
+      const n = Number(rawMods[k]);
+      if (Number.isFinite(n)) mods[k] = n;
+    }
+    if (!Object.keys(mods).length) {
+      /* empty after strip */
+    }
+  }
+  const hasModKeys = !!(mods && Object.keys(mods).length);
+  const hasStats = vanity ? false : (def.hasStats === true || hasModKeys);
+  const rar = (def.rarity && GEAR_RARITY_LOOK[def.rarity]) ? def.rarity : 'common';
+  const tintPair = GEAR_RARITY_LOOK[rar];
+  return {
+    id: def.id,
+    slot: def.slot,
+    kind: def.kind === 'armour' ? 'armour' : 'cosmetic',
+    name: def.name,
+    nameEn: def.nameEn || def.name,
+    desc: def.desc || '',
+    descEn: def.descEn || def.desc || '',
+    rarity: rar,
+    vanity,
+    hasStats: hasStats && hasModKeys,
+    mods: hasStats && hasModKeys ? mods : null,
+    unlockLvl: Math.max(1, Math.floor(Number(def.unlockLvl) || 1)),
+    unlockDays: Math.max(1, Math.floor(Number(def.unlockDays) || 1)),
+    needAdvUnlocked: def.needAdvUnlocked != null ? Math.max(1, Math.floor(Number(def.needAdvUnlocked) || 1)) : null,
+    needDiff: def.needDiff === 'nightmare' || def.needDiff === 'hell' ? def.needDiff : null,
+    starter: def.starter === true,
+    droppable: def.droppable !== false && def.starter !== true,
+    look: def.look || _gearLook(tintPair[0], tintPair[1], def.slot),
+  };
+}
+
+/** flags: v=vanity, s=hasStats, 1=starter. kind a=armour c=cosmetic */
+function _g(slot, suffix, kind, flags, rar, lvl, days, name, nameEn, desc, descEn, mods, extra) {
+  extra = extra || {};
+  const vanity = flags.indexOf('v') !== -1;
+  return _gearItem({
+    id: slot + '_' + suffix,
+    slot,
+    kind: kind === 'a' ? 'armour' : 'cosmetic',
+    vanity,
+    hasStats: !vanity && (flags.indexOf('s') !== -1 || !!(mods && Object.keys(mods).length)),
+    rarity: rar,
+    unlockLvl: lvl,
+    unlockDays: days,
+    name,
+    nameEn,
+    desc,
+    descEn,
+    mods: vanity ? null : mods,
+    starter: flags.indexOf('1') !== -1,
+    needAdvUnlocked: extra.adv,
+    needDiff: extra.diff,
+    look: extra.look,
+  });
+}
+
+const GEAR_ITEMS = [
+  /* ════════ HEAD ════════ */
+  _g('head', 'wrap_cloth', 'c', 'v1', 'common', 1, 1, 'Linnen wrap', 'Linen wrap', 'Eenvoudige hoofddoek. Alleen look.', 'Simple head wrap. Look only.'),
+  _g('head', 'bandana_blue', 'c', 'v', 'common', 2, 2, 'Blauwe bandana', 'Blue bandana', 'Katoenen doek. Geen stats.', 'Cotton wrap. No stats.'),
+  _g('head', 'beanie_wool', 'c', 'v', 'common', 4, 2, 'Wollen muts', 'Wool beanie', 'Warm en nutteloos in gevecht.', 'Warm and useless in a fight.'),
+  _g('head', 'hat_paper', 'c', 'v', 'uncommon', 5, 3, 'Papieren hoed', 'Paper hat', 'Feestmuts. Geen stats.', 'Party hat. No stats.'),
+  _g('head', 'crown_cardboard', 'c', 'v', 'uncommon', 7, 4, 'Kartonnen kroon', 'Cardboard crown', 'Koning voor één dag.', 'King for a day.'),
+  _g('head', 'mask_fox', 'c', 'v', 'uncommon', 9, 5, 'Vossenmasker', 'Fox mask', 'Oranje karton. Alleen look.', 'Orange cardboard. Look only.'),
+  _g('head', 'horns_foam', 'c', 'v', 'uncommon', 11, 5, 'Foam-hoorns', 'Foam horns', 'Feestwinkel-duivel.', 'Party-store devil.'),
+  _g('head', 'hat_chef', 'c', 'v', 'rare', 13, 6, 'Koksmuts', 'Chef hat', 'Quiche, geen crits.', 'Quiche, not crits.'),
+  _g('head', 'hood_rain', 'c', 'v', 'rare', 15, 7, 'Regenhood', 'Rain hood', 'Natte look. Geen stats.', 'Wet look. No stats.'),
+  _g('head', 'helm_pumpkin', 'c', 'v', 'rare', 17, 8, 'Pompoenhelm', 'Pumpkin helm', 'Halloween-emmer op je kop.', 'Halloween bucket on your head.'),
+  _g('head', 'halo_wire', 'c', 'v', 'epic', 22, 11, 'Draad-halo', 'Wire halo', 'Heilige knutsel. Geen zegen.', 'Holy craft. No blessing.'),
+  _g('head', 'visor_toy', 'c', 'v', 'epic', 26, 13, 'Speelgoed-visor', 'Toy visor', 'Plastic sci-fi. Alleen look.', 'Plastic sci-fi. Look only.'),
+  _g('head', 'hood_void_paint', 'c', 'v', 'legendary', 34, 18, 'Void-hood (verf)', 'Void hood (paint)', 'Zwarte verf. Geen leegte-kracht.', 'Black paint. No void power.'),
+  _g('head', 'mask_dream', 'c', 'v', 'nightmare', 53, 30, 'Droommasker', 'Dream mask', 'Nachtmerrie-look. Geen stats.', 'Nightmare look. No stats.', null, { adv: 51, diff: 'nightmare' }),
+  _g('head', 'horns_sulfur', 'c', 'v', 'hell', 63, 40, 'Zwavelhoorns', 'Sulfur horns', 'Hel-look. Geen brand.', 'Hell look. No burn.', null, { adv: 61, diff: 'hell' }),
+  _g('head', 'visor_neon', 'c', 's', 'rare', 18, 8, 'Neon-visor', 'Neon visor', 'Cosmetisch visier mét energy.', 'Cosmetic visor that also boosts energy.', { energyMul: 1.03 }),
+  _g('head', 'circlet_focus', 'c', 's', 'epic', 28, 14, 'Focus-cirkel', 'Focus circlet', 'Sieraad mét energy-regen.', 'Ornament that also speeds energy.', { energyMul: 1.04 }),
+  _g('head', 'helm_lucky', 'c', 's', 'legendary', 38, 20, 'Gelukshelm', 'Lucky helm', 'Cosmetische helm mét crit.', 'Cosmetic helm that also adds crit.', { critBonus: 0.02 }),
+  _g('head', 'helm_tin', 'a', 's', 'common', 3, 2, 'Tinnen helm', 'Tin helm', 'Licht blik. Kleine HP-bonus.', 'Light tin. Small HP bonus.', { maxHp: 4 }),
+  _g('head', 'helm_bronze', 'a', 's', 'uncommon', 8, 4, 'Bronzen helm', 'Bronze helm', 'Zwaarder blik. Meer HP.', 'Heavier tin. More HP.', { maxHp: 6 }),
+  _g('head', 'helm_iron', 'a', 's', 'rare', 12, 6, 'IJzeren helm', 'Iron helm', 'HP + minder chip.', 'HP + less chip.', { maxHp: 8, defMul: 0.97 }),
+  _g('head', 'helm_steel', 'a', 's', 'rare', 20, 10, 'Stalen helm', 'Steel helm', 'Stevige schedelplaat.', 'Sturdy skull plate.', { maxHp: 9, defMul: 0.96 }),
+  _g('head', 'helm_knight', 'a', 's', 'epic', 30, 15, 'Ridderhelm', 'Knight helm', 'Visier + mitigatie.', 'Visor + mitigation.', { maxHp: 10, defMul: 0.95 }),
+  _g('head', 'helm_crystal', 'a', 's', 'legendary', 42, 22, 'Kristalhelm', 'Crystal helm', 'Scherven-pantser. HP + shield.', 'Shard plate. HP + shield.', { maxHp: 8, shieldWave: 0.4 }),
+  _g('head', 'helm_void', 'a', 's', 'mythic', 48, 28, 'Void-helm', 'Void helm', 'Technique-focus + HP.', 'Technique focus + HP.', { maxHp: 6, techniqueMul: 1.03 }),
+  _g('head', 'helm_nightmare', 'a', 's', 'nightmare', 55, 32, 'Nachtmerrie-helm', 'Nightmare helm', 'Droomplaat. HP + crit.', 'Dream plate. HP + crit.', { maxHp: 8, critBonus: 0.02 }, { adv: 51, diff: 'nightmare' }),
+  _g('head', 'helm_hell', 'a', 's', 'hell', 65, 42, 'Hel-helm', 'Hell helm', 'Zwavelplaat. HP + schade.', 'Sulfur plate. HP + damage.', { maxHp: 10, dmgMul: 1.03 }, { adv: 61, diff: 'hell' }),
+
+  /* ════════ CHEST ════════ */
+  _g('chest', 'shirt_plain', 'c', 'v1', 'common', 1, 1, 'Gewoon shirt', 'Plain shirt', 'Basis-hemd. Alleen look.', 'Basic shirt. Look only.'),
+  _g('chest', 'hoodie_gray', 'c', 'v', 'common', 3, 2, 'Grijze hoodie', 'Gray hoodie', 'Zacht. Geen stats.', 'Soft. No stats.'),
+  _g('chest', 'vest_denim', 'c', 'v', 'common', 5, 3, 'Spijker-gilet', 'Denim vest', 'Jaren-90 look.', '90s look.'),
+  _g('chest', 'coat_red', 'c', 'v', 'uncommon', 8, 4, 'Rode jas', 'Red coat', 'Flair-jas. Geen combat-bonus.', 'Flair coat. No combat bonus.'),
+  _g('chest', 'gi_white', 'c', 'v', 'uncommon', 10, 5, 'Witte gi', 'White gi', 'Dojo-katoen. Alleen look.', 'Dojo cotton. Look only.'),
+  _g('chest', 'jacket_bomber', 'c', 'v', 'uncommon', 12, 6, 'Bomberjack', 'Bomber jacket', 'Oranje nylon. Geen stats.', 'Orange nylon. No stats.'),
+  _g('chest', 'tunic_leaf', 'c', 'v', 'rare', 14, 7, 'Blad-tuniek', 'Leaf tunic', 'Bos-cosplay.', 'Forest cosplay.'),
+  _g('chest', 'shirt_stripe', 'c', 'v', 'rare', 16, 8, 'Streepshirt', 'Stripe shirt', 'Scheidsrechter-look.', 'Ref look.'),
+  _g('chest', 'poncho_rain', 'c', 'v', 'rare', 19, 9, 'Regenponcho', 'Rain poncho', 'Plas-proof. Geen stats.', 'Puddle-proof. No stats.'),
+  _g('chest', 'robe_star', 'c', 'v', 'epic', 24, 12, 'Sterrenmantel', 'Star robe', 'Glitter-stof. Alleen look.', 'Glitter cloth. Look only.'),
+  _g('chest', 'capelet_gold', 'c', 'v', 'epic', 27, 14, 'Gouden schouder', 'Gold capelet', 'Bladgoud. Geen stats.', 'Gold leaf. No stats.'),
+  _g('chest', 'jacket_void_paint', 'c', 'v', 'legendary', 36, 19, 'Void-jas (verf)', 'Void jacket (paint)', 'Zwarte verf. Geen leegte.', 'Black paint. No void.'),
+  _g('chest', 'coat_dream', 'c', 'v', 'nightmare', 54, 31, 'Droomjas', 'Dream coat', 'Nachtmerrie-look. Geen stats.', 'Nightmare look. No stats.', null, { adv: 51, diff: 'nightmare' }),
+  _g('chest', 'robe_ash', 'c', 'v', 'hell', 64, 41, 'As-mantel', 'Ash robe', 'Hel-look. Geen brand.', 'Hell look. No burn.', null, { adv: 61, diff: 'hell' }),
+  _g('chest', 'vest_lucky', 'c', 's', 'uncommon', 10, 5, 'Geluksvest', 'Lucky vest', 'Cosmetisch vest mét schade.', 'Cosmetic vest that also adds damage.', { dmgMul: 1.02 }),
+  _g('chest', 'sash_energy', 'c', 's', 'rare', 21, 10, 'Energy-sjerp', 'Energy sash', 'Sjerp mét energy-regen.', 'Sash that also speeds energy.', { energyMul: 1.03 }),
+  _g('chest', 'coat_shadow_stat', 'c', 's', 'epic', 32, 16, 'Schaduwjas+', 'Shadow coat+', 'Cosmetische jas mét mitigatie.', 'Cosmetic coat that also mitigates.', { defMul: 0.97 }),
+  _g('chest', 'vest_padded', 'a', 's', 'common', 4, 2, 'Gewatteerd vest', 'Padded vest', 'Zacht pantser. Extra max HP.', 'Soft armour. Extra max HP.', { maxHp: 6 }),
+  _g('chest', 'mail_copper', 'a', 's', 'uncommon', 9, 4, 'Koperen maliën', 'Copper mail', 'Rinkelend HP.', 'Jingly HP.', { maxHp: 7 }),
+  _g('chest', 'plate_iron', 'a', 's', 'rare', 16, 8, 'IJzeren plaat', 'Iron plate', 'Echt pantser. HP + mitigatie.', 'Real plate. HP + mitigation.', { maxHp: 10, defMul: 0.95 }),
+  _g('chest', 'cuirass_steel', 'a', 's', 'rare', 22, 11, 'Stalen kuras', 'Steel cuirass', 'Zwaarder. Meer HP.', 'Heavier. More HP.', { maxHp: 11, defMul: 0.95 }),
+  _g('chest', 'plate_knight', 'a', 's', 'epic', 31, 15, 'Ridderplaat', 'Knight plate', 'Volle borst. HP + blok.', 'Full chest. HP + block.', { maxHp: 12, blockMul: 0.92 }),
+  _g('chest', 'vest_crystal', 'a', 's', 'legendary', 43, 23, 'Kristalvest', 'Crystal vest', 'Scherven + shield-golf.', 'Shards + wave shield.', { maxHp: 8, shieldWave: 0.5 }),
+  _g('chest', 'plate_void', 'a', 's', 'mythic', 49, 29, 'Void-plaat', 'Void plate', 'Technique + HP.', 'Technique + HP.', { maxHp: 7, techniqueMul: 1.03 }),
+  _g('chest', 'plate_nightmare', 'a', 's', 'nightmare', 56, 33, 'Nachtmerrie-plaat', 'Nightmare plate', 'Droomkuras. HP + schade.', 'Dream cuirass. HP + damage.', { maxHp: 10, dmgMul: 1.03 }, { adv: 51, diff: 'nightmare' }),
+  _g('chest', 'plate_hell', 'a', 's', 'hell', 66, 43, 'Hel-plaat', 'Hell plate', 'Lava-kuras. HP + mitigatie.', 'Lava cuirass. HP + mitigation.', { maxHp: 12, defMul: 0.94 }, { adv: 61, diff: 'hell' }),
+
+  /* ════════ HANDS ════════ */
+  _g('hands', 'wrap', 'c', 'v1', 'common', 1, 1, 'Handwraps', 'Hand wraps', 'Tape om de vuisten. Alleen look.', 'Tape on the fists. Look only.'),
+  _g('hands', 'mittens_wool', 'c', 'v', 'common', 3, 2, 'Wollen wanten', 'Wool mittens', 'Warm. Geen stats.', 'Warm. No stats.'),
+  _g('hands', 'rings_plastic', 'c', 'v', 'common', 5, 3, 'Plastic ringen', 'Plastic rings', 'Speelgoed-bling.', 'Toy bling.'),
+  _g('hands', 'gloves_sparkle', 'c', 'v', 'uncommon', 7, 4, 'Glitter-handschoenen', 'Sparkle gloves', 'Disco-look. Geen stats.', 'Disco look. No stats.'),
+  _g('hands', 'claws_toy', 'c', 'v', 'uncommon', 9, 5, 'Speelgoed-klauwen', 'Toy claws', 'Halloween-winkel.', 'Halloween shop.'),
+  _g('hands', 'gloves_chef', 'c', 'v', 'uncommon', 11, 5, 'Ovenwanten', 'Oven mitts', 'Geen brandwonden. Geen dmg.', 'No burns. No dmg.'),
+  _g('hands', 'wraps_gold', 'c', 'v', 'rare', 14, 7, 'Gouden wraps', 'Gold wraps', 'Foil-tape. Alleen look.', 'Foil tape. Look only.'),
+  _g('hands', 'gloves_pixel', 'c', 'v', 'rare', 17, 8, 'Pixel-handschoenen', 'Pixel gloves', '8-bit look.', '8-bit look.'),
+  _g('hands', 'cuffs_bell', 'c', 'v', 'rare', 19, 9, 'Bel-manchetten', 'Bell cuffs', 'Rinkel. Geen stats.', 'Jingle. No stats.'),
+  _g('hands', 'gloves_opera', 'c', 'v', 'epic', 25, 13, 'Opera-handschoenen', 'Opera gloves', 'Lang satijn. Alleen look.', 'Long satin. Look only.'),
+  _g('hands', 'claws_void_paint', 'c', 'v', 'legendary', 35, 18, 'Void-klauwen (verf)', 'Void claws (paint)', 'Zwarte nagellak.', 'Black nail polish.'),
+  _g('hands', 'wraps_dream', 'c', 'v', 'nightmare', 54, 31, 'Droomwraps', 'Dream wraps', 'Nachtmerrie-look. Geen stats.', 'Nightmare look. No stats.', null, { adv: 51, diff: 'nightmare' }),
+  _g('hands', 'gaunt_ash_paint', 'c', 'v', 'hell', 64, 41, 'As-wanten (look)', 'Ash mitts (look)', 'Hel-look. Geen brand.', 'Hell look. No burn.', null, { adv: 61, diff: 'hell' }),
+  _g('hands', 'gloves_tape', 'a', 's', 'uncommon', 6, 3, 'Tape-handschoenen', 'Tape gloves', 'Steviger greep. Kleine schade.', 'Firmer grip. Small damage.', { dmgMul: 1.02 }),
+  _g('hands', 'bracer_focus', 'c', 's', 'rare', 14, 7, 'Focus-bracer', 'Focus bracer', 'Sieraad-bracer mét energy.', 'Ornamental bracer that also speeds energy.', { energyMul: 1.04 }),
+  _g('hands', 'wraps_monk', 'c', 's', 'epic', 29, 14, 'Monnik-wraps', 'Monk wraps', 'Cosmetisch mét technique.', 'Cosmetic wraps that also boost techniques.', { techniqueMul: 1.03 }),
+  _g('hands', 'gloves_grip', 'c', 's', 'legendary', 37, 19, 'Grip-handschoenen', 'Grip gloves', 'Cosmetisch mét schade.', 'Cosmetic gloves that also add damage.', { dmgMul: 1.02 }),
+  _g('hands', 'bracer_leather', 'a', 's', 'common', 5, 2, 'Leren bracer', 'Leather bracer', 'Licht leer. +HP.', 'Light leather. +HP.', { maxHp: 3 }),
+  _g('hands', 'gauntlet_iron', 'a', 's', 'rare', 20, 10, 'IJzeren want', 'Iron gauntlet', 'Zware hand. Meer schade.', 'Heavy hand. More damage.', { dmgMul: 1.03 }),
+  _g('hands', 'gauntlet_steel', 'a', 's', 'rare', 23, 11, 'Stalen want', 'Steel gauntlet', 'Schade + HP.', 'Damage + HP.', { dmgMul: 1.02, maxHp: 4 }),
+  _g('hands', 'fists_spike', 'a', 's', 'epic', 31, 15, 'Spike-vuisten', 'Spike fists', 'Prik. Meer schade.', 'Poke. More damage.', { dmgMul: 1.03, kbMul: 1.04 }),
+  _g('hands', 'gauntlet_crystal', 'a', 's', 'legendary', 44, 24, 'Kristal-want', 'Crystal gauntlet', 'Energy + HP.', 'Energy + HP.', { energyMul: 1.03, maxHp: 4 }),
+  _g('hands', 'gauntlet_void', 'a', 's', 'mythic', 48, 28, 'Void-want', 'Void gauntlet', 'Technique + schade.', 'Technique + damage.', { techniqueMul: 1.03, dmgMul: 1.02 }),
+  _g('hands', 'gauntlet_nightmare', 'a', 's', 'nightmare', 57, 34, 'Nachtmerrie-want', 'Nightmare gauntlet', 'Droomklauw. Schade + crit.', 'Dream claw. Damage + crit.', { dmgMul: 1.03, critBonus: 0.02 }, { adv: 51, diff: 'nightmare' }),
+  _g('hands', 'gauntlet_hell', 'a', 's', 'hell', 67, 44, 'Hel-want', 'Hell gauntlet', 'Lava-hand. Schade + kb.', 'Lava hand. Damage + knockback.', { dmgMul: 1.04, kbMul: 1.05 }, { adv: 61, diff: 'hell' }),
+
+  /* ════════ LEGS ════════ */
+  _g('legs', 'wrap', 'c', 'v1', 'common', 1, 1, 'Beenwraps', 'Leg wraps', 'Doek om de kuiten. Alleen look.', 'Cloth on the calves. Look only.'),
+  _g('legs', 'socks_plain', 'c', 'v', 'common', 2, 2, 'Witte sokken', 'White socks', 'Sport-look. Geen stats.', 'Gym look. No stats.'),
+  _g('legs', 'shorts_stripe', 'c', 'v', 'common', 4, 2, 'Streep-short', 'Stripe shorts', 'Scheidsrechter-benen.', 'Ref legs.'),
+  _g('legs', 'socks_lucky', 'c', 'v', 'uncommon', 6, 3, 'Gelukssokken', 'Lucky socks', 'Gestreepte sokken. Geen stats.', 'Striped socks. No stats.'),
+  _g('legs', 'pants_baggy', 'c', 'v', 'uncommon', 8, 4, 'Wijde broek', 'Baggy pants', 'Skate-look.', 'Skate look.'),
+  _g('legs', 'boots_clown', 'c', 'v', 'uncommon', 10, 5, 'Clownslaarzen', 'Clown boots', 'Groot en nutteloos.', 'Big and useless.'),
+  _g('legs', 'tabi_white', 'c', 'v', 'rare', 13, 6, 'Witte tabi', 'White tabi', 'Ninja-sok. Alleen look.', 'Ninja sock. Look only.'),
+  _g('legs', 'sneakers_check', 'c', 'v', 'rare', 16, 8, 'Ruit-sneakers', 'Check sneakers', 'Skate shop. Geen stats.', 'Skate shop. No stats.'),
+  _g('legs', 'wrap_gold', 'c', 'v', 'rare', 18, 9, 'Gouden beenwraps', 'Gold leg wraps', 'Foil. Alleen look.', 'Foil. Look only.'),
+  _g('legs', 'bells_ankle', 'c', 'v', 'epic', 24, 12, 'Enkelbellen', 'Ankle bells', 'Rinkel. Geen stats.', 'Jingle. No stats.'),
+  _g('legs', 'boots_platform', 'c', 'v', 'epic', 27, 14, 'Plateau-laarzen', 'Platform boots', 'Hoog. Geen speed.', 'Tall. No speed.'),
+  _g('legs', 'wraps_void_paint', 'c', 'v', 'legendary', 36, 19, 'Void-wraps (verf)', 'Void wraps (paint)', 'Zwarte verf.', 'Black paint.'),
+  _g('legs', 'socks_dream', 'c', 'v', 'nightmare', 54, 31, 'Droomsokken', 'Dream socks', 'Nachtmerrie-look. Geen stats.', 'Nightmare look. No stats.', null, { adv: 51, diff: 'nightmare' }),
+  _g('legs', 'boots_ash_paint', 'c', 'v', 'hell', 64, 41, 'As-laarzen (look)', 'Ash boots (look)', 'Hel-look. Geen brand.', 'Hell look. No burn.', null, { adv: 61, diff: 'hell' }),
+  _g('legs', 'boots_sprint', 'c', 's', 'rare', 15, 7, 'Sprint-sneakers', 'Sprint sneakers', 'Cosmetisch mét loopsnelheid.', 'Cosmetic sneakers that also add run speed.', { speedMul: 1.04 }),
+  _g('legs', 'greaves_steady', 'c', 's', 'epic', 28, 14, 'Standvast-scheen', 'Steady greaves', 'Cosmetisch mét mitigatie.', 'Cosmetic greaves that also mitigate.', { defMul: 0.97 }),
+  _g('legs', 'boots_dash', 'c', 's', 'legendary', 39, 21, 'Dash-laarzen', 'Dash boots', 'Cosmetisch mét speed + XP.', 'Cosmetic boots that also add speed + XP.', { speedMul: 1.03, xpMul: 1.02 }),
+  _g('legs', 'boots_soft', 'a', 's', 'common', 5, 2, 'Zachte laarzen', 'Soft boots', 'Lichte tred. Iets sneller.', 'Light step. A bit faster.', { speedMul: 1.03 }),
+  _g('legs', 'greaves_leather', 'a', 's', 'uncommon', 8, 4, 'Leren scheen', 'Leather greaves', 'Licht leer. +HP.', 'Light leather. +HP.', { maxHp: 4 }),
+  _g('legs', 'greaves_iron', 'a', 's', 'rare', 18, 9, 'IJzeren scheen', 'Iron greaves', 'Scheenplaat. HP + mitigatie.', 'Shin plate. HP + mitigation.', { maxHp: 5, defMul: 0.97 }),
+  _g('legs', 'boots_steel', 'a', 's', 'rare', 21, 10, 'Stalen laarzen', 'Steel boots', 'Zwaar. HP + kb.', 'Heavy. HP + knockback.', { maxHp: 5, kbMul: 1.04 }),
+  _g('legs', 'greaves_knight', 'a', 's', 'epic', 30, 15, 'Ridder-scheen', 'Knight greaves', 'HP + blok.', 'HP + block.', { maxHp: 6, blockMul: 0.93 }),
+  _g('legs', 'greaves_crystal', 'a', 's', 'legendary', 44, 24, 'Kristal-scheen', 'Crystal greaves', 'Speed + shield.', 'Speed + shield.', { speedMul: 1.03, shieldWave: 0.3 }),
+  _g('legs', 'greaves_void', 'a', 's', 'mythic', 49, 29, 'Void-scheen', 'Void greaves', 'Technique + speed.', 'Technique + speed.', { techniqueMul: 1.02, speedMul: 1.03 }),
+  _g('legs', 'greaves_nightmare', 'a', 's', 'nightmare', 58, 34, 'Nachtmerrie-scheen', 'Nightmare greaves', 'Droomplaat. Speed + crit.', 'Dream plate. Speed + crit.', { speedMul: 1.04, critBonus: 0.02 }, { adv: 51, diff: 'nightmare' }),
+  _g('legs', 'greaves_hell', 'a', 's', 'hell', 68, 45, 'Hel-scheen', 'Hell greaves', 'Lava-plaat. HP + schade.', 'Lava plate. HP + damage.', { maxHp: 6, dmgMul: 1.03 }, { adv: 61, diff: 'hell' }),
+
+  /* ════════ BACK ════════ */
+  _g('back', 'pin_dot', 'c', 'v1', 'common', 1, 1, 'Stip-pin', 'Dot pin', 'Klein speldje. Alleen look.', 'Tiny pin. Look only.'),
+  _g('back', 'pin_star', 'c', 'v', 'uncommon', 8, 4, 'Ster-pin', 'Star pin', 'Glitter-speld. Geen stats.', 'Glitter pin. No stats.'),
+  _g('back', 'backpack_school', 'c', 'v', 'common', 3, 2, 'Schooltas', 'School backpack', 'Boeken, geen pantser.', 'Books, not armour.'),
+  _g('back', 'scarf_long', 'c', 'v', 'common', 4, 2, 'Lange sjaal', 'Long scarf', 'Wappert. Geen stats.', 'Flutters. No stats.'),
+  _g('back', 'cape_red', 'c', 'v', 'uncommon', 9, 5, 'Rode cape', 'Red cape', 'Superheld-vilt.', 'Superhero felt.'),
+  _g('back', 'tail_fox', 'c', 'v', 'uncommon', 11, 5, 'Vossenstaart', 'Fox tail', 'Clip-on. Alleen look.', 'Clip-on. Look only.'),
+  _g('back', 'banner_leaf', 'c', 'v', 'rare', 14, 7, 'Bladvlag', 'Leaf banner', 'Bos-vaandel.', 'Forest banner.'),
+  _g('back', 'kite_paper', 'c', 'v', 'rare', 16, 8, 'Papieren vlieger', 'Paper kite', 'Wappert achter je.', 'Trails behind you.'),
+  _g('back', 'balloon_party', 'c', 'v', 'rare', 18, 9, 'Feestballon', 'Party balloon', 'Helium-look. Geen stats.', 'Helium look. No stats.'),
+  _g('back', 'wings_cardboard', 'c', 'v', 'epic', 23, 12, 'Kartonnen vleugels', 'Cardboard wings', 'Knutsel-engel.', 'Craft angel.'),
+  _g('back', 'aura_glow', 'c', 'v', 'rare', 20, 10, 'Gloed-aura', 'Glow aura', 'Zachte aura. Geen combat-bonus.', 'Soft aura. No combat bonus.'),
+  _g('back', 'cape_shadow', 'c', 'v', 'epic', 25, 12, 'Schaduwcape', 'Shadow cape', 'Cape-look. Geen stats.', 'Cape look. No stats.'),
+  _g('back', 'cape_void_paint', 'c', 'v', 'legendary', 36, 19, 'Void-cape (verf)', 'Void cape (paint)', 'Zwarte verf. Geen leegte.', 'Black paint. No void.'),
+  _g('back', 'wings_dream', 'c', 'v', 'nightmare', 54, 31, 'Droomvleugels', 'Dream wings', 'Nachtmerrie-look. Geen stats.', 'Nightmare look. No stats.', null, { adv: 51, diff: 'nightmare' }),
+  _g('back', 'wings_ash', 'c', 'v', 'hell', 64, 41, 'As-vleugels', 'Ash wings', 'Hel-look. Geen brand.', 'Hell look. No burn.', null, { adv: 61, diff: 'hell' }),
+  _g('back', 'leaf', 'c', 's', 'uncommon', 12, 6, 'Blad-hanger', 'Leaf charm', 'Rug-hanger mét +HP.', 'Back charm that also adds HP.', { maxHp: 3 }),
+  _g('back', 'cape_lucky', 'c', 's', 'rare', 22, 11, 'Gelukscape', 'Lucky cape', 'Cosmetische cape mét XP.', 'Cosmetic cape that also adds XP.', { xpMul: 1.03 }),
+  _g('back', 'void', 'c', 's', 'legendary', 40, 14, 'Void-hanger', 'Void charm', 'Rug-hanger mét technique.', 'Back charm that also boosts techniques.', { techniqueMul: 1.03 }, { adv: 40 }),
+  _g('back', 'pack_leather', 'a', 's', 'common', 6, 3, 'Leren pack', 'Leather pack', 'Licht. +HP.', 'Light. +HP.', { maxHp: 4 }),
+  _g('back', 'plate_back', 'a', 's', 'uncommon', 10, 5, 'Rugplaat', 'Back plate', 'IJzer achter. HP + mitigatie.', 'Iron behind. HP + mitigation.', { maxHp: 5, defMul: 0.98 }),
+  _g('back', 'shell_turtle', 'a', 's', 'rare', 19, 9, 'Schildpad-schelp', 'Turtle shell', 'Tank-look mét HP.', 'Tank look with HP.', { maxHp: 8, defMul: 0.96 }),
+  _g('back', 'banner_iron', 'a', 's', 'rare', 24, 12, 'IJzeren vaandel', 'Iron banner', 'Vaandel mét kb.', 'Banner with knockback.', { kbMul: 1.05, maxHp: 3 }),
+  _g('back', 'wing_steel', 'a', 's', 'epic', 33, 16, 'Stalen vleugel', 'Steel wing', 'Reach + HP.', 'Reach + HP.', { weaponRange: 1.04, maxHp: 4 }),
+  _g('back', 'crystal_shard', 'a', 's', 'legendary', 45, 24, 'Kristalscherf', 'Crystal shard', 'Shield-golf + energy.', 'Wave shield + energy.', { shieldWave: 0.4, energyMul: 1.03 }),
+  _g('back', 'void_spine', 'a', 's', 'mythic', 50, 30, 'Void-ruggengraat', 'Void spine', 'Technique + schade.', 'Technique + damage.', { techniqueMul: 1.04, dmgMul: 1.02 }),
+  _g('back', 'wings_nightmare', 'a', 's', 'nightmare', 59, 35, 'Nachtmerrie-vleugels', 'Nightmare wings', 'Droomvleugel. Speed + crit.', 'Dream wing. Speed + crit.', { speedMul: 1.03, critBonus: 0.02 }, { adv: 51, diff: 'nightmare' }),
+  _g('back', 'wings_hell', 'a', 's', 'hell', 69, 46, 'Hel-vleugels', 'Hell wings', 'Lava-vleugel. Schade + HP.', 'Lava wing. Damage + HP.', { dmgMul: 1.03, maxHp: 6 }, { adv: 61, diff: 'hell' }),
+];
+
+const GEAR_BY_ID = Object.create(null);
+for (const it of GEAR_ITEMS) {
+  if (GEAR_BY_ID[it.id]) continue;
+  GEAR_BY_ID[it.id] = it;
+}
+
+function gearItemById(id) {
+  return GEAR_BY_ID[gearCanonItemId(id)] || null;
+}
+function gearItemsForSlot(slot) {
+  const canon = gearCanonSlot(slot) || slot;
+  return GEAR_ITEMS.filter((it) => it.slot === canon);
+}
+function gearItemIsVanity(item) {
+  return !!(item && item.vanity === true);
+}
+function gearItemHasCombatStats(item) {
+  return !!(item && item.hasStats === true && item.vanity !== true && item.mods && typeof item.mods === 'object');
+}
+
+function gearNowMs(now) {
+  const n = Number(now);
+  return Number.isFinite(n) && n > 1e11 ? Math.floor(n) : Date.now();
+}
+
+function saveLooksVeteran(s) {
+  if (!s || typeof s !== 'object') return false;
+  if ((Number(s.lvl) || 1) > 1) return true;
+  if ((Number(s.unlocked) || 1) > 1) return true;
+  const st = s.stats && typeof s.stats === 'object' ? s.stats : null;
+  if (st && ((Number(st.kills) || 0) > 0 || (Number(st.advWins) || 0) > 0)) return true;
+  if (s.gear && s.gear.owned && typeof s.gear.owned === 'object' && Object.keys(s.gear.owned).length > 5) return true;
+  return false;
+}
+
+function sanitizeCreatedAt(raw, s, now) {
+  const tNow = gearNowMs(now);
+  const n = Number(raw);
+  if (Number.isFinite(n) && n > 1e11) {
+    return Math.max(GEAR_CREATED_MIN_MS, Math.min(tNow, Math.floor(n)));
+  }
+  if (saveLooksVeteran(s)) {
+    return Math.max(GEAR_CREATED_MIN_MS, tNow - GEAR_VETERAN_BACKDATE_DAYS * GEAR_MS_PER_DAY);
+  }
+  return tNow;
+}
+
+function gearAccountCreatedAt(s) {
+  const st = s || (typeof save !== 'undefined' ? save : null);
+  const n = st ? Number(st.createdAt) : 0;
+  if (Number.isFinite(n) && n >= GEAR_CREATED_MIN_MS) return Math.floor(n);
+  return 0;
+}
+
+function gearAccountAgeDays(s, now) {
+  const created = gearAccountCreatedAt(s);
+  const t = gearNowMs(now);
+  if (!created) return 1;
+  if (t < created) return 1;
+  return Math.max(1, Math.floor((t - created) / GEAR_MS_PER_DAY) + 1);
+}
+
+function gearUnlockContext(s, now) {
+  const st = s || (typeof save !== 'undefined' ? save : null);
+  const cleared = (st && st.advCleared && typeof st.advCleared === 'object') ? st.advCleared : {};
+  return {
+    lvl: st ? Math.max(1, Math.floor(Number(st.lvl) || 1)) : 1,
+    days: gearAccountAgeDays(st, now),
+    unlocked: st ? Math.max(1, Math.floor(Number(st.unlocked) || 1)) : 1,
+    nightmareOk: !!cleared.normal,
+    hellOk: !!cleared.nightmare,
+    now: gearNowMs(now),
+  };
+}
+
+function gearGateState(item, s, now) {
+  const ctx = (s && s._gearUnlockCtx) ? s._gearUnlockCtx : gearUnlockContext(s, now);
+  const out = {
+    ok: false,
+    lootable: false,
+    levelOk: false,
+    timeOk: false,
+    advOk: true,
+    diffOk: true,
+    needLvl: item ? item.unlockLvl : 1,
+    needDays: item ? item.unlockDays : 1,
+    haveLvl: ctx.lvl,
+    haveDays: ctx.days,
+    reasons: [],
+  };
+  if (!item) {
+    out.reasons.push('unknown');
+    return out;
+  }
+  out.levelOk = ctx.lvl >= item.unlockLvl;
+  out.timeOk = ctx.days >= item.unlockDays;
+  if (!out.levelOk) out.reasons.push('level');
+  if (!out.timeOk) out.reasons.push('time');
+  if (item.needAdvUnlocked != null) {
+    out.advOk = ctx.unlocked >= item.needAdvUnlocked;
+    if (!out.advOk) out.reasons.push('adventure');
+  }
+  if (item.needDiff === 'nightmare') {
+    out.diffOk = !!ctx.nightmareOk;
+    if (!out.diffOk) out.reasons.push('diff');
+  } else if (item.needDiff === 'hell') {
+    out.diffOk = !!ctx.hellOk;
+    if (!out.diffOk) out.reasons.push('diff');
+  }
+  out.ok = out.levelOk && out.timeOk && out.advOk && out.diffOk;
+  out.lootable = out.ok;
+  return out;
+}
+
+function gearItemLootable(item, s, now) {
+  return gearGateState(item, s, now).lootable;
+}
+function gearItemUnlocked(item, s, now) {
+  return gearItemLootable(item, s, now);
+}
+
+function _isForbiddenKey(k) {
+  return k === '__proto__' || k === 'constructor' || k === 'prototype';
+}
+
+function migrateGearRaw(raw) {
+  if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return { schema: 0, equipped: {}, owned: {} };
+  const equippedIn = (raw.equipped && typeof raw.equipped === 'object' && !Array.isArray(raw.equipped))
+    ? raw.equipped
+    : raw;
+  const equipped = {};
+  for (const [k, v] of Object.entries(equippedIn)) {
+    if (_isForbiddenKey(k)) continue;
+    const slot = gearCanonSlot(k);
+    if (!slot) continue;
+    if (typeof v !== 'string' || !v) continue;
+    equipped[slot] = gearCanonItemId(v);
+  }
+  let ownedSrc = raw.owned;
+  const owned = {};
+  if (Array.isArray(ownedSrc)) {
+    for (const id of ownedSrc) {
+      if (typeof id !== 'string') continue;
+      const canon = gearCanonItemId(id);
+      if (!canon || _isForbiddenKey(canon)) continue;
+      owned[canon] = { at: 0, src: 'grant' };
+    }
+  } else if (ownedSrc && typeof ownedSrc === 'object') {
+    for (const [k, v] of Object.entries(ownedSrc)) {
+      if (_isForbiddenKey(k)) continue;
+      const canon = gearCanonItemId(k);
+      if (!canon) continue;
+      if (v === 1 || v === true || typeof v === 'number') {
+        owned[canon] = { at: 0, src: 'grant' };
+      } else if (v && typeof v === 'object' && !Array.isArray(v)) {
+        owned[canon] = {
+          at: Number(v.at) || 0,
+          src: typeof v.src === 'string' ? v.src : 'grant',
+        };
+      }
+    }
+  }
+  return { schema: Number(raw.schema) || 0, equipped, owned };
+}
+
+function sanitizeGearOwnedEntry(raw, now) {
+  const tNow = gearNowMs(now);
+  const entry = (raw && typeof raw === 'object' && !Array.isArray(raw)) ? raw : {};
+  const at = Math.floor(Number(entry.at) || 0);
+  return {
+    at: at > 1e11 ? Math.max(GEAR_CREATED_MIN_MS, Math.min(tNow, at)) : 0,
+    src: typeof entry.src === 'string' ? entry.src.replace(/[^\w\-]/g, '').slice(0, GEAR_SRC_MAX) || 'grant' : 'grant',
+  };
+}
+
+function sanitizeGearSave(raw, s, now) {
+  try {
+    const st = s || {};
+    const migrated = migrateGearRaw(raw);
+    const owned = {};
+    const ids = Object.keys(migrated.owned);
+    ids.sort();
+    let n = 0;
+    for (const id of ids) {
+      if (n >= GEAR_OWNED_CAP) break;
+      if (!GEAR_BY_ID[id]) continue;
+      owned[id] = sanitizeGearOwnedEntry(migrated.owned[id], now);
+      n++;
+    }
+    const bag = { schema: GEAR_SCHEMA, equipped: emptyGearEquipped(), owned };
+    for (const slot of GEAR_SLOT_IDS) {
+      const id = migrated.equipped[slot];
+      if (typeof id !== 'string') continue;
+      const item = GEAR_BY_ID[id];
+      if (!item || item.slot !== slot) continue;
+      if (!owned[id]) continue;
+      if (!gearItemLootable(item, st, now)) continue;
+      bag.equipped[slot] = id;
+    }
+    return bag;
+  } catch (_) {
+    return emptyGearBag();
+  }
+}
+
+function ensureGearSave(s) {
+  const st = s || (typeof save !== 'undefined' ? save : null);
+  if (!st || typeof st !== 'object') return emptyGearBag();
+  if (typeof DEFAULT_SAVE !== 'undefined' && st === DEFAULT_SAVE) return emptyGearBag();
+  if (!st.gear || typeof st.gear !== 'object' || Array.isArray(st.gear)) st.gear = emptyGearBag();
+  if (!st.gear.equipped || typeof st.gear.equipped !== 'object' || Array.isArray(st.gear.equipped)) {
+    st.gear.equipped = emptyGearEquipped();
+  }
+  if (!st.gear.owned || typeof st.gear.owned !== 'object' || Array.isArray(st.gear.owned)) {
+    st.gear.owned = {};
+  }
+  st.gear.schema = GEAR_SCHEMA;
+  return st.gear;
+}
+
+function gearItemOwned(id, s) {
+  const canon = gearCanonItemId(id);
+  if (!canon) return false;
+  const st = s || (typeof save !== 'undefined' ? save : null);
+  const owned = st && st.gear && st.gear.owned;
+  return !!(owned && typeof owned === 'object' && owned[canon]);
+}
+
+function gearOwnedList(s) {
+  const st = s || (typeof save !== 'undefined' ? save : null);
+  const owned = st && st.gear && st.gear.owned;
+  const out = [];
+  if (!owned || typeof owned !== 'object') return out;
+  for (const id of Object.keys(owned)) {
+    if (_isForbiddenKey(id)) continue;
+    const item = GEAR_BY_ID[id];
+    if (item) out.push(item);
+  }
+  return out;
+}
+
+function gearEquippedId(slot, s) {
+  const canon = gearCanonSlot(slot);
+  if (!canon) return null;
+  const st = s || (typeof save !== 'undefined' ? save : null);
+  const id = st && st.gear && st.gear.equipped ? st.gear.equipped[canon] : null;
+  return typeof id === 'string' ? id : null;
+}
+
+function gearEquippedItem(slot, s) {
+  return gearItemById(gearEquippedId(slot, s));
+}
+
+function gearItemUsable(item, s, now) {
+  if (!item) return false;
+  return gearItemOwned(item.id, s) && gearItemUnlocked(item, s, now);
+}
+
+function gearCanGrant(id, s, now) {
+  const item = gearItemById(id);
+  if (!item) return { ok: false, reason: 'unknown' };
+  if (gearItemOwned(item.id, s)) return { ok: true, already: true, item };
+  const gate = gearGateState(item, s, now);
+  if (!gate.ok) return { ok: false, reason: 'gated', gate, item };
+  return { ok: true, item };
+}
+
+function gearCanEquip(id, s, now) {
+  const item = gearItemById(id);
+  if (!item) return { ok: false, reason: 'unknown' };
+  if (!gearItemOwned(item.id, s)) return { ok: false, reason: 'unowned', item };
+  const gate = gearGateState(item, s, now);
+  if (!gate.ok) return { ok: false, reason: 'gated', gate, item };
+  return { ok: true, item, slot: item.slot };
+}
+
+function _persistGearIfLive(st) {
+  try {
+    if (typeof save !== 'undefined' && st === save && typeof persist === 'function') persist();
+  } catch (_) {}
+}
+
+function _gearGrantInto(s, id, src, now) {
+  /* can-own-locked: write owned even if unequippable. Rolls filter via lootable. */
+  const item = gearItemById(id);
+  if (!item) return { ok: false, reason: 'unknown' };
+  if (gearItemOwned(item.id, s)) return { ok: true, already: true, item };
+  const bag = ensureGearSave(s);
+  if (Object.keys(bag.owned).length >= GEAR_OWNED_CAP) return { ok: false, reason: 'full', item };
+  const at = gearNowMs(now);
+  bag.owned[item.id] = {
+    at,
+    src: typeof src === 'string' ? src.replace(/[^\w\-]/g, '').slice(0, GEAR_SRC_MAX) || 'grant' : 'grant',
+  };
+  if (s && typeof s === 'object') {
+    if (!s.ownedGear || typeof s.ownedGear !== 'object' || Array.isArray(s.ownedGear)) s.ownedGear = {};
+    s.ownedGear[item.id] = { gearId: item.id, at };
+  }
+  return { ok: true, item };
+}
+
+function grantStarterGear(s, now) {
+  const st = s || (typeof save !== 'undefined' ? save : null);
+  if (!st || typeof st !== 'object') return;
+  if (typeof DEFAULT_SAVE !== 'undefined' && st === DEFAULT_SAVE) return;
+  const tNow = gearNowMs(now);
+  const bag = ensureGearSave(st);
+  for (const item of GEAR_ITEMS) {
+    if (!item.starter) continue;
+    if (bag.owned[item.id]) continue;
+    if (!gearItemLootable(item, st, tNow)) continue;
+    bag.owned[item.id] = { at: tNow, src: 'starter' };
+  }
+  for (const slot of GEAR_SLOT_IDS) {
+    if (bag.equipped[slot]) continue;
+    const pick = GEAR_ITEMS.find((it) => it.slot === slot && it.starter && bag.owned[it.id]);
+    if (pick) bag.equipped[slot] = pick.id;
+  }
+}
+
+function gearGrantItem(id, src, s, now) {
+  const st = s || (typeof save !== 'undefined' ? save : null);
+  if (!st) return { ok: false, reason: 'nosave' };
+  const result = _gearGrantInto(st, id, src || 'grant', now);
+  if (result.ok && !result.already) _persistGearIfLive(st);
+  return result;
+}
+
+function gearEquipItem(id, s, now) {
+  const st = s || (typeof save !== 'undefined' ? save : null);
+  if (!st) return { ok: false, reason: 'nosave' };
+  const can = gearCanEquip(id, s, now);
+  if (!can.ok) return can;
+  const bag = ensureGearSave(st);
+  bag.equipped[can.slot] = can.item.id;
+  _persistGearIfLive(st);
+  return { ok: true, item: can.item, slot: can.slot };
+}
+
+function gearUnequipSlot(slot, s) {
+  const st = s || (typeof save !== 'undefined' ? save : null);
+  if (!st) return { ok: false, reason: 'nosave' };
+  const canon = gearCanonSlot(slot);
+  if (!canon) return { ok: false, reason: 'badslot' };
+  const bag = ensureGearSave(st);
+  bag.equipped[canon] = null;
+  _persistGearIfLive(st);
+  return { ok: true, slot: canon };
+}
+
+function _emptyGearMods() {
+  return {
+    maxHp: 0, dmgMul: 1, defMul: 1, energyMul: 1, critBonus: 0, kbMul: 1,
+    techniqueMul: 1, shieldWave: 0, blockMul: 1, xpMul: 1, speedMul: 1,
+    weaponRange: 1, advDmgMul: 1,
+  };
+}
+
+function gearCombatMods(s) {
+  const acc = _emptyGearMods();
+  const st = s || (typeof save !== 'undefined' ? save : null);
+  if (!st || !st.gear || !st.gear.equipped) return acc;
+  for (const slot of GEAR_SLOT_IDS) {
+    const item = gearItemById(st.gear.equipped[slot]);
+    if (!gearItemHasCombatStats(item)) continue;
+    if (!gearItemUsable(item, st)) continue;
+    const m = item.mods;
+    if (m.maxHp) acc.maxHp += m.maxHp;
+    if (m.dmgMul) acc.dmgMul *= m.dmgMul;
+    if (m.defMul) acc.defMul *= m.defMul;
+    if (m.energyMul) acc.energyMul *= m.energyMul;
+    if (m.critBonus) acc.critBonus += m.critBonus;
+    if (m.kbMul) acc.kbMul *= m.kbMul;
+    if (m.techniqueMul) acc.techniqueMul *= m.techniqueMul;
+    if (m.shieldWave) acc.shieldWave += m.shieldWave;
+    if (m.blockMul) acc.blockMul *= m.blockMul;
+    if (m.xpMul) acc.xpMul *= m.xpMul;
+    if (m.speedMul) acc.speedMul *= m.speedMul;
+    if (m.weaponRange) acc.weaponRange *= m.weaponRange;
+    if (m.advDmgMul) acc.advDmgMul *= m.advDmgMul;
+  }
+  const B = GEAR_BALANCE;
+  acc.maxHp = Math.min(acc.maxHp, B.maxHpCap);
+  acc.dmgMul = Math.min(acc.dmgMul, B.dmgMulCap);
+  acc.defMul = Math.max(acc.defMul, B.defMulFloor);
+  acc.energyMul = Math.min(acc.energyMul, B.energyMulCap);
+  acc.critBonus = Math.min(acc.critBonus, B.critBonusCap);
+  acc.kbMul = Math.min(acc.kbMul, B.kbMulCap);
+  acc.techniqueMul = Math.min(acc.techniqueMul, B.techniqueMulCap);
+  acc.shieldWave = Math.min(acc.shieldWave, B.shieldWaveCap);
+  acc.blockMul = Math.max(acc.blockMul, B.blockMulFloor);
+  acc.xpMul = Math.min(acc.xpMul, B.xpMulCap);
+  acc.speedMul = Math.min(acc.speedMul, B.speedMulCap);
+  acc.weaponRange = Math.min(acc.weaponRange, B.weaponRangeCap);
+  acc.advDmgMul = Math.min(acc.advDmgMul, B.advDmgMulCap);
+  return acc;
+}
+
+function applyGearBonusesToPlayer(game, player) {
+  if (!game || !player) return;
+  const m = gearCombatMods();
+  game.gearMods = m;
+  if (m.defMul && m.defMul !== 1) game.styleDefMul = (game.styleDefMul || 1) * m.defMul;
+  if (m.advDmgMul && m.advDmgMul !== 1) game.styleAdvDmgMul = (game.styleAdvDmgMul || 1) * m.advDmgMul;
+  if (m.energyMul && m.energyMul !== 1) game.styleEnergyMul = (game.styleEnergyMul || 1) * m.energyMul;
+  if (m.critBonus) game.styleCritBonus = (game.styleCritBonus || 0) + m.critBonus;
+  if (m.kbMul && m.kbMul !== 1) game.styleKbMul = (game.styleKbMul || 1) * m.kbMul;
+  if (m.techniqueMul && m.techniqueMul !== 1) game.styleTechniqueMul = (game.styleTechniqueMul || 1) * m.techniqueMul;
+  if (m.shieldWave) game.styleShieldWave = (game.styleShieldWave || 0) + m.shieldWave;
+  if (m.blockMul && m.blockMul !== 1) game.styleBlockMul = (game.styleBlockMul || 1) * m.blockMul;
+  if (m.xpMul && m.xpMul !== 1) game.styleXpMul = (game.styleXpMul || 1) * m.xpMul;
+  if (m.maxHp) {
+    player.maxhp += m.maxHp;
+    player.hp += m.maxHp;
+  }
+  if (m.speedMul && m.speedMul !== 1) {
+    player.speed = Math.round(player.speed * m.speedMul);
+  }
+}
+
+function applyGearToSpec(fighter, spec) {
+  if (!spec || !fighter || !fighter.isPlayer) return spec;
+  const m = (typeof game !== 'undefined' && game && game.gearMods) ? game.gearMods : gearCombatMods();
+  if (m.dmgMul && m.dmgMul !== 1) spec.dmg = Math.round(spec.dmg * m.dmgMul);
+  if (m.kbMul && m.kbMul !== 1) spec.kb = (spec.kb || 0) * m.kbMul;
+  if (m.weaponRange && spec.kind === 'weapon') {
+    spec.range = (spec.range || 40) * m.weaponRange;
+    spec.r = (spec.r || 24) * Math.sqrt(m.weaponRange);
+  }
+  if (m.techniqueMul && spec.kind === 'special') spec.dmg = Math.round(spec.dmg * m.techniqueMul);
+  return spec;
+}
+
+function gearCombatLine(item) {
+  if (!gearItemHasCombatStats(item)) return '';
+  const parts = [];
+  const m = item.mods;
+  if (m.maxHp) parts.push((m.maxHp > 0 ? '+' : '') + m.maxHp + ' HP');
+  if (m.dmgMul && m.dmgMul !== 1) parts.push((m.dmgMul > 1 ? '+' : '') + Math.round((m.dmgMul - 1) * 100) + '% dmg');
+  if (m.defMul && m.defMul !== 1) parts.push((m.defMul < 1 ? '−' : '+') + Math.round(Math.abs(1 - m.defMul) * 100) + '% dmg in');
+  if (m.energyMul && m.energyMul !== 1) parts.push((m.energyMul > 1 ? '+' : '') + Math.round((m.energyMul - 1) * 100) + '% energy');
+  if (m.critBonus) parts.push('+' + Math.round(m.critBonus * 100) + '% crit');
+  if (m.speedMul && m.speedMul !== 1) parts.push((m.speedMul > 1 ? '+' : '') + Math.round((m.speedMul - 1) * 100) + '% speed');
+  if (m.techniqueMul && m.techniqueMul !== 1) parts.push((m.techniqueMul > 1 ? '+' : '') + Math.round((m.techniqueMul - 1) * 100) + '% tech');
+  if (m.kbMul && m.kbMul !== 1) parts.push((m.kbMul > 1 ? '+' : '') + Math.round((m.kbMul - 1) * 100) + '% kb');
+  if (m.xpMul && m.xpMul !== 1) parts.push((m.xpMul > 1 ? '+' : '') + Math.round((m.xpMul - 1) * 100) + '% XP');
+  if (m.weaponRange && m.weaponRange !== 1) parts.push((m.weaponRange > 1 ? '+' : '') + Math.round((m.weaponRange - 1) * 100) + '% reach');
+  if (m.advDmgMul && m.advDmgMul !== 1) parts.push((m.advDmgMul > 1 ? '+' : '') + Math.round((m.advDmgMul - 1) * 100) + '% adv');
+  if (m.shieldWave) parts.push('+' + m.shieldWave + 's shield/golf');
+  if (m.blockMul && m.blockMul !== 1) parts.push((m.blockMul < 1 ? '−' : '+') + Math.round(Math.abs(1 - m.blockMul) * 100) + '% blok');
+  return parts.join(' · ');
+}
+
+function gearItemLabel(item, field) {
+  if (!item) return '';
+  const lang = (typeof getLang === 'function') ? getLang() : 'nl';
+  if (field === 'desc') return lang === 'nl' ? (item.desc || item.descEn || '') : (item.descEn || item.desc || '');
+  return lang === 'nl' ? (item.name || item.nameEn || item.id) : (item.nameEn || item.name || item.id);
+}
+
+function gearSlotLabel(slot) {
+  const meta = gearSlotById(slot);
+  if (!meta) return slot;
+  if (typeof t === 'function') {
+    const key = 'gear.slot.' + meta.id;
+    const v = t(key);
+    if (v && v !== key) return v;
+  }
+  const lang = (typeof getLang === 'function') ? getLang() : 'nl';
+  return lang === 'nl' ? meta.name : meta.nameEn;
+}
+
+function gearTooltipModel(item, s, now) {
+  if (!item) return null;
+  const gate = gearGateState(item, s, now);
+  const applies = gearItemHasCombatStats(item);
+  return {
+    id: item.id,
+    slot: item.slot,
+    kind: item.kind,
+    name: gearItemLabel(item),
+    desc: gearItemLabel(item, 'desc'),
+    rarity: item.rarity,
+    vanity: item.vanity === true,
+    hasStats: item.hasStats === true,
+    appliesStats: applies,
+    combatLine: applies ? gearCombatLine(item) : '',
+    mods: applies ? Object.assign({}, item.mods) : null,
+    unlockLvl: item.unlockLvl,
+    unlockDays: item.unlockDays,
+    gate,
+    owned: gearItemOwned(item.id, s),
+    equipped: gearEquippedId(item.slot, s) === item.id,
+    starter: !!item.starter,
+    look: item.look || null,
+  };
+}
+
+function gearTooltipLines(item, s, now) {
+  const model = gearTooltipModel(item, s, now);
+  if (!model) return [];
+  const lines = [model.name, model.desc];
+  if (model.vanity) lines.push(typeof t === 'function' ? t('gear.flagVanity') : 'Look only — no stats');
+  else if (model.appliesStats) lines.push(model.combatLine);
+  if (!model.gate.ok) {
+    if (!model.gate.levelOk) {
+      lines.push((typeof t === 'function' ? t('gear.needLvl', { n: model.unlockLvl }) : ('Lv ' + model.unlockLvl)));
+    }
+    if (!model.gate.timeOk) {
+      lines.push((typeof t === 'function' ? t('gear.needDays', { n: model.unlockDays }) : ('Day ' + model.unlockDays)));
+    }
+  }
+  return lines.filter(Boolean);
+}
+
+function gearDropEligible(ctx) {
+  ctx = ctx || {};
+  const st = ctx.save || (typeof save !== 'undefined' ? save : null);
+  const now = ctx.now;
+  const out = [];
+  for (const item of GEAR_ITEMS) {
+    if (!item.droppable) continue;
+    if (gearItemOwned(item.id, st)) continue;
+    if (!gearItemLootable(item, st, now)) continue;
+    if (ctx.slot && item.slot !== gearCanonSlot(ctx.slot) && item.slot !== ctx.slot) continue;
+    if (ctx.kind && item.kind !== ctx.kind) continue;
+    out.push(item);
+  }
+  return out;
+}
+
+function pickGearDropCandidate(ctx) {
+  const list = gearDropEligible(ctx);
+  if (!list.length) return null;
+  let best = list[0];
+  let bestOrder = (typeof rarityOf === 'function' ? rarityOf(best.rarity).order : 0);
+  for (let i = 1; i < list.length; i++) {
+    const ord = (typeof rarityOf === 'function' ? rarityOf(list[i].rarity).order : 0);
+    if (ord < bestOrder) { best = list[i]; bestOrder = ord; }
+  }
+  return best;
+}
+
+const GEAR_DROP_WEIGHT = {
+  common: 1, uncommon: 0.55, rare: 0.28, epic: 0.12,
+  legendary: 0.05, mythic: 0.035, nightmare: 0.022, hell: 0.016,
+};
+
+function gearDropWeight(item) {
+  return GEAR_DROP_WEIGHT[item && item.rarity] || 0.2;
+}
+
+function pickWeightedGearItem(list) {
+  if (!list || !list.length) return null;
+  let total = 0;
+  for (const it of list) total += gearDropWeight(it);
+  if (!(total > 0)) return list[0];
+  let r = Math.random() * total;
+  for (const it of list) {
+    r -= gearDropWeight(it);
+    if (r <= 0) return it;
+  }
+  return list[0];
+}
+
+function rollGearDrop(ctx) {
+  ctx = ctx || {};
+  const st = ctx.save || (typeof save !== 'undefined' ? save : null);
+  const now = ctx.now;
+  const exclude = ctx.excludeIds && typeof ctx.excludeIds === 'object' ? ctx.excludeIds : null;
+  const list = [];
+  for (const item of GEAR_ITEMS) {
+    if (!item.droppable) continue;
+    if (exclude && (exclude[item.id] || (exclude.indexOf && exclude.indexOf(item.id) !== -1))) continue;
+    if (!ctx.allowOwned && gearItemOwned(item.id, st)) continue;
+    if (!ctx.allowLocked && !gearItemLootable(item, st, now)) continue;
+    if (ctx.slot && item.slot !== gearCanonSlot(ctx.slot) && item.slot !== ctx.slot) continue;
+    if (ctx.kind && item.kind !== ctx.kind) continue;
+    list.push(item);
+  }
+  return pickWeightedGearItem(list);
+}
+
+function gearRenderDescriptor(s) {
+  const slots = [];
+  for (const id of GEAR_SLOT_IDS) {
+    const item = gearEquippedItem(id, s);
+    slots.push({
+      slot: id,
+      itemId: item ? item.id : null,
+      kind: item ? item.kind : null,
+      vanity: item ? item.vanity === true : true,
+      hasStats: item ? item.hasStats === true : false,
+      tint: item && item.look ? item.look.tint : null,
+      accent: item && item.look ? item.look.accent : null,
+      layer: item && item.look ? item.look.layer : id,
+    });
+  }
+  return { schema: GEAR_SCHEMA, slots };
+}
+
+function gearOwnedCount(s) {
+  return gearOwnedList(s).length;
+}
+function gearCatalogCount() {
+  return GEAR_ITEMS.length;
+}
+/* --- src/data/gear-world.js --- */
+/* ======================== GEAR WORLD DROPS + PIXELS ======================== */
+/**
+ * Adventure spawners + 16×16 pixels on top of PR #280 catalog (`src/data/gear.js`).
+ * Rolls respect unlockLvl + unlockDays (+ needAdv / needDiff). Grant is can-own-locked.
+ */
+const GEAR_MAX_FIELD = 3;
+
+const GEAR_PIXEL_PALETTE = {
+  k: '#1a2030', i: '#e8f0ff', d: '#9db1e3', g: '#ffd75e', o: '#c97a20',
+  c: '#7cf5ff', p: '#ffb0b8', n: '#4ecf6a', r: '#ff6b6b', u: '#c792ff',
+  w: '#f2f5ff', b: '#6b5344', m: '#333c55', v: '#2a1840', a: '#2d6b36',
+  s: '#8fa3d9', f: '#ffe259',
+};
+
+/** 16×16 templates. A/B/C = per-item tint. */
+const GEAR_PIXEL_TEMPLATES = {
+  wrap: [
+    '................', '................', '................', '...kkkkkkkkkk...',
+    '..kiiiiAAiiiik.', '..kAAAABBBBAAAk.', '..kiiiiAAiiiik.', '...kkkkkkkkkk...',
+    '..........kk....', '.........kBBk...', '..........kk....', '................',
+    '................', '................', '................', '................',
+  ],
+  helm: [
+    '................', '.....kCCCCk.....', '....kCkkkCk.....', '...kkkkkkkkkk...',
+    '..kmmAAAAAAmmk..', '.kmmAAAAAAAAAmmk.', '.kmAAAAAAAAAAmk.', '.kmABkkkkkBAmk.',
+    '.kmAkk....kAmk.', '..kmk......kmk..', '...kk......kk...', '................',
+    '................', '................', '................', '................',
+  ],
+  hat: [
+    '................', '......kAAk......', '.....kAAAAk.....', '....kAAAAAAk....',
+    '...kAABBBBAAk...', '..kkAAAAAAAAAAkk.', 'kkkkkkkkkkkkkkkk', '..kBBBBBBBBBBk..',
+    '...kkkkkkkkkk...', '................', '................', '................',
+    '................', '................', '................', '................',
+  ],
+  visor: [
+    '................', '...kkkkkkkkkk...', '..kAAAAAAAAAAk..', '.kACCCCCCCcccAk.',
+    '.kAC......ccAk.', '..kAAAAAAAAAAk..', '...kkkkkkkkkk...', '....k......k....',
+    '................', '................', '................', '................',
+    '................', '................', '................', '................',
+  ],
+  hood: [
+    '................', '.....kAAAAk.....', '....kABBBAAk....', '...kABBBBBAAk...',
+    '..kABBkkkBBAk...', '.kABBk...kBBAk..', '.kABBk...kBBAk..', '.kAAAAk.kAAAAk..',
+    '..kAAAk.kAAAk...', '...kkk...kkk....', '................', '................',
+    '................', '................', '................', '................',
+  ],
+  shirt: [
+    '................', '....kkkkkkkk....', '...kwwwwwwwwk...', '..kwwAAAAAAwwk..',
+    '..kwwwwwwwwwwk..', '.kwwAAAAAAAAwwk.', '.kwwwwkkwwwwwwk.', '.kwwwwkkwwwwwwk.',
+    '.kwwwwwwwwwwwwk.', '..kwwwwwwwwwwk..', '..kwwk....kwwk..', '..kwwk....kwwk..',
+    '...kk......kk...', '................', '................', '................',
+  ],
+  vest: [
+    '................', '....kkkkkkkk....', '...kmAAAAAAmk...', '..kmAiiiiAAmk...',
+    '..kmAAAAAAAmk...', '.kmAiiiiiiiAAmk.', '.kmAAABBBBAAAmk.', '.kmAiiiiiiiAAmk.',
+    '.kmAAAAAAAAAAmk.', '..kmAiiiiAAmk...', '..kmAAAAAAAmk...', '...kmmkkmmk.....',
+    '....kk..kk......', '................', '................', '................',
+  ],
+  coat: [
+    '................', '.....kAAAAk.....', '....kABBBAAk....', '...kABBBBBAAk...',
+    '..kABBBBBBBAAk..', '.kABBBBBBBBBAAk.', '.kABBBBkBBBBAk..', 'kABBBBk.kBBBBA.',
+    'kABBBk...kBBBA.', '.kABBk....kBAk..', '..kAk......kAk..', '...k........k...',
+    '................', '................', '................', '................',
+  ],
+  plate: [
+    '................', '....kkkkkkkk....', '...kAAAAAAAAAk..', '..kAACCCCCCAAk.',
+    '..kAABBBBBBAAk.', '.kAACCCCCCCCAAk.', '.kAABAAAAAABAk.', '.kAACCCCCCCCAAk.',
+    '.kAABBBBBBBBAAk.', '..kAACCCCCAAk...', '..kAAAAAAAAAk...', '...kAAkkAAk.....',
+    '....kk..kk......', '................', '................', '................',
+  ],
+  gloves: [
+    '................', '................', '......kkkk......', '.....kAAAAk.....',
+    '....kAAAAAAAk...', '...kAAwwwwAAk...', '...kAwBBBwwAk...', '...kAwBBBwwAk...',
+    '...kAAwwwwAAk...', '....kAAAAAAAk...', '.....kkkkkk.....', '......k..k......',
+    '................', '................', '................', '................',
+  ],
+  bracer: [
+    '................', '....C......C....', '...kCk....kCk...', '...kCk....kCk...',
+    '..kkkkkkkkkkkk..', '.kAAAABBBBAAAAk.', '.kABBBBBBBBBBAk.', '.kAAAABBBBAAAAk.',
+    '..kkkkkkkkkkkk..', '...kiiiiiiiik...', '...kiiiiiiiik...', '....kkkkkkkk....',
+    '................', '................', '................', '................',
+  ],
+  gauntlet: [
+    '................', '................', '.....kkkkkk.....', '....kAAAAAAk....',
+    '...kABBBBBBak...', '...kABCCCBAAk...', '...kABBBBBBak...', '...kAAAAAAAAk...',
+    '....kAAAAAAk....', '.....kkkkkk.....', '......k..k......', '................',
+    '................', '................', '................', '................',
+  ],
+  boots: [
+    '................', '................', '................', '................',
+    '..kkkk....kkkk..', '.kAAAAk..kAAAAk.', '.kABBBk..kABBBk.', '.kAAAAk..kAAAAk.',
+    '..kkkk....kkkk..', '.kB..Bk..kB..Bk.', '.kBBBB....BBBB.', '................',
+    '................', '................', '................', '................',
+  ],
+  socks: [
+    '................', '................', '................', '................',
+    '................', '..kAAk....kAAk..', '.kABBAk..kABBAk.', '.kAAAAk..kAAAAk.',
+    '.kCCCCk..kCCCCk.', '.kAAAAk..kAAAAk.', '..kkkk....kkkk..', '................',
+    '................', '................', '................', '................',
+  ],
+  greaves: [
+    '................', '................', '................', '..kkkk....kkkk..',
+    '.kAAAAk..kAAAAk.', '.kABBBk..kABBBk.', '.kACCCk..kACCCk.', '.kABBBk..kABBBk.',
+    '.kAAAAk..kAAAAk.', '..kkkk....kkkk..', '..k..k....k..k..', '..kkkk....kkkk..',
+    '................', '................', '................', '................',
+  ],
+  pin: [
+    '................', '................', '.......kk.......', '......kAAk......',
+    '.....kABBAk.....', '....kABCCBAk....', '.....kABBAk.....', '......kAAk......',
+    '.......kk.......', '.......kk.......', '.......kk.......', '................',
+    '................', '................', '................', '................',
+  ],
+  leaf: [
+    '................', '........kC......', '......kAAAk.....', '.....kAABBAAk...',
+    '....kAABBBAAk...', '...kAAABBAAAk...', '..kAAAABAAAk....', '..kAAAAAAAk.....',
+    '...kAAAAAk......', '....kAAAk.......', '.....kAk........', '......k.........',
+    '................', '................', '................', '................',
+  ],
+  aura: [
+    '................', '....kCCCCCCk....', '...kC......Ck...', '..kC.kAAAAk.Ck..',
+    '.kC.kABBBAAk.Ck.', '.kC.kAAAAAAk.Ck.', '..kC.kAAAAk.Ck..', '...kC......Ck...',
+    '....kCCCCCCk....', '................', '................', '................',
+    '................', '................', '................', '................',
+  ],
+  cape: [
+    '................', '......kkkk......', '.....kAAAAk.....', '....kABBBAAk....',
+    '...kABBBBBAAk...', '..kABBBBBBBAAk..', '..kAAAAABAAAk...', '.kAAAAAkAAAAk...',
+    '.kAAAAk.kAAAk...', '.kAAAk...kAAk...', '..kAk.....kAk...', '...k.......k....',
+    '................', '................', '................', '................',
+  ],
+  voidx: [
+    '................', '....kkkkkkkk....', '...kvvvvvvvvk...', '..kvvCCCCCCvvk..',
+    '..kvvAAAAAAvvk..', '.kvvACCCCCAAvvk.', '.kvvAAvvvvAAvvk.', '.kvvACCCCCAAvvk.',
+    '.kvvAAAAAAAAvvk.', '..kvvCCCCCCvvk..', '..kvvvvvvvvvk...', '...kvvkkvvvk....',
+    '....kk..kk......', '................', '................', '................',
+  ],
+  wings: [
+    '................', 'kAAk........kAAk', 'kABAk......kABAk', 'kABBAk....kABBAk',
+    '.kABBAk..kABBAk.', '..kAAAAkkAAAAk..', '...kAAAAAAAAAk...', '....kAAAAAAk....',
+    '.....kkkkkk.....', '................', '................', '................',
+    '................', '................', '................', '................',
+  ],
+  rings: [
+    '................', '................', '..kkk......kkk..', '.kCCCk....kCCCk.',
+    '.kC.Ck....kC.Ck.', '.kCCCk....kCCCk.', '..kkk......kkk..', '...kAAA..AAAk...',
+    '....kAAAAAAk....', '.....kkkkkk.....', '................', '................',
+    '................', '................', '................', '................',
+  ],
+  claws: [
+    '................', 'C..C........C..C', 'kC.Ck......kC.Ck', '.kCCk......kCCk.',
+    '..kAAAAkkAAAAk..', '...kAAAAAAAAk...', '....kAAAAAAk....', '.....kkkkkk.....',
+    '................', '................', '................', '................',
+    '................', '................', '................', '................',
+  ],
+  tome: [
+    '................', '................', '...kkkkkkkkkk...', '..kAAAAAAAAAAk..',
+    '..kABBBBBBBBAk..', '..kABwwwwwwBAk..', '..kABBBBBBBBAk..', '..kAAAAAAAAAAk..',
+    '...kkkkkkkkkk...', '....k......k....', '................', '................',
+    '................', '................', '................', '................',
+  ],
+  horns: [
+    '................', 'C..........C....', 'kCk........kCk..', '.kAk......kAk...',
+    '..kAAAkkAAAAk...', '...kAAAAAAAAk...', '....kABkkBAk....', '.....kAAAAk.....',
+    '......kkkkk.....', '................', '................', '................',
+    '................', '................', '................', '................',
+  ],
+  shell: [
+    '................', '.....kAAAAk.....', '....kABBBBAk....', '...kABCCCCBAk...',
+    '..kABCCCCCCBAk..', '.kABCCCCCCCCBAk.', '.kAABBBBBBBBAk..', '..kAAAAAAAAAk...',
+    '...kkkkkkkkkk...', '................', '................', '................',
+    '................', '................', '................', '................',
+  ],
+};
+
+const GEAR_TINTS = {
+  cloth: { A: '#e8f0ff', B: '#ffd75e', C: '#c97a20' },
+  tin: { A: '#9db1e3', B: '#333c55', C: '#e8f0ff' },
+  paper: { A: '#f2f5ff', B: '#c97a20', C: '#ffd75e' },
+  neon: { A: '#1a2030', B: '#4ecf6a', C: '#7cf5ff' },
+  iron: { A: '#9db1e3', B: '#ffd75e', C: '#7cf5ff' },
+  leaf: { A: '#4ecf6a', B: '#2d6b36', C: '#ffe259' },
+  night: { A: '#2a1840', B: '#c792ff', C: '#7cf5ff' },
+  gold: { A: '#ffd75e', B: '#c97a20', C: '#ffe259' },
+  void: { A: '#2a1840', B: '#c792ff', C: '#7cf5ff' },
+  red: { A: '#e04f4f', B: '#1a1424', C: '#ffd75e' },
+  sand: { A: '#e8c98a', B: '#8a6030', C: '#c97a20' },
+  fox: { A: '#ff8c42', B: '#d05a1e', C: '#ffe259' },
+  lucky: { A: '#4ecf6a', B: '#ffd75e', C: '#c97a20' },
+  sparkle: { A: '#c792ff', B: '#ffb0b8', C: '#7cf5ff' },
+  focus: { A: '#7cf5ff', B: '#3db8ff', C: '#ffd75e' },
+  lava: { A: '#ff6a3d', B: '#5a1010', C: '#ffd75e' },
+  sprint: { A: '#7cf5ff', B: '#4ecf6a', C: '#e8f0ff' },
+  shadow: { A: '#2a1840', B: '#c792ff', C: '#8fa3d9' },
+  glow: { A: '#7cf5ff', B: '#e8f0ff', C: '#ffd75e' },
+  tome: { A: '#c98850', B: '#6b5344', C: '#f5efe6' },
+};
+
+function gearPixelKey(item) {
+  if (!item) return 'pin';
+  if (item.pixel && GEAR_PIXEL_TEMPLATES[item.pixel]) return item.pixel;
+  const slot = item.slot;
+  const s = String(item.id || '').slice((slot ? slot.length + 1 : 0));
+  const hit = (re) => re.test(s);
+  if (hit(/^wrap/) && slot === 'head') return 'wrap';
+  if (hit(/^wrap/) && slot === 'hands') return 'gloves';
+  if (hit(/^wrap/) && slot === 'legs') return 'boots';
+  if (hit(/^bandana|^beanie/)) return 'wrap';
+  if (hit(/^hat_|^crown/)) return 'hat';
+  if (hit(/^mask/)) return 'visor';
+  if (hit(/^horns/)) return 'horns';
+  if (hit(/^hood/)) return 'hood';
+  if (hit(/^helm/)) return 'helm';
+  if (hit(/^halo/)) return 'aura';
+  if (hit(/^visor/)) return 'visor';
+  if (hit(/^circlet/)) return 'pin';
+  if (hit(/^shirt|^gi|^tunic/)) return 'shirt';
+  if (hit(/^hoodie|^coat|^jacket|^poncho|^robe/)) return 'coat';
+  if (hit(/^mail|^cuirass|^plate/)) return 'plate';
+  if (hit(/^vest_padded/)) return 'vest';
+  if (hit(/^vest/)) return 'vest';
+  if (hit(/^capelet|^sash/)) return 'cape';
+  if (hit(/^mitten|^glove/)) return 'gloves';
+  if (hit(/^ring/)) return 'rings';
+  if (hit(/^claw/)) return 'claws';
+  if (hit(/^cuff|^bracer/)) return 'bracer';
+  if (hit(/^gaunt|^fist/)) return 'gauntlet';
+  if (hit(/^sock|^tabi|^short/)) return 'socks';
+  if (hit(/^pant|^greave/)) return 'greaves';
+  if (hit(/^boot|^sneaker/)) return 'boots';
+  if (hit(/^bell|^pin|^balloon/)) return 'pin';
+  if (hit(/^backpack|^pack_|^tome/)) return 'tome';
+  if (hit(/^scarf|^cape|^banner/)) return 'cape';
+  if (hit(/^tail|^leaf/)) return 'leaf';
+  if (hit(/^kite|^wing/)) return 'wings';
+  if (hit(/^aura/)) return 'aura';
+  if (hit(/^void/)) return 'voidx';
+  if (hit(/^shell/)) return 'shell';
+  if (hit(/^crystal/)) return 'pin';
+  if (slot === 'head') return 'helm';
+  if (slot === 'chest') return 'shirt';
+  if (slot === 'hands') return 'gloves';
+  if (slot === 'legs') return 'boots';
+  return 'pin';
+}
+
+function gearTintKey(item) {
+  if (!item) return 'cloth';
+  if (item.worldTint && GEAR_TINTS[item.worldTint]) return item.worldTint;
+  const s = String(item.id || '');
+  if (/hell|ash|sulfur|lava/.test(s)) return 'lava';
+  if (/nightmare|dream/.test(s)) return 'night';
+  if (/void/.test(s)) return 'void';
+  if (/crystal/.test(s)) return 'glow';
+  if (/gold|lucky/.test(s)) return 'gold';
+  if (/leaf|turtle/.test(s)) return 'leaf';
+  if (/fox/.test(s)) return 'fox';
+  if (/red|crimson/.test(s)) return 'red';
+  if (/neon|glow|aura/.test(s)) return 'neon';
+  if (/paper|cardboard/.test(s)) return 'paper';
+  if (/iron|steel|knight|mail/.test(s)) return 'iron';
+  if (/tin|bronze|copper/.test(s)) return 'tin';
+  if (/sparkle|opera|star/.test(s)) return 'sparkle';
+  if (/focus|circlet|halo/.test(s)) return 'focus';
+  if (/sprint|dash|sneaker/.test(s)) return 'sprint';
+  if (/shadow/.test(s)) return 'shadow';
+  if (/pumpkin|chef|wool|sand/.test(s)) return 'sand';
+  const map = {
+    common: 'cloth', uncommon: 'tin', rare: 'iron', epic: 'gold',
+    legendary: 'glow', mythic: 'void', nightmare: 'night', hell: 'lava',
+  };
+  return map[item.rarity] || 'cloth';
+}
+
+if (typeof GEAR_ITEMS !== 'undefined') {
+  for (const it of GEAR_ITEMS) {
+    it.pixel = gearPixelKey(it);
+    it.worldTint = gearTintKey(it);
+  }
+}
+
+function gearById(id) {
+  return typeof gearItemById === 'function' ? gearItemById(id) : null;
+}
+
+function canonGearId(id) {
+  return typeof gearCanonItemId === 'function' ? gearCanonItemId(id) : (id || '');
+}
+
+function gearOwned(id) {
+  return typeof gearItemOwned === 'function' ? !!gearItemOwned(id) : false;
+}
+
+function gearGateOpen(it, opts) {
+  const item = typeof it === 'string' ? gearById(it) : it;
+  if (!item || typeof gearItemLootable !== 'function') return false;
+  opts = opts || {};
+  const base = (typeof save !== 'undefined' && save) ? save : {};
+  const st = {
+    lvl: opts.lvl != null ? opts.lvl : base.lvl,
+    unlocked: opts.unlocked != null ? opts.unlocked : base.unlocked,
+    createdAt: base.createdAt,
+    advCleared: Object.assign({}, base.advCleared || {}),
+    gear: base.gear,
+  };
+  if (opts.days != null) {
+    const have = Math.max(1, Math.floor(Number(opts.days) || 1));
+    st.createdAt = Date.now() - (have - 1) * 86400000;
+  }
+  if (opts.zone === 'nightmare') st.advCleared.normal = true;
+  if (opts.zone === 'hell') {
+    st.advCleared.normal = true;
+    st.advCleared.nightmare = true;
+  }
+  return gearItemLootable(item, st, opts.now);
+}
+
+function gearDropPool(opts) {
+  opts = opts || {};
+  const base = opts.save || ((typeof save !== 'undefined') ? save : null);
+  const st = base ? {
+    lvl: opts.lvl != null ? opts.lvl : base.lvl,
+    unlocked: opts.unlocked != null ? opts.unlocked : base.unlocked,
+    createdAt: base.createdAt,
+    advCleared: Object.assign({}, base.advCleared || {}),
+    gear: base.gear,
+  } : { lvl: opts.lvl || 1, unlocked: 1, createdAt: Date.now(), advCleared: {}, gear: { owned: {} } };
+  if (opts.days != null) {
+    const have = Math.max(1, Math.floor(Number(opts.days) || 1));
+    st.createdAt = Date.now() - (have - 1) * 86400000;
+  }
+  if (opts.zone === 'nightmare') st.advCleared.normal = true;
+  if (opts.zone === 'hell') {
+    st.advCleared.normal = true;
+    st.advCleared.nightmare = true;
+  }
+  return (typeof rollGearDrop === 'function')
+    ? (function () {
+      const list = [];
+      const fakeCtx = { save: st, now: opts.now, allowLocked: !!opts.allowLocked, allowOwned: !!opts.allowOwned };
+      /* reuse eligibility without picking */
+      if (typeof GEAR_ITEMS === 'undefined') return list;
+      for (const item of GEAR_ITEMS) {
+        if (!item.droppable && !opts.allowStarter) continue;
+        if (item.starter && !opts.allowStarter) continue;
+        if (!opts.allowOwned && typeof gearItemOwned === 'function' && gearItemOwned(item.id, st)) continue;
+        if (!opts.allowLocked && typeof gearItemLootable === 'function' && !gearItemLootable(item, st, opts.now)) continue;
+        list.push(item);
+      }
+      return list;
+    }())
+    : [];
+}
+
+function sanitizeGearOwned(raw) {
+  if (typeof sanitizeGearSave === 'function') {
+    return sanitizeGearSave({ owned: raw }, null).owned;
+  }
+  return {};
+}
+
+function mergeLegacyGearOwned(out) {
+  if (!out || typeof out !== 'object') return out;
+  if (!out.gear || typeof out.gear !== 'object') out.gear = { schema: 1, equipped: {}, owned: {} };
+  if (!out.gear.owned || typeof out.gear.owned !== 'object') out.gear.owned = {};
+  const extras = [out.ownedGear, out.gearOwned];
+  for (const extra of extras) {
+    if (!extra || typeof extra !== 'object') continue;
+    for (const [k, v] of Object.entries(extra)) {
+      if (!v) continue;
+      const id = canonGearId((v && v.gearId) || k);
+      if (!id || out.gear.owned[id]) continue;
+      if (typeof GEAR_BY_ID !== 'undefined' && !GEAR_BY_ID[id]) continue;
+      const at = (v && typeof v === 'object' && v.at) ? v.at : Date.now();
+      out.gear.owned[id] = { at: Math.floor(Number(at) || Date.now()), src: 'drop' };
+    }
+  }
+  const now = Date.now();
+  if (typeof sanitizeGearSave === 'function') out.gear = sanitizeGearSave(out.gear, out, now);
+  const ownedGear = {};
+  for (const [id, row] of Object.entries((out.gear && out.gear.owned) || {})) {
+    ownedGear[id] = { gearId: id, at: row && row.at ? row.at : 0 };
+  }
+  out.ownedGear = ownedGear;
+  delete out.gearOwned;
+  if (!out.equipment || typeof out.equipment !== 'object') out.equipment = {};
+  return out;
+}
+
+function grantGearItem(gearId, opts) {
+  opts = opts || {};
+  if (typeof gearGrantItem !== 'function') return false;
+  const src = typeof opts.src === 'string' ? opts.src : 'drop';
+  const st = opts.save || (typeof save !== 'undefined' ? save : null);
+  const result = gearGrantItem(gearId, src, st, opts.now);
+  if (!result || !result.ok) return false;
+  if (result.already) return false;
+  if (!opts.silent) {
+    try {
+      const it = result.item;
+      const col = gearAccent(it);
+      if (typeof UI !== 'undefined' && UI && typeof UI.toast === 'function') {
+        UI.toast(t('toast.gearDrop', { name: gearLabel(it), slot: gearSlotLabel(it.slot) }), 3800, { tone: 'ok' });
+      }
+      if (typeof game !== 'undefined' && game && typeof game.banner === 'function') {
+        game.banner(gearLabel(it), 2.0, col, 32);
+      }
+      if (typeof AudioSys !== 'undefined' && AudioSys && typeof AudioSys.sfx === 'function') {
+        AudioSys.sfx('newmonster');
+      }
+    } catch (_) {}
+  }
+  return true;
+}
+
+function gearLabel(itOrId, field) {
+  const it = typeof itOrId === 'string' ? gearById(itOrId) : itOrId;
+  if (!it) return String(itOrId || '?');
+  if (typeof gearItemLabel === 'function') return gearItemLabel(it, field);
+  return field === 'desc' ? (it.desc || '') : (it.name || it.id);
+}
+
+function gearAccent(it) {
+  if (!it) return '#c792ff';
+  try {
+    if (typeof rarityOf === 'function') return rarityOf(it.rarity).color;
+  } catch (_) {}
+  if (it.look && it.look.accent) return it.look.accent;
+  return '#c792ff';
+}
+
+function gearSpecialDuel(gameRef) {
+  try {
+    if (typeof adventureSpecialDuelActive === 'function' && adventureSpecialDuelActive(gameRef)) return true;
+  } catch (_) {}
+  return !!(gameRef && (gameRef.satanActive || gameRef.tideBattleActive));
+}
+
+function gearFieldCount(gameRef, id) {
+  let n = 0;
+  for (const pk of (gameRef && gameRef.pickups) || []) {
+    if (pk && pk.kind === 'gear' && pk.life > 0) {
+      if (!id || pk.gearId === id) n++;
+    }
+  }
+  return n;
+}
+
+function rollGearWorldDrop(gameRef, monster) {
+  if (!gameRef || gameRef.mode !== 'adventure' || !gameRef.level) return null;
+  if (gearSpecialDuel(gameRef)) return null;
+  if (gearFieldCount(gameRef) >= GEAR_MAX_FIELD) return null;
+  if (typeof rollGearDrop !== 'function') return null;
+  const n = Math.floor(Number(gameRef.level.n) || 0);
+  const islandBoss = n > 0 && n % 10 === 0 && monster && (monster.elite || monster.superBoss);
+  const exclude = {};
+  for (const pk of gameRef.pickups || []) {
+    if (pk && pk.kind === 'gear' && pk.gearId) exclude[pk.gearId] = true;
+  }
+  let chance = 0.055;
+  if (monster) {
+    if (monster.superBoss) chance = 0.55;
+    else if (monster.elite) chance = 0.2;
+    else if (monster.giant) chance = 0.1;
+  }
+  if (islandBoss) chance = 1;
+  else if (gameRef.level.boss && monster && monster.elite) chance = Math.max(chance, 0.3);
+  try {
+    const diff = gameRef.advDiff || (gameRef.level && gameRef.level.diff) || 'normal';
+    if (!islandBoss && typeof advDropChanceMul === 'function') {
+      chance = Math.min(0.72, chance * advDropChanceMul(diff));
+    }
+  } catch (_) {}
+  if (!islandBoss && Math.random() > chance) return null;
+  return rollGearDrop({
+    allowLocked: !!(islandBoss || (monster && monster.superBoss)),
+    excludeIds: exclude,
+  });
+}
+
+function rollGearStageClearDrop(levelN, diffId) {
+  void diffId;
+  const n = Math.floor(Number(levelN) || 0);
+  if (!(n > 0 && n % 10 === 0)) return null;
+  if (typeof rollGearDrop !== 'function') return null;
+  return rollGearDrop({ allowLocked: true });
+}
+
+function rollGearChestPull() {
+  if (typeof rollGearDrop !== 'function') return null;
+  const pick = rollGearDrop({ allowLocked: false });
+  if (!pick) return null;
+  if (!grantGearItem(pick.id, { silent: true, src: 'chest' })) return null;
+  return pick;
+}
+
+function tickPlayTime(dt) {
+  if (!(dt > 0) || typeof save === 'undefined' || !save || !save.stats) return;
+  const add = dt > 0.08 ? 0.08 : dt;
+  const next = (Number(save.stats.playSec) || 0) + add;
+  save.stats.playSec = next > 9999999 ? 9999999 : next;
+}
+
+function gearPixelRows(id) {
+  const it = gearById(id) || { id: id };
+  const key = gearPixelKey(it);
+  const tmpl = GEAR_PIXEL_TEMPLATES[key] || GEAR_PIXEL_TEMPLATES.pin;
+  const tint = GEAR_TINTS[gearTintKey(it)] || GEAR_TINTS.cloth;
+  const rows = tmpl.slice();
+  rows._tint = tint;
+  return rows;
+}
+
+function gearPixelColor(ch, tint) {
+  if (ch === 'A') return (tint && tint.A) || '#e8f0ff';
+  if (ch === 'B') return (tint && tint.B) || '#9db1e3';
+  if (ch === 'C') return (tint && tint.C) || '#ffd75e';
+  return GEAR_PIXEL_PALETTE[ch] || null;
+}
+
+function drawGearPixels(c, id, x, y, scale) {
+  const rows = gearPixelRows(id);
+  if (!rows || !c) return false;
+  const tint = rows._tint || GEAR_TINTS.cloth;
+  const sc = scale > 0 ? scale : 2;
+  const n = rows.length;
+  c.save();
+  c.imageSmoothingEnabled = false;
+  if ('webkitImageSmoothingEnabled' in c) c.webkitImageSmoothingEnabled = false;
+  if ('mozImageSmoothingEnabled' in c) c.mozImageSmoothingEnabled = false;
+  const ox = Math.round(x - (n * sc) / 2);
+  const oy = Math.round(y - (n * sc) / 2);
+  for (let j = 0; j < n; j++) {
+    const row = rows[j];
+    for (let i = 0; i < row.length; i++) {
+      const col = gearPixelColor(row[i], tint);
+      if (!col) continue;
+      c.fillStyle = col;
+      c.fillRect(ox + i * sc, oy + j * sc, sc, sc);
+    }
+  }
+  c.restore();
+  return true;
+}
+
+function gearPixelsToSvg(id) {
+  const rows = gearPixelRows(id);
+  if (!rows) return '';
+  const tint = rows._tint || GEAR_TINTS.cloth;
+  const n = rows.length;
+  const rects = [];
+  for (let j = 0; j < n; j++) {
+    const row = rows[j];
+    for (let i = 0; i < row.length; i++) {
+      const col = gearPixelColor(row[i], tint);
+      if (!col) continue;
+      rects.push('<rect x="' + i + '" y="' + j + '" width="1" height="1" fill="' + col + '"/>');
+    }
+  }
+  return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ' + n + ' ' + n + '" shape-rendering="crispEdges" aria-hidden="true">\n' + rects.join('\n') + '\n</svg>\n';
+}
+
+function gearAssetPath(id) {
+  const it = gearById(id);
+  return it ? ('assets/gear/' + it.id + '.svg') : '';
 }
 /* --- src/data/styles.js --- */
 /* ============================== STIJLEN ================================ */
@@ -11412,6 +12973,17 @@ function pushChestPull(entry) {
 }
 
 function grantChestConsolation(kind) {
+  try {
+    if (typeof rollGearChestPull === 'function' && Math.random() < 0.16) {
+      const g = rollGearChestPull();
+      if (g) {
+        return {
+          type: 'gear', kind, nice: false,
+          gearId: g.id, rarity: g.rarity, name: (typeof gearLabel === 'function' ? gearLabel(g) : g.name),
+        };
+      }
+    }
+  } catch (_) {}
   const roll = Math.random();
   if (roll < 0.45) {
     const coins = 8 + Math.floor(Math.random() * 16);
@@ -11877,6 +13449,7 @@ function seedNlGameStrings() {
     levelUpLine: '{n}× level-up',
     weaponLine: 'Nieuw wapen: {name}',
     petCoinsLine: '+{n} pet coins',
+    gearLine: 'Gear: {name}',
   });
   if (!I18N.nl.combat) I18N.nl.combat = {};
   Object.assign(I18N.nl.combat, {
@@ -11887,6 +13460,7 @@ function seedNlGameStrings() {
     pickupHp: '+HP', pickupRage: 'RAGE ×1.4', pickupEnergy: 'Vol energy!', pickupShield: 'Schild!',
     pickupSkillShard: '+1 {name} shard',
     pickupItemShard: '+1 {name} item-shard',
+    pickupGear: 'Gear: {name}',
     giant: 'REUS!', wallCombo3: 'Combo ×3 · sloop +{pct}%',
     wallCombo5: 'Combo ×5 · sloop +{pct}%', wallCombo8: 'Combo ×8 · sloop +{pct}%',
     wallCombo10: 'Combo ×10 · sloop +{pct}% — meester-tempo!',
@@ -12060,6 +13634,7 @@ function seedNlGameStrings() {
     saveFailRetry: 'Opslaan mislukt — probeer opnieuw',
     zoneDrop: '{zone}: {name}!',
     zoneFallback: 'Zone',
+    gearDrop: '{slot}: {name}!',
     masteryTier: '{name}: {tier}!',
     saveRepaired: 'Save gerepareerd: {notes}',
     saveCorruptOverwritten: 'Corrupte hoofd-save overschreven — export blijft je vangnet bij URL-wissel',
@@ -12215,6 +13790,7 @@ function seedNlGameStrings() {
     'Kunai & shuriken unlocken vroeg — gooi projectielen naast melee.',
     'Bazen fase 2 onder half HP — blokkeer en spaar energy voor de finish.',
     'Komt eraan: vogels in levels — mik met boog/kunai voor pickups zonder grond te raken.',
+    'Avontuur: monsters laten soms gear/cosmetics vallen — pak de pixel-orb op de grond.',
     'Dagelijkse missies + dagbonus (+80 XP) — reset om middernacht (UTC).',
     'Verder spelen hervat je laatste modus (avontuur, training, muur of 2P).',
     'Komt eraan: vloer-slag met zware wapens — scheurt tegels in muur-modus.',
@@ -12599,6 +14175,13 @@ function seedNlFromRuntime() {
     if (!I18N.nl.weapon) I18N.nl.weapon = {};
     for (const w of WEAPONS) I18N.nl.weapon[w.id] = { name: w.name, desc: w.desc };
   }
+  if (typeof GEAR_ITEMS !== 'undefined') {
+    if (!I18N.nl.gear) I18N.nl.gear = { slot: { head: 'Hoofd', chest: 'Borst', hands: 'Handen', legs: 'Benen', back: 'Rug' } };
+    if (!I18N.nl.gear.slot) I18N.nl.gear.slot = { head: 'Hoofd', chest: 'Borst', hands: 'Handen', legs: 'Benen', back: 'Rug' };
+    for (const g of GEAR_ITEMS) {
+      I18N.nl.gear[g.id] = { name: g.name || g.nameNl, desc: g.desc };
+    }
+  }
   if (typeof STYLES !== 'undefined') {
     if (!I18N.nl.style) I18N.nl.style = {};
     for (const s of STYLES) I18N.nl.style[s.id] = { name: s.name, hint: s.hint, tooltip: s.tooltip, bonus: s.bonus };
@@ -12822,7 +14405,12 @@ const CATALOG_EN = {
     levelUpLine: '{n}× level-up',
     weaponLine: 'New weapon: {name}',
     petCoinsLine: '+{n} pet coins',
+    gearLine: 'Gear: {name}',
   },
+  gear: {
+    slot: { head: 'Head', chest: 'Chest', hands: 'Hands', legs: 'Legs', back: 'Back' },
+  },
+
   banner: {
     levelStart: 'LEVEL {n}',
     levelStartDiff: '{diff} · LEVEL {n}',
@@ -12897,6 +14485,7 @@ const CATALOG_EN = {
     saveFailRetry: 'Save failed — try again',
     zoneDrop: '{zone}: {name}!',
     zoneFallback: 'Zone',
+    gearDrop: '{slot}: {name}!',
     masteryTier: '{name}: {tier}!',
     saveRepaired: 'Save repaired: {notes}',
     saveCorruptOverwritten: 'Corrupt main save overwritten — export stays your safety net',
@@ -13398,6 +14987,7 @@ const CATALOG_EN = {
     'Kunai & shuriken unlock early — throw projectiles alongside melee.',
     'Bosses phase 2 under half HP — block and save energy for the finish.',
     'Coming: birds in levels — aim with bow/kunai for pickups without touching ground.',
+    'Adventure: monsters can drop gear/cosmetics — pick up the pixel orb on the ground.',
     'Daily missions + day bonus (+80 XP) — resets at midnight (UTC).',
     'Continue resumes your last mode (adventure, training, wall or 2P).',
     'Coming: floor slam with heavy weapons — cracks tiles in wall mode.',
@@ -13434,6 +15024,7 @@ const CATALOG_EN = {
     pickupHp: '+HP', pickupRage: 'RAGE ×1.4', pickupEnergy: 'Full energy!', pickupShield: 'Shield!',
     pickupSkillShard: '+1 {name} shard',
     pickupItemShard: '+1 {name} item-shard',
+    pickupGear: 'Gear: {name}',
     giant: 'GIANT!', wallCombo3: 'Combo ×3 · smash +{pct}%',
     wallCombo5: 'Combo ×5 · smash +{pct}%', wallCombo8: 'Combo ×8 · smash +{pct}%',
     wallCombo10: 'Combo ×10 · smash +{pct}% — master tempo!',
@@ -13941,12 +15532,15 @@ function dailyHint(id) {
   return (typeof DAILY_PLAY_HINTS !== 'undefined' && DAILY_PLAY_HINTS[id]) || '';
 }
 
-function pickupLabel(kind, skillId, itemCat, itemId) {
+function pickupLabel(kind, skillId, itemCat, itemId, gearId) {
   if (kind === 'skill_shard' && skillId) {
     return t('combat.pickupSkillShard', { name: skillLabel(skillId) });
   }
   if (kind === 'item_shard' && itemCat && itemId) {
     return t('combat.pickupItemShard', { name: itemUpgradeLabel(itemCat, itemId) });
+  }
+  if (kind === 'gear' && gearId && typeof gearLabel === 'function') {
+    return t('combat.pickupGear', { name: gearLabel(gearId) });
   }
   const k = 'pickup.' + kind;
   const v = t(k);
@@ -14030,6 +15624,12 @@ function dailyModeLabel(mode) {
   if (mode === 'versus') return t('modes.versus');
   if (mode === 'coinrun') return t('modes.coinrun');
   return mode;
+}
+
+if (typeof GEAR_ITEMS !== 'undefined' && I18N.en && I18N.en.gear) {
+  for (const g of GEAR_ITEMS) {
+    I18N.en.gear[g.id] = { name: g.nameEn || g.name, desc: g.descEn || g.desc };
+  }
 }
 /* --- src/systems/audio-samples.js --- */
 /* ========================= ONLINE SFX SAMPLES (CC0) ======================
@@ -25453,7 +27053,8 @@ class Game {
       pk.life -= dt;
       if (!p.alive) continue;
       const dy = (p.y - 48) - pk.y;
-      if ((p.x - pk.x) ** 2 + dy ** 2 < 44 * 44) {
+      const grabR = (pk.kind === 'gear' && typeof IS_TOUCH !== 'undefined' && IS_TOUCH) ? 58 : 44;
+      if ((p.x - pk.x) ** 2 + dy ** 2 < grabR * grabR) {
         try { this.collectPickup(pk); } catch (pickErr) {
           try { sfReportError('pickup', pickErr, 'Pickup hiccup — gevecht gaat door'); } catch (_) {}
           pk.life = 0;
@@ -25652,6 +27253,12 @@ class Game {
           try { noteRunLootWeapon(this.runLoot, zwBoss.id); } catch (_) {}
         }
       } catch (_) {}
+      try {
+        const gdClear = typeof rollGearStageClearDrop === 'function' ? rollGearStageClearDrop(lv, diff) : null;
+        if (gdClear && this.player) {
+          this.spawnPickup(this.player.x, this.player.y - 56, { gearId: gdClear.id, dropTier: 'elite' });
+        }
+      } catch (_) {}
       const eggBonus = maybeAdvEggBonus();
       if (eggBonus) {
         spawnGameEggPet(this);
@@ -25826,6 +27433,16 @@ class Game {
         const zw = rollZoneWeaponDrop(this, m);
         if (zw) {
           try { noteRunLootWeapon(this.runLoot, zw.id); } catch (_) {}
+        }
+      } catch (_) {}
+      try {
+        const gd = typeof rollGearWorldDrop === 'function' ? rollGearWorldDrop(this, m) : null;
+        if (gd) {
+          let dropTier = 'normal';
+          if (m.superBoss) dropTier = 'superBoss';
+          else if (m.elite) dropTier = 'elite';
+          else if (m.giant) dropTier = 'giant';
+          this.spawnPickup(m.x + rand(-16, 16), m.y - m.size * 0.4, { gearId: gd.id, dropTier });
         }
       } catch (_) {}
     }
@@ -26097,6 +27714,19 @@ class Game {
       }
       return;
     }
+    if (opts.gearId) {
+      const gdef = typeof gearItemById === 'function' ? gearItemById(opts.gearId)
+        : (typeof gearById === 'function' ? gearById(opts.gearId) : null);
+      if (!gdef) return;
+      this.pickups.push({
+        x, y, kind: 'gear', gearId: gdef.id, dropTier: opts.dropTier || 'normal',
+        t: rand(0, TAU), life: SHARD_PICKUP_LIFE, bob: 0,
+      });
+      if (opts.dropTier && opts.dropTier !== 'normal') {
+        try { AudioSys.sfxAt('bell', x); } catch (_) {}
+      }
+      return;
+    }
     if (opts.itemCat && opts.itemId && itemUpgradeEligible(opts.itemCat, opts.itemId)) {
       this.pickups.push({
         x, y, kind: 'item_shard', itemCat: opts.itemCat, itemId: opts.itemId, dropTier: opts.dropTier || 'normal',
@@ -26131,7 +27761,7 @@ class Game {
     const meta = PICKUP_META[pk.kind] || PICKUP_META.heal;
     const p = this.player;
     const rareDrop = pk.dropTier === 'superBoss' || pk.dropTier === 'elite' || pk.dropTier === 'giant';
-    if (pk.kind === 'skill_shard' || pk.kind === 'item_shard') {
+    if (pk.kind === 'skill_shard' || pk.kind === 'item_shard' || pk.kind === 'gear') {
       if (rareDrop) {
         try { AudioSys.sfx('megaDrop'); } catch (_) {}
         haptic(pk.dropTier === 'superBoss' ? 28 : 18);
@@ -26170,6 +27800,20 @@ class Game {
         }
         break;
       }
+      case 'gear': {
+        const gid = pk.gearId;
+        const gdef = typeof gearById === 'function' ? gearById(gid) : null;
+        if (!gdef) break;
+        const fresh = typeof grantGearItem === 'function' ? grantGearItem(gid, { silent: true }) : false;
+        try { noteRunLootGear(this.runLoot, gid); } catch (_) {}
+        const col = typeof gearAccent === 'function' ? gearAccent(gdef) : '#c792ff';
+        const lbl = typeof gearLabel === 'function' ? gearLabel(gdef) : gdef.name;
+        this.floater(p.x, p.y - 100, t('combat.pickupGear', { name: lbl }), col, 15);
+        if (fresh) {
+          try { UI.toast(t('toast.gearDrop', { name: lbl, slot: gearSlotLabel(gdef.slot) }), 3600, { tone: 'ok' }); } catch (_) {}
+        }
+        break;
+      }
       case 'heal':
         p.hp = Math.min(p.maxhp, p.hp + Math.round(p.maxhp * 0.28));
         noteRunLootPickup(this.runLoot, 'heal');
@@ -26192,14 +27836,12 @@ class Game {
         this.floater(p.x, p.y - 100, t('combat.pickupShield'), meta.color, 16);
         break;
     }
-    this.banner(pickupLabel(pk.kind, pk.skillId, pk.itemCat, pk.itemId), 0.9,
-      (pk.kind === 'skill_shard' && SKILL_DEFS[pk.skillId]) ? SKILL_DEFS[pk.skillId].color
-        : (pk.kind === 'item_shard' && pk.itemCat && pk.itemId) ? itemUpgradeColor(pk.itemCat, pk.itemId)
-          : meta.color, 28);
-    this.burst(pk.x, pk.y,
-      (pk.kind === 'skill_shard' && SKILL_DEFS[pk.skillId]) ? SKILL_DEFS[pk.skillId].color
-        : (pk.kind === 'item_shard' && pk.itemCat && pk.itemId) ? itemUpgradeColor(pk.itemCat, pk.itemId)
-          : meta.color, 14);
+    const bannerCol = (pk.kind === 'skill_shard' && SKILL_DEFS[pk.skillId]) ? SKILL_DEFS[pk.skillId].color
+      : (pk.kind === 'item_shard' && pk.itemCat && pk.itemId) ? itemUpgradeColor(pk.itemCat, pk.itemId)
+      : (pk.kind === 'gear' && pk.gearId && typeof gearAccent === 'function') ? gearAccent(gearById(pk.gearId))
+      : meta.color;
+    this.banner(pickupLabel(pk.kind, pk.skillId, pk.itemCat, pk.itemId, pk.gearId), 0.9, bannerCol, 28);
+    this.burst(pk.x, pk.y, bannerCol, 14);
     bumpStat('pickups', 1);
     bumpDaily('pickups', 1);
     pk.life = 0;
@@ -27518,6 +29160,7 @@ class Game {
   }
 
   update(dt) {
+    try { if (typeof tickPlayTime === 'function') tickPlayTime(dt); } catch (_) {}
     // Solo-modes: nooit 2P-pads (primePlayInput(mode-string) was een regressie)
     if (this.mode !== 'versus' && typeof Input !== 'undefined' && Input.dualMode) {
       try { Input.dualMode = false; Input.layout(W, H); } catch (_) {}
@@ -28187,16 +29830,23 @@ class Game {
           ? SKILL_DEFS[pk.skillId].color
           : (pk.kind === 'item_shard' && pk.itemCat && pk.itemId)
             ? itemUpgradeColor(pk.itemCat, pk.itemId)
+            : (pk.kind === 'gear' && pk.gearId && typeof gearAccent === 'function')
+              ? gearAccent(gearById(pk.gearId))
             : meta.color;
         const y = pk.y + (pk.bob || 0);
         c.save();
         const pkBlur = (save.liteFx || Perf.tier >= 1 || motionReduced()) ? 0 : 14;
         c.shadowColor = pkCol; c.shadowBlur = pkBlur;
         c.fillStyle = pkCol;
-        c.beginPath(); c.arc(pk.x, y, 14, 0, TAU); c.fill();
+        const orbR = pk.kind === 'gear' ? 16 : 14;
+        c.beginPath(); c.arc(pk.x, y, orbR, 0, TAU); c.fill();
         c.strokeStyle = '#fff'; c.lineWidth = 2;
-        c.beginPath(); c.arc(pk.x, y, 14, 0, TAU); c.stroke();
-        drawPickupIcon(c, pk.kind, pk.x, y, pkCol);
+        c.beginPath(); c.arc(pk.x, y, orbR, 0, TAU); c.stroke();
+        if (pk.kind === 'gear' && pk.gearId && typeof drawGearPixels === 'function') {
+          drawGearPixels(c, pk.gearId, pk.x, y, 2);
+        } else {
+          drawPickupIcon(c, pk.kind, pk.x, y, pkCol);
+        }
         c.restore();
       }
     }

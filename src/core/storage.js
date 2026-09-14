@@ -5,13 +5,18 @@ const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const VERSION_UPDATE_SAVE_KEY = 'stickfighter_version_update_save_v1';
 const VERSION_UPDATE_FLAG_KEY = 'stickfighter_version_update_flag_v1';
 const SAVE_EXPORT_SCHEMA = 3;
-const APP_VERSION = '1.18.163';
+const APP_VERSION = '1.18.164';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 373;
+const SW_CACHE_REV = 374;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', petCoins: 0, dex: {}, summons: {}, pets: {}, activePet: null,
   eggPets: {}, activeEggPet: null, eggDaily: null,
   chestDaily: null, chestWeapons: {},
   zoneWeapons: {},
+  createdAt: 0,
+  /** Gear-systems schema (bc-e509fd59). World drops write owned[{id}]={at,src}. */
+  gear: { schema: 1, equipped: { head: null, chest: null, hands: null, legs: null, back: null }, owned: {} },
+  ownedGear: {},
+  equipment: {},
   advIsland: 0, advFails: {}, advMasterBuff: null, advSatanAt: {},
   /** Normal / Nightmare / Hell — Epic Seven-stijl endgame tiers */
   advDiff: 'normal',
@@ -27,7 +32,7 @@ const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', petCoins: 0,
   /** Keyboard legend on PC / when pads off (default on) */
   kbLegend: true,
   reducedMotion: false, liteFx: false, highContrast: false, lang: null, playerTag: '', lastPlay: null, tipsSeen: {},
-  stats: { kills: 0, advWins: 0, wallBestRun: 0, maxCombo: 0, maxKillStreak: 0, trainMaxCombo: 0, pickups: 0, bossKills: 0, vsMatches: 0, vsWins: 0, matsCoinBest: 0, summonCount: 0, killsSinceSummon: 0, petsTamed: 0, eggsHatched: 0, weaponFinishers: 0, tideBattleWins: 0, skillShards: 0, itemShards: 0, dailyBonusCount: 0 },
+  stats: { kills: 0, advWins: 0, wallBestRun: 0, maxCombo: 0, maxKillStreak: 0, trainMaxCombo: 0, pickups: 0, bossKills: 0, vsMatches: 0, vsWins: 0, matsCoinBest: 0, summonCount: 0, killsSinceSummon: 0, petsTamed: 0, eggsHatched: 0, weaponFinishers: 0, tideBattleWins: 0, skillShards: 0, itemShards: 0, dailyBonusCount: 0, playSec: 0 },
   achievements: {}, daily: null, vsPlayedIds: [], weaponMastery: {}, skillUpgrades: {}, itemUpgrades: {}, activeTechnique: 'spiral_orb', skill: 'spiral_orb', super: 'ketsbam', missionsIntroSeen: false };
 
 const MAX_LEVEL = 70;
@@ -1108,6 +1113,7 @@ function saveHasProgress(s) {
   if (Object.keys(st.achievements || {}).length > 0) return true;
   if (Object.keys(st.summons || {}).length > 0) return true;
   if (Object.keys(st.pets || {}).length > 0) return true;
+  if (st.gear && st.gear.owned && Object.keys(st.gear.owned).length > 0) return true;
   return false;
 }
 
@@ -1388,6 +1394,45 @@ function sanitizeSave(s) {
   }
   out.zoneWeapons = cleanZone;
 
+  const gearNow = Date.now();
+  if (out.ownedGear && typeof out.ownedGear === 'object' && !Array.isArray(out.ownedGear)) {
+    if (!out.gear || typeof out.gear !== 'object' || Array.isArray(out.gear)) {
+      out.gear = { schema: 1, equipped: {}, owned: {} };
+    }
+    if (!out.gear.owned || typeof out.gear.owned !== 'object') out.gear.owned = {};
+    for (const [k, v] of Object.entries(out.ownedGear)) {
+      const id = typeof gearCanonItemId === 'function' ? gearCanonItemId((v && v.gearId) || k) : ((v && v.gearId) || k);
+      if (!id || out.gear.owned[id]) continue;
+      const at = (v && typeof v === 'object' && v.at) ? v.at : gearNow;
+      out.gear.owned[id] = { at: Math.floor(Number(at) || gearNow), src: 'drop' };
+    }
+  }
+  if (typeof sanitizeCreatedAt === 'function') {
+    out.createdAt = sanitizeCreatedAt(out.createdAt, out, gearNow);
+  } else if (!out.createdAt || !Number.isFinite(Number(out.createdAt))) {
+    const veteran = (out.lvl >= 5) || ((out.stats && out.stats.kills) >= 20) || saveHasProgress(out);
+    out.createdAt = Date.now() - (veteran ? 90 : 0) * 86400000;
+  } else {
+    out.createdAt = Math.floor(Number(out.createdAt));
+  }
+  if (typeof sanitizeGearSave === 'function') {
+    out.gear = sanitizeGearSave(out.gear, out, gearNow);
+    if (typeof grantStarterGear === 'function') grantStarterGear(out, gearNow);
+  } else if (typeof mergeLegacyGearOwned === 'function') {
+    mergeLegacyGearOwned(out);
+  } else {
+    out.gear = { schema: 1, equipped: { head: null, chest: null, hands: null, legs: null, back: null }, owned: {} };
+  }
+  const ownedGearMirror = {};
+  if (out.gear && out.gear.owned && typeof out.gear.owned === 'object') {
+    for (const [id, row] of Object.entries(out.gear.owned)) {
+      ownedGearMirror[id] = { gearId: id, at: (row && row.at) || 0 };
+    }
+  }
+  out.ownedGear = ownedGearMirror;
+  out.equipment = (out.equipment && typeof out.equipment === 'object') ? out.equipment : {};
+  delete out.gearOwned;
+
   out.chestWeapons = typeof sanitizeChestWeapons === 'function'
     ? sanitizeChestWeapons(out.chestWeapons)
     : {};
@@ -1621,5 +1666,6 @@ const PICKUP_META = {
   shield: { color: '#9fd8ff', label: 'SCHILD' },
   skill_shard: { color: '#ffd75e', label: 'SKILL' },
   item_shard: { color: '#c792ff', label: 'ITEM' },
+  gear: { color: '#c792ff', label: 'GEAR' },
 };
 

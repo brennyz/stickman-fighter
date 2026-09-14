@@ -142,6 +142,7 @@ function seedNlGameStrings() {
     levelUpLine: '{n}× level-up',
     weaponLine: 'Nieuw wapen: {name}',
     petCoinsLine: '+{n} pet coins',
+    gearLine: 'Gear: {name}',
   });
   if (!I18N.nl.combat) I18N.nl.combat = {};
   Object.assign(I18N.nl.combat, {
@@ -152,6 +153,7 @@ function seedNlGameStrings() {
     pickupHp: '+HP', pickupRage: 'RAGE ×1.4', pickupEnergy: 'Vol energy!', pickupShield: 'Schild!',
     pickupSkillShard: '+1 {name} shard',
     pickupItemShard: '+1 {name} item-shard',
+    pickupGear: 'Gear: {name}',
     giant: 'REUS!', wallCombo3: 'Combo ×3 · sloop +{pct}%',
     wallCombo5: 'Combo ×5 · sloop +{pct}%', wallCombo8: 'Combo ×8 · sloop +{pct}%',
     wallCombo10: 'Combo ×10 · sloop +{pct}% — meester-tempo!',
@@ -325,6 +327,7 @@ function seedNlGameStrings() {
     saveFailRetry: 'Opslaan mislukt — probeer opnieuw',
     zoneDrop: '{zone}: {name}!',
     zoneFallback: 'Zone',
+    gearDrop: '{slot}: {name}!',
     masteryTier: '{name}: {tier}!',
     saveRepaired: 'Save gerepareerd: {notes}',
     saveCorruptOverwritten: 'Corrupte hoofd-save overschreven — export blijft je vangnet bij URL-wissel',
@@ -480,6 +483,7 @@ function seedNlGameStrings() {
     'Kunai & shuriken unlocken vroeg — gooi projectielen naast melee.',
     'Bazen fase 2 onder half HP — blokkeer en spaar energy voor de finish.',
     'Komt eraan: vogels in levels — mik met boog/kunai voor pickups zonder grond te raken.',
+    'Avontuur: monsters laten soms gear/cosmetics vallen — pak de pixel-orb op de grond.',
     'Dagelijkse missies + dagbonus (+80 XP) — reset om middernacht (UTC).',
     'Verder spelen hervat je laatste modus (avontuur, training, muur of 2P).',
     'Komt eraan: vloer-slag met zware wapens — scheurt tegels in muur-modus.',
@@ -864,6 +868,13 @@ function seedNlFromRuntime() {
     if (!I18N.nl.weapon) I18N.nl.weapon = {};
     for (const w of WEAPONS) I18N.nl.weapon[w.id] = { name: w.name, desc: w.desc };
   }
+  if (typeof GEAR_ITEMS !== 'undefined') {
+    if (!I18N.nl.gear) I18N.nl.gear = { slot: { head: 'Hoofd', chest: 'Borst', hands: 'Handen', legs: 'Benen', back: 'Rug' } };
+    if (!I18N.nl.gear.slot) I18N.nl.gear.slot = { head: 'Hoofd', chest: 'Borst', hands: 'Handen', legs: 'Benen', back: 'Rug' };
+    for (const g of GEAR_ITEMS) {
+      I18N.nl.gear[g.id] = { name: g.name || g.nameNl, desc: g.desc };
+    }
+  }
   if (typeof STYLES !== 'undefined') {
     if (!I18N.nl.style) I18N.nl.style = {};
     for (const s of STYLES) I18N.nl.style[s.id] = { name: s.name, hint: s.hint, tooltip: s.tooltip, bonus: s.bonus };
@@ -1087,7 +1098,12 @@ const CATALOG_EN = {
     levelUpLine: '{n}× level-up',
     weaponLine: 'New weapon: {name}',
     petCoinsLine: '+{n} pet coins',
+    gearLine: 'Gear: {name}',
   },
+  gear: {
+    slot: { head: 'Head', chest: 'Chest', hands: 'Hands', legs: 'Legs', back: 'Back' },
+  },
+
   banner: {
     levelStart: 'LEVEL {n}',
     levelStartDiff: '{diff} · LEVEL {n}',
@@ -1162,6 +1178,7 @@ const CATALOG_EN = {
     saveFailRetry: 'Save failed — try again',
     zoneDrop: '{zone}: {name}!',
     zoneFallback: 'Zone',
+    gearDrop: '{slot}: {name}!',
     masteryTier: '{name}: {tier}!',
     saveRepaired: 'Save repaired: {notes}',
     saveCorruptOverwritten: 'Corrupt main save overwritten — export stays your safety net',
@@ -1663,6 +1680,7 @@ const CATALOG_EN = {
     'Kunai & shuriken unlock early — throw projectiles alongside melee.',
     'Bosses phase 2 under half HP — block and save energy for the finish.',
     'Coming: birds in levels — aim with bow/kunai for pickups without touching ground.',
+    'Adventure: monsters can drop gear/cosmetics — pick up the pixel orb on the ground.',
     'Daily missions + day bonus (+80 XP) — resets at midnight (UTC).',
     'Continue resumes your last mode (adventure, training, wall or 2P).',
     'Coming: floor slam with heavy weapons — cracks tiles in wall mode.',
@@ -1699,6 +1717,7 @@ const CATALOG_EN = {
     pickupHp: '+HP', pickupRage: 'RAGE ×1.4', pickupEnergy: 'Full energy!', pickupShield: 'Shield!',
     pickupSkillShard: '+1 {name} shard',
     pickupItemShard: '+1 {name} item-shard',
+    pickupGear: 'Gear: {name}',
     giant: 'GIANT!', wallCombo3: 'Combo ×3 · smash +{pct}%',
     wallCombo5: 'Combo ×5 · smash +{pct}%', wallCombo8: 'Combo ×8 · smash +{pct}%',
     wallCombo10: 'Combo ×10 · smash +{pct}% — master tempo!',
@@ -2206,12 +2225,15 @@ function dailyHint(id) {
   return (typeof DAILY_PLAY_HINTS !== 'undefined' && DAILY_PLAY_HINTS[id]) || '';
 }
 
-function pickupLabel(kind, skillId, itemCat, itemId) {
+function pickupLabel(kind, skillId, itemCat, itemId, gearId) {
   if (kind === 'skill_shard' && skillId) {
     return t('combat.pickupSkillShard', { name: skillLabel(skillId) });
   }
   if (kind === 'item_shard' && itemCat && itemId) {
     return t('combat.pickupItemShard', { name: itemUpgradeLabel(itemCat, itemId) });
+  }
+  if (kind === 'gear' && gearId && typeof gearLabel === 'function') {
+    return t('combat.pickupGear', { name: gearLabel(gearId) });
   }
   const k = 'pickup.' + kind;
   const v = t(k);
@@ -2295,4 +2317,10 @@ function dailyModeLabel(mode) {
   if (mode === 'versus') return t('modes.versus');
   if (mode === 'coinrun') return t('modes.coinrun');
   return mode;
+}
+
+if (typeof GEAR_ITEMS !== 'undefined' && I18N.en && I18N.en.gear) {
+  for (const g of GEAR_ITEMS) {
+    I18N.en.gear[g.id] = { name: g.nameEn || g.name, desc: g.descEn || g.desc };
+  }
 }

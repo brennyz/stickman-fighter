@@ -91,6 +91,13 @@
   },
   "userWishlist": [
     {
+      "id": "w-20260914T171113",
+      "from": "user",
+      "text": "Systems PR READY #280 with 131 gear ids + gates. Wire world drops to those catalog ids; respect level+time gates; can-own-locked OK.",
+      "status": "done-in-code",
+      "updated": "2026-09-14"
+    },
+    {
       "id": "w-20260914T151100",
       "from": "user",
       "text": "ULTRA SPRINT into #266 (draft, no merge): EN-NL consistency (YOU LOST→VERLOREN when NL, kill raw menu.tips / PICK AN ISLAND leftovers); quieter dismissible version toast; remaining screens HOME tiles; name field stays off.",
@@ -614,6 +621,14 @@
   ],
   "sessionLog": [
     {
+      "at": "2026-09-14T17:11:22Z",
+      "summary": "World drops wired to PR #280 131 gear IDs; gates on rolls; can-own-locked grant; 16x16 pixels."
+    },
+    {
+      "at": "2026-09-14T17:11:13Z",
+      "summary": "World drops wired to PR #280 131 gear IDs; gates on rolls; can-own-locked grant; 16x16 pixels."
+    },
+    {
       "at": "2026-09-14T15:17:48Z",
       "summary": "#266 sprint: NL VERLOREN, Tips-label i.p.v. menu.tips, stillere versie-banner, rest HOME. v1.18.163/SW373. Draft."
     },
@@ -704,14 +719,6 @@
     {
       "at": "2026-08-17T10:18:00Z",
       "summary": "main LIVE 33d89b6 v1.18.151 — pull-commando voor de pc klaar"
-    },
-    {
-      "at": "2026-08-17T10:03:24Z",
-      "summary": "LIVE gemerged #248–#255 naar main conflictloos · v1.18.151 / SW 361 — pull main op de pc"
-    },
-    {
-      "at": "2026-08-17T10:02:29Z",
-      "summary": "LIVE merge van d8–d14 stack naar main (conflictloos FF)"
     }
   ],
   "implementedFeaturesSummary": "d18 char select deel 1+2 (v1.11.1-2); Mats coinrun + shuriken mik/vliegers + anti-spam (v1.12.0); speel.html (v1.12.2+). Zie HANDOFF-ZOEKINDEX.md en improvement-d20-bag.json userFeatureLog.",
