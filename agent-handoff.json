@@ -22,8 +22,8 @@
     "shareUrl": "https://brennyz.github.io/stickman-fighter/speel.html",
     "localMainHead": "68e5ccc",
     "remoteMainHead": "68e5ccc",
-    "note": "LIVE main v1.18.161 / SW 371 after #264 merge (68e5ccc). This branch: start polish + HOME chrome unify. #265 folded. #263 parked. Not silent main.",
-    "updated": "2026-09-14T14:20:00Z"
+    "note": "Draft #290 buildings powers + timed loot (4/4). Do not merge to main. Sibling pixel art #289. Versus untouched.",
+    "updated": "2026-09-14T17:25:00Z"
   },
   "githubSync": {
     "policy": "Trigger van de user: «merge main» = commit (als nodig) + push origin/main. Daarna GitHub Pages (~1–3 min) → speel.html is LIVE. Niet stil pushen. Houd pendingUpload bij tot origin/main gelijk is.",
@@ -87,7 +87,13 @@
         "text": "scripts/github-sync-status.sh"
       }
     ],
-    "pendingMerge": []
+    "pendingMerge": [
+      {
+        "id": "pr-290",
+        "kind": "pr",
+        "text": "#290 feat(buildings): timed resources + combat powers (4/4) — draft, no merge"
+      }
+    ]
   },
   "userWishlist": [
     {
@@ -621,6 +627,10 @@
   ],
   "sessionLog": [
     {
+      "at": "2026-09-14T17:20:53Z",
+      "summary": "Buildings 4/4: timed resources + Lv1/3/5 powers on 5 factories. Draft #290, no merge. v1.18.164/SW374."
+    },
+    {
       "at": "2026-09-14T15:17:48Z",
       "summary": "#266 sprint: NL VERLOREN, Tips-label i.p.v. menu.tips, stillere versie-banner, rest HOME. v1.18.163/SW373. Draft."
     },
@@ -715,10 +725,6 @@
     {
       "at": "2026-08-17T10:03:24Z",
       "summary": "LIVE gemerged #248–#255 naar main conflictloos · v1.18.151 / SW 361 — pull main op de pc"
-    },
-    {
-      "at": "2026-08-17T10:02:29Z",
-      "summary": "LIVE merge van d8–d14 stack naar main (conflictloos FF)"
     }
   ],
   "implementedFeaturesSummary": "d18 char select deel 1+2 (v1.11.1-2); Mats coinrun + shuriken mik/vliegers + anti-spam (v1.12.0); speel.html (v1.12.2+). Zie HANDOFF-ZOEKINDEX.md en improvement-d20-bag.json userFeatureLog.",

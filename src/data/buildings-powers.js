@@ -23,10 +23,15 @@ const BUILDING_FACTORY_IDS = ['dojo', 'forge', 'garden', 'tower', 'shrine'];
 
 const BUILDING_ID_ALIASES = {
   dojo: 'dojo', hall: 'dojo', training: 'dojo', factory_dojo: 'dojo', dojo_factory: 'dojo',
+  chippingwood: 'dojo', factorychippingwood: 'dojo',
   forge: 'forge', smith: 'forge', workshop: 'forge', factory_forge: 'forge', forge_factory: 'forge',
+  sticklighter: 'forge', factorysticklighter: 'forge',
   garden: 'garden', farm: 'garden', mill: 'garden', kitchen: 'garden', factory_garden: 'garden',
+  bambooboesaboiler: 'garden', bambooboiler: 'garden', boesa: 'garden',
   tower: 'tower', watch: 'tower', barracks: 'tower', factory_tower: 'tower',
+  woodchipglue: 'tower', factorywoodchipglue: 'tower',
   shrine: 'shrine', well: 'shrine', temple: 'shrine', factory_shrine: 'shrine',
+  echowhistlemill: 'shrine', whistlemill: 'shrine',
 };
 
 const BUILDING_RESOURCE = {

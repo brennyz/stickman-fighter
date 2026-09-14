@@ -211,6 +211,12 @@ run(`
 `);
 assert(run('globalThis.__player2.baseDmg === 10 && globalThis.__player2.maxhp === 100'), 'all-zero buildings do not change combat');
 
+assert(run('buildingCanonId("chipping-wood") === "dojo"'), 'pixel chipping-wood → dojo');
+assert(run('buildingCanonId("stick-lighter") === "forge"'), 'pixel stick-lighter → forge');
+assert(run('buildingCanonId("bamboo-boesa-boiler") === "garden"'), 'pixel boiler → garden');
+assert(run('buildingCanonId("woodchip-glue") === "tower"'), 'pixel woodchip-glue → tower');
+assert(run('buildingCanonId("echo-whistle-mill") === "shrine"'), 'pixel whistle-mill → shrine');
+
 const ids = run('BUILDING_FACTORY_IDS.join(",")');
 assert(ids === 'dojo,forge,garden,tower,shrine', 'stable ids');
 

@@ -53,6 +53,18 @@ Examples: dojo Lv1 = 12/h, pending cap 48. Dojo Lv5 = 28/h, pending cap 112.
 
 Also accepts systems-shaped `{ levels, pending, stock }` and flat `{ dojo: { lv: 2 } }`. Sanitize never throws. Unknown ids / `__proto__` stripped.
 
+Pixel-art lane (#289) kebab ids alias in:
+
+| Pixel / systems id | Power profile |
+|--------------------|---------------|
+| `chipping-wood` | dojo |
+| `stick-lighter` | forge |
+| `bamboo-boesa-boiler` | garden |
+| `woodchip-glue` | tower |
+| `echo-whistle-mill` | shrine |
+
+If the systems catalog ships a different five-id list, the first five entries still map by index.
+
 ## UI bind (HOME tile lane)
 
 Stable:
