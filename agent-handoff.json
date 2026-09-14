@@ -94,7 +94,7 @@
       "id": "w-20260914T125300",
       "from": "user",
       "text": "Je bent een gamer, je verwacht een game, wat mist deze game, ontwikkel dat direct (2026-09-14). Training live: Rabbit 100% HP / geen hit-feedback. Geen versus/nuclear CSS/iOS/share-URL.",
-      "status": "active",
+      "status": "done-in-code",
       "updated": "2026-09-14"
     },
     {
@@ -544,6 +544,10 @@
   ],
   "sessionLog": [
     {
+      "at": "2026-09-14T13:06:51Z",
+      "summary": "Training hit-feel: first punch connects + ghost HP + RABBIT n/max · v1.18.158 / SW 368 · PR #261"
+    },
+    {
       "at": "2026-09-14T11:03:54Z",
       "summary": "Playtest P1: startscherm fold + NL hub, combat feedback/opener, trainLostTip · v1.18.153 / SW 363"
     },
@@ -638,10 +642,6 @@
     {
       "at": "2026-08-17T06:33:20Z",
       "summary": "Director-protocol ontvangen — d20-claim via CLI, niet mergen"
-    },
-    {
-      "at": "2026-08-16T08:27:26Z",
-      "summary": "LIVE gemerged naar main: mobiel slaan + d12 dex · v1.18.143 / SW 353 — Verse versie op telefoon"
     }
   ],
   "implementedFeaturesSummary": "d18 char select deel 1+2 (v1.11.1-2); Mats coinrun + shuriken mik/vliegers + anti-spam (v1.12.0); speel.html (v1.12.2+). Zie HANDOFF-ZOEKINDEX.md en improvement-d20-bag.json userFeatureLog.",
