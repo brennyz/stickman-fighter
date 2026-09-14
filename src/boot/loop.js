@@ -429,12 +429,16 @@ function updateNetStatus(ev) {
       el.classList.add('sw-update');
       el.setAttribute('role', 'button');
       if ('tabIndex' in el) el.tabIndex = 0;
-      el.textContent = 'Nieuwe versie klaar — tik om te laden';
+      el.textContent = (typeof tOr === 'function')
+        ? tOr('net.updateReady', 'Nieuwe versie klaar — tik om te laden')
+        : 'Nieuwe versie klaar — tik om te laden';
     } else {
       el.classList.add('sw-update-wait');
       if (el.removeAttribute) el.removeAttribute('role');
       if ('tabIndex' in el) el.tabIndex = -1;
-      el.textContent = 'Nieuwe versie — laadt in het menu';
+      el.textContent = (typeof tOr === 'function')
+        ? tOr('net.updateWait', 'Nieuwe versie — laadt in het menu')
+        : 'Nieuwe versie — laadt in het menu';
     }
   };
 
@@ -451,12 +455,12 @@ function updateNetStatus(ev) {
     el.classList.remove('online-flash', 'sw-pending', 'sw-update', 'sw-update-wait');
     if (state === 'play') {
       el.textContent = standalone
-        ? 'Offline — speelt uit cache · save blijft hier'
-        : 'Offline — uit cache · icoon in de lade = altijd spelen';
+        ? (typeof tOr === 'function' ? tOr('net.offlinePlay', 'Offline — speelt uit cache · save blijft hier') : 'Offline — speelt uit cache · save blijft hier')
+        : (typeof tOr === 'function' ? tOr('net.offlinePlayHint', 'Offline — uit cache · icoon in de lade = altijd spelen') : 'Offline — uit cache · icoon in de lade = altijd spelen');
     } else {
       el.textContent = swReady
-        ? 'Offline — menu & save uit cache'
-        : 'Offline — open 1× online, daarna speelt het zonder net';
+        ? (typeof tOr === 'function' ? tOr('net.offlineMenu', 'Offline — menu & save uit cache') : 'Offline — menu & save uit cache')
+        : (typeof tOr === 'function' ? tOr('net.offlineNeedOnce', 'Offline — open 1× online, daarna speelt het zonder net') : 'Offline — open 1× online, daarna speelt het zonder net');
     }
     return;
   }
@@ -464,7 +468,7 @@ function updateNetStatus(ev) {
     el.hidden = false;
     el.classList.remove('sw-pending', 'sw-update', 'sw-update-wait');
     el.classList.add('online-flash');
-    el.textContent = 'Weer online';
+    el.textContent = (typeof tOr === 'function') ? tOr('net.backOnline', 'Weer online') : 'Weer online';
     if ('serviceWorker' in navigator) {
       try { navigator.serviceWorker.ready.then((reg) => reg.update()); } catch (_) {}
     }
@@ -481,7 +485,7 @@ function updateNetStatus(ev) {
     el.hidden = false;
     el.classList.add('sw-pending');
     el.classList.remove('online-flash', 'sw-update', 'sw-update-wait', 'offline-ready');
-    el.textContent = 'Cache laden… — daarna ook offline';
+    el.textContent = (typeof tOr === 'function') ? tOr('net.cacheLoading', 'Cache laden… — daarna ook offline') : 'Cache laden… — daarna ook offline';
     return;
   }
   if (swReady && 'caches' in window && !window.__sfOfflineReadyShown) {
@@ -498,7 +502,7 @@ function updateNetStatus(ev) {
         el2.hidden = false;
         el2.classList.remove('sw-pending', 'sw-update', 'sw-update-wait');
         el2.classList.add('offline-ready');
-        el2.textContent = 'Klaar voor offline — save blijft hier';
+        el2.textContent = (typeof tOr === 'function') ? tOr('net.offlineReady', 'Klaar voor offline — save blijft hier') : 'Klaar voor offline — save blijft hier';
         setTimeout(() => {
           if (!window.__sfSwUpdateReady && navigator.onLine && el2.classList.contains('offline-ready')) {
             el2.hidden = true;

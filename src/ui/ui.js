@@ -1862,7 +1862,9 @@ const UI = {
   openModeHub(id) {
     if (!MODE_HUB_META[id]) return;
     this.modeHubId = id;
-    this.safeOpen('modeHubScreen', () => this.renderModeHub(), { msg: 'Hub laden mislukt' });
+    this.safeOpen('modeHubScreen', () => this.renderModeHub(), {
+      msg: (typeof tOr === 'function') ? tOr('hub.loadFail', 'Hub laden mislukt') : 'Hub laden mislukt',
+    });
   },
 
   renderModeHub() {
@@ -1880,6 +1882,8 @@ const UI = {
     if (title) title.textContent = t(isArcade ? 'hub.arcadeTitle' : 'hub.collectTitle');
     if (sub) sub.textContent = t(isArcade ? 'hub.arcadeSub' : 'hub.collectSub');
     if (stepEl) stepEl.textContent = t('hub.step');
+    const trainTile = document.getElementById('btnTraining');
+    if (trainTile) trainTile.setAttribute('data-hub-badge', t('menu.playHere'));
     document.querySelectorAll('[data-hub-panel]').forEach((panel) => {
       panel.hidden = panel.dataset.hubPanel !== this.modeHubId;
     });
