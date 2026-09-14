@@ -212,7 +212,7 @@ function grantZoneWeapon(weaponId, opts) {
       const zone = weaponDropZoneOf(w);
       const col = zone ? zone.color : '#c47aff';
       if (typeof UI !== 'undefined' && UI && typeof UI.toast === 'function') {
-        UI.toast(`${zone ? zone.name : 'Zone'}: ${weaponLabel(w)}!`, 3800);
+        UI.toast(t('toast.zoneDrop', { zone: zone ? zone.name : t('toast.zoneFallback'), name: weaponLabel(w) }), 3800, { tone: 'ok' });
       }
       if (typeof game !== 'undefined' && game && typeof game.banner === 'function') {
         game.banner(weaponLabel(w), 2.1, col, 34);

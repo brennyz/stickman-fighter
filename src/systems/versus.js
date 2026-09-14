@@ -90,8 +90,6 @@ function swapVsSides() {}
 
 function toastVersusRetired() {
   try {
-    UI.toast(t('toast.versusRetired') || '2-speler lokaal is uit — later online multiplayer', 3200);
-  } catch (_) {
-    try { UI.toast('2-speler lokaal is uit — later online multiplayer', 3200); } catch (__) {}
-  }
+    UI.toast(t('toast.versusRetired'), 3200, { tone: 'warn' });
+  } catch (_) {}
 }

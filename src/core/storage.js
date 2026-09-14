@@ -5,9 +5,9 @@ const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const VERSION_UPDATE_SAVE_KEY = 'stickfighter_version_update_save_v1';
 const VERSION_UPDATE_FLAG_KEY = 'stickfighter_version_update_flag_v1';
 const SAVE_EXPORT_SCHEMA = 3;
-const APP_VERSION = '1.18.153';
+const APP_VERSION = '1.18.154';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 363;
+const SW_CACHE_REV = 364;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', petCoins: 0, dex: {}, summons: {}, pets: {}, activePet: null,
   eggPets: {}, activeEggPet: null, eggDaily: null,
   chestDaily: null, chestWeapons: {},
@@ -940,12 +940,26 @@ function readSaveJson(raw) {
   }
 }
 
-function userToast(msg, ms) {
+function userToast(msg, ms, opts) {
   try {
-    if (typeof UI !== 'undefined' && UI.toast) UI.toast(msg, ms || 3200);
+    if (typeof UI !== 'undefined' && UI.toast) UI.toast(msg, ms || 3200, opts);
   } catch (err) {
     console.warn('[Stickman] toast', msg, err);
   }
+}
+
+function toastT(key, params, fallback) {
+  try {
+    if (typeof tOr === 'function') {
+      const s = tOr(key, fallback || '', params);
+      if (s) return s;
+    }
+    if (typeof t === 'function') {
+      const s = t(key, params);
+      if (s && s !== key) return s;
+    }
+  } catch (_) {}
+  return fallback || '';
 }
 
 function writeSaveStamp(json) {
@@ -992,7 +1006,7 @@ function persist() {
     if (json.length > 180000) {
       if (!window.__sfPersistWarn) {
         window.__sfPersistWarn = true;
-        try { UI.toast('Save bijna te groot — export in Instellingen', 4800); } catch (_) {}
+        try { UI.toast(toastT('toast.saveAlmostTooBig', null, 'Save bijna te groot — export in Instellingen'), 4800, { tone: 'warn' }); } catch (_) {}
       }
     }
     localStorage.setItem(SAVE_KEY, json);
@@ -1003,7 +1017,7 @@ function persist() {
     } catch (_) {}
     if (!backupOk && !window.__sfBackupWriteWarn) {
       window.__sfBackupWriteWarn = true;
-      userToast('Backup opslaan mislukt — export save in Instellingen (hoofd-save wel OK)', 5200);
+      userToast(toastT('toast.backupWriteFail', null, 'Backup opslaan mislukt — export save in Instellingen (hoofd-save wel OK)'), 5200, { tone: 'warn' });
     }
     writeSaveStamp(json);
     return true;
@@ -1016,8 +1030,8 @@ function persist() {
     if (!window.__sfPersistWarn) {
       window.__sfPersistWarn = true;
       userToast(backupSaved
-        ? 'Hoofd-save mislukt — backup wel bijgewerkt (export in Instellingen)'
-        : 'Opslaan mislukt — export save in Instellingen', 5200);
+        ? toastT('toast.persistPrimaryFail', null, 'Hoofd-save mislukt — backup wel bijgewerkt (export in Instellingen)')
+        : toastT('toast.persistFail', null, 'Opslaan mislukt — export save in Instellingen'), 5200, { tone: 'danger' });
     }
     return false;
   }
@@ -1050,8 +1064,8 @@ function persistOrToast(context) {
   if (!window.__sfPersistCtxWarn[key]) {
     window.__sfPersistCtxWarn[key] = true;
     userToast(context
-      ? `Opslaan mislukt (${context}) — export save in Instellingen`
-      : 'Opslaan mislukt — export save in Instellingen', 4200);
+      ? toastT('toast.persistFailCtx', { context }, `Opslaan mislukt (${context}) — export save in Instellingen`)
+      : toastT('toast.persistFail', null, 'Opslaan mislukt — export save in Instellingen'), 4200, { tone: 'warn' });
   }
   return false;
 }
@@ -1070,7 +1084,7 @@ function applySaveFromBackupRaw() {
 function restoreSaveFromBackup() {
   try {
     if (!applySaveFromBackupRaw()) {
-      userToast('Backup herstellen mislukt — export save als je die hebt', 4200);
+      userToast(toastT('toast.backupFailed', null, 'Backup herstellen mislukt — export save als je die hebt'), 4200, { tone: 'danger' });
       return false;
     }
     try { checkAchievements(); } catch (_) {}
@@ -1144,7 +1158,7 @@ function applyVersionUpdateSave() {
   try {
     save = sanitizeSave(stash.save);
     if (!persist()) {
-      userToast('Save geladen maar opslaan mislukt — export in Instellingen', 4200);
+      userToast(toastT('toast.persistFail', null, 'Save geladen maar opslaan mislukt — export in Instellingen'), 4200, { tone: 'danger' });
       return false;
     }
     clearVersionUpdateSave();

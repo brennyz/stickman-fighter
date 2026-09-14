@@ -1353,23 +1353,163 @@ const UI = {
     }
   },
 
-  toast(msg, ms) {
+  _toastQ: null,
+  _toastEls: null,
+
+  _ensureToastHost(host) {
+    if (!host || !host.setAttribute) return;
+    try {
+      if (!host.getAttribute || host.getAttribute('role') !== 'status') {
+        host.setAttribute('role', 'status');
+      }
+      if (!host.getAttribute || host.getAttribute('aria-live') !== 'polite') {
+        host.setAttribute('aria-live', 'polite');
+        host.setAttribute('aria-relevant', 'additions');
+      }
+    } catch (_) {}
+  },
+
+  _resolveToastText(msg) {
+    const text = String(msg == null ? '' : msg).trim();
+    if (!text) return '';
+    if (/^[a-z][a-z0-9]*(\.[a-zA-Z0-9_]+)+$/.test(text) && text.length < 80) {
+      try {
+        if (typeof tOr === 'function') {
+          const resolved = tOr(text, '');
+          if (resolved && resolved !== text) return resolved;
+        }
+        if (typeof t === 'function') {
+          const resolved = t(text);
+          if (resolved && resolved !== text) return resolved;
+        }
+      } catch (_) {}
+      return '';
+    }
+    return text;
+  },
+
+  _parseToastArgs(ms, opts) {
+    let duration = 2800;
+    let tone = 'info';
+    if (ms && typeof ms === 'object') {
+      opts = ms;
+      duration = Number(opts.ms) > 0 ? Number(opts.ms) : 2800;
+    } else if (typeof ms === 'number' && ms > 0) {
+      duration = ms;
+    }
+    if (opts && typeof opts === 'object') {
+      if (opts.tone) tone = String(opts.tone);
+      if (typeof ms !== 'number' && Number(opts.ms) > 0) duration = Number(opts.ms);
+    }
+    if (tone !== 'ok' && tone !== 'warn' && tone !== 'danger') tone = 'info';
+    return { ms: duration, tone };
+  },
+
+  toast(msg, ms, opts) {
+    const text = this._resolveToastText(msg);
+    if (!text) return;
+    const spec = this._parseToastArgs(ms, opts);
     const host = document.getElementById('toastHost');
     if (!host) return;
-    if (this._toastHide) {
-      clearTimeout(this._toastHide);
-      this._toastHide = null;
+    this._ensureToastHost(host);
+    this._toastQ = this._toastQ || [];
+    this._toastEls = this._toastEls || [];
+
+    const sameEl = this._toastEls.find((el) => el && el.textContent === text);
+    if (sameEl) {
+      this._bumpToast(sameEl, spec.ms);
+      return;
     }
-    if (typeof host.replaceChildren === 'function') host.replaceChildren();
-    else host.innerHTML = '';
+    const sameQ = this._toastQ.find((q) => q.text === text);
+    if (sameQ) {
+      sameQ.ms = Math.max(sameQ.ms, spec.ms);
+      if (spec.tone !== 'info') sameQ.tone = spec.tone;
+      return;
+    }
+    const item = { text, ms: spec.ms, tone: spec.tone };
+    if (this._toastEls.length >= 2) {
+      this._toastQ.push(item);
+      if (this._toastQ.length > 4) this._toastQ.shift();
+      return;
+    }
+    this._mountToast(item);
+  },
+
+  _bumpToast(el, ms) {
+    if (!el) return;
+    if (el._toastHide) {
+      try { clearTimeout(el._toastHide); } catch (_) {}
+    }
+    el._toastHide = setTimeout(() => this._dismissToast(el), ms || 2800);
+    try {
+      el.classList.remove('toast-bump');
+      void el.offsetWidth;
+      el.classList.add('toast-bump');
+    } catch (_) {}
+  },
+
+  _mountToast(item) {
+    const host = document.getElementById('toastHost');
+    if (!host || !item) return;
     const el = document.createElement('div');
-    el.className = 'toast';
-    el.textContent = msg;
-    host.appendChild(el);
-    this._toastHide = setTimeout(() => {
-      el.remove();
-      this._toastHide = null;
-    }, ms || 2800);
+    el.className = 'toast' + (item.tone && item.tone !== 'info' ? ' toast-' + item.tone : '');
+    el.textContent = item.text;
+    try { el.setAttribute('role', 'status'); } catch (_) {}
+    const dismiss = () => this._dismissToast(el);
+    try {
+      el.addEventListener('click', dismiss);
+      el.addEventListener('keydown', (e) => {
+        if (e && (e.key === 'Enter' || e.key === ' ' || e.key === 'Escape')) {
+          if (e.preventDefault) e.preventDefault();
+          dismiss();
+        }
+      });
+    } catch (_) {}
+    try {
+      if (host.firstChild) host.insertBefore(el, host.firstChild);
+      else host.appendChild(el);
+    } catch (_) {
+      try { host.appendChild(el); } catch (__) {}
+    }
+    this._toastEls = this._toastEls || [];
+    this._toastEls.unshift(el);
+    el._toastHide = setTimeout(dismiss, item.ms || 2800);
+  },
+
+  _dismissToast(el) {
+    if (!el) return;
+    if (el._toastHide) {
+      try { clearTimeout(el._toastHide); } catch (_) {}
+      el._toastHide = null;
+    }
+    try { el.remove(); } catch (_) {
+      try { if (el.parentNode) el.parentNode.removeChild(el); } catch (__) {}
+    }
+    this._toastEls = (this._toastEls || []).filter((x) => x !== el);
+    this._flushToastQ();
+  },
+
+  _flushToastQ() {
+    this._toastQ = this._toastQ || [];
+    this._toastEls = this._toastEls || [];
+    while (this._toastEls.length < 2 && this._toastQ.length) {
+      this._mountToast(this._toastQ.shift());
+    }
+  },
+
+  clearToasts() {
+    this._toastQ = [];
+    const els = (this._toastEls || []).slice();
+    this._toastEls = [];
+    for (const el of els) {
+      if (el && el._toastHide) {
+        try { clearTimeout(el._toastHide); } catch (_) {}
+        el._toastHide = null;
+      }
+      try { if (el) el.remove(); } catch (_) {
+        try { if (el && el.parentNode) el.parentNode.removeChild(el); } catch (__) {}
+      }
+    }
   },
 
   goMenu(opts) {
@@ -1910,7 +2050,7 @@ const UI = {
     try {
       // Menu-UI only — never leave play canvas competing with this screen
       if (typeof state !== 'undefined' && state === 'play' && game) {
-        try { UI.toast('Eerst gevecht afmaken of pauzeren', 2200); } catch (_) {}
+        try { UI.toast(t('toast.finishFight'), 2200, { tone: 'warn' }); } catch (_) {}
         return;
       }
       if (typeof state !== 'undefined' && state === 'play' && !game) state = 'menu';
@@ -1996,11 +2136,11 @@ const UI = {
   openSummonHub() {
     try {
       if (state === 'play' && game) {
-        UI.toast('Eerst gevecht afmaken of pauzeren', 2400);
+        UI.toast(t('toast.finishFight'), 2400, { tone: 'warn' });
         return;
       }
       if (typeof adventureSpecialDuelActive === 'function' && adventureSpecialDuelActive(game)) {
-        UI.toast(t('toast.satanReflectHint'), 2400);
+        UI.toast(t('toast.satanReflectHint'), 2400, { tone: 'warn' });
         return;
       }
       if (state === 'play' && !game) state = 'menu';
@@ -2283,7 +2423,7 @@ const UI = {
     try {
       if (this._chestPullBusy) return;
       if (state === 'play' && game) {
-        UI.toast('Niet tijdens gevecht', 2000);
+        UI.toast(t('toast.notDuringCombat'), 2000, { tone: 'warn' });
         return;
       }
       const screen = document.getElementById('summonScreen');

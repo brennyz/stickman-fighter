@@ -571,7 +571,7 @@ function unlockAchievement(id) {
   const ach = ACHIEVEMENTS.find(a => a.id === id);
   persist();
   try { AudioSys.sfx('newmonster'); } catch (_) {}
-  try { UI.toast(t('toast.achievementUnlock', { name: ach ? achLabel(ach, 'name') : id }), 4000); } catch (_) {}
+  try { UI.toast(t('toast.achievementUnlock', { name: ach ? achLabel(ach, 'name') : id }), 4000, { tone: 'ok' }); } catch (_) {}
   // Nooit missions-DOM rebuilden midden in een gevecht
   try {
     if (state === 'menu' && UI.renderMissions) UI.renderMissions();
@@ -940,7 +940,7 @@ function runImportSaveClick() {
   const previewEl = document.getElementById('saveImportPreview');
   if (!ta || !ta.value.trim()) {
     if (openSaveImportFilePicker()) return;
-    userToast('Kies een exportbestand of plak save-JSON in het vak', 2800);
+    userToast(t('toast.pickFileOrPaste'), 2800, { tone: 'warn' });
     return;
   }
   try {
@@ -948,7 +948,7 @@ function runImportSaveClick() {
     if (!window.__sfImportConfirm) {
       window.__sfImportConfirm = true;
       updateSaveImportPreview(ta.value);
-      UI.toast('Import-preview — tik Import nogmaals om te laden', 3600);
+      UI.toast(t('toast.importPreview'), 3600, { tone: 'warn' });
       setTimeout(() => { window.__sfImportConfirm = false; }, 8000);
       return;
     }
@@ -959,7 +959,7 @@ function runImportSaveClick() {
   } catch (e) {
     window.__sfImportConfirm = false;
     if (previewEl) { previewEl.style.display = 'none'; previewEl.textContent = ''; }
-    UI.toast((e && e.message) ? e.message : 'Ongeldige save — controleer JSON', 3200);
+    UI.toast((e && e.message) ? e.message : t('toast.invalidSave'), 3200, { tone: 'danger' });
   }
 }
 
@@ -2266,7 +2266,7 @@ function copyPlayLink() {
     const url = await resolveSharePlayUrl();
     try {
       await navigator.clipboard.writeText(url);
-      UI.toast('GitHub Pages-link gekopieerd — deel speel.html (niet de tunnel)', 3600);
+      UI.toast(t('toast.pagesLinkCopied'), 3600, { tone: 'ok' });
     } catch (_) {
       UI.toast(url, 4500);
     }
@@ -2290,7 +2290,7 @@ function sharePlayLink() {
     }
     try {
       await navigator.clipboard.writeText(url);
-      UI.toast('Pages-link gekopieerd — stuur naar vrienden (Chrome op Android)', 3600);
+      UI.toast(t('toast.pagesLinkCopiedAndroid'), 3600, { tone: 'ok' });
     } catch (_) {
       UI.toast(url, 4500);
     }

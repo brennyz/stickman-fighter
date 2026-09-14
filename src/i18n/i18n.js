@@ -782,7 +782,8 @@ function renderLangSwitchBar(bar) {
       safeUiAction(() => {
         setLang(code);
         AudioSys.sfx('select');
-        UI.toast(t('settings.langChanged', { lang: LANG_LABELS[code] }), 2200);
+        try { if (UI.clearToasts) UI.clearToasts(); } catch (_) {}
+        UI.toast(t('settings.langChanged', { lang: LANG_LABELS[code] }), 2200, { tone: 'ok' });
         UI.renderSettings();
         UI.renderMenu();
         if (typeof UI.renderModeHub === 'function') UI.renderModeHub();

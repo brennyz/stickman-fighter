@@ -586,7 +586,7 @@ function trackWeaponFinisher(weaponId, gameRef) {
   if (newTierIdx > prevTierIdx && typeof UI !== 'undefined') {
     const w = weaponById(weaponId);
     const tier = WEAPON_MASTERY_TIERS[newTierIdx];
-    try { UI.toast(`${w.name}: ${tier.name}!`, 3200); } catch (_) {}
+    try { UI.toast(t('toast.masteryTier', { name: w.name, tier: tier.name }), 3200, { tone: 'ok' }); } catch (_) {}
   }
   if (typeof checkAchievements === 'function') checkAchievements();
 }

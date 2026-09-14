@@ -647,20 +647,20 @@ function bootGame() {
     const repairNotes = saveSanitizeNotes(beforeSave, save);
     persist();
     if (repairNotes.length && !hadCorruptPrimary && !window.__sfRecoveredBackup) {
-      userToast('Save gerepareerd: ' + repairNotes.slice(0, 2).join(' · '), 4200);
+      userToast(toastT('toast.saveRepaired', { notes: repairNotes.slice(0, 2).join(' · ') }, 'Save gerepareerd: ' + repairNotes.slice(0, 2).join(' · ')), 4200, { tone: 'ok' });
     }
     if (hadCorruptPrimary && !window.__sfRecoveredBackup) {
-      userToast('Corrupte hoofd-save overschreven — export blijft je vangnet bij URL-wissel', 4500);
+      userToast(toastT('toast.saveCorruptOverwritten', null, 'Corrupte hoofd-save overschreven — export blijft je vangnet bij URL-wissel'), 4500, { tone: 'warn' });
     }
   } catch (err) {
     console.error('[Stickman] save sanitize', err);
     if (applySaveFromBackupRaw()) {
       window.__sfRecoveredBackup = true;
-      userToast('Save hersteld uit backup na laadfout', 4800);
+      userToast(toastT('toast.saveRestoredAfterLoad', null, 'Save hersteld uit backup na laadfout'), 4800, { tone: 'ok' });
     } else {
       save = Object.assign({}, DEFAULT_SAVE);
       try { persistPrimaryOnly(); } catch (_) {}
-      userToast('Save kon niet geladen worden — nieuwe voortgang gestart (export backup als je die had)', 4800);
+      userToast(toastT('toast.saveLoadFailedFresh', null, 'Save kon niet geladen worden — nieuwe voortgang gestart (export backup als je die had)'), 4800, { tone: 'danger' });
     }
   }
   safeCall(() => dismissTunnelOverlayIfStatic(), 'overlay');
@@ -712,7 +712,7 @@ function bootGame() {
   } catch (_) {}
   if (window.__sfRecoveredBackup) {
     window.__sfRecoveredBackup = false;
-    safeCall(() => UI.toast('Save hersteld uit backup — je voortgang is veilig', 4200), 'toast');
+    safeCall(() => UI.toast(t('toast.saveRestoredSafe'), 4200, { tone: 'ok' }), 'toast');
   }
   AudioSys.desiredSong = 'menu';
   safeCall(() => { if (typeof AudioSys.applyVolumes === 'function') AudioSys.applyVolumes(); }, 'vol');
@@ -727,7 +727,7 @@ function bootGame() {
     try {
       const hub = document.querySelector('[data-hub]');
       if (hub && !hub.dataset.sfPressBound) {
-        userToast('Oude cache — menu reageert niet. Tik «Verse versie» in de dock.', 6500);
+        userToast(toastT('toast.staleCacheMenu', null, 'Oude cache — menu reageert niet. Tik «Verse versie» in de dock.'), 6500, { tone: 'danger' });
         document.getElementById('btnVerseVersie')?.classList.add('sw-update');
       }
     } catch (_) {}
@@ -802,7 +802,7 @@ function reportAppError(label) {
   window.__sfReportedErr = true;
   console.error(label);
   try {
-    if (typeof UI !== 'undefined' && UI.toast) UI.toast('Er ging iets mis — opgeslagen voortgang is veilig', 4000);
+    if (typeof UI !== 'undefined' && UI.toast) UI.toast(typeof t === 'function' ? t('toast.genericSafeError') : 'Er ging iets mis — opgeslagen voortgang is veilig', 4000, { tone: 'danger' });
   } catch (_) {}
 }
 window.addEventListener('error', (e) => {

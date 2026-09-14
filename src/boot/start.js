@@ -13,7 +13,7 @@ function startGame(mode, opts) {
     return;
   }
   if (!allowed[mode]) {
-    try { UI.toast('Onbekende modus', 2200); } catch (_) {}
+    try { UI.toast(t('toast.unknownMode'), 2200, { tone: 'warn' }); } catch (_) {}
     return;
   }
   try { primePlayInput(false); } catch (_) {}
@@ -162,7 +162,7 @@ const btnContinue = document.getElementById('btnContinue');
 bindPress(btnContinue, () => {
   AudioSys.init(); AudioSys.sfx('select');
   try {
-    if (!resumeLastPlay()) userToast('Nog geen sessie — kies een modus', 2400);
+    if (!resumeLastPlay()) userToast(t('toast.noSession'), 2400, { tone: 'warn' });
   } catch (err) {
     sfReportError('resume', err, 'Verder spelen mislukt — kies een modus');
   }
@@ -276,7 +276,7 @@ if (btnOpenPlayLink) btnOpenPlayLink.addEventListener('click', () => {
   safeAsync((async () => {
     const url = await resolveSharePlayUrl();
     if (url) window.open(url, '_blank', 'noopener');
-    else userToast('Geen speel-link gevonden — zie Instellingen', 2800);
+    else userToast(t('toast.noPlayLink'), 2800, { tone: 'warn' });
   })(), 'openPlayLink', 'Link openen mislukt');
 });
 const btnExportSave = document.getElementById('btnExportSave');
@@ -302,9 +302,10 @@ if (btnExportSave) btnExportSave.addEventListener('click', () => {
       a.click();
       URL.revokeObjectURL(url);
     } catch (_) {}
-    UI.toast(clipped
-      ? `Save gekopieerd + download · ${saveExportSummaryLine()} (~${formatSaveBytes(json.length)})`
-      : `Save in vak + download · ${saveExportSummaryLine()} (~${formatSaveBytes(json.length)})`, 3600);
+    UI.toast(t(clipped ? 'toast.exportCopied' : 'toast.exportBox', {
+      summary: saveExportSummaryLine(),
+      size: formatSaveBytes(json.length),
+    }), 3600, { tone: 'ok' });
     UI.renderSettings();
   })(), 'exportSave', 'Export mislukt — kopieer JSON handmatig uit het vak');
 });
@@ -313,7 +314,7 @@ bindSaveImportFile();
 const btnImportSaveFile = document.getElementById('btnImportSaveFile');
 if (btnImportSaveFile) btnImportSaveFile.addEventListener('click', () => {
   AudioSys.sfx('select');
-  if (!openSaveImportFilePicker()) userToast('Bestand kiezen niet beschikbaar', 2400);
+  if (!openSaveImportFilePicker()) userToast(t('toast.filePickerUnavailable'), 2400, { tone: 'warn' });
 });
 if (btnImportSave) btnImportSave.addEventListener('click', () => runImportSaveClick());
 function bindSettingsControls() {
@@ -434,20 +435,20 @@ if (btnRestoreBackup) btnRestoreBackup.addEventListener('click', () => {
     if (!window.__sfBackupConfirm) {
       const h = saveHealthSummary();
       if (!h.backupOk) {
-        UI.toast('Geen backup gevonden op dit apparaat', 3000);
+        UI.toast(t('toast.noBackup'), 3000, { tone: 'warn' });
         return;
       }
       window.__sfBackupConfirm = true;
-      const driftHint = h.driftDetail || (h.drift ? ' (hoofd en backup verschillen)' : '');
-      UI.toast(`Backup Lv ${h.backupLvl}${driftHint} — tik nogmaals om te herstellen`, 4500);
+      const driftHint = h.driftDetail || (h.drift ? t('toast.backupDrift') : '');
+      UI.toast(t('toast.backupConfirm', { lvl: h.backupLvl, drift: driftHint }), 4500, { tone: 'warn' });
       setTimeout(() => { window.__sfBackupConfirm = false; }, 6000);
       return;
     }
     window.__sfBackupConfirm = false;
     if (restoreSaveFromBackup()) {
-      UI.toast('Backup teruggezet — save + backup synchroon', 3000);
+      UI.toast(t('toast.backupRestored'), 3000, { tone: 'ok' });
       UI.renderSettings();
-    } else UI.toast('Backup herstellen mislukt — export save als je die hebt', 3200);
+    } else UI.toast(t('toast.backupFailed'), 3200, { tone: 'danger' });
   }, 'restoreBackup', 'Backup herstellen mislukt');
 });
 const btnSyncBackup = document.getElementById('btnSyncBackup');
@@ -456,15 +457,15 @@ if (btnSyncBackup) btnSyncBackup.addEventListener('click', () => {
     AudioSys.sfx('select');
     if (!window.__sfSyncBackupConfirm) {
       window.__sfSyncBackupConfirm = true;
-      UI.toast('Sync overschrijft backup met hoofd-save — tik nogmaals', 3800);
+      UI.toast(t('toast.syncConfirm'), 3800, { tone: 'warn' });
       setTimeout(() => { window.__sfSyncBackupConfirm = false; }, 5000);
       return;
     }
     window.__sfSyncBackupConfirm = false;
     if (syncBackupFromPrimary()) {
-      UI.toast('Backup gesynchroniseerd met hoofd-save', 2800);
+      UI.toast(t('toast.syncOk'), 2800, { tone: 'ok' });
       UI.renderSettings();
-    } else UI.toast('Sync mislukt — export save als vangnet', 3200);
+    } else UI.toast(t('toast.syncFailed'), 3200, { tone: 'danger' });
   }, 'syncBackup', 'Backup sync mislukt');
 });
 const btnClearSave = document.getElementById('btnClearSave');
@@ -472,7 +473,7 @@ if (btnClearSave) btnClearSave.addEventListener('click', () => {
   safeUiAction(() => {
     if (!window.__sfClearConfirm) {
       window.__sfClearConfirm = true;
-      UI.toast('Nogmaals tikken = voortgang wissen (backup blijft)', 3500);
+      UI.toast(t('toast.clearConfirm'), 3500, { tone: 'warn' });
       setTimeout(() => { window.__sfClearConfirm = false; }, 4000);
       return;
     }
@@ -480,12 +481,12 @@ if (btnClearSave) btnClearSave.addEventListener('click', () => {
     try { localStorage.removeItem(SAVE_KEY); } catch (_) {}
     save = sanitizeSave(Object.assign({}, DEFAULT_SAVE));
     if (!persistPrimaryOnly()) {
-      userToast('Opslaan mislukt — probeer opnieuw', 3200);
+      userToast(t('toast.saveFailRetry'), 3200, { tone: 'danger' });
       return;
     }
     AudioSys.sfx('lose');
     UI.renderMenu();
-    UI.toast('Nieuwe start — backup staat nog in Instellingen', 4000);
+    UI.toast(t('toast.newStart'), 4000, { tone: 'ok' });
   }, 'clearSave', 'Reset mislukt — probeer opnieuw');
 });
 bindSettingsControls();

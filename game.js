@@ -35,7 +35,7 @@ const Perf = {
     // Tier only throttles FX density — no clearCache/scheduleResize (eye-strain flashes)
     if (this.tier >= 2 && this.frames > 120 && !save.liteFx && !window.__sfLiteHint) {
       window.__sfLiteHint = 1;
-      try { UI.toast('Traag op iPad? Instellingen → Lite FX', 4200); } catch (_) {}
+      try { UI.toast(typeof t === 'function' ? t('toast.liteFxHint') : 'Traag? Instellingen → Lite FX', 4200, { tone: 'warn' }); } catch (_) {}
     }
   },
   reset() { this.tier = 0; this.emaMs = 16.7; this.frames = 0; },
@@ -274,9 +274,9 @@ const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const VERSION_UPDATE_SAVE_KEY = 'stickfighter_version_update_save_v1';
 const VERSION_UPDATE_FLAG_KEY = 'stickfighter_version_update_flag_v1';
 const SAVE_EXPORT_SCHEMA = 3;
-const APP_VERSION = '1.18.153';
+const APP_VERSION = '1.18.154';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 363;
+const SW_CACHE_REV = 364;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', petCoins: 0, dex: {}, summons: {}, pets: {}, activePet: null,
   eggPets: {}, activeEggPet: null, eggDaily: null,
   chestDaily: null, chestWeapons: {},
@@ -1209,12 +1209,26 @@ function readSaveJson(raw) {
   }
 }
 
-function userToast(msg, ms) {
+function userToast(msg, ms, opts) {
   try {
-    if (typeof UI !== 'undefined' && UI.toast) UI.toast(msg, ms || 3200);
+    if (typeof UI !== 'undefined' && UI.toast) UI.toast(msg, ms || 3200, opts);
   } catch (err) {
     console.warn('[Stickman] toast', msg, err);
   }
+}
+
+function toastT(key, params, fallback) {
+  try {
+    if (typeof tOr === 'function') {
+      const s = tOr(key, fallback || '', params);
+      if (s) return s;
+    }
+    if (typeof t === 'function') {
+      const s = t(key, params);
+      if (s && s !== key) return s;
+    }
+  } catch (_) {}
+  return fallback || '';
 }
 
 function writeSaveStamp(json) {
@@ -1261,7 +1275,7 @@ function persist() {
     if (json.length > 180000) {
       if (!window.__sfPersistWarn) {
         window.__sfPersistWarn = true;
-        try { UI.toast('Save bijna te groot — export in Instellingen', 4800); } catch (_) {}
+        try { UI.toast(toastT('toast.saveAlmostTooBig', null, 'Save bijna te groot — export in Instellingen'), 4800, { tone: 'warn' }); } catch (_) {}
       }
     }
     localStorage.setItem(SAVE_KEY, json);
@@ -1272,7 +1286,7 @@ function persist() {
     } catch (_) {}
     if (!backupOk && !window.__sfBackupWriteWarn) {
       window.__sfBackupWriteWarn = true;
-      userToast('Backup opslaan mislukt — export save in Instellingen (hoofd-save wel OK)', 5200);
+      userToast(toastT('toast.backupWriteFail', null, 'Backup opslaan mislukt — export save in Instellingen (hoofd-save wel OK)'), 5200, { tone: 'warn' });
     }
     writeSaveStamp(json);
     return true;
@@ -1285,8 +1299,8 @@ function persist() {
     if (!window.__sfPersistWarn) {
       window.__sfPersistWarn = true;
       userToast(backupSaved
-        ? 'Hoofd-save mislukt — backup wel bijgewerkt (export in Instellingen)'
-        : 'Opslaan mislukt — export save in Instellingen', 5200);
+        ? toastT('toast.persistPrimaryFail', null, 'Hoofd-save mislukt — backup wel bijgewerkt (export in Instellingen)')
+        : toastT('toast.persistFail', null, 'Opslaan mislukt — export save in Instellingen'), 5200, { tone: 'danger' });
     }
     return false;
   }
@@ -1319,8 +1333,8 @@ function persistOrToast(context) {
   if (!window.__sfPersistCtxWarn[key]) {
     window.__sfPersistCtxWarn[key] = true;
     userToast(context
-      ? `Opslaan mislukt (${context}) — export save in Instellingen`
-      : 'Opslaan mislukt — export save in Instellingen', 4200);
+      ? toastT('toast.persistFailCtx', { context }, `Opslaan mislukt (${context}) — export save in Instellingen`)
+      : toastT('toast.persistFail', null, 'Opslaan mislukt — export save in Instellingen'), 4200, { tone: 'warn' });
   }
   return false;
 }
@@ -1339,7 +1353,7 @@ function applySaveFromBackupRaw() {
 function restoreSaveFromBackup() {
   try {
     if (!applySaveFromBackupRaw()) {
-      userToast('Backup herstellen mislukt — export save als je die hebt', 4200);
+      userToast(toastT('toast.backupFailed', null, 'Backup herstellen mislukt — export save als je die hebt'), 4200, { tone: 'danger' });
       return false;
     }
     try { checkAchievements(); } catch (_) {}
@@ -1413,7 +1427,7 @@ function applyVersionUpdateSave() {
   try {
     save = sanitizeSave(stash.save);
     if (!persist()) {
-      userToast('Save geladen maar opslaan mislukt — export in Instellingen', 4200);
+      userToast(toastT('toast.persistFail', null, 'Save geladen maar opslaan mislukt — export in Instellingen'), 4200, { tone: 'danger' });
       return false;
     }
     clearVersionUpdateSave();
@@ -2651,7 +2665,8 @@ function renderLangSwitchBar(bar) {
       safeUiAction(() => {
         setLang(code);
         AudioSys.sfx('select');
-        UI.toast(t('settings.langChanged', { lang: LANG_LABELS[code] }), 2200);
+        try { if (UI.clearToasts) UI.clearToasts(); } catch (_) {}
+        UI.toast(t('settings.langChanged', { lang: LANG_LABELS[code] }), 2200, { tone: 'ok' });
         UI.renderSettings();
         UI.renderMenu();
         if (typeof UI.renderModeHub === 'function') UI.renderModeHub();
@@ -3403,7 +3418,7 @@ function unlockAchievement(id) {
   const ach = ACHIEVEMENTS.find(a => a.id === id);
   persist();
   try { AudioSys.sfx('newmonster'); } catch (_) {}
-  try { UI.toast(t('toast.achievementUnlock', { name: ach ? achLabel(ach, 'name') : id }), 4000); } catch (_) {}
+  try { UI.toast(t('toast.achievementUnlock', { name: ach ? achLabel(ach, 'name') : id }), 4000, { tone: 'ok' }); } catch (_) {}
   // Nooit missions-DOM rebuilden midden in een gevecht
   try {
     if (state === 'menu' && UI.renderMissions) UI.renderMissions();
@@ -3772,7 +3787,7 @@ function runImportSaveClick() {
   const previewEl = document.getElementById('saveImportPreview');
   if (!ta || !ta.value.trim()) {
     if (openSaveImportFilePicker()) return;
-    userToast('Kies een exportbestand of plak save-JSON in het vak', 2800);
+    userToast(t('toast.pickFileOrPaste'), 2800, { tone: 'warn' });
     return;
   }
   try {
@@ -3780,7 +3795,7 @@ function runImportSaveClick() {
     if (!window.__sfImportConfirm) {
       window.__sfImportConfirm = true;
       updateSaveImportPreview(ta.value);
-      UI.toast('Import-preview — tik Import nogmaals om te laden', 3600);
+      UI.toast(t('toast.importPreview'), 3600, { tone: 'warn' });
       setTimeout(() => { window.__sfImportConfirm = false; }, 8000);
       return;
     }
@@ -3791,7 +3806,7 @@ function runImportSaveClick() {
   } catch (e) {
     window.__sfImportConfirm = false;
     if (previewEl) { previewEl.style.display = 'none'; previewEl.textContent = ''; }
-    UI.toast((e && e.message) ? e.message : 'Ongeldige save — controleer JSON', 3200);
+    UI.toast((e && e.message) ? e.message : t('toast.invalidSave'), 3200, { tone: 'danger' });
   }
 }
 
@@ -5098,7 +5113,7 @@ function copyPlayLink() {
     const url = await resolveSharePlayUrl();
     try {
       await navigator.clipboard.writeText(url);
-      UI.toast('GitHub Pages-link gekopieerd — deel speel.html (niet de tunnel)', 3600);
+      UI.toast(t('toast.pagesLinkCopied'), 3600, { tone: 'ok' });
     } catch (_) {
       UI.toast(url, 4500);
     }
@@ -5122,7 +5137,7 @@ function sharePlayLink() {
     }
     try {
       await navigator.clipboard.writeText(url);
-      UI.toast('Pages-link gekopieerd — stuur naar vrienden (Chrome op Android)', 3600);
+      UI.toast(t('toast.pagesLinkCopiedAndroid'), 3600, { tone: 'ok' });
     } catch (_) {
       UI.toast(url, 4500);
     }
@@ -5892,7 +5907,7 @@ function grantZoneWeapon(weaponId, opts) {
       const zone = weaponDropZoneOf(w);
       const col = zone ? zone.color : '#c47aff';
       if (typeof UI !== 'undefined' && UI && typeof UI.toast === 'function') {
-        UI.toast(`${zone ? zone.name : 'Zone'}: ${weaponLabel(w)}!`, 3800);
+        UI.toast(t('toast.zoneDrop', { zone: zone ? zone.name : t('toast.zoneFallback'), name: weaponLabel(w) }), 3800, { tone: 'ok' });
       }
       if (typeof game !== 'undefined' && game && typeof game.banner === 'function') {
         game.banner(weaponLabel(w), 2.1, col, 34);
@@ -7430,7 +7445,7 @@ function trackWeaponFinisher(weaponId, gameRef) {
   if (newTierIdx > prevTierIdx && typeof UI !== 'undefined') {
     const w = weaponById(weaponId);
     const tier = WEAPON_MASTERY_TIERS[newTierIdx];
-    try { UI.toast(`${w.name}: ${tier.name}!`, 3200); } catch (_) {}
+    try { UI.toast(t('toast.masteryTier', { name: w.name, tier: tier.name }), 3200, { tone: 'ok' }); } catch (_) {}
   }
   if (typeof checkAchievements === 'function') checkAchievements();
 }
@@ -9103,10 +9118,8 @@ function swapVsSides() {}
 
 function toastVersusRetired() {
   try {
-    UI.toast(t('toast.versusRetired') || '2-speler lokaal is uit — later online multiplayer', 3200);
-  } catch (_) {
-    try { UI.toast('2-speler lokaal is uit — later online multiplayer', 3200); } catch (__) {}
-  }
+    UI.toast(t('toast.versusRetired'), 3200, { tone: 'warn' });
+  } catch (_) {}
 }
 /* --- src/data/monsters.js --- */
 /* ============================ MONSTERS ================================= */
@@ -11803,7 +11816,48 @@ function seedNlGameStrings() {
     skillEquipped: '{name} uitgerust als special',
     superEquipped: '{name} uitgerust als nood-super',
     superUnlock: 'Nieuwe nood-super: {name}!',
-    welcome: 'Welkom! Menu → Tips · per modus één korte hint bovenin (geen toast-stapel)',
+    welcome: 'Welkom! Menu → Tips · tik een melding weg · per modus één hint bovenin',
+    unknownMode: 'Onbekende modus',
+    noSession: 'Nog geen sessie — kies een modus',
+    noPlayLink: 'Geen speel-link gevonden — zie Instellingen',
+    pasteSaveFirst: 'Plak eerst save-JSON in het vak',
+    importPreview: 'Import-preview — tik Import nogmaals om te laden',
+    invalidSave: 'Ongeldige save — controleer JSON',
+    noBackup: 'Geen backup gevonden op dit apparaat',
+    backupConfirm: 'Backup Lv {lvl}{drift} — tik nogmaals om te herstellen',
+    backupDrift: ' (hoofd en backup verschillen)',
+    backupRestored: 'Backup teruggezet — save + backup synchroon',
+    backupFailed: 'Backup herstellen mislukt — export save als je die hebt',
+    syncConfirm: 'Sync overschrijft backup met hoofd-save — tik nogmaals',
+    syncOk: 'Backup gesynchroniseerd met hoofd-save',
+    syncFailed: 'Sync mislukt — export save als vangnet',
+    clearConfirm: 'Nogmaals tikken = voortgang wissen (backup blijft)',
+    newStart: 'Nieuwe start — backup staat nog in Instellingen',
+    exportCopied: 'Save gekopieerd + download · {summary} (~{size})',
+    exportBox: 'Save in vak + download · {summary} (~{size})',
+    finishFight: 'Eerst gevecht afmaken of pauzeren',
+    notDuringCombat: 'Niet tijdens gevecht',
+    liteFxHint: 'Traag? Instellingen → Lite FX',
+    saveAlmostTooBig: 'Save bijna te groot — export in Instellingen',
+    saveRestoredSafe: 'Save hersteld uit backup — je voortgang is veilig',
+    genericSafeError: 'Er ging iets mis — opgeslagen voortgang is veilig',
+    backupWriteFail: 'Backup opslaan mislukt — export save in Instellingen (hoofd-save wel OK)',
+    persistPrimaryFail: 'Hoofd-save mislukt — backup wel bijgewerkt (export in Instellingen)',
+    persistFail: 'Opslaan mislukt — export save in Instellingen',
+    persistFailCtx: 'Opslaan mislukt ({context}) — export save in Instellingen',
+    pickFileOrPaste: 'Kies een exportbestand of plak save-JSON in het vak',
+    filePickerUnavailable: 'Bestand kiezen niet beschikbaar',
+    pagesLinkCopied: 'GitHub Pages-link gekopieerd — deel speel.html (niet de tunnel)',
+    pagesLinkCopiedAndroid: 'Pages-link gekopieerd — stuur naar vrienden (Chrome op Android)',
+    saveFailRetry: 'Opslaan mislukt — probeer opnieuw',
+    zoneDrop: '{zone}: {name}!',
+    zoneFallback: 'Zone',
+    masteryTier: '{name}: {tier}!',
+    saveRepaired: 'Save gerepareerd: {notes}',
+    saveCorruptOverwritten: 'Corrupte hoofd-save overschreven — export blijft je vangnet bij URL-wissel',
+    saveRestoredAfterLoad: 'Save hersteld uit backup na laadfout',
+    saveLoadFailedFresh: 'Save kon niet geladen worden — nieuwe voortgang gestart (export backup als je die had)',
+    staleCacheMenu: 'Oude cache — menu reageert niet. Tik «Verse versie» in de dock.',
   });
   if (!I18N.nl.gamble) I18N.nl.gamble = {};
   Object.assign(I18N.nl.gamble, {
@@ -12613,6 +12667,31 @@ const CATALOG_EN = {
     pasteSaveFirst: 'Paste save JSON in the box first', importPreview: 'Import preview — tap Import again to load',
     invalidSave: 'Invalid save — check JSON', noBackup: 'No backup found on this device',
     backupConfirm: 'Backup Lv {lvl}{drift} — tap again to restore',
+    backupDrift: ' (main and backup differ)',
+    welcome: 'Welcome! Menu → Tips · tap a notice to dismiss · one hint per mode at top',
+    finishFight: 'Finish or pause the fight first',
+    notDuringCombat: 'Not during a fight',
+    liteFxHint: 'Running slow? Settings → Lite FX',
+    saveAlmostTooBig: 'Save almost too large — export in Settings',
+    saveRestoredSafe: 'Save restored from backup — your progress is safe',
+    genericSafeError: 'Something went wrong — saved progress is safe',
+    backupWriteFail: 'Backup save failed — export in Settings (main save is OK)',
+    persistPrimaryFail: 'Main save failed — backup updated (export in Settings)',
+    persistFail: 'Save failed — export in Settings',
+    persistFailCtx: 'Save failed ({context}) — export in Settings',
+    pickFileOrPaste: 'Pick an export file or paste save JSON in the box',
+    filePickerUnavailable: 'File picker not available',
+    pagesLinkCopied: 'GitHub Pages link copied — share speel.html (not the tunnel)',
+    pagesLinkCopiedAndroid: 'Pages link copied — send to friends (Chrome on Android)',
+    saveFailRetry: 'Save failed — try again',
+    zoneDrop: '{zone}: {name}!',
+    zoneFallback: 'Zone',
+    masteryTier: '{name}: {tier}!',
+    saveRepaired: 'Save repaired: {notes}',
+    saveCorruptOverwritten: 'Corrupt main save overwritten — export stays your safety net',
+    saveRestoredAfterLoad: 'Save restored from backup after a load error',
+    saveLoadFailedFresh: 'Save could not load — started fresh (export a backup if you had one)',
+    staleCacheMenu: 'Stale cache — menu not responding. Tap «Fresh version» in the dock.',
     backupRestored: 'Backup restored — save + backup in sync',
     backupFailed: 'Backup restore failed — export save if you have one',
     syncConfirm: 'Sync overwrites backup with main save — tap again',
@@ -24734,7 +24813,7 @@ class Game {
         try {
           if (!gameUiTimerOk(self)) return;
           self.banner(t('banner.satanIncoming'), 2.2, '#ff3040', 42);
-          UI.toast(t('toast.satanIncoming'), 3800);
+          UI.toast(t('toast.satanIncoming'), 3800, { tone: 'danger' });
         } catch (_) {}
       }, 900);
     }
@@ -25304,7 +25383,7 @@ class Game {
           setTimeout(() => {
             try {
               if (!gameUiTimerOk(self, { allowOver: true })) return;
-              UI.toast(t('toast.islandUnlock', { name: islandLabel(islandFromLevel(lv + 1), 'name'), cap: nCap }), 4200);
+              UI.toast(t('toast.islandUnlock', { name: islandLabel(islandFromLevel(lv + 1), 'name'), cap: nCap }), 4200, { tone: 'ok' });
             } catch (_) {}
           }, 1700);
         }
@@ -25318,9 +25397,9 @@ class Game {
           setTimeout(() => {
             try {
               if (!gameUiTimerOk(self, { allowOver: true })) return;
-              if (diff === 'normal') UI.toast(t('toast.diffUnlockNightmare'), 4800);
-              else if (diff === 'nightmare') UI.toast(t('toast.diffUnlockHell'), 4800);
-              else UI.toast(t('toast.diffHellCleared'), 4200);
+              if (diff === 'normal') UI.toast(t('toast.diffUnlockNightmare'), 4800, { tone: 'ok' });
+              else if (diff === 'nightmare') UI.toast(t('toast.diffUnlockHell'), 4800, { tone: 'ok' });
+              else UI.toast(t('toast.diffHellCleared'), 4200, { tone: 'ok' });
             } catch (_) {}
           }, 1900);
         }
@@ -25352,7 +25431,7 @@ class Game {
             if (!gameUiTimerOk(self, { allowOver: true })) return;
             UI.toast(eggBonus.duplicate
               ? t('toast.eggDuplicate', { name: eggBonus.def.name })
-              : t('toast.eggNew', { name: eggBonus.def.name, rar: rarityLabel(eggBonus.def.rarity) }), 3800);
+              : t('toast.eggNew', { name: eggBonus.def.name, rar: rarityLabel(eggBonus.def.rarity) }), 3800, { tone: 'ok' });
           } catch (_) {}
         }, 1200);
       }
@@ -25379,7 +25458,7 @@ class Game {
         setTimeout(() => {
           try {
             if (!gameUiTimerOk(self, { allowOver: true })) return;
-            UI.toast(t('toast.masterBuffGain'), 3800);
+            UI.toast(t('toast.masterBuffGain'), 3800, { tone: 'ok' });
           } catch (_) {}
         }, 1500);
       }
@@ -25388,7 +25467,7 @@ class Game {
         setTimeout(() => {
           try {
             if (!gameUiTimerOk(self, { allowOver: true })) return;
-            UI.toast(t('toast.satanHeatDanger'), 4200);
+            UI.toast(t('toast.satanHeatDanger'), 4200, { tone: 'danger' });
           } catch (_) {}
         }, gotMaster ? 3200 : 1500);
       } else if (satanSoon) {
@@ -25396,7 +25475,7 @@ class Game {
         setTimeout(() => {
           try {
             if (!gameUiTimerOk(self, { allowOver: true })) return;
-            UI.toast(t('toast.satanComingNext'), 4200);
+            UI.toast(t('toast.satanComingNext'), 4200, { tone: 'danger' });
           } catch (_) {}
         }, gotMaster ? 3200 : 1500);
       }
@@ -25551,7 +25630,7 @@ class Game {
         this.player.maxhp += hpB;
         this.player.hp += hpB;
       }
-      try { UI.toast(t('toast.dexDiscover', { rar: rarityLabel(sp.rarity), name: sp.name || m.spId, hp: hpB }), 3200); } catch (_) {}
+      try { UI.toast(t('toast.dexDiscover', { rar: rarityLabel(sp.rarity), name: sp.name || m.spId, hp: hpB }), 3200, { tone: 'ok' }); } catch (_) {}
     }
     if (m.spId && save.dex) {
       save.dex[m.spId] = (save.dex[m.spId] || 0) + 1;
@@ -25566,7 +25645,7 @@ class Game {
         spawnGamePet(this);
         noteRunLootPet(this.runLoot, tame.sp.name);
         this.banner(t('banner.pet', { name: tame.sp.name }), 2.2, tame.sp.c1, 36);
-        UI.toast(t('toast.petTamed', { name: tame.sp.name, cur: tame.kills, need: tame.need }), 4200);
+        UI.toast(t('toast.petTamed', { name: tame.sp.name, cur: tame.kills, need: tame.need }), 4200, { tone: 'ok' });
       }
     } catch (_) {}
     try { checkAchievements(); } catch (_) {}
@@ -25574,10 +25653,10 @@ class Game {
       if (countBefore < dexCount()) {
         const half = Math.ceil(SPECIES_ORDER.length / 2);
         if (countBefore < half && dexCount() >= half) {
-          UI.toast(t('toast.styleUnlockTome'), 3500);
+          UI.toast(t('toast.styleUnlockTome'), 3500, { tone: 'ok' });
         }
         if (tiersBefore < 4 && dexRarityTierCount() >= 4) {
-          UI.toast(t('toast.styleUnlockCrystal'), 3500);
+          UI.toast(t('toast.styleUnlockCrystal'), 3500, { tone: 'ok' });
         }
       }
     } catch (_) {}
@@ -25626,7 +25705,7 @@ class Game {
       try { ensureSatanSvg(); } catch (_) {}
       triggerSatanIntro(this, mon);
       this.floater(W / 2, Math.max(100, (this.advHudBottom || 120) + 24), t('hud.satanShort'), '#ff3040', 18);
-      UI.toast(t('toast.satanReflectHint'), 4200);
+      UI.toast(t('toast.satanReflectHint'), 4200, { tone: 'warn' });
       this.modeHintLine = IS_TOUCH ? t('hud.satanHintTouch') : t('hud.satanHintKb');
       this.hint = 8;
     } catch (err) {
@@ -25643,7 +25722,7 @@ class Game {
       clearSatanState(this);
       if (!won) return;
       this.banner(t('banner.satanWin'), 2.2, '#ffd75e', 46);
-      UI.toast(t('toast.satanWinTide'), 4200);
+      UI.toast(t('toast.satanWinTide'), 4200, { tone: 'ok' });
       try { AudioSys.sfx('win'); } catch (_) {}
       const self = this;
       setTimeout(() => {
@@ -25695,7 +25774,7 @@ class Game {
       }
       this.floater(W / 2, Math.max(100, (this.advHudBottom || 120) + 24), t('hud.tideBattleShort'), '#4a9fff', 18);
       if (!firstTide) {
-        UI.toast(t('toast.tideBattle', { name: mon.sp.name }), 3200);
+        UI.toast(t('toast.tideBattle', { name: mon.sp.name }), 3200, { tone: 'warn' });
       }
     } catch (err) {
       console.error('[TideBattle] start', err);
@@ -25753,13 +25832,13 @@ class Game {
         return;
       }
       this.banner(t('banner.tideBattleWin'), 2.2, '#4a9fff', 44);
-      UI.toast(t('toast.tideBattleWin', { xp, coins }), 4200);
+      UI.toast(t('toast.tideBattleWin', { xp, coins }), 4200, { tone: 'ok' });
       this.floater(W / 2, 140, `+${xp} XP · +${coins} PC`, '#4a9fff', 17);
       try { AudioSys.sfx('win'); } catch (_) {}
       checkAchievements();
       if (fromSatan && this.waveIdx < 0) {
         this.betweenT = 1.4;
-        try { UI.toast(t('toast.satanTideDone'), 3200); } catch (_) {}
+        try { UI.toast(t('toast.satanTideDone'), 3200, { tone: 'ok' }); } catch (_) {}
       }
     } catch (err) {
       console.error('[TideBattle] finish', err);
@@ -26685,11 +26764,11 @@ class Game {
           try { AudioSys.sfx('newmonster'); } catch (_) {}
         }
         const newStyle = STYLES.find(s => s.needLvl === save.lvl && styleUnlocked(s));
-        if (newStyle) { try { UI.toast(t('toast.styleUnlock', { name: styleLabel(newStyle) }), 3500); } catch (_) {} }
+        if (newStyle) { try { UI.toast(t('toast.styleUnlock', { name: styleLabel(newStyle) }), 3500, { tone: 'ok' }); } catch (_) {} }
         const newSkill = SKILLS.find(s => s.needLvl === save.lvl && skillUnlocked(s));
-        if (newSkill) { try { UI.toast(t('toast.skillUnlock', { name: skillLabel(newSkill) }), 3500); } catch (_) {} }
+        if (newSkill) { try { UI.toast(t('toast.skillUnlock', { name: skillLabel(newSkill) }), 3500, { tone: 'ok' }); } catch (_) {} }
         const newSuper = SUPERS.find(s => s.needLvl === save.lvl && superUnlocked(s));
-        if (newSuper) { try { UI.toast(t('toast.superUnlock', { name: superLabel(newSuper) }), 3500); } catch (_) {} }
+        if (newSuper) { try { UI.toast(t('toast.superUnlock', { name: superLabel(newSuper) }), 3500, { tone: 'ok' }); } catch (_) {} }
       } catch (lvlErr) {
         try { sfReportError('grantXP/level', lvlErr, 'Level-up hiccup — gevecht gaat door'); } catch (_) {}
         break;
@@ -31670,23 +31749,163 @@ const UI = {
     }
   },
 
-  toast(msg, ms) {
+  _toastQ: null,
+  _toastEls: null,
+
+  _ensureToastHost(host) {
+    if (!host || !host.setAttribute) return;
+    try {
+      if (!host.getAttribute || host.getAttribute('role') !== 'status') {
+        host.setAttribute('role', 'status');
+      }
+      if (!host.getAttribute || host.getAttribute('aria-live') !== 'polite') {
+        host.setAttribute('aria-live', 'polite');
+        host.setAttribute('aria-relevant', 'additions');
+      }
+    } catch (_) {}
+  },
+
+  _resolveToastText(msg) {
+    const text = String(msg == null ? '' : msg).trim();
+    if (!text) return '';
+    if (/^[a-z][a-z0-9]*(\.[a-zA-Z0-9_]+)+$/.test(text) && text.length < 80) {
+      try {
+        if (typeof tOr === 'function') {
+          const resolved = tOr(text, '');
+          if (resolved && resolved !== text) return resolved;
+        }
+        if (typeof t === 'function') {
+          const resolved = t(text);
+          if (resolved && resolved !== text) return resolved;
+        }
+      } catch (_) {}
+      return '';
+    }
+    return text;
+  },
+
+  _parseToastArgs(ms, opts) {
+    let duration = 2800;
+    let tone = 'info';
+    if (ms && typeof ms === 'object') {
+      opts = ms;
+      duration = Number(opts.ms) > 0 ? Number(opts.ms) : 2800;
+    } else if (typeof ms === 'number' && ms > 0) {
+      duration = ms;
+    }
+    if (opts && typeof opts === 'object') {
+      if (opts.tone) tone = String(opts.tone);
+      if (typeof ms !== 'number' && Number(opts.ms) > 0) duration = Number(opts.ms);
+    }
+    if (tone !== 'ok' && tone !== 'warn' && tone !== 'danger') tone = 'info';
+    return { ms: duration, tone };
+  },
+
+  toast(msg, ms, opts) {
+    const text = this._resolveToastText(msg);
+    if (!text) return;
+    const spec = this._parseToastArgs(ms, opts);
     const host = document.getElementById('toastHost');
     if (!host) return;
-    if (this._toastHide) {
-      clearTimeout(this._toastHide);
-      this._toastHide = null;
+    this._ensureToastHost(host);
+    this._toastQ = this._toastQ || [];
+    this._toastEls = this._toastEls || [];
+
+    const sameEl = this._toastEls.find((el) => el && el.textContent === text);
+    if (sameEl) {
+      this._bumpToast(sameEl, spec.ms);
+      return;
     }
-    if (typeof host.replaceChildren === 'function') host.replaceChildren();
-    else host.innerHTML = '';
+    const sameQ = this._toastQ.find((q) => q.text === text);
+    if (sameQ) {
+      sameQ.ms = Math.max(sameQ.ms, spec.ms);
+      if (spec.tone !== 'info') sameQ.tone = spec.tone;
+      return;
+    }
+    const item = { text, ms: spec.ms, tone: spec.tone };
+    if (this._toastEls.length >= 2) {
+      this._toastQ.push(item);
+      if (this._toastQ.length > 4) this._toastQ.shift();
+      return;
+    }
+    this._mountToast(item);
+  },
+
+  _bumpToast(el, ms) {
+    if (!el) return;
+    if (el._toastHide) {
+      try { clearTimeout(el._toastHide); } catch (_) {}
+    }
+    el._toastHide = setTimeout(() => this._dismissToast(el), ms || 2800);
+    try {
+      el.classList.remove('toast-bump');
+      void el.offsetWidth;
+      el.classList.add('toast-bump');
+    } catch (_) {}
+  },
+
+  _mountToast(item) {
+    const host = document.getElementById('toastHost');
+    if (!host || !item) return;
     const el = document.createElement('div');
-    el.className = 'toast';
-    el.textContent = msg;
-    host.appendChild(el);
-    this._toastHide = setTimeout(() => {
-      el.remove();
-      this._toastHide = null;
-    }, ms || 2800);
+    el.className = 'toast' + (item.tone && item.tone !== 'info' ? ' toast-' + item.tone : '');
+    el.textContent = item.text;
+    try { el.setAttribute('role', 'status'); } catch (_) {}
+    const dismiss = () => this._dismissToast(el);
+    try {
+      el.addEventListener('click', dismiss);
+      el.addEventListener('keydown', (e) => {
+        if (e && (e.key === 'Enter' || e.key === ' ' || e.key === 'Escape')) {
+          if (e.preventDefault) e.preventDefault();
+          dismiss();
+        }
+      });
+    } catch (_) {}
+    try {
+      if (host.firstChild) host.insertBefore(el, host.firstChild);
+      else host.appendChild(el);
+    } catch (_) {
+      try { host.appendChild(el); } catch (__) {}
+    }
+    this._toastEls = this._toastEls || [];
+    this._toastEls.unshift(el);
+    el._toastHide = setTimeout(dismiss, item.ms || 2800);
+  },
+
+  _dismissToast(el) {
+    if (!el) return;
+    if (el._toastHide) {
+      try { clearTimeout(el._toastHide); } catch (_) {}
+      el._toastHide = null;
+    }
+    try { el.remove(); } catch (_) {
+      try { if (el.parentNode) el.parentNode.removeChild(el); } catch (__) {}
+    }
+    this._toastEls = (this._toastEls || []).filter((x) => x !== el);
+    this._flushToastQ();
+  },
+
+  _flushToastQ() {
+    this._toastQ = this._toastQ || [];
+    this._toastEls = this._toastEls || [];
+    while (this._toastEls.length < 2 && this._toastQ.length) {
+      this._mountToast(this._toastQ.shift());
+    }
+  },
+
+  clearToasts() {
+    this._toastQ = [];
+    const els = (this._toastEls || []).slice();
+    this._toastEls = [];
+    for (const el of els) {
+      if (el && el._toastHide) {
+        try { clearTimeout(el._toastHide); } catch (_) {}
+        el._toastHide = null;
+      }
+      try { if (el) el.remove(); } catch (_) {
+        try { if (el && el.parentNode) el.parentNode.removeChild(el); } catch (__) {}
+      }
+    }
   },
 
   goMenu(opts) {
@@ -32227,7 +32446,7 @@ const UI = {
     try {
       // Menu-UI only — never leave play canvas competing with this screen
       if (typeof state !== 'undefined' && state === 'play' && game) {
-        try { UI.toast('Eerst gevecht afmaken of pauzeren', 2200); } catch (_) {}
+        try { UI.toast(t('toast.finishFight'), 2200, { tone: 'warn' }); } catch (_) {}
         return;
       }
       if (typeof state !== 'undefined' && state === 'play' && !game) state = 'menu';
@@ -32313,11 +32532,11 @@ const UI = {
   openSummonHub() {
     try {
       if (state === 'play' && game) {
-        UI.toast('Eerst gevecht afmaken of pauzeren', 2400);
+        UI.toast(t('toast.finishFight'), 2400, { tone: 'warn' });
         return;
       }
       if (typeof adventureSpecialDuelActive === 'function' && adventureSpecialDuelActive(game)) {
-        UI.toast(t('toast.satanReflectHint'), 2400);
+        UI.toast(t('toast.satanReflectHint'), 2400, { tone: 'warn' });
         return;
       }
       if (state === 'play' && !game) state = 'menu';
@@ -32600,7 +32819,7 @@ const UI = {
     try {
       if (this._chestPullBusy) return;
       if (state === 'play' && game) {
-        UI.toast('Niet tijdens gevecht', 2000);
+        UI.toast(t('toast.notDuringCombat'), 2000, { tone: 'warn' });
         return;
       }
       const screen = document.getElementById('summonScreen');
@@ -34676,7 +34895,7 @@ function startGame(mode, opts) {
     return;
   }
   if (!allowed[mode]) {
-    try { UI.toast('Onbekende modus', 2200); } catch (_) {}
+    try { UI.toast(t('toast.unknownMode'), 2200, { tone: 'warn' }); } catch (_) {}
     return;
   }
   try { primePlayInput(false); } catch (_) {}
@@ -34825,7 +35044,7 @@ const btnContinue = document.getElementById('btnContinue');
 bindPress(btnContinue, () => {
   AudioSys.init(); AudioSys.sfx('select');
   try {
-    if (!resumeLastPlay()) userToast('Nog geen sessie — kies een modus', 2400);
+    if (!resumeLastPlay()) userToast(t('toast.noSession'), 2400, { tone: 'warn' });
   } catch (err) {
     sfReportError('resume', err, 'Verder spelen mislukt — kies een modus');
   }
@@ -34939,7 +35158,7 @@ if (btnOpenPlayLink) btnOpenPlayLink.addEventListener('click', () => {
   safeAsync((async () => {
     const url = await resolveSharePlayUrl();
     if (url) window.open(url, '_blank', 'noopener');
-    else userToast('Geen speel-link gevonden — zie Instellingen', 2800);
+    else userToast(t('toast.noPlayLink'), 2800, { tone: 'warn' });
   })(), 'openPlayLink', 'Link openen mislukt');
 });
 const btnExportSave = document.getElementById('btnExportSave');
@@ -34965,9 +35184,10 @@ if (btnExportSave) btnExportSave.addEventListener('click', () => {
       a.click();
       URL.revokeObjectURL(url);
     } catch (_) {}
-    UI.toast(clipped
-      ? `Save gekopieerd + download · ${saveExportSummaryLine()} (~${formatSaveBytes(json.length)})`
-      : `Save in vak + download · ${saveExportSummaryLine()} (~${formatSaveBytes(json.length)})`, 3600);
+    UI.toast(t(clipped ? 'toast.exportCopied' : 'toast.exportBox', {
+      summary: saveExportSummaryLine(),
+      size: formatSaveBytes(json.length),
+    }), 3600, { tone: 'ok' });
     UI.renderSettings();
   })(), 'exportSave', 'Export mislukt — kopieer JSON handmatig uit het vak');
 });
@@ -34976,7 +35196,7 @@ bindSaveImportFile();
 const btnImportSaveFile = document.getElementById('btnImportSaveFile');
 if (btnImportSaveFile) btnImportSaveFile.addEventListener('click', () => {
   AudioSys.sfx('select');
-  if (!openSaveImportFilePicker()) userToast('Bestand kiezen niet beschikbaar', 2400);
+  if (!openSaveImportFilePicker()) userToast(t('toast.filePickerUnavailable'), 2400, { tone: 'warn' });
 });
 if (btnImportSave) btnImportSave.addEventListener('click', () => runImportSaveClick());
 function bindSettingsControls() {
@@ -35097,20 +35317,20 @@ if (btnRestoreBackup) btnRestoreBackup.addEventListener('click', () => {
     if (!window.__sfBackupConfirm) {
       const h = saveHealthSummary();
       if (!h.backupOk) {
-        UI.toast('Geen backup gevonden op dit apparaat', 3000);
+        UI.toast(t('toast.noBackup'), 3000, { tone: 'warn' });
         return;
       }
       window.__sfBackupConfirm = true;
-      const driftHint = h.driftDetail || (h.drift ? ' (hoofd en backup verschillen)' : '');
-      UI.toast(`Backup Lv ${h.backupLvl}${driftHint} — tik nogmaals om te herstellen`, 4500);
+      const driftHint = h.driftDetail || (h.drift ? t('toast.backupDrift') : '');
+      UI.toast(t('toast.backupConfirm', { lvl: h.backupLvl, drift: driftHint }), 4500, { tone: 'warn' });
       setTimeout(() => { window.__sfBackupConfirm = false; }, 6000);
       return;
     }
     window.__sfBackupConfirm = false;
     if (restoreSaveFromBackup()) {
-      UI.toast('Backup teruggezet — save + backup synchroon', 3000);
+      UI.toast(t('toast.backupRestored'), 3000, { tone: 'ok' });
       UI.renderSettings();
-    } else UI.toast('Backup herstellen mislukt — export save als je die hebt', 3200);
+    } else UI.toast(t('toast.backupFailed'), 3200, { tone: 'danger' });
   }, 'restoreBackup', 'Backup herstellen mislukt');
 });
 const btnSyncBackup = document.getElementById('btnSyncBackup');
@@ -35119,15 +35339,15 @@ if (btnSyncBackup) btnSyncBackup.addEventListener('click', () => {
     AudioSys.sfx('select');
     if (!window.__sfSyncBackupConfirm) {
       window.__sfSyncBackupConfirm = true;
-      UI.toast('Sync overschrijft backup met hoofd-save — tik nogmaals', 3800);
+      UI.toast(t('toast.syncConfirm'), 3800, { tone: 'warn' });
       setTimeout(() => { window.__sfSyncBackupConfirm = false; }, 5000);
       return;
     }
     window.__sfSyncBackupConfirm = false;
     if (syncBackupFromPrimary()) {
-      UI.toast('Backup gesynchroniseerd met hoofd-save', 2800);
+      UI.toast(t('toast.syncOk'), 2800, { tone: 'ok' });
       UI.renderSettings();
-    } else UI.toast('Sync mislukt — export save als vangnet', 3200);
+    } else UI.toast(t('toast.syncFailed'), 3200, { tone: 'danger' });
   }, 'syncBackup', 'Backup sync mislukt');
 });
 const btnClearSave = document.getElementById('btnClearSave');
@@ -35135,7 +35355,7 @@ if (btnClearSave) btnClearSave.addEventListener('click', () => {
   safeUiAction(() => {
     if (!window.__sfClearConfirm) {
       window.__sfClearConfirm = true;
-      UI.toast('Nogmaals tikken = voortgang wissen (backup blijft)', 3500);
+      UI.toast(t('toast.clearConfirm'), 3500, { tone: 'warn' });
       setTimeout(() => { window.__sfClearConfirm = false; }, 4000);
       return;
     }
@@ -35143,12 +35363,12 @@ if (btnClearSave) btnClearSave.addEventListener('click', () => {
     try { localStorage.removeItem(SAVE_KEY); } catch (_) {}
     save = sanitizeSave(Object.assign({}, DEFAULT_SAVE));
     if (!persistPrimaryOnly()) {
-      userToast('Opslaan mislukt — probeer opnieuw', 3200);
+      userToast(t('toast.saveFailRetry'), 3200, { tone: 'danger' });
       return;
     }
     AudioSys.sfx('lose');
     UI.renderMenu();
-    UI.toast('Nieuwe start — backup staat nog in Instellingen', 4000);
+    UI.toast(t('toast.newStart'), 4000, { tone: 'ok' });
   }, 'clearSave', 'Reset mislukt — probeer opnieuw');
 });
 bindSettingsControls();
@@ -36007,20 +36227,20 @@ function bootGame() {
     const repairNotes = saveSanitizeNotes(beforeSave, save);
     persist();
     if (repairNotes.length && !hadCorruptPrimary && !window.__sfRecoveredBackup) {
-      userToast('Save gerepareerd: ' + repairNotes.slice(0, 2).join(' · '), 4200);
+      userToast(toastT('toast.saveRepaired', { notes: repairNotes.slice(0, 2).join(' · ') }, 'Save gerepareerd: ' + repairNotes.slice(0, 2).join(' · ')), 4200, { tone: 'ok' });
     }
     if (hadCorruptPrimary && !window.__sfRecoveredBackup) {
-      userToast('Corrupte hoofd-save overschreven — export blijft je vangnet bij URL-wissel', 4500);
+      userToast(toastT('toast.saveCorruptOverwritten', null, 'Corrupte hoofd-save overschreven — export blijft je vangnet bij URL-wissel'), 4500, { tone: 'warn' });
     }
   } catch (err) {
     console.error('[Stickman] save sanitize', err);
     if (applySaveFromBackupRaw()) {
       window.__sfRecoveredBackup = true;
-      userToast('Save hersteld uit backup na laadfout', 4800);
+      userToast(toastT('toast.saveRestoredAfterLoad', null, 'Save hersteld uit backup na laadfout'), 4800, { tone: 'ok' });
     } else {
       save = Object.assign({}, DEFAULT_SAVE);
       try { persistPrimaryOnly(); } catch (_) {}
-      userToast('Save kon niet geladen worden — nieuwe voortgang gestart (export backup als je die had)', 4800);
+      userToast(toastT('toast.saveLoadFailedFresh', null, 'Save kon niet geladen worden — nieuwe voortgang gestart (export backup als je die had)'), 4800, { tone: 'danger' });
     }
   }
   safeCall(() => dismissTunnelOverlayIfStatic(), 'overlay');
@@ -36072,7 +36292,7 @@ function bootGame() {
   } catch (_) {}
   if (window.__sfRecoveredBackup) {
     window.__sfRecoveredBackup = false;
-    safeCall(() => UI.toast('Save hersteld uit backup — je voortgang is veilig', 4200), 'toast');
+    safeCall(() => UI.toast(t('toast.saveRestoredSafe'), 4200, { tone: 'ok' }), 'toast');
   }
   AudioSys.desiredSong = 'menu';
   safeCall(() => { if (typeof AudioSys.applyVolumes === 'function') AudioSys.applyVolumes(); }, 'vol');
@@ -36087,7 +36307,7 @@ function bootGame() {
     try {
       const hub = document.querySelector('[data-hub]');
       if (hub && !hub.dataset.sfPressBound) {
-        userToast('Oude cache — menu reageert niet. Tik «Verse versie» in de dock.', 6500);
+        userToast(toastT('toast.staleCacheMenu', null, 'Oude cache — menu reageert niet. Tik «Verse versie» in de dock.'), 6500, { tone: 'danger' });
         document.getElementById('btnVerseVersie')?.classList.add('sw-update');
       }
     } catch (_) {}
@@ -36162,7 +36382,7 @@ function reportAppError(label) {
   window.__sfReportedErr = true;
   console.error(label);
   try {
-    if (typeof UI !== 'undefined' && UI.toast) UI.toast('Er ging iets mis — opgeslagen voortgang is veilig', 4000);
+    if (typeof UI !== 'undefined' && UI.toast) UI.toast(typeof t === 'function' ? t('toast.genericSafeError') : 'Er ging iets mis — opgeslagen voortgang is veilig', 4000, { tone: 'danger' });
   } catch (_) {}
 }
 window.addEventListener('error', (e) => {
