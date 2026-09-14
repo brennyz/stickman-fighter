@@ -2,7 +2,7 @@
 /* --- src/00-prelude.js --- */
 'use strict';
 /* =========================================================================
-   STICKMAN FIGHTER — Monster Arena
+   STICKMAN FIGHTER
    Stickman-vechtgame voor iPad (touch) en desktop (toetsenbord).
    Modi: Avontuur, Training, Versus 2P, Muur, Mats (coinrun).
    Audio (sfx + bgm) is procedureel via Web Audio — rechtenvrij.
@@ -323,9 +323,9 @@ const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const VERSION_UPDATE_SAVE_KEY = 'stickfighter_version_update_save_v1';
 const VERSION_UPDATE_FLAG_KEY = 'stickfighter_version_update_flag_v1';
 const SAVE_EXPORT_SCHEMA = 3;
-const APP_VERSION = '1.18.159';
+const APP_VERSION = '1.18.160';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 369;
+const SW_CACHE_REV = 370;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', petCoins: 0, dex: {}, summons: {}, pets: {}, activePet: null,
   eggPets: {}, activeEggPet: null, eggDaily: null,
   chestDaily: null, chestWeapons: {},
@@ -1962,7 +1962,7 @@ const I18N = {
       titleName: 'Naam — hoeft niet', titleNamePh: 'Bijnaam (optioneel)',
       titleNote: 'Geen account — je save blijft op deze telefoon',
       titleGreet: 'Hoi, {name}',
-      splash0: 'Laden…', splash1: 'Pixelmap…', splash2: 'Arena…', splash3: 'Klaar',
+      splash0: 'Laden…', splash1: 'Laden…', splash2: 'Laden…', splash3: 'Klaar',
     },
     hub: {
       step: 'Stap 2 · Kies modus', solo: 'SOLO', collection: 'COLLECTIE',
@@ -2060,7 +2060,7 @@ const I18N = {
       titleName: 'Name — optional', titleNamePh: 'Nickname (optional)',
       titleNote: 'No account — your save stays on this phone',
       titleGreet: 'Hi, {name}',
-      splash0: 'Loading…', splash1: 'Pixel map…', splash2: 'Arena…', splash3: 'Ready',
+      splash0: 'Loading…', splash1: 'Loading…', splash2: 'Loading…', splash3: 'Ready',
     },
     hub: {
       step: 'Step 2 · Pick mode', solo: 'SOLO', collection: 'COLLECTION',
@@ -2157,7 +2157,7 @@ const I18N = {
       titleName: 'Name — muss nicht', titleNamePh: 'Spitzname (optional)',
       titleNote: 'Kein Konto — dein Save bleibt auf diesem Handy',
       titleGreet: 'Hi, {name}',
-      splash0: 'Laden…', splash1: 'Pixelmap…', splash2: 'Arena…', splash3: 'Fertig',
+      splash0: 'Laden…', splash1: 'Laden…', splash2: 'Laden…', splash3: 'Fertig',
     },
     hub: {
       step: 'Schritt 2 · Modus wählen', solo: 'SOLO', collection: 'SAMMLUNG',
@@ -2236,7 +2236,7 @@ const I18N = {
       titleName: 'Nom — pas obligatoire', titleNamePh: 'Surnom (optionnel)',
       titleNote: 'Pas de compte — ta sauvegarde reste sur ce téléphone',
       titleGreet: 'Salut, {name}',
-      splash0: 'Chargement…', splash1: 'Pixelmap…', splash2: 'Arène…', splash3: 'Prêt',
+      splash0: 'Chargement…', splash1: 'Chargement…', splash2: 'Chargement…', splash3: 'Prêt',
     },
     hub: {
       step: 'Étape 2 · Choisir le mode', solo: 'SOLO', collection: 'COLLECTION',
@@ -2315,7 +2315,7 @@ const I18N = {
       titleName: 'Nombre — no hace falta', titleNamePh: 'Apodo (opcional)',
       titleNote: 'Sin cuenta — tu partida se queda en este teléfono',
       titleGreet: 'Hola, {name}',
-      splash0: 'Cargando…', splash1: 'Pixelmap…', splash2: 'Arena…', splash3: 'Listo',
+      splash0: 'Cargando…', splash1: 'Cargando…', splash2: 'Cargando…', splash3: 'Listo',
     },
     hub: {
       step: 'Paso 2 · Elige modo', solo: 'SOLO', collection: 'COLECCIÓN',
@@ -23316,16 +23316,7 @@ function paintSplashStripCanvas(cv, t, opts) {
     drawSplashStick(w * 0.72 + stroll * 0.6, -1, '#c09098', compact ? 0.9 : 1.05);
   }
 
-  // Soft caption bar (non-compact)
-  if (!compact) {
-    const capH = hero ? 22 : 14;
-    c.fillStyle = P ? P.captionBg : 'rgba(18,22,26,.55)';
-    c.fillRect(0, h - capH, w, capH);
-    c.fillStyle = P ? P.captionFg : 'rgba(220,214,200,.82)';
-    c.font = hero ? 'bold 13px monospace' : 'bold 9px monospace';
-    c.textAlign = 'left';
-    c.fillText('MONSTER ARENA', 10, h - (hero ? 7 : 4));
-  }
+  // Splash strip stays picture-only — title + SPELEN already say what this is.
 
   c.imageSmoothingEnabled = prev;
 }
@@ -32595,7 +32586,7 @@ const UI = {
     document.getElementById('togMusic')?.classList.toggle('off', !save.music);
     document.getElementById('togSfx')?.classList.toggle('off', !save.sfx);
     const verLine = document.getElementById('menuVerLine');
-    if (verLine) verLine.textContent = 'v' + APP_VERSION + ' · arcade · SW v' + SW_CACHE_REV;
+    if (verLine) verLine.textContent = 'v' + APP_VERSION;
     const missEl = document.getElementById('menuDailyHint');
     const hubHintEl = document.getElementById('menuHubHint');
     const dailyLine = dailyStatusLine();
@@ -35978,7 +35969,7 @@ function paintMenuHeroCanvas(t) {
   }
 
   let map = { roadY: Hs * 0.82 };
-  const drawOne = (fn, ctx) => fn(ctx, Ws, Hs, t, { lite, caption: true }) || map;
+  const drawOne = (fn, ctx) => fn(ctx, Ws, Hs, t, { lite, caption: false }) || map;
 
   if (N >= 2 && aTo > 0.02 && fromIdx !== toIdx) {
     const buf = ensureMenuVistaBuf(Ws, Hs);
@@ -35997,7 +35988,7 @@ function paintMenuHeroCanvas(t) {
   } else if (N >= 1) {
     map = drawOne(VISTAS[fromIdx], c);
   } else if (typeof drawLandwegPixelmap === 'function') {
-    map = drawLandwegPixelmap(c, Ws, Hs, t, { lite, caption: true, groundY: Hs * 0.58 }) || map;
+    map = drawLandwegPixelmap(c, Ws, Hs, t, { lite, caption: false, groundY: Hs * 0.58 }) || map;
     map.roadY = (map.groundY || Hs * 0.58) + 8;
   } else {
     const sky = c.createLinearGradient(0, 0, 0, Hs);
@@ -36516,8 +36507,8 @@ function runSplashIntro() {
   let finished = false;
   const labels = [
     (typeof tOr === 'function' ? tOr('menu.splash0', 'Laden…') : 'Laden…'),
-    (typeof tOr === 'function' ? tOr('menu.splash1', 'Pixelmap…') : 'Pixelmap…'),
-    (typeof tOr === 'function' ? tOr('menu.splash2', 'Arena…') : 'Arena…'),
+    (typeof tOr === 'function' ? tOr('menu.splash1', 'Laden…') : 'Laden…'),
+    (typeof tOr === 'function' ? tOr('menu.splash2', 'Laden…') : 'Laden…'),
     (typeof tOr === 'function' ? tOr('menu.splash3', 'Klaar') : 'Klaar'),
   ];
 

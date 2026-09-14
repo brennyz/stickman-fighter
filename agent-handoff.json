@@ -13,17 +13,17 @@
     "tunnelBookmark": "https://stickfighter-ipad-b75e.loca.lt/ipad.html"
   },
   "codeTruth": {
-    "appVersion": "1.18.159",
-    "swCache": "stickfighter-app-v369",
-    "gameJsQuery": "game.js?v=369",
-    "cssQuery": "styles/main.css?v=369",
-    "featureBranch": "main",
+    "appVersion": "1.18.160",
+    "swCache": "stickfighter-app-v370",
+    "gameJsQuery": "game.js?v=370",
+    "cssQuery": "styles/main.css?v=370",
+    "featureBranch": "cursor/start-copy-trim-834e",
     "pushBlocked": null,
     "shareUrl": "https://brennyz.github.io/stickman-fighter/speel.html",
     "localMainHead": "060dac15fb5ee53501168fdbaa4dcc63edc7f945",
     "remoteMainHead": "060dac15fb5ee53501168fdbaa4dcc63edc7f945",
-    "note": "MERGED to origin/main by user «merge alles»: #259 P1 landing + #260 toast/title-gate. Hit-reg kept. #261 closed. #256 draft skipped (conflicts/store). v1.18.159 / SW 369.",
-    "updated": "2026-09-14T13:20:00Z"
+    "note": "Start-copy trim on cursor/start-copy-trim-834e — drop MONSTER ARENA / insert-coin / KIES JE PAD. SPELEN + tiles stay. Wait «merge main». v1.18.160 / SW 370.",
+    "updated": "2026-09-14T13:45:00Z"
   },
   "githubSync": {
     "policy": "Trigger van de user: «merge main» = commit (als nodig) + push origin/main. Daarna GitHub Pages (~1–3 min) → speel.html is LIVE. Niet stil pushen. Houd pendingUpload bij tot origin/main gelijk is.",
@@ -90,6 +90,13 @@
     "pendingMerge": []
   },
   "userWishlist": [
+    {
+      "id": "w-20260914T134200",
+      "from": "user",
+      "text": "Ga verder: haal lelijke overbodige teksten weg, maar laat de gebruiker de game nog wel snappen. Startscherm «arena monsters» / MONSTER ARENA is niet meer nodig.",
+      "status": "done-in-code",
+      "updated": "2026-09-14"
+    },
     {
       "id": "w-20260914T130500",
       "from": "user",
@@ -593,6 +600,10 @@
   ],
   "sessionLog": [
     {
+      "at": "2026-09-14T13:47:47Z",
+      "summary": "Startscherm opgeschoond: MONSTER ARENA, insert coin en KIES JE PAD weg. SPELEN + tegels blijven."
+    },
+    {
       "at": "2026-09-14T13:22:45Z",
       "summary": "MERGE MAIN: #259 + #260 → v1.18.159/SW369. Hit-reg gehouden. #261 closed. #256 overgeslagen. speel.html LIVE na Pages."
     },
@@ -687,10 +698,6 @@
     {
       "at": "2026-08-17T08:56:53Z",
       "summary": "Zevende d20-worp geclaimd via CLI"
-    },
-    {
-      "at": "2026-08-17T08:55:57Z",
-      "summary": "d19: Muur-HUD één tempo-getal; balk volgt tempo niet pas record"
     }
   ],
   "implementedFeaturesSummary": "d18 char select deel 1+2 (v1.11.1-2); Mats coinrun + shuriken mik/vliegers + anti-spam (v1.12.0); speel.html (v1.12.2+). Zie HANDOFF-ZOEKINDEX.md en improvement-d20-bag.json userFeatureLog.",

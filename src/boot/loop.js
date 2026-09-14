@@ -191,7 +191,7 @@ function paintMenuHeroCanvas(t) {
   }
 
   let map = { roadY: Hs * 0.82 };
-  const drawOne = (fn, ctx) => fn(ctx, Ws, Hs, t, { lite, caption: true }) || map;
+  const drawOne = (fn, ctx) => fn(ctx, Ws, Hs, t, { lite, caption: false }) || map;
 
   if (N >= 2 && aTo > 0.02 && fromIdx !== toIdx) {
     const buf = ensureMenuVistaBuf(Ws, Hs);
@@ -210,7 +210,7 @@ function paintMenuHeroCanvas(t) {
   } else if (N >= 1) {
     map = drawOne(VISTAS[fromIdx], c);
   } else if (typeof drawLandwegPixelmap === 'function') {
-    map = drawLandwegPixelmap(c, Ws, Hs, t, { lite, caption: true, groundY: Hs * 0.58 }) || map;
+    map = drawLandwegPixelmap(c, Ws, Hs, t, { lite, caption: false, groundY: Hs * 0.58 }) || map;
     map.roadY = (map.groundY || Hs * 0.58) + 8;
   } else {
     const sky = c.createLinearGradient(0, 0, 0, Hs);
@@ -729,8 +729,8 @@ function runSplashIntro() {
   let finished = false;
   const labels = [
     (typeof tOr === 'function' ? tOr('menu.splash0', 'Laden…') : 'Laden…'),
-    (typeof tOr === 'function' ? tOr('menu.splash1', 'Pixelmap…') : 'Pixelmap…'),
-    (typeof tOr === 'function' ? tOr('menu.splash2', 'Arena…') : 'Arena…'),
+    (typeof tOr === 'function' ? tOr('menu.splash1', 'Laden…') : 'Laden…'),
+    (typeof tOr === 'function' ? tOr('menu.splash2', 'Laden…') : 'Laden…'),
     (typeof tOr === 'function' ? tOr('menu.splash3', 'Klaar') : 'Klaar'),
   ];
 

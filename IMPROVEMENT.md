@@ -137,6 +137,7 @@ Schrijf **1–3 regels** per sessie: datum, d#, wat, versie.
 
 | Datum (UTC) | d# | Update |
 |-------------|-----|--------|
+| 2026-09-14 | — | Startscherm: MONSTER ARENA / insert coin / KIES JE PAD weg. SPELEN + tegels blijven. v1.18.160 / SW 370. |
 | 2026-09-14 | — | MERGE MAIN: #259 + #260 → v1.18.159 / SW 369. Hit-reg gehouden. #261 closed. #256 store-draft overgeslagen. |
 | 2026-09-14 | — | Training hit-reg: capsule + face-naar-robot; floater left-clamp; YOU LOST/VERLOREN. v1.18.158 / SW 368. |
 | 2026-09-14 | — | P1 entry: één install-blok per apparaat, geen iPad op Android. v1.18.157 / SW 367. |

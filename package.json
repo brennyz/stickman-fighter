@@ -1,8 +1,8 @@
 {
   "name": "stickman-fighter",
   "private": true,
-  "version": "1.18.159",
-  "description": "Stickman Fighter — Monster Arena PWA",
+  "version": "1.18.160",
+  "description": "Stickman Fighter PWA",
   "scripts": {
     "build": "node scripts/build.mjs",
     "build:css": "node scripts/extract-css.mjs",
@@ -47,7 +47,8 @@
     "smoke:island-polish": "node scripts/smoke-island-polish.mjs",
     "smoke:toast-queue": "node scripts/smoke-toast-queue.mjs",
     "smoke:toast": "node scripts/smoke-toast.mjs",
-    "test": "npm run build && npm run check && npm run check:critical && npm run smoke && npm run smoke:upgrades && npm run smoke:menu && npm run smoke:html && npm run smoke:responsive && npm run smoke:arcade-ui && npm run smoke:pwa && npm run smoke:playtest-p1 && npm run smoke:island-polish && npm run smoke:toast-queue && npm run smoke:toast && npm run smoke:gamble && npm run smoke:levelup && npm run smoke:petwave && npm run smoke:wave12 && npm run smoke:spiral-orb && npm run smoke:boomerang && npm run smoke:weapons && npm run smoke:zone && npm run smoke:cave && npm run smoke:pc && npm run smoke:fighter-move && npm run smoke:touch-btns && npm run smoke:dex && npm run smoke:vista && npm run smoke:advbg && npm run smoke:adventure && npm run smoke:satan && npm run smoke:save && npm run smoke:summon && npm run smoke:wall && npm run smoke:training && npm run smoke:nav",
+    "smoke:start-copy": "node scripts/smoke-start-copy.mjs",
+    "test": "npm run build && npm run check && npm run check:critical && npm run smoke && npm run smoke:upgrades && npm run smoke:menu && npm run smoke:html && npm run smoke:responsive && npm run smoke:arcade-ui && npm run smoke:pwa && npm run smoke:playtest-p1 && npm run smoke:island-polish && npm run smoke:toast-queue && npm run smoke:toast && npm run smoke:start-copy && npm run smoke:gamble && npm run smoke:levelup && npm run smoke:petwave && npm run smoke:wave12 && npm run smoke:spiral-orb && npm run smoke:boomerang && npm run smoke:weapons && npm run smoke:zone && npm run smoke:cave && npm run smoke:pc && npm run smoke:fighter-move && npm run smoke:touch-btns && npm run smoke:dex && npm run smoke:vista && npm run smoke:advbg && npm run smoke:adventure && npm run smoke:satan && npm run smoke:save && npm run smoke:summon && npm run smoke:wall && npm run smoke:training && npm run smoke:nav",
     "roll": "bash scripts/roll-improvement-d20.sh",
     "roll:status": "bash scripts/roll-improvement-d20.sh status",
     "roll:verify": "bash scripts/roll-improvement-d20.sh verify",

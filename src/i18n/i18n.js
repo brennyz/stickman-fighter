@@ -18,7 +18,7 @@ const I18N = {
       titleName: 'Naam — hoeft niet', titleNamePh: 'Bijnaam (optioneel)',
       titleNote: 'Geen account — je save blijft op deze telefoon',
       titleGreet: 'Hoi, {name}',
-      splash0: 'Laden…', splash1: 'Pixelmap…', splash2: 'Arena…', splash3: 'Klaar',
+      splash0: 'Laden…', splash1: 'Laden…', splash2: 'Laden…', splash3: 'Klaar',
     },
     hub: {
       step: 'Stap 2 · Kies modus', solo: 'SOLO', collection: 'COLLECTIE',
@@ -116,7 +116,7 @@ const I18N = {
       titleName: 'Name — optional', titleNamePh: 'Nickname (optional)',
       titleNote: 'No account — your save stays on this phone',
       titleGreet: 'Hi, {name}',
-      splash0: 'Loading…', splash1: 'Pixel map…', splash2: 'Arena…', splash3: 'Ready',
+      splash0: 'Loading…', splash1: 'Loading…', splash2: 'Loading…', splash3: 'Ready',
     },
     hub: {
       step: 'Step 2 · Pick mode', solo: 'SOLO', collection: 'COLLECTION',
@@ -213,7 +213,7 @@ const I18N = {
       titleName: 'Name — muss nicht', titleNamePh: 'Spitzname (optional)',
       titleNote: 'Kein Konto — dein Save bleibt auf diesem Handy',
       titleGreet: 'Hi, {name}',
-      splash0: 'Laden…', splash1: 'Pixelmap…', splash2: 'Arena…', splash3: 'Fertig',
+      splash0: 'Laden…', splash1: 'Laden…', splash2: 'Laden…', splash3: 'Fertig',
     },
     hub: {
       step: 'Schritt 2 · Modus wählen', solo: 'SOLO', collection: 'SAMMLUNG',
@@ -292,7 +292,7 @@ const I18N = {
       titleName: 'Nom — pas obligatoire', titleNamePh: 'Surnom (optionnel)',
       titleNote: 'Pas de compte — ta sauvegarde reste sur ce téléphone',
       titleGreet: 'Salut, {name}',
-      splash0: 'Chargement…', splash1: 'Pixelmap…', splash2: 'Arène…', splash3: 'Prêt',
+      splash0: 'Chargement…', splash1: 'Chargement…', splash2: 'Chargement…', splash3: 'Prêt',
     },
     hub: {
       step: 'Étape 2 · Choisir le mode', solo: 'SOLO', collection: 'COLLECTION',
@@ -371,7 +371,7 @@ const I18N = {
       titleName: 'Nombre — no hace falta', titleNamePh: 'Apodo (opcional)',
       titleNote: 'Sin cuenta — tu partida se queda en este teléfono',
       titleGreet: 'Hola, {name}',
-      splash0: 'Cargando…', splash1: 'Pixelmap…', splash2: 'Arena…', splash3: 'Listo',
+      splash0: 'Cargando…', splash1: 'Cargando…', splash2: 'Cargando…', splash3: 'Listo',
     },
     hub: {
       step: 'Paso 2 · Elige modo', solo: 'SOLO', collection: 'COLECCIÓN',

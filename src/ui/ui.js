@@ -2000,7 +2000,7 @@ const UI = {
     document.getElementById('togMusic')?.classList.toggle('off', !save.music);
     document.getElementById('togSfx')?.classList.toggle('off', !save.sfx);
     const verLine = document.getElementById('menuVerLine');
-    if (verLine) verLine.textContent = 'v' + APP_VERSION + ' · arcade · SW v' + SW_CACHE_REV;
+    if (verLine) verLine.textContent = 'v' + APP_VERSION;
     const missEl = document.getElementById('menuDailyHint');
     const hubHintEl = document.getElementById('menuHubHint');
     const dailyLine = dailyStatusLine();

@@ -281,11 +281,10 @@
     backdrop-filter: none;
     animation: menuGlassIn 0.45s ease both;
   }
-  #menuScreen.menu-video-overhaul .arcade-pre {
-    color: var(--menu-ink-muted);
-    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.45);
-    opacity: 1;
-    letter-spacing: 0.28em;
+  #menuScreen.menu-video-overhaul .arcade-pre,
+  #menuArcadePre[hidden],
+  #pressStartLine[hidden] {
+    display: none !important;
   }
   #menuScreen.menu-video-overhaul h1.title.arcade-logo {
     font-size: clamp(28px, 8.5vw, 54px);
