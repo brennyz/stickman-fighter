@@ -1937,8 +1937,9 @@ const UI = {
     const missAlert = readyClaim > 0 || bonusReady;
     const profileEl = document.getElementById('menuProfileBar');
     if (profileEl) {
+      const tag = save.playerTag ? String(save.playerTag) : '';
       profileEl.innerHTML =
-        `<span class="prof-row"><b>Lv ${save.lvl}</b><span>${weaponLabel(w)}</span>` +
+        `<span class="prof-row"><b>${tag ? tag + ' · ' : ''}Lv ${save.lvl}</b><span>${weaponLabel(w)}</span>` +
         `<span style="color:${(skillById(save.skill || 'spiral_orb').color)}">${skillLabel(skillById(save.skill || 'spiral_orb'))}</span>` +
         `<span style="color:${equippedSuper().color}">${superLabel(equippedSuper())}</span>` +
         `<span style="color:${st.accent}">${styleLabel(st)}</span></span>` +
@@ -2027,7 +2028,7 @@ const UI = {
     const playLinkEl = document.getElementById('menuPlayLink');
     if (playLinkEl) {
       if (location.hostname.endsWith('.github.io')) {
-        playLinkEl.textContent = '✓ GitHub Pages — Deel link (Android)';
+        playLinkEl.textContent = '✓ Speel-link — deel met vrienden (Android)';
       } else if (!playLinkEl.dataset.loaded) {
         playLinkEl.dataset.loaded = '1';
         loadHostingBundle().then(({ hosting }) => {
@@ -2734,7 +2735,7 @@ const UI = {
         const short = (u) => String(u || '').replace(/^https:\/\//, '');
         if (stable && !isTunnelHostUrl(stable)) {
           linkEl.innerHTML =
-            `<div style="opacity:.8;margin-bottom:4px">Vaste speel-link (GitHub Pages) — deel deze</div>` +
+            `<div style="opacity:.8;margin-bottom:4px">Speel-link — deel deze met vrienden</div>` +
             `<a href="${stable}" style="color:#7cf5ff;font-weight:800" rel="noopener">${short(stable)}</a>`;
         } else {
           linkEl.textContent = withShareRevParam('https://brennyz.github.io/stickman-fighter/speel.html', SW_CACHE_REV);
@@ -2742,10 +2743,10 @@ const UI = {
         const kind = playHostKind();
         if (badgeEl) {
           const labels = {
-            pages: 'GitHub Pages — stabiele deel-link',
-            tunnel: 'Tunnel (dev) — deel nooit deze URL',
-            netlify: 'Netlify — export save bij URL-wissel',
-            local: 'Lokaal — deel GitHub Pages met vrienden',
+            pages: 'Stabiele speel-link',
+            tunnel: 'Thuis-test — deel deze URL niet',
+            netlify: 'Andere host — kopieer je save bij wissel',
+            local: 'Lokaal — deel de speel-link met vrienden',
             file: 'Lokaal bestand — deel GitHub Pages',
             other: 'Online host',
           };
@@ -2785,10 +2786,10 @@ const UI = {
         let hint = hosting.stableHint || '';
         if (!hint) {
           if (stable && String(stable).includes('github.io')) {
-            hint = 'Primair: GitHub Pages — deel speel.html. Op Android: Chrome → App installeren. Tunnel is alleen thuis-dev.';
-          } else if (location.hostname.endsWith('.github.io')) hint = 'Je speelt via GitHub Pages — deel speel.html met vrienden.';
-          else if (location.hostname.endsWith('.netlify.app')) hint = 'Netlify-host — export save bij URL-wissel.';
-          else hint = 'Gebruik de vaste Pages-link hierboven; tunnel nooit als deel-link.';
+            hint = 'Deel deze link met vrienden. Op Android: Chrome → App installeren.';
+          } else if (location.hostname.endsWith('.github.io')) hint = 'Deel deze link met vrienden. Op Android: Chrome → App installeren.';
+          else if (location.hostname.endsWith('.netlify.app')) hint = 'Deel de speel-link hierboven met vrienden.';
+          else hint = 'Deel de speel-link hierboven met vrienden.';
         }
         if (onTunnel) {
           hint += ' Tunnel offline/503? Open de vaste GitHub Pages-link (primair).';
@@ -2803,7 +2804,7 @@ const UI = {
       })
       .catch(() => {
         linkEl.textContent = 'https://brennyz.github.io/stickman-fighter/speel.html';
-        if (hintEl) hintEl.textContent = 'Primair: GitHub Pages speel.html — export save bij URL-wissel.';
+        if (hintEl) hintEl.textContent = 'Deel deze link met vrienden. Op Android: Chrome → App installeren.';
       });
   },
 

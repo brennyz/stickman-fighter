@@ -274,9 +274,9 @@ const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const VERSION_UPDATE_SAVE_KEY = 'stickfighter_version_update_save_v1';
 const VERSION_UPDATE_FLAG_KEY = 'stickfighter_version_update_flag_v1';
 const SAVE_EXPORT_SCHEMA = 3;
-const APP_VERSION = '1.18.155';
+const APP_VERSION = '1.18.156';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 365;
+const SW_CACHE_REV = 366;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', petCoins: 0, dex: {}, summons: {}, pets: {}, activePet: null,
   eggPets: {}, activeEggPet: null, eggDaily: null,
   chestDaily: null, chestWeapons: {},
@@ -295,7 +295,7 @@ const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', petCoins: 0,
   showTouchPads: null,
   /** Keyboard legend on PC / when pads off (default on) */
   kbLegend: true,
-  reducedMotion: false, liteFx: false, highContrast: false, lang: null, lastPlay: null, tipsSeen: {},
+  reducedMotion: false, liteFx: false, highContrast: false, lang: null, playerTag: '', lastPlay: null, tipsSeen: {},
   stats: { kills: 0, advWins: 0, wallBestRun: 0, maxCombo: 0, maxKillStreak: 0, trainMaxCombo: 0, pickups: 0, bossKills: 0, vsMatches: 0, vsWins: 0, matsCoinBest: 0, summonCount: 0, killsSinceSummon: 0, petsTamed: 0, eggsHatched: 0, weaponFinishers: 0, tideBattleWins: 0, skillShards: 0, itemShards: 0, dailyBonusCount: 0 },
   achievements: {}, daily: null, vsPlayedIds: [], weaponMastery: {}, skillUpgrades: {}, itemUpgrades: {}, activeTechnique: 'spiral_orb', skill: 'spiral_orb', super: 'ketsbam', missionsIntroSeen: false };
 
@@ -1481,6 +1481,17 @@ function sanitizeTipsSeen(raw) {
   return out;
 }
 
+function sanitizePlayerTag(raw) {
+  let s = String(raw == null ? '' : raw);
+  s = s.replace(/<[^>]*>/g, '');
+  try {
+    s = s.replace(/[^\p{L}\p{N} _.'-]/gu, '');
+  } catch (_) {
+    s = s.replace(/[^\w\s.'-]/g, '');
+  }
+  return s.replace(/\s+/g, ' ').trim().slice(0, 16);
+}
+
 /** Corrupte / gemanipuleerde saves veilig maken (localStorage + import). */
 function sanitizeSave(s) {
   // Literal max — nooit TDZ op MAX_LEVEL (anders crashen alle click-handlers)
@@ -1808,6 +1819,7 @@ function sanitizeSave(s) {
   if (out.lang != null && typeof SUPPORTED_LANGS !== 'undefined' && !SUPPORTED_LANGS.includes(out.lang)) {
     out.lang = null;
   }
+  out.playerTag = sanitizePlayerTag(out.playerTag);
 
   out.stats = Object.assign({}, DEFAULT_SAVE.stats, out.stats || {});
   const cleanStats = {};
@@ -1894,9 +1906,13 @@ const I18N = {
       arcade: 'Arcade', arcadeSub: 'Training · Muur · Muntjes', versus: '2 spelers', versusSub: 'Lokaal',
       collect: 'Collectie', collectSub: 'Wapens · stijl · boek', music: 'Muziek', missions: 'Missies',
       summons: 'Summons', summonsSub: 'Dagelijkse kist · wapen & pet',
-      options: 'Opties', tips: 'Tips', fresh: 'Verse versie', install: 'Zet in app-lade', installSub: 'Één icoon op je beginscherm',
+      options: 'Opties', tips: 'Tips', fresh: 'Verse versie', install: 'Zet in app-lade', installSub: 'Één icoon, zoals een echte app',
       pressStart: 'insert coin', missionReady: 'missie klaar', dayBonus: 'Dagbonus',
       choosePath: 'KIES JE PAD', lastPlayed: 'LAATST', playHere: 'SPEEL',
+      startGame: 'SPELEN', startSub: 'Start het gevecht',
+      titleName: 'Hoe heet je?', titleNamePh: 'Jouw naam',
+      titleNote: 'Geen account — je save blijft op deze telefoon',
+      titleGreet: 'Hoi, {name}',
     },
     hub: {
       step: 'Stap 2 · Kies modus', solo: 'SOLO', collection: 'COLLECTIE',
@@ -1931,25 +1947,27 @@ const I18N = {
       title: 'Instellingen', sub: 'Geluid, trilling & HUD — opgeslagen op dit apparaat',
       lang: 'Taal', music: 'Muziek', sfx: 'Effecten', shake: 'Schermschok', haptics: 'Trillen',
       comboHud: 'Combo-HUD', bigTouch: 'Grote knoppen',
-      kbLegend: 'Toetsen-legenda (PC)', showTouchPads: 'Touch-knoppen altijd',
+      kbLegend: 'Toetsenbord-hulp', showTouchPads: 'Touch-knoppen altijd',
       reducedMotion: 'Minder beweging',
       liteFx: 'Lite FX', highContrast: 'Hoog contrast tekst', restoreBackup: 'Herstel save uit backup',
       a11yMotionOn: 'Minder beweging: aan', a11yMotionOs: 'Minder beweging: via systeem',
       a11yContrastOn: 'Hoog contrast: aan', a11yContrastOs: 'Hoog contrast: via systeem',
       a11yDefault: 'Toegankelijkheid: standaard — schakel hierboven of in je telefoon-instellingen',
       a11yTip: 'Minder beweging = rustigere banners. Hoog contrast = dikkere randen. Lite FX = soepeler op telefoon.',
-      sfxSamplesOn: 'Online SFX: Kenney CC0 geladen',
-      sfxSamplesLoad: 'Online SFX: laden… (synth fallback)',
-      sfxSamplesOff: 'Online SFX: offline — synth fallback',
-      syncBackup: 'Sync backup = hoofd-save', freshCache: 'Verse versie (cache legen)', clearSave: 'Nieuwe start (dubbel tikken)',
-      hosting: 'Hosting & voortgang', copyLink: 'Kopieer vaste speel-link', openLink: 'Open vaste link',
-      savePort: 'Save export / import', exportSave: 'Export save', importSave: 'Import save',
+      sfxSamplesOn: 'Geluidseffecten: geladen',
+      sfxSamplesLoad: 'Geluidseffecten: laden…',
+      sfxSamplesOff: 'Geluidseffecten: offline',
+      syncBackup: 'Backup bijwerken', freshCache: 'Verse versie', clearSave: 'Nieuwe start (dubbel tikken)',
+      syncHint: 'Zet de backup gelijk aan je huidige voortgang.',
+      freshHint: 'Menu reageert niet? Tik hier voor de nieuwste versie.',
+      hosting: 'Speel-link', copyLink: 'Kopieer speel-link', openLink: 'Open speel-link',
+      savePort: 'Voortgang kopiëren', exportSave: 'Kopieer save', importSave: 'Laad save',
       importSaveFile: 'Bestand kiezen',
-      savePortDesc: 'Export kopieert JSON (clipboard + download). Import: kies een bestand of plak JSON — 1× preview, 2× laden. Huidige save gaat naar Backup.',
-      savePortPlaceholder: 'Plak JSON of kies een exportbestand (.json) — meta.key stickfighter_save_v1 · 2× Import om te laden',
+      savePortDesc: 'Kopieer je voortgang (bestand + klembord). Laden: kies een bestand of plak hier — 1× kijken, 2× laden. Je huidige save gaat naar backup.',
+      savePortPlaceholder: 'Plak je save hier, of kies een bestand',
       privacy: 'Privacy',
       ageHint: 'Cartoon-gevecht · tiener+ · geen chat',
-      installAge: 'Cartoon-stickman gevechten · aanbevolen tiener+ · geen chat.',
+      installAge: 'Cartoon-gevechten · tiener+ · geen chat.',
       langChanged: 'Taal: {lang}',
     },
     missions: { title: 'Missies & prestaties', sub: '3 missies per dag',
@@ -1959,7 +1977,7 @@ const I18N = {
       crackEgg: 'Dag-ei openen', crackEggSub: 'Gratis arcade-pull' },
     dex: { title: 'Monsterboek', sub: '{n} soorten · rariteit = HP · boerderij / dierentuin / zee-filters · 4 rariteiten = Kristallijn' },
     help: { title: 'Tips & controls' },
-    install: { title: 'In app-lade zetten', sub: 'Verschijnt als icoon — net als een echte app' },
+    install: { title: 'Zet in app-lade', sub: 'Één icoon, zoals een echte app' },
     island: {
       1: { name: 'Oost-eiland', sub: 'Lv 1–10' }, 2: { name: 'Vuur-eiland', sub: 'Lv 11–20' },
       3: { name: 'Neon-eiland', sub: 'Lv 21–30' }, 4: { name: 'Tempel-eiland', sub: 'Lv 31–40' },
@@ -1985,9 +2003,13 @@ const I18N = {
       arcade: 'Arcade', arcadeSub: 'Training · Wall · Coins', versus: '2 players', versusSub: 'Local',
       collect: 'Collection', collectSub: 'Weapons · style · book', music: 'Music', missions: 'Missions',
       summons: 'Summons', summonsSub: 'Daily chest · weapon & pet',
-      options: 'Options', tips: 'Tips', fresh: 'Fresh version', install: 'Add to home screen', installSub: 'One icon on your device',
+      options: 'Options', tips: 'Tips', fresh: 'Fresh version', install: 'Add as app', installSub: 'One icon, like a real app',
       pressStart: 'insert coin', missionReady: 'mission ready', dayBonus: 'Daily bonus',
       choosePath: 'CHOOSE YOUR PATH', lastPlayed: 'LAST', playHere: 'PLAY',
+      startGame: 'PLAY', startSub: 'Start the fight',
+      titleName: 'What is your name?', titleNamePh: 'Your name',
+      titleNote: 'No account — your save stays on this phone',
+      titleGreet: 'Hi, {name}',
     },
     hub: {
       step: 'Step 2 · Pick mode', solo: 'SOLO', collection: 'COLLECTION',
@@ -2022,25 +2044,27 @@ const I18N = {
       title: 'Settings', sub: 'Sound, haptics & HUD — saved on this device',
       lang: 'Language', music: 'Music', sfx: 'Effects', shake: 'Screen shake', haptics: 'Haptics',
       comboHud: 'Combo HUD', bigTouch: 'Big buttons',
-      kbLegend: 'Keyboard legend (PC)', showTouchPads: 'Always show touch pads',
+      kbLegend: 'Keyboard help', showTouchPads: 'Always show touch pads',
       reducedMotion: 'Reduce motion',
       liteFx: 'Lite FX', highContrast: 'High contrast text', restoreBackup: 'Restore save from backup',
       a11yMotionOn: 'Reduce motion: on', a11yMotionOs: 'Reduce motion: via system',
       a11yContrastOn: 'High contrast: on', a11yContrastOs: 'High contrast: via system',
       a11yDefault: 'Accessibility: default — toggle above or in your phone settings',
       a11yTip: 'Reduce motion = calmer banners. High contrast = thicker borders. Lite FX = smoother on phone.',
-      sfxSamplesOn: 'Online SFX: Kenney CC0 loaded',
-      sfxSamplesLoad: 'Online SFX: loading… (synth fallback)',
-      sfxSamplesOff: 'Online SFX: offline — synth fallback',
-      syncBackup: 'Sync backup = main save', freshCache: 'Fresh version (clear cache)', clearSave: 'New start (tap twice)',
-      hosting: 'Hosting & progress', copyLink: 'Copy play link', openLink: 'Open play link',
-      savePort: 'Save export / import', exportSave: 'Export save', importSave: 'Import save',
+      sfxSamplesOn: 'Sound effects: loaded',
+      sfxSamplesLoad: 'Sound effects: loading…',
+      sfxSamplesOff: 'Sound effects: offline',
+      syncBackup: 'Update backup', freshCache: 'Fresh version', clearSave: 'New start (tap twice)',
+      syncHint: 'Set the backup equal to your current progress.',
+      freshHint: 'Menu stuck? Tap here for the newest version.',
+      hosting: 'Play link', copyLink: 'Copy play link', openLink: 'Open play link',
+      savePort: 'Copy progress', exportSave: 'Copy save', importSave: 'Load save',
       importSaveFile: 'Choose file',
-      savePortDesc: 'Export copies JSON (clipboard + download). Import: pick a file or paste JSON — 1× preview, 2× load. Current save goes to Backup.',
-      savePortPlaceholder: 'Paste JSON or choose an export file (.json) — meta.key stickfighter_save_v1 · tap Import twice to load',
+      savePortDesc: 'Copy your progress (file + clipboard). Load: pick a file or paste here — 1× preview, 2× load. Current save goes to backup.',
+      savePortPlaceholder: 'Paste your save here, or choose a file',
       privacy: 'Privacy',
       ageHint: 'Cartoon combat · teens+ · no chat',
-      installAge: 'Cartoon stickman combat · teens+ recommended · no chat.',
+      installAge: 'Cartoon combat · teens+ · no chat.',
       langChanged: 'Language: {lang}',
     },
     missions: { title: 'Missions & achievements', sub: '3 missions a day',
@@ -2050,7 +2074,7 @@ const I18N = {
       crackEgg: 'Open daily egg', crackEggSub: 'Free arcade pull' },
     dex: { title: 'Monster book', sub: '{n} species · rarity = HP · farm / zoo / sea filters · 4 rarities = Crystalline' },
     help: { title: 'Tips & controls' },
-    install: { title: 'Add to home screen', sub: 'Shows as an icon — like a real app' },
+    install: { title: 'Add as app', sub: 'One icon, like a real app' },
     island: {
       1: { name: 'East island', sub: 'Lv 1–10' }, 2: { name: 'Fire island', sub: 'Lv 11–20' },
       3: { name: 'Neon island', sub: 'Lv 21–30' }, 4: { name: 'Temple island', sub: 'Lv 31–40' },
@@ -2075,9 +2099,13 @@ const I18N = {
       continue: 'Weiterspielen', adventure: 'Abenteuer', adventureSub: 'Story · Inseln · Bosse',
       arcade: 'Arcade', arcadeSub: 'Training · Mauer · Münzen', versus: '2 Spieler', versusSub: 'Lokal',
       collect: 'Sammlung', collectSub: 'Waffen · Stil · Buch', music: 'Musik', missions: 'Missionen',
-      options: 'Optionen', tips: 'Tipps', fresh: 'Neue Version', install: 'Zum Home-Bildschirm', installSub: 'Ein Icon auf dem Gerät',
+      options: 'Optionen', tips: 'Tipps', fresh: 'Neue Version', install: 'Als App speichern', installSub: 'Ein Icon, wie eine echte App',
       pressStart: 'insert coin', missionReady: 'Mission bereit', dayBonus: 'Tagesbonus',
       choosePath: 'WÄHLE DEINEN WEG', lastPlayed: 'ZULETZT', playHere: 'SPIEL',
+      startGame: 'SPIELEN', startSub: 'Starte den Kampf',
+      titleName: 'Wie heißt du?', titleNamePh: 'Dein Name',
+      titleNote: 'Kein Konto — dein Save bleibt auf diesem Handy',
+      titleGreet: 'Hi, {name}',
     },
     hub: {
       step: 'Schritt 2 · Modus wählen', solo: 'SOLO', collection: 'SAMMLUNG',
@@ -2108,15 +2136,17 @@ const I18N = {
       title: 'Einstellungen', sub: 'Sound, Vibration & HUD — auf diesem Gerät gespeichert',
       lang: 'Sprache', music: 'Musik', sfx: 'Effekte', shake: 'Bildschirmshake', haptics: 'Vibration',
       comboHud: 'Combo-HUD', bigTouch: 'Große Tasten',
-      kbLegend: 'Tastatur-Legende (PC)', showTouchPads: 'Touch-Tasten immer',
+      kbLegend: 'Tastatur-Hilfe', showTouchPads: 'Touch-Tasten immer',
       reducedMotion: 'Weniger Bewegung',
-      liteFx: 'Lite FX (schneller)', highContrast: 'Hoher Kontrast', restoreBackup: 'Save aus Backup',
-      syncBackup: 'Backup syncen', freshCache: 'Neue Version (Cache leeren)', clearSave: 'Neustart (2× tippen)',
-      hosting: 'Hosting & Fortschritt', copyLink: 'Link kopieren', openLink: 'Link öffnen',
-      savePort: 'Save export / import', exportSave: 'Save exportieren', importSave: 'Save importieren',
+      liteFx: 'Lite FX', highContrast: 'Hoher Kontrast', restoreBackup: 'Save aus Backup',
+      syncBackup: 'Backup aktualisieren', freshCache: 'Neue Version', clearSave: 'Neustart (2× tippen)',
+      syncHint: 'Backup auf deinen aktuellen Stand setzen.',
+      freshHint: 'Menü hängt? Tippe hier für die neueste Version.',
+      hosting: 'Spiel-Link', copyLink: 'Link kopieren', openLink: 'Link öffnen',
+      savePort: 'Fortschritt kopieren', exportSave: 'Save kopieren', importSave: 'Save laden',
       importSaveFile: 'Datei wählen',
-      savePortDesc: 'Export kopiert JSON (Zwischenablage + Download). Import: Datei oder JSON — 1× Vorschau, 2× laden. Aktueller Save geht ins Backup.',
-      savePortPlaceholder: 'JSON einfügen oder Exportdatei (.json) wählen — meta.key stickfighter_save_v1 · 2× Import zum Laden',
+      savePortDesc: 'Kopiere deinen Fortschritt (Datei + Zwischenablage). Laden: Datei oder hier einfügen — 1× Vorschau, 2× laden.',
+      savePortPlaceholder: 'Save hier einfügen oder Datei wählen',
       privacy: 'Datenschutz',
       ageHint: 'Cartoon-Kampf · ab Teenager · kein Chat',
       installAge: 'Cartoon-Stockfigur-Kämpfe · Teenager+ · kein Chat.',
@@ -2128,7 +2158,7 @@ const I18N = {
     pets: { title: 'Pets · Begleiter', sub: 'Dex-Pets & Ei-Pets', crackEgg: 'Tages-Ei öffnen', crackEggSub: 'Gratis Pull' },
     dex: { title: 'Monsterbuch', sub: '{n} Arten · Seltenheit = HP · Farm / Zoo / Meer' },
     help: { title: 'Tipps & Steuerung' },
-    install: { title: 'Zum Home-Bildschirm', sub: 'Wie eine echte App' },
+    install: { title: 'Als App speichern', sub: 'Ein Icon, wie eine echte App' },
     island: {
       1: { name: 'Ost-Insel', sub: 'Lv 1–10' }, 2: { name: 'Feuer-Insel', sub: 'Lv 11–20' },
       3: { name: 'Neon-Insel', sub: 'Lv 21–30' }, 4: { name: 'Tempel-Insel', sub: 'Lv 31–40' },
@@ -2147,9 +2177,13 @@ const I18N = {
       continue: 'Continuer', adventure: 'Aventure', adventureSub: 'Histoire · îles · boss',
       arcade: 'Arcade', arcadeSub: 'Entraînement · Mur · Pièces', versus: '2 joueurs', versusSub: 'Local',
       collect: 'Collection', collectSub: 'Armes · style · bestiaire', music: 'Musique', missions: 'Missions',
-      options: 'Options', tips: 'Astuces', fresh: 'Version fraîche', install: 'Ajouter à l\'écran d\'accueil', installSub: 'Une icône sur l\'appareil',
+      options: 'Options', tips: 'Astuces', fresh: 'Version fraîche', install: 'Ajouter comme app', installSub: 'Une icône, comme une vraie app',
       pressStart: 'insert coin', missionReady: 'mission prête', dayBonus: 'Bonus du jour',
       choosePath: 'CHOISIS TON CHEMIN', lastPlayed: 'DERNIER', playHere: 'JOUER',
+      startGame: 'JOUER', startSub: 'Lance le combat',
+      titleName: 'Comment tu t\'appelles ?', titleNamePh: 'Ton nom',
+      titleNote: 'Pas de compte — ta sauvegarde reste sur ce téléphone',
+      titleGreet: 'Salut, {name}',
     },
     hub: {
       step: 'Étape 2 · Choisir le mode', solo: 'SOLO', collection: 'COLLECTION',
@@ -2180,15 +2214,17 @@ const I18N = {
       title: 'Options', sub: 'Son, vibrations & HUD — sauvegardé sur cet appareil',
       lang: 'Langue', music: 'Musique', sfx: 'Effets', shake: 'Secousse écran', haptics: 'Vibration',
       comboHud: 'HUD combo', bigTouch: 'Gros boutons',
-      kbLegend: 'Légende clavier (PC)', showTouchPads: 'Toujours boutons tactile',
+      kbLegend: 'Aide clavier', showTouchPads: 'Toujours boutons tactile',
       reducedMotion: 'Moins de mouvement',
-      liteFx: 'Lite FX (plus rapide)', highContrast: 'Contraste élevé', restoreBackup: 'Restaurer backup',
-      syncBackup: 'Sync backup', freshCache: 'Version fraîche (cache)', clearSave: 'Nouveau départ (2× tap)',
-      hosting: 'Hébergement & progrès', copyLink: 'Copier le lien', openLink: 'Ouvrir le lien',
-      savePort: 'Export / import save', exportSave: 'Exporter save', importSave: 'Importer save',
+      liteFx: 'Lite FX', highContrast: 'Contraste élevé', restoreBackup: 'Restaurer backup',
+      syncBackup: 'Mettre à jour la backup', freshCache: 'Version fraîche', clearSave: 'Nouveau départ (2× tap)',
+      syncHint: 'Aligner la backup sur ta progression actuelle.',
+      freshHint: 'Menu bloqué ? Tape ici pour la dernière version.',
+      hosting: 'Lien de jeu', copyLink: 'Copier le lien', openLink: 'Ouvrir le lien',
+      savePort: 'Copier la progression', exportSave: 'Copier la save', importSave: 'Charger la save',
       importSaveFile: 'Choisir fichier',
-      savePortDesc: 'Export copie le JSON (presse-papiers + téléchargement). Import : fichier ou JSON — 1× aperçu, 2× charger. La save actuelle va dans Backup.',
-      savePortPlaceholder: 'Coller le JSON ou choisir un fichier (.json) — meta.key stickfighter_save_v1 · 2× Import pour charger',
+      savePortDesc: 'Copie ta progression (fichier + presse-papiers). Charger : fichier ou coller ici — 1× aperçu, 2× charger.',
+      savePortPlaceholder: 'Colle ta save ici, ou choisis un fichier',
       privacy: 'Confidentialité',
       ageHint: 'Combat cartoon · ados+ · pas de chat',
       installAge: 'Combats stickman cartoon · ados+ · pas de chat.',
@@ -2200,7 +2236,7 @@ const I18N = {
     pets: { title: 'Pets · Compagnons', sub: 'Pets dex & œufs arcade', crackEgg: 'Ouvrir l\'œuf du jour', crackEggSub: 'Tir gratuit' },
     dex: { title: 'Bestiaire', sub: '{n} espèces · rareté = PV · ferme / zoo / mer' },
     help: { title: 'Astuces & contrôles' },
-    install: { title: 'Ajouter à l\'écran d\'accueil', sub: 'Comme une vraie app' },
+    install: { title: 'Ajouter comme app', sub: 'Une icône, comme une vraie app' },
     island: {
       1: { name: 'Île de l\'Est', sub: 'Lv 1–10' }, 2: { name: 'Île de Feu', sub: 'Lv 11–20' },
       3: { name: 'Île Néon', sub: 'Lv 21–30' }, 4: { name: 'Île Temple', sub: 'Lv 31–40' },
@@ -2219,9 +2255,13 @@ const I18N = {
       continue: 'Continuar', adventure: 'Aventura', adventureSub: 'Historia · islas · jefes',
       arcade: 'Arcade', arcadeSub: 'Entrenamiento · Muro · Monedas', versus: '2 jugadores', versusSub: 'Local',
       collect: 'Colección', collectSub: 'Armas · estilo · bestiario', music: 'Música', missions: 'Misiones',
-      options: 'Opciones', tips: 'Consejos', fresh: 'Versión nueva', install: 'Añadir a inicio', installSub: 'Un icono en tu dispositivo',
+      options: 'Opciones', tips: 'Consejos', fresh: 'Versión nueva', install: 'Añadir como app', installSub: 'Un icono, como una app real',
       pressStart: 'insert coin', missionReady: 'misión lista', dayBonus: 'Bonus diario',
       choosePath: 'ELIGE TU CAMINO', lastPlayed: 'ÚLTIMO', playHere: 'JUEGA',
+      startGame: 'JUGAR', startSub: 'Empieza el combate',
+      titleName: '¿Cómo te llamas?', titleNamePh: 'Tu nombre',
+      titleNote: 'Sin cuenta — tu partida se queda en este teléfono',
+      titleGreet: 'Hola, {name}',
     },
     hub: {
       step: 'Paso 2 · Elige modo', solo: 'SOLO', collection: 'COLECCIÓN',
@@ -2252,15 +2292,17 @@ const I18N = {
       title: 'Opciones', sub: 'Sonido, vibración y HUD — guardado en este dispositivo',
       lang: 'Idioma', music: 'Música', sfx: 'Efectos', shake: 'Sacudida pantalla', haptics: 'Vibración',
       comboHud: 'HUD combo', bigTouch: 'Botones grandes',
-      kbLegend: 'Leyenda teclado (PC)', showTouchPads: 'Siempre botones táctiles',
+      kbLegend: 'Ayuda de teclado', showTouchPads: 'Siempre botones táctiles',
       reducedMotion: 'Menos movimiento',
-      liteFx: 'Lite FX (más rápido)', highContrast: 'Alto contraste', restoreBackup: 'Restaurar backup',
-      syncBackup: 'Sync backup', freshCache: 'Versión nueva (caché)', clearSave: 'Nuevo inicio (2× tap)',
-      hosting: 'Hosting y progreso', copyLink: 'Copiar enlace', openLink: 'Abrir enlace',
-      savePort: 'Export / import save', exportSave: 'Exportar save', importSave: 'Importar save',
+      liteFx: 'Lite FX', highContrast: 'Alto contraste', restoreBackup: 'Restaurar backup',
+      syncBackup: 'Actualizar backup', freshCache: 'Versión nueva', clearSave: 'Nuevo inicio (2× tap)',
+      syncHint: 'Iguala la copia a tu progreso actual.',
+      freshHint: '¿Menú atascado? Toca aquí para la versión nueva.',
+      hosting: 'Enlace para jugar', copyLink: 'Copiar enlace', openLink: 'Abrir enlace',
+      savePort: 'Copiar progreso', exportSave: 'Copiar save', importSave: 'Cargar save',
       importSaveFile: 'Elegir archivo',
-      savePortDesc: 'Export copia JSON (portapapeles + descarga). Import: archivo o JSON — 1× vista previa, 2× cargar. La save actual va a Backup.',
-      savePortPlaceholder: 'Pega JSON o elige un archivo (.json) — meta.key stickfighter_save_v1 · 2× Import para cargar',
+      savePortDesc: 'Copia tu progreso (archivo + portapapeles). Cargar: elige un archivo o pega aquí — 1× vista, 2× cargar.',
+      savePortPlaceholder: 'Pega tu save aquí, o elige un archivo',
       privacy: 'Privacidad',
       ageHint: 'Combate cartoon · teens+ · sin chat',
       installAge: 'Combates stickman cartoon · teens+ · sin chat.',
@@ -2272,7 +2314,7 @@ const I18N = {
     pets: { title: 'Pets · Compañeros', sub: 'Pets dex y huevos arcade', crackEgg: 'Abrir huevo diario', crackEggSub: 'Tirada gratis' },
     dex: { title: 'Bestiario', sub: '{n} especies · rareza = HP · granja / zoo / mar' },
     help: { title: 'Consejos y controles' },
-    install: { title: 'Añadir a inicio', sub: 'Como una app real' },
+    install: { title: 'Añadir como app', sub: 'Un icono, como una app real' },
     island: {
       1: { name: 'Isla Este', sub: 'Lv 1–10' }, 2: { name: 'Isla Fuego', sub: 'Lv 11–20' },
       3: { name: 'Isla Neón', sub: 'Lv 21–30' }, 4: { name: 'Isla Templo', sub: 'Lv 31–40' },
@@ -2485,10 +2527,12 @@ function applyLangStaticScreens() {
   if (savePortDesc) savePortDesc.textContent = t('settings.savePortDesc');
   const savePortText = document.getElementById('savePortText');
   if (savePortText) savePortText.placeholder = t('settings.savePortPlaceholder');
-  const hostingTitle = document.querySelector('#settingsScreen .settings-card div[style*="ffd75e"]');
-  if (hostingTitle) hostingTitle.textContent = t('settings.hosting');
-  const savePortTitle = document.querySelectorAll('#settingsScreen .settings-card div[style*="ffd75e"]')[1];
-  if (savePortTitle) savePortTitle.textContent = t('settings.savePort');
+  setText('settingsShareFoldSum', 'settings.hosting');
+  setText('settingsShareTitle', 'settings.hosting');
+  setText('settingsSaveFoldSum', 'settings.savePort');
+  setText('settingsSaveTitle', 'settings.savePort');
+  setText('settingsSyncHint', 'settings.syncHint');
+  setText('settingsFreshHint', 'settings.freshHint');
 
   setText('missionsHead', 'missions.title');
   setText('missionsSub', 'missions.sub');
@@ -2711,6 +2755,7 @@ function applyLang() {
     else if (active === 'modeHubScreen') UI.renderModeHub();
     UI.syncBackLabels();
   }
+  try { if (typeof syncTitleGateCopy === 'function') syncTitleGateCopy(); } catch (_) {}
 }
 
 function initLang() {
@@ -5453,6 +5498,8 @@ function maybeWelcomeToast() {
   setTimeout(() => {
     if (state === 'play') return;
     if (onboardingProgress().seen > 0) return;
+    const splash = document.getElementById('sfSplash');
+    if (splash && !splash.classList.contains('is-done')) return;
     userToast(t('toast.welcome'), 3800);
   }, 2800);
 }
@@ -11827,7 +11874,7 @@ function seedNlGameStrings() {
     unknownMode: 'Onbekende modus',
     noSession: 'Nog geen sessie — kies een modus',
     noPlayLink: 'Geen speel-link gevonden — zie Instellingen',
-    pasteSaveFirst: 'Plak eerst save-JSON in het vak',
+    pasteSaveFirst: 'Plak eerst je save in het vak',
     importPreview: 'Import-preview — tik Import nogmaals om te laden',
     invalidSave: 'Ongeldige save — controleer JSON',
     noBackup: 'Geen backup gevonden op dit apparaat',
@@ -11854,8 +11901,8 @@ function seedNlGameStrings() {
     persistFailCtx: 'Opslaan mislukt ({context}) — export save in Instellingen',
     pickFileOrPaste: 'Kies een exportbestand of plak save-JSON in het vak',
     filePickerUnavailable: 'Bestand kiezen niet beschikbaar',
-    pagesLinkCopied: 'GitHub Pages-link gekopieerd — deel speel.html (niet de tunnel)',
-    pagesLinkCopiedAndroid: 'Pages-link gekopieerd — stuur naar vrienden (Chrome op Android)',
+    pagesLinkCopied: 'Speel-link gekopieerd — stuur naar vrienden',
+    pagesLinkCopiedAndroid: 'Speel-link gekopieerd — stuur naar vrienden (Chrome)',
     saveFailRetry: 'Opslaan mislukt — probeer opnieuw',
     zoneDrop: '{zone}: {name}!',
     zoneFallback: 'Zone',
@@ -11995,8 +12042,8 @@ function seedNlGameStrings() {
     '<b>Rariteiten:</b> Gewoon → Ongewoon → Zeldzaam → Episch → Legendarisch → Mythisch. Zeldzamer = meer XP & meer max HP.',
     '<b>50 levels:</b> <b>5 eilanden × 10 levels</b> — skill gate wapens per eiland · baas Lv 10/20/30/40/50 opent volgend eiland · hitte-meter: 5× = Meester-buff · 9× = gevaar! · 10× = Satan.',
     '<b>Backup:</b> elke save wordt dubbel opgeslagen — bij problemen: <b>Instellingen → Herstel save uit backup</b>.',
-    '<b>Delen:</b> menu → <b>Deel link</b> — vrienden op Android openen in Chrome → Zet in app-lade. Zie ANDROID-DELEN.txt op GitHub.',
-    '<b>Offline:</b> na 1× online openen cache’t de app HTML+JS — banner onderaan bij geen net. Tunnel-link heeft internet nodig; GitHub Pages + app-lade = stabielst.',
+    '<b>Delen:</b> menu → <b>Deel link</b> — vrienden openen in Chrome en tikken <b>Zet in app-lade</b>.',
+    '<b>Offline:</b> na 1× online spelen werkt de app daarna ook zonder net. Banner onderaan als je offline bent.',
   ];
   if (!I18N.nl.menu) I18N.nl.menu = {};
   I18N.nl.menu.d20Tips = [
@@ -12275,7 +12322,7 @@ function seedNlGameStrings() {
     petCoinTip: 'Speel <b>munten bonus</b> voor pet coins (2 gouden munten = 1 PC). Koop pets hier, of tem via kills in het monsterboek. Pets volgen je in avontuur & training.',
     petSummaryTamed: 'Getemd <b>{tamed}/{total}</b> · actief <b>{active}</b> · <b>{wallet} pet coins</b>',
     petNone: 'geen',
-    installSub: 'Verschijnt als icoon — net als een echte app',
+    installSub: 'Één icoon, zoals een echte app',
     boss: 'BAAS',
     topHunter: 'Top jager',
     modeAdventure: '5 eilanden × 10 levels · hitte-meter · 9× = gevaar! · 10× = Satan · Meester-buff · dobbel-gok',
@@ -12663,15 +12710,15 @@ const CATALOG_EN = {
     'Rarities: Common → Uncommon → Rare → Epic → Legendary → Mythic. Rarer = more XP & max HP.',
     '50 levels: 5 islands × 10 levels — skill gate weapons per island · boss Lv 10/20/30/40/50 opens next island · heat meter: 5× = Master buff · 9× = danger! · 10× = Satan.',
     'Backup: every save is stored twice — if needed: Settings → Restore save from backup.',
-    'Share: menu → Share link — friends on Android open in Chrome → Add to home screen. See ANDROID-DELEN.txt on GitHub.',
-    'Offline: after opening online once the app caches HTML+JS — banner at bottom when offline. Tunnel links need internet; GitHub Pages + home screen = most stable.',
+    'Share: menu → Share link — friends open in Chrome and tap Add as app.',
+    'Offline: after playing online once, the app also works without a network. Banner at the bottom when you are offline.',
   ] },
   toast: {
     unknownMode: 'Unknown mode', noSession: 'No session yet — pick a mode',
     missionsIntro: 'Missions: Play → claim XP → Daily bonus',
     missionReady1: '1 mission ready to claim', missionReadyN: '{n} missions ready to claim',
     dayBonusReady: 'Daily bonus +80 XP ready', noPlayLink: 'No play link found — see Settings',
-    pasteSaveFirst: 'Paste save JSON in the box first', importPreview: 'Import preview — tap Import again to load',
+    pasteSaveFirst: 'Paste your save in the box first', importPreview: 'Import preview — tap Import again to load',
     invalidSave: 'Invalid save — check JSON', noBackup: 'No backup found on this device',
     backupConfirm: 'Backup Lv {lvl}{drift} — tap again to restore',
     backupDrift: ' (main and backup differ)',
@@ -12688,8 +12735,8 @@ const CATALOG_EN = {
     persistFailCtx: 'Save failed ({context}) — export in Settings',
     pickFileOrPaste: 'Pick an export file or paste save JSON in the box',
     filePickerUnavailable: 'File picker not available',
-    pagesLinkCopied: 'GitHub Pages link copied — share speel.html (not the tunnel)',
-    pagesLinkCopiedAndroid: 'Pages link copied — send to friends (Chrome on Android)',
+    pagesLinkCopied: 'Play link copied — send it to friends',
+    pagesLinkCopiedAndroid: 'Play link copied — send it to friends (Chrome)',
     saveFailRetry: 'Save failed — try again',
     zoneDrop: '{zone}: {name}!',
     zoneFallback: 'Zone',
@@ -13106,7 +13153,7 @@ const CATALOG_EN = {
     petCoinTip: 'Play <b>coin bonus</b> for pet coins (2 gold coins = 1 PC). Buy pets here, or tame via monster book kills. Pets follow you in adventure & training.',
     petSummaryTamed: 'Tamed <b>{tamed}/{total}</b> · active <b>{active}</b> · <b>{wallet} pet coins</b>',
     petNone: 'none',
-    installSub: 'Shows as an icon — like a real app',
+    installSub: 'One icon, like a real app',
     boss: 'BOSS',
     topHunter: 'Top hunter',
     modeAdventure: '5 islands × 10 levels · heat meter · 9× = danger! · 10× = Satan · Master buff · gamble',
@@ -22982,6 +23029,7 @@ function paintSplashStripCanvas(cv, t, opts) {
   const scroll = calm ? 0 : (t || 0) * 20;
   const progress = opts.progress != null ? Math.max(0, Math.min(1, opts.progress)) : 1;
   const compact = !!opts.compact;
+  const hero = !!opts.hero && !compact;
 
   const skyTop = P ? P.skyTop : '#4a6a82';
   const skyMid = P ? P.skyMid : '#7a94a6';
@@ -23044,11 +23092,11 @@ function paintSplashStripCanvas(cv, t, opts) {
   }
 
   // Mini oak (left) — reuse canopy clusters when available
-  const oakX = Math.round(w * 0.18);
+  const oakX = Math.round(w * (hero ? 0.14 : 0.18));
   const oakBase = roadY - 2;
   if (typeof drawPixelOakTree === 'function' && !compact) {
     const sway = calm ? 0 : Math.sin((t || 0) * 1.4) * 1.5;
-    drawPixelOakTree(c, oakX, oakBase, 0.55, sway);
+    drawPixelOakTree(c, oakX, oakBase, hero ? 0.82 : 0.55, sway);
   } else {
     c.fillStyle = '#3a3024';
     c.fillRect(oakX - 3, oakBase - 28, 6, 28);
@@ -23130,17 +23178,25 @@ function paintSplashStripCanvas(cv, t, opts) {
     c.restore();
   };
   const stroll = calm ? 0 : Math.sin((t || 0) * 0.7) * 10;
-  drawSplashStick(w * 0.58 + stroll, 1, '#d0d4da', compact ? 0.85 : 1);
-  drawSplashStick(w * 0.72 + stroll * 0.6, -1, '#c09098', compact ? 0.9 : 1.05);
+  const sc = compact ? 0.85 : hero ? 2.35 : 1;
+  if (hero) {
+    drawSplashStick(w * 0.42 + stroll, 1, '#d0d4da', sc);
+    drawSplashStick(w * 0.58 + stroll * 0.45, -1, '#ffd75e', sc * 1.08);
+    drawSplashStick(w * 0.74 + stroll * 0.7, 1, '#c09098', sc * 0.92);
+  } else {
+    drawSplashStick(w * 0.58 + stroll, 1, '#d0d4da', sc);
+    drawSplashStick(w * 0.72 + stroll * 0.6, -1, '#c09098', compact ? 0.9 : 1.05);
+  }
 
   // Soft caption bar (non-compact)
   if (!compact) {
+    const capH = hero ? 22 : 14;
     c.fillStyle = P ? P.captionBg : 'rgba(18,22,26,.55)';
-    c.fillRect(0, h - 14, w, 14);
+    c.fillRect(0, h - capH, w, capH);
     c.fillStyle = P ? P.captionFg : 'rgba(220,214,200,.82)';
-    c.font = 'bold 9px monospace';
+    c.font = hero ? 'bold 13px monospace' : 'bold 9px monospace';
     c.textAlign = 'left';
-    c.fillText('LANDWEG · MONSTER ARENA', 8, h - 4);
+    c.fillText('MONSTER ARENA', 10, h - (hero ? 7 : 4));
   }
 
   c.imageSmoothingEnabled = prev;
@@ -32340,8 +32396,9 @@ const UI = {
     const missAlert = readyClaim > 0 || bonusReady;
     const profileEl = document.getElementById('menuProfileBar');
     if (profileEl) {
+      const tag = save.playerTag ? String(save.playerTag) : '';
       profileEl.innerHTML =
-        `<span class="prof-row"><b>Lv ${save.lvl}</b><span>${weaponLabel(w)}</span>` +
+        `<span class="prof-row"><b>${tag ? tag + ' · ' : ''}Lv ${save.lvl}</b><span>${weaponLabel(w)}</span>` +
         `<span style="color:${(skillById(save.skill || 'spiral_orb').color)}">${skillLabel(skillById(save.skill || 'spiral_orb'))}</span>` +
         `<span style="color:${equippedSuper().color}">${superLabel(equippedSuper())}</span>` +
         `<span style="color:${st.accent}">${styleLabel(st)}</span></span>` +
@@ -32430,7 +32487,7 @@ const UI = {
     const playLinkEl = document.getElementById('menuPlayLink');
     if (playLinkEl) {
       if (location.hostname.endsWith('.github.io')) {
-        playLinkEl.textContent = '✓ GitHub Pages — Deel link (Android)';
+        playLinkEl.textContent = '✓ Speel-link — deel met vrienden (Android)';
       } else if (!playLinkEl.dataset.loaded) {
         playLinkEl.dataset.loaded = '1';
         loadHostingBundle().then(({ hosting }) => {
@@ -33137,7 +33194,7 @@ const UI = {
         const short = (u) => String(u || '').replace(/^https:\/\//, '');
         if (stable && !isTunnelHostUrl(stable)) {
           linkEl.innerHTML =
-            `<div style="opacity:.8;margin-bottom:4px">Vaste speel-link (GitHub Pages) — deel deze</div>` +
+            `<div style="opacity:.8;margin-bottom:4px">Speel-link — deel deze met vrienden</div>` +
             `<a href="${stable}" style="color:#7cf5ff;font-weight:800" rel="noopener">${short(stable)}</a>`;
         } else {
           linkEl.textContent = withShareRevParam('https://brennyz.github.io/stickman-fighter/speel.html', SW_CACHE_REV);
@@ -33145,10 +33202,10 @@ const UI = {
         const kind = playHostKind();
         if (badgeEl) {
           const labels = {
-            pages: 'GitHub Pages — stabiele deel-link',
-            tunnel: 'Tunnel (dev) — deel nooit deze URL',
-            netlify: 'Netlify — export save bij URL-wissel',
-            local: 'Lokaal — deel GitHub Pages met vrienden',
+            pages: 'Stabiele speel-link',
+            tunnel: 'Thuis-test — deel deze URL niet',
+            netlify: 'Andere host — kopieer je save bij wissel',
+            local: 'Lokaal — deel de speel-link met vrienden',
             file: 'Lokaal bestand — deel GitHub Pages',
             other: 'Online host',
           };
@@ -33188,10 +33245,10 @@ const UI = {
         let hint = hosting.stableHint || '';
         if (!hint) {
           if (stable && String(stable).includes('github.io')) {
-            hint = 'Primair: GitHub Pages — deel speel.html. Op Android: Chrome → App installeren. Tunnel is alleen thuis-dev.';
-          } else if (location.hostname.endsWith('.github.io')) hint = 'Je speelt via GitHub Pages — deel speel.html met vrienden.';
-          else if (location.hostname.endsWith('.netlify.app')) hint = 'Netlify-host — export save bij URL-wissel.';
-          else hint = 'Gebruik de vaste Pages-link hierboven; tunnel nooit als deel-link.';
+            hint = 'Deel deze link met vrienden. Op Android: Chrome → App installeren.';
+          } else if (location.hostname.endsWith('.github.io')) hint = 'Deel deze link met vrienden. Op Android: Chrome → App installeren.';
+          else if (location.hostname.endsWith('.netlify.app')) hint = 'Deel de speel-link hierboven met vrienden.';
+          else hint = 'Deel de speel-link hierboven met vrienden.';
         }
         if (onTunnel) {
           hint += ' Tunnel offline/503? Open de vaste GitHub Pages-link (primair).';
@@ -33206,7 +33263,7 @@ const UI = {
       })
       .catch(() => {
         linkEl.textContent = 'https://brennyz.github.io/stickman-fighter/speel.html';
-        if (hintEl) hintEl.textContent = 'Primair: GitHub Pages speel.html — export save bij URL-wissel.';
+        if (hintEl) hintEl.textContent = 'Deel deze link met vrienden. Op Android: Chrome → App installeren.';
       });
   },
 
@@ -36150,13 +36207,146 @@ function dismissSplashOverlay() {
 
 function paintSplashTargets(t, progress) {
   if (typeof paintSplashStripCanvas !== 'function') return;
+  const root = document.getElementById('sfSplash');
+  const hero = !!(root && root.classList.contains('is-title'));
   const main = document.getElementById('sfSplashCanvas');
-  if (main) paintSplashStripCanvas(main, t, { progress });
+  if (main) paintSplashStripCanvas(main, t, { progress, hero });
   const tunnel = document.getElementById('tunnelBootStrip');
   const ov = document.getElementById('tunnelBootOverlay');
   if (tunnel && ov && !ov.hidden) {
     paintSplashStripCanvas(tunnel, t, { progress, compact: true });
   }
+}
+
+function shouldSkipTitleGate() {
+  try {
+    const q = new URLSearchParams(location.search);
+    if (q.get('mode')) return true;
+    if (q.get('sfdebug') === '1') return true;
+    if (q.get('nosplash') === '1') return true;
+  } catch (_) {}
+  return false;
+}
+
+function syncTitleGateCopy() {
+  const greet = document.getElementById('sfTitleGreet');
+  const nameLbl = document.getElementById('sfTitleNameLbl');
+  const nameInp = document.getElementById('sfTitleName');
+  const note = document.getElementById('sfTitleNote');
+  const startLbl = document.getElementById('sfTitleStartLbl');
+  const contLbl = document.getElementById('sfTitleContinueLbl');
+  const tag = (typeof save !== 'undefined' && save && save.playerTag) ? String(save.playerTag) : '';
+  if (nameLbl) nameLbl.textContent = typeof t === 'function' ? t('menu.titleName') : 'Hoe heet je?';
+  if (nameInp) {
+    nameInp.placeholder = typeof t === 'function' ? t('menu.titleNamePh') : 'Jouw naam';
+    if (!nameInp.value && tag) nameInp.value = tag;
+  }
+  if (note) note.textContent = typeof t === 'function' ? t('menu.titleNote') : 'Geen account — je save blijft op deze telefoon';
+  if (startLbl) {
+    startLbl.innerHTML = (typeof t === 'function' ? t('menu.startGame') : 'SPELEN') +
+      '<small>' + (typeof t === 'function' ? t('menu.startSub') : 'Start het gevecht') + '</small>';
+  }
+  const lp = (typeof save !== 'undefined' && save && save.lastPlay) ? save.lastPlay : null;
+  if (contLbl) {
+    const modeName = lp && typeof t === 'function' && lp.mode ? t('modes.' + lp.mode) : '';
+    contLbl.innerHTML = (typeof t === 'function' ? t('menu.continue') : 'Verder spelen') +
+      '<small>' + (modeName || (typeof t === 'function' ? t('menu.startSub') : 'Laatste modus')) + '</small>';
+  }
+  if (greet) {
+    const live = (nameInp && nameInp.value.trim()) || tag;
+    greet.textContent = live && typeof t === 'function'
+      ? t('menu.titleGreet', { name: live })
+      : (live ? ('Hoi, ' + live) : '');
+  }
+}
+
+function saveTitlePlayerTag() {
+  const inp = document.getElementById('sfTitleName');
+  if (!inp || typeof save === 'undefined' || !save) return;
+  const tag = typeof sanitizePlayerTag === 'function' ? sanitizePlayerTag(inp.value) : String(inp.value || '').trim().slice(0, 16);
+  save.playerTag = tag;
+  try { persist(); } catch (_) {}
+}
+
+function enterHubFromTitle(opts) {
+  opts = opts || {};
+  if (window.__sfTitleEntered && document.getElementById('sfSplash')?.classList.contains('is-done')) {
+    if (opts.resume) {
+      try { if (typeof resumeLastPlay === 'function') resumeLastPlay(); } catch (_) {}
+    }
+    return;
+  }
+  window.__sfTitleEntered = true;
+  saveTitlePlayerTag();
+  dismissSplashOverlay();
+  try { AudioSys.init(); AudioSys.sfx('select'); } catch (_) {}
+  if (opts.resume) {
+    try {
+      if (typeof resumeLastPlay === 'function' && resumeLastPlay()) return;
+      if (typeof userToast === 'function' && typeof t === 'function') {
+        userToast(t('toast.noSession'), 2400, { tone: 'warn' });
+      }
+    } catch (_) {}
+  }
+  try { UI.show('menuScreen'); } catch (_) {}
+}
+
+function wireTitleGate() {
+  if (window.__sfTitleWired) return;
+  window.__sfTitleWired = true;
+  const start = document.getElementById('sfTitleStart');
+  const cont = document.getElementById('sfTitleContinue');
+  const nameInp = document.getElementById('sfTitleName');
+  const go = (resume) => {
+    try { enterHubFromTitle({ resume: !!resume }); } catch (_) { dismissSplashOverlay(); }
+  };
+  if (start && typeof bindPress === 'function') bindPress(start, () => go(false));
+  else if (start) start.addEventListener('click', () => go(false));
+  if (cont && typeof bindPress === 'function') bindPress(cont, () => go(true));
+  else if (cont) cont.addEventListener('click', () => go(true));
+  if (nameInp) {
+    nameInp.addEventListener('input', () => { try { syncTitleGateCopy(); } catch (_) {} });
+    nameInp.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') { e.preventDefault(); go(false); }
+    });
+  }
+}
+
+function runTitleArenaLoop() {
+  if (window.__sfTitleLoop) return;
+  window.__sfTitleLoop = true;
+  const t0 = performance.now();
+  const tick = (now) => {
+    const root = document.getElementById('sfSplash');
+    if (!root || root.classList.contains('is-done')) {
+      window.__sfTitleLoop = false;
+      return;
+    }
+    try { paintSplashTargets((now - t0) / 1000, 1); } catch (_) {}
+    requestAnimationFrame(tick);
+  };
+  requestAnimationFrame(tick);
+}
+
+function showTitleGate() {
+  const root = document.getElementById('sfSplash');
+  if (!root || root.classList.contains('is-done')) return;
+  if (shouldSkipTitleGate()) {
+    dismissSplashOverlay();
+    return;
+  }
+  root.classList.add('is-title');
+  root.setAttribute('aria-busy', 'false');
+  const gate = document.getElementById('sfTitleGate');
+  if (gate) gate.hidden = false;
+  const cont = document.getElementById('sfTitleContinue');
+  if (cont) {
+    const lp = (typeof save !== 'undefined' && save && save.lastPlay && save.lastPlay.mode);
+    cont.hidden = !lp;
+  }
+  try { syncTitleGateCopy(); } catch (_) {}
+  try { wireTitleGate(); } catch (_) {}
+  runTitleArenaLoop();
 }
 
 function runSplashIntro() {
@@ -36183,7 +36373,7 @@ function runSplashIntro() {
     if (bar) bar.setAttribute('aria-valuenow', '100');
     if (sub) sub.textContent = 'Klaar';
     try { paintSplashTargets(dur / 1000, 1); } catch (_) {}
-    dismissSplashOverlay();
+    showTitleGate();
   };
 
   const tick = (now) => {
@@ -36332,6 +36522,7 @@ function bootGame() {
     get state() { return state; },
     get swRev() { return SW_CACHE_REV; },
     startGame, save, Game, UI, recoverToMenu, syncPlayLayer,
+    enterHub: enterHubFromTitle,
     debug: typeof sfDebugScreen === 'function' ? sfDebugScreen : null,
     fixPlayLayer: () => (typeof sfDebugScreen === 'function' ? sfDebugScreen({ fix: true }) : null),
     goMenu: () => recoverToMenu({ force: true }),

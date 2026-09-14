@@ -563,13 +563,146 @@ function dismissSplashOverlay() {
 
 function paintSplashTargets(t, progress) {
   if (typeof paintSplashStripCanvas !== 'function') return;
+  const root = document.getElementById('sfSplash');
+  const hero = !!(root && root.classList.contains('is-title'));
   const main = document.getElementById('sfSplashCanvas');
-  if (main) paintSplashStripCanvas(main, t, { progress });
+  if (main) paintSplashStripCanvas(main, t, { progress, hero });
   const tunnel = document.getElementById('tunnelBootStrip');
   const ov = document.getElementById('tunnelBootOverlay');
   if (tunnel && ov && !ov.hidden) {
     paintSplashStripCanvas(tunnel, t, { progress, compact: true });
   }
+}
+
+function shouldSkipTitleGate() {
+  try {
+    const q = new URLSearchParams(location.search);
+    if (q.get('mode')) return true;
+    if (q.get('sfdebug') === '1') return true;
+    if (q.get('nosplash') === '1') return true;
+  } catch (_) {}
+  return false;
+}
+
+function syncTitleGateCopy() {
+  const greet = document.getElementById('sfTitleGreet');
+  const nameLbl = document.getElementById('sfTitleNameLbl');
+  const nameInp = document.getElementById('sfTitleName');
+  const note = document.getElementById('sfTitleNote');
+  const startLbl = document.getElementById('sfTitleStartLbl');
+  const contLbl = document.getElementById('sfTitleContinueLbl');
+  const tag = (typeof save !== 'undefined' && save && save.playerTag) ? String(save.playerTag) : '';
+  if (nameLbl) nameLbl.textContent = typeof t === 'function' ? t('menu.titleName') : 'Hoe heet je?';
+  if (nameInp) {
+    nameInp.placeholder = typeof t === 'function' ? t('menu.titleNamePh') : 'Jouw naam';
+    if (!nameInp.value && tag) nameInp.value = tag;
+  }
+  if (note) note.textContent = typeof t === 'function' ? t('menu.titleNote') : 'Geen account — je save blijft op deze telefoon';
+  if (startLbl) {
+    startLbl.innerHTML = (typeof t === 'function' ? t('menu.startGame') : 'SPELEN') +
+      '<small>' + (typeof t === 'function' ? t('menu.startSub') : 'Start het gevecht') + '</small>';
+  }
+  const lp = (typeof save !== 'undefined' && save && save.lastPlay) ? save.lastPlay : null;
+  if (contLbl) {
+    const modeName = lp && typeof t === 'function' && lp.mode ? t('modes.' + lp.mode) : '';
+    contLbl.innerHTML = (typeof t === 'function' ? t('menu.continue') : 'Verder spelen') +
+      '<small>' + (modeName || (typeof t === 'function' ? t('menu.startSub') : 'Laatste modus')) + '</small>';
+  }
+  if (greet) {
+    const live = (nameInp && nameInp.value.trim()) || tag;
+    greet.textContent = live && typeof t === 'function'
+      ? t('menu.titleGreet', { name: live })
+      : (live ? ('Hoi, ' + live) : '');
+  }
+}
+
+function saveTitlePlayerTag() {
+  const inp = document.getElementById('sfTitleName');
+  if (!inp || typeof save === 'undefined' || !save) return;
+  const tag = typeof sanitizePlayerTag === 'function' ? sanitizePlayerTag(inp.value) : String(inp.value || '').trim().slice(0, 16);
+  save.playerTag = tag;
+  try { persist(); } catch (_) {}
+}
+
+function enterHubFromTitle(opts) {
+  opts = opts || {};
+  if (window.__sfTitleEntered && document.getElementById('sfSplash')?.classList.contains('is-done')) {
+    if (opts.resume) {
+      try { if (typeof resumeLastPlay === 'function') resumeLastPlay(); } catch (_) {}
+    }
+    return;
+  }
+  window.__sfTitleEntered = true;
+  saveTitlePlayerTag();
+  dismissSplashOverlay();
+  try { AudioSys.init(); AudioSys.sfx('select'); } catch (_) {}
+  if (opts.resume) {
+    try {
+      if (typeof resumeLastPlay === 'function' && resumeLastPlay()) return;
+      if (typeof userToast === 'function' && typeof t === 'function') {
+        userToast(t('toast.noSession'), 2400, { tone: 'warn' });
+      }
+    } catch (_) {}
+  }
+  try { UI.show('menuScreen'); } catch (_) {}
+}
+
+function wireTitleGate() {
+  if (window.__sfTitleWired) return;
+  window.__sfTitleWired = true;
+  const start = document.getElementById('sfTitleStart');
+  const cont = document.getElementById('sfTitleContinue');
+  const nameInp = document.getElementById('sfTitleName');
+  const go = (resume) => {
+    try { enterHubFromTitle({ resume: !!resume }); } catch (_) { dismissSplashOverlay(); }
+  };
+  if (start && typeof bindPress === 'function') bindPress(start, () => go(false));
+  else if (start) start.addEventListener('click', () => go(false));
+  if (cont && typeof bindPress === 'function') bindPress(cont, () => go(true));
+  else if (cont) cont.addEventListener('click', () => go(true));
+  if (nameInp) {
+    nameInp.addEventListener('input', () => { try { syncTitleGateCopy(); } catch (_) {} });
+    nameInp.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') { e.preventDefault(); go(false); }
+    });
+  }
+}
+
+function runTitleArenaLoop() {
+  if (window.__sfTitleLoop) return;
+  window.__sfTitleLoop = true;
+  const t0 = performance.now();
+  const tick = (now) => {
+    const root = document.getElementById('sfSplash');
+    if (!root || root.classList.contains('is-done')) {
+      window.__sfTitleLoop = false;
+      return;
+    }
+    try { paintSplashTargets((now - t0) / 1000, 1); } catch (_) {}
+    requestAnimationFrame(tick);
+  };
+  requestAnimationFrame(tick);
+}
+
+function showTitleGate() {
+  const root = document.getElementById('sfSplash');
+  if (!root || root.classList.contains('is-done')) return;
+  if (shouldSkipTitleGate()) {
+    dismissSplashOverlay();
+    return;
+  }
+  root.classList.add('is-title');
+  root.setAttribute('aria-busy', 'false');
+  const gate = document.getElementById('sfTitleGate');
+  if (gate) gate.hidden = false;
+  const cont = document.getElementById('sfTitleContinue');
+  if (cont) {
+    const lp = (typeof save !== 'undefined' && save && save.lastPlay && save.lastPlay.mode);
+    cont.hidden = !lp;
+  }
+  try { syncTitleGateCopy(); } catch (_) {}
+  try { wireTitleGate(); } catch (_) {}
+  runTitleArenaLoop();
 }
 
 function runSplashIntro() {
@@ -596,7 +729,7 @@ function runSplashIntro() {
     if (bar) bar.setAttribute('aria-valuenow', '100');
     if (sub) sub.textContent = 'Klaar';
     try { paintSplashTargets(dur / 1000, 1); } catch (_) {}
-    dismissSplashOverlay();
+    showTitleGate();
   };
 
   const tick = (now) => {
@@ -745,6 +878,7 @@ function bootGame() {
     get state() { return state; },
     get swRev() { return SW_CACHE_REV; },
     startGame, save, Game, UI, recoverToMenu, syncPlayLayer,
+    enterHub: enterHubFromTitle,
     debug: typeof sfDebugScreen === 'function' ? sfDebugScreen : null,
     fixPlayLayer: () => (typeof sfDebugScreen === 'function' ? sfDebugScreen({ fix: true }) : null),
     goMenu: () => recoverToMenu({ force: true }),

@@ -91,6 +91,13 @@
   },
   "userWishlist": [
     {
+      "id": "w-20260914T124000",
+      "from": "user",
+      "text": "Denk aan welk scherm eerst komt en verander dat ook (2026-09-14): startscherm moet tof zijn — laadscherm-poppetjes groter, mooie knoppen, START/SPELEN, login nadenken (geen nep-account).",
+      "status": "done-in-code",
+      "updated": "2026-09-14"
+    },
+    {
       "id": "w-20260914T123000",
       "from": "user",
       "text": "Nee eerst verder verbeteren (2026-09-14): iOS/iPad dingen eruit — Android-first UI heeft die niet nodig; haal informatie weg die er niet toe doet; UI/UX overal dezelfde taal (geen mix iPad/Safari/Android).",
@@ -551,6 +558,10 @@
   ],
   "sessionLog": [
     {
+      "at": "2026-09-14T12:46:43Z",
+      "summary": "Title-gate: grotere splash-poppetjes + SPELEN + lokale naam (geen account) · settings-fold · Android-copy gelijk · v1.18.156 / SW 366"
+    },
+    {
       "at": "2026-09-14T12:35:10Z",
       "summary": "Android-first copy: iPad/iOS/Safari eruit uit settings, speel.html, install, tips en share · v1.18.155 / SW 365"
     },
@@ -645,10 +656,6 @@
     {
       "at": "2026-08-17T07:08:14Z",
       "summary": "Tweede d20-worp geclaimd via CLI"
-    },
-    {
-      "at": "2026-08-17T06:41:19Z",
-      "summary": "d8 PWA: SW wacht op menu, update-banner tikt alleen op hub — klaar voor super-merge"
     }
   ],
   "implementedFeaturesSummary": "d18 char select deel 1+2 (v1.11.1-2); Mats coinrun + shuriken mik/vliegers + anti-spam (v1.12.0); speel.html (v1.12.2+). Zie HANDOFF-ZOEKINDEX.md en improvement-d20-bag.json userFeatureLog.",

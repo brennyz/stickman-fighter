@@ -51,8 +51,8 @@ must(/pointer-events:\s*auto/.test(css.match(/\.toast \{[\s\S]*?\}/)?.[0] || '')
 must(/t\('toast\.unknownMode'\)/.test(start), 'unknownMode must use i18n');
 must(/t\('toast\.noBackup'\)/.test(start), 'backup toasts must use i18n');
 must(/toastT\(/.test(storage), 'storage leftover toasts should use toastT');
-must(/APP_VERSION = '1\.18\.155'/.test(storage), 'version should be 1.18.155');
-must(/SW_CACHE_REV = 365/.test(storage), 'SW rev should be 365');
+must(/APP_VERSION = '1\.18\.156'/.test(storage), 'version should be 1.18.156');
+must(/SW_CACHE_REV = 366/.test(storage), 'SW rev should be 366');
 
 const i18n = fs.readFileSync(path.join(root, 'src/i18n/i18n.js'), 'utf8');
 const speel = fs.readFileSync(path.join(root, 'speel.html'), 'utf8');
@@ -70,6 +70,19 @@ must(!/2P op iPad/.test(catalog), 'catalog d20 tip still iPad');
 must(!/handy on iPad/.test(catalog), 'EN catalog still says handy on iPad');
 must(!/Android \+ iPad/.test(ui), 'menu play-link still says Android + iPad');
 must(!/Safari → Delen/.test(ui), 'hosting hint still teaches Safari Add to Home');
+must(!/Hosting & voortgang/.test(index), 'settings still says Hosting');
+must(!/Export save/.test(index), 'settings still says Export save');
+must(!/Kenney CC0/.test(i18n), 'settings still credits Kenney to players');
+must(!/meta\.key stickfighter/.test(index), 'settings still shows save schema key');
+must(/id="sfTitleGate"/.test(index), 'title gate missing');
+must(/id="sfTitleStart"/.test(index), 'title SPELEN button missing');
+must(/id="sfTitleName"/.test(index), 'title name field missing');
+must(/width="720" height="280"/.test(index), 'splash canvas should be larger hero size');
+must(/classList.contains\('is-title'\)/.test(index), 'failsafe must keep title gate');
+must(/startGame: 'SPELEN'/.test(i18n), 'title start label missing');
+must(/playerTag: ''/.test(storage), 'save should store local playerTag');
+must(/function showTitleGate/.test(fs.readFileSync(path.join(root, 'src/boot/loop.js'), 'utf8')), 'showTitleGate missing');
+must(!/password|inloggen|log in/i.test(index.match(/id="sfTitleGate"[\s\S]*?<\/div>\s*<script>/)?.[0] || ''), 'title must not fake an account login');
 
 if (built) {
   must(/_toastQ/.test(built), 'built game.js missing toast queue');

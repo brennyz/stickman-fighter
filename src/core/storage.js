@@ -5,9 +5,9 @@ const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const VERSION_UPDATE_SAVE_KEY = 'stickfighter_version_update_save_v1';
 const VERSION_UPDATE_FLAG_KEY = 'stickfighter_version_update_flag_v1';
 const SAVE_EXPORT_SCHEMA = 3;
-const APP_VERSION = '1.18.155';
+const APP_VERSION = '1.18.156';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 365;
+const SW_CACHE_REV = 366;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', petCoins: 0, dex: {}, summons: {}, pets: {}, activePet: null,
   eggPets: {}, activeEggPet: null, eggDaily: null,
   chestDaily: null, chestWeapons: {},
@@ -26,7 +26,7 @@ const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', petCoins: 0,
   showTouchPads: null,
   /** Keyboard legend on PC / when pads off (default on) */
   kbLegend: true,
-  reducedMotion: false, liteFx: false, highContrast: false, lang: null, lastPlay: null, tipsSeen: {},
+  reducedMotion: false, liteFx: false, highContrast: false, lang: null, playerTag: '', lastPlay: null, tipsSeen: {},
   stats: { kills: 0, advWins: 0, wallBestRun: 0, maxCombo: 0, maxKillStreak: 0, trainMaxCombo: 0, pickups: 0, bossKills: 0, vsMatches: 0, vsWins: 0, matsCoinBest: 0, summonCount: 0, killsSinceSummon: 0, petsTamed: 0, eggsHatched: 0, weaponFinishers: 0, tideBattleWins: 0, skillShards: 0, itemShards: 0, dailyBonusCount: 0 },
   achievements: {}, daily: null, vsPlayedIds: [], weaponMastery: {}, skillUpgrades: {}, itemUpgrades: {}, activeTechnique: 'spiral_orb', skill: 'spiral_orb', super: 'ketsbam', missionsIntroSeen: false };
 
@@ -1212,6 +1212,17 @@ function sanitizeTipsSeen(raw) {
   return out;
 }
 
+function sanitizePlayerTag(raw) {
+  let s = String(raw == null ? '' : raw);
+  s = s.replace(/<[^>]*>/g, '');
+  try {
+    s = s.replace(/[^\p{L}\p{N} _.'-]/gu, '');
+  } catch (_) {
+    s = s.replace(/[^\w\s.'-]/g, '');
+  }
+  return s.replace(/\s+/g, ' ').trim().slice(0, 16);
+}
+
 /** Corrupte / gemanipuleerde saves veilig maken (localStorage + import). */
 function sanitizeSave(s) {
   // Literal max — nooit TDZ op MAX_LEVEL (anders crashen alle click-handlers)
@@ -1539,6 +1550,7 @@ function sanitizeSave(s) {
   if (out.lang != null && typeof SUPPORTED_LANGS !== 'undefined' && !SUPPORTED_LANGS.includes(out.lang)) {
     out.lang = null;
   }
+  out.playerTag = sanitizePlayerTag(out.playerTag);
 
   out.stats = Object.assign({}, DEFAULT_SAVE.stats, out.stats || {});
   const cleanStats = {};

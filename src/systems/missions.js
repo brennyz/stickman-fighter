@@ -2599,6 +2599,8 @@ function maybeWelcomeToast() {
   setTimeout(() => {
     if (state === 'play') return;
     if (onboardingProgress().seen > 0) return;
+    const splash = document.getElementById('sfSplash');
+    if (splash && !splash.classList.contains('is-done')) return;
     userToast(t('toast.welcome'), 3800);
   }, 2800);
 }

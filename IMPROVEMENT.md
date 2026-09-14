@@ -1,3 +1,4 @@
+| 2026-09-14 | **title-gate** | Eerste scherm = splash-poppetjes groter + SPELEN / naam (geen account). Settings-fold + Android-copy gelijkgetrokken. **v1.18.156 / SW v366**. |
 | 2026-09-14 | **android-copy** | iPad/iOS-copy eruit uit speler-UI (settings, speel.html, install, tips, share). Zelfde Android-taal overal. **v1.18.155 / SW v365**. |
 | 2026-09-14 | **toast/UI** | Toast-queue (max 2 + de-dupe + tik-weg) · a11y aria-live · leftover NL-toasts i18n · Android-leesbaar + toon (ok/warn/danger). Complementary aan #257. **v1.18.154 / SW v364**. |
 | 2026-09-14 | **playtest P1** | Android-first: landing fold + NL-first hub; trainLostTip + energy/iframe copy; opener 2-mob + robot block/HP readable. **v1.18.153 / SW v363**. |
