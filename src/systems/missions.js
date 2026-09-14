@@ -1446,7 +1446,7 @@ function repairBrokenButtonIcon(img) {
 function hardenButtonIcons(root) {
   try {
     const scope = root && root.querySelectorAll ? root : document;
-    scope.querySelectorAll('img[src*="assets/buttons/"], img[src*="assets/ui/"]').forEach((img) => {
+    scope.querySelectorAll('img[src*="assets/buttons/"], img[src*="assets/ui/"], img[src*="assets/buildings/"]').forEach((img) => {
       if (skipButtonIconHarden(img)) {
         try { img.classList.remove('sf-icon-broken'); } catch (_) {}
         return;

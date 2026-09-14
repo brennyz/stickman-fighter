@@ -6,7 +6,7 @@
 
 | Pad | Inhoud |
 |-----|--------|
-| `hub/` | Hoofdmenu: adventure, arcade, versus, collect, continue |
+| `hub/` | Hoofdmenu: adventure, arcade, versus, collect, continue, **buildings** |
 | `modes/` | Mode-rijen: training, wall, mats, weapons, pets, style, skills, upgrades, dex |
 | `chrome/` | Dock, home, settings, pause, save, gamble, claim, … |
 

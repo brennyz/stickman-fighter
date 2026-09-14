@@ -73,9 +73,10 @@ Cursor kan SVG’s als code schrijven en in `assets/` zetten. Raster via image-t
 ```
 assets/
   buttons/          ← menu + hub SVG-iconen (leidend voor knop-vervanging)
-    hub/            ← adventure, arcade, versus, collect
+    hub/            ← adventure, arcade, versus, collect, buildings
     modes/          ← training, wall, mats, weapons, pets, style, skills, upgrades, dex
     chrome/         ← back, home, claim, pause, settings toggles
+  buildings/        ← 32×32 factory pixel cards (see BUILDING-PIXEL-MAP.md)
   ui/               ← overige UI-SVG (lock, check, saga chips als files)
   forest-floor/     ← scenery samples (bestaand)
 icons/              ← alleen PWA app-iconen (180/192/512 png)
@@ -137,6 +138,7 @@ houd kleuren/stroke volgens ASSET-STYLE, geen emoji, daarna build+smoke.
 | Set | Locatie nu | Doelmap | Status |
 |-----|------------|---------|--------|
 | Hub tiles (4) | `index.html` `.hub-tile-ico` | `assets/buttons/hub/` | **Live** |
+| Buildings HOME + cards | `BUILDING-PIXEL-MAP.md` | `assets/buttons/hub/buildings.svg` + `assets/buildings/` | **Draft** (3 of 4) |
 | Mode-rijen | `index.html` `.mode-btn .ico` | `assets/buttons/modes/` | **Live** |
 | Nav chrome (terug / pauze / swap) | `.back-btn` / `#pauseBtn` / char-swap | `assets/buttons/chrome/{back,pause,swap}.svg` | **Live** |
 | Home / claim / settings / dock | `index.html` | `assets/buttons/chrome/` | **Live** |
