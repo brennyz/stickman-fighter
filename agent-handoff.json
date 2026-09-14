@@ -13,17 +13,17 @@
     "tunnelBookmark": "https://stickfighter-ipad-b75e.loca.lt/ipad.html"
   },
   "codeTruth": {
-    "appVersion": "1.18.163",
-    "swCache": "stickfighter-app-v373",
-    "gameJsQuery": "game.js?v=373",
-    "cssQuery": "styles/main.css?v=373",
-    "featureBranch": "cursor/unify-ui-polish-0977",
+    "appVersion": "1.18.164",
+    "swCache": "stickfighter-app-v374",
+    "gameJsQuery": "game.js?v=374",
+    "cssQuery": "styles/main.css?v=374",
+    "featureBranch": "cursor/season-overlays-2009",
     "pushBlocked": null,
     "shareUrl": "https://brennyz.github.io/stickman-fighter/speel.html",
-    "localMainHead": "68e5ccc",
-    "remoteMainHead": "68e5ccc",
-    "note": "LIVE main v1.18.161 / SW 371 after #264 merge (68e5ccc). This branch: start polish + HOME chrome unify. #265 folded. #263 parked. Not silent main.",
-    "updated": "2026-09-14T14:20:00Z"
+    "localMainHead": "90182c8",
+    "remoteMainHead": "90182c8",
+    "note": "PR #277 season CSS overlays (classic/jungle/halloween + winter/summer hooks). Draft, not silent main.",
+    "updated": "2026-09-14T17:03:00Z"
   },
   "githubSync": {
     "policy": "Trigger van de user: «merge main» = commit (als nodig) + push origin/main. Daarna GitHub Pages (~1–3 min) → speel.html is LIVE. Niet stil pushen. Houd pendingUpload bij tot origin/main gelijk is.",
@@ -94,7 +94,7 @@
       "id": "w-20260914T165100",
       "from": "user",
       "text": "SEASONAL story + CSS overlays ONLY: reusable season-overlay (classic/jungle/halloween + winter/summer hooks). pointer-events none, tokens, persist + optional calendar auto, i18n blurbs, art-slot hooks for pixel-art agent, season id for audio. No PNGs, no audio synth, no Versus, no gear.",
-      "status": "active",
+      "status": "done-in-code",
       "updated": "2026-09-14"
     },
     {
@@ -621,6 +621,10 @@
   ],
   "sessionLog": [
     {
+      "at": "2026-09-14T17:02:42Z",
+      "summary": "Season overlay: classic/jungle/halloween CSS + story, persist/auto, art slots. PR #277. v1.18.164/SW374."
+    },
+    {
       "at": "2026-09-14T15:17:48Z",
       "summary": "#266 sprint: NL VERLOREN, Tips-label i.p.v. menu.tips, stillere versie-banner, rest HOME. v1.18.163/SW373. Draft."
     },
@@ -715,10 +719,6 @@
     {
       "at": "2026-08-17T10:03:24Z",
       "summary": "LIVE gemerged #248–#255 naar main conflictloos · v1.18.151 / SW 361 — pull main op de pc"
-    },
-    {
-      "at": "2026-08-17T10:02:29Z",
-      "summary": "LIVE merge van d8–d14 stack naar main (conflictloos FF)"
     }
   ],
   "implementedFeaturesSummary": "d18 char select deel 1+2 (v1.11.1-2); Mats coinrun + shuriken mik/vliegers + anti-spam (v1.12.0); speel.html (v1.12.2+). Zie HANDOFF-ZOEKINDEX.md en improvement-d20-bag.json userFeatureLog.",
