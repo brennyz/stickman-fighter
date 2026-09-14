@@ -22,8 +22,8 @@
     "shareUrl": "https://brennyz.github.io/stickman-fighter/speel.html",
     "localMainHead": "90182c8",
     "remoteMainHead": "90182c8",
-    "note": "LIVE main v1.18.163 / SW 373 after #266. Draft #267 = keep-loot + EN VERLOREN + quiet update toast (v1.18.165 / SW 375). #268 is other-agent welcome/summon — do not duplicate. Not silent main — wait «merge».",
-    "updated": "2026-09-14T16:05:00Z"
+    "note": "LIVE main v1.18.163 / SW 373 after #266. #267 MERGE-READY (v1.18.165 / SW 375): EN VERLOREN + keep-loot + quiet HOME update. Upgrades/drawer/weapons-contrast = c4a6 new PR — do not duplicate. Wait «merge».",
+    "updated": "2026-09-14T16:12:00Z"
   },
   "githubSync": {
     "policy": "Trigger van de user: «merge main» = commit (als nodig) + push origin/main. Daarna GitHub Pages (~1–3 min) → speel.html is LIVE. Niet stil pushen. Houd pendingUpload bij tot origin/main gelijk is.",
@@ -82,6 +82,13 @@
     ]
   },
   "userWishlist": [
+    {
+      "id": "w-20260914T160800",
+      "from": "user",
+      "text": "After #267: help or don't block. Upgrades inaccessible, drawer copy trim (keep features), weapons gray contrast. Prefer c4a6 new PR. Finish #267 merge-ready without scope-creep into Upgrades.",
+      "status": "done-in-code",
+      "updated": "2026-09-14"
+    },
     {
       "id": "w-20260914T155900",
       "from": "user",
@@ -620,6 +627,10 @@
   ],
   "sessionLog": [
     {
+      "at": "2026-09-14T16:09:29Z",
+      "summary": "#267 merge-klaar (v1.18.165/SW375). Upgrades/drawer/contrast aan c4a6. Niet gemerged — wacht «merge»."
+    },
+    {
       "at": "2026-09-14T16:06:49Z",
       "summary": "#267 op #266 LIVE: EN VERLOREN, keep-loot, HOME-only update-banner (v1.18.165 / SW 375). Wacht «merge». #268 niet gedupliceerd."
     },
@@ -714,10 +725,6 @@
     {
       "at": "2026-08-17T10:21:10Z",
       "summary": "PC-pull geregeld: pull-main.sh + GITHUB-PUSH is nu pull-kaart; main LIVE"
-    },
-    {
-      "at": "2026-08-17T10:20:50Z",
-      "summary": "pull-main script + GITHUB-PUSH bijwerken zodat de pc één commando kan pullen"
     }
   ],
   "implementedFeaturesSummary": "d18 char select deel 1+2 (v1.11.1-2); Mats coinrun + shuriken mik/vliegers + anti-spam (v1.12.0); speel.html (v1.12.2+). Zie HANDOFF-ZOEKINDEX.md en improvement-d20-bag.json userFeatureLog.",
