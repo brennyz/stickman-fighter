@@ -2231,6 +2231,13 @@ const UI = {
       if (pullLbl) pullLbl.textContent = left > 0 ? t('ui.summonPullLeft', { n: left }) : t('ui.summonPullEmpty');
       if (pullBtn) {
         pullBtn.disabled = left <= 0 || !!this._chestPullBusy;
+        const titleEl = pullBtn.querySelector('div');
+        if (titleEl) {
+          const small = titleEl.querySelector('small');
+          titleEl.textContent = '';
+          titleEl.appendChild(document.createTextNode(tOr('ui.summonOpen', 'Open kist')));
+          if (small) titleEl.appendChild(small);
+        }
         pullBtn.setAttribute('aria-label', left > 0
           ? t('ui.summonAriaPull', { n: left })
           : t('ui.summonAriaEmpty'));
@@ -2246,7 +2253,10 @@ const UI = {
         stage.tabIndex = canPull ? 0 : -1;
       }
       const hint = document.getElementById('summonStageHint');
-      if (hint) hint.style.display = (left > 0 && !this._chestPullBusy) ? '' : 'none';
+      if (hint) {
+        hint.textContent = tOr('ui.summonHint', 'Tik kist om te openen');
+        hint.style.display = (left > 0 && !this._chestPullBusy) ? '' : 'none';
+      }
 
       const logEl = document.getElementById('summonLog');
       if (logEl) {
@@ -2608,10 +2618,10 @@ const UI = {
         this._chestPullLeftSnap = null;
       }
       const text = document.getElementById('summonRevealText');
-      const msg = typeof chestResultToast === 'function' ? chestResultToast(res) : (res && res.ok ? 'Summon!' : 'Mislukt');
+      const msg = typeof chestResultToast === 'function' ? chestResultToast(res) : (res && res.ok ? 'Summon!' : tOr('ui.summonFail', 'Mislukt'));
       // Never spoil via toast/text during the open — only after card
       this._summonPendingMsg = (res && res.ok) ? msg : null;
-      if (text) text.textContent = (res && res.ok) ? 'Kist opent…' : msg;
+      if (text) text.textContent = (res && res.ok) ? tOr('ui.summonOpening', 'Kist opent…') : msg;
 
       if (!res || !res.ok) {
         this._chestPullBusy = false;

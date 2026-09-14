@@ -17,6 +17,7 @@ const ASSETS = [
   './game.js',
   './styles/main.css',
   './styles/seasons.css',
+  './styles/season-overlays.css',
   './tunnel-check.js',
   './install.js',
   './manifest.webmanifest',
@@ -162,7 +163,23 @@ const ASSETS = [
   './assets/seasons/season-halloween-corner-tr.png',
   './assets/seasons/season-halloween-corner-bl.png',
   './assets/seasons/season-halloween-corner-br.png',
-  './assets/seasons/season-halloween-banner.png'
+  './assets/seasons/season-halloween-banner.png',
+  './assets/seasons/jungle/corner-tl.png',
+  './assets/seasons/jungle/corner-tr.png',
+  './assets/seasons/jungle/corner-bl.png',
+  './assets/seasons/jungle/corner-br.png',
+  './assets/seasons/jungle/banner.png',
+  './assets/seasons/jungle/vignette.png',
+  './assets/seasons/jungle/ground-trim.png',
+  './assets/seasons/jungle/motif.png',
+  './assets/seasons/halloween/corner-tl.png',
+  './assets/seasons/halloween/corner-tr.png',
+  './assets/seasons/halloween/corner-bl.png',
+  './assets/seasons/halloween/corner-br.png',
+  './assets/seasons/halloween/banner.png',
+  './assets/seasons/halloween/vignette.png',
+  './assets/seasons/halloween/ground-trim.png',
+  './assets/seasons/halloween/motif.png'
 ];
 
 function offlineFallbackHtml() {

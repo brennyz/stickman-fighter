@@ -3600,6 +3600,21 @@ function applyLangStaticScreens() {
 
   setText('petScreenHead', 'pets.title');
   setText('petScreenSub', 'pets.sub');
+  setText('summonScreenHead', 'menu.summons');
+  setText('summonScreenSub', 'ui.summonSub');
+  setText('summonWhereStrip', 'ui.summonWhere');
+  setText('summonStageHint', 'ui.summonHint');
+  setText('summonRevealText', 'ui.summonRevealHint');
+  const gotoW = document.getElementById('btnSummonGotoWeapons');
+  if (gotoW) {
+    const d = gotoW.querySelector('div');
+    if (d) d.innerHTML = t('ui.summonGotoWeapons') + '<small>' + t('ui.summonCollect') + '</small>';
+  }
+  const gotoP = document.getElementById('btnSummonGotoPets');
+  if (gotoP) {
+    const d = gotoP.querySelector('div');
+    if (d) d.innerHTML = t('ui.summonGotoPets') + '<small>' + t('ui.summonCollect') + '</small>';
+  }
   const eggBtn = document.getElementById('eggCrackBtn');
   if (eggBtn) {
     const d = eggBtn.querySelector('div');
@@ -3836,6 +3851,7 @@ function applyLang() {
     else if (active === 'dexScreen' && typeof UI.renderDex === 'function') UI.renderDex();
     else if (active === 'skillScreen' && typeof UI.renderSkills === 'function') UI.renderSkills();
     else if (active === 'modeHubScreen') UI.renderModeHub();
+    else if (active === 'summonScreen' && typeof UI.renderSummon === 'function') UI.renderSummon();
     else if (active === 'resultScreen' && UI.lastResult && typeof UI.showResult === 'function') {
       try { UI.showResult(!!UI.lastResult.win, UI.lastResult); } catch (_) {}
     }
@@ -6820,6 +6836,22 @@ function gambleOnboardHintLine() {
       : 'Eerste keer: sum ≤5 super-baas · sum ≥9 ally buff · Skip = geen gok');
 }
 
+/** Welcome only on HOME hub — never chase Adventure/Settings/title. */
+function welcomeToastOnHub() {
+  try {
+    if (typeof state !== 'undefined' && (state === 'play' || state === 'pause')) return false;
+    const splash = document.getElementById('sfSplash');
+    if (splash && !splash.classList.contains('is-done')) return false;
+    const menu = document.getElementById('menuScreen');
+    if (!menu || !menu.classList.contains('active')) return false;
+    const other = document.querySelector('.screen.active:not(#menuScreen)');
+    if (other) return false;
+    return true;
+  } catch (_) {
+    return false;
+  }
+}
+
 function maybeWelcomeToast() {
   ensureTipsSeen();
   if (save.tipsSeen.welcome) return;
@@ -6829,19 +6861,35 @@ function maybeWelcomeToast() {
     persist();
     return;
   }
-  save.tipsSeen.welcome = 1;
-  persist();
-  setTimeout(() => {
-    if (state === 'play') return;
-    if (onboardingProgress().seen > 0) return;
+  let tries = 0;
+  const tick = () => {
+    if (save.tipsSeen.welcome) return;
+    if (onboardingProgress().seen > 0 || save.lvl > 1) {
+      save.tipsSeen.welcome = 1;
+      persist();
+      return;
+    }
+    if (welcomeToastOnHub()) {
+      save.tipsSeen.welcome = 1;
+      persist();
+      try { userToast(t('toast.welcome'), 2200); } catch (_) {}
+      return;
+    }
+    tries++;
+    let onSplash = false;
     try {
-      const lvl = document.getElementById('levelScreen');
-      if (lvl && lvl.classList.contains('active')) return;
+      const splash = document.getElementById('sfSplash');
+      onSplash = !!(splash && !splash.classList.contains('is-done'));
     } catch (_) {}
-    const splash = document.getElementById('sfSplash');
-    if (splash && !splash.classList.contains('is-done')) return;
-    userToast(t('toast.welcome'), 3800);
-  }, 2800);
+    // Still on title/splash — wait for HOME. Left hub already — don't follow.
+    if (onSplash && tries < 24) {
+      setTimeout(tick, 350);
+      return;
+    }
+    save.tipsSeen.welcome = 1;
+    persist();
+  };
+  setTimeout(tick, 400);
 }
 
 /** Level-pacing v1.14.3: iets rustiger — +15% vroeg, oplopend tot +50% vanaf ~Lv 18. */
@@ -12284,6 +12332,11 @@ function applyPlayerSkill(fighter) {
 }
 
 function skillBanner(sk) {
+  const id = sk && sk.id;
+  if (id && typeof tOr === 'function') {
+    const via = tOr('technique.' + id, '');
+    if (via) return via;
+  }
   return (sk && sk.banner) || 'SPECIAL!';
 }
 
@@ -17660,8 +17713,14 @@ function sanitizeChestWeapons(raw) {
 
 function chestResultToast(res) {
   if (!res || !res.ok) {
-    if (res && res.reason === 'empty') return 'Geen summons meer vandaag';
-    return 'Summon mislukt — probeer opnieuw';
+    if (res && res.reason === 'empty') {
+      return (typeof tOr === 'function')
+        ? tOr('ui.summonNoMore', 'Geen summons meer vandaag')
+        : 'Geen summons meer vandaag';
+    }
+    return (typeof tOr === 'function')
+      ? tOr('ui.summonFail', 'Summon mislukt — probeer opnieuw')
+      : 'Summon mislukt — probeer opnieuw';
   }
   if (res.type === 'weapon_unlock') {
     return `✦ ${res.name} ontgrendeld! · ${rarityLabel(res.rarity)}${res.skill ? ' · ' + res.skill : ''}`;
@@ -17983,6 +18042,15 @@ function seedNlGameStrings() {
     satan: 'SATAN — {name}!',
     satanIncoming: 'SATAN KOMT…',
     satanWin: 'SATAN VERSLAGEN!',
+    spiral_orbTriple: 'DRIEVOUDIGE SPIRAAL ORB!',
+    spiral_orbDual: 'DUBBELE SPIRAAL ORB!',
+  });
+  if (!I18N.nl.technique) I18N.nl.technique = {};
+  Object.assign(I18N.nl.technique, {
+    spiral_orb: 'SPIRAAL ORB!',
+    lightning_pierce: 'BLIKSEMPRIK!',
+    wave_cannon: 'GOLFKANON!',
+    void_gaze: 'LEEGTEBLIK!',
   });
   if (!I18N.nl.result) I18N.nl.result = {};
   Object.assign(I18N.nl.result, {
@@ -18223,7 +18291,7 @@ function seedNlGameStrings() {
     skillEquipped: '{name} uitgerust als special',
     superEquipped: '{name} uitgerust als nood-super',
     superUnlock: 'Nieuwe nood-super: {name}!',
-    welcome: 'Welkom! Menu → Tips · tik een melding weg · per modus één hint bovenin',
+    welcome: 'Welkom — tik een melding weg · Tips in het menu',
     unknownMode: 'Onbekende modus',
     noSession: 'Nog geen sessie — kies een modus',
     noPlayLink: 'Geen speel-link gevonden — zie Instellingen',
@@ -18701,6 +18769,15 @@ function seedNlGameStrings() {
     petSummaryTamed: 'Getemd <b>{tamed}/{total}</b> · actief <b>{active}</b> · <b>{wallet} pet coins</b>',
     petNone: 'geen',
     installSub: 'Lade · beginscherm',
+    summonQuota: 'Vandaag: {left}/{total} random summons',
+    summonLeft: '{n} over',
+    summonDone: 'Op',
+    summonOpen: 'Open kist',
+    summonOpenAria: 'Open kist, {n} over',
+    summonNoMore: 'Geen summons meer vandaag',
+    summonOpening: 'Kist opent…',
+    summonNoPulls: 'Nog geen pulls vandaag.',
+    summonFail: 'Summon mislukt — probeer opnieuw',
     boss: 'BAAS',
     topHunter: 'Top jager',
     modeAdventure: '5 eilanden × 10 levels · hitte-meter · 9× = gevaar! · 10× = Satan · Meester-buff · dobbel-gok',
@@ -18890,7 +18967,9 @@ function seedNlGameStrings() {
     earLaser: 'OOR-LASER — spring!', lightning_pierceTele: 'LIGHTNING PIERCE — dash/spring!',
     lightning_pierceMiss: 'Lightning Pierce gemist — spring werkt!',
     kickTele: 'TRAP — spring/blok!', punchTele: 'SLA — blok/weg!', earLaserShort: 'OOR-LASER',
-    rabbitRobot: 'RABBITROBOT · {pct}%', roundInfo: 'Ronde {n} · eerst 2 wint · {s}-{r}',
+    rabbitRobot: 'RABBITROBOT · {pct}%',
+    rabbitRobotHp: 'RABBIT {hp}/{max}',
+    roundInfo: 'Ronde {n} · eerst 2 wint · {s}-{r}',
     dummyGrace: 'Dummy {n}s — oefen combo', goal: 'doel ×{n}', record: 'record ×{n}',
     time: 'TIJD', wallGen: 'MUUR ×{n}', stones: 'Stenen: {n}',
     recordGap: 'Record {best} · nog {gap} te gaan',
@@ -19365,7 +19444,7 @@ const CATALOG_EN = {
     invalidSave: 'Invalid save — check JSON', noBackup: 'No backup found on this device',
     backupConfirm: 'Backup Lv {lvl}{drift} — tap again to restore',
     backupDrift: ' (main and backup differ)',
-    welcome: 'Welcome! Menu → Tips · tap a notice to dismiss · one hint per mode at top',
+    welcome: 'Welcome — tap a notice away · Tips in the menu',
     finishFight: 'Finish or pause the fight first',
     notDuringCombat: 'Not during a fight',
     liteFxHint: 'Running slow? Settings → Lite FX',
@@ -19824,6 +19903,15 @@ const CATALOG_EN = {
     petSummaryTamed: 'Tamed <b>{tamed}/{total}</b> · active <b>{active}</b> · <b>{wallet} pet coins</b>',
     petNone: 'none',
     installSub: 'Home screen',
+    summonQuota: 'Today: {left}/{total} random summons',
+    summonLeft: '{n} left',
+    summonDone: 'Done',
+    summonOpen: 'Open chest',
+    summonOpenAria: 'Open chest, {n} left',
+    summonNoMore: 'No more summons today',
+    summonOpening: 'Chest opening…',
+    summonNoPulls: 'No pulls yet today.',
+    summonFail: 'Summon failed — try again',
     boss: 'BOSS',
     topHunter: 'Top hunter',
     modeAdventure: '5 islands × 10 levels · heat meter · 9× = danger! · 10× = Satan · Master buff · gamble',
@@ -20153,7 +20241,9 @@ const CATALOG_EN = {
     earLaser: 'EAR-LASER — jump!', lightning_pierceTele: 'LIGHTNING PIERCE — dash/jump!',
     lightning_pierceMiss: 'Lightning Pierce missed — jump works!',
     kickTele: 'KICK — jump/block!', punchTele: 'PUNCH — block/dodge!', earLaserShort: 'EAR-LASER',
-    rabbitRobot: 'RABBITROBOT · {pct}%', roundInfo: 'Round {n} · first to 2 · {s}-{r}',
+    rabbitRobot: 'RABBITROBOT · {pct}%',
+    rabbitRobotHp: 'RABBIT {hp}/{max}',
+    roundInfo: 'Round {n} · first to 2 · {s}-{r}',
     dummyGrace: 'Dummy {n}s — practice combo', goal: 'goal ×{n}', record: 'record ×{n}',
     time: 'TIME', wallGen: 'WALL ×{n}', stones: 'Stones: {n}',
     recordGap: 'Record {best} · {gap} to go',
@@ -20197,7 +20287,7 @@ const CATALOG_EN = {
     teleFire: 'FIRE — side-step!',
     ketsTap: 'Tap!', ketsKey: 'E / tap',
   },
-  technique: { spiral_orb: 'SPIRAL ORB!', lightning_pierce: 'LIGHTNING PIERCE!', void_gaze: 'VOID GAZE!' },
+  technique: { spiral_orb: 'SPIRAL ORB!', lightning_pierce: 'LIGHTNING PIERCE!', wave_cannon: 'WAVE CANNON!', void_gaze: 'VOID GAZE!' },
   gamble: {
     superBoss: 'Bad luck! Super-boss in a random wave',
     miniBoss: 'Risk: extra elite in a wave',
@@ -30839,7 +30929,7 @@ class Fighter {
       weapon: weaponById('vuist'), speed: 260, jumpV: 620,
       ai: null, aiTimer: 0, aiMove: 0, aiCd: 2,
       name: 'Stickman',
-      substCd: 0, specialCd: 0, invulnT: 0, hitFlashT: 0, afterimages: [], dashCd: 0,
+      substCd: 0, specialCd: 0, invulnT: 0, hitFlashT: 0, hpGhost: 0, hpGhostT: 0, afterimages: [], dashCd: 0,
       weaponComboIdx: 0, weaponComboT: 0, _lastWeaponKind: null, _weaponComboPrimed: false, _weaponComboHits: 0,
       style: null, playerSlot: 0, vsSpecial: 'spiral_orb',
     }, opts);
@@ -31237,6 +31327,10 @@ class Fighter {
     }
     if (this.invulnT > 0) this.invulnT -= dt;
     if (this.hitFlashT > 0) this.hitFlashT -= dt;
+    if (this.hpGhostT > 0) {
+      this.hpGhostT -= dt;
+      if (this.hpGhostT <= 0) this.hpGhost = this.hp;
+    }
     if (this._shurikenCd > 0) this._shurikenCd -= dt;
     for (const a of this.afterimages) a.life -= dt;
     this.afterimages = this.afterimages.filter(a => a.life > 0);
@@ -31409,7 +31503,11 @@ class Fighter {
         spawnFxRing(game, this.x, this.y - 42, parry ? '#ffd75e' : '#9fd8ff', fxLite() ? 6 : 10);
       }
       if (save.haptics !== false) haptic(parry ? 9 : 4);
+      const hpBefore = this.hp;
       this.hp -= dmg;
+      if ((this.hpGhostT || 0) <= 0) this.hpGhost = hpBefore;
+      this.hpGhost = Math.max(this.hpGhost || hpBefore, hpBefore);
+      this.hpGhostT = 0.45;
       return dmg;
     }
     if (this.isPlayer && game && game.playerShieldT > 0) {
@@ -31423,7 +31521,11 @@ class Fighter {
     if (this.isPlayer && game && game.buildingDefMul && game.buildingDefMul !== 1) {
       dmg = Math.max(1, Math.round(dmg * game.buildingDefMul));
     }
+    const hpBefore = this.hp;
     this.hp -= dmg;
+    if ((this.hpGhostT || 0) <= 0) this.hpGhost = hpBefore;
+    this.hpGhost = Math.max(this.hpGhost || hpBefore, hpBefore);
+    this.hpGhostT = 0.55;
     if (this.isPlayer && game) {
       if (game.mode === 'training' || game.mode === 'adventure') {
         game.combo = 0;
@@ -36554,6 +36656,8 @@ class Game {
     this.monsters = [];
     this.inputLocked = false;
     this.playerHurtCd = 0;
+    this.hitReadT = 0;
+    this.hitReadDmg = 0;
     this.sessionXP = 0;
     this.over = false;
     this.maxCombo = 0;
@@ -37954,6 +38058,8 @@ class Game {
     resetWeaponCombo(this.player);
     this.robot.hp = this.robot.maxhp = this.robotMaxHp;
     this.robot.x = W * 0.75; this.robot.y = this.ground; this.robot.vx = 0; this.robot.face = -1;
+    this.robot.hpGhost = this.robot.hp;
+    this.robot.hpGhostT = 0;
     this.robot.attack = null; this.robot.hurtT = 0; this.robot.deadT = 0;
     resetWeaponCombo(this.robot);
     this.phase = 'intro'; this.phaseT = 0;
@@ -38823,16 +38929,12 @@ class Game {
         fireProj(0, 0, 1.05, { curl: 0 });
         fireProj(face * 8, -14, 0.92, { curl: -1, vy0: -120, curlAccel: 480, curlMaxVy: 300 });
         fireProj(face * 8, 14, 0.92, { curl: 1, vy0: 120, curlAccel: 480, curlMaxVy: 300 });
-        try { this.banner(t('banner.spiral_orbTriple'), 1.15, col, 36); } catch (_) {
-          this.banner('TRIPLE SPIRAL ORB!', 1.15, col, 36);
-        }
+        this.banner(tOr('banner.spiral_orbTriple', 'TRIPLE SPIRAL ORB!'), 1.15, col, 36);
       } else if (mode === 'dual') {
         // ↑ + ↓ krul — start al met verticale snelheid zodat beide lanes zichtbaar zijn
         fireProj(face * 6, -12, 0.96, { curl: -1, vy0: -100, curlAccel: 440, curlMaxVy: 280 });
         fireProj(face * 6, 12, 0.96, { curl: 1, vy0: 100, curlAccel: 440, curlMaxVy: 280 });
-        try { this.banner(t('banner.spiral_orbDual'), 1.0, col, 32); } catch (_) {
-          this.banner('DUAL SPIRAL ORB!', 1.0, col, 32);
-        }
+        this.banner(tOr('banner.spiral_orbDual', 'DUAL SPIRAL ORB!'), 1.0, col, 32);
       } else {
         fireProj(0, 0, 1, { curl: 0 });
       }
@@ -38959,7 +39061,8 @@ class Game {
     const j = m.enemyTechnique;
     const dmg = Math.round(m.dmg * (j === 'wave_cannon' ? 2.15 : j === 'lightning_pierce' ? 1.75 : 1.55));
     const y0 = m.y - m.size * 0.55;
-    const lbl = j === 'lightning_pierce' ? 'LIGHTNING PIERCE!' : j === 'wave_cannon' ? 'WAVE CANNON!' : 'SPIRAL ORB!';
+    const fallback = j === 'lightning_pierce' ? 'LIGHTNING PIERCE!' : j === 'wave_cannon' ? 'WAVE CANNON!' : 'SPIRAL ORB!';
+    const lbl = (typeof tOr === 'function') ? tOr('technique.' + j, fallback) : fallback;
     const col = j === 'lightning_pierce' ? '#a8e0ff' : j === 'wave_cannon' ? '#7cf5ff' : '#7cf5ff';
     try {
       this.floater(m.x, m.y - m.size - 24, lbl, col, 14);
@@ -39193,6 +39296,10 @@ class Game {
           this.floater(tgt.x, tgt.y - 115, (counter ? t('combat.counter') + ' ' : '') + '-' + dmg, col, 16);
         }
         this.burst(tgt.bodyX, tgt.bodyY, col, 7);
+        if (this.mode === 'training') {
+          this.hitReadT = 0.45;
+          this.hitReadDmg = dmg;
+        }
         applyHitConfirmFx(this, hx, hy, spec, counter ? { counter: true } : null);
         if (spec.kind === 'weapon') bumpWeaponComboWindow(f, 0.1);
         if (spec.kind === 'weapon' && !isThrowWeapon(f.weapon.id) && spec.moveIdx < 2) {
@@ -39231,6 +39338,7 @@ class Game {
     }
     try { if (typeof updateAimTutorial === 'function') updateAimTutorial(this, dt); } catch (_) {}
     if (this.playerHurtCd > 0) this.playerHurtCd -= dt;
+    if (this.hitReadT > 0) this.hitReadT -= dt;
     let ketsJustFinished = false;
     if (this.ketsbamChargeT > 0) {
       if (this.over || !this.player?.alive) {
@@ -41636,15 +41744,24 @@ class Game {
         fillHudText(c, t('hud.earLaserShort'), W / 2, ly - 10, { fill: '#ffb0b8' });
         c.restore();
       }
-      // robotbalk rechtsboven
-      c.fillStyle = 'rgba(0,0,0,.45)'; this.rr(c, W - half - 20, by - 4, half + 8, 30, 10); c.fill();
-      c.fillStyle = '#333c55'; this.rr(c, W - half - 16, by, half, 15, 6); c.fill();
-      c.fillStyle = '#ff8080';
-      const frac = clamp(r.hp / r.maxhp, 0, 1);
-      this.rr(c, W - 16 - half * frac, by, half * frac, 15, 6); c.fill();
-      c.font = '800 13px sans-serif'; c.textAlign = 'right'; c.fillStyle = '#fff';
-      const rPct = Math.round(frac * 100);
-      c.fillText(t('hud.rabbitRobot', { pct: rPct }), W - 20, by + 30);
+      // robotbalk rechtsboven — ghost + cijfers (hit-reg blijft #259)
+      const maxHp = Math.max(1, r.maxhp || 1);
+      const frac = clamp(r.hp / maxHp, 0, 1);
+      const ghostFrac = clamp((r.hpGhost != null ? r.hpGhost : r.hp) / maxHp, 0, 1);
+      const reading = (this.hitReadT || 0) > 0;
+      c.fillStyle = 'rgba(0,0,0,.5)'; this.rr(c, W - half - 20, by - 6, half + 8, 36, 10); c.fill();
+      c.fillStyle = '#333c55'; this.rr(c, W - half - 16, by, half, 18, 6); c.fill();
+      if (ghostFrac > frac) {
+        c.fillStyle = '#ffd0a8';
+        this.rr(c, W - 16 - half * ghostFrac, by, half * ghostFrac, 18, 6); c.fill();
+      }
+      c.fillStyle = reading ? '#ffd75e' : '#ff6b6b';
+      this.rr(c, W - 16 - half * frac, by, half * frac, 18, 6); c.fill();
+      c.font = reading ? '900 15px sans-serif' : '800 13px sans-serif';
+      c.textAlign = 'right';
+      c.fillStyle = reading ? '#ffd75e' : '#fff';
+      const hpNow = Math.max(0, Math.round(r.hp));
+      c.fillText(tOr('hud.rabbitRobotHp', 'RABBIT {hp}/{max}', { hp: hpNow, max: Math.round(maxHp), pct: Math.round(frac * 100) }), W - 20, by + 34);
       // timer + rondepunten
       c.textAlign = 'center';
       c.font = '800 12px sans-serif';
@@ -42377,6 +42494,88 @@ class Game {
   }
 }
 
+/* --- src/ui/season-overlay.js --- */
+/* Season overlay — resolve pack token onto body[data-season].
+   Slot contract matches CSS pair #279: docs/SEASON-ASSET-SLOTS.md
+   Art files: assets/seasons/<id>/<slot>.png
+   Combat hides via CSS (body.is-playing). No gear, no FOMO. */
+
+const SEASON_PACKS = { jungle: 1, halloween: 1 };
+const SEASON_ART_SLOTS = [
+  'corner-tl', 'corner-tr', 'corner-bl', 'corner-br',
+  'banner', 'vignette', 'ground-trim', 'motif',
+];
+const SEASON_ART_PRESENT = {
+  jungle: { 'corner-tl': 1, 'corner-tr': 1, 'corner-bl': 1, 'corner-br': 1, banner: 1, vignette: 1, 'ground-trim': 1, motif: 1 },
+  halloween: { 'corner-tl': 1, 'corner-tr': 1, 'corner-bl': 1, 'corner-br': 1, banner: 1, vignette: 1, 'ground-trim': 1, motif: 1 },
+};
+
+function calendarSeasonOverlay(now) {
+  const d = now || new Date();
+  const m = d.getMonth();
+  const day = d.getDate();
+  if (m === 9 || (m === 10 && day <= 2)) return 'halloween';
+  return '';
+}
+
+function resolveSeasonOverlay() {
+  try {
+    const q = new URLSearchParams(location.search).get('season');
+    if (q === 'none' || q === 'off' || q === '0' || q === 'classic') return '';
+    if (q && SEASON_PACKS[q]) return q;
+  } catch (_) {}
+  try {
+    const stored = localStorage.getItem('sfSeason');
+    if (stored === 'none' || stored === '' || stored === 'classic') return '';
+    if (stored && SEASON_PACKS[stored]) return stored;
+  } catch (_) {}
+  return calendarSeasonOverlay();
+}
+
+function seasonArtUrl(sid, slot) {
+  if (!SEASON_ART_SLOTS.includes(slot)) return '';
+  if (!SEASON_ART_PRESENT[sid] || !SEASON_ART_PRESENT[sid][slot]) return '';
+  return 'assets/seasons/' + sid + '/' + slot + '.png';
+}
+
+function applySeasonOverlay() {
+  const season = resolveSeasonOverlay();
+  const body = typeof document !== 'undefined' ? document.body : null;
+  const root = typeof document !== 'undefined' ? document.documentElement : null;
+  if (body) {
+    if (season) body.setAttribute('data-season', season);
+    else body.removeAttribute('data-season');
+    body.classList.toggle('has-season-overlay', !!season);
+  }
+  if (root) {
+    if (season) root.setAttribute('data-season', season);
+    else root.removeAttribute('data-season');
+    SEASON_ART_SLOTS.forEach((slot) => {
+      const url = season ? seasonArtUrl(season, slot) : '';
+      if (url) root.style.setProperty('--season-art-' + slot, 'url("' + url + '")');
+      else root.style.removeProperty('--season-art-' + slot);
+    });
+  }
+  const host = document.getElementById('seasonOverlay');
+  if (host) {
+    host.setAttribute('data-season-pack', season || '');
+    host.setAttribute('aria-hidden', 'true');
+    host.style.pointerEvents = 'none';
+  }
+  return season;
+}
+
+try { applySeasonOverlay(); } catch (_) {}
+try {
+  window.__sfSeason = {
+    resolve: resolveSeasonOverlay,
+    apply: applySeasonOverlay,
+    packs: Object.keys(SEASON_PACKS),
+    slots: SEASON_ART_SLOTS,
+    present: SEASON_ART_PRESENT,
+  };
+  window.__sfSeasonArtPresent = SEASON_ART_PRESENT;
+} catch (_) {}
 /* --- src/ui/ui.js --- */
 /* ================================= UI ================================== */
 /** Long-press skip-gamble timers — bump gen on re-render / leave level screen. */
@@ -44611,6 +44810,13 @@ const UI = {
       if (pullLbl) pullLbl.textContent = left > 0 ? t('ui.summonPullLeft', { n: left }) : t('ui.summonPullEmpty');
       if (pullBtn) {
         pullBtn.disabled = left <= 0 || !!this._chestPullBusy;
+        const titleEl = pullBtn.querySelector('div');
+        if (titleEl) {
+          const small = titleEl.querySelector('small');
+          titleEl.textContent = '';
+          titleEl.appendChild(document.createTextNode(tOr('ui.summonOpen', 'Open kist')));
+          if (small) titleEl.appendChild(small);
+        }
         pullBtn.setAttribute('aria-label', left > 0
           ? t('ui.summonAriaPull', { n: left })
           : t('ui.summonAriaEmpty'));
@@ -44626,7 +44832,10 @@ const UI = {
         stage.tabIndex = canPull ? 0 : -1;
       }
       const hint = document.getElementById('summonStageHint');
-      if (hint) hint.style.display = (left > 0 && !this._chestPullBusy) ? '' : 'none';
+      if (hint) {
+        hint.textContent = tOr('ui.summonHint', 'Tik kist om te openen');
+        hint.style.display = (left > 0 && !this._chestPullBusy) ? '' : 'none';
+      }
 
       const logEl = document.getElementById('summonLog');
       if (logEl) {
@@ -44988,10 +45197,10 @@ const UI = {
         this._chestPullLeftSnap = null;
       }
       const text = document.getElementById('summonRevealText');
-      const msg = typeof chestResultToast === 'function' ? chestResultToast(res) : (res && res.ok ? 'Summon!' : 'Mislukt');
+      const msg = typeof chestResultToast === 'function' ? chestResultToast(res) : (res && res.ok ? 'Summon!' : tOr('ui.summonFail', 'Mislukt'));
       // Never spoil via toast/text during the open — only after card
       this._summonPendingMsg = (res && res.ok) ? msg : null;
-      if (text) text.textContent = (res && res.ok) ? 'Kist opent…' : msg;
+      if (text) text.textContent = (res && res.ok) ? tOr('ui.summonOpening', 'Kist opent…') : msg;
 
       if (!res || !res.ok) {
         this._chestPullBusy = false;

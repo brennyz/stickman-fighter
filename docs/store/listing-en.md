@@ -5,6 +5,8 @@ Draft for Google Play and Apple App Store. No IAP claimed; free app with no in-a
 **Internal name:** Stickman Fighter  
 **Version reference:** see `package.json` / `APP_VERSION` in `game.js`
 
+Versus / local 2-player on one screen is **retired**. Do not promise it in the listing.
+
 ---
 
 ## Short title (≤ 30 characters)
@@ -24,10 +26,10 @@ Stickman Fighter
 ## Short description (Play: ≤ 80 characters)
 
 ```
-Cartoon stickman arena fighter: adventure, 2-player, weapons & skills. Free.
+Cartoon stickman arena fighter: adventure, training, weapons & skills. Free.
 ```
 
-(78 characters)
+(76 characters)
 
 ---
 
@@ -42,17 +44,17 @@ Cartoon arena fighter
 ## Long description
 
 ```
-Stickman Fighter is a cartoon stickman arena fighter for phone, tablet, and desktop. Battle monster waves, collect weapons and skills, and play solo or two-player on one screen.
+Stickman Fighter is a cartoon stickman arena fighter for phone, tablet, and desktop. Battle monster waves, collect weapons and skills, and play solo — adventure, training, or arcade.
 
 WHAT YOU CAN DO
 • Adventure — stages with waves, bosses, and loot
-• Versus & training — 1 or 2 players on the same device
+• Training — 1v1 practice against the Rabbit Robot
+• Arcade — wall mode and other solo challenges
 • Collect weapons, pets, skills, and upgrades
-• Wall mode and other arcade challenges
 • Play offline after install (PWA / native shell)
 
 PLAY STYLE
-Light cartoon stickman combat (no blood, no realistic gore). Touch controls on tablet/phone; keyboard on PC. Landscape recommended for 2 players.
+Light cartoon stickman combat (no blood, no realistic gore). Touch controls on tablet/phone; keyboard on PC. Landscape recommended.
 
 NO ACCOUNT · NO CHAT
 No login, no online multiplayer chat, no user-generated chat. Progress stays on-device (export/import available).
@@ -70,15 +72,15 @@ Languages: Dutch and English in the menu.
 ### Google Play — tags / categories (suggestion)
 
 - Primary category: **Action** / Games → Action
-- Tags: `stickman`, `fighter`, `arena`, `cartoon`, `2 player`, `offline`, `arcade`, `adventure`
+- Tags: `stickman`, `fighter`, `arena`, `cartoon`, `training`, `offline`, `arcade`, `adventure`
 
 ### Apple App Store — Keyword field (≤ 100 characters, comma-separated)
 
 ```
-stickman,fighter,arena,cartoon,arcade,2player,offline,fighting,monsters,skills
+stickman,fighter,arena,cartoon,arcade,training,offline,fighting,monsters,skills
 ```
 
-(88 characters)
+(79 characters)
 
 ---
 
@@ -93,6 +95,7 @@ Store listing draft · PWA soft live. Cartoon arena fighter, no IAP, no login.
 ## Do not claim
 
 - No “online PvP” or “chat with friends”
+- No “2-player / versus on one screen” (retired)
 - No “buy coins / battle pass” (no IAP)
 - No “gambling for money” — only in-game dice for level buff/boss
 - Do not promise a specific age rating before IARC; see `content-rating-iarc.md`

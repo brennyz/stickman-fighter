@@ -5,6 +5,8 @@ Draft voor Google Play én Apple App Store. Geen IAP geclaimd; app is gratis zon
 **Interne naam:** Stickman Fighter  
 **Versie referentie:** zie `package.json` / `APP_VERSION` in `game.js`
 
+Versus / 2-spelers-op-één-scherm is **retired**. Listing mag dat niet beloven.
+
 ---
 
 ## Korte titel (≤ 30 tekens)
@@ -13,7 +15,7 @@ Draft voor Google Play én Apple App Store. Geen IAP geclaimd; app is gratis zon
 Stickman Fighter Arena
 ```
 
-Alternatief (24 tekens):
+Alternatief (17 tekens):
 
 ```
 Stickman Fighter
@@ -24,10 +26,10 @@ Stickman Fighter
 ## Korte beschrijving (Play: ≤ 80 tekens)
 
 ```
-Cartoon stickman arena-vechter: avontuur, 2 spelers, wapens & skills. Gratis.
+Cartoon stickman arena-vechter: avontuur, training, wapens & skills. Gratis.
 ```
 
-(79 tekens)
+(76 tekens)
 
 ---
 
@@ -42,17 +44,17 @@ Cartoon arena-vechtspel
 ## Lange beschrijving
 
 ```
-Stickman Fighter is een cartoon-achtig stickman arena-vechtspel voor telefoon, tablet en desktop. Vecht tegen golven monsters, verzamel wapens en skills, en speel alleen of met z’n tweeën op één scherm.
+Stickman Fighter is een cartoon-achtig stickman arena-vechtspel voor telefoon, tablet en desktop. Vecht tegen golven monsters, verzamel wapens en skills, en speel solo — avontuur, training of arcade.
 
 WAT JE KUNT DOEN
 • Avontuur — stages met golven, bazen en loot
-• Versus & training — 1 of 2 spelers op hetzelfde apparaat
+• Training — 1v1 oefenen tegen de Rabbit Robot
+• Arcade — muur-modus en andere solo-uitdagingen
 • Wapens, pets, skills en upgrades verzamelen
-• Muur-modus en andere arcade-uitdagingen
 • Offline speelbaar na installatie (PWA / native shell)
 
 SPEELSTIJL
-Lichte, cartoon-geweld-stickmen (geen bloed, geen realistische gore). Touch-besturing op tablet/telefoon; toetsenbord op PC. Landscape aanbevolen voor 2 spelers.
+Lichte, cartoon-geweld-stickmen (geen bloed, geen realistische gore). Touch-besturing op tablet/telefoon; toetsenbord op PC. Landscape aanbevolen.
 
 GEEN ACCOUNT · GEEN CHAT
 Geen login, geen online multiplayer-chat, geen gebruikersgegenereerde chat. Voortgang staat lokaal op het apparaat (export/import mogelijk).
@@ -70,15 +72,15 @@ Taal: Nederlands en Engels in het menu.
 ### Google Play — tags / categorieën (suggestie)
 
 - Categorie primair: **Actie** / Games → Action
-- Tags: `stickman`, `vechten`, `arena`, `cartoon`, `2 spelers`, `offline`, `arcade`, `avontuur`
+- Tags: `stickman`, `vechten`, `arena`, `cartoon`, `training`, `offline`, `arcade`, `avontuur`
 
 ### Apple App Store — Keyword field (≤ 100 tekens, komma-gescheiden)
 
 ```
-stickman,vechten,arena,cartoon,arcade,2spelers,offline,vechtspel,monsters,skills
+stickman,vechten,arena,cartoon,arcade,training,offline,vechtspel,monsters,skills
 ```
 
-(99 tekens)
+(80 tekens)
 
 ---
 
@@ -93,6 +95,7 @@ Store-listing draft · PWA soft live. Cartoon arena-fighter, geen IAP, geen logi
 ## Claims om níet te maken
 
 - Geen “online PvP” of “chat met vrienden”
+- Geen “2 spelers / versus op één scherm” (retired)
 - Geen “koop coins / battle pass” (geen IAP)
 - Geen “gokken om geld” — alleen in-game dobbel voor level-buff/baas
 - Geen leeftijd “PEGI 3” beloven vóór IARC-uitslag; zie `content-rating-iarc.md`

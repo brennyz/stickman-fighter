@@ -463,8 +463,14 @@ function sanitizeChestWeapons(raw) {
 
 function chestResultToast(res) {
   if (!res || !res.ok) {
-    if (res && res.reason === 'empty') return 'Geen summons meer vandaag';
-    return 'Summon mislukt — probeer opnieuw';
+    if (res && res.reason === 'empty') {
+      return (typeof tOr === 'function')
+        ? tOr('ui.summonNoMore', 'Geen summons meer vandaag')
+        : 'Geen summons meer vandaag';
+    }
+    return (typeof tOr === 'function')
+      ? tOr('ui.summonFail', 'Summon mislukt — probeer opnieuw')
+      : 'Summon mislukt — probeer opnieuw';
   }
   if (res.type === 'weapon_unlock') {
     return `✦ ${res.name} ontgrendeld! · ${rarityLabel(res.rarity)}${res.skill ? ' · ' + res.skill : ''}`;

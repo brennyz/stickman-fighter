@@ -897,6 +897,55 @@
       "text": "NEW OWNER: (1) Upgrades menu not accessible — HOME tile from start/hub. (2) App drawer: drop cluttery words, keep actions. (3) Weapons gray panel contrast + similar. (4) Continue HOME unify. New PR. #263 parked. No silent main.",
       "status": "done-in-code",
       "updated": "2026-09-14"
+    },
+    {
+      "id": "w-20260914T132500",
+      "from": "user",
+      "text": "ga verder — na merge: training ghost-HP / goud-flash / RABBIT n/max (feel only, geen hit-reg rewrite). Geen versus/nuclear CSS/iOS/share-URL/secrets. Niet stil naar main.",
+      "status": "done-in-code",
+      "updated": "2026-09-14"
+    },
+    {
+      "id": "w-20260914T152200",
+      "from": "user",
+      "text": "merge main en ga door — #266 LIVE. Next PR: welcome toast only on HOME (no Adventure/Settings crowd); combat technique banners + summon copy via i18n. Name field stays off. #263 parked. Draft, no silent main.",
+      "status": "done-in-code",
+      "updated": "2026-09-14"
+    },
+    {
+      "id": "w-20260914T102555",
+      "from": "user",
+      "text": "prompt voor grokbot om het spel te testen en te optimaliseren",
+      "status": "done-in-code",
+      "updated": "2026-09-14"
+    },
+    {
+      "id": "w-20260910T201014",
+      "from": "user",
+      "text": "Fix security issues",
+      "status": "done-in-code",
+      "updated": "2026-09-10"
+    },
+    {
+      "id": "w-20260910T200616",
+      "from": "user",
+      "text": "Ik ben wel go voor Android",
+      "status": "done-in-code",
+      "updated": "2026-09-10"
+    },
+    {
+      "id": "w-20260910T131901",
+      "from": "user",
+      "text": "website is geen Play-app — hoeft dat ook niet?",
+      "status": "done-in-code",
+      "updated": "2026-09-10"
+    },
+    {
+      "id": "w-20260910T125242",
+      "from": "user",
+      "text": "verbeter de store-tool; toon wat er moet gebeuren vóór App Store deploy",
+      "status": "done-in-code",
+      "updated": "2026-09-10"
     }
   ],
   "agentRules": [
