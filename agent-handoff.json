@@ -94,7 +94,7 @@
       "id": "w-20260914T105000",
       "from": "user",
       "text": "Android-first playtest P1 batch (2026-09-14): (1) production startscherm — SPELEN/Avontuur first, fold install/debug, consistent NL cards; (2) combat feel/feedback + opener survival; (3) fix combat.trainLostTip i18n leak. Do not touch Versus/nuclear CSS/share-URL/iOS/secrets.",
-      "status": "active",
+      "status": "done-in-code",
       "updated": "2026-09-14"
     },
     {
@@ -537,6 +537,10 @@
   ],
   "sessionLog": [
     {
+      "at": "2026-09-14T11:03:54Z",
+      "summary": "Playtest P1: startscherm fold + NL hub, combat feedback/opener, trainLostTip · v1.18.153 / SW 363"
+    },
+    {
       "at": "2026-08-17T14:31:25Z",
       "summary": "Mega-merge op main: light-FX + versus-stubs + dawnblade · v1.18.152 / SW 362"
     },
@@ -631,10 +635,6 @@
     {
       "at": "2026-08-16T08:27:26Z",
       "summary": "LIVE gemerged naar main: mobiel slaan + d12 dex · v1.18.143 / SW 353 — Verse versie op telefoon"
-    },
-    {
-      "at": "2026-08-16T08:26:00Z",
-      "summary": "LIVE merge: mobiel slaan (attackSpec + 44px pads) + d12 dex · v1.18.143 / SW 353"
     }
   ],
   "implementedFeaturesSummary": "d18 char select deel 1+2 (v1.11.1-2); Mats coinrun + shuriken mik/vliegers + anti-spam (v1.12.0); speel.html (v1.12.2+). Zie HANDOFF-ZOEKINDEX.md en improvement-d20-bag.json userFeatureLog.",
