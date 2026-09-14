@@ -138,6 +138,7 @@ Schrijf **1–3 regels** per sessie: datum, d#, wat, versie.
 
 | Datum (UTC) | d# | Update |
 |-------------|-----|--------|
+| 2026-09-14 | — | EN-NL + VERLOREN: keep-loot regel, geen late heat/master-toasts op resultaat, train Again-sub i18n. Niet unify (#266). v1.18.163 / SW 373. Wacht «merge». |
 | 2026-09-14 | — | Arcade pick-mode = HOME hub-tegels; net/SW-banner volgt game-taal. v1.18.161 / SW 371. #263 geparkeerd. |
 | 2026-09-14 | — | MERGE MAIN: #259 + #260 → v1.18.159 / SW 369. Hit-reg gehouden. #261 closed. #256 store-draft overgeslagen. |
 | 2026-09-14 | — | Training hit-reg: capsule + face-naar-robot; floater left-clamp; YOU LOST/VERLOREN. v1.18.158 / SW 368. |

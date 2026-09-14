@@ -1171,6 +1171,7 @@ const UI = {
           syncPlayLayer();
           return;
         }
+        try { this.clearToasts(); } catch (_) {}
         try { clearScreensForPlay(); } catch (_) {}
       } else {
         const target = document.getElementById(id);
@@ -4408,6 +4409,7 @@ const UI = {
     if (state === 'menu' && game && !game.over) return;
     try {
     this.lastResult = data;
+    try { this.clearToasts(); } catch (_) {}
     const title = document.getElementById('resTitle');
     if (!title) throw new Error('result DOM missing');
     title.textContent = data.title;
@@ -4456,7 +4458,7 @@ const UI = {
       const label = again.querySelector('div');
       if (label) {
         if (data.mode === 'versus') label.innerHTML = t('result.rematch') + '<small>' + t('result.rematchSub') + '</small>';
-        else if (data.mode === 'training') label.innerHTML = t('result.again') + '<small>vs RabbitRobot</small>';
+        else if (data.mode === 'training') label.innerHTML = t('result.again') + '<small>' + tOr('result.trainAgainSub', 'vs RabbitRobot') + '</small>';
         else label.textContent = t('result.again');
       }
     }

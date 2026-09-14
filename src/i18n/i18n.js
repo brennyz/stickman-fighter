@@ -61,6 +61,9 @@ const I18N = {
       audioMuteAll: 'Alles uit', audioRestore: 'Standaard', audioSfxOnly: 'Alleen geluid',
     },
     result: { again: 'Opnieuw', next: 'Volgend level', menu: 'Hoofdmenu', menuArcade: 'Arcade', rematch: 'Rematch', rematchSub: 'Zelfde vechters',
+      trainAgainSub: 'vs RabbitRobot',
+      advLoseKeep: 'XP en loot van deze run blijven',
+      wavesStart: 'begin',
       xp: '+{xp} XP verdiend · nu Lv {lvl} ({cur}/{need} XP)' },
     settings: {
       title: 'Instellingen', sub: 'Geluid, trilling & HUD — opgeslagen op dit apparaat',
@@ -172,6 +175,9 @@ const I18N = {
       audioMuteAll: 'Mute all', audioRestore: 'Default', audioSfxOnly: 'SFX only',
     },
     result: { again: 'Again', next: 'Next level', menu: 'Main menu', menuArcade: 'Arcade', rematch: 'Rematch', rematchSub: 'Same fighters',
+      trainAgainSub: 'vs RabbitRobot',
+      advLoseKeep: 'XP and loot from this run stay',
+      wavesStart: 'start',
       xp: '+{xp} XP earned · now Lv {lvl} ({cur}/{need} XP)' },
     settings: {
       title: 'Settings', sub: 'Sound, haptics & HUD — saved on this device',
@@ -267,6 +273,9 @@ const I18N = {
       audioHint: 'Lautstärke in Pause — sync mit Einstellungen',
     },
     result: { again: 'Nochmal', next: 'Nächstes Level', menu: 'Hauptmenü', menuArcade: 'Arcade', rematch: 'Revanche', rematchSub: 'Gleiche Kämpfer',
+      trainAgainSub: 'vs RabbitRobot',
+      advLoseKeep: 'XP und Beute von diesem Lauf bleiben',
+      wavesStart: 'Start',
       xp: '+{xp} XP · jetzt Lv {lvl} ({cur}/{need} XP)' },
     settings: {
       title: 'Einstellungen', sub: 'Sound, Vibration & HUD — auf diesem Gerät gespeichert',
@@ -348,6 +357,9 @@ const I18N = {
       audioHint: 'Volume en pause — sync avec Options',
     },
     result: { again: 'Rejouer', next: 'Niveau suivant', menu: 'Menu principal', menuArcade: 'Arcade', rematch: 'Revanche', rematchSub: 'Mêmes combattants',
+      trainAgainSub: 'vs RabbitRobot',
+      advLoseKeep: 'XP et butin de cette run restent',
+      wavesStart: 'début',
       xp: '+{xp} XP · Lv {lvl} ({cur}/{need} XP)' },
     settings: {
       title: 'Options', sub: 'Son, vibrations & HUD — sauvegardé sur cet appareil',
@@ -429,6 +441,9 @@ const I18N = {
       audioHint: 'Volumen en pausa — sync con Opciones',
     },
     result: { again: 'Otra vez', next: 'Siguiente nivel', menu: 'Menú principal', menuArcade: 'Arcade', rematch: 'Revancha', rematchSub: 'Mismos luchadores',
+      trainAgainSub: 'vs RabbitRobot',
+      advLoseKeep: 'XP y botín de esta run se quedan',
+      wavesStart: 'inicio',
       xp: '+{xp} XP · Lv {lvl} ({cur}/{need} XP)' },
     settings: {
       title: 'Opciones', sub: 'Sonido, vibración y HUD — guardado en este dispositivo',

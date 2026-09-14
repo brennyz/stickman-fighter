@@ -73,6 +73,9 @@ function seedNlGameStrings() {
   if (!I18N.nl.result) I18N.nl.result = {};
   Object.assign(I18N.nl.result, {
     advWin: 'GEWONNEN!', advLose: 'VERLOREN', trainWin: 'KAMPIOEN!', trainLose: 'ROBOT WINT...',
+    advLoseKeep: 'XP en loot van deze run blijven',
+    trainAgainSub: 'vs RabbitRobot',
+    wavesStart: 'begin',
     vsP1Win: 'SPELER 1 WINT!', vsP2Win: 'SPELER 2 WINT!', wallRecord: 'NIEUW RECORD!', wallTime: 'TIJD IS OM!',
     matsRecord: 'RECORD!', matsDone: 'Goed gedaan!',
     perfectRun: 'Perfecte run — hou je HP hoog!',
@@ -1012,6 +1015,9 @@ const CATALOG_EN = {
   pickup: { heal: '+HP', rage: 'RAGE', energy: 'ENERGY', shield: 'SHIELD' },
   result: {
     advWin: 'VICTORY!', advLose: 'YOU LOST...', trainWin: 'CHAMPION!', trainLose: 'ROBOT WINS...',
+    advLoseKeep: 'XP and loot from this run stay',
+    trainAgainSub: 'vs RabbitRobot',
+    wavesStart: 'start',
     vsP1Win: 'PLAYER 1 WINS!', vsP2Win: 'PLAYER 2 WINS!', wallRecord: 'NEW RECORD!', wallTime: "TIME'S UP!",
     matsRecord: 'NEW RECORD!', matsDone: 'Well done!',
     perfectRun: 'Perfect run — keep HP high!',
@@ -1899,6 +1905,9 @@ const CATALOG_DE = {
   },
   result: {
     advWin: 'GEWONNEN!', advLose: 'VERLOREN', trainWin: 'MEISTER!', trainLose: 'ROBOT GEWINNT...',
+    advLoseKeep: 'XP und Beute von diesem Lauf bleiben',
+    trainAgainSub: 'vs RabbitRobot',
+    wavesStart: 'Start',
     vsP1Win: 'SPIELER 1 GEWINNT!', vsP2Win: 'SPIELER 2 GEWINNT!', wallRecord: 'NEUER REKORD!', wallTime: 'ZEIT UM!',
     matsRecord: 'NEUER REKORD!', matsDone: 'Gut gemacht!',
   },
@@ -2000,6 +2009,9 @@ const CATALOG_FR = {
   },
   result: {
     advWin: 'VICTOIRE !', advLose: 'DÉFAITE...', trainWin: 'CHAMPION !', trainLose: 'ROBOT GAGNE...',
+    advLoseKeep: 'XP et butin de cette run restent',
+    trainAgainSub: 'vs RabbitRobot',
+    wavesStart: 'début',
     vsP1Win: 'JOUEUR 1 GAGNE !', vsP2Win: 'JOUEUR 2 GAGNE !', wallRecord: 'NOUVEAU RECORD !', wallTime: 'FIN DU TEMPS !',
     matsRecord: 'NOUVEAU RECORD !', matsDone: 'Bien joué !',
   },
@@ -2101,6 +2113,9 @@ const CATALOG_ES = {
   },
   result: {
     advWin: '¡VICTORIA!', advLose: 'DERROTA...', trainWin: '¡CAMPEÓN!', trainLose: 'ROBOT GANA...',
+    advLoseKeep: 'XP y botín de esta run se quedan',
+    trainAgainSub: 'vs RabbitRobot',
+    wavesStart: 'inicio',
     vsP1Win: '¡JUGADOR 1 GANA!', vsP2Win: '¡JUGADOR 2 GANA!', wallRecord: '¡NUEVO RÉCORD!', wallTime: '¡SE ACABÓ EL TIEMPO!',
     matsRecord: '¡NUEVO RÉCORD!', matsDone: '¡Bien hecho!',
   },

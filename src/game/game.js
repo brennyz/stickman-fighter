@@ -897,32 +897,7 @@ class Game {
         || (typeof shouldTriggerSatan === 'function' && shouldTriggerSatan(lv, diff));
       const heatDanger = failsNow === SATAN_DANGER_FAILS;
       persist();
-      if (gotMaster) {
-        const self = this;
-        setTimeout(() => {
-          try {
-            if (!gameUiTimerOk(self, { allowOver: true })) return;
-            UI.toast(t('toast.masterBuffGain'), 3800, { tone: 'ok' });
-          } catch (_) {}
-        }, 1500);
-      }
-      if (heatDanger) {
-        const self = this;
-        setTimeout(() => {
-          try {
-            if (!gameUiTimerOk(self, { allowOver: true })) return;
-            UI.toast(t('toast.satanHeatDanger'), 4200, { tone: 'danger' });
-          } catch (_) {}
-        }, gotMaster ? 3200 : 1500);
-      } else if (satanSoon) {
-        const self = this;
-        setTimeout(() => {
-          try {
-            if (!gameUiTimerOk(self, { allowOver: true })) return;
-            UI.toast(t('toast.satanComingNext'), 4200, { tone: 'danger' });
-          } catch (_) {}
-        }, gotMaster ? 3200 : 1500);
-      }
+      // Heat / master already land on the VERLOREN result tip — late toasts stuck on that screen.
       AudioSys.sfx('lose');
       this.banner(t('banner.lost'), 2, '#ff6b6b', 50);
     }
@@ -939,6 +914,10 @@ class Game {
         if (diff !== 'normal') {
           base = t('result.advDiffLine', { diff: advDiffLabel(diff) }) + base;
         }
+        if (!win) {
+          const keep = tOr('result.advLoseKeep', 'XP en loot van deze run blijven');
+          if (keep) base = keep + ' · ' + base;
+        }
         if (masterBuffActive(lv, diff) && !win) base += t('result.masterBuffActive');
         if (this.gambleRoll && this.gambleRoll.outcome !== 'neutral') {
           base += t('result.gambleLine', {
@@ -954,7 +933,7 @@ class Game {
         : (stars >= 3 ? t('result.perfectRun') : (stars > prevStars
         ? t('result.starImproved', { stars, prev: prevStars })
         : t('result.pickupsHelp', { hint: starHintLine() })))) : (() => {
-        const prog = this.waveIdx >= 0 ? t('result.wavesProg', { cur: this.waveIdx + 1, total: this.level.waves.length }) : 'start';
+        const prog = this.waveIdx >= 0 ? t('result.wavesProg', { cur: this.waveIdx + 1, total: this.level.waves.length }) : tOr('result.wavesStart', 'begin');
         const failsNow = advFailCount(lv, diff);
         let heatTip = '';
         if (failsNow >= SATAN_FAIL_THRESHOLD && typeof shouldTriggerSatan === 'function' && shouldTriggerSatan(lv, diff)) {

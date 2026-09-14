@@ -323,9 +323,9 @@ const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const VERSION_UPDATE_SAVE_KEY = 'stickfighter_version_update_save_v1';
 const VERSION_UPDATE_FLAG_KEY = 'stickfighter_version_update_flag_v1';
 const SAVE_EXPORT_SCHEMA = 3;
-const APP_VERSION = '1.18.161';
+const APP_VERSION = '1.18.163';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 371;
+const SW_CACHE_REV = 373;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', petCoins: 0, dex: {}, summons: {}, pets: {}, activePet: null,
   eggPets: {}, activeEggPet: null, eggDaily: null,
   chestDaily: null, chestWeapons: {},
@@ -2005,6 +2005,9 @@ const I18N = {
       audioMuteAll: 'Alles uit', audioRestore: 'Standaard', audioSfxOnly: 'Alleen geluid',
     },
     result: { again: 'Opnieuw', next: 'Volgend level', menu: 'Hoofdmenu', menuArcade: 'Arcade', rematch: 'Rematch', rematchSub: 'Zelfde vechters',
+      trainAgainSub: 'vs RabbitRobot',
+      advLoseKeep: 'XP en loot van deze run blijven',
+      wavesStart: 'begin',
       xp: '+{xp} XP verdiend · nu Lv {lvl} ({cur}/{need} XP)' },
     settings: {
       title: 'Instellingen', sub: 'Geluid, trilling & HUD — opgeslagen op dit apparaat',
@@ -2116,6 +2119,9 @@ const I18N = {
       audioMuteAll: 'Mute all', audioRestore: 'Default', audioSfxOnly: 'SFX only',
     },
     result: { again: 'Again', next: 'Next level', menu: 'Main menu', menuArcade: 'Arcade', rematch: 'Rematch', rematchSub: 'Same fighters',
+      trainAgainSub: 'vs RabbitRobot',
+      advLoseKeep: 'XP and loot from this run stay',
+      wavesStart: 'start',
       xp: '+{xp} XP earned · now Lv {lvl} ({cur}/{need} XP)' },
     settings: {
       title: 'Settings', sub: 'Sound, haptics & HUD — saved on this device',
@@ -2211,6 +2217,9 @@ const I18N = {
       audioHint: 'Lautstärke in Pause — sync mit Einstellungen',
     },
     result: { again: 'Nochmal', next: 'Nächstes Level', menu: 'Hauptmenü', menuArcade: 'Arcade', rematch: 'Revanche', rematchSub: 'Gleiche Kämpfer',
+      trainAgainSub: 'vs RabbitRobot',
+      advLoseKeep: 'XP und Beute von diesem Lauf bleiben',
+      wavesStart: 'Start',
       xp: '+{xp} XP · jetzt Lv {lvl} ({cur}/{need} XP)' },
     settings: {
       title: 'Einstellungen', sub: 'Sound, Vibration & HUD — auf diesem Gerät gespeichert',
@@ -2292,6 +2301,9 @@ const I18N = {
       audioHint: 'Volume en pause — sync avec Options',
     },
     result: { again: 'Rejouer', next: 'Niveau suivant', menu: 'Menu principal', menuArcade: 'Arcade', rematch: 'Revanche', rematchSub: 'Mêmes combattants',
+      trainAgainSub: 'vs RabbitRobot',
+      advLoseKeep: 'XP et butin de cette run restent',
+      wavesStart: 'début',
       xp: '+{xp} XP · Lv {lvl} ({cur}/{need} XP)' },
     settings: {
       title: 'Options', sub: 'Son, vibrations & HUD — sauvegardé sur cet appareil',
@@ -2373,6 +2385,9 @@ const I18N = {
       audioHint: 'Volumen en pausa — sync con Opciones',
     },
     result: { again: 'Otra vez', next: 'Siguiente nivel', menu: 'Menú principal', menuArcade: 'Arcade', rematch: 'Revancha', rematchSub: 'Mismos luchadores',
+      trainAgainSub: 'vs RabbitRobot',
+      advLoseKeep: 'XP y botín de esta run se quedan',
+      wavesStart: 'inicio',
       xp: '+{xp} XP · Lv {lvl} ({cur}/{need} XP)' },
     settings: {
       title: 'Opciones', sub: 'Sonido, vibración y HUD — guardado en este dispositivo',
@@ -11801,6 +11816,9 @@ function seedNlGameStrings() {
   if (!I18N.nl.result) I18N.nl.result = {};
   Object.assign(I18N.nl.result, {
     advWin: 'GEWONNEN!', advLose: 'VERLOREN', trainWin: 'KAMPIOEN!', trainLose: 'ROBOT WINT...',
+    advLoseKeep: 'XP en loot van deze run blijven',
+    trainAgainSub: 'vs RabbitRobot',
+    wavesStart: 'begin',
     vsP1Win: 'SPELER 1 WINT!', vsP2Win: 'SPELER 2 WINT!', wallRecord: 'NIEUW RECORD!', wallTime: 'TIJD IS OM!',
     matsRecord: 'RECORD!', matsDone: 'Goed gedaan!',
     perfectRun: 'Perfecte run — hou je HP hoog!',
@@ -12740,6 +12758,9 @@ const CATALOG_EN = {
   pickup: { heal: '+HP', rage: 'RAGE', energy: 'ENERGY', shield: 'SHIELD' },
   result: {
     advWin: 'VICTORY!', advLose: 'YOU LOST...', trainWin: 'CHAMPION!', trainLose: 'ROBOT WINS...',
+    advLoseKeep: 'XP and loot from this run stay',
+    trainAgainSub: 'vs RabbitRobot',
+    wavesStart: 'start',
     vsP1Win: 'PLAYER 1 WINS!', vsP2Win: 'PLAYER 2 WINS!', wallRecord: 'NEW RECORD!', wallTime: "TIME'S UP!",
     matsRecord: 'NEW RECORD!', matsDone: 'Well done!',
     perfectRun: 'Perfect run — keep HP high!',
@@ -13627,6 +13648,9 @@ const CATALOG_DE = {
   },
   result: {
     advWin: 'GEWONNEN!', advLose: 'VERLOREN', trainWin: 'MEISTER!', trainLose: 'ROBOT GEWINNT...',
+    advLoseKeep: 'XP und Beute von diesem Lauf bleiben',
+    trainAgainSub: 'vs RabbitRobot',
+    wavesStart: 'Start',
     vsP1Win: 'SPIELER 1 GEWINNT!', vsP2Win: 'SPIELER 2 GEWINNT!', wallRecord: 'NEUER REKORD!', wallTime: 'ZEIT UM!',
     matsRecord: 'NEUER REKORD!', matsDone: 'Gut gemacht!',
   },
@@ -13728,6 +13752,9 @@ const CATALOG_FR = {
   },
   result: {
     advWin: 'VICTOIRE !', advLose: 'DÉFAITE...', trainWin: 'CHAMPION !', trainLose: 'ROBOT GAGNE...',
+    advLoseKeep: 'XP et butin de cette run restent',
+    trainAgainSub: 'vs RabbitRobot',
+    wavesStart: 'début',
     vsP1Win: 'JOUEUR 1 GAGNE !', vsP2Win: 'JOUEUR 2 GAGNE !', wallRecord: 'NOUVEAU RECORD !', wallTime: 'FIN DU TEMPS !',
     matsRecord: 'NOUVEAU RECORD !', matsDone: 'Bien joué !',
   },
@@ -13829,6 +13856,9 @@ const CATALOG_ES = {
   },
   result: {
     advWin: '¡VICTORIA!', advLose: 'DERROTA...', trainWin: '¡CAMPEÓN!', trainLose: 'ROBOT GANA...',
+    advLoseKeep: 'XP y botín de esta run se quedan',
+    trainAgainSub: 'vs RabbitRobot',
+    wavesStart: 'inicio',
     vsP1Win: '¡JUGADOR 1 GANA!', vsP2Win: '¡JUGADOR 2 GANA!', wallRecord: '¡NUEVO RÉCORD!', wallTime: '¡SE ACABÓ EL TIEMPO!',
     matsRecord: '¡NUEVO RÉCORD!', matsDone: '¡Bien hecho!',
   },
@@ -25683,32 +25713,7 @@ class Game {
         || (typeof shouldTriggerSatan === 'function' && shouldTriggerSatan(lv, diff));
       const heatDanger = failsNow === SATAN_DANGER_FAILS;
       persist();
-      if (gotMaster) {
-        const self = this;
-        setTimeout(() => {
-          try {
-            if (!gameUiTimerOk(self, { allowOver: true })) return;
-            UI.toast(t('toast.masterBuffGain'), 3800, { tone: 'ok' });
-          } catch (_) {}
-        }, 1500);
-      }
-      if (heatDanger) {
-        const self = this;
-        setTimeout(() => {
-          try {
-            if (!gameUiTimerOk(self, { allowOver: true })) return;
-            UI.toast(t('toast.satanHeatDanger'), 4200, { tone: 'danger' });
-          } catch (_) {}
-        }, gotMaster ? 3200 : 1500);
-      } else if (satanSoon) {
-        const self = this;
-        setTimeout(() => {
-          try {
-            if (!gameUiTimerOk(self, { allowOver: true })) return;
-            UI.toast(t('toast.satanComingNext'), 4200, { tone: 'danger' });
-          } catch (_) {}
-        }, gotMaster ? 3200 : 1500);
-      }
+      // Heat / master already land on the VERLOREN result tip — late toasts stuck on that screen.
       AudioSys.sfx('lose');
       this.banner(t('banner.lost'), 2, '#ff6b6b', 50);
     }
@@ -25725,6 +25730,10 @@ class Game {
         if (diff !== 'normal') {
           base = t('result.advDiffLine', { diff: advDiffLabel(diff) }) + base;
         }
+        if (!win) {
+          const keep = tOr('result.advLoseKeep', 'XP en loot van deze run blijven');
+          if (keep) base = keep + ' · ' + base;
+        }
         if (masterBuffActive(lv, diff) && !win) base += t('result.masterBuffActive');
         if (this.gambleRoll && this.gambleRoll.outcome !== 'neutral') {
           base += t('result.gambleLine', {
@@ -25740,7 +25749,7 @@ class Game {
         : (stars >= 3 ? t('result.perfectRun') : (stars > prevStars
         ? t('result.starImproved', { stars, prev: prevStars })
         : t('result.pickupsHelp', { hint: starHintLine() })))) : (() => {
-        const prog = this.waveIdx >= 0 ? t('result.wavesProg', { cur: this.waveIdx + 1, total: this.level.waves.length }) : 'start';
+        const prog = this.waveIdx >= 0 ? t('result.wavesProg', { cur: this.waveIdx + 1, total: this.level.waves.length }) : tOr('result.wavesStart', 'begin');
         const failsNow = advFailCount(lv, diff);
         let heatTip = '';
         if (failsNow >= SATAN_FAIL_THRESHOLD && typeof shouldTriggerSatan === 'function' && shouldTriggerSatan(lv, diff)) {
@@ -31805,6 +31814,7 @@ const UI = {
           syncPlayLayer();
           return;
         }
+        try { this.clearToasts(); } catch (_) {}
         try { clearScreensForPlay(); } catch (_) {}
       } else {
         const target = document.getElementById(id);
@@ -35042,6 +35052,7 @@ const UI = {
     if (state === 'menu' && game && !game.over) return;
     try {
     this.lastResult = data;
+    try { this.clearToasts(); } catch (_) {}
     const title = document.getElementById('resTitle');
     if (!title) throw new Error('result DOM missing');
     title.textContent = data.title;
@@ -35090,7 +35101,7 @@ const UI = {
       const label = again.querySelector('div');
       if (label) {
         if (data.mode === 'versus') label.innerHTML = t('result.rematch') + '<small>' + t('result.rematchSub') + '</small>';
-        else if (data.mode === 'training') label.innerHTML = t('result.again') + '<small>vs RabbitRobot</small>';
+        else if (data.mode === 'training') label.innerHTML = t('result.again') + '<small>' + tOr('result.trainAgainSub', 'vs RabbitRobot') + '</small>';
         else label.textContent = t('result.again');
       }
     }
@@ -35149,6 +35160,7 @@ function startGame(mode, opts) {
     return;
   }
   try { primePlayInput(false); } catch (_) {}
+  try { if (typeof UI !== 'undefined' && UI.clearToasts) UI.clearToasts(); } catch (_) {}
   window.__sfLoopErr = false;
   try { Input.releaseAll(); } catch (_) {}
   Input.dualMode = false;
