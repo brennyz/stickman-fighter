@@ -1613,6 +1613,7 @@ function applyLangStaticScreens() {
       : undefined;
     if (title) title.textContent = t(titleKey);
     if (sub) sub.textContent = t(subKey, subParams);
+    if (title) btn.setAttribute('aria-label', t(titleKey));
   }
 
   document.querySelectorAll('.sub-home-btn').forEach((btn) => {
@@ -1950,6 +1951,15 @@ function applyLang() {
   }
   try { if (typeof syncTitleGateCopy === 'function') syncTitleGateCopy(); } catch (_) {}
   try { if (typeof updateNetStatus === 'function') updateNetStatus(); } catch (_) {}
+  // Keep hub aria in lockstep with the visible title (lang-bar click + renderMenu).
+  const buildingsHomeFinal = document.getElementById('btnBuildings');
+  if (buildingsHomeFinal) {
+    const visible = buildingsHomeFinal.querySelector('.hub-tile-title');
+    buildingsHomeFinal.setAttribute(
+      'aria-label',
+      (visible && visible.textContent.trim()) || t('hub.buildings')
+    );
+  }
 }
 
 function initLang() {

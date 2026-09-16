@@ -338,9 +338,9 @@ const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const VERSION_UPDATE_SAVE_KEY = 'stickfighter_version_update_save_v1';
 const VERSION_UPDATE_FLAG_KEY = 'stickfighter_version_update_flag_v1';
 const SAVE_EXPORT_SCHEMA = 3;
-const APP_VERSION = '1.18.175';
+const APP_VERSION = '1.18.176';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 385;
+const SW_CACHE_REV = 386;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', petCoins: 0, dex: {}, summons: {}, pets: {}, activePet: null,
   eggPets: {}, activeEggPet: null, eggDaily: null,
   chestDaily: null, chestWeapons: {},
@@ -3925,6 +3925,7 @@ function applyLangStaticScreens() {
       : undefined;
     if (title) title.textContent = t(titleKey);
     if (sub) sub.textContent = t(subKey, subParams);
+    if (title) btn.setAttribute('aria-label', t(titleKey));
   }
 
   document.querySelectorAll('.sub-home-btn').forEach((btn) => {
@@ -4262,6 +4263,15 @@ function applyLang() {
   }
   try { if (typeof syncTitleGateCopy === 'function') syncTitleGateCopy(); } catch (_) {}
   try { if (typeof updateNetStatus === 'function') updateNetStatus(); } catch (_) {}
+  // Keep hub aria in lockstep with the visible title (lang-bar click + renderMenu).
+  const buildingsHomeFinal = document.getElementById('btnBuildings');
+  if (buildingsHomeFinal) {
+    const visible = buildingsHomeFinal.querySelector('.hub-tile-title');
+    buildingsHomeFinal.setAttribute(
+      'aria-label',
+      (visible && visible.textContent.trim()) || t('hub.buildings')
+    );
+  }
 }
 
 function initLang() {
@@ -48314,7 +48324,11 @@ const UI = {
     });
     const buildingsTile = document.getElementById('btnBuildings');
     if (buildingsTile) {
-      buildingsTile.setAttribute('aria-label', t('hub.buildings'));
+      const visible = buildingsTile.querySelector('.hub-tile-title');
+      buildingsTile.setAttribute(
+        'aria-label',
+        (visible && visible.textContent.trim()) || t('hub.buildings')
+      );
     }
     const summonTile = document.getElementById('btnSummons');
     if (summonTile) {

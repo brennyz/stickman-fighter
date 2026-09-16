@@ -145,6 +145,7 @@ Schrijf **1–3 regels** per sessie: datum, d#, wat, versie.
 
 | Datum (UTC) | d# | Update |
 |-------------|-----|--------|
+| 2026-09-16 | — | **PLAYTEST HARDEN C6 P1** #311: 390px HUD/hint vs pads; EN Factories aria lockstep with visible title (lang-bar click); Back to menu. **v1.18.176 / SW 386**. |
 | 2026-09-16 | — | **PLAYTEST HARDEN C6** #311: banners slim top-strip (no mid-field MASTER/WAVE); 390px hint/pause/next-wave above strike pads; EN Factories aria + Back to menu on leftover HOME buttons. **v1.18.175 / SW 385**. |
 | 2026-09-16 | — | **PLAYTEST HARDEN C3+C4** #311: Stip-pin on chest (no feet-cape orphan); unbuilt Fabrieken show 20 PC not 0/1 Vonken. **v1.18.174 / SW 384**. |
 | 2026-09-16 | — | **PLAYTEST HARDEN C1+C2** #311: Verse versie in Opties→Hulp (geen debug-rommel); auto-apply + toast; summons Overslaan + geen nested X-scroll. **v1.18.173 / SW 383**. |

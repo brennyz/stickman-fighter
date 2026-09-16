@@ -2084,7 +2084,11 @@ const UI = {
     });
     const buildingsTile = document.getElementById('btnBuildings');
     if (buildingsTile) {
-      buildingsTile.setAttribute('aria-label', t('hub.buildings'));
+      const visible = buildingsTile.querySelector('.hub-tile-title');
+      buildingsTile.setAttribute(
+        'aria-label',
+        (visible && visible.textContent.trim()) || t('hub.buildings')
+      );
     }
     const summonTile = document.getElementById('btnSummons');
     if (summonTile) {

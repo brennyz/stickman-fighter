@@ -74,7 +74,14 @@ async function run() {
         .map((el) => (el.textContent || '').trim())
         .filter(Boolean);
       const leftover = [adv, collect, weapons, settings, dexSum, dexTypes, eggBtn, exportHint, musicName, sfxName, profileAria, buildings, buildingsAria].join(' ');
-      return { lang, adv, collect, help, weapons, settings, dexSum, dexTypes, eggBtn, exportHint, musicName, sfxName, profileAria, summons, buildings, buildingsAria, backHome, tAdv, tHud, leftover };
+      const clickEn = document.querySelector('#menuLangBar [data-lang="en"]');
+      if (clickEn && typeof clickEn.click === 'function') clickEn.click();
+      const afterClick = {
+        lang: (typeof save !== 'undefined' && save.lang) || '',
+        buildings: (document.querySelector('#btnBuildings .hub-tile-title') || {}).textContent || '',
+        buildingsAria: (document.getElementById('btnBuildings') || {}).getAttribute('aria-label') || '',
+      };
+      return { lang, adv, collect, help, weapons, settings, dexSum, dexTypes, eggBtn, exportHint, musicName, sfxName, profileAria, summons, buildings, buildingsAria, backHome, tAdv, tHud, leftover, afterClick };
     }
     const en = snap('en');
     const de = snap('de');
@@ -88,7 +95,10 @@ async function run() {
       && /Profile/i.test(en.profileAria)
       && /Factor/i.test(en.buildings) && /Factor/i.test(en.buildingsAria)
       && !/Fabriek/i.test(en.buildings + ' ' + en.buildingsAria)
-      && en.backHome.length > 0 && en.backHome.every((s) => /Back to menu/i.test(s));
+      && en.backHome.length > 0 && en.backHome.every((s) => /Back to menu/i.test(s))
+      && /Factor/i.test((en.afterClick && en.afterClick.buildings) || '')
+      && /Factor/i.test((en.afterClick && en.afterClick.buildingsAria) || '')
+      && !/Fabriek/i.test(((en.afterClick && en.afterClick.buildings) || '') + ' ' + ((en.afterClick && en.afterClick.buildingsAria) || ''));
     const deOk = /Abenteuer/i.test(de.adv) && /Sammlung/i.test(de.collect)
       && /Waffen/i.test(de.weapons) && /Einstellungen/i.test(de.settings)
       && /Tipp/i.test(de.help) && !DUTCH.test(de.leftover)

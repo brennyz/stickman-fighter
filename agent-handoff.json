@@ -13,14 +13,14 @@
     "tunnelBookmark": "https://stickfighter-ipad-b75e.loca.lt/ipad.html"
   },
   "codeTruth": {
-    "appVersion": "1.18.175",
-    "swCache": "stickfighter-app-v385",
-    "gameJsQuery": "game.js?v=385",
-    "cssQuery": "styles/main.css?v=385",
+    "appVersion": "1.18.176",
+    "swCache": "stickfighter-app-v386",
+    "gameJsQuery": "game.js?v=386",
+    "cssQuery": "styles/main.css?v=386",
     "featureBranch": "cursor/playtest-harden-cycles-a78c",
     "pushBlocked": null,
     "shareUrl": "https://brennyz.github.io/stickman-fighter/speel.html",
-    "note": "PLAYTEST HARDEN #311 C1–C6: Verse versie path, summon skip, pin-on-chest, unbuilt PC cost, HUD/hint clearance, EN Factories + Back to menu. v1.18.175 / SW 385. Draft, not main.",
+    "note": "PLAYTEST HARDEN #311 C1–C6 P1: HUD/hint clearance + EN Factories aria lockstep + Back to menu. v1.18.176 / SW 386. Draft, not main.",
     "updated": "2026-09-16T14:57:43Z",
     "localMainHead": "aa24036e617729d9893b6520902ca190afb5d0d7",
     "remoteMainHead": "a7a4b74ed34c3e8c131dc4e2a6cf4579bfca8631"

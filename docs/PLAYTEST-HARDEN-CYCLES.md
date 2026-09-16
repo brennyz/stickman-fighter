@@ -96,7 +96,7 @@ Adventure + Training feel · `#fomoRitual` (todayKey / streak / missions) · EN/
 - [x] Fixes on this branch (if any)
 - [x] Smoke: `smoke:training` · `smoke:adventure` · `smoke:fomo-pra` · `smoke:i18n-locale` · `smoke:i18n-switch` · `smoke:toast-queue` · `smoke:aim-tutorial`
 
-**Open P0/P1:** Cycle 6 P1 — MASTER BUFF/WAVE banners at 31% covered the playfield; next-wave chips + pause ring sat on 390px strike pads. **Fix:** banners in a slim top strip (cap 26px on phones); skip redundant WAVE n/m banner on portrait; hint / pause ring / next-wave sit above `touchClusterTopY`. EN a11y: `#btnBuildings` aria + leftover `.sub-home-btn` now use `t()`.
+**Open P0/P1:** Cycle 6 P1 — MASTER BUFF/WAVE banners at 31% covered the playfield; next-wave chips + pause ring sat on 390px strike pads. **Fix:** banners in a slim top strip (cap 26px on phones); skip redundant WAVE n/m banner on portrait; hint / pause ring / next-wave sit above `touchClusterTopY`. EN a11y: `#btnBuildings` aria stays locked to the visible title after lang-bar click (not only `setLang()`).
 
 ## Baseline smoke (2026-09-16, no findings yet)
 
