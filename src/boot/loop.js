@@ -580,6 +580,7 @@ function updateNetStatus(ev) {
 window.addEventListener('online', updateNetStatus);
 window.addEventListener('offline', updateNetStatus);
 window.addEventListener('pageshow', (ev) => {
+  try { tickBuildingsNow(Date.now()); } catch (_) {}
   if (ev.persisted) {
     try { cancelGambleStart(); } catch (_) {}
     try { Input.releaseAll(); } catch (_) {}

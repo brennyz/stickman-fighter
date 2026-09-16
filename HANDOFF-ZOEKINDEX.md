@@ -23,7 +23,7 @@ rg -l "handoff|coinrun|projAimVelocity|charSelectScreen|ASSET-STYLE" .
 | Android / Play GO | docs | — | `npm run android:go`, `native/android/GO.md`, `docs/store/play-console-stappen.md` |
 | Grokbot Android-test | docs | — | `docs/GROKBOT-ANDROID-PROMPT.md` — plak PROMPT in Grokbot |
 | **Season overlays (jungle + halloween)** | 1.18.164 | — | `docs/season-overlay-slots.md`, `assets/seasons/`, `#seasonOverlay` |
-| **Buildings powers + timed loot (4/4)** | 1.18.165 | this branch | binds #292 ids `stick_lighter`…`echo_whistle` · factories/wallet · `src/data/buildings-powers.js` |
+| **Buildings powers depth + timed 2.0** | 1.18.168 | this branch | identities 0–4 in `src/systems/buildings-combat.js` · rates/table `docs/BUILDINGS-POWERS.md` · #292 tick/collect |
 | **Gear loadout (5 slots)** | 1.18.164 | this branch | `src/data/gear.js`, `docs/GEAR-SYSTEM.md`, `#gearScreen` |
 | **Season overlay (CSS + story)** | 1.18.164 | — | `SEASON-OVERLAY.md`, `src/systems/seasons.js`, `styles/seasons.css` |
 | **Mik-indicator** kleur + radius (Options) | 1.18.164 | — | `save.aimColor` / `save.aimRadius`, `drawPlayerAimIndicator` |
