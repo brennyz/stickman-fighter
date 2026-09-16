@@ -1,0 +1,207 @@
+/* Season overlay motion — Halloween required, jungle mild.
+   Own file so #303 can unify seasons.css + season-overlays.css without a fight.
+   GPU-cheap: transform + opacity only (except motif background-position drift).
+   Does not change overlay show/hide. */
+
+#seasonOverlay,
+.season-overlay,
+#seasonOverlay [data-season-slot],
+.season-overlay [data-season-slot],
+.season-art-slot,
+.season-vignette {
+  pointer-events: none !important;
+}
+
+/* ── Keyframes ─────────────────────────────────────────────────────────── */
+
+@keyframes sf-season-sway-tl {
+  0%, 100% { transform: translate3d(0, 0, 0) rotate(-1.2deg); }
+  50% { transform: translate3d(1px, 2px, 0) rotate(2.4deg); }
+}
+
+@keyframes sf-season-sway-tr {
+  0%, 100% { transform: translate3d(0, 0, 0) rotate(1.4deg); }
+  50% { transform: translate3d(-1px, 2px, 0) rotate(-2.6deg); }
+}
+
+@keyframes sf-season-sway-bl {
+  0%, 100% { transform: translate3d(0, 0, 0) rotate(-0.9deg); }
+  50% { transform: translate3d(2px, -1px, 0) rotate(1.8deg); }
+}
+
+@keyframes sf-season-sway-br {
+  0%, 100% { transform: translate3d(0, 0, 0) rotate(1deg); }
+  50% { transform: translate3d(-2px, -1px, 0) rotate(-2.2deg); }
+}
+
+@keyframes sf-season-flicker {
+  0%, 100% { opacity: 0.82; }
+  14% { opacity: 1; }
+  28% { opacity: 0.88; }
+  42% { opacity: 0.96; }
+  61% { opacity: 0.84; }
+  79% { opacity: 1; }
+}
+
+@keyframes sf-season-vignette-flicker {
+  0%, 100% { opacity: 0.3; }
+  35% { opacity: 0.4; }
+  58% { opacity: 0.33; }
+}
+
+@keyframes sf-season-bob-banner {
+  0%, 100% { transform: translate3d(-50%, 0, 0); }
+  50% { transform: translate3d(-50%, -2px, 0); }
+}
+
+@keyframes sf-season-bob-ground {
+  0%, 100% { transform: translate3d(0, 0, 0); }
+  50% { transform: translate3d(0, 2px, 0); }
+}
+
+@keyframes sf-season-motif-drift {
+  0%, 100% { background-position: 55% 40%; }
+  50% { background-position: 40% 62%; }
+}
+
+@keyframes sf-season-vine-sway-tl {
+  0%, 100% { transform: translate3d(0, 0, 0) rotate(-0.6deg); }
+  50% { transform: translate3d(1px, 1px, 0) rotate(0.8deg); }
+}
+
+@keyframes sf-season-vine-sway-tr {
+  0%, 100% { transform: translate3d(0, 0, 0) rotate(0.5deg); }
+  50% { transform: translate3d(-1px, 1px, 0) rotate(-0.7deg); }
+}
+
+@keyframes sf-season-vine-sway-bl {
+  0%, 100% { transform: translate3d(0, 0, 0) rotate(-0.4deg); }
+  50% { transform: translate3d(1px, -1px, 0) rotate(0.6deg); }
+}
+
+@keyframes sf-season-vine-sway-br {
+  0%, 100% { transform: translate3d(0, 0, 0) rotate(0.5deg); }
+  50% { transform: translate3d(-1px, -1px, 0) rotate(-0.6deg); }
+}
+
+/* ── Halloween (required) ──────────────────────────────────────────────── */
+
+[data-season="halloween"] .season-art-tl,
+[data-season="halloween"] [data-season-slot="corner-tl"] {
+  transform-origin: top left;
+  pointer-events: none !important;
+  animation: sf-season-sway-tl 5.8s ease-in-out infinite;
+  animation-delay: 0s;
+}
+
+[data-season="halloween"] .season-art-tr,
+[data-season="halloween"] [data-season-slot="corner-tr"] {
+  transform-origin: top right;
+  pointer-events: none !important;
+  animation: sf-season-sway-tr 6.4s ease-in-out infinite;
+  animation-delay: 0.35s;
+}
+
+[data-season="halloween"] .season-art-bl,
+[data-season="halloween"] [data-season-slot="corner-bl"] {
+  transform-origin: bottom left;
+  pointer-events: none !important;
+  animation: sf-season-sway-bl 5.2s ease-in-out infinite;
+  animation-delay: 0.7s;
+}
+
+[data-season="halloween"] .season-art-br,
+[data-season="halloween"] [data-season-slot="corner-br"] {
+  transform-origin: bottom right;
+  pointer-events: none !important;
+  animation:
+    sf-season-sway-br 4.8s ease-in-out infinite,
+    sf-season-flicker 0.72s ease-in-out infinite;
+  animation-delay: 1.05s, 0.12s;
+}
+
+[data-season="halloween"] .season-vignette,
+[data-season="halloween"] [data-season-slot="vignette"] {
+  pointer-events: none !important;
+  animation: sf-season-vignette-flicker 1.15s ease-in-out infinite;
+}
+
+[data-season="halloween"] .season-art-banner,
+[data-season="halloween"] [data-season-slot="banner"] {
+  pointer-events: none !important;
+  animation: sf-season-bob-banner 3.6s ease-in-out infinite;
+}
+
+[data-season="halloween"] .season-art-ground,
+[data-season="halloween"] [data-season-slot="ground-trim"] {
+  pointer-events: none !important;
+  animation: sf-season-bob-ground 4.2s ease-in-out infinite;
+  animation-delay: 0.55s;
+}
+
+[data-season="halloween"] .season-art-motif,
+[data-season="halloween"] [data-season-slot="motif"] {
+  pointer-events: none !important;
+  animation: sf-season-motif-drift 16s ease-in-out infinite;
+}
+
+/* ── Jungle (mild vine sway, same file, cheap) ─────────────────────────── */
+
+[data-season="jungle"] .season-art-tl,
+[data-season="jungle"] [data-season-slot="corner-tl"] {
+  transform-origin: top left;
+  pointer-events: none !important;
+  animation: sf-season-vine-sway-tl 9.2s ease-in-out infinite;
+}
+
+[data-season="jungle"] .season-art-tr,
+[data-season="jungle"] [data-season-slot="corner-tr"] {
+  transform-origin: top right;
+  pointer-events: none !important;
+  animation: sf-season-vine-sway-tr 10s ease-in-out infinite;
+  animation-delay: 0.5s;
+}
+
+[data-season="jungle"] .season-art-bl,
+[data-season="jungle"] [data-season-slot="corner-bl"] {
+  transform-origin: bottom left;
+  pointer-events: none !important;
+  animation: sf-season-vine-sway-bl 8.6s ease-in-out infinite;
+  animation-delay: 1s;
+}
+
+[data-season="jungle"] .season-art-br,
+[data-season="jungle"] [data-season-slot="corner-br"] {
+  transform-origin: bottom right;
+  pointer-events: none !important;
+  animation: sf-season-vine-sway-br 9.6s ease-in-out infinite;
+  animation-delay: 1.4s;
+}
+
+/* Reduced motion: OS pref + in-game Lite FX / reduced-motion class. */
+@media (prefers-reduced-motion: reduce) {
+  [data-season="halloween"] .season-art-slot,
+  [data-season="halloween"] [data-season-slot],
+  [data-season="halloween"] .season-vignette,
+  [data-season="jungle"] .season-art-slot,
+  [data-season="jungle"] [data-season-slot],
+  #seasonOverlay,
+  .season-overlay {
+    animation: none !important;
+    transition: none !important;
+  }
+}
+
+body.reduced-motion [data-season="halloween"] .season-art-slot,
+body.reduced-motion [data-season="halloween"] [data-season-slot],
+body.reduced-motion [data-season="halloween"] .season-vignette,
+body.lite-fx [data-season="halloween"] .season-art-slot,
+body.lite-fx [data-season="halloween"] [data-season-slot],
+body.lite-fx [data-season="halloween"] .season-vignette,
+body.reduced-motion [data-season="jungle"] .season-art-slot,
+body.reduced-motion [data-season="jungle"] [data-season-slot],
+body.lite-fx [data-season="jungle"] .season-art-slot,
+body.lite-fx [data-season="jungle"] [data-season-slot] {
+  animation: none !important;
+  transition: none !important;
+}
