@@ -863,16 +863,18 @@ function artWasp() {
 
 function artSpider() {
   const g = grid();
-  fillEllipse(g, 16, 16, 5, 4, CH.body);
-  fillEllipse(g, 22, 18, 5, 4, CH.dark);
+  fillEllipse(g, 14, 16, 4, 4, CH.body);
+  fillEllipse(g, 21, 17, 6, 5, CH.dark);
   for (const s of [-1, 1]) {
-    fillRect(g, 16 + s * 6, 12, 5, 1, CH.ink);
-    fillRect(g, 16 + s * 7, 15, 6, 1, CH.ink);
-    fillRect(g, 16 + s * 6, 19, 5, 1, CH.ink);
-    fillRect(g, 16 + s * 5, 22, 4, 1, CH.ink);
+    fillRect(g, 14 + s * 5, 11, 2, 4, CH.ink);
+    fillRect(g, 14 + s * 8, 14, 3, 2, CH.ink);
+    fillRect(g, 14 + s * 6, 18, 3, 2, CH.ink);
+    fillRect(g, 14 + s * 5, 21, 2, 3, CH.ink);
   }
-  eyes(g, 14, 15, 1);
-  eyes(g, 17, 15, 1);
+  eyes(g, 12, 15, 1);
+  eyes(g, 15, 15, 1);
+  set(g, 13, 14, CH.eye);
+  set(g, 16, 14, CH.eye);
   return outline(g);
 }
 
@@ -907,16 +909,18 @@ function artBot() {
 
 function artScrapdog() {
   const g = grid();
-  fillRect(g, 12, 16, 12, 6, CH.body);
-  fillRect(g, 6, 15, 7, 6, CH.dark);
-  fillRect(g, 7, 12, 2, 3, CH.ink);
-  fillRect(g, 11, 12, 2, 3, CH.ink);
-  fillRect(g, 23, 17, 5, 2, CH.ink);
-  set(g, 27, 16, CH.orange);
-  fillRect(g, 13, 22, 2, 4, CH.dark);
+  fillEllipse(g, 18, 18, 8, 5, CH.body);
+  fillEllipse(g, 8, 16, 5, 4, CH.dark);
+  fillTri(g, 6, 13, 5, 8, 8, 14, CH.ink);
+  fillTri(g, 10, 13, 12, 8, 12, 14, CH.ink);
+  fillEllipse(g, 6, 17, 2, 2, CH.orange);
+  fillRect(g, 24, 17, 5, 2, CH.ink);
+  set(g, 28, 16, CH.orange);
+  set(g, 16, 16, CH.accent);
+  set(g, 20, 16, CH.accent);
+  fillRect(g, 12, 22, 2, 4, CH.dark);
   fillRect(g, 17, 22, 2, 4, CH.dark);
   fillRect(g, 21, 22, 2, 4, CH.dark);
-  fillEllipse(g, 8, 17, 2, 2, CH.orange);
   return outline(g);
 }
 
@@ -938,11 +942,14 @@ function artYeti() {
   const g = grid();
   fillEllipse(g, 16, 16, 8, 8, CH.body);
   fillEllipse(g, 16, 8, 5, 5, CH.body);
+  fillRect(g, 12, 6, 8, 2, CH.dark);
   fillEllipse(g, 8, 18, 3, 4, CH.dark);
   fillEllipse(g, 24, 18, 3, 4, CH.dark);
   fillEllipse(g, 16, 18, 3, 2, CH.accent);
   eyes(g, 14, 8, 1);
   eyes(g, 18, 8, 1);
+  fillRect(g, 14, 11, 1, 2, CH.accent);
+  fillRect(g, 18, 11, 1, 2, CH.accent);
   fillRect(g, 13, 23, 2, 5, CH.dark);
   fillRect(g, 18, 23, 2, 5, CH.dark);
   return outline(g);
