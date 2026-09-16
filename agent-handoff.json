@@ -40,6 +40,14 @@
   },
   "userWishlist": [
     {
+      "id": "w-20260916T105900",
+      "from": "user",
+      "text": "BUILDINGS UI HARDEN (UX doorontwikkeling): list→detail, collect één tap, duidelijke wallet, power/effect copy. Bind docs/BUILDINGS.md. Draft PR, no merge to main, no Versus.",
+      "status": "open",
+      "updated": "2026-09-16",
+      "notes": "Harden on top of #291/#292. Android-first. Mega-merge only."
+    },
+    {
       "id": "w-20260914T200700",
       "from": "user",
       "text": "Hij laad niet lekker, what is up",

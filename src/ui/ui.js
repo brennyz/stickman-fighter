@@ -1356,6 +1356,10 @@ const UI = {
         return;
       }
       if (active === 'buildingsScreen') {
+        if (this.buildingsPane === 'detail') {
+          try { this.buildingsShowList(); } catch (_) { this.buildingsPane = 'list'; this.renderBuildings(); }
+          return;
+        }
         try { this.stopBuildingsTick(); } catch (_) {}
         this.renderMenu();
         this.show('menuScreen');
@@ -3543,6 +3547,7 @@ const UI = {
     });
   },
 
+  /** Fallback stub. Live list→detail lives in src/ui/buildings-ui.js (loaded after this file). */
   openBuildings() {
     this.safeOpen('buildingsScreen', () => this.renderBuildings(), {
       msg: (typeof tOr === 'function') ? tOr('buildings.loadFail', 'Fabrieken laden mislukt') : 'Fabrieken laden mislukt',

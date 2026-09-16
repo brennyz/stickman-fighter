@@ -8,9 +8,11 @@ Mega-merge: **do not merge this branch to `main` alone.**
 ## What this PR ships
 
 - HOME hub tile (`data-hub="buildings"`) in the same 2-col style as Arcade / Collectie
-- `#buildingsScreen` list + detail for **5 factories**
-- Per factory: level, lock-by-world (adventure island), timed resource + Collect, Upgrade CTA
-- Adapter `buildingsApi()` — uses live systems if present, otherwise an in-memory stub
+- `#buildingsScreen` **list → detail** for **5 factories** (Android portrait: list first; tap a row for detail)
+- `#buildingsWallet` chips for PC + spark / glue / chip / steam / echo
+- Per factory: short “wat doet dit?” copy from `buildingTooltipModel` (blurb + power rank)
+- Collect = one tap (`Oogsten`) with toast + wallet flash. Upgrade is a **separate step** (not mashed into collect)
+- Adapter `buildingsApi()` — prefers live `BUILDING_IDS` / `buildingCollect`; stub only if those symbols are missing
 
 Share / playtest URL stays **`speel.html`**. No Versus. Android-first (portrait list, detail under).
 
@@ -72,11 +74,12 @@ When `BUILDING_IDS` + `buildingCollect` are present, the HOME screen binds that 
 
 1. Open `speel.html` → SPELEN → HOME (`index.html`).
 2. After Avontuur / Arcade / Collectie, tap **Fabrieken / Buildings**.
-3. List shows 5 factories (Stick-Lighter … Echo-Whistle Mill). Stick-Lighter is unlocked; others lock until that island is open.
-4. Tap a factory → detail: level, stockpile, timer, **Oogsten**, **Upgrade**.
-5. Oogsten credits the factory resource (spark / glue / chip / steam / echo). Upgrade spends pet coins (or **Bouwen** when still unbuilt).
-6. Locked factory: Collect/Upgrade disabled, lock copy names the world.
-7. HOME / Terug returns to KIES JE PAD. Versus tile must stay gone.
+3. Portrait starts on the **list** (5 factories: Stick-Lighter … Echo-Whistle Mill). Stick-Lighter is unlocked; others lock until that island is open.
+4. Wallet chips under the title always show **PC + Vonken / Lijm / Snippers / Stoom / Echo** (readable amounts, including 0).
+5. Tap a factory → **detail**: “Wat doet dit?” blurb + current/next power, hopper bar, **Oogsten** (primary). Upgrade is a second control that opens a confirm step — not a twin collect button.
+6. Oogsten once credits the factory resource (spark / glue / chip / steam / echo); toast `+N` and the matching wallet chip flashes. Empty hopper stays disabled.
+7. Upgrade… → confirm (pet coins + factory resources from `nextCost`). Unbuilt factories use **Bouwen…**. Locked factory: CTAs disabled, lock copy names the world.
+8. ← Overzicht or Back returns to the list; Back on the list returns to KIES JE PAD. Versus tile must stay gone.
 
 Debug without adventure progress: in console
 `save.unlocked = 70; persist(); location.reload()` then all five unlock.

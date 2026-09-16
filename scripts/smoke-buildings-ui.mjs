@@ -34,15 +34,22 @@ must(/id="btnBuildings"/.test(html), 'missing #btnBuildings');
 must(/id="buildingsScreen"/.test(html), 'missing #buildingsScreen');
 must(/id="buildingsList"/.test(html), 'missing #buildingsList');
 must(/id="buildingsDetail"/.test(html), 'missing #buildingsDetail');
+must(/id="buildingsWallet"/.test(html), 'missing #buildingsWallet');
 must(html.indexOf('id="buildingsDetail"') < html.indexOf('id="buildingsList"'),
   'detail must sit above the list on Android');
 must(/id="buildingsApiNote"/.test(html), 'missing stub/live API note');
 must(/assets\/buttons\/hub\/buildings\.svg/.test(html), 'hub buildings.svg not wired');
 must(!/data-hub="versus"/.test(html), 'versus hub tile must stay retired');
+for (const id of ['stick_lighter', 'woodchip_glue', 'chipping_wood', 'bamboo_boesa', 'echo_whistle']) {
+  must(html.includes('data-factory-id="' + id + '"'), 'HTML stub missing data-factory-id=' + id);
+}
 
 must(/hub-tile-buildings/.test(css), 'missing .hub-tile-buildings style');
 must(/#buildingsScreen/.test(css), 'missing #buildingsScreen CSS');
 must(/buildings-cta/.test(css), 'missing collect/upgrade CTA CSS');
+must(/buildings-wallet-chip/.test(css), 'missing readable wallet chip CSS');
+must(/data-buildings-pane/.test(css) || /buildings-pane-detail/.test(css), 'list/detail pane CSS missing');
+must(/buildings-cta-stack/.test(css), 'collect/upgrade must stack, not mash in one grid');
 must(!/\.screen\s*\{\s*display:\s*none\s*!important/.test(css), 'nuclear .screen hide forbidden');
 
 must(bridge.includes('BuildingsStub'), 'bridge must ship a stub');
@@ -59,12 +66,21 @@ must(!bridge.includes("'forge'") && !bridge.includes('"forge"'), 'bridge must no
 
 must(ui.includes('openBuildings') && ui.includes('renderBuildings'), 'buildings-ui missing open/render');
 must(ui.includes('doBuildingCollect') && ui.includes('doBuildingUpgrade'), 'missing collect/upgrade CTAs');
+must(ui.includes('buildingsShowDetail') && ui.includes('buildingsShowList'), 'list→detail flow missing');
+must(ui.includes('buildingsShowUpgradeStep'), 'upgrade must be a separate step');
+must(ui.includes('paintBuildingsWallet'), 'wallet painter missing');
+must(ui.includes('whatItDoes') || ui.includes('buildingsEffectHtml'), 'power/effect copy missing');
+must(ui.includes('data-factory-id'), 'rows must bind data-factory-id');
+must(bridge.includes('buildingsWalletModel'), 'bridge must expose wallet model');
+must(bridge.includes('buildingTooltipModel'), 'bridge must prefer live tooltip model');
 must(start.includes("hub === 'buildings'"), 'start.js must route buildings hub tile');
 must(coreUi.includes("'buildingsScreen'"), 'UI.screens must include buildingsScreen');
 must(/case 'buildings'/.test(coreUi), 'hubTileStatLine must handle buildings');
 
 must(/menu\.buildings/.test(i18n), 'i18n missing menu.buildings');
 must(/buildings:\s*\{/.test(i18n), 'i18n missing buildings namespace');
+must(/whatItDoes/.test(i18n), 'i18n missing what-does-this-do copy');
+must(/upgradeOpen/.test(i18n), 'i18n missing separate upgrade-step copy');
 must(manifest.includes('src/systems/buildings-bridge.js'), 'manifest missing buildings-bridge');
 must(manifest.includes('src/ui/buildings-ui.js'), 'manifest missing buildings-ui');
 must(sw.includes('./assets/buttons/hub/buildings.svg'), 'sw.js missing hub buildings.svg');
@@ -125,6 +141,14 @@ async function runBrowser() {
       const echoLocked = !!(echo && echo.classList.contains('buildings-row-locked'));
       const collect = document.getElementById('btnBuildingCollect');
       const upgrade = document.getElementById('btnBuildingUpgrade');
+      const paneList = (scr && scr.getAttribute('data-buildings-pane')) === 'list';
+      const factoryIds = list ? [...list.querySelectorAll('[data-factory-id]')].map((r) => r.getAttribute('data-factory-id')) : [];
+      const wallet = document.getElementById('buildingsWallet');
+      const chips = wallet ? [...wallet.querySelectorAll('[data-res]')].map((c) => c.getAttribute('data-res')) : [];
+      if (typeof UI.buildingsShowDetail === 'function') UI.buildingsShowDetail('stick_lighter');
+      const paneDetail = (scr && scr.getAttribute('data-buildings-pane')) === 'detail';
+      const effect = document.querySelector('[data-buildings-effect="stick_lighter"]');
+      const overview = document.getElementById('btnBuildingsOverview');
       if (typeof save !== 'undefined') {
         save.unlocked = 70;
         if (typeof persist === 'function') persist();
@@ -134,23 +158,37 @@ async function runBrowser() {
       const echoOpen = !!(echo2 && !echo2.classList.contains('buildings-row-locked'));
       const versusGone = !document.querySelector('[data-hub="versus"]');
       const apiLive = typeof buildingsHasSystemsApi === 'function' && buildingsHasSystemsApi();
+      const mashed = !!(collect && upgrade && collect.parentElement && collect.parentElement === upgrade.parentElement
+        && getComputedStyle(collect.parentElement).gridTemplateColumns.split(' ').length > 1
+        && getComputedStyle(collect.parentElement).display === 'grid');
       return {
         ok: !!(scr && scr.classList.contains('active')
           && ids.length === 5
           && ids.includes('stick_lighter') && ids.includes('echo_whistle')
+          && factoryIds.includes('stick_lighter') && factoryIds.includes('echo_whistle')
           && !ids.includes('mill') && !ids.includes('forge')
           && !lighterLocked && echoLocked
           && !millCopy
           && collect && upgrade
+          && paneList && paneDetail
+          && effect && overview
+          && chips.includes('spark') && chips.includes('echo') && chips.includes('petCoins')
+          && !mashed
           && echoOpen
           && versusGone
           && apiLive),
         ids,
+        factoryIds,
+        chips,
         lighterLocked,
         echoLocked,
         echoOpen,
+        paneList,
+        paneDetail,
+        hasEffect: !!effect,
         versusGone,
         apiLive,
+        mashed,
         head: (document.getElementById('buildingsScreenHead') || {}).textContent || '',
       };
     } catch (e) {
