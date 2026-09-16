@@ -23,9 +23,9 @@ Equip requires **owned + unlocked + slot match**. Sanitize strips locked / wrong
 
 ## Bind helpers (systems)
 
-`gearItemById` · `gearItemsForSlot` · `gearGateState` · `gearTooltipModel` · `gearEquipItem` · `gearUnequipSlot` · `gearRenderDescriptor` · `sanitizeGearSave` · `grantStarterGear`
+`gearItemById` · `gearItemsForSlot` · `gearGateState` · `gearEquipState` · `gearTooltipModel` · `gearEquipItem` · `gearUnequipSlot` · `gearSlotInventory` · `gearRenderDescriptor` · `sanitizeGearSave` · `grantStarterGear`
 
-UI wrappers (non-colliding): `listGearSlots` · `listGearItems` · `getEquippedGear` · `equipGear` · `unequipGear` · `gearFilterItems`
+UI wrappers (non-colliding): `listGearSlots` · `listGearItems` · `listGearSlotInventory` · `getEquippedGear` · `equipGear` · `unequipGear` · `gearFilterItems`
 
 ## LOOK vs STAT
 
