@@ -85,6 +85,7 @@
     "smoke:ghost-hp": "node scripts/smoke-ghost-hp.mjs",
     "store:feature": "node scripts/capture-feature-graphic.mjs",
     "store:doctor": "node scripts/store-doctor.mjs",
-    "android:go": "node scripts/android-go.mjs"
+    "android:go": "node scripts/android-go.mjs",
+    "pixels:buildings:shots": "node scripts/gen-building-pixels.mjs && node scripts/render-building-previews.mjs"
   }
 }

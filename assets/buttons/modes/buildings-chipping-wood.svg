@@ -1,10 +1,11 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
      stroke="#7cf5ff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
      aria-hidden="true">
-  <!-- Chipping-Wood: cheerful chipper mouth + flying chips (not a sawmill/dojo) -->
-  <path d="M4 14h9.5" stroke="#c98850"/>
-  <path d="M4 16.2h8.2" stroke="#6b4a28"/>
-  <circle cx="16.2" cy="15" r="5.1" fill="rgba(124,245,255,.18)"/>
-  <circle cx="16.2" cy="15" r="1.4" fill="#7cf5ff" stroke="none"/>
-  <path d="M19.8 8.2l1.6-2.1M21.2 10.4l2 .2M20.4 12.6l1.8 1.1" stroke="#c98850" stroke-width="1.7"/>
+  <!-- Chipping-Wood: log + toothy chipper (not a sawmill/dojo) -->
+  <path d="M2.6 13.6h10.2" stroke="#c98850"/>
+  <path d="M2.6 16h9.2" stroke="#6b4a28"/>
+  <circle cx="16.2" cy="14.6" r="5.6" fill="rgba(124,245,255,.2)"/>
+  <circle cx="16.2" cy="14.6" r="1.5" fill="#7cf5ff" stroke="none"/>
+  <path d="M16.2 8.2v1.4M21.4 14.6h-1.4M16.2 21v-1.4M11 14.6h1.4" stroke-width="2.1"/>
+  <path d="M20.6 7.2l1.5-2M22.2 10l1.8.2M21.4 12.6l1.7 1" stroke="#c98850" stroke-width="1.7"/>
 </svg>
