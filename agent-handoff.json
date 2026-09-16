@@ -13,39 +13,41 @@
     "tunnelBookmark": "https://stickfighter-ipad-b75e.loca.lt/ipad.html"
   },
   "codeTruth": {
-    "appVersion": "1.18.167",
-    "swCache": "stickfighter-app-v377",
-    "gameJsQuery": "game.js?v=377",
-    "cssQuery": "styles/main.css?v=377",
-    "featureBranch": "main",
+    "appVersion": "1.18.170",
+    "swCache": "stickfighter-app-v380",
+    "gameJsQuery": "game.js?v=380",
+    "cssQuery": "styles/main.css?v=380",
+    "featureBranch": "cursor/equip-look-head-a6cb",
     "pushBlocked": null,
     "shareUrl": "https://brennyz.github.io/stickman-fighter/speel.html",
-    "note": "Boot hotfix LIVE on origin/main c245df4. v1.18.167 / SW 377. Pages ~1–3 min then Verse versie.",
-    "updated": "2026-09-14T20:20:46Z",
-    "localMainHead": "c245df446cdab8494b7030e3bab2b3f92c3c7242",
-    "remoteMainHead": "c245df446cdab8494b7030e3bab2b3f92c3c7242"
+    "note": "PR #301 draft: Styles head + MOTION ready-guard / flame. Not on origin/main until «merge main». LIVE main still older.",
+    "updated": "2026-09-16T12:05:00Z",
+    "localMainHead": "40e5ccc7ad46d35745fd8fd7ef9229b9579f3fdf",
+    "remoteMainHead": "40e5ccc7ad46d35745fd8fd7ef9229b9579f3fdf"
   },
   "githubSync": {
     "policy": "Trigger van de user: «merge main» = commit (als nodig) + push origin/main. Daarna GitHub Pages (~1–3 min) → speel.html is LIVE. Niet stil pushen. Houd pendingUpload bij tot origin/main gelijk is.",
     "pcEqualsMain": true,
-    "localHead": "c245df446cdab8494b7030e3bab2b3f92c3c7242",
-    "remoteMainHead": "c245df446cdab8494b7030e3bab2b3f92c3c7242",
+    "localHead": "d1236befcdba7aa50c80fe98638090b944964fc3",
+    "remoteMainHead": "40e5ccc7ad46d35745fd8fd7ef9229b9579f3fdf",
     "ahead": 0,
     "behind": 0,
     "dirty": false,
-    "lastChecked": "2026-09-14T20:21:12Z",
+    "lastChecked": "2026-09-16T12:05:00Z",
     "lastAsked": "2026-08-17T14:01:21Z",
     "pendingUpload": [],
-    "pendingMerge": []
+    "pendingMerge": [
+      "https://github.com/brennyz/stickman-fighter/pull/301"
+    ]
   },
   "userWishlist": [
     {
       "id": "w-20260916T113500",
       "from": "user",
       "text": "PRIORITY before mega-merge — add MOTION / lived-in feel on #301: SF-like ready pose + idle breathe; lightweight weapon/cosmetic FX (flame/spark/cloth sway). Menu + combat match. Android-first, no Versus, no hitbox/save/gear-id changes.",
-      "status": "doing",
+      "status": "done-in-code",
       "updated": "2026-09-16",
-      "notes": "Equip-look lane. Fold into PR #301."
+      "notes": "Shipped on #301. Ready guard + breathe; wick flame/spark; cloth sway; gear-doll rAF. Hitboxes/save/gear IDs unchanged. v1.18.170 / SW 380."
     },
     {
       "id": "w-20260916T110100",
@@ -923,6 +925,10 @@
   ],
   "sessionLog": [
     {
+      "at": "2026-09-16T12:07:00Z",
+      "summary": "MOTION on #301: SF-ready guard (weight back, lead hand up) + wick-seated flame/spark + cloth sway; gear doll live. v1.18.170 / SW 380. Versus ongemoeid."
+    },
+    {
       "at": "2026-09-16T11:35:10Z",
       "summary": "Styles-hoofd blijft zichtbaar (contrast + kin-restroke + camera); gear-sit menu/combat. v1.18.168 / SW 378. PR #301."
     },
@@ -1017,10 +1023,6 @@
     {
       "at": "2026-09-14T12:41:28Z",
       "summary": "Start toast-wachtrij: één tegelijk, Android Chrome/TWA"
-    },
-    {
-      "at": "2026-09-14T12:35:18Z",
-      "summary": "SATAN-kaart dikkere duivel, groter portret, korte copy, hitte-balk zonder dubbele tekst · v1.18.155 / SW 365"
     }
   ],
   "implementedFeaturesSummary": "d18 char select deel 1+2 (v1.11.1-2); Mats coinrun + shuriken mik/vliegers + anti-spam (v1.12.0); speel.html (v1.12.2+). Zie HANDOFF-ZOEKINDEX.md en improvement-d20-bag.json userFeatureLog.",

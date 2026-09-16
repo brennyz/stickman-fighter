@@ -24,6 +24,7 @@ rg -l "handoff|coinrun|projAimVelocity|charSelectScreen|ASSET-STYLE" .
 | Grokbot Android-test | docs | — | `docs/GROKBOT-ANDROID-PROMPT.md` — plak PROMPT in Grokbot |
 | **Season overlays (jungle + halloween)** | 1.18.164 | — | `docs/season-overlay-slots.md`, `assets/seasons/`, `#seasonOverlay` |
 | **Buildings powers + timed loot (4/4)** | 1.18.165 | this branch | binds #292 ids `stick_lighter`…`echo_whistle` · factories/wallet · `src/data/buildings-powers.js` |
+| **MOTION lived-in + Styles head** | 1.18.170 | #301 `cursor/equip-look-head-a6cb` | `src/render/live-fx.js` ready/flame/spark/cloth; `fighter.pose` idle; gear doll rAF. Versus out. |
 | **Gear loadout (5 slots)** | 1.18.164 | this branch | `src/data/gear.js`, `docs/GEAR-SYSTEM.md`, `#gearScreen` |
 | **Season overlay (CSS + story)** | 1.18.164 | — | `SEASON-OVERLAY.md`, `src/systems/seasons.js`, `styles/seasons.css` |
 | **Mik-indicator** kleur + radius (Options) | 1.18.164 | — | `save.aimColor` / `save.aimRadius`, `drawPlayerAimIndicator` |
