@@ -36,15 +36,22 @@
     "lastChecked": "2026-09-14T20:21:12Z",
     "lastAsked": "2026-08-17T14:01:21Z",
     "pendingUpload": [],
-    "pendingMerge": []
+    "pendingMerge": [
+      {
+        "id": "pr-304",
+        "kind": "pr",
+        "text": "#304 feat(buildings): power identities + timed hopper 2.0 — draft, no merge"
+      }
+    ]
   },
   "userWishlist": [
     {
       "id": "w-20260916T110000",
       "from": "user",
       "text": "GROTE DOORONTWIKKELING — buildings POWERS + TIMED RESOURCES 2.0. Continue #290 lane (not a parallel bag). Distinct combat/adventure identities per factory ranks 0–4; timed hopper 2.0 (wall-clock, no double-pay); #292 contract. No HOME UI. No Versus. Mega-merge only — do not merge to main.",
-      "status": "active",
-      "updated": "2026-09-16"
+      "status": "done-in-code",
+      "updated": "2026-09-16",
+      "notes": "Draft #304. Identities in buildings-combat.js; hopper 2.0; #292 rates. Do not merge to main."
     },
     {
       "id": "w-20260914T200700",
@@ -914,6 +921,10 @@
   ],
   "sessionLog": [
     {
+      "at": "2026-09-16T11:10:00Z",
+      "summary": "Powers depth + timed hopper 2.0 on #304 (continue #290). Distinct rank 0–4 identities; 8h collect lock. Draft, no main."
+    },
+    {
       "at": "2026-09-14T20:20:40Z",
       "summary": "Boot-hotfix LIVE op origin/main: game.js parseerde niet (gotoW + SEASON_ART_SLOTS). v1.18.167 / SW 377. Verse versie na Pages."
     },
@@ -1008,10 +1019,6 @@
     {
       "at": "2026-09-14T12:35:18Z",
       "summary": "SATAN-kaart dikkere duivel, groter portret, korte copy, hitte-balk zonder dubbele tekst · v1.18.155 / SW 365"
-    },
-    {
-      "at": "2026-09-14T12:31:31Z",
-      "summary": "Start SATAN-kaart kwaliteit: dikkere duivel, minder dubbele tekst"
     }
   ],
   "implementedFeaturesSummary": "d18 char select deel 1+2 (v1.11.1-2); Mats coinrun + shuriken mik/vliegers + anti-spam (v1.12.0); speel.html (v1.12.2+). Zie HANDOFF-ZOEKINDEX.md en improvement-d20-bag.json userFeatureLog.",
