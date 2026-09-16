@@ -931,6 +931,10 @@
   ],
   "sessionLog": [
     {
+      "at": "2026-09-16T11:43:37Z",
+      "summary": "P0–P3 UI/UX + FINDINGS i18n, snappy summons (2.4s/265KB) and HOME-bottom SW banner/nuke retry. PR #306 ready. v1.18.169 / SW 379."
+    },
+    {
       "at": "2026-09-16T11:10:04Z",
       "summary": "P0–P3 UI/UX + FINDINGS i18n: online save primary, Options strip, weapons contrast, Settings HOME-tegels, NL/EN/DE leftovers, 390px overflow, gear/season/aim harden. v1.18.168 / SW 378."
     },
@@ -1025,10 +1029,6 @@
     {
       "at": "2026-09-14T12:41:28Z",
       "summary": "Start toast-wachtrij: één tegelijk, Android Chrome/TWA"
-    },
-    {
-      "at": "2026-09-14T12:35:18Z",
-      "summary": "SATAN-kaart dikkere duivel, groter portret, korte copy, hitte-balk zonder dubbele tekst · v1.18.155 / SW 365"
     }
   ],
   "implementedFeaturesSummary": "d18 char select deel 1+2 (v1.11.1-2); Mats coinrun + shuriken mik/vliegers + anti-spam (v1.12.0); speel.html (v1.12.2+). Zie HANDOFF-ZOEKINDEX.md en improvement-d20-bag.json userFeatureLog.",
