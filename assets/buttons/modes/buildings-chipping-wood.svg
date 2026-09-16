@@ -6,6 +6,7 @@
   <path d="M2.6 13.6h10.2" stroke="#c98850"/>
   <path d="M2.6 16h9.2" stroke="#6b4a28"/>
   <g class="s">
+  <animateTransform attributeName="transform" type="rotate" values="0 16.2 14.6;45 16.2 14.6;90 16.2 14.6;135 16.2 14.6;180 16.2 14.6;225 16.2 14.6;270 16.2 14.6;315 16.2 14.6;360 16.2 14.6" dur="3.2s" repeatCount="indefinite" calcMode="discrete"/>
   <circle cx="16.2" cy="14.6" r="5.6" fill="rgba(124,245,255,.2)"/>
   <circle cx="16.2" cy="14.6" r="1.5" fill="#7cf5ff" stroke="none"/>
   <path d="M16.2 8.2v1.4M21.4 14.6h-1.4M16.2 21v-1.4M11 14.6h1.4" stroke-width="2.1"/>

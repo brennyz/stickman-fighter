@@ -5,9 +5,9 @@
   <!-- HOME buildings: factory district — flame, vat, pipes -->
   <path d="M2.6 20.6V12.2h7.2V20.6z" fill="rgba(255,215,94,.2)"/>
   <path d="M5.4 12.2V8.2h2"/>
-  <path class="f" d="M6.4 5.6c.6-.8 1.4-1 1.9-.2" stroke="#ff8a3d" stroke-width="1.7"/>
+  <path class="f" d="M6.4 5.6c.6-.8 1.4-1 1.9-.2" stroke="#ff8a3d" stroke-width="1.7"><animate attributeName="opacity" values="1;.3;1" dur="1.1s" repeatCount="indefinite" calcMode="discrete"/></path>
   <circle cx="13.2" cy="16.6" r="3.3" fill="rgba(212,224,90,.25)" stroke="#d4e05a"/>
   <path d="M17.2 20.6V9.4h2.2V20.6"/>
   <path d="M20 20.6V12h2.1"/>
-  <path class="e" d="M19.6 8.6c1.2.8 1.2 2.4 0 3.2" stroke="#7cf5ff" stroke-width="1.7"/>
+  <path class="e" d="M19.6 8.6c1.2.8 1.2 2.4 0 3.2" stroke="#7cf5ff" stroke-width="1.7"><animate attributeName="opacity" values="1;.35;1" dur="2.2s" repeatCount="indefinite"/></path>
 </svg>

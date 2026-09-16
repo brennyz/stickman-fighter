@@ -5,8 +5,8 @@
   <!-- Bamboo-Boesa: thick stalks + kettle face + steam (not a garden) -->
   <path d="M3.8 21V5.6M7.2 21V7.4"/>
   <path d="M2.8 9.4h2M6.2 11.6h2" stroke="#5a9e4a"/>
-  <circle class="g" cx="16.2" cy="14.8" r="5.5" fill="rgba(201,122,32,.3)" stroke="#c97a20"/>
+  <circle class="g" cx="16.2" cy="14.8" r="5.5" fill="rgba(201,122,32,.3)" stroke="#c97a20"><animate attributeName="opacity" values="1;.4;1" dur="2.4s" repeatCount="indefinite"/></circle>
   <path d="M14.3 13.4h.25M18 13.4h.25M14.6 16.6c.9.8 2.3.8 3.2 0" stroke="#c97a20"/>
   <path d="M15.4 9.2V6.2h2v3"/>
-  <path class="t" d="M13.8 4.2c.8-.9 1.8-.9 2.5 0M17.6 3.6c.6-.8 1.4-.7 1.9.2" stroke="#c8e8ff" stroke-width="1.7"/>
+  <path class="t" d="M13.8 4.2c.8-.9 1.8-.9 2.5 0M17.6 3.6c.6-.8 1.4-.7 1.9.2" stroke="#c8e8ff" stroke-width="1.7"><animate attributeName="opacity" values="1;.15;1" dur="2.4s" repeatCount="indefinite" calcMode="discrete"/></path>
 </svg>

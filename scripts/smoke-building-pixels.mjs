@@ -83,6 +83,7 @@ const LIFE = {
 for (const [id, cls] of Object.entries(LIFE)) {
   const svg = read(`assets/buildings/${id}.svg`);
   ok(svg.includes('prefers-reduced-motion'), `motion reduce ${id}`);
+  ok(svg.includes('<animate') || svg.includes('<animateTransform'), `smil ${id}`);
   ok(svg.includes(`class="${cls}"`) || svg.includes(`class='${cls}'`) || svg.includes(`class="${cls} `), `life ${cls} ${id}`);
 }
 ok(read('assets/buildings/hub-buildings.svg').includes('prefers-reduced-motion'), 'hub motion reduce');

@@ -404,7 +404,7 @@ function paintChippingWood() {
   stickman(px, 5, 25, C.k, C.i);
   rimLight(px, [C.l, C.m, C.d]);
   return scene(px, [
-    { cls: 'spin', px: blade },
+    { cls: 'spin', px: blade, origin: [21, 17] },
     { cls: 'flicker2', px: chips },
   ]);
 }
@@ -530,7 +530,7 @@ function paintEchoWhistle() {
   stickman(px, 2, 25, C.k, C.i);
   rimLight(px, [C.l, C.m, C.u]);
   return scene(px, [
-    { cls: 'wiggle', px: paddles },
+    { cls: 'wiggle', px: paddles, origin: [11, 4] },
     { cls: 'echo', px: ringA },
     { cls: 'echo2', px: ringB },
   ]);
@@ -723,12 +723,44 @@ function flatten(sceneOrPx) {
   return out;
 }
 
+/** SMIL is what Chrome/Android actually run on SVG-as-<img>; CSS covers inline + reduced-motion. */
+function lifeAnim(cls, origin) {
+  const [ox, oy] = origin || [16, 16];
+  if (cls === 'flicker') {
+    return '<animate attributeName="opacity" values="1;.22;1" dur="1.05s" repeatCount="indefinite" calcMode="discrete"/>';
+  }
+  if (cls === 'flicker2') {
+    return '<animate attributeName="opacity" values="1;.22;1" dur="1.4s" repeatCount="indefinite" calcMode="discrete"/>';
+  }
+  if (cls === 'glow') {
+    return '<animate attributeName="opacity" values=".3;.92;.3" dur="2.4s" repeatCount="indefinite"/>';
+  }
+  if (cls === 'drip') {
+    return '<animate attributeName="opacity" values="1;.15;1" dur="1.55s" repeatCount="indefinite" calcMode="discrete"/>';
+  }
+  if (cls === 'spin') {
+    return `<animateTransform attributeName="transform" type="rotate" values="0 ${ox} ${oy};45 ${ox} ${oy};90 ${ox} ${oy};135 ${ox} ${oy};180 ${ox} ${oy};225 ${ox} ${oy};270 ${ox} ${oy};315 ${ox} ${oy};360 ${ox} ${oy}" dur="3.2s" repeatCount="indefinite" calcMode="discrete"/>`;
+  }
+  if (cls === 'wiggle') {
+    return `<animateTransform attributeName="transform" type="rotate" values="-14 ${ox} ${oy};14 ${ox} ${oy};-14 ${ox} ${oy}" dur="2.8s" repeatCount="indefinite" calcMode="discrete"/>`;
+  }
+  if (cls === 'steam') {
+    return '<animate attributeName="opacity" values=".85;0;.85" dur="2.5s" repeatCount="indefinite" calcMode="discrete"/>';
+  }
+  if (cls === 'echo' || cls === 'echo2') {
+    const dur = cls === 'echo2' ? '2.7s' : '2.1s';
+    return `<animate attributeName="opacity" values=".22;1;.22" dur="${dur}" repeatCount="indefinite"/>`;
+  }
+  return '';
+}
+
 function encodeSvg(sceneOrPx) {
   const { base, layers } = asScene(sceneOrPx);
   const layerXml = layers
     .map((L) => {
       const paths = encodePaths(L.px);
-      return paths ? `<g class="${L.cls}">${paths}</g>` : '';
+      if (!paths) return '';
+      return `<g class="${L.cls}">${lifeAnim(L.cls, L.origin)}${paths}</g>`;
     })
     .join('');
   const css = layers.length ? LIFE_CSS : '';
