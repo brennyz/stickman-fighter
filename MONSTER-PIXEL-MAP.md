@@ -169,6 +169,7 @@ These 18 arts now also paint their own 32×32 map. Aliases are not assigned (`ca
 - **W3 (18)** stay aliased onto the #282 set until a later unique-pixel pass.
 - Files are 32×32 crisp SVG (RLE rects), typically 1–3 KB.
 - Combat paint is from JS maps (no Image decode) so a missing SVG never blanks a fighter.
+- Combat motion (visual only): idle bob ≤ 3.8% of radius, phase from `hopT` / id hash; telegraph squash + lean-in; dash recover stretch. `prefers-reduced-motion` / `motionReduced()` disables it. Hitboxes unchanged.
 
 ## Do not
 

@@ -517,7 +517,14 @@ class Monster {
       c.restore();
     }
     c.scale(this.face < 0 ? 1 : -1, 1); // art kijkt standaard naar links
-    drawMonsterArt(c, this.sp, this.size, this.t, this.flashT > 0, this.telegraphT > 0);
+    drawMonsterArt(c, this.sp, this.size, this.t, this.flashT > 0,
+      this.telegraphT > 0 || this.techniqueTelegraphT > 0, {
+        hopT: this.hopT,
+        telegraphT: this.telegraphT,
+        telegraphMax: this.telegraphMax,
+        dashT: this.dashT,
+        techniqueTelegraphT: this.techniqueTelegraphT,
+      });
     if (this.enraged && this.alive) {
       c.save();
       const calm = motionReduced();
@@ -592,10 +599,10 @@ class Monster {
   }
 }
 
-function drawMonsterArt(c, sp, r, t, flash, telegraph) {
+function drawMonsterArt(c, sp, r, t, flash, telegraph, motion) {
   if (!sp || !c) return;
   r = clamp(Number(r) || 24, 6, 120);
-  if (typeof drawMonsterPixelArt === 'function' && drawMonsterPixelArt(c, sp, r, t, flash, telegraph)) {
+  if (typeof drawMonsterPixelArt === 'function' && drawMonsterPixelArt(c, sp, r, t, flash, telegraph, motion)) {
     return;
   }
   const body = flash ? (motionReduced() ? sp.c1 : '#ffffff') : (sp.c1 || '#888');

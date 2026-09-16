@@ -1156,12 +1156,25 @@ function emitJs(artMaps, speciesMaps) {
   return lines.join('\n');
 }
 
+const W2_MOTION_CLASS = {
+  wolf: 'charge', owl: 'flyer', frog: 'hopper', snake: 'swim', boar: 'charge',
+  skeleton: 'undead', mummy: 'undead', beetle: 'insect', wasp: 'flyer', spider: 'insect',
+  drone: 'mech', bot: 'mech', scrapdog: 'charge', penguin: 'hopper', yeti: 'tank',
+  crab: 'insect', turtle: 'tank', squid: 'swim',
+  raven: 'flyer', moose: 'tank', beaver: 'charge', badger: 'charge', stag: 'charge', lynx: 'charge',
+  wisp: 'shoot', gargoyle: 'flyer', lich: 'undead',
+  cog: 'mech', turret: 'shoot', rivet: 'tank', piston: 'mech',
+  walrus: 'tank', ray: 'swim', mole: 'hopper', junkbat: 'flyer', seal: 'hopper',
+};
+
 function artFigure(id, kind) {
-  return `<figure data-id="${id}" data-kind="${kind}" data-art="${id}"><div class="zoom"><img src="art-${id}.svg" alt="${id}" width="96" height="96"></div><figcaption>${id}<small>${kind} · ${id}</small></figcaption></figure>`;
+  const motion = W2_MOTION_CLASS[id] || 'charge';
+  return `<figure class="motion-${motion}" data-id="${id}" data-kind="${kind}" data-art="${id}" data-motion="${motion}"><div class="zoom"><img src="art-${id}.svg" alt="${id}" width="96" height="96"></div><figcaption>${id}<small>${kind} · ${id}</small></figcaption></figure>`;
 }
 
 function combatFigure(id) {
-  return `<figure data-id="${id}" data-kind="combat" data-art="${id}"><div class="arena"><img src="art-${id}.svg" alt="${id}" width="48" height="48"></div><figcaption>${id}</figcaption></figure>`;
+  const motion = W2_MOTION_CLASS[id] || 'charge';
+  return `<figure class="motion-${motion}" data-id="${id}" data-kind="combat" data-art="${id}" data-motion="${motion}"><div class="arena"><img src="art-${id}.svg" alt="${id}" width="48" height="48"></div><figcaption>${id}</figcaption></figure>`;
 }
 
 function emitPreview(artMaps, speciesMaps) {
@@ -1205,9 +1218,18 @@ function emitPreview(artMaps, speciesMaps) {
     linear-gradient(-45deg,transparent 75%,#20283c 75%);
     background-size: 12px 12px; background-position: 0 0,0 6px,6px -6px,-6px 0;
     border-radius: 6px; padding: 8px; }
-  .zoom img { width: 96px; height: 96px; image-rendering: pixelated; }
+  .zoom img { width: 96px; height: 96px; image-rendering: pixelated; animation: pixel-bob-md .9s ease-in-out infinite; }
   .arena { image-rendering: pixelated; background: #0e1224; border-radius: 6px; padding: 10px; min-height: 68px; display: flex; align-items: center; justify-content: center; }
-  .arena img { width: 48px; height: 48px; image-rendering: pixelated; }
+  .arena img { width: 48px; height: 48px; image-rendering: pixelated; animation: pixel-bob-md .9s ease-in-out infinite; }
+  .motion-flyer img, .motion-hopper img { animation-name: pixel-bob-lg; animation-duration: .7s; }
+  .motion-tank img, .motion-undead img, .motion-mech img, .motion-shoot img { animation-name: pixel-bob-sm; animation-duration: 1.15s; }
+  .combat-row figure:hover img { animation: none; transform: translateX(-3px) scaleX(1.08) scaleY(.93); }
+  @keyframes pixel-bob-sm { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-3%); } }
+  @keyframes pixel-bob-md { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-5%); } }
+  @keyframes pixel-bob-lg { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-7%); } }
+  @media (prefers-reduced-motion: reduce) {
+    .zoom img, .arena img { animation: none !important; }
+  }
   .combat-row { display: flex; flex-wrap: wrap; gap: 10px; background: #0b1020; border: 1px solid #2a3348; border-radius: 10px; padding: 10px; }
   .combat-row figure { width: 76px; }
   figcaption { margin-top: 6px; font-weight: 700; }
@@ -1233,7 +1255,7 @@ Share URL stays <code>speel.html</code>.</p>
 </section>
 <section id="w2-combat">
 <h2>Combat size (~48px) per biome</h2>
-<p>Same maps at typical combat footprint on a dark arena. 8 rarities stay 1 art + tint.</p>
+<p>Same maps at typical combat footprint on a dark arena. Sprites idle-bob (flyer/hopper more, tank/mech less). Hover a row = telegraph squash/lean. Combat uses the same feel in <code>drawMonsterPixelArt</code>.</p>
 ${combatBlocks}
 </section>
 <section>
@@ -1318,6 +1340,7 @@ ${spRows.join('\n')}
 - **W3 (18)** stay aliased onto the #282 set until a later unique-pixel pass.
 - Files are 32×32 crisp SVG (RLE rects), typically 1–3 KB.
 - Combat paint is from JS maps (no Image decode) so a missing SVG never blanks a fighter.
+- Combat motion (visual only): idle bob ≤ 3.8% of radius, phase from \`hopT\` / id hash; telegraph squash + lean-in; dash recover stretch. \`prefers-reduced-motion\` / \`motionReduced()\` disables it. Hitboxes unchanged.
 
 ## Do not
 

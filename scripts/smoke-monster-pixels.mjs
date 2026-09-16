@@ -41,7 +41,7 @@ function fail(why) {
 const ctx = { console };
 vm.createContext(ctx);
 vm.runInContext(
-  fs.readFileSync(mapsPath, 'utf8') + '\n' + fs.readFileSync(paintPath, 'utf8') + '\nthis.MONSTER_PIXEL_ART=MONSTER_PIXEL_ART;this.MONSTER_PIXEL_SPECIES=MONSTER_PIXEL_SPECIES;this.drawMonsterPixelArt=drawMonsterPixelArt;\n',
+  fs.readFileSync(mapsPath, 'utf8') + '\n' + fs.readFileSync(paintPath, 'utf8') + '\nthis.MONSTER_PIXEL_ART=MONSTER_PIXEL_ART;this.MONSTER_PIXEL_SPECIES=MONSTER_PIXEL_SPECIES;this.drawMonsterPixelArt=drawMonsterPixelArt;this.monsterPixelMotion=monsterPixelMotion;this.monsterPixelFeel=monsterPixelFeel;\n',
   ctx,
   { filename: 'monster-pixels.js' }
 );
@@ -157,6 +157,32 @@ for (let i = 0; i < w2Ids.length; i++) {
     if (art[w2Ids[i]] === art[w2Ids[j]]) fail('W2 maps not unique: ' + w2Ids[i] + ' === ' + w2Ids[j]);
   }
 }
+
+function paintYs(sp, t, telegraph, motion) {
+  const ys = [];
+  const s = {
+    imageSmoothingEnabled: true,
+    fillStyle: '',
+    fillRect(x, y) { ys.push(y); },
+  };
+  ctx.drawMonsterPixelArt(s, sp, 32, t, false, telegraph, motion);
+  return ys;
+}
+const wolfSp = { id: 'wolfling', art: 'wolf', type: 'charge', shape: 'quad', c1: '#c98850', c2: '#6b4a28' };
+const yIdle0 = paintYs(wolfSp, 0, false, { hopT: 0 });
+const yIdle1 = paintYs(wolfSp, Math.PI / 9.6, false, { hopT: 0 });
+if (!yIdle0.length || yIdle0[0] === yIdle1[0]) fail('idle bob should shift paint y');
+const flyFeel = ctx.monsterPixelFeel({ art: 'owl', type: 'fly', shape: 'flyer' });
+const tankFeel = ctx.monsterPixelFeel({ art: 'yeti', type: 'tank', shape: 'tank' });
+if (!(flyFeel.amp > tankFeel.amp)) fail('flyer bob should exceed tank bob');
+const idleM = ctx.monsterPixelMotion(wolfSp, 20, 0, false, { hopT: 0.1 });
+const windM = ctx.monsterPixelMotion(wolfSp, 20, 0, true, { hopT: 0.1, telegraphT: 0.1, telegraphMax: 0.4 });
+if (!(windM.sx > idleM.sx && windM.sy < idleM.sy && windM.ox < idleM.ox)) {
+  fail('telegraph wind-up should squash and lean');
+}
+const preview = fs.readFileSync(path.join(dir, 'preview.html'), 'utf8');
+if (!preview.includes('pixel-bob-md')) fail('preview missing idle-bob animation');
+if (!preview.includes('scaleX(1.08)')) fail('preview missing telegraph hover');
 
 if (!fs.existsSync(path.join(dir, 'preview.html'))) fail('preview.html missing');
 if (!fs.existsSync(path.join(root, 'MONSTER-PIXEL-MAP.md'))) fail('MONSTER-PIXEL-MAP.md missing');
