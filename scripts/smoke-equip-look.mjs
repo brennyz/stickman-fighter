@@ -472,7 +472,7 @@ const pinLook = api.fromDescriptor({
 if (!pinLook || pinLook.kind !== 'pin') fail('descriptor pin kind');
 if (pinLook.layer !== 'chest') fail('pin must paint on chest (not a back-cape / feet orphan)');
 if (pinLook.anchor !== 'shoulder') fail('pin must anchor on shoulder');
-if (!(pinLook.oy >= 6) || Math.abs(pinLook.ox) < 4) fail('pin offset must sit on the lapel, not origin/feet');
+if (!(pinLook.oy >= 8) || Math.abs(pinLook.ox) < 3) fail('pin offset must sit on the lapel, not origin/feet');
 const hunterCharm = (api.forStyle({ id: 'hunter', bandana: '#3d5c32', accent: '#5ad06a', plate: '#6b5344' }) || [])
   .find((l) => l.kind === 'charm');
 if (hunterCharm && hunterCharm.slot !== 'head') fail('hunter style charm stays on the head');

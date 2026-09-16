@@ -322,7 +322,7 @@ if (typeof UI === 'object' && UI) {
       btn.setAttribute('data-factory-id', view.id);
       btn.dataset.buildingId = view.id;
       btn.dataset.factoryId = view.id;
-      const unbuilt = !view.locked && !(view.built || Number(view.level) >= 1);
+      const unbuilt = !view.locked && Number(view.level) < 1;
       if (view.id === sel) {
         btn.setAttribute('data-hub-badge', view.canCollect
           ? buildingsTxt('buildings.collect', 'Oogsten')
@@ -400,7 +400,7 @@ if (typeof UI === 'object' && UI) {
     host.dataset.factoryId = view.id;
     host.setAttribute('data-factory-id', view.id);
     const locked = !!view.locked;
-    const unbuilt = !locked && !(view.built || view.level >= 1);
+    const unbuilt = !locked && Number(view.level) < 1;
     const step = this.buildingsStep === 'upgrade' ? 'upgrade' : 'harvest';
     const pct = view.capacity ? Math.min(100, Math.round((view.pending / view.capacity) * 100)) : 0;
     const eta = (!locked && view.pending < view.capacity && view.nextMs > 0)

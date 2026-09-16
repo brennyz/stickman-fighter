@@ -76,8 +76,8 @@ must(ui.includes('data-factory-id'), 'rows must bind data-factory-id');
 must(ui.includes('buildingDescModel'), 'UI must consume systems buildingDescModel');
 must(ui.includes('buildingWalletModel'), 'UI must consume systems buildingWalletModel');
 must(ui.includes('buildingArtSrc'), 'UI must consume systems buildingArtSrc');
-must(ui.includes('buildingsCostText(view)') && ui.includes('unbuilt'),
-  'unbuilt list row must show build cost (PC), not 0/cap Vonken stock');
+must(ui.includes('buildingsCostText(view)') && ui.includes('Number(view.level) < 1'),
+  'unbuilt list row must key off level<1 and show PC cost, not 0/cap Vonken stock');
 must(!/\bfunction buildingsWalletModel\b/.test(bridge) && !/\bfunction buildingsWalletModel\b/.test(ui),
   'do not ship a parallel buildingsWalletModel — systems #297 owns buildingWalletModel');
 must(bridge.includes('buildingDescModel') || ui.includes('buildingDescModel'), 'must bind buildingDescModel');

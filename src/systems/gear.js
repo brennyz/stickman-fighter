@@ -474,10 +474,6 @@ function drawGearHeroDoll(cv, saveObj, animT) {
   const scale = Math.min(cv.width / 140, cv.height / 190) * 1.28;
   cc.translate(cv.width / 2, cv.height - 36);
   cc.scale(scale, scale);
-  const back = tintOf('back');
-  if (back && _gearBackOverlayKind(back.itemId) !== 'none') {
-    _paintGearOverlay(cc, 'back', back.tint || back.accent, back.accent);
-  }
   const st = typeof styleById === 'function' ? styleById((s && s.style) || 'classic') : { body: '#f2f5ff' };
   const wpn = (s && typeof weaponById === 'function') ? weaponById(s.weapon || 'vuist') : null;
   const preview = new Fighter({
@@ -485,11 +481,9 @@ function drawGearHeroDoll(cv, saveObj, animT) {
     weapon: wpn || undefined,
   });
   preview.animT = Number.isFinite(animT) ? animT : 0.55;
+  /* Fighter.draw already paints equipped looks on live bones.
+     The old slot overlays used a stale idle pose (cape-to-feet, floating dots). */
   preview.draw(cc);
-  for (const sid of ['legs', 'chest', 'head', 'hands']) {
-    const layer = tintOf(sid);
-    if (layer) _paintGearOverlay(cc, sid, layer.tint || layer.accent, layer.accent);
-  }
   if (s && s.activePet && typeof drawMonsterArt === 'function') {
     const def = (typeof activePetDef === 'function') ? activePetDef()
       : ((typeof petDef === 'function') ? petDef(s.activePet) : null);

@@ -486,6 +486,12 @@ function drawLookCharm(c, look, x, y, sc) {
 
 /** Stip-pin / catalog pin — lapel disc + short stem. Never a back-cape blob. */
 function drawLookPin(c, look, x, y, sc) {
+  if (!(y < -24)) return;
+  if (typeof drawGearPixels === 'function' && look && look.id) {
+    try {
+      if (drawGearPixels(c, look.id, x, y, Math.max(1.15, 1.35 * sc), { live: false })) return;
+    } catch (_) { /* fall through to vector pin */ }
+  }
   const fill = look.color || '#ffd75e';
   const rim = look.accent || '#c97a20';
   c.fillStyle = fill;

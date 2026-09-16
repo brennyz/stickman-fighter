@@ -64,6 +64,8 @@ must(/save\.gear/.test(uiAdapt) && /equipped\[/.test(uiAdapt), 'adapter must wri
 must(/needLvl/.test(uiAdapt) && /needTrain/.test(uiAdapt) && /needDex/.test(uiAdapt) && /needTime/.test(uiAdapt), 'v1 item lock fields missing');
 must(/GEAR_DRAW_ORDER = \['back', 'legs', 'chest', 'head', 'hands', 'weapon', 'pet'\]/.test(uiAdapt), 'draw-order must be back→legs→chest→head→hands→weapon→pet');
 must(/function drawGearHeroDoll/.test(uiAdapt), 'drawGearHeroDoll missing');
+must(!/preview\.draw\(cc\);[\s\S]{0,120}for \(const sid of \['legs'/.test(uiAdapt),
+  'doll must not double-paint stale slot overlays after Fighter.draw');
 must(/function gearSortItems/.test(uiAdapt) && /function gearRaritiesInList/.test(uiAdapt), 'large-catalog sort/rarity helpers missing');
 must(/gearFilterItems\(items, filter, q, rarity\)/.test(uiAdapt) || /function gearFilterItems\(items, filter, q, rarity\)/.test(uiAdapt), 'gearFilterItems must take rarity');
 must(/isCosmetic/.test(uiAdapt) && /hasStats/.test(uiAdapt), 'contract item flags missing');

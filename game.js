@@ -10816,7 +10816,7 @@ const EQUIP_LOOK_DEFAULTS = {
   glow: { slot: 'head', layer: 'head', ox: 0, oy: 0, scale: 1 },
   lightning: { slot: 'head', layer: 'head', ox: 0, oy: 0, scale: 1 },
   charm: { slot: 'back', layer: 'chest', ox: 7, oy: 8, scale: 1, anchor: 'shoulder' },
-  pin: { slot: 'back', layer: 'chest', ox: 8, oy: 10, scale: 1, anchor: 'shoulder' },
+  pin: { slot: 'back', layer: 'chest', ox: 6, oy: 14, scale: 1, anchor: 'shoulder' },
   coat: { slot: 'back', layer: 'back', ox: 0, oy: 1, scale: 1 },
   cape: { slot: 'back', layer: 'back', ox: 0, oy: 2, scale: 1 },
   tome: { slot: 'back', layer: 'back', ox: -1, oy: 3, scale: 1 },
@@ -11235,8 +11235,8 @@ function lookPieceFromDescriptorRow(row) {
     slot,
     layer: pin ? 'chest' : layer,
     anchor: pin ? 'shoulder' : undefined,
-    ox: pin ? 8 : undefined,
-    oy: pin ? 10 : undefined,
+    ox: pin ? 6 : undefined,
+    oy: pin ? 14 : undefined,
     color: pin ? (row.tint || '#ffd75e') : row.tint,
     accent: pin ? (row.accent || '#c97a20') : row.accent,
   });
@@ -30848,10 +30848,6 @@ function drawGearHeroDoll(cv, saveObj, animT) {
   const scale = Math.min(cv.width / 140, cv.height / 190) * 1.28;
   cc.translate(cv.width / 2, cv.height - 36);
   cc.scale(scale, scale);
-  const back = tintOf('back');
-  if (back && _gearBackOverlayKind(back.itemId) !== 'none') {
-    _paintGearOverlay(cc, 'back', back.tint || back.accent, back.accent);
-  }
   const st = typeof styleById === 'function' ? styleById((s && s.style) || 'classic') : { body: '#f2f5ff' };
   const wpn = (s && typeof weaponById === 'function') ? weaponById(s.weapon || 'vuist') : null;
   const preview = new Fighter({
@@ -30859,11 +30855,9 @@ function drawGearHeroDoll(cv, saveObj, animT) {
     weapon: wpn || undefined,
   });
   preview.animT = Number.isFinite(animT) ? animT : 0.55;
+  /* Fighter.draw already paints equipped looks on live bones.
+     The old slot overlays used a stale idle pose (cape-to-feet, floating dots). */
   preview.draw(cc);
-  for (const sid of ['legs', 'chest', 'head', 'hands']) {
-    const layer = tintOf(sid);
-    if (layer) _paintGearOverlay(cc, sid, layer.tint || layer.accent, layer.accent);
-  }
   if (s && s.activePet && typeof drawMonsterArt === 'function') {
     const def = (typeof activePetDef === 'function') ? activePetDef()
       : ((typeof petDef === 'function') ? petDef(s.activePet) : null);
@@ -32952,6 +32946,12 @@ function drawLookCharm(c, look, x, y, sc) {
 
 /** Stip-pin / catalog pin — lapel disc + short stem. Never a back-cape blob. */
 function drawLookPin(c, look, x, y, sc) {
+  if (!(y < -24)) return;
+  if (typeof drawGearPixels === 'function' && look && look.id) {
+    try {
+      if (drawGearPixels(c, look.id, x, y, Math.max(1.15, 1.35 * sc), { live: false })) return;
+    } catch (_) { /* fall through to vector pin */ }
+  }
   const fill = look.color || '#ffd75e';
   const rim = look.accent || '#c97a20';
   c.fillStyle = fill;
@@ -51626,7 +51626,7 @@ if (typeof UI === 'object' && UI) {
       btn.setAttribute('data-factory-id', view.id);
       btn.dataset.buildingId = view.id;
       btn.dataset.factoryId = view.id;
-      const unbuilt = !view.locked && !(view.built || Number(view.level) >= 1);
+      const unbuilt = !view.locked && Number(view.level) < 1;
       if (view.id === sel) {
         btn.setAttribute('data-hub-badge', view.canCollect
           ? buildingsTxt('buildings.collect', 'Oogsten')
@@ -51704,7 +51704,7 @@ if (typeof UI === 'object' && UI) {
     host.dataset.factoryId = view.id;
     host.setAttribute('data-factory-id', view.id);
     const locked = !!view.locked;
-    const unbuilt = !locked && !(view.built || view.level >= 1);
+    const unbuilt = !locked && Number(view.level) < 1;
     const step = this.buildingsStep === 'upgrade' ? 'upgrade' : 'harvest';
     const pct = view.capacity ? Math.min(100, Math.round((view.pending / view.capacity) * 100)) : 0;
     const eta = (!locked && view.pending < view.capacity && view.nextMs > 0)
