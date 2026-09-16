@@ -40,6 +40,14 @@
   },
   "userWishlist": [
     {
+      "id": "w-20260916T110000",
+      "from": "user",
+      "text": "check de talen, ook anderen dan alleen nl en en",
+      "status": "in-progress",
+      "updated": "2026-09-16",
+      "notes": "Post-#283 Z→A factcheck alle picker-talen (nl→fr→es→en→de). Report + FR/ES/DE stringfixes, speel.html i18n + stepsIos. Versus ongemoeid."
+    },
+    {
       "id": "w-20260914T200700",
       "from": "user",
       "text": "Hij laad niet lekker, what is up",

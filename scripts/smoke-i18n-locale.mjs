@@ -168,4 +168,30 @@ if (!/summonQuota:/.test(catalog)) fail('summon quota copy must be i18n');
 if (!/ui\.summonQuota/.test(ui)) fail('renderSummon quota must use i18n');
 if (!/ui\.summonLogEmpty/.test(ui) && !/ui\.summonNoPulls/.test(ui)) fail('summon log empty state must use i18n');
 
-console.log('SMOKE_OK i18n-locale: Tips/VERLOREN + #273 coverage + #283 overlays (EN-first, no Dutch leak stubs)');
+const speel = fs.readFileSync(path.join(root, 'speel.html'), 'utf8');
+if (!/id="stepsIos"/.test(speel)) fail('speel.html must restore #stepsIos for iPhone/iPad');
+if (/getElementById\('stepsIos'\)\.classList\.remove/.test(speel)) {
+  fail('speel.html must not unhide iOS steps via literal getElementById(stepsIos)');
+}
+if (!/var stepEl = document\.getElementById\(stepId\)/.test(speel)) fail('speel.html must null-guard install step card');
+if (!/var SPEEL_I18N = \{/.test(speel)) fail('speel.html must wire landing i18n');
+for (const loc of ['nl:', 'en:', 'de:', 'fr:', 'es:']) {
+  if (!speel.includes(loc)) fail('speel.html SPEEL_I18N missing ' + loc);
+}
+if (!/ritualTitle: 'Heute'/.test(i18n + locales + deChrome)) fail('DE fomo.ritualTitle still English Today');
+if (!/ritualTitle: 'Aujourd/.test(i18n + locales)) fail('FR fomo.ritualTitle still English Today');
+if (!/ritualTitle: 'Hoy'/.test(i18n + locales)) fail('ES fomo.ritualTitle still English Today');
+if (/name: 'Fists'/.test(locales)) fail('FR/ES weapon overlay still has English Fists');
+if (/name: 'Ninja sword'/.test(locales)) fail('FR/ES weapon overlay still has English Ninja sword');
+if (/name: 'Energy blade'/.test(locales)) fail('FR/ES weapon overlay still has English Energy blade');
+if (!/name: 'Poings'/.test(locales)) fail('FR weapon vuist should be Poings');
+if (!/name: 'Puños'/.test(locales)) fail('ES weapon vuist should be Puños');
+if (!/continueLastMode: 'Dernier mode'/.test(locales)) fail('FR ui.continueLastMode missing');
+if (!/continueLastMode: 'Último modo'/.test(locales)) fail('ES ui.continueLastMode missing');
+if (!/Usine Allume-Bâton/.test(i18n)) fail('FR factory names still leftover English');
+if (!/Fábrica Palo-Mechero/.test(i18n)) fail('ES factory names still leftover English');
+if (!/Stock-Anzünder-Fabrik/.test(i18n)) fail('DE factory names still leftover English');
+if (/help: \{ title: 'Tips & controls' \}/.test(i18n.split(/\n\s+en:\s+\{/)[0])) fail('NL help.title still English Tips & controls');
+if (/playLinkOk:/.test(i18n.split(/\n\s+fr:\s+\{/)[1] || '') === false) fail('FR settings.playLinkOk missing');
+
+console.log('SMOKE_OK i18n-locale: Tips/VERLOREN + #273 coverage + #283 overlays + 2026-09-16 FR/ES/DE polish');

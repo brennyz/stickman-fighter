@@ -1,3 +1,4 @@
+| 2026-09-16 | **i18n alle talen** | Post-#283 factcheck Z→A (nl→fr→es→en→de): FOMO/fabrieken/wapens FR/ES/DE; speel.html i18n + #stepsIos; Versus ongemoeid. **v1.18.168 / SW v378**. |
 | 2026-09-14 | **i18n Z→A rebase** | #283 rebased on #273: coverage keys + FR/ES/DE overlays; polish wording wins. **v1.18.165 / SW v375**. |
 | 2026-09-14 | **i18n harden** | Zelfde lane #273: Collectie/Settings leftover Dutch via t(); EN/DE geen NL-markers; Versus-keys vallen terug op EN. **v1.18.165 / SW v375**. |
 | 2026-09-14 | **i18n chrome** | EN/DE/NL: locale in scope (geen NL-fallback op EN/DE); HOME/Collectie/Upgrades/Wapens/Opties/HUD/tips in alle 3 talen. **v1.18.164 / SW v374**. |
