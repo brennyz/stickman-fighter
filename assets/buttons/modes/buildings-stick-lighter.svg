@@ -1,11 +1,13 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
      stroke="#ffd75e" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
      aria-hidden="true">
-  <!-- Stick-Lighter: crossed matches + spark (not a generic forge) -->
-  <path d="M5 19l7-14" stroke="#c98850"/>
-  <path d="M12 19L8 6" stroke="#6b4a28"/>
-  <circle cx="12" cy="4.4" r="1.5" fill="#ff8a3d" stroke="none"/>
-  <path d="M12 2.2c1.2-.9 2.4-.4 2.6.6" stroke="#ff8a3d" stroke-width="1.7"/>
-  <path d="M15.5 13.5h5.2v6.2H15.5z" fill="rgba(255,215,94,.22)"/>
-  <path d="M17.2 13.5V11h1.8v2.5"/>
+  <!-- Stick-Lighter: giant zippo + flame (not a generic forge) -->
+  <path d="M8 21V10.2h8V21z" fill="rgba(255,215,94,.28)"/>
+  <path d="M9.2 10.2V8.4h3.2"/>
+  <path d="M14.6 8.2h3.6v3.2" stroke="#c97a20"/>
+  <path d="M12 2.4c1.4 1 2.2 2.2 1.6 3.6" stroke="#ff8a3d" stroke-width="1.8"/>
+  <path d="M10.6 5.2c.6-1.4 1.8-2.2 2.6-1.6" stroke="#ffe08a" stroke-width="1.7"/>
+  <path d="M4.6 14.2l.2-7.2" stroke="#c98850"/>
+  <path d="M6.4 16.2l.2-6" stroke="#6b4a28"/>
+  <circle cx="5" cy="6.4" r="1.05" fill="#ff8a3d" stroke="none"/>
 </svg>

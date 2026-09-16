@@ -2,6 +2,8 @@
 
 Mega-merge **3 of 4** — art + wire only. Canonical ids **exact-match** systems **#292**.
 
+**Art v2** (prop-first silhouettes, shared ink `#0a0c14` + lifted walls `#5a6788`). One card per id — the wire map has no idle/active slot, so there are **no state variants**.
+
 **Locked `buildingId` strings:**
 
 | buildingId | name | card | stroke (`artHint.iconFile`) |

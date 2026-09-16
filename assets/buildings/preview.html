@@ -4,55 +4,167 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Stickman Fighter — building pixels</title>
 <style>
-  html,body{margin:0;background:#0e1424;color:#e8f0ff;font-family:system-ui,sans-serif}
-  body{padding:24px 20px 40px}
-  h1{font-family:Georgia,serif;color:#ffd75e;font-size:24px;margin:0 0 4px}
-  .sub{opacity:.7;margin:0 0 18px;font-size:13px}
-  h2{font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:#9db1e3;margin:22px 0 10px}
-  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:14px}
+  :root { --bg:#0e1424; --ink:#e8f0ff; --gold:#ffd75e; --dim:#9db1e3; --card:#1a2030; --card2:#2a3348; }
+  html,body{margin:0;background:var(--bg);color:var(--ink);font-family:system-ui,sans-serif}
+  body{padding:28px 22px 48px;max-width:1100px}
+  h1{font-family:Georgia,serif;color:var(--gold);font-size:26px;margin:0 0 4px}
+  .sub{opacity:.72;margin:0 0 20px;font-size:13px;line-height:1.45}
+  h2{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--dim);margin:28px 0 12px}
+  .sheet{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:18px 16px}
+  @media (max-width:720px){ .sheet{grid-template-columns:repeat(2,minmax(0,1fr))} }
   figure{margin:0;display:flex;flex-direction:column;align-items:center;gap:8px}
-  .zoom{width:112px;height:112px;border-radius:16px;background:linear-gradient(180deg,#2a3348,#1a2030);
-    box-shadow:0 6px 0 #0a0d18, inset 0 0 0 1px rgba(255,255,255,.08);
+  .zoom{width:128px;height:128px;border-radius:22px;background:linear-gradient(180deg,var(--card2),var(--card));
+    box-shadow:0 7px 0 #070a12, inset 0 0 0 1px rgba(255,255,255,.08);
     display:flex;align-items:center;justify-content:center;image-rendering:pixelated}
   .zoom img{width:96px;height:96px;image-rendering:pixelated}
-  figcaption{font-size:12px;font-weight:700;text-align:center}
-  figcaption small{display:block;font-weight:600;opacity:.6;margin-top:2px}
-  .hub{background:linear-gradient(180deg,#3a3040,#1a2030)}
+  .zoom.z192{width:220px;height:220px;border-radius:28px}
+  .zoom.z192 img{width:192px;height:192px}
+  .zoom.z32{width:64px;height:64px;border-radius:14px}
+  .zoom.z32 img{width:32px;height:32px}
+  .zoom.hub{background:linear-gradient(180deg,#3a3040,var(--card))}
+  figcaption{font-size:13px;font-weight:700;text-align:center;letter-spacing:.01em}
+  figcaption small{display:block;font-weight:600;opacity:.55;margin-top:2px;font-size:11px}
+  .phones{display:grid;gap:10px}
+  .phone{display:flex;align-items:center;gap:12px;padding:10px 12px;border-radius:16px;
+    background:linear-gradient(180deg,var(--card2),var(--card));
+    box-shadow:0 4px 0 #070a12, inset 0 0 0 1px rgba(255,255,255,.07)}
+  .phone img{width:64px;height:64px;image-rendering:pixelated;flex:none}
+  .phone strong{display:block;font-size:14px}
+  .phone span{display:block;font-size:11px;opacity:.55;margin-top:2px}
+  .zooms,.natives,.strokes{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:14px}
+  .natives{grid-template-columns:repeat(auto-fill,minmax(90px,1fr))}
+  .strokes{grid-template-columns:repeat(auto-fill,minmax(120px,1fr))}
+  .strokes .zoom img{width:48px;height:48px;image-rendering:auto}
+  .note{margin-top:28px;font-size:12px;opacity:.55}
 </style>
 </head><body>
 <h1>Fabrieken — stickman pixel</h1>
-<p class="sub">Locked ids (#292): stick_lighter · woodchip_glue · chipping_wood · bamboo_boesa · echo_whistle · not the share URL</p>
-<h2>HOME tile</h2>
-<div class="grid">
-<figure data-id="buildings">
-  <div class="zoom hub"><img src="hub-buildings.svg" alt="Buildings" width="96" height="96"></div>
-  <figcaption>Buildings<small>buildings · hub pixel</small></figcaption>
-</figure>
-<figure data-id="buildings-stroke">
-  <div class="zoom hub"><img src="../buttons/hub/buildings.svg" alt="Buildings stroke" width="48" height="48"></div>
-  <figcaption>HOME stroke<small>assets/buttons/hub/buildings.svg</small></figcaption>
-</figure>
-</div>
-<h2>Building cards (5 factories)</h2>
-<div class="grid">
+<p class="sub">Locked ids (#292): stick_lighter · woodchip_glue · chipping_wood · bamboo_boesa · echo_whistle.
+Art v2: prop-first silhouettes, shared ink + walls, no idle/active variants (wire map is one card each). Not the share URL.</p>
+
+<h2>Sheet — display names</h2>
+<div class="sheet">
+
 <figure data-id="stick_lighter">
-  <div class="zoom"><img src="stick_lighter.svg" alt="Stick-Lighter Factory" width="96" height="96"></div>
+  <div class="zoom "><img src="stick_lighter.svg" alt="Stick-Lighter Factory" width="96" height="96"></div>
   <figcaption>Stick-Lighter Factory<small>stick_lighter</small></figcaption>
 </figure>
 <figure data-id="woodchip_glue">
-  <div class="zoom"><img src="woodchip_glue.svg" alt="Woodchip-Glue Factory" width="96" height="96"></div>
+  <div class="zoom "><img src="woodchip_glue.svg" alt="Woodchip-Glue Factory" width="96" height="96"></div>
   <figcaption>Woodchip-Glue Factory<small>woodchip_glue</small></figcaption>
 </figure>
 <figure data-id="chipping_wood">
-  <div class="zoom"><img src="chipping_wood.svg" alt="Chipping-Wood Factory" width="96" height="96"></div>
+  <div class="zoom "><img src="chipping_wood.svg" alt="Chipping-Wood Factory" width="96" height="96"></div>
   <figcaption>Chipping-Wood Factory<small>chipping_wood</small></figcaption>
 </figure>
 <figure data-id="bamboo_boesa">
-  <div class="zoom"><img src="bamboo_boesa.svg" alt="Bamboo-Boesa Boiler" width="96" height="96"></div>
+  <div class="zoom "><img src="bamboo_boesa.svg" alt="Bamboo-Boesa Boiler" width="96" height="96"></div>
   <figcaption>Bamboo-Boesa Boiler<small>bamboo_boesa</small></figcaption>
 </figure>
 <figure data-id="echo_whistle">
-  <div class="zoom"><img src="echo_whistle.svg" alt="Echo-Whistle Mill" width="96" height="96"></div>
+  <div class="zoom "><img src="echo_whistle.svg" alt="Echo-Whistle Mill" width="96" height="96"></div>
   <figcaption>Echo-Whistle Mill<small>echo_whistle</small></figcaption>
-</figure></div>
+</figure>
+<figure data-id="buildings">
+  <div class="zoom hub"><img src="hub-buildings.svg" alt="Buildings" width="96" height="96"></div>
+  <figcaption>Buildings<small>HOME hub</small></figcaption>
+</figure>
+</div>
+
+<h2>Android cards (~64px art)</h2>
+<div class="phones">
+
+<article class="phone" data-id="stick_lighter-card">
+  <img src="stick_lighter.svg" alt="Stick-Lighter Factory" width="64" height="64">
+  <div><strong>Stick-Lighter Factory</strong><span>stick_lighter</span></div>
+</article>
+<article class="phone" data-id="woodchip_glue-card">
+  <img src="woodchip_glue.svg" alt="Woodchip-Glue Factory" width="64" height="64">
+  <div><strong>Woodchip-Glue Factory</strong><span>woodchip_glue</span></div>
+</article>
+<article class="phone" data-id="chipping_wood-card">
+  <img src="chipping_wood.svg" alt="Chipping-Wood Factory" width="64" height="64">
+  <div><strong>Chipping-Wood Factory</strong><span>chipping_wood</span></div>
+</article>
+<article class="phone" data-id="bamboo_boesa-card">
+  <img src="bamboo_boesa.svg" alt="Bamboo-Boesa Boiler" width="64" height="64">
+  <div><strong>Bamboo-Boesa Boiler</strong><span>bamboo_boesa</span></div>
+</article>
+<article class="phone" data-id="echo_whistle-card">
+  <img src="echo_whistle.svg" alt="Echo-Whistle Mill" width="64" height="64">
+  <div><strong>Echo-Whistle Mill</strong><span>echo_whistle</span></div>
+</article>
+</div>
+
+<h2>192px zoom</h2>
+<div class="zooms">
+
+<figure data-id="stick_lighter-192">
+  <div class="zoom z192"><img src="stick_lighter.svg" alt="Stick-Lighter Factory" width="192" height="192"></div>
+  <figcaption>Stick-Lighter Factory</figcaption>
+</figure>
+<figure data-id="woodchip_glue-192">
+  <div class="zoom z192"><img src="woodchip_glue.svg" alt="Woodchip-Glue Factory" width="192" height="192"></div>
+  <figcaption>Woodchip-Glue Factory</figcaption>
+</figure>
+<figure data-id="chipping_wood-192">
+  <div class="zoom z192"><img src="chipping_wood.svg" alt="Chipping-Wood Factory" width="192" height="192"></div>
+  <figcaption>Chipping-Wood Factory</figcaption>
+</figure>
+<figure data-id="bamboo_boesa-192">
+  <div class="zoom z192"><img src="bamboo_boesa.svg" alt="Bamboo-Boesa Boiler" width="192" height="192"></div>
+  <figcaption>Bamboo-Boesa Boiler</figcaption>
+</figure>
+<figure data-id="echo_whistle-192">
+  <div class="zoom z192"><img src="echo_whistle.svg" alt="Echo-Whistle Mill" width="192" height="192"></div>
+  <figcaption>Echo-Whistle Mill</figcaption>
+</figure>
+<figure data-id="buildings-192">
+  <div class="zoom z192 hub"><img src="hub-buildings.svg" alt="Buildings" width="192" height="192"></div>
+  <figcaption>Buildings</figcaption>
+</figure>
+</div>
+
+<h2>32×32 native</h2>
+<div class="natives">
+
+<figure data-id="stick_lighter-32">
+  <div class="zoom z32"><img src="stick_lighter.svg" alt="Stick-Lighter Factory" width="32" height="32"></div>
+  <figcaption>Stick-Lighter Factory</figcaption>
+</figure>
+<figure data-id="woodchip_glue-32">
+  <div class="zoom z32"><img src="woodchip_glue.svg" alt="Woodchip-Glue Factory" width="32" height="32"></div>
+  <figcaption>Woodchip-Glue Factory</figcaption>
+</figure>
+<figure data-id="chipping_wood-32">
+  <div class="zoom z32"><img src="chipping_wood.svg" alt="Chipping-Wood Factory" width="32" height="32"></div>
+  <figcaption>Chipping-Wood Factory</figcaption>
+</figure>
+<figure data-id="bamboo_boesa-32">
+  <div class="zoom z32"><img src="bamboo_boesa.svg" alt="Bamboo-Boesa Boiler" width="32" height="32"></div>
+  <figcaption>Bamboo-Boesa Boiler</figcaption>
+</figure>
+<figure data-id="echo_whistle-32">
+  <div class="zoom z32"><img src="echo_whistle.svg" alt="Echo-Whistle Mill" width="32" height="32"></div>
+  <figcaption>Echo-Whistle Mill</figcaption>
+</figure>
+<figure data-id="buildings-32">
+  <div class="zoom z32 hub"><img src="hub-buildings.svg" alt="Buildings" width="32" height="32"></div>
+  <figcaption>Buildings</figcaption>
+</figure>
+</div>
+
+<h2>HOME + factory strokes</h2>
+<div class="strokes">
+<figure data-id="buildings-stroke">
+  <div class="zoom hub"><img src="../buttons/hub/buildings.svg" alt="Buildings stroke" width="48" height="48"></div>
+  <figcaption>Buildings<small>HOME stroke</small></figcaption>
+</figure>
+<figure><div class="zoom"><img src="../buttons/modes/buildings-stick-lighter.svg" alt="" width="48" height="48"></div><figcaption>Stick-Lighter Factory</figcaption></figure>
+<figure><div class="zoom"><img src="../buttons/modes/buildings-woodchip-glue.svg" alt="" width="48" height="48"></div><figcaption>Woodchip-Glue Factory</figcaption></figure>
+<figure><div class="zoom"><img src="../buttons/modes/buildings-chipping-wood.svg" alt="" width="48" height="48"></div><figcaption>Chipping-Wood Factory</figcaption></figure>
+<figure><div class="zoom"><img src="../buttons/modes/buildings-bamboo-boesa.svg" alt="" width="48" height="48"></div><figcaption>Bamboo-Boesa Boiler</figcaption></figure>
+<figure><div class="zoom"><img src="../buttons/modes/buildings-echo-whistle.svg" alt="" width="48" height="48"></div><figcaption>Echo-Whistle Mill</figcaption></figure>
+</div>
+<p class="note">Regenerate with <code>npm run pixels:buildings</code> · map: BUILDING-PIXEL-MAP.md · share URL stays speel.html</p>
 </body></html>
