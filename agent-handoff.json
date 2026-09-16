@@ -17,23 +17,23 @@
     "swCache": "stickfighter-app-v382",
     "gameJsQuery": "game.js?v=382",
     "cssQuery": "styles/main.css?v=382",
-    "featureBranch": "cursor/mega-merge-grok-wave-5478",
+    "featureBranch": "main",
     "pushBlocked": null,
     "shareUrl": "https://brennyz.github.io/stickman-fighter/speel.html",
-    "note": "Mega-merge #295–#309 onto stack. v1.18.172 / SW 382. Brendon merge NOW.",
-    "updated": "2026-09-14T20:20:46Z",
-    "localMainHead": "c245df446cdab8494b7030e3bab2b3f92c3c7242",
-    "remoteMainHead": "c245df446cdab8494b7030e3bab2b3f92c3c7242"
+    "note": "MEGA-MERGE LIVE on origin/main a18fc9e. #295–#309. v1.18.172 / SW 382. Pages ~1–3 min then Verse versie.",
+    "updated": "2026-09-16T12:31:58Z",
+    "localMainHead": "a18fc9e67633773cb18b638c64c9a86916d02d27",
+    "remoteMainHead": "a18fc9e67633773cb18b638c64c9a86916d02d27"
   },
   "githubSync": {
     "policy": "Trigger van de user: «merge main» = commit (als nodig) + push origin/main. Daarna GitHub Pages (~1–3 min) → speel.html is LIVE. Niet stil pushen. Houd pendingUpload bij tot origin/main gelijk is.",
     "pcEqualsMain": true,
-    "localHead": "c245df446cdab8494b7030e3bab2b3f92c3c7242",
-    "remoteMainHead": "c245df446cdab8494b7030e3bab2b3f92c3c7242",
+    "localHead": "a18fc9e67633773cb18b638c64c9a86916d02d27",
+    "remoteMainHead": "a18fc9e67633773cb18b638c64c9a86916d02d27",
     "ahead": 0,
     "behind": 0,
     "dirty": false,
-    "lastChecked": "2026-09-14T20:21:12Z",
+    "lastChecked": "2026-09-16T12:31:58Z",
     "lastAsked": "2026-08-17T14:01:21Z",
     "pendingUpload": [],
     "pendingMerge": []
@@ -1058,6 +1058,10 @@
   ],
   "sessionLog": [
     {
+      "at": "2026-09-16T12:31:58Z",
+      "summary": "MEGA-MERGE LIVE origin/main a18fc9e: #295–#309. v1.18.172 / SW 382. speel.html na Pages."
+    },
+    {
       "at": "2026-09-14T20:20:40Z",
       "summary": "Boot-hotfix LIVE op origin/main: game.js parseerde niet (gotoW + SEASON_ART_SLOTS). v1.18.167 / SW 377. Verse versie na Pages."
     },
@@ -1152,10 +1156,6 @@
     {
       "at": "2026-09-14T12:35:18Z",
       "summary": "SATAN-kaart dikkere duivel, groter portret, korte copy, hitte-balk zonder dubbele tekst · v1.18.155 / SW 365"
-    },
-    {
-      "at": "2026-09-14T12:31:31Z",
-      "summary": "Start SATAN-kaart kwaliteit: dikkere duivel, minder dubbele tekst"
     }
   ],
   "implementedFeaturesSummary": "d18 char select deel 1+2 (v1.11.1-2); Mats coinrun + shuriken mik/vliegers + anti-spam (v1.12.0); speel.html (v1.12.2+). Zie HANDOFF-ZOEKINDEX.md en improvement-d20-bag.json userFeatureLog.",
