@@ -1315,6 +1315,36 @@ function saveAgeDays(stampAt) {
   }
 }
 
+function formatSaveWhen(stampAt) {
+  if (!stampAt) return (typeof t === 'function') ? t('settings.saveWhenNever') : '';
+  try {
+    const ms = new Date(stampAt).getTime();
+    if (!Number.isFinite(ms)) return (typeof t === 'function') ? t('settings.saveWhenNever') : '';
+    const sec = Math.max(0, Math.round((Date.now() - ms) / 1000));
+    if (sec < 20) return t('settings.saveWhenJustNow');
+    if (sec < 3600) return t('settings.saveWhenMin', { n: Math.max(1, Math.round(sec / 60)) });
+    if (sec < 86400) return t('settings.saveWhenHour', { n: Math.max(1, Math.round(sec / 3600)) });
+    return t('settings.saveWhenDay', { n: Math.max(1, Math.round(sec / 86400)) });
+  } catch (_) {
+    return (typeof t === 'function') ? t('settings.saveWhenNever') : '';
+  }
+}
+
+function onlineSaveStatusLine(h) {
+  const online = typeof navigator === 'undefined' || navigator.onLine !== false;
+  const lvl = h && h.lvl != null ? h.lvl : '?';
+  if (h && h.primaryCorrupt) return t('settings.saveAutoBad', { lvl });
+  if (!online) return t('settings.saveOnlineOffline');
+  return t('settings.saveAutoLine', { lvl, when: formatSaveWhen(h && h.stampAt) });
+}
+
+function onlineSavePill(h) {
+  const online = typeof navigator === 'undefined' || navigator.onLine !== false;
+  if (h && h.primaryCorrupt) return t('settings.saveOfflineBad');
+  if (!online) return t('settings.saveSyncOffline');
+  return t('settings.saveSyncOk');
+}
+
 function exportSaveJson() {
   const clean = sanitizeSave(save);
   const payload = Object.assign({}, clean, {
@@ -3046,7 +3076,9 @@ function weaponNextUnlockHtml() {
   return `<div class="dex-ach-next" style="margin-top:10px;padding:8px 10px;border-radius:12px;background:rgba(124,245,255,.06);border:1px solid rgba(124,245,255,.22)">` +
     `<div style="font-size:11px;font-weight:800;color:#7cf5ff;margin-bottom:4px">${t('ui.dexNextWeapon', { name: weaponLabel(next) })}</div>` +
     `<div style="font-size:12px;opacity:.85"><span class="rar-pill" style="color:${rar.color};border-color:${rar.color}">${rarityLabel(next.rarity)}</span>` +
-    ` · unlock Lv <b>${next.unlock}</b>${need ? ` · nog <b>${need}</b> level${need === 1 ? '' : 's'}` : ' · bijna!'}</div>` +
+    ` · ${t('ui.dexUnlockLv', { lv: next.unlock, lvl: next.unlock })}${need
+      ? t(need === 1 ? 'ui.dexUnlockNeed' : 'ui.dexUnlockNeedMany', { need: `<b>${need}</b>` })
+      : t('ui.dexUnlockSoon')}</div>` +
     `<div class="xpline" style="margin-top:6px;height:6px"><div style="width:${pct}%"></div></div></div>`;
 }
 function dexCosmeticProgressLines() {

@@ -557,6 +557,38 @@ if (btnClearSave) btnClearSave.addEventListener('click', () => {
   }, 'clearSave', 'Reset mislukt — probeer opnieuw');
 });
 bindSettingsControls();
+function bindPlayerDiagUnlock() {
+  const head = document.getElementById('settingsHead');
+  if (!head || head.dataset.diagBound === '1') return;
+  head.dataset.diagBound = '1';
+  let taps = 0;
+  let last = 0;
+  let holdTimer = 0;
+  const unlock = () => {
+    document.body.classList.add('sf-player-diag');
+    const block = document.getElementById('settingsDiagBlock');
+    if (block) block.hidden = false;
+    try {
+      if (typeof UI !== 'undefined' && UI.toast) {
+        UI.toast((typeof t === 'function') ? t('settings.diagOn') : 'Diagnostics on', 1600, { tone: 'ok' });
+      }
+    } catch (_) {}
+  };
+  head.addEventListener('click', () => {
+    const now = Date.now();
+    taps = (now - last < 1400) ? taps + 1 : 1;
+    last = now;
+    if (taps >= 5) { taps = 0; unlock(); }
+  });
+  head.addEventListener('pointerdown', () => {
+    holdTimer = setTimeout(unlock, 900);
+  });
+  const clearHold = () => { if (holdTimer) { clearTimeout(holdTimer); holdTimer = 0; } };
+  head.addEventListener('pointerup', clearHold);
+  head.addEventListener('pointerleave', clearHold);
+  head.addEventListener('pointercancel', clearHold);
+}
+bindPlayerDiagUnlock();
 const btnHelp = document.getElementById('btnHelp');
 bindPress(btnHelp, () => {
   AudioSys.init(); AudioSys.sfx('select');

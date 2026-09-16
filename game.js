@@ -323,9 +323,9 @@ const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const VERSION_UPDATE_SAVE_KEY = 'stickfighter_version_update_save_v1';
 const VERSION_UPDATE_FLAG_KEY = 'stickfighter_version_update_flag_v1';
 const SAVE_EXPORT_SCHEMA = 3;
-const APP_VERSION = '1.18.167';
+const APP_VERSION = '1.18.168';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 377;
+const SW_CACHE_REV = 378;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', petCoins: 0, dex: {}, summons: {}, pets: {}, activePet: null,
   eggPets: {}, activeEggPet: null, eggDaily: null,
   chestDaily: null, chestWeapons: {},
@@ -2319,9 +2319,10 @@ const I18N = {
       continue: 'Verder spelen', adventure: 'Avontuur', adventureSub: 'Verhaal · eilanden · bazen',
       arcade: 'Arcade', arcadeSub: 'Training · Muur · Muntjes', versus: '2 spelers', versusSub: 'Lokaal',
       collect: 'Collectie', collectSub: 'Wapens · figuur · boek', music: 'Muziek', missions: 'Missies',
-      summons: 'Summons', summonsSub: 'Dagelijkse kist · wapen & pet',
+      summons: 'Oproepen', summonsSub: 'Dagelijkse kist · wapen & pet',
       buildings: 'Fabrieken', buildingsSub: 'Werken · oogst · upgrade',
       options: 'Opties', tips: 'Tips', fresh: 'Verse versie', install: 'Zet in app-lade', installSub: 'Één icoon, zoals een echte app',
+      profileAria: 'Profiel en missies',
       pressStart: 'insert coin', missionReady: 'missie klaar', dayBonus: 'Dagbonus',
       choosePath: 'KIES JE PAD', lastPlayed: 'LAATST', playHere: 'SPEEL', saveSync: 'save OK',
       startGame: 'SPELEN', startSub: 'Start het gevecht',
@@ -2343,7 +2344,7 @@ const I18N = {
       style: 'Stijl', styleSub: 'Bandana & outfit unlocks',
       gear: 'Uitrusting', gearSub: '5 slots · pantser & cosmetics',
       skills: 'Skills', skillsSub: 'Energy specials · Spiral Orb · Wave Cannon',
-      upgrades: 'Upgrades', upgradesSub: 'Shards · technique uitrusten',
+      upgrades: 'Upgrades', upgradesSub: 'Shards · techniek uitrusten',
       dex: 'Monsterboek', dexSub: '{n} soorten · rariteit = HP · boerderij · zoo · zee · woud',
       modes3: '3 snelle modi', fightersLocal: '20 vechters · lokaal', vsRecord: '{w}/{m} gewonnen',
       statTrain: '{n}× training', statWall: 'muur {n}', statMats: '{n} munten',
@@ -2384,10 +2385,29 @@ const I18N = {
       sfxSamplesOn: 'Geluidseffecten: geladen',
       sfxSamplesLoad: 'Geluidseffecten: laden…',
       sfxSamplesOff: 'Geluidseffecten: offline',
-      saveAuto: 'Save gaat automatisch mee',
-      saveAutoLine: 'Lv {lvl} · OK op dit apparaat',
+      saveAuto: 'Online save',
+      saveAutoLine: 'Lv {lvl} · laatst gesynchroniseerd {when}',
       saveAutoBad: 'Lv {lvl} · check — open Bestand / offline',
       saveAutoHint: 'Online-save blijft vanzelf bij deze speel-link. Geen extra knop.',
+      saveOnlineLine: 'Online save · laatst gesynchroniseerd {when}',
+      saveOnlineOffline: 'Offline · save blijft op dit apparaat',
+      saveOnlineSyncing: 'Online save · synchroniseren…',
+      saveSyncOk: 'Gesynchroniseerd',
+      saveSyncing: 'Bezig',
+      saveSyncOffline: 'Offline',
+      saveWhenJustNow: 'zojuist',
+      saveWhenMin: '{n} min geleden',
+      saveWhenHour: '{n} uur geleden',
+      saveWhenDay: '{n} d geleden',
+      saveWhenNever: 'wacht op eerste schrijf',
+      audioThemeHead: 'Sfeer / soundtrack',
+      audioThemeLine: 'Sfeer: {name}',
+      touchAuto: 'auto', touchOn: 'aan', touchOff: 'uit',
+      diagOn: 'Hulp-diagnostiek aan',
+      aimSwatchCyan: 'Cyaan', aimSwatchGold: 'Goud', aimSwatchGreen: 'Groen',
+      aimSwatchOrange: 'Oranje', aimSwatchPink: 'Roze', aimSwatchPurple: 'Paars',
+      aimSwatchWhite: 'Wit',
+      aimPickAria: 'Mik-kleur kiezen',
       saveOfflineFold: 'Bestand / offline',
       saveOfflineTitle: 'Los pad — alleen als je een bestand wilt',
       saveOfflineOk: 'Bestandskopie klaar',
@@ -2440,17 +2460,17 @@ const I18N = {
       achievements: 'Prestaties' },
     fomo: {
       ritualTitle: 'Vandaag',
-      ritualCtaSummon: 'Naar summons',
+      ritualCtaSummon: 'Naar oproepen',
       ritualCtaMission: 'Speel missie',
       ritualCtaAdv: 'Naar avontuur',
       ritualDismiss: 'Sluiten',
       ritualReopen: 'Dagoverzicht',
       resetIn: 'Nieuw over {reset}',
-      rowSummons: 'Summons {left}/{total}',
+      rowSummons: 'Oproepen {left}/{total}',
       rowEggReady: 'Dag-ei klaar',
       rowEggDone: 'Dag-ei al open',
-      streakReward3: '+1 summon',
-      streakReward7: '+ei of summons',
+      streakReward3: '+1 oproep',
+      streakReward7: '+ei of oproepen',
       streakReward14: '+120 XP',
     },
     pets: { title: 'Pets · Metgezels', sub: 'Dex-pets via monsterboek · Ei-pets via dagelijkse arcade-pull',
@@ -2471,7 +2491,7 @@ const I18N = {
       5: { name: 'Finale-eiland', sub: 'Lv 41–50' },
       6: { name: 'Nachtmerrie', sub: 'Lv 51–60' },
       7: { name: 'Hel', sub: 'Lv 61–70' },
-      progress: 'Eiland {cur}/7 · {name} · {cleared}/{total} · unlock Lv {unlocked}/{max}',
+      progress: 'Eiland {cur}/7 · {name} · {cleared}/{total} · vrij Lv {unlocked}/{max}',
     },
     buildings: {
       title: 'Fabrieken',
@@ -2515,6 +2535,14 @@ const I18N = {
       ctxSuspended: 'Tik slider voor geluid',
       track: { menu: 'Menu', menu2: 'Menu 2', menu3: 'Menu 3', menuArcade: 'Arcade', menuHero: 'Hero', menuDream: 'Dream',
         battle: 'Gevecht', elite: 'Elite', boss: 'Baas', wall: 'Muur', training: 'Training', coinrun: 'Mats' },
+      theme: {
+        classic: { label: 'Klassiek', sub: 'Huidige pack' },
+        jungle: { label: 'Jungle', sub: 'Groen · drums' },
+        'fire-bamboo-boesa': { label: 'Vuur-bamboe', sub: 'Boesa · sintel' },
+        halloween: { label: 'Halloween', sub: 'Spooky · ostinato' },
+        winter: { label: 'Winter', sub: 'Seizoen-hook' },
+        summer: { label: 'Zomer', sub: 'Seizoen-hook' },
+      },
     },
   },
   en: {
@@ -2538,7 +2566,8 @@ const I18N = {
       collect: 'Collection', collectSub: 'Weapons · figure · book', music: 'Music', missions: 'Missions',
       summons: 'Summons', summonsSub: 'Daily chest · weapon & pet',
       buildings: 'Buildings', buildingsSub: 'Factories · collect · upgrade',
-      options: 'Options', tips: 'Tips', fresh: 'Fresh version', install: 'Add as app', installSub: 'One icon, like a real app',
+      options: 'Settings', tips: 'Tips', fresh: 'Fresh version', install: 'Add as app', installSub: 'One icon, like a real app',
+      profileAria: 'Profile and missions',
       pressStart: 'insert coin', missionReady: 'mission ready', dayBonus: 'Daily bonus',
       choosePath: 'CHOOSE YOUR PATH', lastPlayed: 'LAST', playHere: 'PLAY', saveSync: 'save OK',
       startGame: 'PLAY', startSub: 'Start the fight',
@@ -2581,7 +2610,7 @@ const I18N = {
     },
     result: { again: 'Again', next: 'Next level', menu: 'Main menu', menuArcade: 'Arcade', rematch: 'Rematch', rematchSub: 'Same fighters',
       trainAgainSub: 'vs RabbitRobot',
-      advWin: 'VICTORY!', advLose: 'VERLOREN', trainWin: 'CHAMPION!', trainLose: 'ROBOT WINS...',
+      advWin: 'VICTORY!', advLose: 'YOU LOST', trainWin: 'CHAMPION!', trainLose: 'ROBOT WINS...',
       advLoseKeep: 'XP and loot from this run stay',
       wavesStart: 'start',
       xp: '+{xp} XP earned · now Lv {lvl} ({cur}/{need} XP)' },
@@ -2601,10 +2630,29 @@ const I18N = {
       sfxSamplesOn: 'Sound effects: loaded',
       sfxSamplesLoad: 'Sound effects: loading…',
       sfxSamplesOff: 'Sound effects: offline',
-      saveAuto: 'Save stays with you automatically',
-      saveAutoLine: 'Lv {lvl} · OK on this device',
+      saveAuto: 'Online save',
+      saveAutoLine: 'Lv {lvl} · last synced {when}',
       saveAutoBad: 'Lv {lvl} · check — open File / offline',
       saveAutoHint: 'Online save stays with this play link automatically. No extra button.',
+      saveOnlineLine: 'Online save · last synced {when}',
+      saveOnlineOffline: 'Offline · save stays on this device',
+      saveOnlineSyncing: 'Online save · syncing…',
+      saveSyncOk: 'Synced',
+      saveSyncing: 'Syncing',
+      saveSyncOffline: 'Offline',
+      saveWhenJustNow: 'just now',
+      saveWhenMin: '{n} min ago',
+      saveWhenHour: '{n} h ago',
+      saveWhenDay: '{n} d ago',
+      saveWhenNever: 'waiting for first write',
+      audioThemeHead: 'Mood / soundtrack',
+      audioThemeLine: 'Theme: {name}',
+      touchAuto: 'auto', touchOn: 'on', touchOff: 'off',
+      diagOn: 'Help diagnostics on',
+      aimSwatchCyan: 'Cyan', aimSwatchGold: 'Gold', aimSwatchGreen: 'Green',
+      aimSwatchOrange: 'Orange', aimSwatchPink: 'Pink', aimSwatchPurple: 'Purple',
+      aimSwatchWhite: 'White',
+      aimPickAria: 'Pick aim color',
       saveOfflineFold: 'File / offline',
       saveOfflineTitle: 'Separate path — only if you want a file',
       saveOfflineOk: 'File copy ready',
@@ -2688,7 +2736,7 @@ const I18N = {
       5: { name: 'Final island', sub: 'Lv 41–50' },
       6: { name: 'Nightmare', sub: 'Lv 51–60' },
       7: { name: 'Hell', sub: 'Lv 61–70' },
-      progress: 'Island {cur}/7 · {name} · {cleared}/{total} · unlock Lv {unlocked}/{max}',
+      progress: 'Island {cur}/7 · {name} · {cleared}/{total} · open Lv {unlocked}/{max}',
     },
     buildings: {
       title: 'Factories',
@@ -2732,6 +2780,14 @@ const I18N = {
       ctxSuspended: 'Tap slider to wake audio',
       track: { menu: 'Menu', menu2: 'Menu 2', menu3: 'Menu 3', menuArcade: 'Arcade', menuHero: 'Hero', menuDream: 'Dream',
         battle: 'Battle', elite: 'Elite', boss: 'Boss', wall: 'Wall', training: 'Training', coinrun: 'Mats' },
+      theme: {
+        classic: { label: 'Classic', sub: 'Current pack' },
+        jungle: { label: 'Jungle', sub: 'Green · drums' },
+        'fire-bamboo-boesa': { label: 'Fire-bamboo', sub: 'Boesa · ember' },
+        halloween: { label: 'Halloween', sub: 'Spooky · ostinato' },
+        winter: { label: 'Winter', sub: 'Season hook' },
+        summer: { label: 'Summer', sub: 'Season hook' },
+      },
     },
   },
   de: {
@@ -2755,8 +2811,9 @@ const I18N = {
       collect: 'Sammlung', collectSub: 'Waffen · Stil · Buch',
       buildings: 'Fabriken', buildingsSub: 'Werke · ernten · upgrade',
       music: 'Musik', missions: 'Missionen',
-      summons: 'Summons', summonsSub: 'Tägliche Kiste · Waffe & Pet',
-      options: 'Optionen', tips: 'Tipps', fresh: 'Neue Version', install: 'Als App speichern', installSub: 'Ein Icon, wie eine echte App',
+      summons: 'Beschwörungen', summonsSub: 'Tägliche Kiste · Waffe & Pet',
+      options: 'Einstellungen', tips: 'Tipps', fresh: 'Neue Version', install: 'Als App speichern', installSub: 'Ein Icon, wie eine echte App',
+      profileAria: 'Profil und Missionen',
       pressStart: 'insert coin', missionReady: 'Mission bereit', dayBonus: 'Tagesbonus',
       choosePath: 'WÄHLE DEINEN WEG', lastPlayed: 'ZULETZT', playHere: 'SPIEL', saveSync: 'save OK',
       startGame: 'SPIELEN', startSub: 'Starte den Kampf',
@@ -2806,17 +2863,17 @@ const I18N = {
       collected: '+{n} {res} · {name}',
       collectedAll: 'Ernte +{n} aus {k} Gebäuden',
       waveHeal: '+{n} HP',
-      stick_lighter: { name: 'Stick-Lighter Factory', blurb: 'A lopsided woodshed that rubs sticks together until they sulk into sparks.' },
+      stick_lighter: { name: 'Stock-Anzünder-Fabrik', blurb: 'Schiefer Schuppen, der Stöcke reibt, bis sie Funken geben.' },
       stick_lighterSub: 'Funken · Ostinsel',
-      woodchip_glue: { name: 'Woodchip-Glue Factory', blurb: 'Boils yesterday’s sawdust into a paste that sticks harder than a combo. Do not lick.' },
+      woodchip_glue: { name: 'Holzspan-Leim-Fabrik', blurb: 'Kocht Sägemehl zu einer Paste, die härter klebt als eine Combo. Nicht lecken.' },
       woodchip_glueSub: 'Leim · Feuerinsel',
-      chipping_wood: { name: 'Chipping-Wood Factory', blurb: 'A cheerful chipper that whispers TIMBER and coughs useful chips.' },
+      chipping_wood: { name: 'Holz-Schnippler-Fabrik', blurb: 'Fröhlicher Häcksler, der TIMBER flüstert und nützliche Späne hustet.' },
       chipping_woodSub: 'Späne · Neoninsel',
-      bamboo_boesa: { name: 'Bamboo-Boesa Boiler', blurb: 'Fire-island kettle that steams hollow “boesa” bamboo until the stalks whistle.' },
+      bamboo_boesa: { name: 'Bambus-Boesa-Kessel', blurb: 'Feuer-Kessel, der hohlen Boesa-Bambus dämpft, bis die Stängel pfeifen.' },
       bamboo_boesaSub: 'Dampf · Tempelinsel',
-      echo_whistle: { name: 'Echo-Whistle Mill', blurb: 'A mill wheel that turns air into taunts. The building heckles you back.' },
+      echo_whistle: { name: 'Echo-Flötenmühle', blurb: 'Mühlrad, das Luft zu Spott mahlt. Das Gebäude motzt zurück.' },
       echo_whistleSub: 'Echo · Finalinsel',
-      bamboo_boesa_boiler: { name: 'Bamboo-Boesa Boiler' }, echo_whistle_mill: { name: 'Echo-Whistle Mill' },
+      bamboo_boesa_boiler: { name: 'Bambus-Boesa-Kessel' }, echo_whistle_mill: { name: 'Echo-Flötenmühle' },
       res: { spark: 'Funken', glue: 'Leim', chip: 'Span', steam: 'Dampf', echo: 'Echo', embers: 'Glut', chips: 'Späne', echoes: 'Echos' },
     },
     modes: { adventure: 'Abenteuer', training: 'Training', wall: 'Mauer', versus: '2 Spieler', coinrun: 'Münzen' },
@@ -2867,10 +2924,29 @@ const I18N = {
       importSaveFile: 'Datei wählen',
       savePortDesc: 'Der normale Save bleibt automatisch. Dieser Weg ist nur für ein anderes Gerät oder eine Datei.',
       savePortPlaceholder: 'Save hier einfügen oder Datei wählen',
-      saveAuto: 'Save läuft automatisch mit',
-      saveAutoLine: 'Lv {lvl} · OK auf diesem Gerät',
+      saveAuto: 'Online-Save',
+      saveAutoLine: 'Lv {lvl} · zuletzt synchronisiert {when}',
       saveAutoBad: 'Lv {lvl} · prüfen — Datei / offline öffnen',
       saveAutoHint: 'Online-Save bleibt automatisch bei diesem Spiel-Link. Kein Extra-Knopf.',
+      saveOnlineLine: 'Online-Save · zuletzt synchronisiert {when}',
+      saveOnlineOffline: 'Offline · Save bleibt auf diesem Gerät',
+      saveOnlineSyncing: 'Online-Save · synchronisiert…',
+      saveSyncOk: 'Synchron',
+      saveSyncing: 'Läuft',
+      saveSyncOffline: 'Offline',
+      saveWhenJustNow: 'gerade eben',
+      saveWhenMin: 'vor {n} Min',
+      saveWhenHour: 'vor {n} Std',
+      saveWhenDay: 'vor {n} T',
+      saveWhenNever: 'wartet auf ersten Schreib',
+      audioThemeHead: 'Stimmung / Soundtrack',
+      audioThemeLine: 'Stimmung: {name}',
+      touchAuto: 'auto', touchOn: 'an', touchOff: 'aus',
+      diagOn: 'Hilfe-Diagnose an',
+      aimSwatchCyan: 'Cyan', aimSwatchGold: 'Gold', aimSwatchGreen: 'Grün',
+      aimSwatchOrange: 'Orange', aimSwatchPink: 'Rosa', aimSwatchPurple: 'Lila',
+      aimSwatchWhite: 'Weiß',
+      aimPickAria: 'Ziel-Farbe wählen',
       saveOfflineFold: 'Datei / offline',
       saveOfflineTitle: 'Extra-Weg — nur wenn du eine Datei willst',
       saveOfflineOk: 'Datei-Kopie bereit',
@@ -2909,11 +2985,11 @@ const I18N = {
       claimAll: 'Alle abholen', claimAllSub: '+XP auf einmal', dayBonus: 'Tagesbonus', dayBonusSub: '+80 XP',
       achievements: 'Erfolge' },
     fomo: {
-      ritualTitle: 'Today', ritualCtaSummon: 'Open summons', ritualCtaMission: 'Play mission',
-      ritualCtaAdv: 'Play adventure', ritualDismiss: 'Close', ritualReopen: 'Day overview',
-      resetIn: 'Resets in {reset}', rowSummons: 'Summons {left}/{total}',
-      rowEggReady: 'Daily egg ready', rowEggDone: 'Daily egg already opened',
-      streakReward3: '+1 summon', streakReward7: '+egg or summons', streakReward14: '+120 XP',
+      ritualTitle: 'Heute', ritualCtaSummon: 'Zu Beschwörungen', ritualCtaMission: 'Mission spielen',
+      ritualCtaAdv: 'Ins Abenteuer', ritualDismiss: 'Schließen', ritualReopen: 'Tagesübersicht',
+      resetIn: 'Neu in {reset}', rowSummons: 'Beschwörungen {left}/{total}',
+      rowEggReady: 'Tages-Ei bereit', rowEggDone: 'Tages-Ei schon offen',
+      streakReward3: '+1 Beschwörung', streakReward7: '+Ei oder Beschwörungen', streakReward14: '+120 XP',
     },
     pets: { title: 'Pets · Begleiter', sub: 'Dex-Pets & Ei-Pets', crackEgg: 'Tages-Ei öffnen', crackEggSub: 'Kostenloser Arcade-Zug' },
     dex: { title: 'Monsterbuch', sub: '{n} Arten · Seltenheit = HP · Farm / Zoo / Meer / Wald / Krypta' },
@@ -2935,6 +3011,14 @@ const I18N = {
       bgmDuckPause: ' · BGM gedämpft',
       track: { menu: 'Menü', menu2: 'Menü 2', menu3: 'Menü 3', menuArcade: 'Arcade', menuHero: 'Hero', menuDream: 'Dream',
         battle: 'Kampf', elite: 'Elite', boss: 'Boss', wall: 'Mauer', training: 'Training', coinrun: 'Mats' },
+      theme: {
+        classic: { label: 'Klassisch', sub: 'Aktuelles Pack' },
+        jungle: { label: 'Dschungel', sub: 'Grün · Drums' },
+        'fire-bamboo-boesa': { label: 'Feuer-Bambus', sub: 'Boesa · Glut' },
+        halloween: { label: 'Halloween', sub: 'Spooky · Ostinato' },
+        winter: { label: 'Winter', sub: 'Saison-Hook' },
+        summer: { label: 'Sommer', sub: 'Saison-Hook' },
+      },
     },
   },
   fr: {
@@ -3492,6 +3576,37 @@ function applyLangStaticScreens() {
   setTitle('btnSettings', 'settings.title');
   setTitle('btnHelp', 'menu.tips');
   setTitle('btnVerseVersie', 'settings.freshHint');
+  const profileBar = document.getElementById('menuProfileBar');
+  if (profileBar) profileBar.setAttribute('aria-label', t('menu.profileAria'));
+  const upgradesHome = document.getElementById('btnUpgradesHome');
+  if (upgradesHome) upgradesHome.setAttribute('aria-label', t('hub.upgrades'));
+  const summonHome = document.getElementById('btnSummons');
+  if (summonHome && !summonHome.getAttribute('data-hub-stat')) {
+    summonHome.setAttribute('aria-label', t('menu.summons'));
+  }
+  const buildingsList = document.getElementById('buildingsList');
+  if (buildingsList) buildingsList.setAttribute('aria-label', t('buildings.title'));
+  const gearFilterBar = document.getElementById('gearFilterBar');
+  if (gearFilterBar) gearFilterBar.setAttribute('aria-label', tOr('gear.filterAria', t('gear.filterAll')));
+  const gearRarityBar = document.getElementById('gearRarityBar');
+  if (gearRarityBar) gearRarityBar.setAttribute('aria-label', tOr('gear.rarityAria', t('rarity.rare')));
+  const seasonBar = document.getElementById('seasonSwitchBar');
+  if (seasonBar) seasonBar.setAttribute('aria-label', t('season.title'));
+  const aimSwatchMap = {
+    '#7cf5ff': 'settings.aimSwatchCyan',
+    '#ffd75e': 'settings.aimSwatchGold',
+    '#7cfc8a': 'settings.aimSwatchGreen',
+    '#ffb06a': 'settings.aimSwatchOrange',
+    '#ffb0b8': 'settings.aimSwatchPink',
+    '#c792ff': 'settings.aimSwatchPurple',
+    '#e8f0ff': 'settings.aimSwatchWhite',
+  };
+  document.querySelectorAll('#setAimColorSwatches [data-aim-color]').forEach((btn) => {
+    const key = aimSwatchMap[(btn.getAttribute('data-aim-color') || '').toLowerCase()];
+    if (key) btn.setAttribute('aria-label', t(key));
+  });
+  const aimPick = document.getElementById('setAimColor');
+  if (aimPick) aimPick.setAttribute('aria-label', t('settings.aimPickAria'));
 
   const installLbl = document.getElementById('btnInstallLabel');
   if (installLbl) installLbl.innerHTML = t('menu.install') + '<small>' + t('menu.installSub') + '</small>';
@@ -3530,6 +3645,12 @@ function applyLangStaticScreens() {
   setText('settingsHead', 'settings.title');
   setText('settingsSub', 'settings.sub');
   setText('setLangLbl', 'settings.lang');
+  setText('setMusicVolName', 'settings.music');
+  setText('setSfxVolName', 'settings.sfx');
+  setText('pauseMusicVolName', 'pause.music');
+  setText('pauseSfxVolName', 'pause.sfx');
+  setText('setAudioThemeLbl', 'settings.audioThemeHead');
+  setText('pauseAudioThemeLbl', 'settings.audioThemeHead');
   setText('setAimHead', 'settings.aimHead');
   setText('setAimHint', 'settings.aimHint');
   setText('setAimColorLbl', 'settings.aimColor');
@@ -5309,6 +5430,36 @@ function saveAgeDays(stampAt) {
   }
 }
 
+function formatSaveWhen(stampAt) {
+  if (!stampAt) return (typeof t === 'function') ? t('settings.saveWhenNever') : '';
+  try {
+    const ms = new Date(stampAt).getTime();
+    if (!Number.isFinite(ms)) return (typeof t === 'function') ? t('settings.saveWhenNever') : '';
+    const sec = Math.max(0, Math.round((Date.now() - ms) / 1000));
+    if (sec < 20) return t('settings.saveWhenJustNow');
+    if (sec < 3600) return t('settings.saveWhenMin', { n: Math.max(1, Math.round(sec / 60)) });
+    if (sec < 86400) return t('settings.saveWhenHour', { n: Math.max(1, Math.round(sec / 3600)) });
+    return t('settings.saveWhenDay', { n: Math.max(1, Math.round(sec / 86400)) });
+  } catch (_) {
+    return (typeof t === 'function') ? t('settings.saveWhenNever') : '';
+  }
+}
+
+function onlineSaveStatusLine(h) {
+  const online = typeof navigator === 'undefined' || navigator.onLine !== false;
+  const lvl = h && h.lvl != null ? h.lvl : '?';
+  if (h && h.primaryCorrupt) return t('settings.saveAutoBad', { lvl });
+  if (!online) return t('settings.saveOnlineOffline');
+  return t('settings.saveAutoLine', { lvl, when: formatSaveWhen(h && h.stampAt) });
+}
+
+function onlineSavePill(h) {
+  const online = typeof navigator === 'undefined' || navigator.onLine !== false;
+  if (h && h.primaryCorrupt) return t('settings.saveOfflineBad');
+  if (!online) return t('settings.saveSyncOffline');
+  return t('settings.saveSyncOk');
+}
+
 function exportSaveJson() {
   const clean = sanitizeSave(save);
   const payload = Object.assign({}, clean, {
@@ -7040,7 +7191,9 @@ function weaponNextUnlockHtml() {
   return `<div class="dex-ach-next" style="margin-top:10px;padding:8px 10px;border-radius:12px;background:rgba(124,245,255,.06);border:1px solid rgba(124,245,255,.22)">` +
     `<div style="font-size:11px;font-weight:800;color:#7cf5ff;margin-bottom:4px">${t('ui.dexNextWeapon', { name: weaponLabel(next) })}</div>` +
     `<div style="font-size:12px;opacity:.85"><span class="rar-pill" style="color:${rar.color};border-color:${rar.color}">${rarityLabel(next.rarity)}</span>` +
-    ` · unlock Lv <b>${next.unlock}</b>${need ? ` · nog <b>${need}</b> level${need === 1 ? '' : 's'}` : ' · bijna!'}</div>` +
+    ` · ${t('ui.dexUnlockLv', { lv: next.unlock, lvl: next.unlock })}${need
+      ? t(need === 1 ? 'ui.dexUnlockNeed' : 'ui.dexUnlockNeedMany', { need: `<b>${need}</b>` })
+      : t('ui.dexUnlockSoon')}</div>` +
     `<div class="xpline" style="margin-top:6px;height:6px"><div style="width:${pct}%"></div></div></div>`;
 }
 function dexCosmeticProgressLines() {
@@ -13294,6 +13447,11 @@ function applySeasonTheme(opts) {
   try {
     document.dispatchEvent(new CustomEvent('sf-season-change', { detail: snap }));
   } catch (_) {}
+  try {
+    if (typeof window !== 'undefined' && window.__sfSeason && typeof window.__sfSeason.apply === 'function') {
+      window.__sfSeason.apply();
+    }
+  } catch (_) {}
   if (opts && opts.toast && typeof UI !== 'undefined' && UI.toast && typeof t === 'function') {
     UI.toast(t('season.picked', { name: seasonLabel(snap.id) }), 2000, { tone: 'ok' });
   }
@@ -18590,7 +18748,7 @@ function seedNlGameStrings() {
     gearSub: '5 slots · look vs stats · level- en tijdslot',
     styleActive: 'Actief',
     stylePick: 'Tik om te kiezen',
-    styleIslandGate: 'Avontuur-cap Lv {cap} · stijl unlock Lv {need}',
+    styleIslandGate: 'Avontuur-cap Lv {cap} · stijl vrij Lv {need}',
     weaponIslandPick: 'Training ✓ · avontuur ≤ Lv {cap}',
     weaponIslandCapShort: 'Eiland-cap Lv {cap}',
     skillHead: 'Skills',
@@ -18773,7 +18931,7 @@ function seedNlGameStrings() {
     firstMinuteWall: '60s · combo ×3/×5/×8 hints · record-tempo + projectie in HUD',
     firstMinuteVersus: 'Eerste minuut: P1 links · P2 rechts',
     firstMinuteCoinrun: '45s munten · joy ↑ mik · roze vlieger = +3 · max 3 shuriken snel',
-    firstMinuteAdventureKb: 'Eerste minuut: A/D lopen · W springen · J/K/L · U technique · Shift subst',
+    firstMinuteAdventureKb: 'Eerste minuut: A/D lopen · W springen · J/K/L · U speciaal · Shift wissel',
     firstMinuteTrainingKb: 'Eerste minuut: spring lasers · Shift = substitutie · energy vol → U',
     firstMinuteWallKb: '60s · combo-milestones · A/D · J/K/L · record-tempo in HUD',
     firstMinuteVersusKb: 'Eerste minuut: P1 WASD+JKL · P2 pijltjes+1-5 · best-of-3',
@@ -18798,9 +18956,9 @@ function seedNlGameStrings() {
     hubStatSkills: '{n}/{total} · {skill} · {super}',
     hubStatSkillsEmpty: '{n} specials',
     hubStatDexLine: '{n}/{total} · +max HP',
-    summonHead: 'Summons',
+    summonHead: 'Oproepen',
     summonSub: 'Dagelijkse kist · 10× random · wapen of pet',
-    summonWhere: 'Menu → Summons · buit in Collectie → Wapens / Pets (badge Kist)',
+    summonWhere: 'Menu → Oproepen · buit in Collectie → Wapens / Pets (badge Kist)',
     summonQuota: 'Vandaag: {left}/{total} random summons',
     summonPull: 'Open kist',
     summonPullLeft: '{n} over',
@@ -18842,6 +19000,14 @@ function seedNlGameStrings() {
     weaponPicked: 'gekozen',
     weaponPick: 'kies',
     weaponChestBadge: 'Kist',
+    weaponSummonBadge: 'Oproep',
+    weaponFinishers: 'finishers {n}',
+    weaponFinisherN: '{n}× finisher',
+    weaponMoveFinisher: 'finisher',
+    weaponZoneDrop: 'Valt in {zone}-zone / Nightmare·Hel',
+    weaponPickFail: 'Wapen kiezen mislukt',
+    weaponLockedAdv: 'Nog vergrendeld — verder in avontuur',
+    weaponActive: 'Actief',
     upgradeLevelsTotal: 'Totaal {n} upgrade-levels',
     upgradeShardsLine: '{skill} skill · {item} item shards',
     upgradeMaxHint: 'Standaard max Lv {std} · mythische/extreme max Lv {ext}',
@@ -18864,17 +19030,17 @@ function seedNlGameStrings() {
     dexAllTypes: 'Alle types',
     dexSortBook: 'Boek',
     dexSortRarity: 'Rariteit',
-    dexSortUnlock: 'Unlock Lv',
+    dexSortUnlock: 'Vrij Lv',
     dexSortKills: 'Kills',
     dexSummary: 'Boek {n}/{total} · kills {kills} · bonus max HP +{hp} · rariteiten {tiers}/6',
-    dexAppear: 'Verschijnt in avontuur · unlock Lv {lvl}',
-    dexUnlockLv: 'Unlock Lv {lvl}',
+    dexAppear: 'Verschijnt in avontuur · vrij Lv {lvl}',
+    dexUnlockLv: 'vrij Lv {lvl}',
     dexSecret: 'Geheim',
     dexNotBeaten: 'Nog niet verslagen',
     dexStats: '{type} · basis HP {hp} · dmg {dmg} · spd {spd} · {xp} XP · Lv {lvl}',
     dexType: { hop: 'Hups', fly: 'Vlieg', charge: 'Charge', shoot: 'Schiet', tank: 'Tank', dragon: 'Draak', swim: 'Zee' },
     dexBiome: { farm: 'Boerderij', zoo: 'Dierentuin', sea: 'Zee', classic: 'Klassiek', secret: 'Geheim' },
-    saveHealthStats: 'Lv {lvl} · unlock {unlocked} · boek {dex} · kills {kills}',
+    saveHealthStats: 'Lv {lvl} · vrij {unlocked} · boek {dex} · kills {kills}',
     saveHealthSummon: ' · ✦ {n} summon',
     saveHealthPet: ' · pet {n}',
     saveHealthEgg: ' · ei {n}',
@@ -18906,7 +19072,11 @@ function seedNlGameStrings() {
     dexHintRarities: '{cur}/{need} rariteiten',
     dexHintKillsBook: '{cur}/{need} kills in boek',
     // Aliases for factcheck #283 — same chrome, do not fight their ui.js names.
-    dexAppears: 'Verschijnt in avontuur · unlock Lv {lv}',
+    dexAppears: 'Verschijnt in avontuur · vrij Lv {lv}',
+    dexUnlockLv: 'vrij Lv {lv}',
+    dexUnlockNeed: ' · nog {need} level',
+    dexUnlockNeedMany: ' · nog {need} levels',
+    dexUnlockSoon: ' · bijna!',
     dexBaseStats: '{type} · basis HP {hp} · dmg {dmg} · spd {spd} · {xp} XP · Lv {lv}',
     dexNotSeen: 'Nog niet verslagen',
     dexKillsLine: '{n}× verslagen',
@@ -18985,7 +19155,9 @@ function seedNlGameStrings() {
     hintDualTouch: 'P1 = linker helft · P2 = rechter helft · joystick + aanvalsknoppen',
     hintDualKb: 'P1: A/D · W · J/K/L/U · Shift  |  P2: pijltjes · 1/2/3/4/5',
     hintTouch: 'Links: joystick om te lopen · Rechts: aanvalsknoppen',
-    hintKb: 'A/D lopen · W springen · J stomp · K trap · L wapen · U speciaal',
+    hintKb: 'A/D lopen · W springen · J stamp · K schop · L wapen · U speciaal',
+    kbWalk: 'lopen', kbJump: 'spring', kbSub: 'wissel', kbPunch: 'stamp', kbKick: 'schop',
+    kbWeapon: 'wapen', kbSpecial: 'speciaal', kbParry: 'kets', kbHit: 'slag',
     partGateTouch: 'CHECKPOINT → houd joystick RECHTS (loop door)',
     partGateKb: 'CHECKPOINT → houd D of → vast (loop door)',
     partGateTouchShort: 'Joystick →',
@@ -19110,9 +19282,11 @@ function seedNlFromRuntime() {
     filterEmpty: 'Niets in deze filter',
     filterRarityAll: 'Alle',
     filterCount: '{shown}/{total} in {slot}',
+    filterAria: 'Filter',
+    rarityAria: 'Zeldzaamheid',
     rar: {
-      common: 'common', uncommon: 'uncommon', rare: 'rare', epic: 'epic',
-      legendary: 'legendary', mythic: 'mythic', nightmare: 'nightmare', hell: 'hell',
+      common: 'gewoon', uncommon: 'ongewoon', rare: 'zeldzaam', epic: 'episch',
+      legendary: 'legendarisch', mythic: 'mythisch', nightmare: 'nachtmerrie', hell: 'hel',
     },
     catalogN: '{n} items',
     weaponAside: 'Wapen',
@@ -19172,6 +19346,8 @@ const CATALOG_EN = {
     filterEmpty: 'Nothing in this filter',
     filterRarityAll: 'All',
     filterCount: '{shown}/{total} in {slot}',
+    filterAria: 'Filter',
+    rarityAria: 'Rarity',
     rar: {
       common: 'common', uncommon: 'uncommon', rare: 'rare', epic: 'epic',
       legendary: 'legendary', mythic: 'mythic', nightmare: 'nightmare', hell: 'hell',
@@ -19277,7 +19453,7 @@ const CATALOG_EN = {
   },
   pickup: { heal: '+HP', rage: 'RAGE', energy: 'ENERGY', shield: 'SHIELD' },
   result: {
-    advWin: 'VICTORY!', advLose: 'VERLOREN', trainWin: 'CHAMPION!', trainLose: 'ROBOT WINS...',
+    advWin: 'VICTORY!', advLose: 'YOU LOST', trainWin: 'CHAMPION!', trainLose: 'ROBOT WINS...',
     advLoseKeep: 'XP and loot from this run stay',
     trainAgainSub: 'vs RabbitRobot',
     wavesStart: 'start',
@@ -19907,7 +20083,7 @@ const CATALOG_EN = {
     firstMinuteWall: '60s · combo ×3/×5/×8 hints · record pace + projection in HUD',
     firstMinuteVersus: 'First minute: P1 left · P2 right',
     firstMinuteCoinrun: '45s coins · joy ↑ aim · pink flyer = +3 · max 3 shuriken fast',
-    firstMinuteAdventureKb: 'First minute: A/D move · W jump · J/K/L · U technique · Shift subst',
+    firstMinuteAdventureKb: 'First minute: A/D move · W jump · J/K/L · U special · Shift swap',
     firstMinuteTrainingKb: 'First minute: jump lasers · Shift = subst · full energy → U',
     firstMinuteWallKb: '60s · combo milestones · A/D · J/K/L · record pace in HUD',
     firstMinuteVersusKb: 'First minute: P1 WASD+JKL · P2 arrows+1-5 · best-of-3',
@@ -19976,6 +20152,14 @@ const CATALOG_EN = {
     weaponPicked: 'chosen',
     weaponPick: 'pick',
     weaponChestBadge: 'Chest',
+    weaponSummonBadge: 'Summon',
+    weaponFinishers: 'finishers {n}',
+    weaponFinisherN: '{n}× finisher',
+    weaponMoveFinisher: 'finisher',
+    weaponZoneDrop: 'Drops in {zone} zone / Nightmare·Hell',
+    weaponPickFail: 'Could not pick weapon',
+    weaponLockedAdv: 'Still locked — play more adventure',
+    weaponActive: 'Active',
     upgradeLevelsTotal: 'Total {n} upgrade levels',
     upgradeShardsLine: '{skill} skill · {item} item shards',
     upgradeMaxHint: 'Default max Lv {std} · mythic/extreme max Lv {ext}',
@@ -20001,8 +20185,11 @@ const CATALOG_EN = {
     dexSortUnlock: 'Unlock Lv',
     dexSortKills: 'Kills',
     dexSummary: 'Book {n}/{total} · kills {kills} · bonus max HP +{hp} · rarities {tiers}/6',
-    dexAppear: 'Appears in adventure · unlock Lv {lvl}',
-    dexUnlockLv: 'Unlock Lv {lvl}',
+    dexAppear: 'Appears in adventure · open Lv {lvl}',
+    dexUnlockLv: 'open Lv {lvl}',
+    dexUnlockNeed: ' · {need} more level',
+    dexUnlockNeedMany: ' · {need} more levels',
+    dexUnlockSoon: ' · almost!',
     dexSecret: 'Secret',
     dexNotBeaten: 'Not defeated yet',
     dexStats: '{type} · base HP {hp} · dmg {dmg} · spd {spd} · {xp} XP · Lv {lvl}',
@@ -20260,6 +20447,8 @@ const CATALOG_EN = {
     hintDualKb: 'P1: A/D · W · J/K/L/U · Shift  |  P2: arrows · 1/2/3/4/5',
     hintTouch: 'Left: joystick to walk · Right: attack buttons',
     hintKb: 'A/D walk · W jump · J punch · K kick · L weapon · U special',
+    kbWalk: 'walk', kbJump: 'jump', kbSub: 'swap', kbPunch: 'punch', kbKick: 'kick',
+    kbWeapon: 'weapon', kbSpecial: 'special', kbParry: 'parry', kbHit: 'hit',
     partGateTouch: 'CHECKPOINT → hold joystick RIGHT (walk through)',
     partGateKb: 'CHECKPOINT → hold D or → (walk through)',
     partGateTouchShort: 'Stick →',
@@ -21239,7 +21428,9 @@ const CATALOG_DE_CHROME = {
     spawnFair: 'Spawn · fairer Start', nextRound: 'Nächste Runde',
     matchOver: 'Match vorbei',
     hintTouch: 'Links: Joystick laufen · Rechts: Angriffstasten',
-    hintKb: 'A/D laufen · W springen · J Schlag · K Tritt · L Waffe · U Special',
+    hintKb: 'A/D laufen · W springen · J Schlag · K Tritt · L Waffe · U Spezial',
+    kbWalk: 'laufen', kbJump: 'sprung', kbSub: 'Wechsel', kbPunch: 'Schlag', kbKick: 'Tritt',
+    kbWeapon: 'Waffe', kbSpecial: 'Spezial', kbParry: 'Konter', kbHit: 'Schlag',
     partGateTouch: 'CHECKPOINT → Joystick RECHTS halten',
     partGateKb: 'CHECKPOINT → D oder → halten',
     partGateTouchShort: 'Stick →',
@@ -21479,7 +21670,7 @@ const CATALOG_DE_CHROME = {
     firstMinuteWall: '60s · Combo ×3/×5/×8 · Rekord-Tempo + Projektion im HUD',
     firstMinuteVersus: 'Erste Minute: P1 links · P2 rechts',
     firstMinuteCoinrun: '45s Münzen · Joy ↑ zielen · rosa Flieger = +3 · max 3 Shuriken schnell',
-    firstMinuteAdventureKb: 'Erste Minute: A/D laufen · W springen · J/K/L · U Technik · Shift Subst',
+    firstMinuteAdventureKb: 'Erste Minute: A/D laufen · W springen · J/K/L · U Spezial · Shift Wechsel',
     firstMinuteTrainingKb: 'Erste Minute: Laser springen · Shift = Subst · volle Energy → U',
     firstMinuteWallKb: '60s · Combo-Meilensteine · A/D · J/K/L · Rekord-Tempo im HUD',
     firstMinuteVersusKb: 'Erste Minute: P1 WASD+JKL · P2 Pfeile+1-5 · Best-of-3',
@@ -21504,9 +21695,9 @@ const CATALOG_DE_CHROME = {
     hubStatSkills: '{n}/{total} · {skill} · {super}',
     hubStatSkillsEmpty: '{n} Specials',
     hubStatDexLine: '{n}/{total} · +max HP',
-    summonHead: 'Summons',
+    summonHead: 'Beschwörungen',
     summonSub: 'Tägliche Kiste · 10× random · Waffe oder Pet',
-    summonWhere: 'Menü → Summons · Beute in Sammlung → Waffen / Pets (Kisten-Badge)',
+    summonWhere: 'Menü → Beschwörungen · Beute in Sammlung → Waffen / Pets (Kisten-Badge)',
     summonQuota: 'Heute: {left}/{total} Random-Summons',
     summonLeft: '{n} übrig',
     summonDone: 'Leer',
@@ -21555,6 +21746,19 @@ const CATALOG_DE_CHROME = {
     weaponThrowLine: 'Wurf-Projektil — keine Melee-Combo',
     weaponPicked: 'gewählt',
     weaponPick: 'wählen',
+    weaponChestBadge: 'Kiste',
+    weaponSummonBadge: 'Beschwörung',
+    weaponFinishers: 'Finisher {n}',
+    weaponFinisherN: '{n}× Finisher',
+    weaponMoveFinisher: 'Finisher',
+    weaponZoneDrop: 'Drop in {zone}-Zone / Albtraum·Hölle',
+    weaponPickFail: 'Waffe wählen fehlgeschlagen',
+    weaponLockedAdv: 'Noch gesperrt — weiter im Abenteuer',
+    weaponActive: 'Aktiv',
+    dexUnlockLv: 'frei Lv {lv}',
+    dexUnlockNeed: ' · noch {need} Level',
+    dexUnlockNeedMany: ' · noch {need} Level',
+    dexUnlockSoon: ' · fast!',
     weaponChestBadge: 'Kiste',
     upgradeLevelsTotal: 'Gesamt {n} Upgrade-Level',
     upgradeShardsLine: '{skill} Skill · {item} Item-Splitter',
@@ -21619,7 +21823,13 @@ const CATALOG_DE_CHROME = {
     dexHintSpecies: '{cur}/{need} Arten',
     dexHintRarities: '{cur}/{need} Seltenheiten',
     dexHintKillsBook: '{cur}/{need} Kills im Buch',
-    dexAppears: 'Erscheint im Abenteuer · Unlock Lv {lv}',
+    dexAppears: 'Erscheint im Abenteuer · frei Lv {lv}',
+    dexUnlockLv: 'frei Lv {lv}',
+    dexUnlockNeed: ' · noch {need} Level',
+    dexUnlockNeedMany: ' · noch {need} Level',
+    dexUnlockSoon: ' · fast!',
+    filterAria: 'Filter',
+    rarityAria: 'Seltenheit',
     dexBaseStats: '{type} · Basis-HP {hp} · dmg {dmg} · spd {spd} · {xp} XP · Lv {lv}',
     dexNotSeen: 'Noch nicht besiegt',
     dexKillsLine: '{n}× besiegt',
@@ -21629,6 +21839,28 @@ const CATALOG_DE_CHROME = {
     errLoadSettings: 'Einstellungen laden fehlgeschlagen',
     errLoadScreen: 'Bildschirm laden fehlgeschlagen — Neue Version tippen',
     errLoadHelp: 'Tipps laden fehlgeschlagen',
+  },
+  gear: {
+    filterAll: 'Alles',
+    filterOwned: 'Deins',
+    filterAria: 'Filter',
+    rarityAria: 'Seltenheit',
+    pillVanity: 'LOOK',
+    pillStat: 'STAT',
+    pillLock: 'SPERRE',
+    empty: 'Leer',
+    pickHint: 'Tippe einen Slot, dann ein Item.',
+    lockedLine: 'Gesperrt · {why}',
+    equip: 'Anlegen',
+    unequip: 'Ablegen',
+    wearing: 'an',
+    catalogN: '{n} Items',
+    weaponAside: 'Waffe',
+    weaponAsideHint: 'Bleibt in Sammlung → Waffen — kein 6. Slot.',
+    rar: {
+      common: 'gewöhnlich', uncommon: 'ungewöhnlich', rare: 'selten', epic: 'episch',
+      legendary: 'legendär', mythic: 'mythisch', nightmare: 'Albtraum', hell: 'Hölle',
+    },
   },
 };
 /* --- src/i18n/catalog-locales.js --- */
@@ -24084,6 +24316,20 @@ function drawAudioThemeMenuWash(c) {
   c.restore();
 }
 
+function audioThemeLabel(id) {
+  const meta = AUDIO_THEME_META[id];
+  return (typeof tOr === 'function')
+    ? tOr('audio.theme.' + id + '.label', (meta && meta.label) || id)
+    : ((meta && meta.label) || id);
+}
+
+function audioThemeSub(id) {
+  const meta = AUDIO_THEME_META[id];
+  return (typeof tOr === 'function')
+    ? tOr('audio.theme.' + id + '.sub', (meta && meta.sub) || '')
+    : ((meta && meta.sub) || '');
+}
+
 function onAudioThemeBarPress(e) {
   const t = e && (e.target || e.srcElement);
   const btn = t && t.closest ? t.closest('[data-audio-theme]') : null;
@@ -24094,8 +24340,7 @@ function onAudioThemeBarPress(e) {
     setAudioTheme(id);
     try {
       if (typeof UI !== 'undefined' && UI.toast) {
-        const meta = AUDIO_THEME_META[id];
-        UI.toast('Sfeer: ' + ((meta && meta.label) || id), 1600, { tone: 'ok' });
+        UI.toast((typeof t === 'function' ? t('settings.audioThemeLine', { name: audioThemeLabel(id) }) : ('Theme: ' + audioThemeLabel(id))), 1600, { tone: 'ok' });
       }
     } catch (_) {}
   };
@@ -24111,13 +24356,14 @@ function renderAudioThemeBar(bar) {
     && AUDIO_THEME_IDS.every((id, i) => existing[i] && existing[i].getAttribute('data-audio-theme') === id);
   if (!same) {
     bar.innerHTML = AUDIO_THEME_IDS.map((id) => {
-      const meta = AUDIO_THEME_META[id];
       const active = id === cur ? ' active' : '';
-      return `<button type="button" class="dex-filter-btn${active}" data-audio-theme="${id}">${meta.label}</button>`;
+      return `<button type="button" class="dex-filter-btn${active}" data-audio-theme="${id}">${audioThemeLabel(id)}</button>`;
     }).join('');
   } else {
     existing.forEach((btn) => {
-      btn.classList.toggle('active', btn.getAttribute('data-audio-theme') === cur);
+      const id = btn.getAttribute('data-audio-theme');
+      btn.classList.toggle('active', id === cur);
+      if (id) btn.textContent = audioThemeLabel(id);
     });
   }
   if (!bar.dataset.audioThemeBound) {
@@ -42235,17 +42481,18 @@ class Game {
   drawKeyboardLegend(c) {
     if (fxLite() && typeof Perf !== 'undefined' && Perf.tier >= 2) return;
     const dual = Input.dualMode && this.mode === 'versus';
+    const lab = (key, fallback) => (typeof tOr === 'function' ? tOr('hud.' + key, fallback) : fallback);
     const rows = dual
       ? [
-          [{ k: 'A/D', lab: 'P1' }, { k: 'W', lab: '↑' }, { k: 'J K L', lab: 'slag' }, { k: 'U', lab: 'technique' }],
-          [{ k: '←→', lab: 'P2' }, { k: '↑', lab: '↑' }, { k: '1 2 3', lab: 'slag' }, { k: '4', lab: 'technique' }],
+          [{ k: 'A/D', lab: 'P1' }, { k: 'W', lab: '↑' }, { k: 'J K L', lab: lab('kbHit', 'hit') }, { k: 'U', lab: lab('kbSpecial', 'special') }],
+          [{ k: '←→', lab: 'P2' }, { k: '↑', lab: '↑' }, { k: '1 2 3', lab: lab('kbHit', 'hit') }, { k: '4', lab: lab('kbSpecial', 'special') }],
         ]
       : [
-          [{ k: 'A/D', lab: 'lopen' }, { k: 'W', lab: 'spring' }, { k: 'Shift', lab: 'subst' }],
-          [{ k: 'J', lab: 'stomp' }, { k: 'K', lab: 'trap' }, { k: 'L', lab: 'wapen' }, { k: 'U', lab: 'technique' }],
+          [{ k: 'A/D', lab: lab('kbWalk', 'walk') }, { k: 'W', lab: lab('kbJump', 'jump') }, { k: 'Shift', lab: lab('kbSub', 'swap') }],
+          [{ k: 'J', lab: lab('kbPunch', 'punch') }, { k: 'K', lab: lab('kbKick', 'kick') }, { k: 'L', lab: lab('kbWeapon', 'weapon') }, { k: 'U', lab: lab('kbSpecial', 'special') }],
         ];
     if (!dual && this.mode === 'adventure') {
-      rows[0].push({ k: 'E', lab: 'kets' });
+      rows[0].push({ k: 'E', lab: lab('kbParry', 'parry') });
     }
 
     const chipH = 22;
@@ -45881,7 +46128,7 @@ const UI = {
           name: `<b>${weaponLabel(save.weapon)}</b>`,
           cap: `<b>${adventureWeaponCap()}</b>`,
         }) +
-        ((save.stats.weaponFinishers || 0) > 0 ? ` · finishers <b>${save.stats.weaponFinishers}</b>` : '') +
+        ((save.stats.weaponFinishers || 0) > 0 ? ' · ' + t('ui.weaponFinishers', { n: `<b>${save.stats.weaponFinishers}</b>` }) : '') +
         (tierChips ? `<div style="margin-top:6px;line-height:1.7">${tierChips}</div>` : '') +
         weaponNextUnlockHtml();
     }
@@ -45941,7 +46188,7 @@ const UI = {
       el.appendChild(cv);
       const info = document.createElement('div');
       const summonBadge = w.summoned
-        ? ` <span class="rar-pill" style="color:${rar.color};border-color:${rar.color}">✦ Summon</span>`
+        ? ` <span class="rar-pill" style="color:${rar.color};border-color:${rar.color}">✦ ${t('ui.weaponSummonBadge')}</span>`
         : '';
       const chestSk = typeof chestWeaponSkillOf === 'function' ? chestWeaponSkillOf(w.id) : null;
       const chestBadge = chestSk
@@ -45966,7 +46213,7 @@ const UI = {
       const tierBadge = tier && finCount >= 3
         ? ` <span class="rar-pill" style="color:${tier.color};border-color:${tier.color}">${tier.name}</span>`
         : '';
-      const mastLine = finCount ? ` · ${finCount}× finisher` : '';
+      const mastLine = finCount ? ' · ' + t('ui.weaponFinisherN', { n: finCount }) : '';
       const upLv = weaponUpgradeEligible(base) ? itemUpgradeLevel('weapon', w.id) : 0;
       const upMax = weaponUpgradeEligible(base) ? itemUpgradeMax('weapon', w.id) : 0;
       const upBadge = upLv > 0
@@ -45976,7 +46223,7 @@ const UI = {
         ? `<div class="cinfo" style="opacity:.82;font-size:12px;margin-top:3px">${weaponUpgradeSummary(w.id)}</div>`
         : '';
       const moveLine = labels
-        ? `① ${labels[0]} · ② ${labels[1]} · ③ ${labels[2]} finisher${mastLine}`
+        ? `① ${labels[0]} · ② ${labels[1]} · ③ ${labels[2]} ${t('ui.weaponMoveFinisher')}${mastLine}`
         : (isThrowWeapon(w.id) ? t('ui.weaponThrowLine') : '');
       const islandLine = islandLocked && !lvlLocked
         ? `<div class="cinfo" style="opacity:.82;font-size:12px;margin-top:3px;color:#ffd75e">${t('ui.weaponIslandPick', { cap: adventureWeaponCap() })}</div>`
@@ -45990,7 +46237,7 @@ const UI = {
         ? `<div class="cinfo" style="opacity:.88;font-size:12px;margin-top:3px;color:${zoneMeta ? zoneMeta.color : '#ffb0b8'}">${effectTxt}</div>`
         : '';
       const zoneLockLine = lvlLocked && zoneMeta
-        ? `<div class="cinfo" style="opacity:.82;font-size:12px;margin-top:3px;color:${zoneMeta.color}">Drop in ${zoneMeta.name}-zone / Nightmare·Hell modus</div>`
+        ? `<div class="cinfo" style="opacity:.82;font-size:12px;margin-top:3px;color:${zoneMeta.color}">${t('ui.weaponZoneDrop', { zone: zoneMeta.name })}</div>`
         : '';
       info.innerHTML = `<div class="cname">${weaponLabel(w)} <span class="rar-pill" style="color:${rar.color};border-color:${rar.color}">${rarityLabel(w.rarity)}</span>${zoneBadge}${summonBadge}${chestBadge}${tierBadge}${upBadge}</div>
         <div class="cinfo">${statLine}</div>` +
@@ -46002,7 +46249,7 @@ const UI = {
       el.appendChild(info);
       if (weaponUpgradeEligible(base)) appendItemUpgradeButton(el, 'weapon', w.id, () => this.renderWeapons());
       const right = document.createElement('div');
-      right.className = 'right';
+      right.className = 'right' + (selected && !lvlLocked && !islandLocked ? ' picked' : '');
       right.innerHTML = lvlLocked
         ? (zoneMeta ? `${SVG_LOCK_ICON} ${zoneMeta.name}` : `${SVG_LOCK_ICON} Lv ${base.unlock}`)
         : (islandLocked
@@ -46024,7 +46271,7 @@ const UI = {
           playWeaponPickFeedback(w.id);
           if (islandLocked) UI.toast(t('toast.weaponIslandCap', { cap: adventureWeaponCap() }), 2800);
           this.renderWeapons();
-        }, 'pickWeapon/' + w.id, 'Wapen kiezen mislukt');
+        }, 'pickWeapon/' + w.id, t('ui.weaponPickFail'));
       });
       list.appendChild(el);
     }
@@ -46060,7 +46307,7 @@ const UI = {
         rarEl.innerHTML =
           `<span class="rar-pill" style="color:${rar.color};border-color:${rar.color}">${rarityLabel(w.rarity)}</span>` +
           (zone ? ` <span class="rar-pill" style="color:${zone.color};border-color:${zone.color}">${zone.name}</span>` : '') +
-          (save.weapon === w.id ? ' <span class="rar-pill" style="color:#ffd75e;border-color:#ffd75e">Actief</span>' : '');
+          (save.weapon === w.id ? ' <span class="rar-pill weapon-active-pill" style="color:#f2efe6;border-color:#ffd75e">&#10004; ' + t('ui.weaponActive') + '</span>' : '');
       }
     }
     if (statsEl) {
@@ -46068,12 +46315,12 @@ const UI = {
       if (locked) {
         const zone = base.dropZone ? weaponDropZoneOf(base) : null;
         statsEl.textContent = zone
-          ? `Drop in ${zone.name}-zone of Nightmare 2.0 / Hell 3.0`
-          : 'Nog vergrendeld — level verder in avontuur';
+          ? t('ui.weaponZoneDrop', { zone: zone.name })
+          : t('ui.weaponLockedAdv');
       } else {
-        statsEl.textContent =
-          `${weaponDesc(w)} · x${w.dmg} dmg · bereik ${w.range} · spd x${w.speed}` +
-          (effectTxt ? ` · ${effectTxt}` : '');
+        statsEl.textContent = t('ui.weaponStatLine', {
+          desc: weaponDesc(w), dmg: w.dmg, range: w.range, speed: w.speed,
+        }) + (effectTxt ? ` · ${effectTxt}` : '');
       }
     }
     const c = cv.getContext('2d');
@@ -46969,7 +47216,7 @@ const UI = {
           ? tOr('gear.empty', 'Leeg')
           : (!unlock.unlocked
             ? (unlock.label || tOr('gear.pillLock', 'LOCK'))
-            : (gearItemName(item) + (rar ? ' · ' + rar : '')));
+            : (gearItemName(item) + (rar ? ' · ' + tOr('rarity.' + rar, tOr('gear.rar.' + rar, rar)) : '')));
         btn.innerHTML =
           `<span class="gear-slot-swatch" style="background:${esc(tint)}"></span>` +
           `<span class="gear-slot-copy">` +
@@ -46984,7 +47231,7 @@ const UI = {
             this._gearPickerScroll = 0;
             AudioSys.sfx('select');
             this.renderGear();
-          }, 'gearSlot/' + sid, 'Slot kiezen mislukt');
+          }, 'gearSlot/' + sid, tOr('gear.errSlot', 'Slot pick failed'));
         });
         slotList.appendChild(btn);
       }
@@ -47397,9 +47644,16 @@ const UI = {
     if (healthEl) {
       const h = saveHealthSummary();
       const lvl = h.lvl != null ? h.lvl : '?';
-      healthEl.textContent = h.primaryCorrupt
-        ? t('settings.saveAutoBad', { lvl })
-        : t('settings.saveAutoLine', { lvl });
+      healthEl.textContent = (typeof onlineSaveStatusLine === 'function')
+        ? onlineSaveStatusLine(h)
+        : (h.primaryCorrupt
+          ? t('settings.saveAutoBad', { lvl })
+          : t('settings.saveAutoLine', { lvl, when: '' }));
+    }
+    const pill = document.getElementById('settingsSaveSyncPill');
+    if (pill) {
+      const h = saveHealthSummary();
+      pill.textContent = (typeof onlineSavePill === 'function') ? onlineSavePill(h) : t('settings.saveSyncOk');
     }
     const detail = document.getElementById('saveHealthDetail');
     if (detail) {
@@ -47438,7 +47692,7 @@ const UI = {
         off = save.showTouchPads !== true;
         const mode = save.showTouchPads == null ? 'auto' : (save.showTouchPads ? 'on' : 'off');
         const base = typeof t === 'function' ? t('settings.showTouchPads') : 'Touch-knoppen altijd';
-        const suffix = mode === 'auto' ? ' · auto' : (mode === 'on' ? ' · aan' : ' · uit');
+        const suffix = ' · ' + t(mode === 'auto' ? 'settings.touchAuto' : (mode === 'on' ? 'settings.touchOn' : 'settings.touchOff'));
         const ico = el.querySelector('.tog-ico');
         el.textContent = '';
         if (ico) el.appendChild(ico);
@@ -47463,7 +47717,10 @@ const UI = {
       const themeMeta = (typeof AUDIO_THEME_META !== 'undefined' && typeof getAudioTheme === 'function')
         ? AUDIO_THEME_META[getAudioTheme()]
         : null;
-      const themeLine = themeMeta ? ('Sfeer: ' + themeMeta.label) : '';
+      const themeName = (typeof audioThemeLabel === 'function' && typeof getAudioTheme === 'function')
+        ? audioThemeLabel(getAudioTheme())
+        : (themeMeta && themeMeta.label);
+      const themeLine = themeName ? t('settings.audioThemeLine', { name: themeName }) : '';
       audioEl.textContent = base + ' · ' + sampleLine + (themeLine ? ' · ' + themeLine : '');
     }
     try { if (typeof renderAudioThemeSwitch === 'function') renderAudioThemeSwitch(); } catch (_) {}
@@ -47475,7 +47732,7 @@ const UI = {
   renderPausePerfStrip() {
     const el = document.getElementById('pausePerfStrip');
     if (!el) return;
-    if (!game || state !== 'pause') {
+    if (!game || state !== 'pause' || !document.body.classList.contains('sf-player-diag')) {
       el.style.display = 'none';
       el.textContent = '';
       return;
@@ -47498,7 +47755,7 @@ const UI = {
     if (statusEl) {
       let line = audioMixStatusLine(true);
       if (typeof navigator.onLine === 'boolean' && !navigator.onLine) {
-        line += ' · Offline — save op dit apparaat';
+        line += ' · ' + t('settings.saveOnlineOffline');
       }
       statusEl.textContent = line;
     }
@@ -48460,6 +48717,38 @@ if (btnClearSave) btnClearSave.addEventListener('click', () => {
   }, 'clearSave', 'Reset mislukt — probeer opnieuw');
 });
 bindSettingsControls();
+function bindPlayerDiagUnlock() {
+  const head = document.getElementById('settingsHead');
+  if (!head || head.dataset.diagBound === '1') return;
+  head.dataset.diagBound = '1';
+  let taps = 0;
+  let last = 0;
+  let holdTimer = 0;
+  const unlock = () => {
+    document.body.classList.add('sf-player-diag');
+    const block = document.getElementById('settingsDiagBlock');
+    if (block) block.hidden = false;
+    try {
+      if (typeof UI !== 'undefined' && UI.toast) {
+        UI.toast((typeof t === 'function') ? t('settings.diagOn') : 'Diagnostics on', 1600, { tone: 'ok' });
+      }
+    } catch (_) {}
+  };
+  head.addEventListener('click', () => {
+    const now = Date.now();
+    taps = (now - last < 1400) ? taps + 1 : 1;
+    last = now;
+    if (taps >= 5) { taps = 0; unlock(); }
+  });
+  head.addEventListener('pointerdown', () => {
+    holdTimer = setTimeout(unlock, 900);
+  });
+  const clearHold = () => { if (holdTimer) { clearTimeout(holdTimer); holdTimer = 0; } };
+  head.addEventListener('pointerup', clearHold);
+  head.addEventListener('pointerleave', clearHold);
+  head.addEventListener('pointercancel', clearHold);
+}
+bindPlayerDiagUnlock();
 const btnHelp = document.getElementById('btnHelp');
 bindPress(btnHelp, () => {
   AudioSys.init(); AudioSys.sfx('select');

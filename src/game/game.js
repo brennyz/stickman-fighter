@@ -5709,17 +5709,18 @@ class Game {
   drawKeyboardLegend(c) {
     if (fxLite() && typeof Perf !== 'undefined' && Perf.tier >= 2) return;
     const dual = Input.dualMode && this.mode === 'versus';
+    const lab = (key, fallback) => (typeof tOr === 'function' ? tOr('hud.' + key, fallback) : fallback);
     const rows = dual
       ? [
-          [{ k: 'A/D', lab: 'P1' }, { k: 'W', lab: '↑' }, { k: 'J K L', lab: 'slag' }, { k: 'U', lab: 'technique' }],
-          [{ k: '←→', lab: 'P2' }, { k: '↑', lab: '↑' }, { k: '1 2 3', lab: 'slag' }, { k: '4', lab: 'technique' }],
+          [{ k: 'A/D', lab: 'P1' }, { k: 'W', lab: '↑' }, { k: 'J K L', lab: lab('kbHit', 'hit') }, { k: 'U', lab: lab('kbSpecial', 'special') }],
+          [{ k: '←→', lab: 'P2' }, { k: '↑', lab: '↑' }, { k: '1 2 3', lab: lab('kbHit', 'hit') }, { k: '4', lab: lab('kbSpecial', 'special') }],
         ]
       : [
-          [{ k: 'A/D', lab: 'lopen' }, { k: 'W', lab: 'spring' }, { k: 'Shift', lab: 'subst' }],
-          [{ k: 'J', lab: 'stomp' }, { k: 'K', lab: 'trap' }, { k: 'L', lab: 'wapen' }, { k: 'U', lab: 'technique' }],
+          [{ k: 'A/D', lab: lab('kbWalk', 'walk') }, { k: 'W', lab: lab('kbJump', 'jump') }, { k: 'Shift', lab: lab('kbSub', 'swap') }],
+          [{ k: 'J', lab: lab('kbPunch', 'punch') }, { k: 'K', lab: lab('kbKick', 'kick') }, { k: 'L', lab: lab('kbWeapon', 'weapon') }, { k: 'U', lab: lab('kbSpecial', 'special') }],
         ];
     if (!dual && this.mode === 'adventure') {
-      rows[0].push({ k: 'E', lab: 'kets' });
+      rows[0].push({ k: 'E', lab: lab('kbParry', 'parry') });
     }
 
     const chipH = 22;

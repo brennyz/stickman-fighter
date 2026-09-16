@@ -22,9 +22,10 @@ const I18N = {
       continue: 'Verder spelen', adventure: 'Avontuur', adventureSub: 'Verhaal · eilanden · bazen',
       arcade: 'Arcade', arcadeSub: 'Training · Muur · Muntjes', versus: '2 spelers', versusSub: 'Lokaal',
       collect: 'Collectie', collectSub: 'Wapens · figuur · boek', music: 'Muziek', missions: 'Missies',
-      summons: 'Summons', summonsSub: 'Dagelijkse kist · wapen & pet',
+      summons: 'Oproepen', summonsSub: 'Dagelijkse kist · wapen & pet',
       buildings: 'Fabrieken', buildingsSub: 'Werken · oogst · upgrade',
       options: 'Opties', tips: 'Tips', fresh: 'Verse versie', install: 'Zet in app-lade', installSub: 'Één icoon, zoals een echte app',
+      profileAria: 'Profiel en missies',
       pressStart: 'insert coin', missionReady: 'missie klaar', dayBonus: 'Dagbonus',
       choosePath: 'KIES JE PAD', lastPlayed: 'LAATST', playHere: 'SPEEL', saveSync: 'save OK',
       startGame: 'SPELEN', startSub: 'Start het gevecht',
@@ -46,7 +47,7 @@ const I18N = {
       style: 'Stijl', styleSub: 'Bandana & outfit unlocks',
       gear: 'Uitrusting', gearSub: '5 slots · pantser & cosmetics',
       skills: 'Skills', skillsSub: 'Energy specials · Spiral Orb · Wave Cannon',
-      upgrades: 'Upgrades', upgradesSub: 'Shards · technique uitrusten',
+      upgrades: 'Upgrades', upgradesSub: 'Shards · techniek uitrusten',
       dex: 'Monsterboek', dexSub: '{n} soorten · rariteit = HP · boerderij · zoo · zee · woud',
       modes3: '3 snelle modi', fightersLocal: '20 vechters · lokaal', vsRecord: '{w}/{m} gewonnen',
       statTrain: '{n}× training', statWall: 'muur {n}', statMats: '{n} munten',
@@ -87,10 +88,29 @@ const I18N = {
       sfxSamplesOn: 'Geluidseffecten: geladen',
       sfxSamplesLoad: 'Geluidseffecten: laden…',
       sfxSamplesOff: 'Geluidseffecten: offline',
-      saveAuto: 'Save gaat automatisch mee',
-      saveAutoLine: 'Lv {lvl} · OK op dit apparaat',
+      saveAuto: 'Online save',
+      saveAutoLine: 'Lv {lvl} · laatst gesynchroniseerd {when}',
       saveAutoBad: 'Lv {lvl} · check — open Bestand / offline',
       saveAutoHint: 'Online-save blijft vanzelf bij deze speel-link. Geen extra knop.',
+      saveOnlineLine: 'Online save · laatst gesynchroniseerd {when}',
+      saveOnlineOffline: 'Offline · save blijft op dit apparaat',
+      saveOnlineSyncing: 'Online save · synchroniseren…',
+      saveSyncOk: 'Gesynchroniseerd',
+      saveSyncing: 'Bezig',
+      saveSyncOffline: 'Offline',
+      saveWhenJustNow: 'zojuist',
+      saveWhenMin: '{n} min geleden',
+      saveWhenHour: '{n} uur geleden',
+      saveWhenDay: '{n} d geleden',
+      saveWhenNever: 'wacht op eerste schrijf',
+      audioThemeHead: 'Sfeer / soundtrack',
+      audioThemeLine: 'Sfeer: {name}',
+      touchAuto: 'auto', touchOn: 'aan', touchOff: 'uit',
+      diagOn: 'Hulp-diagnostiek aan',
+      aimSwatchCyan: 'Cyaan', aimSwatchGold: 'Goud', aimSwatchGreen: 'Groen',
+      aimSwatchOrange: 'Oranje', aimSwatchPink: 'Roze', aimSwatchPurple: 'Paars',
+      aimSwatchWhite: 'Wit',
+      aimPickAria: 'Mik-kleur kiezen',
       saveOfflineFold: 'Bestand / offline',
       saveOfflineTitle: 'Los pad — alleen als je een bestand wilt',
       saveOfflineOk: 'Bestandskopie klaar',
@@ -143,17 +163,17 @@ const I18N = {
       achievements: 'Prestaties' },
     fomo: {
       ritualTitle: 'Vandaag',
-      ritualCtaSummon: 'Naar summons',
+      ritualCtaSummon: 'Naar oproepen',
       ritualCtaMission: 'Speel missie',
       ritualCtaAdv: 'Naar avontuur',
       ritualDismiss: 'Sluiten',
       ritualReopen: 'Dagoverzicht',
       resetIn: 'Nieuw over {reset}',
-      rowSummons: 'Summons {left}/{total}',
+      rowSummons: 'Oproepen {left}/{total}',
       rowEggReady: 'Dag-ei klaar',
       rowEggDone: 'Dag-ei al open',
-      streakReward3: '+1 summon',
-      streakReward7: '+ei of summons',
+      streakReward3: '+1 oproep',
+      streakReward7: '+ei of oproepen',
       streakReward14: '+120 XP',
     },
     pets: { title: 'Pets · Metgezels', sub: 'Dex-pets via monsterboek · Ei-pets via dagelijkse arcade-pull',
@@ -174,7 +194,7 @@ const I18N = {
       5: { name: 'Finale-eiland', sub: 'Lv 41–50' },
       6: { name: 'Nachtmerrie', sub: 'Lv 51–60' },
       7: { name: 'Hel', sub: 'Lv 61–70' },
-      progress: 'Eiland {cur}/7 · {name} · {cleared}/{total} · unlock Lv {unlocked}/{max}',
+      progress: 'Eiland {cur}/7 · {name} · {cleared}/{total} · vrij Lv {unlocked}/{max}',
     },
     buildings: {
       title: 'Fabrieken',
@@ -218,6 +238,14 @@ const I18N = {
       ctxSuspended: 'Tik slider voor geluid',
       track: { menu: 'Menu', menu2: 'Menu 2', menu3: 'Menu 3', menuArcade: 'Arcade', menuHero: 'Hero', menuDream: 'Dream',
         battle: 'Gevecht', elite: 'Elite', boss: 'Baas', wall: 'Muur', training: 'Training', coinrun: 'Mats' },
+      theme: {
+        classic: { label: 'Klassiek', sub: 'Huidige pack' },
+        jungle: { label: 'Jungle', sub: 'Groen · drums' },
+        'fire-bamboo-boesa': { label: 'Vuur-bamboe', sub: 'Boesa · sintel' },
+        halloween: { label: 'Halloween', sub: 'Spooky · ostinato' },
+        winter: { label: 'Winter', sub: 'Seizoen-hook' },
+        summer: { label: 'Zomer', sub: 'Seizoen-hook' },
+      },
     },
   },
   en: {
@@ -241,7 +269,8 @@ const I18N = {
       collect: 'Collection', collectSub: 'Weapons · figure · book', music: 'Music', missions: 'Missions',
       summons: 'Summons', summonsSub: 'Daily chest · weapon & pet',
       buildings: 'Buildings', buildingsSub: 'Factories · collect · upgrade',
-      options: 'Options', tips: 'Tips', fresh: 'Fresh version', install: 'Add as app', installSub: 'One icon, like a real app',
+      options: 'Settings', tips: 'Tips', fresh: 'Fresh version', install: 'Add as app', installSub: 'One icon, like a real app',
+      profileAria: 'Profile and missions',
       pressStart: 'insert coin', missionReady: 'mission ready', dayBonus: 'Daily bonus',
       choosePath: 'CHOOSE YOUR PATH', lastPlayed: 'LAST', playHere: 'PLAY', saveSync: 'save OK',
       startGame: 'PLAY', startSub: 'Start the fight',
@@ -284,7 +313,7 @@ const I18N = {
     },
     result: { again: 'Again', next: 'Next level', menu: 'Main menu', menuArcade: 'Arcade', rematch: 'Rematch', rematchSub: 'Same fighters',
       trainAgainSub: 'vs RabbitRobot',
-      advWin: 'VICTORY!', advLose: 'VERLOREN', trainWin: 'CHAMPION!', trainLose: 'ROBOT WINS...',
+      advWin: 'VICTORY!', advLose: 'YOU LOST', trainWin: 'CHAMPION!', trainLose: 'ROBOT WINS...',
       advLoseKeep: 'XP and loot from this run stay',
       wavesStart: 'start',
       xp: '+{xp} XP earned · now Lv {lvl} ({cur}/{need} XP)' },
@@ -304,10 +333,29 @@ const I18N = {
       sfxSamplesOn: 'Sound effects: loaded',
       sfxSamplesLoad: 'Sound effects: loading…',
       sfxSamplesOff: 'Sound effects: offline',
-      saveAuto: 'Save stays with you automatically',
-      saveAutoLine: 'Lv {lvl} · OK on this device',
+      saveAuto: 'Online save',
+      saveAutoLine: 'Lv {lvl} · last synced {when}',
       saveAutoBad: 'Lv {lvl} · check — open File / offline',
       saveAutoHint: 'Online save stays with this play link automatically. No extra button.',
+      saveOnlineLine: 'Online save · last synced {when}',
+      saveOnlineOffline: 'Offline · save stays on this device',
+      saveOnlineSyncing: 'Online save · syncing…',
+      saveSyncOk: 'Synced',
+      saveSyncing: 'Syncing',
+      saveSyncOffline: 'Offline',
+      saveWhenJustNow: 'just now',
+      saveWhenMin: '{n} min ago',
+      saveWhenHour: '{n} h ago',
+      saveWhenDay: '{n} d ago',
+      saveWhenNever: 'waiting for first write',
+      audioThemeHead: 'Mood / soundtrack',
+      audioThemeLine: 'Theme: {name}',
+      touchAuto: 'auto', touchOn: 'on', touchOff: 'off',
+      diagOn: 'Help diagnostics on',
+      aimSwatchCyan: 'Cyan', aimSwatchGold: 'Gold', aimSwatchGreen: 'Green',
+      aimSwatchOrange: 'Orange', aimSwatchPink: 'Pink', aimSwatchPurple: 'Purple',
+      aimSwatchWhite: 'White',
+      aimPickAria: 'Pick aim color',
       saveOfflineFold: 'File / offline',
       saveOfflineTitle: 'Separate path — only if you want a file',
       saveOfflineOk: 'File copy ready',
@@ -391,7 +439,7 @@ const I18N = {
       5: { name: 'Final island', sub: 'Lv 41–50' },
       6: { name: 'Nightmare', sub: 'Lv 51–60' },
       7: { name: 'Hell', sub: 'Lv 61–70' },
-      progress: 'Island {cur}/7 · {name} · {cleared}/{total} · unlock Lv {unlocked}/{max}',
+      progress: 'Island {cur}/7 · {name} · {cleared}/{total} · open Lv {unlocked}/{max}',
     },
     buildings: {
       title: 'Factories',
@@ -435,6 +483,14 @@ const I18N = {
       ctxSuspended: 'Tap slider to wake audio',
       track: { menu: 'Menu', menu2: 'Menu 2', menu3: 'Menu 3', menuArcade: 'Arcade', menuHero: 'Hero', menuDream: 'Dream',
         battle: 'Battle', elite: 'Elite', boss: 'Boss', wall: 'Wall', training: 'Training', coinrun: 'Mats' },
+      theme: {
+        classic: { label: 'Classic', sub: 'Current pack' },
+        jungle: { label: 'Jungle', sub: 'Green · drums' },
+        'fire-bamboo-boesa': { label: 'Fire-bamboo', sub: 'Boesa · ember' },
+        halloween: { label: 'Halloween', sub: 'Spooky · ostinato' },
+        winter: { label: 'Winter', sub: 'Season hook' },
+        summer: { label: 'Summer', sub: 'Season hook' },
+      },
     },
   },
   de: {
@@ -458,8 +514,9 @@ const I18N = {
       collect: 'Sammlung', collectSub: 'Waffen · Stil · Buch',
       buildings: 'Fabriken', buildingsSub: 'Werke · ernten · upgrade',
       music: 'Musik', missions: 'Missionen',
-      summons: 'Summons', summonsSub: 'Tägliche Kiste · Waffe & Pet',
-      options: 'Optionen', tips: 'Tipps', fresh: 'Neue Version', install: 'Als App speichern', installSub: 'Ein Icon, wie eine echte App',
+      summons: 'Beschwörungen', summonsSub: 'Tägliche Kiste · Waffe & Pet',
+      options: 'Einstellungen', tips: 'Tipps', fresh: 'Neue Version', install: 'Als App speichern', installSub: 'Ein Icon, wie eine echte App',
+      profileAria: 'Profil und Missionen',
       pressStart: 'insert coin', missionReady: 'Mission bereit', dayBonus: 'Tagesbonus',
       choosePath: 'WÄHLE DEINEN WEG', lastPlayed: 'ZULETZT', playHere: 'SPIEL', saveSync: 'save OK',
       startGame: 'SPIELEN', startSub: 'Starte den Kampf',
@@ -509,17 +566,17 @@ const I18N = {
       collected: '+{n} {res} · {name}',
       collectedAll: 'Ernte +{n} aus {k} Gebäuden',
       waveHeal: '+{n} HP',
-      stick_lighter: { name: 'Stick-Lighter Factory', blurb: 'A lopsided woodshed that rubs sticks together until they sulk into sparks.' },
+      stick_lighter: { name: 'Stock-Anzünder-Fabrik', blurb: 'Schiefer Schuppen, der Stöcke reibt, bis sie Funken geben.' },
       stick_lighterSub: 'Funken · Ostinsel',
-      woodchip_glue: { name: 'Woodchip-Glue Factory', blurb: 'Boils yesterday’s sawdust into a paste that sticks harder than a combo. Do not lick.' },
+      woodchip_glue: { name: 'Holzspan-Leim-Fabrik', blurb: 'Kocht Sägemehl zu einer Paste, die härter klebt als eine Combo. Nicht lecken.' },
       woodchip_glueSub: 'Leim · Feuerinsel',
-      chipping_wood: { name: 'Chipping-Wood Factory', blurb: 'A cheerful chipper that whispers TIMBER and coughs useful chips.' },
+      chipping_wood: { name: 'Holz-Schnippler-Fabrik', blurb: 'Fröhlicher Häcksler, der TIMBER flüstert und nützliche Späne hustet.' },
       chipping_woodSub: 'Späne · Neoninsel',
-      bamboo_boesa: { name: 'Bamboo-Boesa Boiler', blurb: 'Fire-island kettle that steams hollow “boesa” bamboo until the stalks whistle.' },
+      bamboo_boesa: { name: 'Bambus-Boesa-Kessel', blurb: 'Feuer-Kessel, der hohlen Boesa-Bambus dämpft, bis die Stängel pfeifen.' },
       bamboo_boesaSub: 'Dampf · Tempelinsel',
-      echo_whistle: { name: 'Echo-Whistle Mill', blurb: 'A mill wheel that turns air into taunts. The building heckles you back.' },
+      echo_whistle: { name: 'Echo-Flötenmühle', blurb: 'Mühlrad, das Luft zu Spott mahlt. Das Gebäude motzt zurück.' },
       echo_whistleSub: 'Echo · Finalinsel',
-      bamboo_boesa_boiler: { name: 'Bamboo-Boesa Boiler' }, echo_whistle_mill: { name: 'Echo-Whistle Mill' },
+      bamboo_boesa_boiler: { name: 'Bambus-Boesa-Kessel' }, echo_whistle_mill: { name: 'Echo-Flötenmühle' },
       res: { spark: 'Funken', glue: 'Leim', chip: 'Span', steam: 'Dampf', echo: 'Echo', embers: 'Glut', chips: 'Späne', echoes: 'Echos' },
     },
     modes: { adventure: 'Abenteuer', training: 'Training', wall: 'Mauer', versus: '2 Spieler', coinrun: 'Münzen' },
@@ -570,10 +627,29 @@ const I18N = {
       importSaveFile: 'Datei wählen',
       savePortDesc: 'Der normale Save bleibt automatisch. Dieser Weg ist nur für ein anderes Gerät oder eine Datei.',
       savePortPlaceholder: 'Save hier einfügen oder Datei wählen',
-      saveAuto: 'Save läuft automatisch mit',
-      saveAutoLine: 'Lv {lvl} · OK auf diesem Gerät',
+      saveAuto: 'Online-Save',
+      saveAutoLine: 'Lv {lvl} · zuletzt synchronisiert {when}',
       saveAutoBad: 'Lv {lvl} · prüfen — Datei / offline öffnen',
       saveAutoHint: 'Online-Save bleibt automatisch bei diesem Spiel-Link. Kein Extra-Knopf.',
+      saveOnlineLine: 'Online-Save · zuletzt synchronisiert {when}',
+      saveOnlineOffline: 'Offline · Save bleibt auf diesem Gerät',
+      saveOnlineSyncing: 'Online-Save · synchronisiert…',
+      saveSyncOk: 'Synchron',
+      saveSyncing: 'Läuft',
+      saveSyncOffline: 'Offline',
+      saveWhenJustNow: 'gerade eben',
+      saveWhenMin: 'vor {n} Min',
+      saveWhenHour: 'vor {n} Std',
+      saveWhenDay: 'vor {n} T',
+      saveWhenNever: 'wartet auf ersten Schreib',
+      audioThemeHead: 'Stimmung / Soundtrack',
+      audioThemeLine: 'Stimmung: {name}',
+      touchAuto: 'auto', touchOn: 'an', touchOff: 'aus',
+      diagOn: 'Hilfe-Diagnose an',
+      aimSwatchCyan: 'Cyan', aimSwatchGold: 'Gold', aimSwatchGreen: 'Grün',
+      aimSwatchOrange: 'Orange', aimSwatchPink: 'Rosa', aimSwatchPurple: 'Lila',
+      aimSwatchWhite: 'Weiß',
+      aimPickAria: 'Ziel-Farbe wählen',
       saveOfflineFold: 'Datei / offline',
       saveOfflineTitle: 'Extra-Weg — nur wenn du eine Datei willst',
       saveOfflineOk: 'Datei-Kopie bereit',
@@ -612,11 +688,11 @@ const I18N = {
       claimAll: 'Alle abholen', claimAllSub: '+XP auf einmal', dayBonus: 'Tagesbonus', dayBonusSub: '+80 XP',
       achievements: 'Erfolge' },
     fomo: {
-      ritualTitle: 'Today', ritualCtaSummon: 'Open summons', ritualCtaMission: 'Play mission',
-      ritualCtaAdv: 'Play adventure', ritualDismiss: 'Close', ritualReopen: 'Day overview',
-      resetIn: 'Resets in {reset}', rowSummons: 'Summons {left}/{total}',
-      rowEggReady: 'Daily egg ready', rowEggDone: 'Daily egg already opened',
-      streakReward3: '+1 summon', streakReward7: '+egg or summons', streakReward14: '+120 XP',
+      ritualTitle: 'Heute', ritualCtaSummon: 'Zu Beschwörungen', ritualCtaMission: 'Mission spielen',
+      ritualCtaAdv: 'Ins Abenteuer', ritualDismiss: 'Schließen', ritualReopen: 'Tagesübersicht',
+      resetIn: 'Neu in {reset}', rowSummons: 'Beschwörungen {left}/{total}',
+      rowEggReady: 'Tages-Ei bereit', rowEggDone: 'Tages-Ei schon offen',
+      streakReward3: '+1 Beschwörung', streakReward7: '+Ei oder Beschwörungen', streakReward14: '+120 XP',
     },
     pets: { title: 'Pets · Begleiter', sub: 'Dex-Pets & Ei-Pets', crackEgg: 'Tages-Ei öffnen', crackEggSub: 'Kostenloser Arcade-Zug' },
     dex: { title: 'Monsterbuch', sub: '{n} Arten · Seltenheit = HP · Farm / Zoo / Meer / Wald / Krypta' },
@@ -638,6 +714,14 @@ const I18N = {
       bgmDuckPause: ' · BGM gedämpft',
       track: { menu: 'Menü', menu2: 'Menü 2', menu3: 'Menü 3', menuArcade: 'Arcade', menuHero: 'Hero', menuDream: 'Dream',
         battle: 'Kampf', elite: 'Elite', boss: 'Boss', wall: 'Mauer', training: 'Training', coinrun: 'Mats' },
+      theme: {
+        classic: { label: 'Klassisch', sub: 'Aktuelles Pack' },
+        jungle: { label: 'Dschungel', sub: 'Grün · Drums' },
+        'fire-bamboo-boesa': { label: 'Feuer-Bambus', sub: 'Boesa · Glut' },
+        halloween: { label: 'Halloween', sub: 'Spooky · Ostinato' },
+        winter: { label: 'Winter', sub: 'Saison-Hook' },
+        summer: { label: 'Sommer', sub: 'Saison-Hook' },
+      },
     },
   },
   fr: {
@@ -1195,6 +1279,37 @@ function applyLangStaticScreens() {
   setTitle('btnSettings', 'settings.title');
   setTitle('btnHelp', 'menu.tips');
   setTitle('btnVerseVersie', 'settings.freshHint');
+  const profileBar = document.getElementById('menuProfileBar');
+  if (profileBar) profileBar.setAttribute('aria-label', t('menu.profileAria'));
+  const upgradesHome = document.getElementById('btnUpgradesHome');
+  if (upgradesHome) upgradesHome.setAttribute('aria-label', t('hub.upgrades'));
+  const summonHome = document.getElementById('btnSummons');
+  if (summonHome && !summonHome.getAttribute('data-hub-stat')) {
+    summonHome.setAttribute('aria-label', t('menu.summons'));
+  }
+  const buildingsList = document.getElementById('buildingsList');
+  if (buildingsList) buildingsList.setAttribute('aria-label', t('buildings.title'));
+  const gearFilterBar = document.getElementById('gearFilterBar');
+  if (gearFilterBar) gearFilterBar.setAttribute('aria-label', tOr('gear.filterAria', t('gear.filterAll')));
+  const gearRarityBar = document.getElementById('gearRarityBar');
+  if (gearRarityBar) gearRarityBar.setAttribute('aria-label', tOr('gear.rarityAria', t('rarity.rare')));
+  const seasonBar = document.getElementById('seasonSwitchBar');
+  if (seasonBar) seasonBar.setAttribute('aria-label', t('season.title'));
+  const aimSwatchMap = {
+    '#7cf5ff': 'settings.aimSwatchCyan',
+    '#ffd75e': 'settings.aimSwatchGold',
+    '#7cfc8a': 'settings.aimSwatchGreen',
+    '#ffb06a': 'settings.aimSwatchOrange',
+    '#ffb0b8': 'settings.aimSwatchPink',
+    '#c792ff': 'settings.aimSwatchPurple',
+    '#e8f0ff': 'settings.aimSwatchWhite',
+  };
+  document.querySelectorAll('#setAimColorSwatches [data-aim-color]').forEach((btn) => {
+    const key = aimSwatchMap[(btn.getAttribute('data-aim-color') || '').toLowerCase()];
+    if (key) btn.setAttribute('aria-label', t(key));
+  });
+  const aimPick = document.getElementById('setAimColor');
+  if (aimPick) aimPick.setAttribute('aria-label', t('settings.aimPickAria'));
 
   const installLbl = document.getElementById('btnInstallLabel');
   if (installLbl) installLbl.innerHTML = t('menu.install') + '<small>' + t('menu.installSub') + '</small>';
@@ -1233,6 +1348,12 @@ function applyLangStaticScreens() {
   setText('settingsHead', 'settings.title');
   setText('settingsSub', 'settings.sub');
   setText('setLangLbl', 'settings.lang');
+  setText('setMusicVolName', 'settings.music');
+  setText('setSfxVolName', 'settings.sfx');
+  setText('pauseMusicVolName', 'pause.music');
+  setText('pauseSfxVolName', 'pause.sfx');
+  setText('setAudioThemeLbl', 'settings.audioThemeHead');
+  setText('pauseAudioThemeLbl', 'settings.audioThemeHead');
   setText('setAimHead', 'settings.aimHead');
   setText('setAimHint', 'settings.aimHint');
   setText('setAimColorLbl', 'settings.aimColor');

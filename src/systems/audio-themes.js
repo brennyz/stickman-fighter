@@ -646,6 +646,20 @@ function drawAudioThemeMenuWash(c) {
   c.restore();
 }
 
+function audioThemeLabel(id) {
+  const meta = AUDIO_THEME_META[id];
+  return (typeof tOr === 'function')
+    ? tOr('audio.theme.' + id + '.label', (meta && meta.label) || id)
+    : ((meta && meta.label) || id);
+}
+
+function audioThemeSub(id) {
+  const meta = AUDIO_THEME_META[id];
+  return (typeof tOr === 'function')
+    ? tOr('audio.theme.' + id + '.sub', (meta && meta.sub) || '')
+    : ((meta && meta.sub) || '');
+}
+
 function onAudioThemeBarPress(e) {
   const t = e && (e.target || e.srcElement);
   const btn = t && t.closest ? t.closest('[data-audio-theme]') : null;
@@ -656,8 +670,7 @@ function onAudioThemeBarPress(e) {
     setAudioTheme(id);
     try {
       if (typeof UI !== 'undefined' && UI.toast) {
-        const meta = AUDIO_THEME_META[id];
-        UI.toast('Sfeer: ' + ((meta && meta.label) || id), 1600, { tone: 'ok' });
+        UI.toast((typeof t === 'function' ? t('settings.audioThemeLine', { name: audioThemeLabel(id) }) : ('Theme: ' + audioThemeLabel(id))), 1600, { tone: 'ok' });
       }
     } catch (_) {}
   };
@@ -673,13 +686,14 @@ function renderAudioThemeBar(bar) {
     && AUDIO_THEME_IDS.every((id, i) => existing[i] && existing[i].getAttribute('data-audio-theme') === id);
   if (!same) {
     bar.innerHTML = AUDIO_THEME_IDS.map((id) => {
-      const meta = AUDIO_THEME_META[id];
       const active = id === cur ? ' active' : '';
-      return `<button type="button" class="dex-filter-btn${active}" data-audio-theme="${id}">${meta.label}</button>`;
+      return `<button type="button" class="dex-filter-btn${active}" data-audio-theme="${id}">${audioThemeLabel(id)}</button>`;
     }).join('');
   } else {
     existing.forEach((btn) => {
-      btn.classList.toggle('active', btn.getAttribute('data-audio-theme') === cur);
+      const id = btn.getAttribute('data-audio-theme');
+      btn.classList.toggle('active', id === cur);
+      if (id) btn.textContent = audioThemeLabel(id);
     });
   }
   if (!bar.dataset.audioThemeBound) {

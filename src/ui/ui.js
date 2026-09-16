@@ -3303,7 +3303,7 @@ const UI = {
           name: `<b>${weaponLabel(save.weapon)}</b>`,
           cap: `<b>${adventureWeaponCap()}</b>`,
         }) +
-        ((save.stats.weaponFinishers || 0) > 0 ? ` · finishers <b>${save.stats.weaponFinishers}</b>` : '') +
+        ((save.stats.weaponFinishers || 0) > 0 ? ' · ' + t('ui.weaponFinishers', { n: `<b>${save.stats.weaponFinishers}</b>` }) : '') +
         (tierChips ? `<div style="margin-top:6px;line-height:1.7">${tierChips}</div>` : '') +
         weaponNextUnlockHtml();
     }
@@ -3363,7 +3363,7 @@ const UI = {
       el.appendChild(cv);
       const info = document.createElement('div');
       const summonBadge = w.summoned
-        ? ` <span class="rar-pill" style="color:${rar.color};border-color:${rar.color}">✦ Summon</span>`
+        ? ` <span class="rar-pill" style="color:${rar.color};border-color:${rar.color}">✦ ${t('ui.weaponSummonBadge')}</span>`
         : '';
       const chestSk = typeof chestWeaponSkillOf === 'function' ? chestWeaponSkillOf(w.id) : null;
       const chestBadge = chestSk
@@ -3388,7 +3388,7 @@ const UI = {
       const tierBadge = tier && finCount >= 3
         ? ` <span class="rar-pill" style="color:${tier.color};border-color:${tier.color}">${tier.name}</span>`
         : '';
-      const mastLine = finCount ? ` · ${finCount}× finisher` : '';
+      const mastLine = finCount ? ' · ' + t('ui.weaponFinisherN', { n: finCount }) : '';
       const upLv = weaponUpgradeEligible(base) ? itemUpgradeLevel('weapon', w.id) : 0;
       const upMax = weaponUpgradeEligible(base) ? itemUpgradeMax('weapon', w.id) : 0;
       const upBadge = upLv > 0
@@ -3398,7 +3398,7 @@ const UI = {
         ? `<div class="cinfo" style="opacity:.82;font-size:12px;margin-top:3px">${weaponUpgradeSummary(w.id)}</div>`
         : '';
       const moveLine = labels
-        ? `① ${labels[0]} · ② ${labels[1]} · ③ ${labels[2]} finisher${mastLine}`
+        ? `① ${labels[0]} · ② ${labels[1]} · ③ ${labels[2]} ${t('ui.weaponMoveFinisher')}${mastLine}`
         : (isThrowWeapon(w.id) ? t('ui.weaponThrowLine') : '');
       const islandLine = islandLocked && !lvlLocked
         ? `<div class="cinfo" style="opacity:.82;font-size:12px;margin-top:3px;color:#ffd75e">${t('ui.weaponIslandPick', { cap: adventureWeaponCap() })}</div>`
@@ -3412,7 +3412,7 @@ const UI = {
         ? `<div class="cinfo" style="opacity:.88;font-size:12px;margin-top:3px;color:${zoneMeta ? zoneMeta.color : '#ffb0b8'}">${effectTxt}</div>`
         : '';
       const zoneLockLine = lvlLocked && zoneMeta
-        ? `<div class="cinfo" style="opacity:.82;font-size:12px;margin-top:3px;color:${zoneMeta.color}">Drop in ${zoneMeta.name}-zone / Nightmare·Hell modus</div>`
+        ? `<div class="cinfo" style="opacity:.82;font-size:12px;margin-top:3px;color:${zoneMeta.color}">${t('ui.weaponZoneDrop', { zone: zoneMeta.name })}</div>`
         : '';
       info.innerHTML = `<div class="cname">${weaponLabel(w)} <span class="rar-pill" style="color:${rar.color};border-color:${rar.color}">${rarityLabel(w.rarity)}</span>${zoneBadge}${summonBadge}${chestBadge}${tierBadge}${upBadge}</div>
         <div class="cinfo">${statLine}</div>` +
@@ -3424,7 +3424,7 @@ const UI = {
       el.appendChild(info);
       if (weaponUpgradeEligible(base)) appendItemUpgradeButton(el, 'weapon', w.id, () => this.renderWeapons());
       const right = document.createElement('div');
-      right.className = 'right';
+      right.className = 'right' + (selected && !lvlLocked && !islandLocked ? ' picked' : '');
       right.innerHTML = lvlLocked
         ? (zoneMeta ? `${SVG_LOCK_ICON} ${zoneMeta.name}` : `${SVG_LOCK_ICON} Lv ${base.unlock}`)
         : (islandLocked
@@ -3446,7 +3446,7 @@ const UI = {
           playWeaponPickFeedback(w.id);
           if (islandLocked) UI.toast(t('toast.weaponIslandCap', { cap: adventureWeaponCap() }), 2800);
           this.renderWeapons();
-        }, 'pickWeapon/' + w.id, 'Wapen kiezen mislukt');
+        }, 'pickWeapon/' + w.id, t('ui.weaponPickFail'));
       });
       list.appendChild(el);
     }
@@ -3482,7 +3482,7 @@ const UI = {
         rarEl.innerHTML =
           `<span class="rar-pill" style="color:${rar.color};border-color:${rar.color}">${rarityLabel(w.rarity)}</span>` +
           (zone ? ` <span class="rar-pill" style="color:${zone.color};border-color:${zone.color}">${zone.name}</span>` : '') +
-          (save.weapon === w.id ? ' <span class="rar-pill" style="color:#ffd75e;border-color:#ffd75e">Actief</span>' : '');
+          (save.weapon === w.id ? ' <span class="rar-pill weapon-active-pill" style="color:#f2efe6;border-color:#ffd75e">&#10004; ' + t('ui.weaponActive') + '</span>' : '');
       }
     }
     if (statsEl) {
@@ -3490,12 +3490,12 @@ const UI = {
       if (locked) {
         const zone = base.dropZone ? weaponDropZoneOf(base) : null;
         statsEl.textContent = zone
-          ? `Drop in ${zone.name}-zone of Nightmare 2.0 / Hell 3.0`
-          : 'Nog vergrendeld — level verder in avontuur';
+          ? t('ui.weaponZoneDrop', { zone: zone.name })
+          : t('ui.weaponLockedAdv');
       } else {
-        statsEl.textContent =
-          `${weaponDesc(w)} · x${w.dmg} dmg · bereik ${w.range} · spd x${w.speed}` +
-          (effectTxt ? ` · ${effectTxt}` : '');
+        statsEl.textContent = t('ui.weaponStatLine', {
+          desc: weaponDesc(w), dmg: w.dmg, range: w.range, speed: w.speed,
+        }) + (effectTxt ? ` · ${effectTxt}` : '');
       }
     }
     const c = cv.getContext('2d');
@@ -4391,7 +4391,7 @@ const UI = {
           ? tOr('gear.empty', 'Leeg')
           : (!unlock.unlocked
             ? (unlock.label || tOr('gear.pillLock', 'LOCK'))
-            : (gearItemName(item) + (rar ? ' · ' + rar : '')));
+            : (gearItemName(item) + (rar ? ' · ' + tOr('rarity.' + rar, tOr('gear.rar.' + rar, rar)) : '')));
         btn.innerHTML =
           `<span class="gear-slot-swatch" style="background:${esc(tint)}"></span>` +
           `<span class="gear-slot-copy">` +
@@ -4406,7 +4406,7 @@ const UI = {
             this._gearPickerScroll = 0;
             AudioSys.sfx('select');
             this.renderGear();
-          }, 'gearSlot/' + sid, 'Slot kiezen mislukt');
+          }, 'gearSlot/' + sid, tOr('gear.errSlot', 'Slot pick failed'));
         });
         slotList.appendChild(btn);
       }
@@ -4819,9 +4819,16 @@ const UI = {
     if (healthEl) {
       const h = saveHealthSummary();
       const lvl = h.lvl != null ? h.lvl : '?';
-      healthEl.textContent = h.primaryCorrupt
-        ? t('settings.saveAutoBad', { lvl })
-        : t('settings.saveAutoLine', { lvl });
+      healthEl.textContent = (typeof onlineSaveStatusLine === 'function')
+        ? onlineSaveStatusLine(h)
+        : (h.primaryCorrupt
+          ? t('settings.saveAutoBad', { lvl })
+          : t('settings.saveAutoLine', { lvl, when: '' }));
+    }
+    const pill = document.getElementById('settingsSaveSyncPill');
+    if (pill) {
+      const h = saveHealthSummary();
+      pill.textContent = (typeof onlineSavePill === 'function') ? onlineSavePill(h) : t('settings.saveSyncOk');
     }
     const detail = document.getElementById('saveHealthDetail');
     if (detail) {
@@ -4860,7 +4867,7 @@ const UI = {
         off = save.showTouchPads !== true;
         const mode = save.showTouchPads == null ? 'auto' : (save.showTouchPads ? 'on' : 'off');
         const base = typeof t === 'function' ? t('settings.showTouchPads') : 'Touch-knoppen altijd';
-        const suffix = mode === 'auto' ? ' · auto' : (mode === 'on' ? ' · aan' : ' · uit');
+        const suffix = ' · ' + t(mode === 'auto' ? 'settings.touchAuto' : (mode === 'on' ? 'settings.touchOn' : 'settings.touchOff'));
         const ico = el.querySelector('.tog-ico');
         el.textContent = '';
         if (ico) el.appendChild(ico);
@@ -4885,7 +4892,10 @@ const UI = {
       const themeMeta = (typeof AUDIO_THEME_META !== 'undefined' && typeof getAudioTheme === 'function')
         ? AUDIO_THEME_META[getAudioTheme()]
         : null;
-      const themeLine = themeMeta ? ('Sfeer: ' + themeMeta.label) : '';
+      const themeName = (typeof audioThemeLabel === 'function' && typeof getAudioTheme === 'function')
+        ? audioThemeLabel(getAudioTheme())
+        : (themeMeta && themeMeta.label);
+      const themeLine = themeName ? t('settings.audioThemeLine', { name: themeName }) : '';
       audioEl.textContent = base + ' · ' + sampleLine + (themeLine ? ' · ' + themeLine : '');
     }
     try { if (typeof renderAudioThemeSwitch === 'function') renderAudioThemeSwitch(); } catch (_) {}
@@ -4897,7 +4907,7 @@ const UI = {
   renderPausePerfStrip() {
     const el = document.getElementById('pausePerfStrip');
     if (!el) return;
-    if (!game || state !== 'pause') {
+    if (!game || state !== 'pause' || !document.body.classList.contains('sf-player-diag')) {
       el.style.display = 'none';
       el.textContent = '';
       return;
@@ -4920,7 +4930,7 @@ const UI = {
     if (statusEl) {
       let line = audioMixStatusLine(true);
       if (typeof navigator.onLine === 'boolean' && !navigator.onLine) {
-        line += ' · Offline — save op dit apparaat';
+        line += ' · ' + t('settings.saveOnlineOffline');
       }
       statusEl.textContent = line;
     }

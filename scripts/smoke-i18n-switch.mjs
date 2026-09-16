@@ -41,7 +41,7 @@ async function run() {
   await page.waitForFunction(() => window.__sfBooted, { timeout: 45000 });
 
   const result = await page.evaluate(() => {
-    const DUTCH = /(Avontuur|Collectie|Instellingen|Wapens|Vandaag|Verzameld|Uitrusten|Dag-ei|muur |× vandaag|Alle types|Alle biomen|Export bevat|Laatst opgeslagen|Cosmetisch metgezel|Nog niet uitgekomen|Volgende prestatie|prestaties|soorten in monsterboek)/;
+    const DUTCH = /(Avontuur|Collectie|Instellingen|Wapens|Vandaag|Verzameld|Uitrusten|Dag-ei|muur |× vandaag|Alle types|Alle biomen|Export bevat|Laatst opgeslagen|Cosmetisch metgezel|Nog niet uitgekomen|Volgende prestatie|prestaties|soorten in monsterboek|Muziek|Effecten|Profiel en missies|Zet in app-lade|unlock Lv)/;
     function txt(id) { return (document.getElementById(id) || {}).textContent || ''; }
     function snap(lang) {
       if (typeof setLang === 'function') setLang(lang);
@@ -64,8 +64,12 @@ async function run() {
       const exportHint = txt('saveExportHint');
       const tAdv = typeof t === 'function' ? t('menu.adventure') : '';
       const tHud = typeof t === 'function' ? t('hud.levelWave', { n: 1, wv: 1, total: 3 }) : '';
-      const leftover = [adv, collect, weapons, settings, dexSum, dexTypes, eggBtn, exportHint].join(' ');
-      return { lang, adv, collect, help, weapons, settings, dexSum, dexTypes, eggBtn, exportHint, tAdv, tHud, leftover };
+      const musicName = txt('setMusicVolName');
+      const sfxName = txt('setSfxVolName');
+      const profileAria = (document.getElementById('menuProfileBar') || {}).getAttribute('aria-label') || '';
+      const summons = (document.querySelector('.hub-tile-summon .hub-tile-title') || {}).textContent || '';
+      const leftover = [adv, collect, weapons, settings, dexSum, dexTypes, eggBtn, exportHint, musicName, sfxName, profileAria].join(' ');
+      return { lang, adv, collect, help, weapons, settings, dexSum, dexTypes, eggBtn, exportHint, musicName, sfxName, profileAria, summons, tAdv, tHud, leftover };
     }
     const en = snap('en');
     const de = snap('de');
@@ -74,15 +78,21 @@ async function run() {
       && /Weapons/i.test(en.weapons) && /Settings|Options/i.test(en.settings)
       && /Tips/i.test(en.help) && !DUTCH.test(en.leftover)
       && /Wave/.test(en.tHud) && !/Golf/.test(en.tHud)
-      && /Book|All types|All biomes/i.test(en.dexSum + ' ' + en.dexTypes);
+      && /Book|All types|All biomes/i.test(en.dexSum + ' ' + en.dexTypes)
+      && /Music/i.test(en.musicName) && /Effect/i.test(en.sfxName)
+      && /Profile/i.test(en.profileAria);
     const deOk = /Abenteuer/i.test(de.adv) && /Sammlung/i.test(de.collect)
       && /Waffen/i.test(de.weapons) && /Einstellungen/i.test(de.settings)
       && /Tipp/i.test(de.help) && !DUTCH.test(de.leftover)
       && /Welle/.test(de.tHud) && !/Golf/.test(de.tHud) && !/Vandaag/.test(de.tHud)
-      && /Buch|Alle Typen|Alle Biome/i.test(de.dexSum + ' ' + de.dexTypes);
+      && /Buch|Alle Typen|Alle Biome/i.test(de.dexSum + ' ' + de.dexTypes)
+      && /Musik/i.test(de.musicName) && /Effekt/i.test(de.sfxName)
+      && /Profil/i.test(de.profileAria)
+      && /Beschwörung/i.test(de.summons);
     const nlOk = /Avontuur/.test(nl.adv) && /Collectie/.test(nl.collect)
       && /Wapens/.test(nl.weapons) && /Instellingen/.test(nl.settings)
-      && /Tips/.test(nl.help) && /Boek|Alle types/.test(nl.dexSum + ' ' + nl.dexTypes);
+      && /Tips/.test(nl.help) && /Boek|Alle types/.test(nl.dexSum + ' ' + nl.dexTypes)
+      && /Oproepen/.test(nl.summons);
     return { ok: !!(enOk && deOk && nlOk), en, de, nl, enOk, deOk, nlOk };
   });
 
