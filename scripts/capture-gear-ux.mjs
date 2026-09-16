@@ -113,7 +113,8 @@ async function run() {
         save.gear.owned.head_visor_neon = save.gear.owned.head_visor_neon || { at: Date.now(), src: 'shot' };
       }
       save.lvl = Math.max(save.lvl || 1, 20);
-      if (typeof gearEquipItem === 'function') gearEquipItem('head_visor_neon');
+      save.createdAt = Math.min(save.createdAt || Date.now(), Date.now() - 90 * 86400000);
+      if (typeof gearEquipItem === 'function') gearEquipItem('head_visor_neon', { expectSlot: 'head' });
       try {
         document.querySelectorAll('.sf-toast, .toast, [data-toast]').forEach((n) => { n.remove(); });
       } catch (_) {}
@@ -123,6 +124,40 @@ async function run() {
     });
     await new Promise((r) => setTimeout(r, 250));
     await shot(page, '05-gear-equipped');
+
+    await page.evaluate(() => {
+      const el = document.getElementById('gearScreen');
+      const inv = document.getElementById('gearInvSection');
+      if (el && inv) {
+        const sr = el.getBoundingClientRect();
+        const ir = inv.getBoundingClientRect();
+        el.scrollTop += (ir.top - sr.top) - 8;
+      }
+      UI.gearFilter = 'all';
+      UI.gearSlotPick = 'head';
+      UI.renderGear();
+      try {
+        document.querySelectorAll('.sf-toast, .toast, [data-toast]').forEach((n) => { n.remove(); });
+      } catch (_) {}
+    });
+    await new Promise((r) => setTimeout(r, 250));
+    await shot(page, '08-gear-sheet');
+
+    await page.evaluate(() => {
+      UI.gearFilter = 'lock';
+      UI.gearFilterQ = '';
+      UI.gearRarity = 'all';
+      UI.renderGear({ pickerOnly: true });
+      const el = document.getElementById('gearScreen');
+      const inv = document.getElementById('gearInvSection');
+      if (el && inv) {
+        const sr = el.getBoundingClientRect();
+        const ir = inv.getBoundingClientRect();
+        el.scrollTop += (ir.top - sr.top) - 8;
+      }
+    });
+    await new Promise((r) => setTimeout(r, 250));
+    await shot(page, '09-gear-lock');
 
     await page.evaluate(() => {
       if (typeof setLang === 'function') setLang('en');

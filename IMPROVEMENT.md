@@ -145,6 +145,7 @@ Schrijf **1–3 regels** per sessie: datum, d#, wat, versie.
 
 | Datum (UTC) | d# | Update |
 |-------------|-----|--------|
+| 2026-09-16 | — | Gear UI ↔ #295 equip-API: sheets via gearSlotInventory, tap via gearEquipItem(id,{expectSlot}), states ok/vanity-ok/already-equipped/locked/not-owned/wrong-slot/unknown. DOM/schema 1 ongewijzigd. v1.18.171 / SW 381. Draft, niet main. |
 | 2026-09-16 | — | Gear UX pass: HOME-sibling (1-tap Uitrusting, grotere hero + overlays, slot/wapen HOME-cards, tap=aan/uit, safe Back, één page-scroll). Schema ongewijzigd. v1.18.170 / SW 380. Draft, niet main. |
 | 2026-09-16 | — | **Gear loot pixels + motion:** unique 16×16 (107 templates + 131-id) + rarity ring + spawn pop / 3-frame fakkel / collect snap. Gates untouched. **v1.18.168 / SW 378** draft #305. |
 | 2026-09-16 | — | #302 stacked on #303: halloween nest PNG upgrade + `season-motion.css` loops. Unify CSS untouched. Play overlay stays visible. **v1.18.170 / SW 380**. |

@@ -64,8 +64,8 @@ gearItemById(id) · gearItemsForSlot(slot) · gearSlotById(id)
 gearUnlockContext(s, now) · gearGateState(item, s, now) · gearGateCopy(item, s, now)
 gearEquipState(id, s, now, expectSlot?)
 gearItemUnlocked / gearItemLootable / gearItemUsable
-gearCanGrant(id) · gearCanEquip(id, s, now, expectSlot?)
-gearGrantItem · gearEquipItem(id, s, now, expectSlot?) · gearUnequipSlot
+gearCanGrant(id) · gearCanEquip(id, s, now, expectSlot?) · gearEquipState(id, s, now, expectSlot?)
+gearGrantItem · gearEquipItem(id, s, now, expectSlot?) · gearEquipItem(id, { expectSlot? }) · gearUnequipSlot
 gearSlotInventory(slot, s)   // owned + locked preview + gate copy (schema 1)
 gearTooltipModel · gearTooltipLines · gearCombatLine
 gearRenderDescriptor(s)   // look tint/accent/layer — pixel art later

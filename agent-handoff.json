@@ -1038,6 +1038,13 @@
       "text": "BUILDINGS UX (systems + screen flow): overview of 5 factories → tap card for detail → then upgrade sheet. One-tap collect on resource pill. Sticky wallet always shows owned spark/glue/chip/steam/echo. buildingDescModel produce+power lines. Dutch-first. Draft PR only — mega-merge, do NOT merge main.",
       "status": "in-progress",
       "updated": "2026-09-16"
+    },
+    {
+      "id": "w-20260916T111200",
+      "from": "user",
+      "text": "Systems equip-API klaar (#295): align sheets/equip-flow. Bind gearEquipState/gearCanEquip (ok|vanity-ok|already-equipped|locked|not-owned|wrong-slot|unknown), gearEquipItem(id,{expectSlot?}), gearSlotInventory(slot,save). DOM #gearScreen/[data-slot]/[data-gear-id] ongewijzigd. Schema 1 ongemoeid. Geen layout-conflict met systems. Update PR #307 met screenshots + NL API-note.",
+      "status": "in-progress",
+      "updated": "2026-09-16"
     }
   ],
   "agentRules": [

@@ -14,13 +14,14 @@
  * MOST cosmetics are vanity. SOME cosmetics have stats. Armour has stats.
  * Every lootable item has BOTH unlockLvl (save.lvl) AND unlockDays (account age).
  *
- * World-drop lane (this PR, sibling src/data/gear-world.js):
+ * World-drop lane (sibling src/data/gear-world.js):
  *   grant is can-own-locked (gates not re-checked); rolls use lootable / allowLocked.
  *   rollGearDrop is implemented here so systems + spawners share one picker.
  *
- * Equip-flow states (gearEquipState / gearCanEquip.state):
- *   ok · vanity-ok · already-equipped · locked · not-owned · wrong-slot · unknown
- * Slot picker bind: gearSlotInventory(slot, save) → owned + locked preview + gate copy.
+ * Equip API (#295 + #307):
+ *   gearEquipState / gearCanEquip → ok | vanity-ok | already-equipped | locked | not-owned | wrong-slot | unknown
+ *   gearEquipItem(id, s, now, expectSlot) OR gearEquipItem(id, { expectSlot? })
+ *   gearSlotInventory(slot, save) → owned + locked preview + gate copy.
  */
 const GEAR_SCHEMA = 1;
 const GEAR_MS_PER_DAY = 86400000;
@@ -619,6 +620,37 @@ const GEAR_EQUIP_STATES = {
   NOSAVE: 'nosave',
 };
 
+function _gearIsSaveLike(obj) {
+  return !!(obj && typeof obj === 'object' && !Array.isArray(obj) && (
+    obj.gear != null || obj.lvl != null || obj.createdAt != null
+    || obj.unlocked != null || obj.advCleared != null
+    || obj.coins != null || obj.weapon != null
+  ));
+}
+
+function _gearIsEquipOpts(obj) {
+  if (!obj || typeof obj !== 'object' || Array.isArray(obj)) return false;
+  if (_gearIsSaveLike(obj)) return false;
+  const keys = Object.keys(obj);
+  if (!keys.length) return true;
+  return keys.every((k) => k === 'expectSlot' || k === 'now');
+}
+
+function _gearParseCall(sOrOpts, now, expectSlot) {
+  if (_gearIsEquipOpts(sOrOpts)) {
+    return {
+      s: (typeof save !== 'undefined' ? save : null),
+      now: sOrOpts.now != null ? sOrOpts.now : now,
+      expectSlot: sOrOpts.expectSlot != null ? sOrOpts.expectSlot : expectSlot,
+    };
+  }
+  return {
+    s: sOrOpts || (typeof save !== 'undefined' ? save : null),
+    now,
+    expectSlot,
+  };
+}
+
 function _gearEquipResult(partial) {
   const item = partial.item || null;
   const state = partial.state || GEAR_EQUIP_STATES.UNKNOWN;
@@ -641,32 +673,33 @@ function _gearEquipResult(partial) {
 
 /** Canonical equip-flow state. expectSlot (optional) → wrong-slot if mismatch. */
 function gearEquipState(id, s, now, expectSlot) {
+  const parsed = _gearParseCall(s, now, expectSlot);
   const item = gearItemById(id);
   if (!item) return _gearEquipResult({ ok: false, state: GEAR_EQUIP_STATES.UNKNOWN });
-  if (expectSlot != null && expectSlot !== '') {
-    const want = gearCanonSlot(expectSlot);
+  if (parsed.expectSlot != null && parsed.expectSlot !== '') {
+    const want = gearCanonSlot(parsed.expectSlot);
     if (!want || want !== item.slot) {
       return _gearEquipResult({
         ok: false,
         state: GEAR_EQUIP_STATES.WRONG_SLOT,
         item,
-        owned: gearItemOwned(item.id, s),
+        owned: gearItemOwned(item.id, parsed.s),
         label: (typeof tOr === 'function') ? tOr('gear.lockSlot', 'Verkeerd slot') : 'Verkeerd slot',
       });
     }
   }
-  const owned = gearItemOwned(item.id, s);
+  const owned = gearItemOwned(item.id, parsed.s);
   if (!owned) {
     return _gearEquipResult({
       ok: false,
       state: GEAR_EQUIP_STATES.NOT_OWNED,
       item,
-      gate: gearGateState(item, s, now),
+      gate: gearGateState(item, parsed.s, parsed.now),
       owned: false,
-      label: gearGateCopy(item, s, now),
+      label: gearGateCopy(item, parsed.s, parsed.now),
     });
   }
-  const gate = gearGateState(item, s, now);
+  const gate = gearGateState(item, parsed.s, parsed.now);
   if (!gate.ok) {
     return _gearEquipResult({
       ok: false,
@@ -674,10 +707,10 @@ function gearEquipState(id, s, now, expectSlot) {
       item,
       gate,
       owned: true,
-      label: gearGateCopy(item, s, now),
+      label: gearGateCopy(item, parsed.s, parsed.now),
     });
   }
-  const wearing = gearEquippedId(item.slot, s) === item.id;
+  const wearing = gearEquippedId(item.slot, parsed.s) === item.id;
   if (wearing) {
     return _gearEquipResult({
       ok: true,
@@ -759,9 +792,10 @@ function gearGrantItem(id, src, s, now) {
 }
 
 function gearEquipItem(id, s, now, expectSlot) {
-  const st = s || (typeof save !== 'undefined' ? save : null);
+  const parsed = _gearParseCall(s, now, expectSlot);
+  const st = parsed.s;
   if (!st) return _gearEquipResult({ ok: false, state: GEAR_EQUIP_STATES.NOSAVE });
-  const can = gearEquipState(id, st, now, expectSlot);
+  const can = gearEquipState(id, st, parsed.now, parsed.expectSlot);
   if (!can.ok) return can;
   const bag = ensureGearSave(st);
   bag.equipped[can.item.slot] = can.item.id;
@@ -802,13 +836,16 @@ function gearUnequipSlot(slot, s) {
 
 /** Owned items + locked/not-owned preview for one slot. Schema 1, no new save shape. */
 function gearSlotInventory(slot, s, now) {
+  const parsed = _gearIsEquipOpts(s)
+    ? { s: (typeof save !== 'undefined' ? save : null), now: s.now != null ? s.now : now }
+    : { s: s || (typeof save !== 'undefined' ? save : null), now };
   const canon = gearCanonSlot(slot);
-  const st = s || (typeof save !== 'undefined' ? save : null);
+  const st = parsed.s;
   if (!canon) return { slot: null, equippedId: null, items: [] };
   const equippedId = gearEquippedId(canon, st);
   const items = [];
   for (const item of gearItemsForSlot(canon)) {
-    const eq = gearEquipState(item.id, st, now, canon);
+    const eq = gearEquipState(item.id, st, parsed.now, canon);
     const owned = !!eq.owned;
     items.push({
       id: item.id,

@@ -27,7 +27,7 @@ const REGRESSION_MUST_DEFINE = [
   'applyReadyStance', 'drawWeaponLiveFx', 'weaponLiveKind', 'lookClothSway', 'startGearDollLive',
   'speciesBlurb', 'speciesBiomeId', 'dexBiomeDiscovered',
   'listGearSlots', 'equipGear', 'unequipGear', 'getEquippedGear',
-  'gearEquipItem', 'gearTooltipModel', 'gearRenderDescriptor',
+  'gearEquipItem', 'gearEquipState', 'gearSlotInventory', 'gearTooltipModel', 'gearRenderDescriptor',
   'tickBuildingResources', 'collectBuildingResource', 'applyBuildingPowersToPlayer', 'buildingPowerBonus',
   'applyBuildingCombatHook', 'tickBuildingCombat',
 ];
