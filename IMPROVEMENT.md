@@ -143,6 +143,7 @@ Schrijf **1–3 regels** per sessie: datum, d#, wat, versie.
 
 | Datum (UTC) | d# | Update |
 |-------------|-----|--------|
+| 2026-09-16 | — | Wave 3 monster doorontwikkeling: 18 unieke W2 P1 pixels, +18 families (144 soorten, boek ~714), frost/reef golven + biome telegraph/technique, dex filters. **v1.18.168 / SW 378**. Draft PR, geen silent main. |
 | 2026-09-14 | — | **Boot-hotfix** live laadde niet: `gotoW` 2× in i18n + `SEASON_ART_SLOTS` 2× (seasons + overlay). DE chrome keys. **v1.18.167 / SW 377**. Menu «Verse versie» na Pages. |
 | 2026-09-14 | — | Grokbot-prompt voor Android playtest + optimaliseren: `docs/GROKBOT-ANDROID-PROMPT.md`. |
 | 2026-09-10 | — | Store doctor: website ís het spel; Play/App Store optioneel, niet verplicht. |

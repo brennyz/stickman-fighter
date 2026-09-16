@@ -291,7 +291,9 @@ const SPECIES = {
     tideCerber: { name: 'Driekoppige Jachthond', art: 'tideHound', size: 36, hp: 345, dmg: 29, speed: 92, type: 'charge', xp: 124, rarity: 'mythic', c1: '#505868', c2: '#202830' },
 };
 const MONSTER_CATALOG_W2_EXPANDED = (typeof expandMonsterCatalog === 'function')
-  ? expandMonsterCatalog(typeof MONSTER_FAMILIES_W2 !== 'undefined' ? MONSTER_FAMILIES_W2 : [])
+  ? expandMonsterCatalog(typeof allMonsterCatalogFamilies === 'function'
+    ? allMonsterCatalogFamilies()
+    : (typeof MONSTER_FAMILIES_W2 !== 'undefined' ? MONSTER_FAMILIES_W2 : []))
   : { species: {}, unlockAt: {}, familyCount: 0, speciesCount: 0 };
 Object.assign(SPECIES, MONSTER_CATALOG_W2_EXPANDED.species || {});
 for (const _spId of Object.keys(SPECIES)) {
@@ -406,9 +408,14 @@ function speciesTop10Threshold() {
   return _speciesTop10Threshold;
 }
 
-function pickEnemyTechnique(spId, levelN) {
+function pickEnemyTechnique(spId, levelN, biome) {
   if (levelN < ENEMY_TECHNIQUE_MIN_LEVEL) return null;
   if (speciesPowerScore(spId) < speciesTop10Threshold()) return null;
+  const b = biome || (SPECIES[spId] && SPECIES[spId].biome);
+  if (typeof biomeTechniqueKind === 'function') {
+    const flavored = biomeTechniqueKind(b);
+    if (flavored) return flavored;
+  }
   return ENEMY_TECHNIQUE_KINDS[Math.floor(Math.random() * ENEMY_TECHNIQUE_KINDS.length)];
 }
 
@@ -472,13 +479,17 @@ const COLOSSAL_HP_MUL = 1.9;
 const COLOSSAL_DMG_MUL = 1.12;
 const COLOSSAL_XP_MUL = 1.45;
 
-const SEA_ARTS = new Set(['shark', 'octo', 'crab', 'turtle', 'squid', 'ray']);
+const SEA_ARTS = new Set([
+  'shark', 'octo', 'crab', 'turtle', 'squid', 'ray',
+  ...(typeof CATALOG_SEA_ARTS !== 'undefined' ? CATALOG_SEA_ARTS : []),
+]);
 const FARM_ARTS = new Set(['cow', 'pig', 'chicken', 'sheep', 'horse', 'goat', 'duck', 'rooster', 'donkey', 'goose']);
 const ZOO_ARTS = new Set(['elephant', 'lion', 'tiger', 'giraffe', 'hippo', 'rhino', 'gorilla', 'zebra', 'bear', 'croc', 'kangaroo', 'panda', 'flamingo', 'camel']);
 const BEAST_SIZE_ARTS = new Set([
   ...FARM_ARTS,
   ...ZOO_ARTS,
   ...(typeof WILD_ARTS !== 'undefined' ? WILD_ARTS : []),
+  ...(typeof FROST_ARTS !== 'undefined' ? FROST_ARTS : []),
   ...(typeof CRYPT_ARTS !== 'undefined' ? CRYPT_ARTS : []),
   ...(typeof SCRAP_ARTS !== 'undefined' ? SCRAP_ARTS : []),
 ]);
@@ -521,6 +532,7 @@ function speciesBiomeId(sp, id) {
   if (typeof CATALOG_SEA_ARTS !== 'undefined' && CATALOG_SEA_ARTS.has(sp.art)) return 'sea';
   if (typeof CRYPT_ARTS !== 'undefined' && CRYPT_ARTS.has(sp.art)) return 'crypt';
   if (typeof SCRAP_ARTS !== 'undefined' && SCRAP_ARTS.has(sp.art)) return 'scrap';
+  if (typeof FROST_ARTS !== 'undefined' && FROST_ARTS.has(sp.art)) return 'frost';
   if (typeof WILD_ARTS !== 'undefined' && WILD_ARTS.has(sp.art)) {
     const slot = typeof MONSTER_ART_SLOTS !== 'undefined' ? MONSTER_ART_SLOTS[sp.art] : null;
     return (slot && slot.biome) || 'wild';
@@ -644,6 +656,24 @@ const ART_BLURB = {
   turtle: 'Schild. Daarna nog een schild.',
   squid: 'Armen genoeg voor iedereen.',
   ray: 'Glijdt alsof water optioneel is.',
+  hawk: 'Duikt alsof jij de muis bent.',
+  ram: 'Hoorns eerst, excuses later.',
+  cougar: 'Zachte poot, harde landing.',
+  weasel: 'Te smal voor je timing.',
+  porcupine: 'Knuffelen is een slecht plan.',
+  toad: 'Dikker dan een kikker. Nog steeds springt.',
+  ghoul: 'Honger met een graf-adres.',
+  wraith: 'Half lucht, helemaal lastig.',
+  bonehound: 'Kwispelt met een dijbeen.',
+  revenant: 'Was al dood. Komt toch.',
+  shade: 'Schaduw die terugschiet.',
+  welder: 'Vonken zijn het gesprek.',
+  sawbot: 'Zaag als begroeting.',
+  rustmite: 'Klein. Eet metaal. En tempo.',
+  furnace: 'Loopende oven. Geen thermostaat.',
+  coil: 'Spoel vol slechte ideeën.',
+  mammoth: 'Wol + slagtand + deadline.',
+  urchin: 'Een bal stekels met een mening.',
 };
 
 const TYPE_BLURB = {
@@ -712,10 +742,10 @@ const BOSS_AT = {
   40: [{ sp: 'voidkonijn', elite: true }, { sp: 'schaduwvorst' }],
   45: [{ sp: 'voidkonijn', elite: true }, { sp: 'guvvedrak' }],
   50: [{ sp: 'guvvedrak', elite: true }, { sp: 'voidkonijn', elite: true }, { sp: 'schaduwvorst', elite: true }],
-  55: [{ sp: 'voidkonijn', elite: true }, { sp: 'neondrake', elite: true }, { sp: 'schaduwvorst' }, { sp: 'voidyeti', elite: true }],
-  60: [{ sp: 'guvvedrak', elite: true }, { sp: 'omegadrake', elite: true }, { sp: 'voidkonijn', elite: true }, { sp: 'voidlich', elite: true }],
-  65: [{ sp: 'omegadrake', elite: true }, { sp: 'etherwyrm', elite: true }, { sp: 'neondrake' }, { sp: 'voidwolf', elite: true }],
-  70: [{ sp: 'guvvedrak', elite: true }, { sp: 'omegadrake', elite: true }, { sp: 'apexwyrm', elite: true }, { sp: 'voidkonijn', elite: true }, { sp: 'voidklink', elite: true }],
+  55: [{ sp: 'voidkonijn', elite: true }, { sp: 'neondrake', elite: true }, { sp: 'schaduwvorst' }, { sp: 'voidyeti', elite: true }, { sp: 'voidhavik', elite: true }],
+  60: [{ sp: 'guvvedrak', elite: true }, { sp: 'omegadrake', elite: true }, { sp: 'voidkonijn', elite: true }, { sp: 'voidlich', elite: true }, { sp: 'voidghoul', elite: true }],
+  65: [{ sp: 'omegadrake', elite: true }, { sp: 'etherwyrm', elite: true }, { sp: 'neondrake' }, { sp: 'voidwolf', elite: true }, { sp: 'voidzaag', elite: true }],
+  70: [{ sp: 'guvvedrak', elite: true }, { sp: 'omegadrake', elite: true }, { sp: 'apexwyrm', elite: true }, { sp: 'voidkonijn', elite: true }, { sp: 'voidklink', elite: true }, { sp: 'voidmanmoet', elite: true }],
 };
 
 function weightedPick(pool, n, rarityBias) {
@@ -929,31 +959,47 @@ function buildLevel(n, diffId) {
           }
         }
       }
-    } else if (n >= 4 && roll < 0.80) {
+    } else if (n >= 4 && roll < 0.78) {
       meta.trait = 'woods';
       meta.spawnMul = 0.88;
       meta.label = 'woods';
       const wildPool = typeof wildSpeciesPool === 'function' ? wildSpeciesPool(n, maxRarity) : [];
       if (wildPool.length && typeof applyCatalogWave === 'function') {
-        applyCatalogWave(list, wildPool, n, rarityBias, false);
+        applyCatalogWave(list, wildPool, n, rarityBias, false, 0.12);
       }
-    } else if (n >= 9 && roll < 0.86) {
+    } else if (n >= 6 && roll < 0.84) {
+      meta.trait = 'frost';
+      meta.spawnMul = 0.92;
+      meta.label = 'frost';
+      const frostPool = typeof frostSpeciesPool === 'function' ? frostSpeciesPool(n, maxRarity) : [];
+      if (frostPool.length && typeof applyCatalogWave === 'function') {
+        applyCatalogWave(list, frostPool, n, rarityBias, n >= 12, 0.10);
+      }
+    } else if (n >= 9 && roll < 0.89) {
       meta.trait = 'crypt';
       meta.spawnMul = 0.86;
       meta.label = 'crypt';
       const cryptPool = typeof cryptSpeciesPool === 'function' ? cryptSpeciesPool(n, maxRarity) : [];
       if (cryptPool.length && typeof applyCatalogWave === 'function') {
-        applyCatalogWave(list, cryptPool, n, rarityBias, false);
+        applyCatalogWave(list, cryptPool, n, rarityBias, false, 0.22);
       }
-    } else if (n >= 12 && roll < 0.92) {
+    } else if (n >= 12 && roll < 0.93) {
       meta.trait = 'scrap';
-      meta.spawnMul = 0.84;
+      meta.spawnMul = 0.80;
       meta.label = 'scrap';
       const scrapPool = typeof scrapSpeciesPool === 'function' ? scrapSpeciesPool(n, maxRarity) : [];
       if (scrapPool.length && typeof applyCatalogWave === 'function') {
-        applyCatalogWave(list, scrapPool, n, rarityBias, false);
+        applyCatalogWave(list, scrapPool, n, rarityBias, false, 0.16);
       }
-    } else if (n >= 7 && roll < 0.96) {
+    } else if (n >= 8 && roll < 0.96) {
+      meta.trait = 'reef';
+      meta.spawnMul = 0.86;
+      meta.label = 'reef';
+      const reefPool = typeof reefSpeciesPool === 'function' ? reefSpeciesPool(n, maxRarity) : [];
+      if (reefPool.length && typeof applyCatalogWave === 'function') {
+        applyCatalogWave(list, reefPool, n, rarityBias, false, 0.10);
+      }
+    } else if (n >= 7 && roll < 0.99) {
       const sp = weightedPick(pool, n, rarityBias);
       list.push({ sp, elite: true, giant: rollWaveGiant(n, true, sp, diff.giantBonus) });
       meta.trait = 'elite';
@@ -1020,8 +1066,10 @@ const WAVE_TRAIT_BANNER = {
   ranch: { key: 'banner.ranchWave', color: '#e8c98a', size: 40 },
   safari: { key: 'banner.safariWave', color: '#43b25b', size: 40 },
   woods: { key: 'banner.woodsWave', color: '#6ee06e', size: 40 },
+  frost: { key: 'banner.frostWave', color: '#a8e0ff', size: 40 },
   crypt: { key: 'banner.cryptWave', color: '#c47aff', size: 40 },
   scrap: { key: 'banner.scrapWave', color: '#9fb2c8', size: 40 },
+  reef: { key: 'banner.reefWave', color: '#4a9fff', size: 40 },
   ember: { key: 'banner.emberWave', color: '#ff7a4d', size: 42 },
   pain: { key: 'banner.painWave', color: '#ff3a2a', size: 44 },
 };

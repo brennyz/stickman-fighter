@@ -85,6 +85,8 @@ const ACHIEVEMENTS = [
     test: () => (typeof dexBiomeDiscovered === 'function' ? dexBiomeDiscovered('crypt') : 0) >= 10 },
   { id: 'dexScrap', name: 'Schroot-kenner', desc: '10 schroot-soorten in het boek',
     test: () => (typeof dexBiomeDiscovered === 'function' ? dexBiomeDiscovered('scrap') : 0) >= 10 },
+  { id: 'dexFrost', name: 'Vorst-kenner', desc: '8 vorst-soorten in het boek',
+    test: () => (typeof dexBiomeDiscovered === 'function' ? dexBiomeDiscovered('frost') : 0) >= 8 },
   { id: 'train5', name: 'Robotbreker', desc: '5× training gewonnen',
     test: s => s.trainWins >= 5 },
   { id: 'wall100', name: 'Sloper', desc: 'Muurrecord 100+',
@@ -582,6 +584,7 @@ function achievementProgressFrac(ach) {
     case 'dexWild': return Math.min(typeof dexBiomeDiscovered === 'function' ? dexBiomeDiscovered('wild') : 0, 10) / 10;
     case 'dexCrypt': return Math.min(typeof dexBiomeDiscovered === 'function' ? dexBiomeDiscovered('crypt') : 0, 10) / 10;
     case 'dexScrap': return Math.min(typeof dexBiomeDiscovered === 'function' ? dexBiomeDiscovered('scrap') : 0, 10) / 10;
+    case 'dexFrost': return Math.min(typeof dexBiomeDiscovered === 'function' ? dexBiomeDiscovered('frost') : 0, 8) / 8;
     case 'train5': return Math.min(s.trainWins, 5) / 5;
     case 'wall100': return Math.min(s.bestWall, 100) / 100;
     case 'combo8': return Math.min(s.stats.maxCombo || 0, 8) / 8;
@@ -621,6 +624,7 @@ function achievementProgressHint(ach) {
     case 'dexWild': return `${typeof dexBiomeDiscovered === 'function' ? dexBiomeDiscovered('wild') : 0}/10 woud`;
     case 'dexCrypt': return `${typeof dexBiomeDiscovered === 'function' ? dexBiomeDiscovered('crypt') : 0}/10 crypte`;
     case 'dexScrap': return `${typeof dexBiomeDiscovered === 'function' ? dexBiomeDiscovered('scrap') : 0}/10 schroot`;
+    case 'dexFrost': return `${typeof dexBiomeDiscovered === 'function' ? dexBiomeDiscovered('frost') : 0}/8 vorst`;
     case 'train5': return `${Math.min(s.trainWins, 5)}/5 training-wins`;
     case 'wall100': return `${Math.min(s.bestWall, 100)}/100 muur-score`;
     case 'combo8': return `×${Math.min(s.stats.maxCombo || 0, 8)}/8 combo`;

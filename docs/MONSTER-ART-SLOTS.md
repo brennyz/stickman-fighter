@@ -1,60 +1,68 @@
 # Monster art slots — pixel partner
 
-A **separate** cloud agent owns pixel art. This file is the contract.
+A **separate** cloud agent owns leftover stub pixels. This file is the contract.
 
-## Reuse #282 pixels — do not redo
+## W2 P1 — dedicated maps (Wave 3)
 
-PR **#282** (`MONSTER-PIXEL-MAP.md`) already shipped 34 art-family maps + 31 flagship species maps. Combat resolves:
+These 18 arts paint unique 32×32 stickman-pixel maps. `MONSTER_ART_SLOTS[id].pixelStatus = 'pixel'`. Combat / book resolve the dedicated `MONSTER_PIXEL_ART[art]` first — **no `sp.pixel` alias**.
 
-`sp.pixel` → `sp.id` → `sp.art` → canvas stub
+`wolf` `owl` `frog` `snake` `boar` `skeleton` `mummy` `beetle` `wasp` `spider` `drone` `bot` `scrapdog` `penguin` `yeti` `crab` `turtle` `squid`
 
-W2 catalog species keep unique `art` IDs (biome / woods-crypt-scrap waves) but set **`SPECIES[id].pixel`** to a provisional ID from that map. Tint uses each species `c1`/`c2`. **No new SVGs required** for this roster double.
+Canvas stub (`drawCatalogStubArt`) stays as fallback if a map is missing.
+
+## Reuse #282 pixels — P2/P3 + Wave 3
+
+PR **#282** already shipped 34 art-family maps + 31 flagship species maps. Combat resolves:
+
+1. Dedicated map when `pixelStatus === 'pixel'` and `MONSTER_PIXEL_ART[art]` exists
+2. `sp.pixel` → `sp.id` → `sp.art` → canvas stub
+
+W2 P2/P3 and **Wave 3** species keep unique `art` IDs (biome / woods-crypt-scrap-frost-reef waves) but set **`SPECIES[id].pixel`** to a provisional ID. Tint uses each species `c1`/`c2`.
 
 Aliases live in `src/data/monster-catalog.js` → `MONSTER_PIXEL_ALIAS`.
 
-| W2 `art` | `.pixel` (common–legendary) | `.pixel` mythic+ |
-|----------|-----------------------------|------------------|
-| wolf | `fox` | `voidkonijn` |
-| owl, raven, wasp, junkbat | `bat` | — |
-| frog, mole | `slime` | `voidsly` / `frostbub` |
-| snake | `croc` | `razendekrokodil` |
-| boar, beaver | `pig` | `razendzwijn` |
-| moose | `cow` | `holkoe` |
-| badger, beetle, crab | `hedgehog` | — |
-| stag | `horse` | `holpaard` |
-| lynx | `tiger` | `razendetijger` |
-| skeleton, wisp, lich | `ghost` | — |
-| mummy, rivet, piston, turtle | `golem` | — |
-| gargoyle | `dragon` | `omegadrake` |
-| drone, bot, cog, turret | `can` | — |
-| scrapdog | `fox` | `voidkonijn` |
-| penguin, seal | `duck` | `kwakophol` |
-| yeti | `bear` | `razendebeer` |
-| walrus | `hippo` | `razendnijlpaard` |
-| squid, spider | `octo` | `voidocto` |
-| ray | `shark` | `levihaai` |
-
-Optional unique pixels later: keep the W2 `art` ID, draw a new map, then drop `.pixel` (or point it at the new art key). Until then, **reuse the strings above**.
-
-Live game draws **stub silhouettes** only when #282 maps are not loaded (`pixelStatus: 'stub'`). First paint uses `sp.pixel` aliases onto the #282 set.
+| leftover `art` | `.pixel` (common–legendary) | `.pixel` mythic+ |
+|----------------|-----------------------------|------------------|
+| owl-family leftovers: `raven` `junkbat` | `bat` | — |
+| `moose` | `cow` | `holkoe` |
+| `beaver` | `pig` | — |
+| `badger` | `hedgehog` | — |
+| `stag` | `horse` | `holpaard` |
+| `lynx` | `tiger` | `razendetijger` |
+| `mole` | `slime` | `frostbub` |
+| `wisp` `lich` | `ghost` | — |
+| `gargoyle` | `dragon` | `omegadrake` |
+| `cog` `turret` | `can` | — |
+| `rivet` `piston` | `golem` | — |
+| `walrus` | `hippo` | `razendnijlpaard` |
+| `seal` | `duck` | — |
+| `ray` | `shark` | `levihaai` |
+| W3 `hawk` | `bat` | — |
+| W3 `ram` | `goat` | `kopstootgeit` |
+| W3 `cougar` | `tiger` | `razendetijger` |
+| W3 `weasel` `bonehound` | `fox` | `voidkonijn` |
+| W3 `porcupine` `rustmite` `urchin` | `hedgehog` | — |
+| W3 `toad` | `slime` | `voidsly` |
+| W3 `ghoul` `wraith` `shade` | `ghost` | — |
+| W3 `revenant` `furnace` | `golem` | — |
+| W3 `welder` `sawbot` `coil` | `can` | — |
+| W3 `mammoth` | `elephant` | `reuzenolifant` |
 
 ## Where to edit
 
 | What | File |
 |------|------|
 | Art slot IDs, biome, type, shape, blurbs | `src/data/monster-catalog.js` → `MONSTER_ART_SLOTS` |
-| Family variants (8 rarities each) | `src/data/monster-catalog.js` → `MONSTER_FAMILIES_W2` |
-| Stub silhouettes (meantime) | `src/render/catalog-art.js` → `drawCatalogStubArt` |
-| Combat / book use `sp.art` | `src/entities/monster.js` → `drawMonsterArt` default branch |
+| Family variants (8 rarities each) | `MONSTER_FAMILIES_W2` + `MONSTER_FAMILIES_W3` |
+| Dedicated / stub silhouettes | `scripts/gen-monster-pixels.mjs` + `src/render/catalog-art.js` |
+| Combat / book use `sp.art` | `src/entities/monster.js` → `drawMonsterArt` |
 
 Do **not** invent new `art` strings in `SPECIES` by hand. Add a family row; the expander writes SPECIES + UNLOCK_AT.
 
-## How to fill pixels
+## How to fill leftover pixels
 
-First paint: keep aliases (`MONSTER_PIXEL_ALIAS`). Unique silhouettes later:
-
-1. Pick a **P1** slot from the table (priority `1` first).
-2. Implement a real drawer in `scripts/gen-monster-pixels.mjs` (or `src/render/catalog-art.js`).
+1. Pick a **stub** slot (`pixelStatus: 'stub'`).
+2. Implement a real drawer in `scripts/gen-monster-pixels.mjs`.
 3. Set `MONSTER_ART_SLOTS[id].pixelStatus = 'pixel'`.
 4. Keep the stub path as fallback (`default` / try/catch).
 5. Rebuild: `npm run pixels && npm run build` — do not edit `game.js` directly.
@@ -68,11 +76,11 @@ listMonsterArtSlots()
 
 Each row: `{ art, biome, type, shape, priority, pixelStatus, species[], count }`.
 
-## Slot IDs (36) — wave 2
+## Slot IDs — wave 2 (36) + wave 3 (18)
 
 `art` is the **stable ID**. Filenames / canvas cases must match exactly.
 
-### P1 — fill first
+### P1 — unique pixels shipped
 
 | art | biome | type | shape | variants (ids) |
 |-----|-------|------|-------|----------------|
@@ -123,6 +131,29 @@ Each row: `{ art, biome, type, shape, priority, pixelStatus, species[], count }`
 | `junkbat` | scrap | fly | flyer |
 | `seal` | frost | hop | hopper |
 
+### Wave 3 — stub + alias (18 families)
+
+| art | biome | type | shape | variants (ids) |
+|-----|-------|------|-------|----------------|
+| `hawk` | wild | fly | flyer | havikpup … helhavik |
+| `ram` | wild | charge | quad | ramling … helram |
+| `cougar` | wild | charge | quad | poemaling … helpoema |
+| `weasel` | wild | charge | quad | wezelling … helwezel |
+| `porcupine` | wild | tank | quad | quillpup … helquill |
+| `toad` | wild | hop | hopper | paddeling … helpadd |
+| `ghoul` | crypt | charge | undead | ghoulling … helghoul |
+| `wraith` | crypt | fly | flyer | wraithling … helwraith |
+| `bonehound` | crypt | charge | quad | bothond … helbothond |
+| `revenant` | crypt | tank | undead | revenling … helrev |
+| `shade` | crypt | shoot | shooter | schimling … helschim |
+| `welder` | scrap | shoot | mech | vonkling … hellas |
+| `sawbot` | scrap | charge | mech | zaagling … helzaag |
+| `rustmite` | scrap | hop | insect | roestmijt … helmijt |
+| `furnace` | scrap | tank | tank | ovenling … heloven |
+| `coil` | scrap | shoot | shooter | spoelling … helspoel |
+| `mammoth` | frost | tank | tank | manmoetpup … helmanmoet |
+| `urchin` | sea | swim | insect | zeeegel … helegel |
+
 ## Variant rule
 
 Every art has **8** named species: common → hell.
@@ -130,6 +161,8 @@ Every art has **8** named species: common → hell.
 - Nightmare unlocks at Adventure **51+**
 - Hell unlocks at **61+**
 - Colors come from the family `colors[]` (`c1` / `c2`) — keep those as tint, not extra art files.
+
+Catalog totals (expander only): **54 families × 8 = 432** species, plus the classic/farm/zoo roster in `monsters.js` (book **700+**).
 
 ## Existing arts (not this pass)
 

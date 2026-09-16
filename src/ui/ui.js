@@ -3139,8 +3139,10 @@ const UI = {
         else if (trait === 'ranch') cls += ' trait-ranch';
         else if (trait === 'safari') cls += ' trait-safari';
         else if (trait === 'woods') cls += ' trait-woods';
+        else if (trait === 'frost') cls += ' trait-frost';
         else if (trait === 'crypt') cls += ' trait-crypt';
         else if (trait === 'scrap') cls += ' trait-scrap';
+        else if (trait === 'reef') cls += ' trait-reef';
         else if (trait === 'tide') cls += ' trait-tide';
         else if (trait === 'ember') cls += ' trait-ember';
         else if (trait === 'pain') cls += ' trait-pain';

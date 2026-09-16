@@ -323,9 +323,9 @@ const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const VERSION_UPDATE_SAVE_KEY = 'stickfighter_version_update_save_v1';
 const VERSION_UPDATE_FLAG_KEY = 'stickfighter_version_update_flag_v1';
 const SAVE_EXPORT_SCHEMA = 3;
-const APP_VERSION = '1.18.167';
+const APP_VERSION = '1.18.168';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 377;
+const SW_CACHE_REV = 378;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', petCoins: 0, dex: {}, summons: {}, pets: {}, activePet: null,
   eggPets: {}, activeEggPet: null, eggDaily: null,
   chestDaily: null, chestWeapons: {},
@@ -2344,7 +2344,7 @@ const I18N = {
       gear: 'Uitrusting', gearSub: '5 slots · pantser & cosmetics',
       skills: 'Skills', skillsSub: 'Energy specials · Spiral Orb · Wave Cannon',
       upgrades: 'Upgrades', upgradesSub: 'Shards · technique uitrusten',
-      dex: 'Monsterboek', dexSub: '{n} soorten · rariteit = HP · boerderij · zoo · zee · woud',
+      dex: 'Monsterboek', dexSub: '{n} soorten · rariteit = HP · boerderij · zoo · zee · woud · crypte · schroot',
       modes3: '3 snelle modi', fightersLocal: '20 vechters · lokaal', vsRecord: '{w}/{m} gewonnen',
       statTrain: '{n}× training', statWall: 'muur {n}', statMats: '{n} munten',
       loadFail: 'Hub laden mislukt',
@@ -2561,7 +2561,7 @@ const I18N = {
       gear: 'Loadout', gearSub: '5 slots · armour & cosmetics',
       skills: 'Skills', skillsSub: 'Energy specials · Spiral Orb · Wave Cannon',
       upgrades: 'Upgrades', upgradesSub: 'Shards · equip a technique',
-      dex: 'Monster book', dexSub: '{n} species · rarity = HP · farm · zoo · sea · woods',
+      dex: 'Monster book', dexSub: '{n} species · rarity = HP · farm · zoo · sea · woods · crypt · scrap',
       modes3: '3 quick modes', fightersLocal: '20 fighters · local', vsRecord: '{w}/{m} won',
       statTrain: '{n} train', statWall: 'wall {n}', statMats: '{n} coins',
       loadFail: 'Could not load hub',
@@ -2779,7 +2779,7 @@ const I18N = {
       gear: 'Ausrüstung', gearSub: '5 Slots · Rüstung & Kosmetik',
       skills: 'Skills', skillsSub: 'Energy specials · Spiral Orb · Wave Cannon',
       upgrades: 'Upgrades', upgradesSub: 'Splitter · Technik ausrüsten',
-      dex: 'Monsterbuch', dexSub: '{n} Arten · Seltenheit = HP · Farm · Zoo · Meer · Wald',
+      dex: 'Monsterbuch', dexSub: '{n} Arten · Seltenheit = HP · Farm · Zoo · Meer · Wald · Krypta · Schrott',
       modes3: '3 schnelle Modi', fightersLocal: '20 Kämpfer · lokal', vsRecord: '{w}/{m} Siege',
       statTrain: '{n}× Training', statWall: 'Mauer {n}', statMats: '{n} Münzen',
       loadFail: 'Hub laden fehlgeschlagen',
@@ -2982,7 +2982,7 @@ const I18N = {
       gear: 'Équipement', gearSub: '5 emplacements · armure & cosmétique',
       skills: 'Skills', skillsSub: 'Spéciaux énergie · Spiral Orb · Wave Cannon',
       upgrades: 'Améliorations', upgradesSub: 'Éclats · équiper une technique',
-      dex: 'Bestiaire', dexSub: '{n} espèces · rareté = PV · ferme · zoo · mer · bois',
+      dex: 'Bestiaire', dexSub: '{n} espèces · rareté = PV · ferme · zoo · mer · bois · crypte · ferraille',
       modes3: '3 modes rapides', fightersLocal: '20 combattants · local', vsRecord: '{w}/{m} victoires',
       statTrain: '{n}× entraînement', statWall: 'mur {n}', statMats: '{n} pièces',
       loadFail: 'Hub introuvable',
@@ -4079,6 +4079,8 @@ const ACHIEVEMENTS = [
     test: () => (typeof dexBiomeDiscovered === 'function' ? dexBiomeDiscovered('crypt') : 0) >= 10 },
   { id: 'dexScrap', name: 'Schroot-kenner', desc: '10 schroot-soorten in het boek',
     test: () => (typeof dexBiomeDiscovered === 'function' ? dexBiomeDiscovered('scrap') : 0) >= 10 },
+  { id: 'dexFrost', name: 'Vorst-kenner', desc: '8 vorst-soorten in het boek',
+    test: () => (typeof dexBiomeDiscovered === 'function' ? dexBiomeDiscovered('frost') : 0) >= 8 },
   { id: 'train5', name: 'Robotbreker', desc: '5× training gewonnen',
     test: s => s.trainWins >= 5 },
   { id: 'wall100', name: 'Sloper', desc: 'Muurrecord 100+',
@@ -4576,6 +4578,7 @@ function achievementProgressFrac(ach) {
     case 'dexWild': return Math.min(typeof dexBiomeDiscovered === 'function' ? dexBiomeDiscovered('wild') : 0, 10) / 10;
     case 'dexCrypt': return Math.min(typeof dexBiomeDiscovered === 'function' ? dexBiomeDiscovered('crypt') : 0, 10) / 10;
     case 'dexScrap': return Math.min(typeof dexBiomeDiscovered === 'function' ? dexBiomeDiscovered('scrap') : 0, 10) / 10;
+    case 'dexFrost': return Math.min(typeof dexBiomeDiscovered === 'function' ? dexBiomeDiscovered('frost') : 0, 8) / 8;
     case 'train5': return Math.min(s.trainWins, 5) / 5;
     case 'wall100': return Math.min(s.bestWall, 100) / 100;
     case 'combo8': return Math.min(s.stats.maxCombo || 0, 8) / 8;
@@ -4615,6 +4618,7 @@ function achievementProgressHint(ach) {
     case 'dexWild': return `${typeof dexBiomeDiscovered === 'function' ? dexBiomeDiscovered('wild') : 0}/10 woud`;
     case 'dexCrypt': return `${typeof dexBiomeDiscovered === 'function' ? dexBiomeDiscovered('crypt') : 0}/10 crypte`;
     case 'dexScrap': return `${typeof dexBiomeDiscovered === 'function' ? dexBiomeDiscovered('scrap') : 0}/10 schroot`;
+    case 'dexFrost': return `${typeof dexBiomeDiscovered === 'function' ? dexBiomeDiscovered('frost') : 0}/8 vorst`;
     case 'train5': return `${Math.min(s.trainWins, 5)}/5 training-wins`;
     case 'wall100': return `${Math.min(s.bestWall, 100)}/100 muur-score`;
     case 'combo8': return `×${Math.min(s.stats.maxCombo || 0, 8)}/8 combo`;
@@ -13445,13 +13449,13 @@ function toastVersusRetired() {
   } catch (_) {}
 }
 /* --- src/data/monster-catalog.js --- */
-/* ====================== MONSTER CATALOG W2 (editor) ==================== */
+/* ====================== MONSTER CATALOG W2+W3 (editor) ================= */
 /**
  * Data-driven family table — expands into SPECIES + UNLOCK_AT.
- * Pixel partner: reuse #282 maps via SPECIES[id].pixel (MONSTER_PIXEL_ALIAS).
- * Unique `art` stays for biome/waves; stubs only if pixel maps are absent.
+ * W2 P1 arts paint dedicated 32×32 maps (`pixelStatus: 'pixel'`).
+ * W2 P2/P3 + W3 reuse #282 maps via SPECIES[id].pixel aliases.
  *
- * Do not edit SPECIES by hand for wave-2 beasts — add a family row here.
+ * Do not edit SPECIES by hand for catalog beasts — add a family row here.
  */
 const MONSTER_CATALOG_RARITIES = [
   { rarity: 'common',    size: 0, hp: 1.00, dmg: 1.00, speed: 1.00, xp: 1.00, unlockAdd: 0 },
@@ -13466,11 +13470,11 @@ const MONSTER_CATALOG_RARITIES = [
 
 /** Art slot registry — one ID per silhouette. Pixel partner owns these. */
 const MONSTER_ART_SLOTS = {
-  wolf:      { biome: 'wild',  type: 'charge', shape: 'quad',    priority: 1, pixelStatus: 'stub', blurb: 'Tanden eerst, vragen later.' },
-  owl:       { biome: 'wild',  type: 'fly',    shape: 'flyer',   priority: 1, pixelStatus: 'stub', blurb: 'Draait de kop, dan jij.' },
-  frog:      { biome: 'wild',  type: 'hop',    shape: 'hopper',  priority: 1, pixelStatus: 'stub', blurb: 'Eén sprong, twee problemen.' },
-  snake:     { biome: 'wild',  type: 'charge', shape: 'swimmer', priority: 1, pixelStatus: 'stub', blurb: 'Geen benen, wél tempo.' },
-  boar:      { biome: 'wild',  type: 'charge', shape: 'quad',    priority: 1, pixelStatus: 'stub', blurb: 'Slagtanden als bumper.' },
+  wolf:      { biome: 'wild',  type: 'charge', shape: 'quad',    priority: 1, pixelStatus: 'pixel', blurb: 'Tanden eerst, vragen later.' },
+  owl:       { biome: 'wild',  type: 'fly',    shape: 'flyer',   priority: 1, pixelStatus: 'pixel', blurb: 'Draait de kop, dan jij.' },
+  frog:      { biome: 'wild',  type: 'hop',    shape: 'hopper',  priority: 1, pixelStatus: 'pixel', blurb: 'Eén sprong, twee problemen.' },
+  snake:     { biome: 'wild',  type: 'charge', shape: 'swimmer', priority: 1, pixelStatus: 'pixel', blurb: 'Geen benen, wél tempo.' },
+  boar:      { biome: 'wild',  type: 'charge', shape: 'quad',    priority: 1, pixelStatus: 'pixel', blurb: 'Slagtanden als bumper.' },
   raven:     { biome: 'wild',  type: 'fly',    shape: 'flyer',   priority: 2, pixelStatus: 'stub', blurb: 'Krast alsof hij gelijk heeft.' },
   moose:     { biome: 'wild',  type: 'tank',   shape: 'tank',    priority: 2, pixelStatus: 'stub', blurb: 'Gewei breder dan je plan.' },
   beaver:    { biome: 'wild',  type: 'tank',   shape: 'quad',    priority: 2, pixelStatus: 'stub', blurb: 'Bouwt een dam van jouw combo.' },
@@ -13478,36 +13482,57 @@ const MONSTER_ART_SLOTS = {
   stag:      { biome: 'wild',  type: 'charge', shape: 'quad',    priority: 2, pixelStatus: 'stub', blurb: 'Woud-koning met piek-gewei.' },
   lynx:      { biome: 'wild',  type: 'charge', shape: 'quad',    priority: 2, pixelStatus: 'stub', blurb: 'Pluimoor, scherpe mening.' },
   mole:      { biome: 'wild',  type: 'hop',    shape: 'hopper',  priority: 3, pixelStatus: 'stub', blurb: 'Komt van onder. Altijd.' },
-  skeleton:  { biome: 'crypt', type: 'charge', shape: 'undead',  priority: 1, pixelStatus: 'stub', blurb: 'Rammelt, maar raakt wél.' },
-  mummy:     { biome: 'crypt', type: 'tank',   shape: 'undead',  priority: 1, pixelStatus: 'stub', blurb: 'Verband als pantser.' },
-  beetle:    { biome: 'crypt', type: 'hop',    shape: 'insect',  priority: 1, pixelStatus: 'stub', blurb: 'Schild-kever, weinig praat.' },
-  wasp:      { biome: 'crypt', type: 'fly',    shape: 'insect',  priority: 1, pixelStatus: 'stub', blurb: 'Angel eerst, excuses nooit.' },
-  spider:    { biome: 'crypt', type: 'shoot',  shape: 'insect',  priority: 1, pixelStatus: 'stub', blurb: 'Web + afstand = irritant.' },
+  skeleton:  { biome: 'crypt', type: 'charge', shape: 'undead',  priority: 1, pixelStatus: 'pixel', blurb: 'Rammelt, maar raakt wél.' },
+  mummy:     { biome: 'crypt', type: 'tank',   shape: 'undead',  priority: 1, pixelStatus: 'pixel', blurb: 'Verband als pantser.' },
+  beetle:    { biome: 'crypt', type: 'hop',    shape: 'insect',  priority: 1, pixelStatus: 'pixel', blurb: 'Schild-kever, weinig praat.' },
+  wasp:      { biome: 'crypt', type: 'fly',    shape: 'insect',  priority: 1, pixelStatus: 'pixel', blurb: 'Angel eerst, excuses nooit.' },
+  spider:    { biome: 'crypt', type: 'shoot',  shape: 'insect',  priority: 1, pixelStatus: 'pixel', blurb: 'Web + afstand = irritant.' },
   wisp:      { biome: 'crypt', type: 'shoot',  shape: 'shooter', priority: 2, pixelStatus: 'stub', blurb: 'Dwaallicht met slechte bedoelingen.' },
   gargoyle:  { biome: 'crypt', type: 'fly',    shape: 'flyer',   priority: 2, pixelStatus: 'stub', blurb: 'Steen die dacht dat hij kon vliegen.' },
   lich:      { biome: 'crypt', type: 'shoot',  shape: 'undead',  priority: 2, pixelStatus: 'stub', blurb: 'Te veel botten, te veel magie.' },
-  drone:     { biome: 'scrap', type: 'fly',    shape: 'mech',    priority: 1, pixelStatus: 'stub', blurb: 'Zoemt, mikt, piept.' },
-  bot:       { biome: 'scrap', type: 'shoot',  shape: 'mech',    priority: 1, pixelStatus: 'stub', blurb: 'Blik met een laser-mening.' },
-  scrapdog:  { biome: 'scrap', type: 'charge', shape: 'quad',    priority: 1, pixelStatus: 'stub', blurb: 'Roest-hond. Kwispelt met ketting.' },
+  drone:     { biome: 'scrap', type: 'fly',    shape: 'mech',    priority: 1, pixelStatus: 'pixel', blurb: 'Zoemt, mikt, piept.' },
+  bot:       { biome: 'scrap', type: 'shoot',  shape: 'mech',    priority: 1, pixelStatus: 'pixel', blurb: 'Blik met een laser-mening.' },
+  scrapdog:  { biome: 'scrap', type: 'charge', shape: 'quad',    priority: 1, pixelStatus: 'pixel', blurb: 'Roest-hond. Kwispelt met ketting.' },
   cog:       { biome: 'scrap', type: 'hop',    shape: 'mech',    priority: 2, pixelStatus: 'stub', blurb: 'Tandwiel dat terugbijt.' },
   turret:    { biome: 'scrap', type: 'shoot',  shape: 'shooter', priority: 2, pixelStatus: 'stub', blurb: 'Blijft staan. Jij beweegt.' },
   rivet:     { biome: 'scrap', type: 'tank',   shape: 'tank',    priority: 2, pixelStatus: 'stub', blurb: 'Klinknagels en slechte ideeën.' },
   junkbat:   { biome: 'scrap', type: 'fly',    shape: 'flyer',   priority: 3, pixelStatus: 'stub', blurb: 'Vleermuis van sloopafval.' },
   piston:    { biome: 'scrap', type: 'charge', shape: 'mech',    priority: 2, pixelStatus: 'stub', blurb: 'Hydrauliek met een deadline.' },
-  penguin:   { biome: 'frost', type: 'hop',    shape: 'hopper',  priority: 1, pixelStatus: 'stub', blurb: 'Waddelt. Tot hij sprint.' },
-  yeti:      { biome: 'frost', type: 'tank',   shape: 'tank',    priority: 1, pixelStatus: 'stub', blurb: 'Sneeuwman die terugslaat.' },
+  penguin:   { biome: 'frost', type: 'hop',    shape: 'hopper',  priority: 1, pixelStatus: 'pixel', blurb: 'Waddelt. Tot hij sprint.' },
+  yeti:      { biome: 'frost', type: 'tank',   shape: 'tank',    priority: 1, pixelStatus: 'pixel', blurb: 'Sneeuwman die terugslaat.' },
   walrus:    { biome: 'frost', type: 'tank',   shape: 'tank',    priority: 2, pixelStatus: 'stub', blurb: 'Slagtand-zee. Zwaar.' },
   seal:      { biome: 'frost', type: 'hop',    shape: 'hopper',  priority: 3, pixelStatus: 'stub', blurb: 'Glibbert uit je timing.' },
-  crab:      { biome: 'sea',   type: 'swim',   shape: 'insect',  priority: 1, pixelStatus: 'stub', blurb: 'Schaar links, schaar rechts.' },
-  turtle:    { biome: 'sea',   type: 'swim',   shape: 'tank',    priority: 1, pixelStatus: 'stub', blurb: 'Schild. Daarna nog een schild.' },
-  squid:     { biome: 'sea',   type: 'swim',   shape: 'swimmer', priority: 1, pixelStatus: 'stub', blurb: 'Armen genoeg voor iedereen.' },
+  crab:      { biome: 'sea',   type: 'swim',   shape: 'insect',  priority: 1, pixelStatus: 'pixel', blurb: 'Schaar links, schaar rechts.' },
+  turtle:    { biome: 'sea',   type: 'swim',   shape: 'tank',    priority: 1, pixelStatus: 'pixel', blurb: 'Schild. Daarna nog een schild.' },
+  squid:     { biome: 'sea',   type: 'swim',   shape: 'swimmer', priority: 1, pixelStatus: 'pixel', blurb: 'Armen genoeg voor iedereen.' },
   ray:       { biome: 'sea',   type: 'swim',   shape: 'swimmer', priority: 2, pixelStatus: 'stub', blurb: 'Glijdt alsof water optioneel is.' },
+  /* Wave 3 — deepen wild / crypt / scrap (+ frost/sea). Stub + alias until unique pixels. */
+  hawk:      { biome: 'wild',  type: 'fly',    shape: 'flyer',   priority: 1, pixelStatus: 'stub', blurb: 'Duikt alsof jij de muis bent.' },
+  ram:       { biome: 'wild',  type: 'charge', shape: 'quad',    priority: 1, pixelStatus: 'stub', blurb: 'Hoorns eerst, excuses later.' },
+  cougar:    { biome: 'wild',  type: 'charge', shape: 'quad',    priority: 1, pixelStatus: 'stub', blurb: 'Zachte poot, harde landing.' },
+  weasel:    { biome: 'wild',  type: 'charge', shape: 'quad',    priority: 1, pixelStatus: 'stub', blurb: 'Te smal voor je timing.' },
+  porcupine: { biome: 'wild',  type: 'tank',   shape: 'quad',    priority: 1, pixelStatus: 'stub', blurb: 'Knuffelen is een slecht plan.' },
+  toad:      { biome: 'wild',  type: 'hop',    shape: 'hopper',  priority: 1, pixelStatus: 'stub', blurb: 'Dikker dan een kikker. Nog steeds springt.' },
+  ghoul:     { biome: 'crypt', type: 'charge', shape: 'undead',  priority: 1, pixelStatus: 'stub', blurb: 'Honger met een graf-adres.' },
+  wraith:    { biome: 'crypt', type: 'fly',    shape: 'flyer',   priority: 1, pixelStatus: 'stub', blurb: 'Half lucht, helemaal lastig.' },
+  bonehound: { biome: 'crypt', type: 'charge', shape: 'quad',    priority: 1, pixelStatus: 'stub', blurb: 'Kwispelt met een dijbeen.' },
+  revenant:  { biome: 'crypt', type: 'tank',   shape: 'undead',  priority: 1, pixelStatus: 'stub', blurb: 'Was al dood. Komt toch.' },
+  shade:     { biome: 'crypt', type: 'shoot',  shape: 'shooter', priority: 1, pixelStatus: 'stub', blurb: 'Schaduw die terugschiet.' },
+  welder:    { biome: 'scrap', type: 'shoot',  shape: 'mech',    priority: 1, pixelStatus: 'stub', blurb: 'Vonken zijn het gesprek.' },
+  sawbot:    { biome: 'scrap', type: 'charge', shape: 'mech',    priority: 1, pixelStatus: 'stub', blurb: 'Zaag als begroeting.' },
+  rustmite:  { biome: 'scrap', type: 'hop',    shape: 'insect',  priority: 1, pixelStatus: 'stub', blurb: 'Klein. Eet metaal. En tempo.' },
+  furnace:   { biome: 'scrap', type: 'tank',   shape: 'tank',    priority: 1, pixelStatus: 'stub', blurb: 'Loopende oven. Geen thermostaat.' },
+  coil:      { biome: 'scrap', type: 'shoot',  shape: 'shooter', priority: 1, pixelStatus: 'stub', blurb: 'Spoel vol slechte ideeën.' },
+  mammoth:   { biome: 'frost', type: 'tank',   shape: 'tank',    priority: 1, pixelStatus: 'stub', blurb: 'Wol + slagtand + deadline.' },
+  urchin:    { biome: 'sea',   type: 'swim',   shape: 'insect',  priority: 1, pixelStatus: 'stub', blurb: 'Een bal stekels met een mening.' },
 };
 
-const WILD_ARTS = new Set(Object.keys(MONSTER_ART_SLOTS).filter((id) => MONSTER_ART_SLOTS[id].biome === 'wild' || MONSTER_ART_SLOTS[id].biome === 'frost'));
+const WILD_ARTS = new Set(Object.keys(MONSTER_ART_SLOTS).filter((id) => MONSTER_ART_SLOTS[id].biome === 'wild'));
+const FROST_ARTS = new Set(Object.keys(MONSTER_ART_SLOTS).filter((id) => MONSTER_ART_SLOTS[id].biome === 'frost'));
 const CRYPT_ARTS = new Set(Object.keys(MONSTER_ART_SLOTS).filter((id) => MONSTER_ART_SLOTS[id].biome === 'crypt'));
 const SCRAP_ARTS = new Set(Object.keys(MONSTER_ART_SLOTS).filter((id) => MONSTER_ART_SLOTS[id].biome === 'scrap'));
 const CATALOG_SEA_ARTS = new Set(Object.keys(MONSTER_ART_SLOTS).filter((id) => MONSTER_ART_SLOTS[id].biome === 'sea'));
+const CATALOG_P1_PIXEL_ARTS = new Set(Object.keys(MONSTER_ART_SLOTS).filter((id) => MONSTER_ART_SLOTS[id].pixelStatus === 'pixel'));
 
 /**
  * #282 provisional pixel IDs (art families + flagship SPECIES keys).
@@ -13574,9 +13599,29 @@ const MONSTER_PIXEL_ALIAS = {
   turtle: { pixel: 'golem' },
   squid: { pixel: 'octo', high: 'voidocto' },
   ray: { pixel: 'shark', high: 'levihaai' },
+  hawk: { pixel: 'bat' },
+  ram: { pixel: 'goat', high: 'kopstootgeit' },
+  cougar: { pixel: 'tiger', high: 'razendetijger' },
+  weasel: { pixel: 'fox', high: 'voidkonijn' },
+  porcupine: { pixel: 'hedgehog' },
+  toad: { pixel: 'slime', high: 'voidsly' },
+  ghoul: { pixel: 'ghost' },
+  wraith: { pixel: 'ghost' },
+  bonehound: { pixel: 'fox', high: 'voidkonijn' },
+  revenant: { pixel: 'golem' },
+  shade: { pixel: 'ghost' },
+  welder: { pixel: 'can' },
+  sawbot: { pixel: 'can' },
+  rustmite: { pixel: 'hedgehog' },
+  furnace: { pixel: 'golem' },
+  coil: { pixel: 'can' },
+  mammoth: { pixel: 'elephant', high: 'reuzenolifant' },
+  urchin: { pixel: 'hedgehog' },
 };
 
 function catalogPixelFor(art, rarity) {
+  const slot = (typeof MONSTER_ART_SLOTS !== 'undefined' && MONSTER_ART_SLOTS[art]) || {};
+  if (slot.pixelStatus === 'pixel') return null;
   const a = MONSTER_PIXEL_ALIAS[art];
   if (!a) return null;
   const order = (typeof rarityOf === 'function')
@@ -13702,6 +13747,68 @@ const MONSTER_FAMILIES_W2 = [
     colors: catalogColors([['#6a9fc8','#2a5080'],['#e8c98a','#8a6030'],['#8fb8d8','#3a6088'],['#7cf5ff','#2a7fc0'],['#4a9fff','#1a4080'],['#5a1040','#ff6b9d'],['#2a1840','#b06ae0'],['#ff3040','#2a0810']]) },
 ];
 
+/** Wave 3 — 18 families × 8 rarities = 144 species. Deepen wild/crypt/scrap + frost/sea. */
+const MONSTER_FAMILIES_W3 = [
+  { art: 'hawk', catalog: 'w3', unlock: 5, base: { size: 16, hp: 34, dmg: 9, speed: 116, xp: 12 },
+    names: [['havikpup','Havikpup'],['nachthavik','Nachthavik'],['stormhavik','Stormhavik'],['ashavik','Ashavik'],['maanhavek','Maanhavek'],['voidhavik','Voidhavik'],['nmhavik','Nachtmerrie-Havik'],['helhavik','Hel-Havik']],
+    colors: catalogColors([['#c98850','#6b4a28'],['#2a1840','#5a3fb0'],['#7cf5ff','#2a7fc0'],['#9a917f','#4a4038'],['#c47aff','#5a2080'],['#5a1040','#ff6b9d'],['#6b5cff','#2e2266'],['#ff3040','#2a0810']]) },
+  { art: 'ram', catalog: 'w3', unlock: 6, base: { size: 24, hp: 62, dmg: 12, speed: 88, xp: 14 },
+    names: [['ramling','Ramling'],['bosram','Bosram'],['kopram','Kopram'],['stormram','Stormram'],['kroonram','Kroonram'],['voidram','Voidram'],['nmram','Nachtmerrie-Ram'],['helram','Hel-Ram']],
+    colors: catalogColors([['#d4a574','#8a6030'],['#43b25b','#1e4a28'],['#c98850','#6b4a28'],['#7cf5ff','#2a7fc0'],['#ffd75e','#8a6020'],['#5a1040','#ff6b9d'],['#2a1840','#b06ae0'],['#ff3040','#2a0810']]) },
+  { art: 'cougar', catalog: 'w3', unlock: 8, base: { size: 22, hp: 52, dmg: 13, speed: 122, xp: 15 },
+    names: [['poemaling','Poemaling'],['bospoema','Bospoema'],['klauwpoema','Klauwpoema'],['stormpoema','Stormpoema'],['schaduwpoema','Schaduwpoema'],['voidpoema','Voidpoema'],['nmpoema','Nachtmerrie-Poema'],['helpoema','Hel-Poema']],
+    colors: catalogColors([['#e8c98a','#8a6030'],['#c98850','#6b4a28'],['#ff8c42','#d05a1e'],['#7cf5ff','#2a7fc0'],['#2a1840','#5a3fb0'],['#5a1040','#ff6b9d'],['#6b5cff','#2e2266'],['#ff3040','#2a0810']]) },
+  { art: 'weasel', catalog: 'w3', unlock: 4, base: { size: 15, hp: 36, dmg: 9, speed: 128, xp: 11 },
+    names: [['wezelling','Wezelling'],['boswezel','Boswezel'],['bijtwezel','Bijtwezel'],['stormwezel','Stormwezel'],['schaduwwezel','Schaduwwezel'],['voidwezel','Voidwezel'],['nmwezel','Nachtmerrie-Wezel'],['helwezel','Hel-Wezel']],
+    colors: catalogColors([['#c98850','#6b4a28'],['#43b25b','#1e4a28'],['#ff8c42','#d05a1e'],['#7cf5ff','#2a7fc0'],['#2a1840','#5a3fb0'],['#5a1040','#ff6b9d'],['#6b5cff','#2e2266'],['#ff3040','#2a0810']]) },
+  { art: 'porcupine', catalog: 'w3', unlock: 7, base: { size: 18, hp: 58, dmg: 10, speed: 52, xp: 13 },
+    names: [['quillpup','Quillpup'],['bosquill','Bosquill'],['pantsquill','Pantsquill'],['stormquill','Stormquill'],['koningquill','Koningquill'],['voidquill','Voidquill'],['nmquill','Nachtmerrie-Quill'],['helquill','Hel-Quill']],
+    colors: catalogColors([['#c98850','#8a5a30'],['#43b25b','#1e4a28'],['#9fb2c8','#5f7189'],['#7cf5ff','#2a7fc0'],['#ffd75e','#8a6020'],['#5a1040','#ff6b9d'],['#2a1840','#b06ae0'],['#ff3040','#2a0810']]) },
+  { art: 'toad', catalog: 'w3', unlock: 2, base: { size: 18, hp: 42, dmg: 8, speed: 54, xp: 10 },
+    names: [['paddeling','Paddeling'],['moeraspadd','Moeraspadd'],['knorpadd','Knorpadd'],['stormpadd','Stormpadd'],['koningpadd','Koningpadd'],['voidpadd','Voidpadd'],['nmpadd','Nachtmerrie-Pad'],['helpadd','Hel-Pad']],
+    colors: catalogColors([['#4a8f52','#1e4a28'],['#5ad06a','#2a6030'],['#c98850','#6b4a28'],['#7cf5ff','#2a7fc0'],['#ffd75e','#8a6020'],['#5a1040','#ff6b9d'],['#b06ae0','#5a2080'],['#ff3040','#2a0810']]) },
+  { art: 'ghoul', catalog: 'w3', unlock: 10, base: { size: 21, hp: 56, dmg: 12, speed: 82, xp: 15 },
+    names: [['ghoulling','Ghoulling'],['grafghoul','Grafghoul'],['bijtghoul','Bijtghoul'],['stormghoul','Stormghoul'],['grafvreter','Grafvreter'],['voidghoul','Voidghoul'],['nmghoul','Nachtmerrie-Ghoul'],['helghoul','Hel-Ghoul']],
+    colors: catalogColors([['#8a8478','#3a3830'],['#6b5344','#3a2820'],['#9a917f','#4a4038'],['#7cf5ff','#2a7fc0'],['#c47aff','#5a2080'],['#5a1040','#ff6b9d'],['#2a1840','#b06ae0'],['#ff3040','#2a0810']]) },
+  { art: 'wraith', catalog: 'w3', unlock: 12, base: { size: 17, hp: 40, dmg: 11, speed: 108, xp: 16 },
+    names: [['wraithling','Wraithling'],['nachtwraith','Nachtwraith'],['zielwraith','Zielwraith'],['stormwraith','Stormwraith'],['etherwraith','Etherwraith'],['voidwraith','Voidwraith'],['nmwraith','Nachtmerrie-Wraith'],['helwraith','Hel-Wraith']],
+    colors: catalogColors([['#cfe6ff','#7aa8cf'],['#2a1840','#5a3fb0'],['#c47aff','#5a2080'],['#7cf5ff','#2a7fc0'],['#a8e0ff','#3a7fc0'],['#5a1040','#ff6b9d'],['#6b5cff','#2e2266'],['#ff3040','#2a0810']]) },
+  { art: 'bonehound', catalog: 'w3', unlock: 11, base: { size: 20, hp: 54, dmg: 13, speed: 112, xp: 16 },
+    names: [['bothond','Bothond'],['grafhond','Grafhond'],['knokhond','Knokhond'],['stormbothond','Stormbothond'],['grafbek','Grafbek'],['voidbothond','Voidbothond'],['nmbothond','Nachtmerrie-Bothond'],['helbothond','Hel-Bothond']],
+    colors: catalogColors([['#dfe8ff','#6a7080'],['#9fb2c8','#5f7189'],['#cfe6ff','#7aa8cf'],['#7cf5ff','#2a7fc0'],['#ffd75e','#8a6020'],['#5a1040','#ff6b9d'],['#2a1840','#b06ae0'],['#ff3040','#2a0810']]) },
+  { art: 'revenant', catalog: 'w3', unlock: 14, base: { size: 24, hp: 80, dmg: 14, speed: 38, xp: 19 },
+    names: [['revenling','Revenling'],['grafrev','Grafrev'],['terugkeer','Terugkeer'],['stormrev','Stormrev'],['doodrev','Doodrev'],['voidrev','Voidrev'],['nmrev','Nachtmerrie-Rev'],['helrev','Hel-Rev']],
+    colors: catalogColors([['#9a917f','#4a4038'],['#6b5344','#3a2820'],['#dfe8ff','#6a7080'],['#7cf5ff','#2a7fc0'],['#c47aff','#5a2080'],['#5a1040','#ff6b9d'],['#2a1840','#b06ae0'],['#ff3040','#2a0810']]) },
+  { art: 'shade', catalog: 'w3', unlock: 13, base: { size: 16, hp: 42, dmg: 11, speed: 56, xp: 16 },
+    names: [['schimling','Schimling'],['grafschim','Grafschim'],['zielschim','Zielschim'],['stormschim','Stormschim'],['nachtschim','Nachtschim'],['voidschim','Voidschim'],['nmschim','Nachtmerrie-Schim'],['helschim','Hel-Schim']],
+    colors: catalogColors([['#505868','#202830'],['#2a1840','#5a3fb0'],['#c47aff','#5a2080'],['#7cf5ff','#2a7fc0'],['#6b5cff','#2e2266'],['#5a1040','#ff6b9d'],['#2a1840','#b06ae0'],['#ff3040','#2a0810']]) },
+  { art: 'welder', catalog: 'w3', unlock: 12, base: { size: 18, hp: 48, dmg: 11, speed: 50, xp: 15 },
+    names: [['vonkling','Vonkling'],['lasbrander','Lasbrander'],['vonkbot','Vonkbot'],['stormlas','Stormlas'],['kernlas','Kernlas'],['voidlas','Voidlas'],['nmlas','Nachtmerrie-Las'],['hellas','Hel-Las']],
+    colors: catalogColors([['#ff9a42','#8a2020'],['#b86a4a','#6a3820'],['#ffd75e','#c97a20'],['#7cf5ff','#2a7fc0'],['#ff7043','#8a2020'],['#5a1040','#ff6b9d'],['#2a1840','#b06ae0'],['#ff3040','#2a0810']]) },
+  { art: 'sawbot', catalog: 'w3', unlock: 13, base: { size: 20, hp: 56, dmg: 13, speed: 102, xp: 16 },
+    names: [['zaagling','Zaagling'],['zaagbot','Zaagbot'],['knipzaag','Knipzaag'],['stormzaag','Stormzaag'],['megazaag','Megazaag'],['voidzaag','Voidzaag'],['nmzaag','Nachtmerrie-Zaag'],['helzaag','Hel-Zaag']],
+    colors: catalogColors([['#9fb2c8','#5f7189'],['#b86a4a','#6a3820'],['#dfe8ff','#6a7080'],['#7cf5ff','#2a7fc0'],['#ffd75e','#8a6020'],['#5a1040','#ff6b9d'],['#2a1840','#b06ae0'],['#ff3040','#2a0810']]) },
+  { art: 'rustmite', catalog: 'w3', unlock: 9, base: { size: 14, hp: 32, dmg: 8, speed: 78, xp: 11 },
+    names: [['roestmijt','Roestmijt'],['schrootmijt','Schrootmijt'],['knaagmijt','Knaagmijt'],['stormmijt','Stormmijt'],['megamijt','Megamijt'],['voidmijt','Voidmijt'],['nmmijt','Nachtmerrie-Mijt'],['helmijt','Hel-Mijt']],
+    colors: catalogColors([['#b86a4a','#6a3820'],['#9a917f','#4a4038'],['#c98850','#7a5030'],['#7cf5ff','#2a7fc0'],['#ffd75e','#8a6020'],['#5a1040','#ff6b9d'],['#2a1840','#b06ae0'],['#ff3040','#2a0810']]) },
+  { art: 'furnace', catalog: 'w3', unlock: 16, base: { size: 28, hp: 96, dmg: 15, speed: 28, xp: 20 },
+    names: [['ovenling','Ovenling'],['smeltoven','Smeltoven'],['stoofoven','Stoofoven'],['stormoven','Stormoven'],['kernoven','Kernoven'],['voidoven','Voidoven'],['nmoven','Nachtmerrie-Oven'],['heloven','Hel-Oven']],
+    colors: catalogColors([['#ff7043','#8a2020'],['#b86a4a','#6a3820'],['#ffd75e','#c97a20'],['#7cf5ff','#2a7fc0'],['#ff9a42','#8a2818'],['#5a1040','#ff6b9d'],['#2a1840','#b06ae0'],['#ff3040','#2a0810']]) },
+  { art: 'coil', catalog: 'w3', unlock: 14, base: { size: 16, hp: 44, dmg: 12, speed: 46, xp: 16 },
+    names: [['spoelling','Spoelling'],['vonkspoel','Vonkspoel'],['stroomspoel','Stroomspoel'],['stormspoel','Stormspoel'],['megaspoel','Megaspoel'],['voidspoel','Voidspoel'],['nmspoel','Nachtmerrie-Spoel'],['helspoel','Hel-Spoel']],
+    colors: catalogColors([['#7cf5ff','#2a7fc0'],['#9fb2c8','#5f7189'],['#ffe259','#c97a20'],['#6fd7ff','#2a5080'],['#c47aff','#5a2080'],['#5a1040','#ff6b9d'],['#2a1840','#b06ae0'],['#ff3040','#2a0810']]) },
+  { art: 'mammoth', catalog: 'w3', unlock: 15, base: { size: 32, hp: 98, dmg: 16, speed: 32, xp: 21 },
+    names: [['manmoetpup','Manmoetpup'],['sneeuwmanmoet','Sneeuwmanmoet'],['slagtandijs','Slagtandijs'],['stormmanmoet','Stormmanmoet'],['kroonmanmoet','Kroonmanmoet'],['voidmanmoet','Voidmanmoet'],['nmmanmoet','Nachtmerrie-Manmoet'],['helmanmoet','Hel-Manmoet']],
+    colors: catalogColors([['#dfe8ff','#6a7080'],['#a8e0ff','#3a7fc0'],['#9fb2c8','#5f7189'],['#7cf5ff','#2a7fc0'],['#cfe6ff','#7aa8cf'],['#5a1040','#ff6b9d'],['#2a1840','#b06ae0'],['#ff3040','#2a0810']]) },
+  { art: 'urchin', catalog: 'w3', unlock: 8, base: { size: 15, hp: 38, dmg: 9, speed: 64, xp: 12 },
+    names: [['zeeegel','Zeeegel'],['stekelegel','Stekelegel'],['rifegel','Rifegel'],['stormegel','Stormegel'],['koningsegel','Koningsegel'],['voidegel','Voidegel'],['nmegel','Nachtmerrie-Egel'],['helegel','Hel-Egel']],
+    colors: catalogColors([['#c47aff','#5a2080'],['#ff7043','#8a2020'],['#43b25b','#1e4a28'],['#7cf5ff','#2a7fc0'],['#ffd75e','#8a6020'],['#5a1040','#ff6b9d'],['#2a1840','#b06ae0'],['#ff3040','#2a0810']]) },
+];
+
+function allMonsterCatalogFamilies() {
+  return [].concat(MONSTER_FAMILIES_W2 || [], MONSTER_FAMILIES_W3 || []);
+}
+
 function catalogUnlockFor(step, familyUnlock) {
   const base = Number(familyUnlock) || 1;
   if (step.unlockAdd === 'nm') return Math.max(51, base + 36);
@@ -13713,7 +13820,7 @@ function expandMonsterCatalog(families) {
   const species = {};
   const unlockAt = {};
   const collisions = [];
-  const list = families || MONSTER_FAMILIES_W2;
+  const list = families || (typeof allMonsterCatalogFamilies === 'function' ? allMonsterCatalogFamilies() : MONSTER_FAMILIES_W2);
   for (const fam of list) {
     const slot = MONSTER_ART_SLOTS[fam.art] || {};
     const names = fam.names || [];
@@ -13736,7 +13843,7 @@ function expandMonsterCatalog(families) {
         name,
         art: fam.art,
         artSlot: fam.art,
-        catalog: 'w2',
+        catalog: fam.catalog || 'w2',
         biome: slot.biome || fam.biome || 'classic',
         pixel: pixelId || undefined,
         pixelStatus: slot.pixelStatus || 'stub',
@@ -13794,23 +13901,48 @@ function catalogSpeciesPool(levelN, maxRarityOrder, arts) {
 function wildSpeciesPool(levelN, maxRarityOrder) {
   return catalogSpeciesPool(levelN, maxRarityOrder, WILD_ARTS);
 }
+function frostSpeciesPool(levelN, maxRarityOrder) {
+  return catalogSpeciesPool(levelN, maxRarityOrder, FROST_ARTS);
+}
 function cryptSpeciesPool(levelN, maxRarityOrder) {
   return catalogSpeciesPool(levelN, maxRarityOrder, CRYPT_ARTS);
 }
 function scrapSpeciesPool(levelN, maxRarityOrder) {
   return catalogSpeciesPool(levelN, maxRarityOrder, SCRAP_ARTS);
 }
+function reefSpeciesPool(levelN, maxRarityOrder) {
+  return catalogSpeciesPool(levelN, maxRarityOrder, CATALOG_SEA_ARTS);
+}
 
-function applyCatalogWave(list, pool, n, rarityBias, giantForce) {
+function applyCatalogWave(list, pool, n, rarityBias, giantForce, eliteBias) {
   if (!pool || !pool.length || !list || !list.length) return;
+  const eliteP = Number(eliteBias) || 0;
   for (let i = 0; i < list.length; i++) {
-    if (Math.random() < 0.72) {
+    if (Math.random() < 0.76) {
       const sp = weightedPick(pool, n, rarityBias);
       list[i].sp = sp;
+      if (eliteP && Math.random() < eliteP) list[i].elite = true;
       if (giantForce) list[i].giant = true;
       else list[i].giant = list[i].giant || rollWaveGiant(n, !!list[i].elite, sp, 0);
     }
   }
+}
+
+function biomeTelegraphMul(biome) {
+  if (biome === 'crypt') return 1.16;
+  if (biome === 'scrap') return 0.88;
+  if (biome === 'frost') return 1.10;
+  if (biome === 'wild') return 0.94;
+  if (biome === 'sea') return 1.06;
+  return 1;
+}
+
+function biomeTechniqueKind(biome) {
+  if (biome === 'crypt') return 'spiral_orb';
+  if (biome === 'scrap') return 'wave_cannon';
+  if (biome === 'frost' || biome === 'wild') return 'lightning_pierce';
+  if (biome === 'sea') return 'wave_cannon';
+  return null;
 }
 /* --- src/data/monsters.js --- */
 /* ============================ MONSTERS ================================= */
@@ -14106,7 +14238,9 @@ const SPECIES = {
     tideCerber: { name: 'Driekoppige Jachthond', art: 'tideHound', size: 36, hp: 345, dmg: 29, speed: 92, type: 'charge', xp: 124, rarity: 'mythic', c1: '#505868', c2: '#202830' },
 };
 const MONSTER_CATALOG_W2_EXPANDED = (typeof expandMonsterCatalog === 'function')
-  ? expandMonsterCatalog(typeof MONSTER_FAMILIES_W2 !== 'undefined' ? MONSTER_FAMILIES_W2 : [])
+  ? expandMonsterCatalog(typeof allMonsterCatalogFamilies === 'function'
+    ? allMonsterCatalogFamilies()
+    : (typeof MONSTER_FAMILIES_W2 !== 'undefined' ? MONSTER_FAMILIES_W2 : []))
   : { species: {}, unlockAt: {}, familyCount: 0, speciesCount: 0 };
 Object.assign(SPECIES, MONSTER_CATALOG_W2_EXPANDED.species || {});
 for (const _spId of Object.keys(SPECIES)) {
@@ -14221,9 +14355,14 @@ function speciesTop10Threshold() {
   return _speciesTop10Threshold;
 }
 
-function pickEnemyTechnique(spId, levelN) {
+function pickEnemyTechnique(spId, levelN, biome) {
   if (levelN < ENEMY_TECHNIQUE_MIN_LEVEL) return null;
   if (speciesPowerScore(spId) < speciesTop10Threshold()) return null;
+  const b = biome || (SPECIES[spId] && SPECIES[spId].biome);
+  if (typeof biomeTechniqueKind === 'function') {
+    const flavored = biomeTechniqueKind(b);
+    if (flavored) return flavored;
+  }
   return ENEMY_TECHNIQUE_KINDS[Math.floor(Math.random() * ENEMY_TECHNIQUE_KINDS.length)];
 }
 
@@ -14287,13 +14426,17 @@ const COLOSSAL_HP_MUL = 1.9;
 const COLOSSAL_DMG_MUL = 1.12;
 const COLOSSAL_XP_MUL = 1.45;
 
-const SEA_ARTS = new Set(['shark', 'octo', 'crab', 'turtle', 'squid', 'ray']);
+const SEA_ARTS = new Set([
+  'shark', 'octo', 'crab', 'turtle', 'squid', 'ray',
+  ...(typeof CATALOG_SEA_ARTS !== 'undefined' ? CATALOG_SEA_ARTS : []),
+]);
 const FARM_ARTS = new Set(['cow', 'pig', 'chicken', 'sheep', 'horse', 'goat', 'duck', 'rooster', 'donkey', 'goose']);
 const ZOO_ARTS = new Set(['elephant', 'lion', 'tiger', 'giraffe', 'hippo', 'rhino', 'gorilla', 'zebra', 'bear', 'croc', 'kangaroo', 'panda', 'flamingo', 'camel']);
 const BEAST_SIZE_ARTS = new Set([
   ...FARM_ARTS,
   ...ZOO_ARTS,
   ...(typeof WILD_ARTS !== 'undefined' ? WILD_ARTS : []),
+  ...(typeof FROST_ARTS !== 'undefined' ? FROST_ARTS : []),
   ...(typeof CRYPT_ARTS !== 'undefined' ? CRYPT_ARTS : []),
   ...(typeof SCRAP_ARTS !== 'undefined' ? SCRAP_ARTS : []),
 ]);
@@ -14336,6 +14479,7 @@ function speciesBiomeId(sp, id) {
   if (typeof CATALOG_SEA_ARTS !== 'undefined' && CATALOG_SEA_ARTS.has(sp.art)) return 'sea';
   if (typeof CRYPT_ARTS !== 'undefined' && CRYPT_ARTS.has(sp.art)) return 'crypt';
   if (typeof SCRAP_ARTS !== 'undefined' && SCRAP_ARTS.has(sp.art)) return 'scrap';
+  if (typeof FROST_ARTS !== 'undefined' && FROST_ARTS.has(sp.art)) return 'frost';
   if (typeof WILD_ARTS !== 'undefined' && WILD_ARTS.has(sp.art)) {
     const slot = typeof MONSTER_ART_SLOTS !== 'undefined' ? MONSTER_ART_SLOTS[sp.art] : null;
     return (slot && slot.biome) || 'wild';
@@ -14459,6 +14603,24 @@ const ART_BLURB = {
   turtle: 'Schild. Daarna nog een schild.',
   squid: 'Armen genoeg voor iedereen.',
   ray: 'Glijdt alsof water optioneel is.',
+  hawk: 'Duikt alsof jij de muis bent.',
+  ram: 'Hoorns eerst, excuses later.',
+  cougar: 'Zachte poot, harde landing.',
+  weasel: 'Te smal voor je timing.',
+  porcupine: 'Knuffelen is een slecht plan.',
+  toad: 'Dikker dan een kikker. Nog steeds springt.',
+  ghoul: 'Honger met een graf-adres.',
+  wraith: 'Half lucht, helemaal lastig.',
+  bonehound: 'Kwispelt met een dijbeen.',
+  revenant: 'Was al dood. Komt toch.',
+  shade: 'Schaduw die terugschiet.',
+  welder: 'Vonken zijn het gesprek.',
+  sawbot: 'Zaag als begroeting.',
+  rustmite: 'Klein. Eet metaal. En tempo.',
+  furnace: 'Loopende oven. Geen thermostaat.',
+  coil: 'Spoel vol slechte ideeën.',
+  mammoth: 'Wol + slagtand + deadline.',
+  urchin: 'Een bal stekels met een mening.',
 };
 
 const TYPE_BLURB = {
@@ -14527,10 +14689,10 @@ const BOSS_AT = {
   40: [{ sp: 'voidkonijn', elite: true }, { sp: 'schaduwvorst' }],
   45: [{ sp: 'voidkonijn', elite: true }, { sp: 'guvvedrak' }],
   50: [{ sp: 'guvvedrak', elite: true }, { sp: 'voidkonijn', elite: true }, { sp: 'schaduwvorst', elite: true }],
-  55: [{ sp: 'voidkonijn', elite: true }, { sp: 'neondrake', elite: true }, { sp: 'schaduwvorst' }, { sp: 'voidyeti', elite: true }],
-  60: [{ sp: 'guvvedrak', elite: true }, { sp: 'omegadrake', elite: true }, { sp: 'voidkonijn', elite: true }, { sp: 'voidlich', elite: true }],
-  65: [{ sp: 'omegadrake', elite: true }, { sp: 'etherwyrm', elite: true }, { sp: 'neondrake' }, { sp: 'voidwolf', elite: true }],
-  70: [{ sp: 'guvvedrak', elite: true }, { sp: 'omegadrake', elite: true }, { sp: 'apexwyrm', elite: true }, { sp: 'voidkonijn', elite: true }, { sp: 'voidklink', elite: true }],
+  55: [{ sp: 'voidkonijn', elite: true }, { sp: 'neondrake', elite: true }, { sp: 'schaduwvorst' }, { sp: 'voidyeti', elite: true }, { sp: 'voidhavik', elite: true }],
+  60: [{ sp: 'guvvedrak', elite: true }, { sp: 'omegadrake', elite: true }, { sp: 'voidkonijn', elite: true }, { sp: 'voidlich', elite: true }, { sp: 'voidghoul', elite: true }],
+  65: [{ sp: 'omegadrake', elite: true }, { sp: 'etherwyrm', elite: true }, { sp: 'neondrake' }, { sp: 'voidwolf', elite: true }, { sp: 'voidzaag', elite: true }],
+  70: [{ sp: 'guvvedrak', elite: true }, { sp: 'omegadrake', elite: true }, { sp: 'apexwyrm', elite: true }, { sp: 'voidkonijn', elite: true }, { sp: 'voidklink', elite: true }, { sp: 'voidmanmoet', elite: true }],
 };
 
 function weightedPick(pool, n, rarityBias) {
@@ -14744,31 +14906,47 @@ function buildLevel(n, diffId) {
           }
         }
       }
-    } else if (n >= 4 && roll < 0.80) {
+    } else if (n >= 4 && roll < 0.78) {
       meta.trait = 'woods';
       meta.spawnMul = 0.88;
       meta.label = 'woods';
       const wildPool = typeof wildSpeciesPool === 'function' ? wildSpeciesPool(n, maxRarity) : [];
       if (wildPool.length && typeof applyCatalogWave === 'function') {
-        applyCatalogWave(list, wildPool, n, rarityBias, false);
+        applyCatalogWave(list, wildPool, n, rarityBias, false, 0.12);
       }
-    } else if (n >= 9 && roll < 0.86) {
+    } else if (n >= 6 && roll < 0.84) {
+      meta.trait = 'frost';
+      meta.spawnMul = 0.92;
+      meta.label = 'frost';
+      const frostPool = typeof frostSpeciesPool === 'function' ? frostSpeciesPool(n, maxRarity) : [];
+      if (frostPool.length && typeof applyCatalogWave === 'function') {
+        applyCatalogWave(list, frostPool, n, rarityBias, n >= 12, 0.10);
+      }
+    } else if (n >= 9 && roll < 0.89) {
       meta.trait = 'crypt';
       meta.spawnMul = 0.86;
       meta.label = 'crypt';
       const cryptPool = typeof cryptSpeciesPool === 'function' ? cryptSpeciesPool(n, maxRarity) : [];
       if (cryptPool.length && typeof applyCatalogWave === 'function') {
-        applyCatalogWave(list, cryptPool, n, rarityBias, false);
+        applyCatalogWave(list, cryptPool, n, rarityBias, false, 0.22);
       }
-    } else if (n >= 12 && roll < 0.92) {
+    } else if (n >= 12 && roll < 0.93) {
       meta.trait = 'scrap';
-      meta.spawnMul = 0.84;
+      meta.spawnMul = 0.80;
       meta.label = 'scrap';
       const scrapPool = typeof scrapSpeciesPool === 'function' ? scrapSpeciesPool(n, maxRarity) : [];
       if (scrapPool.length && typeof applyCatalogWave === 'function') {
-        applyCatalogWave(list, scrapPool, n, rarityBias, false);
+        applyCatalogWave(list, scrapPool, n, rarityBias, false, 0.16);
       }
-    } else if (n >= 7 && roll < 0.96) {
+    } else if (n >= 8 && roll < 0.96) {
+      meta.trait = 'reef';
+      meta.spawnMul = 0.86;
+      meta.label = 'reef';
+      const reefPool = typeof reefSpeciesPool === 'function' ? reefSpeciesPool(n, maxRarity) : [];
+      if (reefPool.length && typeof applyCatalogWave === 'function') {
+        applyCatalogWave(list, reefPool, n, rarityBias, false, 0.10);
+      }
+    } else if (n >= 7 && roll < 0.99) {
       const sp = weightedPick(pool, n, rarityBias);
       list.push({ sp, elite: true, giant: rollWaveGiant(n, true, sp, diff.giantBonus) });
       meta.trait = 'elite';
@@ -14835,8 +15013,10 @@ const WAVE_TRAIT_BANNER = {
   ranch: { key: 'banner.ranchWave', color: '#e8c98a', size: 40 },
   safari: { key: 'banner.safariWave', color: '#43b25b', size: 40 },
   woods: { key: 'banner.woodsWave', color: '#6ee06e', size: 40 },
+  frost: { key: 'banner.frostWave', color: '#a8e0ff', size: 40 },
   crypt: { key: 'banner.cryptWave', color: '#c47aff', size: 40 },
   scrap: { key: 'banner.scrapWave', color: '#9fb2c8', size: 40 },
+  reef: { key: 'banner.reefWave', color: '#4a9fff', size: 40 },
   ember: { key: 'banner.emberWave', color: '#ff7a4d', size: 42 },
   pain: { key: 'banner.painWave', color: '#ff3a2a', size: 44 },
 };
@@ -17989,8 +18169,10 @@ function seedNlGameStrings() {
     ranchWave: 'BOERDERIJ OP HOL',
     safariWave: 'DIERENTUIN-UITBRAAK',
     woodsWave: 'WOUD-GOLF',
+    frostWave: 'VORST-GOLF',
     cryptWave: 'CRYPTE-GOLF',
     scrapWave: 'SCHROOT-GOLF',
+    reefWave: 'RIF-GOLF',
     emberWave: 'EMBER-GOLF · 2.0',
     painWave: 'PIJN-GOLF · 3.0',
     waveClear: 'Golf gewist +{heal} HP',
@@ -18873,7 +19055,7 @@ function seedNlGameStrings() {
     dexNotBeaten: 'Nog niet verslagen',
     dexStats: '{type} · basis HP {hp} · dmg {dmg} · spd {spd} · {xp} XP · Lv {lvl}',
     dexType: { hop: 'Hups', fly: 'Vlieg', charge: 'Charge', shoot: 'Schiet', tank: 'Tank', dragon: 'Draak', swim: 'Zee' },
-    dexBiome: { farm: 'Boerderij', zoo: 'Dierentuin', sea: 'Zee', classic: 'Klassiek', secret: 'Geheim' },
+    dexBiome: { farm: 'Boerderij', zoo: 'Dierentuin', sea: 'Zee', wild: 'Woud', crypt: 'Crypte', scrap: 'Schroot', frost: 'Vorst', classic: 'Klassiek', secret: 'Geheim' },
     saveHealthStats: 'Lv {lvl} · unlock {unlocked} · boek {dex} · kills {kills}',
     saveHealthSummon: ' · ✦ {n} summon',
     saveHealthPet: ' · pet {n}',
@@ -19203,6 +19385,7 @@ const CATALOG_EN = {
     dexWild: { name: 'Woods hunter', desc: '10 wild species in the book' },
     dexCrypt: { name: 'Crypt guide', desc: '10 crypt species in the book' },
     dexScrap: { name: 'Scrap knower', desc: '10 scrap species in the book' },
+    dexFrost: { name: 'Frost knower', desc: '8 frost species in the book' },
     train5: { name: 'Robot breaker', desc: 'Win training 5×' },
     wall100: { name: 'Demolisher', desc: 'Wall record 100+' },
     combo8: { name: 'Combo king', desc: 'Reach combo ×8' },
@@ -19374,7 +19557,7 @@ const CATALOG_EN = {
     eliteNamed: 'ELITE — {name}!',
     flyerWave: 'FLYER WAVE', rushWave: 'RUSH WAVE', eliteTraitWave: 'ELITE WAVE', tideWave: 'TIDE WAVE',
     ranchWave: 'FARM RAMPAGE', safariWave: 'ZOO BREAKOUT',
-    woodsWave: 'WOODS WAVE', cryptWave: 'CRYPT WAVE', scrapWave: 'SCRAP WAVE',
+    woodsWave: 'WOODS WAVE', frostWave: 'FROST WAVE', cryptWave: 'CRYPT WAVE', scrapWave: 'SCRAP WAVE', reefWave: 'REEF WAVE',
     emberWave: 'EMBER WAVE · 2.0', painWave: 'PAIN WAVE · 3.0',
     waveClear: 'Wave cleared +{heal} HP', waveN: 'WAVE {n}/{total}',
     fight: 'FIGHT!', levelClear: 'LEVEL {n} CLEAR!', won: 'VICTORY!', lost: 'VERLOREN', spiral_orbTriple: 'TRIPLE SPIRAL ORB!', spiral_orbDual: 'DUAL SPIRAL ORB!',
@@ -20007,7 +20190,7 @@ const CATALOG_EN = {
     dexNotBeaten: 'Not defeated yet',
     dexStats: '{type} · base HP {hp} · dmg {dmg} · spd {spd} · {xp} XP · Lv {lvl}',
     dexType: { hop: 'Hop', fly: 'Fly', charge: 'Charge', shoot: 'Shoot', tank: 'Tank', dragon: 'Dragon', swim: 'Sea' },
-    dexBiome: { farm: 'Farm', zoo: 'Zoo', sea: 'Sea', classic: 'Classic', secret: 'Secret' },
+    dexBiome: { farm: 'Farm', zoo: 'Zoo', sea: 'Sea', wild: 'Woods', crypt: 'Crypt', scrap: 'Scrap', frost: 'Frost', classic: 'Classic', secret: 'Secret' },
     saveHealthStats: 'Lv {lvl} · unlock {unlocked} · book {dex} · kills {kills}',
     saveHealthSummon: ' · ✦ {n} summon',
     saveHealthPet: ' · pet {n}',
@@ -20296,6 +20479,7 @@ const CATALOG_DE = {
     dexWild: { name: 'Waldjäger', desc: '10 Wald-Arten im Buch' },
     dexCrypt: { name: 'Krypten-Guide', desc: '10 Krypten-Arten im Buch' },
     dexScrap: { name: 'Schrottkenner', desc: '10 Schrott-Arten im Buch' },
+    dexFrost: { name: 'Frostkenner', desc: '8 Frost-Arten im Buch' },
     train5: { name: 'Robotbrecher', desc: '5× Training gewonnen' },
     wall100: { name: 'Abrissprofi', desc: 'Mauer-Rekord 100+' },
     combo8: { name: 'Combo-König', desc: 'Combo ×8 erreicht' },
@@ -20364,7 +20548,7 @@ const CATALOG_DE = {
   },
   banner: {
     levelUp: 'LEVEL UP! Lv {lvl}', masterBuff: 'MEISTER-BUFF +20%', bossWave: 'BOSS-WELLE!',
-    woodsWave: 'WALD-WELLE', cryptWave: 'KRYPTEN-WELLE', scrapWave: 'SCHROTT-WELLE',
+    woodsWave: 'WALD-WELLE', frostWave: 'FROST-WELLE', cryptWave: 'KRYPTEN-WELLE', scrapWave: 'SCHROTT-WELLE', reefWave: 'RIFF-WELLE',
     fight: 'KÄMPF!', levelClear: 'LEVEL {n} FERTIG!', won: 'GEWONNEN!', lost: 'VERLOREN...', summon: '✦ SUMMON! ✦',
     matsStart: 'MÜNZEN-BONUS', wallStart: 'ZERSTÖRE DIE MAUER!', bonusDone: 'BONUS FERTIG!',
     kets: 'KABLAM…', ketsBam: 'KABLAM!',
@@ -20404,6 +20588,7 @@ const CATALOG_FR = {
     dexWild: { name: 'Chasseur des bois', desc: '10 espèces des bois au livre' },
     dexCrypt: { name: 'Guide de crypte', desc: '10 espèces de crypte au livre' },
     dexScrap: { name: 'Connaisseur de ferraille', desc: '10 espèces de ferraille au livre' },
+    dexFrost: { name: 'Connaisseur du gel', desc: '8 espèces de gel au livre' },
     train5: { name: 'Brise-robot', desc: '5× entraînement gagné' },
     wall100: { name: 'Démolisseur', desc: 'Record mur 100+' },
     combo8: { name: 'Roi du combo', desc: 'Combo ×8 atteint' },
@@ -20472,7 +20657,7 @@ const CATALOG_FR = {
   },
   banner: {
     levelUp: 'LEVEL UP ! Lv {lvl}', masterBuff: 'BUFF MAÎTRE +20 %', bossWave: 'VAGUE BOSS !',
-    woodsWave: 'VAGUE FORÊT', cryptWave: 'VAGUE CRYPTE', scrapWave: 'VAGUE FERRAILLE',
+    woodsWave: 'VAGUE FORÊT', frostWave: 'VAGUE GEL', cryptWave: 'VAGUE CRYPTE', scrapWave: 'VAGUE FERRAILLE', reefWave: 'VAGUE RÉCIF',
     fight: 'COMBAT !', levelClear: 'NIVEAU {n} TERMINÉ !', won: 'VICTOIRE !', lost: 'DÉFAITE...', summon: '✦ INVOCATION ! ✦',
     matsStart: 'BONUS PIÈCES', wallStart: 'CASSE LE MUR !', bonusDone: 'BONUS TERMINÉ !',
     kets: 'KABLAM…', ketsBam: 'KABLAM !',
@@ -20512,6 +20697,7 @@ const CATALOG_ES = {
     dexWild: { name: 'Cazador del bosque', desc: '10 especies salvajes en el libro' },
     dexCrypt: { name: 'Guía de cripta', desc: '10 especies de cripta en el libro' },
     dexScrap: { name: 'Conocedor de chatarra', desc: '10 especies de chatarra en el libro' },
+    dexFrost: { name: 'Conocedor de escarcha', desc: '8 especies de escarcha en el libro' },
     train5: { name: 'Rompe-robots', desc: '5× entrenamiento ganado' },
     wall100: { name: 'Demoledor', desc: 'Récord muro 100+' },
     combo8: { name: 'Rey del combo', desc: 'Combo ×8 alcanzado' },
@@ -20580,7 +20766,7 @@ const CATALOG_ES = {
   },
   banner: {
     levelUp: '¡SUBIDA DE NIVEL! Lv {lvl}', masterBuff: 'BUFF MAESTRO +20%', bossWave: '¡OLA JEFE!',
-    woodsWave: 'OLA BOSQUE', cryptWave: 'OLA CRIPTA', scrapWave: 'OLA CHATARRA',
+    woodsWave: 'OLA BOSQUE', frostWave: 'OLA ESCARCHA', cryptWave: 'OLA CRIPTA', scrapWave: 'OLA CHATARRA', reefWave: 'OLA ARRECIFE',
     fight: '¡LUCHA!', levelClear: '¡NIVEL {n} LISTO!', won: '¡VICTORIA!', lost: 'DERROTA...', summon: '✦ ¡INVOCACIÓN! ✦',
     matsStart: 'BONUS MONEDAS', wallStart: '¡ROMPE EL MURO!', bonusDone: '¡BONUS LISTO!',
     kets: '¡KABLAM…!', ketsBam: '¡KABLAM!',
@@ -20866,7 +21052,7 @@ const CATALOG_DE_CHROME = {
     bossNamed: 'BOSS — {name}!', eliteNamed: 'ELITE — {name}!',
     flyerWave: 'FLIEGER-WELLE', rushWave: 'RUSH-WELLE', eliteTraitWave: 'ELITE-WELLE', tideWave: 'TIDE-WELLE',
     ranchWave: 'FARM AMOK', safariWave: 'ZOO-AUSBRUCH',
-    woodsWave: 'WALD-WELLE', cryptWave: 'KRYPTEN-WELLE', scrapWave: 'SCHROTT-WELLE',
+    woodsWave: 'WALD-WELLE', frostWave: 'FROST-WELLE', cryptWave: 'KRYPTEN-WELLE', scrapWave: 'SCHROTT-WELLE', reefWave: 'RIFF-WELLE',
     emberWave: 'EMBER-WELLE · 2.0', painWave: 'SCHMERZ-WELLE · 3.0',
     waveClear: 'Welle klar +{heal} HP', waveN: 'WELLE {n}/{total}',
     fight: 'KÄMPF!', levelClear: 'LEVEL {n} FERTIG!', won: 'GEWONNEN!', lost: 'VERLOREN',
@@ -21587,7 +21773,7 @@ const CATALOG_DE_CHROME = {
     dexNotBeaten: 'Noch nicht besiegt',
     dexStats: '{type} · Basis-HP {hp} · dmg {dmg} · spd {spd} · {xp} XP · Lv {lvl}',
     dexType: { hop: 'Hopser', fly: 'Flug', charge: 'Charge', shoot: 'Schuss', tank: 'Tank', dragon: 'Drache', swim: 'Meer' },
-    dexBiome: { farm: 'Farm', zoo: 'Zoo', sea: 'Meer', classic: 'Klassisch', secret: 'Geheim' },
+    dexBiome: { farm: 'Farm', zoo: 'Zoo', sea: 'Meer', wild: 'Wald', crypt: 'Krypta', scrap: 'Schrott', frost: 'Frost', classic: 'Klassisch', secret: 'Geheim' },
     saveHealthStats: 'Lv {lvl} · Unlock {unlocked} · Buch {dex} · Kills {kills}',
     saveHealthSummon: ' · ✦ {n} Summon',
     saveHealthPet: ' · Pet {n}',
@@ -22757,7 +22943,7 @@ overlayI18nCatalog(CATALOG_DE, {
     colossalBossName: 'KOLOSSAL {name}!', bossNamed: 'BOSS — {name}!', eliteNamed: 'ELITE — {name}!',
     flyerWave: 'FLIEGER-WELLE', rushWave: 'RUSH-WELLE', eliteTraitWave: 'ELITE-WELLE', tideWave: 'TIDE-WELLE',
     ranchWave: 'FARM AMOK', safariWave: 'ZOO-AUSBRUCH',
-    woodsWave: 'WALD-WELLE', cryptWave: 'KRYPTEN-WELLE', scrapWave: 'SCHROTT-WELLE',
+    woodsWave: 'WALD-WELLE', frostWave: 'FROST-WELLE', cryptWave: 'KRYPTEN-WELLE', scrapWave: 'SCHROTT-WELLE', reefWave: 'RIFF-WELLE',
     emberWave: 'EMBER-WELLE · 2.0', painWave: 'SCHMERZ-WELLE · 3.0',
     waveClear: 'Welle klar +{heal} HP', waveN: 'WELLE {n}/{total}',
     fight: 'KÄMPF!', levelClear: 'LEVEL {n} FERTIG!', won: 'GEWONNEN!', lost: 'VERLOREN',
@@ -30602,6 +30788,24 @@ const MONSTER_PIXEL_ART = {
   panda: '..........................................................................................................................................................................................................................................................................N..........N..................NNDNN..NNN.NNDNN...............NDDDDDNNBBBNDDDDDN..............NDDDDDBBBBBBDDDDDN.............NDDDDDDDBBBBDDDDDDDN.............NDDDDDBBBBBBDDDDDN..............NDDDDDBBBBBDDDDDDN..............NBDDWDDBBDDWDDDBBBN.............NDDWKWDDDDWKWDDBBBN............NBBDDWDDBBDDWDDBBBBBN...........NBBBBDBBBDBBDBBBBBBBN...........NBBBBBBBDDDBBBBBBBBBN............NBBBBBDDDDDBBBBBBBN.............NBBBBBBDDDBBBBBBBBN..............NBBBBBBDBBBBBBBBN...............NBBBBBBBBBBBBBBBN................NBBBBBBBBBBBBBN..................NNDDDBBBBBDDDN...................NDDDBBBNNDDDN...................NDDDNNN.NDDDN....................NNN.....NNN.........................................................................................................',
   flamingo: '...........................................................................N.............................NNWNN..........................NPWKWPN......................NNNOPPWPPPN....................NOOOOPPPPPN......................NNNNONPPPN..........................N.NPPN............................NPPN............................NPPN............................NPPN...N...N....................NPPNNNNBNNNDNNN.................NPPNBBBBDDDDDDDN................NPPBBBBDDDDDDDDDN...............NPPBBBBBDDDDDDDN.................NBBBBBBBBBDBNN...................NBBBBBBBBBN.....................NBBBBBBBBBN......................NBBBBBBBN........................NNOONNN..........................NOON............................NOON............................NOON............................NOON............................NOON............................NOON...........................NOOON............................NNN.............................................................................................................',
   camel: '................................................................................................................................................................................................................................................N.............................NNBNN..........................NBBBBBN........................NBBBBBBBN.................N.NNN.NBBBBBBBN...............NNWNBBBNBBBBBBBBBNNN...........NDWKWDBBNNBBBBBBBBBBBN..........NDDWDDBBNBBBBBBBBBBBBBN........NDDDDDDDBBBBBBBBBBBBBBBBN........NDDDDDBBBBBBBBBBBBBBBBBBN.......NDDDDDBBBBBBBBBBBBBBBBBBN........NNDNBBBBBBBBBBBBBBBBBBBBN.........NNBBBBBBBBBBBBBBBBBBBN............NNBBBBBBBBBBBBBBBBBN..............NBBBBBBBBBBBBBBBN................NBBBBBBBBBBBBBN..................NDDBBBBBBBDDN...................NDDNNBBBNNDDN...................NDDN.NNN.NDDN...................NDDN.....NDDN....................NN.......NN........................................................................................................................................',
+  wolf: '....................................................................................................................................N........N.....................NDN......NDN.....................NN......NDN.....................NDN.....NDN.....................NDN.....NDN......................NDN...NDDN......................NDDN..NDDN......................NDDN..NDDNNNN...................NDDDNNDDDNBBBNNNN..............NBBBBDBBBBDBBBBBBBN.N..........NBBBWBBBBBBBBBBBBBBBNDNNNN......NBBWKWBBBBBBBBBBBBBBBDDDDDN....NBBBBWBBBBBBBBBBBBBBBBBDDDDDN..NNWBBBBBBBBBBBBBBBBBBBBBDDDDDDNNBBBBBBBBBBBBBBBBBBBBBBBBBDDDDN..NNNNBBBBBBBBBBBBBBBBBBBBDDDDN.......NNNBBBBBBBBBBBBBBBBBNNNN...........NBBBBBBBBBBBBBBBN................NBBBBBBBBBBBBBNN.................NDDBBDDBBBDDNDDN................NDDNNDDBNNDDNDDN................NDDNNDDN.NDDNDDN................NDDNNDDN.NDDNNN..................NN..NN...NN..........................................................................................................................................',
+  owl: '........................................................................................................................................N...............N..............NDN.............NDN..............NN.............NN...............NDN...........NDN...............NDDN.........NDDN................NDN...NNN...NDN.................NDDNNNBBBNNNDDN.................NDDDBBBBBBBDDDN..................NBADBBBBBDABN..................NAAWAABBBAAWAAN................NBAWWWABBBAWWWABN...............NAWKWWWABAWKWWWAN..............NDDDWWWABBBAWWDDDN..............NDDDAWAABBBAAWDDDBN.............NBBBBABBOBBBBABBBBN.............NBBBBBBBOOBBBBBBBBN..............NBBBBBOOOOBBBBBBN...............NBBBBOOOOOOOBBBBN...............NBBBBBBBBBBBBBBBN................NBBBBBBBBBBBBBN..................NBBBBBBBBBBBN....................NDDBBBBDDBN.....................NDDNBBBDDN......................NDDNNNNDDN.......................NN....NN............................................................................................................',
+  frog: '...........................................................................................................................................................................................................................................................................................................................................N.........N...................NNWNN.....NNWNN................NBWWWBN...NBWWWBN...............NWKWWWNNNNNWKWWWN..............NBBWWWBBBBBBBWWWBBN..............NBBWBBBBBBBBBWBBN...............NBBBBBBBBBBBBBBBN..............NBBBBBBBBBBBBBBBBBN............NBBBBBBBBBBBBBBBBBBBN...........NBBBBBBBBBBBBBBBBBBBN..........NBBBBBBDDDDDDDDBBBBBBBN..........NBBBBBBBBBBBBBBBBBBBN..........NNDBBBBBBBBBBBBBBBBBDNN........NDDDDDBBBBBBBBBBBBBDDDDDN......NDDDDDDDBBBBBBBBBBBDDDDDDDN......NDDDDDNBDDBBBBDDBBNDDDDDN........NNDNN.NDDNBBBDDNN.NNDNN...........N...NDDNNNNDDN....N..................NN....NN............................................................................................................',
+  snake: '........................................................................................................................................................................................................................................................................N............................NNNBNNN.....................NN.NBBWBBBBN...................NBPNNBWKWBBBNNNNNN..............NPBBBBBWBBBBBBBBBBN..............NNBBBBBBBDDBBBBBBBNNN.............NBBBBBBBBBBBBBBBBBBN.............NNNNBNNNNNNBBBBBBBNN................N....NBBBBBBBBBBN.....................NBBBDDBBBBN.....................NBBBBBBBBBBNNN...................NNNBNNBBBBBBBN.....................N.NBBBBBBBN......................NBBBBBBBBBN......................NBBBBBBBN.......................NBBBBBBBN........................NNNBNNN............................N.......................................................................................................................................................................................................',
+  boar: '..............................................................................................................................................................................N.......N......................NDN.....NDN......................NN.....NDN......................NDN....NDN.......................NDN..NDDN.......................NDDN.NDDN.....................NNNBBDNDDDN...................NNBBBBBBDBBDN................N.NBBBBBBBBBBBBDN............NNNDNBBBBBBBBBBBBBBBN..........NDDDWDDDBBBBBBBBBBBBBBN........NDADWKWDDDBBBBBBBBBBBBBN........NDPDDWDDDDBBBBBBBBBBBBBN.......NDPPPDAADDDDBBBBBBBBBBBBBN......NPPPPPAADDDBBBBBBBBBBBBBN......NAAPPPAAAADDBBBBBBBBBBBBBN.......NNNPDDDDDDBBBBBBBBBBBBBBN..........NNNDNBBBBBBBBBBBBBBBN..............N.NBBBBBBBBBBBBBN..................NDDBBBBBBBDDN...................NDDNNBBBNNDDN...................NDDN.NNN.NDDN....................NN.......NN.........................................................................................................................................',
+  skeleton: '................................................................................................................N............................NNNBNNN........................NBBBBBBBN......................NBBBBBBBBBN.....................NBBBBBBBBBN.....................NBBNBBBNBBN....................NBBBBBBBBBBBN....................NBBBBBBBBBN.....................NBBBNNBBBBN.....................NBBBBBBBBBN......................NBBBBBBBN.....................NNNDDDDDDNNN...................NBBBBBBBBBBBBN...................NNNDDDDDDNNN......................NBBBBBBN........................NDDDDDDN........................NBBBBBBN........................NDDDDDDN.........................NBBNBBN.........................NBBNBBN.........................NBBNBBN.........................NBBNBBN.........................NBBNBBN..........................NN.NN.............................................................................................................................................................................',
+  mummy: '................................................................................N............................NNNBNNN........................NBBBBBBBN......................NBBBBBBBBBN.....................NBBBBBBBBBN.....................NBBBBBBBBBN....................NBBBNBBBNBBBN....................NBBBBBBBBBN.....................NBBBBBBBBBN.....................NBBBBBBBBBN.....................NBBBBBBBBN....................NNNDDDDDDDDN...................NAAABBBBBBBBN...................NAAABBBBBBBBN....................NNNDDDDDDDDNNNN...................NBBBBBBBBAAAAN..................NBBBBBBBBNNNN...................NDDDDDDDDN......................NBBBBBBBBN......................NBBBBBBBBN......................NBBBBBBBBN.......................NDDNNDDN........................NDDNNDDN........................NDDNNDDN........................NDDNNDDN.........................NN..NN.............................................................................................................................................',
+  beetle: '................................................................................................................................................................................................................................................................................................................NNN..........................NNNDDDNNN.............N........NDDDDDDDDDN...........NDN......NDDDDDBDDDDDN...........N..N.N.NDDDBBBBBBBDDDN............NDNBNDDDBBBBBBBBBDDDN...........NBWBBBDBBBBBBBBBBBDDN...........NWKWBBDBBBBBBBBBBBDDN..........NBBWBBBBBBBBBBBBBBBBDDN..........NBBBBBDBBBBBBBBBBBDDN...........NBBBBBDBBBBBBBBBBBDDN............NNBNDDDBBBBBBBBBDDDN..............N.NDDDBBBBBBBDDDN..................NDDDDDBDDDDDN....................NDDNNDDNDNN.N...................NNNNNDDNNN..N...................N..NNNNN.N..N.......................................................................................................................................................................................................',
+  wasp: '......................................................................................................................................................................N.............N................NHN...........NHN................NHN..........NN..................NHNN.......NHN...................NHHN.....NHHN....................NHHN...NHHN.....................NHHHNNNHHHN....................NBWBBBHBNHHNNN..................NWKWBBBBBBHBBBN................NBBWBBBBBBBBBBBBN................NBBBBBBDDBBBBBBN...N............NBBBBBBDDBBBBBBBNNNON............NNNBNBBDDDDDBOOOOOON...............NNBBBBBBBBBNNOOON.................NBBBBBBBN..NNON.................NNNNNNNN.....N..................N...N...........................N...N.............................................................................................................................................................................................................................................................................................................',
+  spider: '................................................................................................................................................................................................................................................................................................................................................................................N.........................NNNNNNBNNN..NNNNN.................NBBBBBBBN.N....................NBBWBBWBBBNDN.................NNNNWKWWKWDDDDNNNNNN.............NBBBWBBWDDDDDDDDDN...............NBBBBBBDDDDDDDDDN...............NBBBBBDDDDDDDDDDDN.............NNNNNBBBDDDDNNNNNN...................NBNDDDDDDDDDN....................N.NDDDDDDDN................NNNN....NNNNNNN......................................................................................................................................................................................................................................................................................................',
+  drone: '.......................................................................................................................................................................................................................................................................................................................................N.................N...........NNDNN.............NNDNN........NDDDDDN...........NDDDDDN......NDDDDDDDNNNNNNNNNNNDDDDDDDN......NDDDNNNBBBBBBBBBBNNNDDDDN........NNDN.NBBBBBHBBBBN..NDNN...........N..NBBDDOOODBBN...N.............N..NBBDOOOOOBBN...N...........NNDNNNBBDDOOODBBN.NNDNN........NDDDDDNBBBBBOBBBBNNDDDDDN......NDDDDDDDNNNNNNNNNNNDDDDDDDN......NDDDDDN...........NDDDDDN........NNDNN.............NNDNN...........N.................N......................................................................................................................................................................................................................................................................',
+  bot: '...............NHN............................NHHHN..........................NHHHHHN..........................NHHHN............................NHN...........................NNNNNN.........................NDDDDDDN........................NDDDDDDN........................NDOOOODN........................NDOOOODN........................NDDDDDDN........................NDDDDDDN.......................NBBBBBBBBN....................NNNBBBBBBBBNNN.................NDDDBBBBBBBBDDDN................NDDDBBBBBBBBDDDN.................NNNBBBBBBBBNNN....................NBBBBBBBBN......................NBBBBBBBBN......................NBBBBBBBBN......................NBBBBBBBBN......................NBBBBBBBBN.......................NDDNNDDN........................NDDNNDDN........................NDDNNDDN........................NDDNNDDN........................NDDNNDDN.........................NN..NN.............................................................................................................................................',
+  scrapdog: '.......................................................................................................................................................................................................................................................................................................................................................................................................NN..NN..........................NN..NN.........................NNNNNNN........................NDDODDDDNNNNNNNNNNN...N.........NDOOODDDBBBBBBBBBBBN.NON........NOOOOODDBBBBBBBBBBNNNNN.........NDOOODDDBBBBBBBBBBNNNNN.........NDDODDDDBBBBBBBBBBBN............NDDDDDDDBBBBBBBBBBBN.............NNNNNNBBBBBBBBBBBBN...................NDDNNDDNNDDN....................NDDNNDDNNDDN....................NDDNNDDNNDDN....................NDDNNDDNNDDN.....................NN..NN..NN.........................................................................................................................................................................',
+  penguin: '................................................................................................................N.............................NNBNN..........................NBBBBBN........................NBBBBBBBN.......................NBWBBBBBN......................NBWKWBBBBBN....................NNNOWBBBBBN....................NOOOOBBBBBBBN....................NBOOBBBBBBBBN...................NBBBOBBBBBBBN...................NBBBAAAAABBBN...................NBBAAAAAAABBN..................NBBBAAAAAAABBBN.................NDDDAAAAAADDDBN.................NDDDAAAAAADDDBN.................NDDDAAAAAADDDN..................NDDDAAAAAADDDN...................NBBAAAAAAABBN...................NBBAAAAAAABBN....................NBAAAAAAABN......................NBAAAAABN........................NBBABBN........................NOOOBOOON.......................NOOONOOON........................NNN.NNN............................................................................................................................................',
+  yeti: '................................................................................N............................NNNBNNN........................NBBBBBBBN......................NBBBBBBBBBN.....................NBBBBBBBBBN.....................NBBWBBBWBBN....................NBBWKWBWKWBBN....................NBBWBBBWBBN....................NBBBBBBBBBBBN..................NBBBBBBBBBBBBBN................NBBBBBBBBBBBBBBBN...............NBBBBBBBBBBBBBBBN.............NNDBBBBBBBBBBBBBBBDNN..........NDDDDDBBBBBBBBBBBDDDDDN.........NDDDDDBBBBBABBBBBDDDDDN.........NDDDDDBBBAAAAABBBDDDDDN........NDDDDDDDBAAAAAAABDDDDDDDN........NDDDDDBBBAAAAABBBDDDDDN.........NDDDDDBBBBBABBBBBDDDDDN.........NDDDDDBBBBBBBBBBBDDDDDN..........NNDNNBBBBBBBBBBBNNDNN.............N..NBDDBBBDDBN..N...................NDDBBBDDN.......................NDDNNNDDN.......................NDDN.NDDN.......................NDDN.NDDN........................NN...NN............................................................................................................',
+  crab: '............................................................................................................................................................................................................................................................................................................................................N......N.......................NWN....NWN.................N...NWKWNNNNWKWN....N........NNNDNNN.NWNNBBBNWN..NNNDNNN....NDDDDDDDNNNBBBBBBNBNNDDDDDDDN...NDDDDDDDBBNBBBBBBNBBBDDDDDDDN..NDDDDDDDDDBBBBBBBBBBBDDDDDDDDDN..NDDDDDDDBBBBBBBBBBBBBDDDDDDDN...NDDDDDDDBBBBBBBBBBBBBDDDDDDDN....NNNDNNBBBBBBBBBBBBBBBNNDNNN........N.NBBBBBBBBBBBBBBBN.N..............NBBBBBBBBBBBBBN..................NNNBBNNBBNNNN....................NNNNNNBNNN......................NN..NNN.NN...........................................................................................................................................................................................................................................',
+  turtle: '................................................................................................................................................................................................................................................................................................................NNN..........................NNNDDDNNN.....................NNDDDDDDDDDNN..................NDDDDDDBDDDDDDN................NDDDDBBBBBBBDDDDN.............NNDDDDBBBBBBBBBDDDDN.........NNNBNDDDBBBDDBBBBBBDDDN........NBBWBBBBDBBBDDBBDDBBDDDBNN......NBWKWBBBBBBBBBBBDDBBBBBBBBN....NBOBWBBBBBBBBBBBBBBBBBBBBBBBN..NOOOBBBBBBDBBBBBBBBBBBDBBBBBN....NNBOBBBBBDDBBBBBBBBBDDDDBNN.......NNNBNNDDBDBBBBBBBDBDDNN............N.NBBBBBDDBDDBBBBBN..............NBBBBBBBDDDBBBBBBBN..............NBBBBBNDDDNBBBBBN................NNBNN.NNN.NNBNN...................N.........N.........................................................................................................................................................................',
+  squid: '................................................N..............................NDN............................NDDDN..........................NDDDDDN........................NDDDDDDDN......................NDDDDDDDDDN....................NDDDDDDDDDDDN..................NDDDWDDDDDWDDDN................NNBBWWWBBBWWWBBNN..............NBBBWKWWWBWKWWWBBBN............NBBBBBWWWBBBWWWBBBBBN............NBBBBBWBBBBBWBBBBBN..............NNBBBBBBBBBBBBBNN.................NNBBBBBBBBBNN...................NNNBBBBBBBN.NN.................NDDNDDNDDNDDNDDN................NDDNDDNDDNDDNDDN................NDDNDDNDDNDDNDDN................NDDNDDNDDNDDNDDN................NDDNDDNDDNDDNDDN................NDDNDDNDDNDDNDDN................NDDNDDNDDNDDNDDN................NDDNDDNDDNDDNDDN................NPNNDDNPNNDDNPN..................N.NPN.N.NPN.N......................N.....N............................................................................................................................................................................',
 };
 const MONSTER_PIXEL_SPECIES = {
   holkoe: '....................................................................................................................................................................................................N.......N......................NDN.....NDN......................NN.....NN.......................NDN...NDN........................NDNN.NN....NNN..................NDNDNDNNNNNBBBNNNN.............NDDDDDDDBBBBBBBBBBBNN..........NDDDWDDDDDBBBBBBBBDBBBN.........NDDWKWDDDDBDDBBBDDDDDBBN.......NDDADWDDDDDDDDDBDDDDDBBBBN.......NAAADDDDDDDDDDDBBDBBBBBBN......NAAAAADDDDDDDDDBBBBBBBBBBN.......NAAADDDDDBBDDBBBBBBBBBBBBN.......NANNDBBBBBBBBBBBBBBBBBBN.........N.NBBBBBBBBBBBBBBPBBBBN...........NBBBBBBBBBBBBPPPPPBBN............NBBBBBBBBBBPPPPPPPN..............NBBBBBBBBBBPPPPPN................NNDDBBBBBBBBDDN..................NDDNNBBBNNNDDN..................NDDN.NNN..NDDN...................NN........NN........................................................................................................................................',
@@ -31938,6 +32142,19 @@ class Monster {
     this.dashT = 0; this.telegraphT = 0; this.telegraphMax = 0; this.hopT = rand(0, 0.8);
     /** Soft-feel: langere dodge-telegraphs op golf 1 / vroege levels. */
     this.softTelegraph = !!opts.softTelegraph;
+    this.biomeId = (typeof speciesBiomeId === 'function')
+      ? speciesBiomeId(sp, spId)
+      : (sp && sp.biome) || 'classic';
+    this.biomeTelegraphMul = (typeof biomeTelegraphMul === 'function')
+      ? biomeTelegraphMul(this.biomeId)
+      : 1;
+    if (opts.levelN != null && typeof pickEnemyTechnique === 'function') {
+      this.enemyTechnique = pickEnemyTechnique(spId, opts.levelN, this.biomeId);
+      if (this.enemyTechnique) {
+        this.techniqueCD = rand(3.2, 6.5);
+        this.techniqueTelegraphT = 0;
+      }
+    }
     this.face = -1;
     this.enraged = false;
     this.phase2FlashT = 0;
@@ -31995,7 +32212,7 @@ class Monster {
       } else {
         this.x += dir * this.speed * spdMul * dt * 0.6;
         if (dist < 240 && this.atkCD <= 0) {
-          const wind = this.enraged ? 0.28 : (this.softTelegraph ? 0.88 : 0.45);
+          const wind = (this.enraged ? 0.28 : (this.softTelegraph ? 0.88 : 0.45)) * (this.biomeTelegraphMul || 1);
           this.telegraphT = wind;
           this.telegraphMax = wind;
           this.atkCD = rand(1.6, 2.6) / (this.enraged ? 1.25 : 1);
@@ -32027,7 +32244,7 @@ class Monster {
       } else {
         this.x += dir * this.speed * dt;
         if (dist < this.size + 48 && this.atkCD <= 0) {
-          const wind = this.softTelegraph ? 0.98 : 0.55;
+          const wind = (this.softTelegraph ? 0.98 : 0.55) * (this.biomeTelegraphMul || 1);
           this.telegraphT = wind;
           this.telegraphMax = wind;
           this.atkCD = 2.0;
@@ -32065,7 +32282,7 @@ class Monster {
         } else {
           this.x += dir * this.speed * spdMul * dt * 0.78;
           if (dist < 230 && this.atkCD <= 0) {
-            const wind = this.enraged ? 0.2 : (this.softTelegraph ? 0.58 : 0.36);
+            const wind = (this.enraged ? 0.2 : (this.softTelegraph ? 0.58 : 0.36)) * (this.biomeTelegraphMul || 1);
             this.telegraphT = wind;
             this.telegraphMax = wind;
             this.atkCD = rand(1.35, 2.1) / (this.enraged ? 1.25 : 1);
@@ -45717,8 +45934,10 @@ const UI = {
         else if (trait === 'ranch') cls += ' trait-ranch';
         else if (trait === 'safari') cls += ' trait-safari';
         else if (trait === 'woods') cls += ' trait-woods';
+        else if (trait === 'frost') cls += ' trait-frost';
         else if (trait === 'crypt') cls += ' trait-crypt';
         else if (trait === 'scrap') cls += ' trait-scrap';
+        else if (trait === 'reef') cls += ' trait-reef';
         else if (trait === 'tide') cls += ' trait-tide';
         else if (trait === 'ember') cls += ' trait-ember';
         else if (trait === 'pain') cls += ' trait-pain';
