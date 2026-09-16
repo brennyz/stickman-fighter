@@ -31,6 +31,7 @@ must(/function calendarSeasonId/.test(seasonsJs), 'calendarSeasonId missing');
 must(/function setSeasonPref/.test(seasonsJs), 'setSeasonPref missing');
 must(/function currentSeasonId/.test(seasonsJs), 'currentSeasonId missing');
 must(/function querySeasonOverride/.test(seasonsJs), 'QA ?season= override missing');
+must(/function dismissSeasonQueryOverride/.test(seasonsJs), 'settings pick must drop ?season= preview');
 must(/function seasonBeat/.test(seasonsJs), 'story beat helper missing');
 must(/season-swapping/.test(seasonsJs), 'season swap class missing');
 must(/sf-season-change/.test(seasonsJs), 'audio hook event missing');

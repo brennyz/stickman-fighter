@@ -20,6 +20,8 @@ const SEASON_ART_SLOTS = [
 
 let lastAppliedSeasonId = '';
 let seasonSwapTimer = 0;
+/** After a settings chip pick, ignore ?season= so preview does not fight save.seasonPref. */
+let seasonQueryIgnored = false;
 
 function normalizeSeasonPref(v) {
   const s = String(v == null ? '' : v).toLowerCase().trim();
@@ -60,6 +62,7 @@ function calendarSeasonId(when) {
 
 /** QA / screenshots: ?season=winter|summer|jungle|halloween|classic — not persisted. */
 function querySeasonOverride() {
+  if (seasonQueryIgnored) return null;
   try {
     const q = new URLSearchParams(location.search).get('season');
     if (q == null || q === '') return null;
@@ -70,6 +73,19 @@ function querySeasonOverride() {
   } catch (_) {
     return null;
   }
+}
+
+function dismissSeasonQueryOverride() {
+  seasonQueryIgnored = true;
+  try {
+    const u = new URL(location.href);
+    if (!u.searchParams.has('season')) return;
+    u.searchParams.delete('season');
+    const next = u.pathname + (u.search || '') + (u.hash || '');
+    if (typeof history !== 'undefined' && history.replaceState) {
+      history.replaceState(null, '', next);
+    }
+  } catch (_) {}
 }
 
 function currentSeasonPref() {
@@ -235,6 +251,7 @@ function applySeasonTheme(opts) {
 function setSeasonPref(pref, opts) {
   const next = normalizeSeasonPref(pref);
   if (typeof save === 'undefined' || !save) return currentSeasonId();
+  dismissSeasonQueryOverride();
   if (save.seasonPref === next) {
     applySeasonTheme();
     return currentSeasonId();
