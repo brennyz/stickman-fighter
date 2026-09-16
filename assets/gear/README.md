@@ -2,10 +2,12 @@
 
 16×16 stickman-pixel icons for world-drop gear.  
 **IDs:** PR #280 catalog (`src/data/gear.js`).  
-**Pixels:** `src/data/gear-world.js` templates + tints.
+**Pixels:** `src/data/gear-world.js` `GEAR_PIXEL_BY_ID` + templates + tints.
 
 ```bash
 node scripts/render-gear-assets.mjs
 ```
 
 Not SW-precached (Android first-load). Combat pickups blit pixels from JS.
+
+Canvas-only pickup motion (skipped when `motionReduced()` / `fxLite()` / `save.liteFx`): spawn pop, ready tilt, hell 3-frame fakkel, glow/ring pulse, collect snap. SVGs stay static. Preview: `_preview/_pickup-motion.html`.

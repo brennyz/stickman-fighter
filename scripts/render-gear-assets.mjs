@@ -88,11 +88,82 @@ const sampleHtml = html.replace(cells, sampleCells).replace('gear pixels', 'gear
 const sampleSheet = path.join(previewDir, '_sample.html');
 fs.writeFileSync(sampleSheet, sampleHtml, 'utf8');
 
+function svgUri(id) {
+  const svg = fs.readFileSync(path.join(outDir, id + '.svg'), 'utf8');
+  return 'data:image/svg+xml;base64,' + Buffer.from(svg).toString('base64');
+}
+
+const pickupIds = [
+  { id: 'head_bandana_blue', scale: 2, ring: null, label: 'common' },
+  { id: 'chest_plate_iron', scale: 2.25, ring: '#7eb6ff', label: 'rare' },
+  { id: 'back_wings_hell', scale: 2.75, ring: '#ff6a3d', label: 'hell · superBoss' },
+];
+const pickupOrbs = pickupIds.map((p, i) => {
+  const it = items.find((x) => x.id === p.id);
+  const acc = (it && it.look && it.look.accent) || '#c792ff';
+  const px = 32 + (p.scale * 16);
+  const ring = p.ring
+    ? `<div class="ring" style="width:${px + 14}px;height:${px + 14}px;border-color:${p.ring}"></div>`
+    : '';
+  return `<div class="orb-wrap" style="left:${40 + i * 110}px;top:${380 + (i % 2) * 40}px">
+    <div class="orb" style="width:${px + 8}px;height:${px + 8}px;background:${acc}">${ring}
+      <img src="${svgUri(p.id)}" alt="" style="width:${px}px;height:${px}px">
+    </div>
+    <span>${p.label}</span>
+  </div>`;
+}).join('\n');
+
+const pickupHtml = `<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<title>Gear pickup mock — Android 390</title>
+<style>
+  html,body{margin:0;background:#151b33;color:#e8f0ff;font-family:system-ui,sans-serif}
+  .phone{width:390px;height:844px;margin:0 auto;position:relative;overflow:hidden;
+    background:linear-gradient(180deg,#1c2744,#0e1424 70%)}
+  .ground{position:absolute;left:0;right:0;bottom:0;height:220px;
+    background:linear-gradient(180deg,transparent,#0a0d18)}
+  h1{margin:18px 16px 4px;font-size:15px;color:#ffd75e}
+  .sub{margin:0 16px 12px;font-size:11px;opacity:.7}
+  .orb-wrap{position:absolute;display:flex;flex-direction:column;align-items:center;gap:6px}
+  .orb{border-radius:50%;display:flex;align-items:center;justify-content:center;
+    box-shadow:0 0 16px currentColor;position:relative;border:2px solid #fff}
+  .ring{position:absolute;border-radius:50%;border:2px solid;pointer-events:none}
+  .orb img{image-rendering:pixelated;image-rendering:crisp-edges}
+  .orb-wrap span{font-size:10px;font-weight:800;opacity:.8}
+</style></head><body>
+<div class="phone">
+  <h1>Pickup feel · max 3 orbs</h1>
+  <p class="sub">390×844 · unique silhouettes · rare+ ring</p>
+  ${pickupOrbs}
+  <div class="ground"></div>
+</div>
+</body></html>`;
+const pickupPage = path.join(previewDir, '_pickup.html');
+fs.writeFileSync(pickupPage, pickupHtml, 'utf8');
+
+const compareIds = [
+  'head_wrap_cloth', 'head_bandana_blue', 'head_beanie_wool', 'head_hat_paper', 'head_crown_cardboard',
+  'head_helm_knight', 'head_helm_nightmare', 'head_helm_hell',
+  'chest_shirt_plain', 'chest_hoodie_gray', 'chest_vest_denim', 'chest_plate_iron', 'chest_plate_hell',
+  'hands_wrap', 'hands_mittens_wool', 'hands_rings_plastic', 'hands_gauntlet_hell',
+  'legs_wrap', 'legs_socks_plain', 'legs_shorts_stripe', 'legs_boots_clown', 'legs_greaves_hell',
+  'back_pin_dot', 'back_backpack_school', 'back_scarf_long', 'back_cape_red', 'back_wings_hell',
+];
+const compareCells = compareIds.map((id) => {
+  const it = items.find((x) => x.id === id);
+  return cellHtml(it || { id, nameEn: id, slot: '', rarity: '', unlockLvl: 1 });
+}).join('\n');
+const compareHtml = html.replace(cells, compareCells).replace('gear pixels', 'gear pixels (distinct set)');
+const comparePage = path.join(previewDir, '_compare.html');
+fs.writeFileSync(comparePage, compareHtml, 'utf8');
+
 const chromeBin = fs.existsSync('/opt/google/chrome/chrome')
   ? '/opt/google/chrome/chrome'
   : (process.env.CHROME_PATH || '');
 const png = path.join(previewDir, 'all.png');
 const samplePng = path.join(previewDir, 'sample.png');
+const pickupPng = path.join(previewDir, 'pickup-android.png');
+const comparePng = path.join(previewDir, 'distinct-set.png');
 if (chromeBin && fs.existsSync(chromeBin)) {
   const userData = path.join(previewDir, '.chrome-ud');
   fs.mkdirSync(userData, { recursive: true });
@@ -107,6 +178,8 @@ if (chromeBin && fs.existsSync(chromeBin)) {
     console.warn('chrome preview skip:', (r.stderr || r.stdout || '').slice(0, 200));
   }
   shot(png, sheet, 1400, 3600);
+  shot(pickupPng, pickupPage, 390, 844);
+  shot(comparePng, comparePage, 1280, 1600);
 }
 
 console.log(JSON.stringify({
@@ -115,4 +188,6 @@ console.log(JSON.stringify({
   sheet: 'assets/gear/_preview/_sheet.html',
   sample: fs.existsSync(samplePng) ? 'assets/gear/_preview/sample.png' : null,
   png: fs.existsSync(png) ? 'assets/gear/_preview/all.png' : null,
+  pickup: fs.existsSync(pickupPng) ? 'assets/gear/_preview/pickup-android.png' : null,
+  compare: fs.existsSync(comparePng) ? 'assets/gear/_preview/distinct-set.png' : null,
 }));

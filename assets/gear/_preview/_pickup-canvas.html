@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Gear pickup canvas — real drawGearPixels</title>
+<style>
+  html,body{margin:0;background:#0e1424;color:#e8f0ff;font-family:system-ui,sans-serif}
+  body{padding:16px}
+  h1{color:#ffd75e;font-size:18px;margin:0 0 6px}
+  .sub{opacity:.7;font-size:12px;margin:0 0 12px}
+  canvas{background:linear-gradient(180deg,#1c2744,#0e1424);image-rendering:pixelated;border-radius:12px;display:block}
+</style>
+</head>
+<body>
+<h1>Real canvas pickups</h1>
+<p class="sub">drawGearPixels + gearPickupFeel · 390-wide Android mock</p>
+<canvas id="c" width="390" height="280"></canvas>
+<script src="../../../src/data/gear.js"></script>
+<script src="../../../src/data/gear-world.js"></script>
+<script>
+(function () {
+  function rarityOf(r) {
+    const m = { common:{color:'#c8d0dc'}, uncommon:{color:'#8fd98a'}, rare:{color:'#7eb6ff'},
+      epic:{color:'#c792ff'}, legendary:{color:'#ffd75e'}, mythic:{color:'#ff6b9d'},
+      nightmare:{color:'#c47aff'}, hell:{color:'#ff6a3d'} };
+    return m[r] || m.common;
+  }
+  window.rarityOf = rarityOf;
+  const TAU = Math.PI * 2;
+  const c = document.getElementById('c').getContext('2d');
+  c.imageSmoothingEnabled = false;
+  const drops = [
+    { id: 'head_bandana_blue', x: 60, y: 90, tier: 'normal' },
+    { id: 'head_beanie_wool', x: 130, y: 90, tier: 'normal' },
+    { id: 'chest_hoodie_gray', x: 200, y: 90, tier: 'normal' },
+    { id: 'hands_mittens_wool', x: 270, y: 90, tier: 'normal' },
+    { id: 'back_backpack_school', x: 340, y: 90, tier: 'normal' },
+    { id: 'head_helm_knight', x: 60, y: 190, tier: 'elite' },
+    { id: 'chest_plate_iron', x: 140, y: 190, tier: 'normal' },
+    { id: 'legs_boots_clown', x: 220, y: 190, tier: 'normal' },
+    { id: 'head_helm_nightmare', x: 300, y: 190, tier: 'elite' },
+    { id: 'back_wings_hell', x: 360, y: 200, tier: 'superBoss' },
+  ];
+  for (const d of drops) {
+    const it = gearById(d.id);
+    const feel = gearPickupFeel(it, d.tier);
+    const col = gearAccent(it);
+    c.save();
+    c.fillStyle = col;
+    c.beginPath(); c.arc(d.x, d.y, feel.orbR, 0, TAU); c.fill();
+    c.strokeStyle = '#fff'; c.lineWidth = 2;
+    c.beginPath(); c.arc(d.x, d.y, feel.orbR, 0, TAU); c.stroke();
+    if (feel.ring) {
+      c.strokeStyle = feel.ring; c.lineWidth = 2;
+      c.beginPath(); c.arc(d.x, d.y, feel.orbR + 3, 0, TAU); c.stroke();
+    }
+    drawGearPixels(c, d.id, d.x, d.y, feel.scale);
+    c.restore();
+    c.fillStyle = 'rgba(232,240,255,.7)';
+    c.font = '700 9px system-ui';
+    c.textAlign = 'center';
+    c.fillText(it.slot + ' · ' + it.rarity, d.x, d.y + feel.orbR + 14);
+  }
+})();
+</script>
+</body>
+</html>

@@ -1003,6 +1003,34 @@
       "status": "done-in-code",
       "updated": "2026-09-16",
       "notes": "Folded into #303. seasons.css owns show/hide; season-overlays.css is shim only; nested art URLs; play overlay visible."
+    },
+    {
+      "id": "w-20260916T113900",
+      "from": "user",
+      "text": "UI-scanner vóór mega-merge: motion / lived-in FX on gear pixels (flame flicker, glow pulse, rare ring pulse / elite sparkle). Respect motionReduced/fxLite. Cap ≤3 orbs. SVG static. Gates/schema/Versus/equip-look untouched. PR #305 note + 2–3 frame strip. smoke:gear-drops green.",
+      "status": "done-in-code",
+      "updated": "2026-09-16"
+    },
+    {
+      "id": "w-20260916T110200",
+      "from": "user",
+      "text": "UPGRADE world-drop PIXEL ART + pickup feel (loot lane). Unique readable silhouettes (expand templates / per-id overrides) so early/common lootable items and each slot archetype are distinguishable at pickup scale on Android. Keep SVG assets in sync via gearPixelsToSvg. Rare/elite/superBoss pickup scale + rarity ring. Gates untouched. No Versus.",
+      "status": "done-in-code",
+      "updated": "2026-09-16"
+    },
+    {
+      "id": "w-20260916T112200",
+      "from": "user",
+      "text": "PRIORITY before mega-merge — MORE REALISM VIA MOTION on gear/pixel art. Living weapon FX (flickering flame/fakkel, glow pulse), snappier pickup/equip motion, stickman-ready pose energy where loot lane draws gear. Android-first, lightweight, no Versus. Document on PR #305.",
+      "status": "done-in-code",
+      "updated": "2026-09-16"
+    },
+    {
+      "id": "w-20260916T112000",
+      "from": "user",
+      "text": "PRIORITY before mega-merge — more realism via motion on gear/pixel art. Flame flicker, glow pulse, rarity ring pulse, elite sparkle. Android-first, cheap, respect motionReduced/fxLite. Unique silhouettes stay. No Versus / schema / gates.",
+      "status": "done-in-code",
+      "updated": "2026-09-16"
     }
   ],
   "agentRules": [

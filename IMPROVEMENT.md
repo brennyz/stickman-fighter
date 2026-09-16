@@ -145,6 +145,7 @@ Schrijf **1–3 regels** per sessie: datum, d#, wat, versie.
 
 | Datum (UTC) | d# | Update |
 |-------------|-----|--------|
+| 2026-09-16 | — | **Gear loot pixels + motion:** unique 16×16 (107 templates + 131-id) + rarity ring + spawn pop / 3-frame fakkel / collect snap. Gates untouched. **v1.18.168 / SW 378** draft #305. |
 | 2026-09-16 | — | #302 stacked on #303: halloween nest PNG upgrade + `season-motion.css` loops. Unify CSS untouched. Play overlay stays visible. **v1.18.170 / SW 380**. |
 | 2026-09-16 | — | **Season CSS unify** één owner (`seasons.css`) · nested `assets/seasons/<id>/` · play overlay zichtbaar + safe zones · flat `season-*-corner` deprecated. **v1.18.169 / SW 379**. |
 | 2026-09-16 | — | **Season deepdive** winter/zomer CSS-pariteit + story beats (hub/eiland/result) + i18n nl/en/de/fr/es + tap-safe swap. Geen pixel-PNG, geen audio. **v1.18.168 / SW 378**. |

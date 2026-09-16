@@ -243,6 +243,92 @@ run(`
 `);
 if (!(run('__gearRects > 8'))) fail('drawGearPixels drew too few pixels');
 
+/* Unique silhouettes: early commons + one strong set per slot + NM/Hell accents */
+const earlyUnique = [
+  'head_wrap_cloth', 'head_bandana_blue', 'head_beanie_wool', 'head_hat_paper', 'head_crown_cardboard',
+  'chest_shirt_plain', 'chest_hoodie_gray', 'chest_vest_denim', 'chest_coat_red',
+  'hands_wrap', 'hands_mittens_wool', 'hands_rings_plastic',
+  'legs_wrap', 'legs_socks_plain', 'legs_shorts_stripe', 'legs_boots_clown',
+  'back_pin_dot', 'back_backpack_school', 'back_scarf_long', 'back_cape_red',
+];
+const occSeen = {};
+for (const id of earlyUnique) {
+  const occ = run('gearPixelOccupancy(' + JSON.stringify(id) + ')');
+  if (!occ || occ.length !== 256) fail('occupancy missing/short for ' + id);
+  if (occSeen[occ]) fail('silhouette collision ' + id + ' vs ' + occSeen[occ]);
+  occSeen[occ] = id;
+}
+const slotSet = ['head_helm_knight', 'chest_plate_iron', 'hands_gauntlet_iron', 'legs_greaves_knight', 'back_cape_red'];
+const slotOcc = {};
+for (const id of slotSet) {
+  const occ = run('gearPixelOccupancy(' + JSON.stringify(id) + ')');
+  if (slotOcc[occ]) fail('slot-set collision ' + id + ' vs ' + slotOcc[occ]);
+  slotOcc[occ] = id;
+}
+if (run("gearTintKey(gearById('head_helm_nightmare'))") !== 'night') fail('nightmare helm tint');
+if (run("gearTintKey(gearById('head_helm_hell'))") !== 'lava') fail('hell helm tint');
+if (run("gearTintKey(gearById('chest_plate_nightmare'))") !== 'night') fail('nightmare plate tint');
+if (run("gearTintKey(gearById('chest_plate_hell'))") !== 'lava') fail('hell plate tint');
+if (run("gearPixelKey(gearById('head_helm_nightmare'))") === run("gearPixelKey(gearById('head_helm_hell'))")) {
+  fail('nightmare/hell helm must use distinct silhouettes');
+}
+const feelCommon = run("gearPickupFeel('head_bandana_blue', 'normal')");
+if (!feelCommon || feelCommon.scale !== 2 || feelCommon.ring) fail('common pickup should stay scale 2, no ring');
+const feelRare = run("gearPickupFeel('head_helm_iron', 'normal')");
+if (!feelRare || !(feelRare.scale > 2) || !feelRare.ring) fail('rare pickup needs larger scale + ring');
+const feelElite = run("gearPickupFeel('head_bandana_blue', 'elite')");
+if (!feelElite || !(feelElite.scale >= 2.5) || !feelElite.ring) fail('elite drop should bump scale + ring');
+const feelBoss = run("gearPickupFeel('back_wings_hell', 'superBoss')");
+if (!feelBoss || !(feelBoss.scale >= 2.75) || !feelBoss.ring) fail('superBoss hell pickup should be largest + ring');
+if (run('GEAR_MAX_FIELD') !== 3) fail('GEAR_MAX_FIELD must stay 3');
+run(`
+  globalThis.__fxCalls = 0;
+  globalThis.__fxOk = gearPickupDrawFx({
+    save() {}, restore() {}, beginPath() {}, arc() {}, stroke() {}, fillRect() { globalThis.__fxCalls++; },
+  }, { gearId: 'back_wings_hell', dropTier: 'superBoss', t: 0.4, x: 10 }, 20, gearPickupFeel('back_wings_hell', 'superBoss'));
+`);
+if (run('__fxOk') !== true) fail('gearPickupDrawFx should run when lite/motion flags off');
+if (!(run('__fxCalls >= 1'))) fail('hell pickup FX should draw flicker pixels');
+run('save.liteFx = true');
+if (run("gearPickupDrawFx({ save(){}, restore(){}, beginPath(){}, arc(){}, stroke(){}, fillRect(){} }, { gearId: 'back_wings_hell', t: 1, x: 0 }, 0, gearPickupFeel('back_wings_hell', 'superBoss'))") !== false) {
+  fail('liteFx must skip pickup motion FX');
+}
+run('save.liteFx = false');
+if (run('Object.keys(GEAR_PIXEL_BY_ID).length') !== 131) fail('GEAR_PIXEL_BY_ID must cover 131 ids');
+const pop0 = run("gearPickupMotion({ age: 0, t: 0 }, { rank: 0 })");
+if (!pop0 || !(pop0.pop < 0.5)) fail('spawn pop should start small');
+const pop1 = run("gearPickupMotion({ age: 1, t: 2 }, { rank: 2 })");
+if (!pop1 || Math.abs(pop1.pop - 1) > 0.05) fail('settled pickup pop should be ~1');
+const live0 = run("gearLivingPixels('back_wings_hell', 0).length");
+const live1 = run("gearLivingPixels('back_wings_hell', 1).length");
+const live2 = run("gearLivingPixels('back_wings_hell', 2).length");
+if (!(live0 >= 2 && live1 >= 2 && live2 >= 2)) fail('hell living pixels need 3-frame fakkel');
+if (run("gearLivingPixels('head_bandana_blue', 0).length") !== 0) fail('common cloth should not grow flame pixels');
+const thHell = run("gearPickupTheme(gearById('back_wings_hell'))");
+if (!thHell || !thHell.flame) fail('hell gear must be flame-themed');
+const thAsh = run("gearPickupTheme(gearById('chest_robe_ash'))");
+if (!thAsh || !thAsh.flame) fail('ash/lava look must be flame-themed');
+const thVoid = run("gearPickupTheme(gearById('head_helm_void'))");
+if (!thVoid || !thVoid.glow || thVoid.flame) fail('void helm should glow, not flame');
+const thAura = run("gearPickupTheme(gearById('back_aura_glow'))");
+if (!thAura || !thAura.glow) fail('aura pickup should glow-pulse');
+const thCrystal = run("gearPickupTheme(gearById('head_helm_crystal'))");
+if (!thCrystal || !thCrystal.glow) fail('crystal pickup should glow-pulse');
+const thCloth = run("gearPickupTheme(gearById('head_bandana_blue'))");
+if (!thCloth || thCloth.flame || thCloth.glow) fail('common cloth must stay still');
+run(`
+  globalThis.__gearRects2 = 0;
+  drawGearPixels({
+    save() {}, restore() {}, imageSmoothingEnabled: true, translate() {}, rotate() {},
+    fillRect() { globalThis.__gearRects2++; },
+  }, 'back_wings_hell', 0, 0, 2, { frame: 1, tilt: 0.1 });
+`);
+if (!(run('__gearRects2 > 8'))) fail('drawGearPixels+opts drew too few pixels');
+run('save.liteFx = true');
+const liteM = run("gearPickupMotion({ age: 1, t: 2 }, { rank: 3 })");
+if (!liteM || liteM.tilt !== 0 || liteM.sway !== 0) fail('liteFx should zero tilt/sway');
+run('save.liteFx = false');
+
 run(`
   globalThis.__gearPk = null;
   globalThis.__gearHost = { pickups: [], clampPickupPos(x, y) { return { x, y }; }, spawnPickup: Game.prototype.spawnPickup };

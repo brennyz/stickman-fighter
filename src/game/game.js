@@ -683,9 +683,31 @@ class Game {
     const p = this.player;
     for (const pk of this.pickups) {
       pk.t += dt;
-      pk.bob = Math.sin(pk.t * 5) * 6;
+      if (pk.kind === 'gear') pk.age = (Number(pk.age) || 0) + dt;
+      let bobAmp = 6;
+      if (pk.kind === 'gear' && typeof gearPickupFeel === 'function') {
+        const feelBob = gearPickupFeel(pk.gearId, pk.dropTier);
+        if (feelBob && feelBob.rank >= 2) bobAmp = 8;
+        if (pk.dropTier === 'elite' || pk.dropTier === 'superBoss') bobAmp = 9;
+        const bounce = Math.abs(Math.sin(pk.t * 6.4));
+        pk.bob = (bounce * bounce) * bobAmp;
+        const liveSway = typeof gearPickupFxAllowed !== 'function' || gearPickupFxAllowed();
+        pk.sway = liveSway ? Math.sin(pk.t * 4.3) * ((feelBob && feelBob.rank >= 2) ? 2.1 : 1.1) : 0;
+      } else {
+        pk.bob = Math.sin(pk.t * 5) * bobAmp;
+      }
+      if (pk._got && pk._snapT > 0) {
+        pk._snapT -= dt;
+        if (p && p.alive) {
+          const k = Math.min(1, dt * 16);
+          pk.x += (p.x - pk.x) * k;
+          pk.y += ((p.y - 56) - pk.y) * k;
+        }
+        if (pk._snapT <= 0) pk.life = 0;
+        continue;
+      }
       pk.life -= dt;
-      if (!p.alive) continue;
+      if (!p.alive || pk._got) continue;
       const dy = (p.y - 48) - pk.y;
       const grabR = (pk.kind === 'gear' && typeof IS_TOUCH !== 'undefined' && IS_TOUCH) ? 58 : 44;
       if ((p.x - pk.x) ** 2 + dy ** 2 < grabR * grabR) {
@@ -1359,7 +1381,7 @@ class Game {
       if (!gdef) return;
       this.pickups.push({
         x, y, kind: 'gear', gearId: gdef.id, dropTier: opts.dropTier || 'normal',
-        t: rand(0, TAU), life: SHARD_PICKUP_LIFE, bob: 0,
+        t: rand(0, TAU), life: SHARD_PICKUP_LIFE, bob: 0, age: 0, sway: 0,
       });
       if (opts.dropTier && opts.dropTier !== 'normal') {
         try { AudioSys.sfxAt('bell', x); } catch (_) {}
@@ -1480,10 +1502,15 @@ class Game {
       : (pk.kind === 'gear' && pk.gearId && typeof gearAccent === 'function') ? gearAccent(gearById(pk.gearId))
       : meta.color;
     this.banner(pickupLabel(pk.kind, pk.skillId, pk.itemCat, pk.itemId, pk.gearId), 0.9, bannerCol, 28);
-    this.burst(pk.x, pk.y, bannerCol, 14);
+    this.burst(pk.x, pk.y, bannerCol, pk.kind === 'gear' ? 20 : 14);
     bumpStat('pickups', 1);
     bumpDaily('pickups', 1);
-    pk.life = 0;
+    if (pk.kind === 'gear' && typeof gearPickupFxAllowed === 'function' && gearPickupFxAllowed()) {
+      pk._snapT = 0.16;
+      pk.life = Math.max(pk.life, 0.18);
+    } else {
+      pk.life = 0;
+    }
   }
 
   /* --------------------------- TRAINING ------------------------------- */
@@ -3501,12 +3528,31 @@ class Game {
         const pkBlur = (save.liteFx || Perf.tier >= 1 || motionReduced()) ? 0 : 14;
         c.shadowColor = pkCol; c.shadowBlur = pkBlur;
         c.fillStyle = pkCol;
-        const orbR = pk.kind === 'gear' ? 16 : 14;
-        c.beginPath(); c.arc(pk.x, y, orbR, 0, TAU); c.fill();
+        const gearFeel = (pk.kind === 'gear' && typeof gearPickupFeel === 'function')
+          ? gearPickupFeel(pk.gearId, pk.dropTier)
+          : null;
+        const motion = (pk.kind === 'gear' && typeof gearPickupMotion === 'function')
+          ? gearPickupMotion(pk, gearFeel)
+          : null;
+        const drawX = pk.x + (motion ? motion.sway : (pk.sway || 0));
+        const orbR = (gearFeel ? gearFeel.orbR : (pk.kind === 'gear' ? 16 : 14)) * ((motion && motion.pop) || 1);
+        c.beginPath(); c.arc(drawX, y, orbR, 0, TAU); c.fill();
         c.strokeStyle = '#fff'; c.lineWidth = 2;
-        c.beginPath(); c.arc(pk.x, y, orbR, 0, TAU); c.stroke();
+        c.beginPath(); c.arc(drawX, y, orbR, 0, TAU); c.stroke();
+        if (gearFeel && gearFeel.ring) {
+          c.strokeStyle = gearFeel.ring;
+          c.lineWidth = 2;
+          c.beginPath(); c.arc(drawX, y, orbR + 3, 0, TAU); c.stroke();
+        }
         if (pk.kind === 'gear' && pk.gearId && typeof drawGearPixels === 'function') {
-          drawGearPixels(c, pk.gearId, pk.x, y, 2);
+          const sprScale = (gearFeel ? gearFeel.scale : 2) * ((motion && motion.pop) || 1);
+          drawGearPixels(c, pk.gearId, drawX, y, sprScale, {
+            tilt: motion ? motion.tilt : 0,
+            frame: motion ? motion.frame : 0,
+          });
+          if (gearFeel && typeof gearPickupDrawFx === 'function') {
+            gearPickupDrawFx(c, Object.assign({}, pk, { x: drawX }), y, Object.assign({}, gearFeel, { orbR: orbR }));
+          }
         } else {
           drawPickupIcon(c, pk.kind, pk.x, y, pkCol);
         }
