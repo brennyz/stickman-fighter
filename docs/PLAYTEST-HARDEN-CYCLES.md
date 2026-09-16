@@ -72,7 +72,7 @@ Hub tiles, `#upgradeScreen`, `#settingsScreen` (aim color/radius, Lite FX, langu
 - [x] Findings received
 - [x] P0/P1 investigated on main
 - [x] Fixes on this branch (if any)
-- [ ] Smoke: `smoke:buildings` · `smoke:buildings-ui` · `smoke:buildings-powers` · `smoke:building-pixels`
+- [x] Smoke: `smoke:buildings` · `smoke:buildings-ui` · `smoke:buildings-powers` · `smoke:building-pixels`
 
 **Open P0/P1:** Cycle 4 P2 — list «0/1 Vonken» vs Build 20 PC. **Fix:** unbuilt rows show build cost (PC), not hopper 0/cap.
 
