@@ -904,7 +904,7 @@ function drawMonsterArt(c, sp, r, t, flash, telegraph, motion) {
     default:
       if (typeof drawCatalogStubArt === 'function' && typeof MONSTER_ART_SLOTS !== 'undefined' && MONSTER_ART_SLOTS[sp.art]) {
         try {
-          drawCatalogStubArt(c, sp.art, r, t, body, dark, telegraph);
+          drawCatalogStubArt(c, sp.art, r, t, body, dark, telegraph, motion);
         } catch (err) {
           console.error('[CatalogArt]', sp.art, err);
           c.fillStyle = body;

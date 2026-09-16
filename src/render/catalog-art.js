@@ -23,11 +23,14 @@ function catalogStubMark(c, art, r, dark) {
   c.globalAlpha = 1;
 }
 
-function drawCatalogShape(c, shape, r, t, body, dark, telegraph) {
-  const bob = Math.sin(t * 4.2) * r * 0.04;
+function drawCatalogShape(c, shape, r, t, body, dark, telegraph, motion) {
+  const feel = (typeof monsterPixelMotion === 'function')
+    ? monsterPixelMotion({ shape, type: shape, art: motion && motion.art }, r, t, telegraph, motion)
+    : { ox: 0, oy: (typeof motionReduced === 'function' && motionReduced()) ? 0 : Math.sin(t * 4.2) * r * 0.03, sx: 1, sy: 1 };
   const warn = telegraph ? 1.08 : 1;
   c.save();
-  c.translate(0, bob);
+  c.translate(feel.ox, feel.oy);
+  c.scale(feel.sx, feel.sy);
   c.fillStyle = body;
   switch (shape) {
     case 'flyer': {
@@ -145,11 +148,12 @@ function drawCatalogShape(c, shape, r, t, body, dark, telegraph) {
   c.restore();
 }
 
-function drawCatalogStubArt(c, art, r, t, body, dark, telegraph) {
+function drawCatalogStubArt(c, art, r, t, body, dark, telegraph, motion) {
   if (!c) return;
   r = clamp(Number(r) || 22, 6, 120);
   const slot = (typeof MONSTER_ART_SLOTS !== 'undefined' && MONSTER_ART_SLOTS[art]) || { shape: 'quad' };
-  drawCatalogShape(c, slot.shape || 'quad', r, t, body || '#888', dark || '#444', telegraph);
+  const bag = Object.assign({ art }, motion || {});
+  drawCatalogShape(c, slot.shape || 'quad', r, t, body || '#888', dark || '#444', telegraph, bag);
   catalogStubMark(c, art, r, dark || '#333');
   if (slot.pixelStatus === 'stub') {
     c.save();
