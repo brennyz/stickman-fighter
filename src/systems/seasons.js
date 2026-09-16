@@ -4,6 +4,7 @@
 const SEASON_IDS = ['classic', 'jungle', 'halloween', 'winter', 'summer'];
 const SEASON_PREF_IDS = ['auto'].concat(SEASON_IDS);
 const SEASON_DEFAULT_PREF = 'auto';
+const SEASON_BEAT_SLOTS = ['hub', 'level', 'result'];
 
 /** Calendar windows (local date). First match wins. Jungle = spring growth. */
 const SEASON_CALENDAR = [
@@ -16,6 +17,9 @@ const SEASON_CALENDAR = [
 const SEASON_ART_SLOTS = [
   'vignette', 'motif', 'corner-tl', 'corner-tr', 'corner-bl', 'corner-br', 'banner',
 ];
+
+let lastAppliedSeasonId = '';
+let seasonSwapTimer = 0;
 
 function normalizeSeasonPref(v) {
   const s = String(v == null ? '' : v).toLowerCase().trim();
@@ -54,6 +58,20 @@ function calendarSeasonId(when) {
   return 'classic';
 }
 
+/** QA / screenshots: ?season=winter|summer|jungle|halloween|classic — not persisted. */
+function querySeasonOverride() {
+  try {
+    const q = new URLSearchParams(location.search).get('season');
+    if (q == null || q === '') return null;
+    const s = String(q).toLowerCase().trim();
+    if (s === 'none' || s === 'off' || s === '0' || s === 'default') return 'classic';
+    if (SEASON_IDS.includes(s)) return s;
+    return null;
+  } catch (_) {
+    return null;
+  }
+}
+
 function currentSeasonPref() {
   try {
     return normalizeSeasonPref(typeof save !== 'undefined' && save ? save.seasonPref : SEASON_DEFAULT_PREF);
@@ -63,6 +81,8 @@ function currentSeasonPref() {
 }
 
 function currentSeasonId() {
+  const q = querySeasonOverride();
+  if (q) return q;
   const pref = currentSeasonPref();
   if (pref !== 'auto') return normalizeSeasonId(pref);
   return calendarSeasonId();
@@ -81,7 +101,18 @@ function seasonPrefLabel(pref) {
 
 function seasonBlurb(id) {
   const key = 'season.blurb.' + normalizeSeasonId(id);
+  if (typeof tOr === 'function') return tOr(key, '');
   return typeof t === 'function' ? t(key) : '';
+}
+
+function seasonBeat(slot, id) {
+  const sid = normalizeSeasonId(id);
+  if (sid === 'classic') return '';
+  const key = 'season.beat.' + slot + '.' + sid;
+  if (typeof tOr === 'function') return tOr(key, '');
+  if (typeof t !== 'function') return '';
+  const text = t(key);
+  return text && text !== key ? text : '';
 }
 
 function seasonSnapshot() {
@@ -94,11 +125,27 @@ function seasonSnapshot() {
     calendarId,
     slots: SEASON_ART_SLOTS.slice(),
     ids: SEASON_IDS.slice(),
+    beats: SEASON_BEAT_SLOTS.slice(),
+    query: querySeasonOverride(),
   };
 }
 
 function seasonRootEl() {
   try { return document.documentElement || document.body || null; } catch (_) { return null; }
+}
+
+function markSeasonSwap(fromId, toId) {
+  if (!fromId || fromId === toId) return;
+  const root = seasonRootEl();
+  if (!root || !root.classList) return;
+  try {
+    root.classList.add('season-swapping');
+    if (seasonSwapTimer) clearTimeout(seasonSwapTimer);
+    seasonSwapTimer = setTimeout(() => {
+      try { root.classList.remove('season-swapping'); } catch (_) {}
+      seasonSwapTimer = 0;
+    }, 480);
+  } catch (_) {}
 }
 
 function syncSeasonDomAttrs(snap) {
@@ -110,34 +157,44 @@ function syncSeasonDomAttrs(snap) {
   }
   try {
     if (document.body && document.body.dataset) document.body.dataset.season = snap.id;
+    if (document.body && document.body.classList) {
+      document.body.classList.toggle('has-season-overlay', snap.id !== 'classic');
+    }
   } catch (_) {}
+}
+
+function setSeasonText(id, text, hideEmpty) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.textContent = text || '';
+  if (hideEmpty) {
+    const empty = !text;
+    el.hidden = empty;
+    if (empty) el.setAttribute('hidden', '');
+    else el.removeAttribute('hidden');
+  }
 }
 
 function syncSeasonFlavorUi(snap) {
   const s = snap || seasonSnapshot();
   const name = seasonLabel(s.id);
   const blurb = seasonBlurb(s.id);
-  const setTxt = (id, text, hideEmpty) => {
-    const el = document.getElementById(id);
-    if (!el) return;
-    el.textContent = text || '';
-    if (hideEmpty) {
-      const empty = !text;
-      el.hidden = empty;
-      if (empty) el.setAttribute('hidden', '');
-      else el.removeAttribute('hidden');
-    }
-  };
-  setTxt('setSeasonLbl', typeof t === 'function' ? t('season.title') : 'Season');
-  setTxt('seasonHint', typeof t === 'function' ? t('season.hint') : '');
-  setTxt('seasonBlurb', blurb);
+  setSeasonText('setSeasonLbl', typeof t === 'function' ? t('season.title') : 'Season');
+  setSeasonText('seasonHint', typeof t === 'function' ? t('season.hint') : '');
+  setSeasonText('seasonBlurb', blurb);
   let autoLine = '';
   if (typeof t === 'function') {
-    autoLine = s.pref === 'auto'
-      ? t('season.autoSuggest', { name })
-      : t('season.calendarNow', { name: seasonLabel(s.calendarId) });
+    if (s.query) {
+      autoLine = typeof tOr === 'function'
+        ? tOr('season.queryNow', t('season.picked', { name }))
+        : t('season.picked', { name });
+    } else {
+      autoLine = s.pref === 'auto'
+        ? t('season.autoSuggest', { name })
+        : t('season.calendarNow', { name: seasonLabel(s.calendarId) });
+    }
   }
-  setTxt('seasonAutoHint', autoLine);
+  setSeasonText('seasonAutoHint', autoLine);
   const menu = document.getElementById('seasonMenuBlurb');
   if (menu) {
     const show = s.id !== 'classic' && blurb;
@@ -146,10 +203,21 @@ function syncSeasonFlavorUi(snap) {
     if (!show) menu.setAttribute('hidden', '');
     else menu.removeAttribute('hidden');
   }
+  const beats = [
+    ['seasonHubBeat', 'hub'],
+    ['seasonLevelBeat', 'level'],
+    ['seasonResultBeat', 'result'],
+  ];
+  for (let i = 0; i < beats.length; i++) {
+    const line = seasonBeat(beats[i][1], s.id);
+    setSeasonText(beats[i][0], line, true);
+  }
 }
 
 function applySeasonTheme(opts) {
   const snap = seasonSnapshot();
+  markSeasonSwap(lastAppliedSeasonId, snap.id);
+  lastAppliedSeasonId = snap.id;
   syncSeasonDomAttrs(snap);
   syncSeasonFlavorUi(snap);
   if (typeof renderSeasonSwitch === 'function') {
@@ -185,7 +253,7 @@ function renderSeasonSwitch() {
   bar.innerHTML = chips.map((id) => {
     const label = seasonPrefLabel(id);
     const active = cur === id ? ' active' : '';
-    return `<button type="button" class="dex-filter-btn${active}" data-season-pref="${id}">${label}</button>`;
+    return `<button type="button" class="dex-filter-btn season-chip${active}" data-season-pref="${id}">${label}</button>`;
   }).join('');
   bar.querySelectorAll('[data-season-pref]').forEach((btn) => {
     const id = btn.getAttribute('data-season-pref');

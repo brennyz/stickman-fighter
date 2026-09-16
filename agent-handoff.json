@@ -40,6 +40,14 @@
   },
   "userWishlist": [
     {
+      "id": "w-20260916T110000",
+      "from": "user",
+      "text": "LARGE seasonal deepdive (story + CSS): winter/summer parity, richer NL-first blurbs + i18n, broader tap-safe screen coverage, season-change UX, docs/smokes. No pixel art, no audio, no Versus.",
+      "status": "doing",
+      "updated": "2026-09-16",
+      "notes": "Lane: story+CSS only. Partner owns assets/seasons PNG + audio stems."
+    },
+    {
       "id": "w-20260914T200700",
       "from": "user",
       "text": "Hij laad niet lekker, what is up",

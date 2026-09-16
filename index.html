@@ -15,9 +15,9 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Bangers&family=Black+Ops+One&family=Nunito:wght@600;800;900&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="styles/main.css?v=377">
-<link rel="stylesheet" href="styles/seasons.css?v=377">
-<link rel="stylesheet" href="styles/season-overlays.css?v=377">
+<link rel="stylesheet" href="styles/main.css?v=378">
+<link rel="stylesheet" href="styles/seasons.css?v=378">
+<link rel="stylesheet" href="styles/season-overlays.css?v=378">
 
 
 
@@ -110,7 +110,7 @@
       <div class="arcade-pre" id="menuArcadePre" hidden>KIES JE PAD</div>
       <h1 class="title arcade-logo">STICKMAN<span>FIGHTER</span></h1>
       <p class="press-start" id="pressStartLine" hidden>insert coin</p>
-      <div class="subtitle" id="menuVerLine">v1.18.167</div>
+      <div class="subtitle" id="menuVerLine">v1.18.168</div>
       <p class="season-menu-blurb" id="seasonMenuBlurb" hidden></p>
     </header>
     <div class="arcade-menu-body menu-landing-body">
@@ -219,6 +219,7 @@
       <span class="menu-badge badge-solo" id="modeHubBadge">SOLO</span>
       <h2 class="head" id="modeHubTitle">Arcade</h2>
       <p class="subtitle" id="modeHubSub">Snelle sessies</p>
+      <p class="season-story-beat" id="seasonHubBeat" hidden></p>
     </div>
     <div class="mode-hub-panel hub-tile-grid" data-hub-panel="arcade">
       <button type="button" class="hub-tile hub-tile-train hub-tile-featured" id="btnTraining" data-hub-badge="SPEEL">
@@ -320,6 +321,7 @@
   <button type="button" class="btn island-help-btn" id="btnIslandHelp" title="Eilanden &amp; skill gate uitleg">?</button>
   <h2 class="head" id="levelScreenHead">Kies een eiland</h2>
   <div class="subtitle" id="levelScreenSub">Normal → Nightmare → Hell · hitte-meter · <b style="color:#ff6b6b">9× = gevaar!</b> · 10× = Satan</div>
+  <p class="season-story-beat" id="seasonLevelBeat" hidden></p>
   <div id="levelDiffBar" class="diff-bar" role="tablist" aria-label="Moeilijkheid"></div>
   <div id="levelDiffBlurb" class="diff-blurb" aria-live="polite"></div>
   <div class="menu-lang-wrap level-lang-wrap" style="margin:0 auto 12px;width:min(94vw,420px);text-align:center">
@@ -540,7 +542,7 @@
     <div id="saveHealthLine" style="font-size:13px;line-height:1.45;color:#cfe0ff;margin-bottom:8px">Lv … · OK op dit apparaat</div>
     <div id="settingsSaveAutoHint" style="font-size:12px;opacity:.78;line-height:1.45">Online-save blijft vanzelf bij deze speel-link. Geen extra knop.</div>
   </div>
-  <div class="settings-card" id="settingsSeasonCard">
+  <div class="settings-card settings-season-card" id="settingsSeasonCard">
     <div style="font-weight:900;color:#7cf5ff;margin-bottom:6px" id="setSeasonLbl">Seizoen</div>
     <div id="seasonHint" class="season-hint">Laag boven het originele scherm. Auto volgt de kalender.</div>
     <div id="seasonSwitchBar" class="dex-filter-bar" style="margin-bottom:10px" role="group" aria-label="Seizoen"></div>
@@ -627,7 +629,7 @@
     <summary id="settingsHelpFoldSum">Hulp</summary>
     <div class="settings-card settings-fold-body">
       <div id="settingsHelpTitle" style="font-weight:900;color:#ffd75e;margin:0 0 6px">Vast op een oude versie?</div>
-      <div id="setAppVersion" style="font-size:12px;opacity:.7;margin-bottom:8px">v1.18.167</div>
+      <div id="setAppVersion" style="font-size:12px;opacity:.7;margin-bottom:8px">v1.18.168</div>
       <div id="settingsHelpDesc" style="font-size:12px;opacity:.85;margin-bottom:8px;line-height:1.4">Leegt de cache en laadt opnieuw. Alleen nodig als het spel niet meekomt.</div>
       <button type="button" class="btn tog" id="btnForceFresh"><span class="tog-ico"><img src="assets/buttons/chrome/refresh.svg" alt="" width="24" height="24" decoding="async" draggable="false"></span>Verse versie</button>
       <div id="settingsFreshHint" style="font-size:11px;opacity:.72;margin:6px 0 10px;line-height:1.4">Menu reageert niet? Tik hier voor de nieuwste versie.</div>
@@ -751,6 +753,7 @@
   <div id="resLoot" class="run-loot-panel" style="display:none" aria-live="polite"></div>
   <div class="detail" id="resXp"></div>
   <div class="detail" id="resTip" style="color:#7cf5ff;opacity:.9;margin-top:6px"></div>
+  <p class="season-story-beat" id="seasonResultBeat" hidden></p>
   <div style="height:14px"></div>
   <button class="btn mode-btn b-adventure" id="resAgain"><span class="ico"><img src="assets/buttons/chrome/refresh.svg" alt="" width="28" height="28" decoding="async" draggable="false"></span><div>Opnieuw</div></button>
   <button class="btn mode-btn b-training" id="resNext" style="display:none"><span class="ico"><img src="assets/buttons/chrome/next.svg" alt="" width="28" height="28" decoding="async" draggable="false"></span><div>Volgend level</div></button>
@@ -794,14 +797,14 @@
 
 <!-- Season pixel overlays — #279 slot contract. docs/season-overlay-slots.md -->
 <div id="seasonOverlay" class="season-overlay" aria-hidden="true" data-season-pack="">
-  <div class="season-vignette" data-season-slot="vignette"></div>
-  <div id="seasonSlotCornerTL" class="season-art-slot season-art-tl" data-season-slot="corner-tl"></div>
-  <div id="seasonSlotCornerTR" class="season-art-slot season-art-tr" data-season-slot="corner-tr"></div>
-  <div id="seasonSlotCornerBL" class="season-art-slot season-art-bl" data-season-slot="corner-bl"></div>
-  <div id="seasonSlotCornerBR" class="season-art-slot season-art-br" data-season-slot="corner-br"></div>
-  <div id="seasonSlotBanner" class="season-art-slot season-art-banner" data-season-slot="banner"></div>
-  <div id="seasonSlotGroundTrim" class="season-art-slot season-art-ground" data-season-slot="ground-trim"></div>
-  <div id="seasonSlotMotif" class="season-art-slot season-art-motif" data-season-slot="motif"></div>
+  <div class="season-vignette season-layer" data-season-slot="vignette"></div>
+  <div id="seasonSlotCornerTL" class="season-art-slot season-art-tl season-layer season-corner season-corner-tl" data-season-slot="corner-tl"></div>
+  <div id="seasonSlotCornerTR" class="season-art-slot season-art-tr season-layer season-corner season-corner-tr" data-season-slot="corner-tr"></div>
+  <div id="seasonSlotCornerBL" class="season-art-slot season-art-bl season-layer season-corner season-corner-bl" data-season-slot="corner-bl"></div>
+  <div id="seasonSlotCornerBR" class="season-art-slot season-art-br season-layer season-corner season-corner-br" data-season-slot="corner-br"></div>
+  <div id="seasonSlotBanner" class="season-art-slot season-art-banner season-layer season-banner" data-season-slot="banner"></div>
+  <div id="seasonSlotGroundTrim" class="season-art-slot season-art-ground season-layer" data-season-slot="ground-trim"></div>
+  <div id="seasonSlotMotif" class="season-art-slot season-art-motif season-layer" data-season-slot="motif"></div>
 </div>
 
 <canvas id="game" aria-hidden="true"></canvas>
@@ -817,12 +820,12 @@
 
 <script>
 /* HTML↔JS handshake: als oude SW nog oude game.js serveert terwijl menu-HTML nieuw is. */
-window.__SF_EXPECT_REV = 377;
-window.__SF_EXPECT_APP = '1.18.167';
+window.__SF_EXPECT_REV = 378;
+window.__SF_EXPECT_APP = '1.18.168';
 </script>
-<script src="tunnel-check.js?v=377"></script>
-<script src="game.js?v=377"></script>
-<script src="install.js?v=377"></script>
+<script src="tunnel-check.js?v=378"></script>
+<script src="game.js?v=378"></script>
+<script src="install.js?v=378"></script>
 <script>
 (function () {
   function nukeStale(reason) {

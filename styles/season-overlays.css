@@ -33,27 +33,70 @@
   --season-art-motif: url("../assets/seasons/halloween/motif.png");
 }
 
+/* Winter/summer: tokens + CSS fallbacks live in seasons.css. No PNG urls until partner ships files. */
+[data-season="winter"] {
+  --season-ink: #b8e8ff;
+  --season-ink-deep: #1a3048;
+  --season-accent: #e8f6ff;
+  --season-safe-top: max(72px, calc(env(safe-area-inset-top, 0px) + 56px));
+  --season-safe-bottom: max(168px, calc(env(safe-area-inset-bottom, 0px) + 148px));
+}
+
+[data-season="summer"] {
+  --season-ink: #fff4d2;
+  --season-ink-deep: #5a2e10;
+  --season-accent: #ffd36a;
+  --season-safe-top: max(72px, calc(env(safe-area-inset-top, 0px) + 56px));
+  --season-safe-bottom: max(168px, calc(env(safe-area-inset-bottom, 0px) + 148px));
+}
+
 #seasonOverlay,
 .season-overlay {
   position: fixed;
   inset: 0;
-  z-index: 21;
+  z-index: 22;
   pointer-events: none !important;
-  display: none;
+  display: block;
+}
+
+html[data-season="classic"] #seasonOverlay,
+html:not([data-season]) #seasonOverlay {
+  pointer-events: none !important;
 }
 
 body[data-season="jungle"]:has(#menuScreen.active) #seasonOverlay,
 body[data-season="halloween"]:has(#menuScreen.active) #seasonOverlay,
+body[data-season="winter"]:has(#menuScreen.active) #seasonOverlay,
+body[data-season="summer"]:has(#menuScreen.active) #seasonOverlay,
 body[data-season="jungle"]:has(#modeHubScreen.active) #seasonOverlay,
 body[data-season="halloween"]:has(#modeHubScreen.active) #seasonOverlay,
+body[data-season="winter"]:has(#modeHubScreen.active) #seasonOverlay,
+body[data-season="summer"]:has(#modeHubScreen.active) #seasonOverlay,
+body[data-season="jungle"]:has(#settingsScreen.active) #seasonOverlay,
+body[data-season="halloween"]:has(#settingsScreen.active) #seasonOverlay,
+body[data-season="winter"]:has(#settingsScreen.active) #seasonOverlay,
+body[data-season="summer"]:has(#settingsScreen.active) #seasonOverlay,
+body[data-season="jungle"]:has(#levelScreen.active) #seasonOverlay,
+body[data-season="halloween"]:has(#levelScreen.active) #seasonOverlay,
+body[data-season="winter"]:has(#levelScreen.active) #seasonOverlay,
+body[data-season="summer"]:has(#levelScreen.active) #seasonOverlay,
+body[data-season="jungle"]:has(#resultScreen.active) #seasonOverlay,
+body[data-season="halloween"]:has(#resultScreen.active) #seasonOverlay,
+body[data-season="winter"]:has(#resultScreen.active) #seasonOverlay,
+body[data-season="summer"]:has(#resultScreen.active) #seasonOverlay,
 .season-preview-frame .season-overlay {
   display: block;
 }
 
+/* Play: keep a light wash; hide pixel-heavy slots so pads/pause stay clear. */
+body.is-playing #seasonOverlay [data-season-slot]:not([data-season-slot="vignette"]),
+body.is-playing .season-overlay [data-season-slot]:not([data-season-slot="vignette"]) {
+  opacity: 0;
+  visibility: hidden;
+}
 body.is-playing #seasonOverlay,
 body.is-playing .season-overlay {
-  display: none !important;
-  visibility: hidden !important;
+  pointer-events: none !important;
 }
 
 .season-art-slot,

@@ -323,9 +323,9 @@ const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const VERSION_UPDATE_SAVE_KEY = 'stickfighter_version_update_save_v1';
 const VERSION_UPDATE_FLAG_KEY = 'stickfighter_version_update_flag_v1';
 const SAVE_EXPORT_SCHEMA = 3;
-const APP_VERSION = '1.18.167';
+const APP_VERSION = '1.18.168';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 377;
+const SW_CACHE_REV = 378;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', petCoins: 0, dex: {}, summons: {}, pets: {}, activePet: null,
   eggPets: {}, activeEggPet: null, eggDaily: null,
   chestDaily: null, chestWeapons: {},
@@ -2417,7 +2417,7 @@ const I18N = {
     },
     season: {
       title: 'Seizoen',
-      hint: 'Laag boven het originele scherm. Auto volgt de kalender. Blijft op dit apparaat.',
+      hint: 'Sfeerlaag boven het originele scherm. Auto volgt de kalender. Tikken blijven vrij.',
       auto: 'Auto',
       classic: 'Klassiek',
       jungle: 'Jungle',
@@ -2427,12 +2427,33 @@ const I18N = {
       calendarNow: 'Kalender nu: {name}',
       autoSuggest: 'Auto · {name}',
       picked: 'Seizoen: {name}',
+      queryNow: 'Voorbeeld · {name}',
       blurb: {
         classic: 'De klassieke arena — geen extra laag, puur Stickman.',
         jungle: 'Lianen over de oude arena. De jungle fluistert: blijf laag, sla hard.',
         halloween: 'Pompoenen aan de rand. Iets grijnst mee vanuit het donker — vecht toch.',
-        winter: 'Vorst op de randen. Sneeuw-art volgt — de arena blijft van jou.',
-        summer: 'Zomerhitte over het scherm. Zon-art volgt — de knoppen blijven vrij.',
+        winter: 'Vorst op de randen. Adem als rook. De arena blijft van jou.',
+        summer: 'Zomerhitte over het scherm. Zon in je nek — knoppen blijven vrij.',
+      },
+      beat: {
+        hub: {
+          jungle: 'Groen licht op de tegels. De jungle wacht.',
+          halloween: 'Iets tikt mee op de tegels. Toch Arcade.',
+          winter: 'De eilanden liggen onder vorst. Warm je vuisten.',
+          summer: 'Hitte op de tegels. Drink later — sla nu.',
+        },
+        level: {
+          jungle: 'Kies een eiland. Lianen wijken niet.',
+          halloween: 'Kies een eiland. Het donker kiest mee.',
+          winter: 'Kies een eiland. IJs kraakt onder je stappen.',
+          summer: 'Kies een eiland. De zon brandt, jij ook.',
+        },
+        result: {
+          jungle: 'De jungle sluit weer. Jij bleef staan.',
+          halloween: 'Het grijnzen dooft. Jij niet.',
+          winter: 'De kou bijt. Jij bijt harder.',
+          summer: 'Zon in je ogen. Toch gewonnen.',
+        },
       },
     },
     missions: { title: 'Missies & prestaties', sub: '3 missies per dag',
@@ -2634,7 +2655,7 @@ const I18N = {
     },
     season: {
       title: 'Season',
-      hint: 'A layer on top of the original screen. Auto follows the calendar. Saved on this device.',
+      hint: 'A mood layer on the original screen. Auto follows the calendar. Taps stay free.',
       auto: 'Auto',
       classic: 'Classic',
       jungle: 'Jungle',
@@ -2644,12 +2665,33 @@ const I18N = {
       calendarNow: 'Calendar now: {name}',
       autoSuggest: 'Auto · {name}',
       picked: 'Season: {name}',
+      queryNow: 'Preview · {name}',
       blurb: {
         classic: 'The original arena — no extra layer, just Stickman.',
         jungle: 'Vines over the original arena. The jungle whispers: stay low, hit hard.',
         halloween: 'Pumpkins at the edge. Something grins from the dark — fight anyway.',
-        winter: 'Frost on the edges. Snow art later — the arena stays yours.',
-        summer: 'Summer heat over the screen. Sun art later — buttons stay clear.',
+        winter: 'Frost on the edges. Breath like smoke. The arena stays yours.',
+        summer: 'Summer heat over the screen. Sun on your neck — buttons stay clear.',
+      },
+      beat: {
+        hub: {
+          jungle: 'Green light on the tiles. The jungle waits.',
+          halloween: 'Something taps along. Arcade anyway.',
+          winter: 'The islands sit under frost. Warm your fists.',
+          summer: 'Heat on the tiles. Drink later — hit now.',
+        },
+        level: {
+          jungle: 'Pick an island. The vines do not yield.',
+          halloween: 'Pick an island. The dark picks with you.',
+          winter: 'Pick an island. Ice cracks underfoot.',
+          summer: 'Pick an island. The sun burns — so do you.',
+        },
+        result: {
+          jungle: 'The jungle closes again. You stayed standing.',
+          halloween: 'The grin fades. You do not.',
+          winter: 'The cold bites. You bite harder.',
+          summer: 'Sun in your eyes. You still won.',
+        },
       },
     },
     missions: { title: 'Missions & achievements', sub: '3 missions a day',
@@ -2887,7 +2929,7 @@ const I18N = {
     },
     season: {
       title: 'Saison',
-      hint: 'Schicht über dem Originalbildschirm. Auto folgt dem Kalender. Bleibt auf diesem Gerät.',
+      hint: 'Stimmungsschicht über dem Originalbildschirm. Auto folgt dem Kalender. Tippen bleiben frei.',
       auto: 'Auto',
       classic: 'Klassisch',
       jungle: 'Dschungel',
@@ -2897,12 +2939,33 @@ const I18N = {
       calendarNow: 'Kalender jetzt: {name}',
       autoSuggest: 'Auto · {name}',
       picked: 'Saison: {name}',
+      queryNow: 'Vorschau · {name}',
       blurb: {
         classic: 'Die klassische Arena — keine Extra-Schicht, nur Stickman.',
         jungle: 'Ranken über der alten Arena. Der Dschungel flüstert: bleib tief, schlag hart.',
         halloween: 'Kürbisse am Rand. Etwas grinst aus dem Dunkel — kämpfe trotzdem.',
-        winter: 'Frost an den Rändern. Schnee-Art folgt — die Arena bleibt deine.',
-        summer: 'Sommerhitze über dem Bild. Sonnen-Art folgt — Tasten bleiben frei.',
+        winter: 'Frost an den Rändern. Atem wie Rauch. Die Arena bleibt deine.',
+        summer: 'Sommerhitze über dem Bild. Sonne im Nacken — Tasten bleiben frei.',
+      },
+      beat: {
+        hub: {
+          jungle: 'Grünes Licht auf den Kacheln. Der Dschungel wartet.',
+          halloween: 'Etwas tippt mit. Trotzdem Arcade.',
+          winter: 'Die Inseln liegen unter Frost. Wärm deine Fäuste.',
+          summer: 'Hitze auf den Kacheln. Trink später — schlag jetzt.',
+        },
+        level: {
+          jungle: 'Wähl eine Insel. Ranken weichen nicht.',
+          halloween: 'Wähl eine Insel. Das Dunkel wählt mit.',
+          winter: 'Wähl eine Insel. Eis knackt unter dir.',
+          summer: 'Wähl eine Insel. Die Sonne brennt, du auch.',
+        },
+        result: {
+          jungle: 'Der Dschungel schließt sich. Du bliebst stehen.',
+          halloween: 'Das Grinsen verlischt. Du nicht.',
+          winter: 'Die Kälte beißt. Du beißt härter.',
+          summer: 'Sonne in den Augen. Trotzdem gewonnen.',
+        },
       },
     },
     missions: { title: 'Missionen & Erfolge', sub: '3 tägliche Missionen · XP abholen',
@@ -3085,7 +3148,7 @@ const I18N = {
     },
     season: {
       title: 'Saison',
-      hint: 'Une couche au-dessus de l’écran d’origine. Auto suit le calendrier. Reste sur cet appareil.',
+      hint: 'Une couche d’ambiance sur l’écran d’origine. Auto suit le calendrier. Les appuis restent libres.',
       auto: 'Auto',
       classic: 'Classique',
       jungle: 'Jungle',
@@ -3095,12 +3158,33 @@ const I18N = {
       calendarNow: 'Calendrier : {name}',
       autoSuggest: 'Auto · {name}',
       picked: 'Saison : {name}',
+      queryNow: 'Aperçu · {name}',
       blurb: {
         classic: 'L’arène d’origine — pas de couche en plus, juste Stickman.',
         jungle: 'Lianes sur l’arène. La jungle murmure : reste bas, frappe fort.',
         halloween: 'Citrouilles au bord. Quelque chose sourit dans le noir — combats quand même.',
-        winter: 'Givre sur les bords. L’art neige vient — l’arène reste à toi.',
-        summer: 'Chaleur d’été sur l’écran. L’art soleil vient — les boutons restent libres.',
+        winter: 'Givre sur les bords. Souffle en fumée. L’arène reste à toi.',
+        summer: 'Chaleur d’été sur l’écran. Soleil dans le cou — les boutons restent libres.',
+      },
+      beat: {
+        hub: {
+          jungle: 'Lumière verte sur les tuiles. La jungle attend.',
+          halloween: 'Quelque chose tape avec. Arcade quand même.',
+          winter: 'Les îles sont sous le givre. Réchauffe tes poings.',
+          summer: 'Chaleur sur les tuiles. Bois plus tard — frappe maintenant.',
+        },
+        level: {
+          jungle: 'Choisis une île. Les lianes ne cèdent pas.',
+          halloween: 'Choisis une île. Le noir choisit avec toi.',
+          winter: 'Choisis une île. La glace craque sous tes pas.',
+          summer: 'Choisis une île. Le soleil brûle, toi aussi.',
+        },
+        result: {
+          jungle: 'La jungle se referme. Tu es resté debout.',
+          halloween: 'Le sourire s’éteint. Pas toi.',
+          winter: 'Le froid mord. Tu mords plus fort.',
+          summer: 'Soleil dans les yeux. Gagné quand même.',
+        },
       },
     },
     missions: { title: 'Missions & succès', sub: '3 missions quotidiennes · réclamer XP',
@@ -3283,7 +3367,7 @@ const I18N = {
     },
     season: {
       title: 'Temporada',
-      hint: 'Capa sobre la pantalla original. Auto sigue el calendario. Se guarda en este aparato.',
+      hint: 'Capa de ambiente sobre la pantalla original. Auto sigue el calendario. Los toques siguen libres.',
       auto: 'Auto',
       classic: 'Clásico',
       jungle: 'Jungla',
@@ -3293,12 +3377,33 @@ const I18N = {
       calendarNow: 'Calendario ahora: {name}',
       autoSuggest: 'Auto · {name}',
       picked: 'Temporada: {name}',
+      queryNow: 'Vista · {name}',
       blurb: {
         classic: 'La arena clásica — sin capa extra, solo Stickman.',
         jungle: 'Lianas sobre la arena. La jungla susurra: agáchate, golpea fuerte.',
         halloween: 'Calabazas al borde. Algo sonríe en la oscuridad — pelea igual.',
-        winter: 'Escarcha en los bordes. El arte de nieve llega — la arena sigue siendo tuya.',
-        summer: 'Calor de verano en la pantalla. El arte de sol llega — los botones siguen libres.',
+        winter: 'Escarcha en los bordes. El aliento es humo. La arena sigue siendo tuya.',
+        summer: 'Calor de verano en la pantalla. Sol en la nuca — los botones siguen libres.',
+      },
+      beat: {
+        hub: {
+          jungle: 'Luz verde en las losas. La jungla espera.',
+          halloween: 'Algo golpea al ritmo. Arcade igual.',
+          winter: 'Las islas están bajo escarcha. Calienta los puños.',
+          summer: 'Calor en las losas. Bebe luego — golpea ahora.',
+        },
+        level: {
+          jungle: 'Elige una isla. Las lianas no ceden.',
+          halloween: 'Elige una isla. Lo oscuro elige contigo.',
+          winter: 'Elige una isla. El hielo cruje bajo tus pasos.',
+          summer: 'Elige una isla. El sol quema, tú también.',
+        },
+        result: {
+          jungle: 'La jungla se cierra. Tú seguiste en pie.',
+          halloween: 'La sonrisa se apaga. Tú no.',
+          winter: 'El frío muerde. Tú muerdes más fuerte.',
+          summer: 'Sol en los ojos. Ganaste igual.',
+        },
       },
     },
     missions: { title: 'Misiones y logros', sub: '3 misiones diarias · reclamar XP',
@@ -13140,6 +13245,7 @@ function fillHudText(c, text, x, y, opts) {
 const SEASON_IDS = ['classic', 'jungle', 'halloween', 'winter', 'summer'];
 const SEASON_PREF_IDS = ['auto'].concat(SEASON_IDS);
 const SEASON_DEFAULT_PREF = 'auto';
+const SEASON_BEAT_SLOTS = ['hub', 'level', 'result'];
 
 /** Calendar windows (local date). First match wins. Jungle = spring growth. */
 const SEASON_CALENDAR = [
@@ -13152,6 +13258,9 @@ const SEASON_CALENDAR = [
 const SEASON_ART_SLOTS = [
   'vignette', 'motif', 'corner-tl', 'corner-tr', 'corner-bl', 'corner-br', 'banner',
 ];
+
+let lastAppliedSeasonId = '';
+let seasonSwapTimer = 0;
 
 function normalizeSeasonPref(v) {
   const s = String(v == null ? '' : v).toLowerCase().trim();
@@ -13190,6 +13299,20 @@ function calendarSeasonId(when) {
   return 'classic';
 }
 
+/** QA / screenshots: ?season=winter|summer|jungle|halloween|classic — not persisted. */
+function querySeasonOverride() {
+  try {
+    const q = new URLSearchParams(location.search).get('season');
+    if (q == null || q === '') return null;
+    const s = String(q).toLowerCase().trim();
+    if (s === 'none' || s === 'off' || s === '0' || s === 'default') return 'classic';
+    if (SEASON_IDS.includes(s)) return s;
+    return null;
+  } catch (_) {
+    return null;
+  }
+}
+
 function currentSeasonPref() {
   try {
     return normalizeSeasonPref(typeof save !== 'undefined' && save ? save.seasonPref : SEASON_DEFAULT_PREF);
@@ -13199,6 +13322,8 @@ function currentSeasonPref() {
 }
 
 function currentSeasonId() {
+  const q = querySeasonOverride();
+  if (q) return q;
   const pref = currentSeasonPref();
   if (pref !== 'auto') return normalizeSeasonId(pref);
   return calendarSeasonId();
@@ -13217,7 +13342,18 @@ function seasonPrefLabel(pref) {
 
 function seasonBlurb(id) {
   const key = 'season.blurb.' + normalizeSeasonId(id);
+  if (typeof tOr === 'function') return tOr(key, '');
   return typeof t === 'function' ? t(key) : '';
+}
+
+function seasonBeat(slot, id) {
+  const sid = normalizeSeasonId(id);
+  if (sid === 'classic') return '';
+  const key = 'season.beat.' + slot + '.' + sid;
+  if (typeof tOr === 'function') return tOr(key, '');
+  if (typeof t !== 'function') return '';
+  const text = t(key);
+  return text && text !== key ? text : '';
 }
 
 function seasonSnapshot() {
@@ -13230,11 +13366,27 @@ function seasonSnapshot() {
     calendarId,
     slots: SEASON_ART_SLOTS.slice(),
     ids: SEASON_IDS.slice(),
+    beats: SEASON_BEAT_SLOTS.slice(),
+    query: querySeasonOverride(),
   };
 }
 
 function seasonRootEl() {
   try { return document.documentElement || document.body || null; } catch (_) { return null; }
+}
+
+function markSeasonSwap(fromId, toId) {
+  if (!fromId || fromId === toId) return;
+  const root = seasonRootEl();
+  if (!root || !root.classList) return;
+  try {
+    root.classList.add('season-swapping');
+    if (seasonSwapTimer) clearTimeout(seasonSwapTimer);
+    seasonSwapTimer = setTimeout(() => {
+      try { root.classList.remove('season-swapping'); } catch (_) {}
+      seasonSwapTimer = 0;
+    }, 480);
+  } catch (_) {}
 }
 
 function syncSeasonDomAttrs(snap) {
@@ -13246,34 +13398,44 @@ function syncSeasonDomAttrs(snap) {
   }
   try {
     if (document.body && document.body.dataset) document.body.dataset.season = snap.id;
+    if (document.body && document.body.classList) {
+      document.body.classList.toggle('has-season-overlay', snap.id !== 'classic');
+    }
   } catch (_) {}
+}
+
+function setSeasonText(id, text, hideEmpty) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.textContent = text || '';
+  if (hideEmpty) {
+    const empty = !text;
+    el.hidden = empty;
+    if (empty) el.setAttribute('hidden', '');
+    else el.removeAttribute('hidden');
+  }
 }
 
 function syncSeasonFlavorUi(snap) {
   const s = snap || seasonSnapshot();
   const name = seasonLabel(s.id);
   const blurb = seasonBlurb(s.id);
-  const setTxt = (id, text, hideEmpty) => {
-    const el = document.getElementById(id);
-    if (!el) return;
-    el.textContent = text || '';
-    if (hideEmpty) {
-      const empty = !text;
-      el.hidden = empty;
-      if (empty) el.setAttribute('hidden', '');
-      else el.removeAttribute('hidden');
-    }
-  };
-  setTxt('setSeasonLbl', typeof t === 'function' ? t('season.title') : 'Season');
-  setTxt('seasonHint', typeof t === 'function' ? t('season.hint') : '');
-  setTxt('seasonBlurb', blurb);
+  setSeasonText('setSeasonLbl', typeof t === 'function' ? t('season.title') : 'Season');
+  setSeasonText('seasonHint', typeof t === 'function' ? t('season.hint') : '');
+  setSeasonText('seasonBlurb', blurb);
   let autoLine = '';
   if (typeof t === 'function') {
-    autoLine = s.pref === 'auto'
-      ? t('season.autoSuggest', { name })
-      : t('season.calendarNow', { name: seasonLabel(s.calendarId) });
+    if (s.query) {
+      autoLine = typeof tOr === 'function'
+        ? tOr('season.queryNow', t('season.picked', { name }))
+        : t('season.picked', { name });
+    } else {
+      autoLine = s.pref === 'auto'
+        ? t('season.autoSuggest', { name })
+        : t('season.calendarNow', { name: seasonLabel(s.calendarId) });
+    }
   }
-  setTxt('seasonAutoHint', autoLine);
+  setSeasonText('seasonAutoHint', autoLine);
   const menu = document.getElementById('seasonMenuBlurb');
   if (menu) {
     const show = s.id !== 'classic' && blurb;
@@ -13282,10 +13444,21 @@ function syncSeasonFlavorUi(snap) {
     if (!show) menu.setAttribute('hidden', '');
     else menu.removeAttribute('hidden');
   }
+  const beats = [
+    ['seasonHubBeat', 'hub'],
+    ['seasonLevelBeat', 'level'],
+    ['seasonResultBeat', 'result'],
+  ];
+  for (let i = 0; i < beats.length; i++) {
+    const line = seasonBeat(beats[i][1], s.id);
+    setSeasonText(beats[i][0], line, true);
+  }
 }
 
 function applySeasonTheme(opts) {
   const snap = seasonSnapshot();
+  markSeasonSwap(lastAppliedSeasonId, snap.id);
+  lastAppliedSeasonId = snap.id;
   syncSeasonDomAttrs(snap);
   syncSeasonFlavorUi(snap);
   if (typeof renderSeasonSwitch === 'function') {
@@ -13321,7 +13494,7 @@ function renderSeasonSwitch() {
   bar.innerHTML = chips.map((id) => {
     const label = seasonPrefLabel(id);
     const active = cur === id ? ' active' : '';
-    return `<button type="button" class="dex-filter-btn${active}" data-season-pref="${id}">${label}</button>`;
+    return `<button type="button" class="dex-filter-btn season-chip${active}" data-season-pref="${id}">${label}</button>`;
   }).join('');
   bar.querySelectorAll('[data-season-pref]').forEach((btn) => {
     const id = btn.getAttribute('data-season-pref');
@@ -42491,14 +42664,14 @@ class Game {
 /* Season overlay — resolve pack token onto body[data-season].
    Slot contract matches CSS pair #279: docs/SEASON-ASSET-SLOTS.md
    Art files: assets/seasons/<id>/<slot>.png
-   Combat hides via CSS (body.is-playing). No gear, no FOMO.
+   Combat hides pixel slots via CSS (body.is-playing). No gear, no FOMO.
 
    IIFE so mega-merge with src/systems/seasons.js does not redeclare
    const SEASON_ART_SLOTS (that module owns calendar/pref theme). */
 (function (root) {
   'use strict';
 
-  const SEASON_PACKS = { jungle: 1, halloween: 1 };
+  const SEASON_PACKS = { jungle: 1, halloween: 1, winter: 1, summer: 1 };
   const SEASON_ART_SLOTS = [
     'corner-tl', 'corner-tr', 'corner-bl', 'corner-br',
     'banner', 'vignette', 'ground-trim', 'motif',
@@ -42506,9 +42679,16 @@ class Game {
   const SEASON_ART_PRESENT = {
     jungle: { 'corner-tl': 1, 'corner-tr': 1, 'corner-bl': 1, 'corner-br': 1, banner: 1, vignette: 1, 'ground-trim': 1, motif: 1 },
     halloween: { 'corner-tl': 1, 'corner-tr': 1, 'corner-bl': 1, 'corner-br': 1, banner: 1, vignette: 1, 'ground-trim': 1, motif: 1 },
+    /* winter/summer: CSS fallbacks only until partner PNGs land */
   };
 
   function calendarSeasonOverlay(now) {
+    try {
+      if (typeof calendarSeasonId === 'function') {
+        const id = calendarSeasonId(now);
+        return (id && id !== 'classic' && SEASON_PACKS[id]) ? id : '';
+      }
+    } catch (_) {}
     const d = now || new Date();
     const m = d.getMonth();
     const day = d.getDate();
@@ -42521,6 +42701,13 @@ class Game {
       const q = new URLSearchParams(location.search).get('season');
       if (q === 'none' || q === 'off' || q === '0' || q === 'classic') return '';
       if (q && SEASON_PACKS[q]) return q;
+    } catch (_) {}
+    try {
+      if (typeof currentSeasonId === 'function') {
+        const id = currentSeasonId();
+        if (id && id !== 'classic' && SEASON_PACKS[id]) return id;
+        if (id === 'classic') return '';
+      }
     } catch (_) {}
     try {
       const stored = localStorage.getItem('sfSeason');
@@ -42540,14 +42727,19 @@ class Game {
     const season = resolveSeasonOverlay();
     const body = typeof document !== 'undefined' ? document.body : null;
     const rootEl = typeof document !== 'undefined' ? document.documentElement : null;
-    if (body) {
-      if (season) body.setAttribute('data-season', season);
-      else body.removeAttribute('data-season');
-      body.classList.toggle('has-season-overlay', !!season);
+    const owned = typeof applySeasonTheme === 'function';
+    if (!owned) {
+      if (body) {
+        if (season) body.setAttribute('data-season', season);
+        else body.removeAttribute('data-season');
+      }
+      if (rootEl) {
+        if (season) rootEl.setAttribute('data-season', season);
+        else rootEl.removeAttribute('data-season');
+      }
     }
+    if (body) body.classList.toggle('has-season-overlay', !!season);
     if (rootEl) {
-      if (season) rootEl.setAttribute('data-season', season);
-      else rootEl.removeAttribute('data-season');
       SEASON_ART_SLOTS.forEach((slot) => {
         const url = season ? seasonArtUrl(season, slot) : '';
         if (url) rootEl.style.setProperty('--season-art-' + slot, 'url("' + url + '")');
@@ -42564,6 +42756,11 @@ class Game {
   }
 
   try { applySeasonOverlay(); } catch (_) {}
+  try {
+    document.addEventListener('sf-season-change', function () {
+      try { applySeasonOverlay(); } catch (_) {}
+    });
+  } catch (_) {}
   try {
     root.__sfSeason = {
       resolve: resolveSeasonOverlay,
@@ -43801,6 +43998,7 @@ const UI = {
         if (scr) scr.classList.remove('active');
       }
       if (id) {
+        try { if (typeof syncSeasonFlavorUi === 'function') syncSeasonFlavorUi(); } catch (_) {}
         const el = document.getElementById(id);
         requestAnimationFrame(() => {
           try {

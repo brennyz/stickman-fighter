@@ -27,4 +27,6 @@ Regenerate: `python3 scripts/gen-season-pixel-art.py`
 
 Preview: `preview.html`
 
-Winter/summer stay hooks. Overlay stays `pointer-events: none`.
+Winter/summer have **full CSS fallbacks** (frost / sun) in `styles/seasons.css`. PNG folders stay empty until the pixel-art agent drops files — do not uncomment `--season-art-*` until those exist.
+
+Overlay stays `pointer-events: none`.

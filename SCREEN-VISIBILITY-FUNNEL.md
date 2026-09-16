@@ -38,7 +38,7 @@ Van achter naar voren (z-index / stacking):
 | **B · Menu-backdrop paint** | `drawMenuBackdrop(ctx)` in `src/boot/loop.js` | Alleen als `Perf.canvasDrawActive()` én **niet** `state==='play'` (typisch hub) | Donkerblauw `#151b33`-achtig vlak **op de canvas** |
 | **C · `.screen` UI** | `.screen` / `.screen.active` in `styles/main.css` | Exact één (of meer) schermen met class `active` → `display:flex` | Menu/settings/levels — achtergrond **ook** `#151b33` gradient |
 | **D · Overlays** | splash, tunnel, `#levelRollFlash`, toasts, debug-strip | Eigen `hidden` / classes | Kan canvas of UI bedekken |
-| **D2 · Season overlay** | `#seasonOverlay` (`styles/seasons.css`) | `html[data-season]` ≠ classic | Decoratie in hoeken · **`pointer-events:none`** · z-index 22 (onder toast/pauze) |
+| **D2 · Season overlay** | `#seasonOverlay` (`styles/seasons.css`) | `html[data-season]` ≠ classic | Decoratie in hoeken + lichte wash · **`pointer-events:none`** · z-index 22 (onder toast/pauze) · tijdens play alleen zwakke vignette |
 | **E · Menu-stage** *(overhaul PR)* | `#menuScreen .menu-stage` | Alleen hub live; moet weg bij play | Full-bleed vista/video achter menu-chrome |
 
 **Belangrijk onderscheid — twee soorten “blauw”:**

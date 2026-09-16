@@ -8,7 +8,7 @@ Partner agents:
 
 | Agent | Owns |
 |-------|------|
-| **This system** | Season IDs, CSS tokens, overlay DOM, settings + persist, flavor i18n, `data-season` / audio hook |
+| **This system (story + CSS)** | Season IDs, CSS tokens, overlay DOM, settings + persist, flavor i18n, story beats, `data-season` / audio hook, season-swap fade |
 | **Pixel-art agent** | PNGs in `assets/seasons/<id>/<slot>.png` — drop files, uncomment `--season-art-*` in `styles/seasons.css` |
 | **Audio agent** | Read `html[data-season-audio]` / `currentSeasonId()` / `sf-season-change` — do not invent IDs |
 
@@ -21,8 +21,11 @@ Partner agents:
 - `Auto` — local calendar (see windows below)
 - `Klassiek` / Jungle / Halloween / Winter / Zomer
 - Preference is `save.seasonPref` (same save as language / Lite FX)
+- QA: `?season=winter` (or jungle / halloween / summer / classic) — preview only, not saved
 
-Classic = original screen (overlay hidden). Other seasons add a wash + corner decorations. Taps go through.
+Classic = original screen (overlay hidden). Other seasons add a wash + corner decorations + short flavor. Taps go through.
+
+Story beats (text only, `pointer-events: none`) sit on hub, island-select, and result. Menu keeps the existing blurb.
 
 ---
 
@@ -32,8 +35,9 @@ Classic = original screen (overlay hidden). Other seasons add a wash + corner de
 - Entire overlay: `pointer-events: none !important`
 - `z-index: 22` — above `.screen` (20), below toasts (40) and pause (50)
 - Reserved safe zones (CSS tokens): top / pause-right / combat-bottom / left
-- During `body.is-playing` vignette is weaker and all four corners sit outside pause + combat pads
-- On menu/settings, bottom corners stay hidden so pumpkins/vines never cover toggles or HOME
+- During `body.is-playing` vignette is weaker; pixel-heavy slots (corners / banner / ground / motif) hide so pads stay clear
+- On menu/settings/hub, bottom corners stay hidden so pumpkins/vines/frost never cover toggles or HOME
+- Season swap fades overlay opacity only — never a full-screen flash, never blocks input
 - No `display:none !important` on `.screen`, no canvas z-index fights
 
 See `SCREEN-VISIBILITY-FUNNEL.md` layer **D2**.
@@ -45,12 +49,14 @@ See `SCREEN-VISIBILITY-FUNNEL.md` layer **D2**.
 | ID | Status | Calendar (local, first match) |
 |----|--------|-------------------------------|
 | `classic` | full | default outside other windows |
-| `jungle` | full CSS | 15 Apr – 31 May |
-| `halloween` | full CSS | 15 Oct – 5 Nov |
-| `winter` | hook | 1 Dec – 6 Jan |
-| `summer` | hook | 21 Jun – 20 Aug |
+| `jungle` | full CSS + partner PNGs | 15 Apr – 31 May |
+| `halloween` | full CSS + partner PNGs | 15 Oct – 5 Nov |
+| `winter` | full CSS (PNG slots commented) | 1 Dec – 6 Jan |
+| `summer` | full CSS (PNG slots commented) | 21 Jun – 20 Aug |
 
 Aliases: `default` → `classic`. Pref `auto` resolves via calendar.
+
+Winter / summer use CSS fallbacks (frost, icicles, snow wash / sun, heat haze, warm wash) until the pixel-art agent drops files. Do **not** invent new season IDs.
 
 ---
 
@@ -68,6 +74,8 @@ assets/seasons/<seasonId>/
   corner-br.png    same
   banner.png       optional flavor strip (wired as --season-art-banner)
 ```
+
+Coordinator-named jungle/halloween files (`assets/seasons/season-<id>-corner-*.png`) stay wired in `styles/seasons.css`. Winter/summer `--season-art-*` lines stay **commented** until those PNGs exist.
 
 DOM hooks (already in `index.html`):
 
@@ -105,7 +113,7 @@ currentSeasonId()           // 'classic' | 'jungle' | …
 document.documentElement.dataset.season
 document.documentElement.dataset.seasonAudio
 document.addEventListener('sf-season-change', (e) => e.detail)
-// e.detail = { id, pref, calendarId, slots, ids }
+// e.detail = { id, pref, calendarId, slots, ids, beats, query }
 AudioSys.seasonId()         // same as currentSeasonId
 window.__sf.season          // snapshot + setPref
 ```
@@ -118,10 +126,12 @@ Do not block on missing stems. Classic = current menu/battle mix.
 
 | File | Role |
 |------|------|
-| `src/systems/seasons.js` | IDs, calendar, persist, apply, settings chips |
-| `styles/seasons.css` | tokens, overlay, fallbacks |
+| `src/systems/seasons.js` | IDs, calendar, persist, apply, settings chips, story beats, swap class |
+| `styles/seasons.css` | tokens, overlay, fallbacks, screen wash, transitions |
+| `styles/season-overlays.css` | partner PNG wiring (jungle/halloween) + play-safe slot hide |
+| `src/ui/season-overlay.js` | art-present map; defers `data-season` to seasons.js |
 | `src/core/storage.js` | `save.seasonPref` |
-| `src/i18n/i18n.js` | `season.*` keys (nl/en/de/fr/es) |
-| `index.html` | `#seasonOverlay`, settings card, menu blurb |
+| `src/i18n/i18n.js` | `season.*` + `season.beat.*` keys (nl/en/de/fr/es) |
+| `index.html` | `#seasonOverlay`, settings card, menu blurb, hub/level/result beats |
 
 Out of scope: drawing PNGs, synth, cosmetics, Versus.

@@ -12,8 +12,10 @@ Live play URL stays [`speel.html`](https://brennyz.github.io/stickman-fighter/sp
 
 | Token | Pack folder | When it applies |
 |-------|-------------|-----------------|
-| `jungle` | `assets/seasons/jungle/` | `?season=jungle` or `localStorage.sfSeason=jungle` |
-| `halloween` | `assets/seasons/halloween/` | October 1 – November 2, or `?season=halloween` |
+| `jungle` | `assets/seasons/jungle/` | `?season=jungle` or `save.seasonPref` / calendar |
+| `halloween` | `assets/seasons/halloween/` | 15 Oct – 5 Nov, or `?season=halloween` |
+| `winter` | `assets/seasons/winter/` | 1 Dec – 6 Jan — **CSS fallbacks until PNGs land** |
+| `summer` | `assets/seasons/summer/` | 21 Jun – 20 Aug — **CSS fallbacks until PNGs land** |
 | `classic` | — | overlay off (`?season=none` / `classic`) |
 
 `document.body.dataset.season` and `html[data-season]` are the switch.
@@ -40,8 +42,8 @@ SVG sources sit next to each PNG (same stem). Regenerator writes both.
 ## Safety
 
 1. Host and every slot: `pointer-events: none`.
-2. Hidden during `body.is-playing`.
-3. Visible only on `#menuScreen.active` or `#modeHubScreen.active`.
+2. During `body.is-playing`: hide pixel-heavy slots; keep a weak vignette wash.
+3. Visible on menu / hub / settings / island-select / result (classic stays off).
 4. `--season-safe-bottom` (≥168px) keeps ground/BL/BR off Android pads and the meta dock.
 5. `image-rendering: pixelated` + 4× PNG (retina-safe chunky scale).
 
