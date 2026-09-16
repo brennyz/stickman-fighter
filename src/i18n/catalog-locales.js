@@ -353,6 +353,8 @@ overlayI18nCatalog(CATALOG_FR, {
     continueLastMode: 'Dernier mode',
     gearHead: 'Équipement',
     gearSub: '5 emplacements · look vs stats · niveau et temps',
+    dexAllBiomes: 'Tous les biomes',
+    dexBiome: { farm: 'Ferme', zoo: 'Zoo', sea: 'Mer', wild: 'Bois', crypt: 'Crypte', scrap: 'Ferraille', frost: 'Givre', classic: 'Classique', secret: 'Secret' },
   },
   fomo: {
     ritualTitle: 'Aujourd’hui',
@@ -868,6 +870,8 @@ overlayI18nCatalog(CATALOG_ES, {
     continueLastMode: 'Último modo',
     gearHead: 'Equipo',
     gearSub: '5 huecos · look vs stats · nivel y tiempo',
+    dexAllBiomes: 'Todos los biomas',
+    dexBiome: { farm: 'Granja', zoo: 'Zoo', sea: 'Mar', wild: 'Bosque', crypt: 'Cripta', scrap: 'Chatarra', frost: 'Escarcha', classic: 'Clásico', secret: 'Secreto' },
   },
   fomo: {
     ritualTitle: 'Hoy',
@@ -1397,6 +1401,8 @@ overlayI18nCatalog(CATALOG_DE, {
     continueLastMode: 'Letzter Modus',
     gearHead: 'Ausrüstung',
     gearSub: '5 Slots · Look vs Stats · Level und Zeit',
+    dexAllBiomes: 'Alle Biome',
+    dexBiome: { farm: 'Farm', zoo: 'Zoo', sea: 'Meer', wild: 'Wald', crypt: 'Krypta', scrap: 'Schrott', frost: 'Frost', classic: 'Klassisch', secret: 'Geheim' },
   },
   fomo: {
     ritualTitle: 'Heute',

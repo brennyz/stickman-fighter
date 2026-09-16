@@ -193,5 +193,11 @@ if (!/Fábrica Palo-Mechero/.test(i18n)) fail('ES factory names still leftover E
 if (!/Stock-Anzünder-Fabrik/.test(i18n)) fail('DE factory names still leftover English');
 if (/help: \{ title: 'Tips & controls' \}/.test(i18n.split(/\n\s+en:\s+\{/)[0])) fail('NL help.title still English Tips & controls');
 if (/playLinkOk:/.test(i18n.split(/\n\s+fr:\s+\{/)[1] || '') === false) fail('FR settings.playLinkOk missing');
+if (!/wild: 'Woods'/.test(catalog)) fail('EN dexBiome.wild must be Woods (no Dutch Woud leak)');
+if (!/wild: 'Wald'/.test(deChrome + locales)) fail('DE dexBiome.wild must be Wald');
+if (!/wild: 'Bois'/.test(locales)) fail('FR dexBiome.wild must be Bois');
+if (!/wild: 'Bosque'/.test(locales)) fail('ES dexBiome.wild must be Bosque');
+if (!/scrap: 'Scrap'/.test(catalog)) fail('EN dexBiome.scrap missing');
+if (!/scrap: 'Schrott'/.test(deChrome + locales)) fail('DE dexBiome.scrap must not stay Dutch Schroot');
 
 console.log('SMOKE_OK i18n-locale: Tips/VERLOREN + #273 coverage + #283 overlays + 2026-09-16 FR/ES/DE polish');

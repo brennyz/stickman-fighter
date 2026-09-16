@@ -13,10 +13,10 @@ Versus: **niet gefixt** (alleen genoteerd).
 | Locale | Chrome vs EN | Duidelijke bugs (deze PR) | Resterend |
 |--------|--------------|---------------------------|-----------|
 | **nl** | Broncatalogus | `help.title` was EN; landing hardcoded NL (OK als default) | index.html first-paint NL tot `applyLang` |
-| **fr** | Overlay + i18n.js | FOMO EN-stubs; fabrieksblurbs EN; wapennamen EN via #283-overlay; settings `playLink*` / mastery ontbrak | Catalogus-diepte (gear-items, some ui.*) valt terug op EN |
-| **es** | Overlay + i18n.js | Zelfde als FR + `Música off` / `Todo off` | Zelfde EN-fallback voor diepe catalogus |
-| **en** | Volledigste catalogus | Geen Dutch leftovers in CATALOG_EN chrome | Versus first-minute copy in `missions.js` is NL (niet aangeraakt) |
-| **de** | Chrome + `CATALOG_DE_CHROME` | FOMO EN-stubs; fabrieksnamen/blurbs EN | Diepe catalogus deels EN-fallback (bewust na #283) |
+| **fr** | Overlay + i18n.js | FOMO EN; fabrieken EN; wapens EN via overlay; playLink/gear; dexBiome NL-leak | Diepe catalogus valt terug op EN |
+| **es** | Overlay + i18n.js | Zelfde als FR + `Música off` / `Todo off` | Zelfde EN-fallback |
+| **en** | Volledigste catalogus | dexBiome.wild e.d. lekten NL (`Woud`) | Versus first-minute in `missions.js` blijft NL |
+| **de** | Chrome + `CATALOG_DE_CHROME` | FOMO EN; fabrieken EN; dexBiome NL-leak | Diepe catalogus deels EN-fallback |
 
 ## Findings (Z→A)
 
@@ -43,8 +43,12 @@ Versus: **niet gefixt** (alleen genoteerd).
 | es | `audio.musicOff` / `pause.audioMuteAll` | `Música off` / `Todo off` | P2 | **Gefixt** → apagada / apagado |
 | es | `result.advLose` | `DERROTA...` | P3 | **Gefixt** |
 | es | diepe catalogus | EN-fallback | P3 | Zelfde als FR |
-| en | `CATALOG_EN` chrome | Geen Dutch leftovers gevonden (charBig5Hint / Spiraal Orb al gepoetst in #283) | — | Geen actie |
+| en | `ui.dexBiome.wild/crypt/scrap/frost` | Ontbrak → `tOr` viel terug op NL `Woud/Crypte/Schroot/Vorst` | P1 | **Gefixt** Woods/Crypt/Scrap/Frost |
+| en | `CATALOG_EN` chrome | Geen andere Dutch leftovers (charBig5Hint / Spiraal Orb al gepoetst in #283) | — | Geen actie |
 | en | `index.html` first-paint | Korte NL-flash voor EN-spelers tot boot | P3 | Zie nl |
+| de | `ui.dexBiome.wild` e.d. | Filterchips `Woud/Crypte/Schroot/Vorst` (NL-fallback) | P1 | **Gefixt** Wald/Krypta/Schrott/Frost |
+| fr | `ui.dexBiome.*` | Zelfde NL-fallback | P1 | **Gefixt** Bois/Crypte/Ferraille/Givre |
+| es | `ui.dexBiome.*` | Zelfde NL-fallback | P1 | **Gefixt** Bosque/Cripta/Chatarra/Escarcha |
 | de | `fomo.*` | EN-stubs (`Today`, `Play adventure`) | P1 | **Gefixt** DE + overlay + `CATALOG_DE_CHROME` |
 | de | `buildings.*` | EN factory namen/blurbs | P1 | **Gefixt** |
 | de | `gear.*` chrome | Ontbrak in i18n.js (ui.gearHead zat al in DE chrome) | P2 | **Gefixt** slot-labels |

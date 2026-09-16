@@ -821,7 +821,7 @@ const CATALOG_DE_CHROME = {
     dexNotBeaten: 'Noch nicht besiegt',
     dexStats: '{type} · Basis-HP {hp} · dmg {dmg} · spd {spd} · {xp} XP · Lv {lvl}',
     dexType: { hop: 'Hopser', fly: 'Flug', charge: 'Charge', shoot: 'Schuss', tank: 'Tank', dragon: 'Drache', swim: 'Meer' },
-    dexBiome: { farm: 'Farm', zoo: 'Zoo', sea: 'Meer', classic: 'Klassisch', secret: 'Geheim' },
+    dexBiome: { farm: 'Farm', zoo: 'Zoo', sea: 'Meer', wild: 'Wald', crypt: 'Krypta', scrap: 'Schrott', frost: 'Frost', classic: 'Klassisch', secret: 'Geheim' },
     saveHealthStats: 'Lv {lvl} · Unlock {unlocked} · Buch {dex} · Kills {kills}',
     saveHealthSummon: ' · ✦ {n} Summon',
     saveHealthPet: ' · Pet {n}',
