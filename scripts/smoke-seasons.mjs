@@ -30,6 +30,10 @@ must(/SEASON_IDS = \['classic', 'jungle', 'halloween', 'winter', 'summer'\]/.tes
 must(/function calendarSeasonId/.test(seasonsJs), 'calendarSeasonId missing');
 must(/function setSeasonPref/.test(seasonsJs), 'setSeasonPref missing');
 must(/function currentSeasonId/.test(seasonsJs), 'currentSeasonId missing');
+must(/function querySeasonOverride/.test(seasonsJs), 'QA ?season= override missing');
+must(/function dismissSeasonQueryOverride/.test(seasonsJs), 'settings pick must drop ?season= preview');
+must(/function seasonBeat/.test(seasonsJs), 'story beat helper missing');
+must(/season-swapping/.test(seasonsJs), 'season swap class missing');
 must(/sf-season-change/.test(seasonsJs), 'audio hook event missing');
 must(/seasonPref/.test(storage) && /seasonPref: 'auto'/.test(storage),
   'save.seasonPref default auto missing');
@@ -37,6 +41,10 @@ must(/seasonPref/.test(storage) && /seasonPref: 'auto'/.test(storage),
 must(/id="seasonOverlay"/.test(index), 'seasonOverlay missing in index.html');
 must(/id="seasonSwitchBar"/.test(index), 'season settings bar missing');
 must(/id="seasonMenuBlurb"/.test(index), 'menu flavor blurb missing');
+must(/id="seasonHubBeat"/.test(index) && /id="seasonResultBeat"/.test(index),
+  'hub/result story beats missing');
+must(/id="seasonLevelBeat"/.test(index), 'adventure-select story beat missing');
+must(/settings-season-card/.test(index), 'settings season card polish class missing');
 must(/data-season-slot="vignette"/.test(index), 'vignette slot missing');
 must(/data-season-slot="motif"/.test(index), 'motif slot missing');
 must(/data-season-slot="corner-tl"/.test(index), 'corner-tl slot missing');
@@ -59,21 +67,47 @@ must(/--season-safe-bottom/.test(css) && /--season-safe-right/.test(css),
   'safe-zone tokens missing');
 must(/html\[data-season="jungle"\]/.test(css), 'jungle theme tokens missing');
 must(/html\[data-season="halloween"\]/.test(css), 'halloween theme tokens missing');
-must(/html\[data-season="winter"\]/.test(css), 'winter hook missing');
-must(/html\[data-season="summer"\]/.test(css), 'summer hook missing');
+must(/html\[data-season="winter"\]/.test(css), 'winter theme missing');
+must(/html\[data-season="summer"\]/.test(css), 'summer theme missing');
 must(/html\[data-season="classic"\] \.season-overlay/.test(css),
   'classic must hide overlay');
 must(/--season-art-corner-tl/.test(css), 'art-slot CSS variables missing');
 must(/z-index:\s*22/.test(css), 'overlay z-index should sit under toast/pause');
+must(/season-winter-drift/.test(css) && /season-summer-haze/.test(css),
+  'winter/summer must have full CSS motif motion (not stub wash only)');
+must(/icicle|clip-path: polygon/.test(css) && /border-radius:\s*50%/.test(css),
+  'winter icicles + summer sun disc fallbacks missing');
+must(/season-swapping/.test(css) && /--season-swap-ms/.test(css),
+  'season swap transition tokens missing');
+must(/#settingsScreen\.screen\.active/.test(css) && /#resultScreen\.screen\.active/.test(css),
+  'settings/result seasonal screen wash missing');
+must(!/\.screen\s*\{[^}]*display:\s*none\s*!important/.test(css),
+  'no nuclear display:none !important on .screen');
+must(/assets\/seasons\/jungle\/corner-tl\.png/.test(css)
+  && /assets\/seasons\/halloween\/corner-tl\.png/.test(css),
+  'canon art paths must be nested assets/seasons/<id>/');
+must(!/season-jungle-corner|season-halloween-corner/.test(css),
+  'flat season-*-corner-*.png urls are deprecated');
+must(/html:not\(\[data-season="classic"\]\) body\.is-playing #seasonOverlay/.test(css),
+  'play overlay must stay visible (owned by seasons.css)');
+const overlays = fs.readFileSync(path.join(root, 'styles/season-overlays.css'), 'utf8');
+must(!/display:\s*none\s*!important/.test(overlays),
+  'season-overlays.css must not fight play decor with display:none !important');
+must(/body:not\(\.is-playing\) #seasonOverlay \[data-season-slot="corner-bl"\]/.test(css),
+  'menu/settings must hide BL corners on #seasonOverlay');
 
 must(/season: \{/.test(i18n), 'i18n season block missing');
 must(/blurb: \{/.test(i18n) && /jungle:/.test(i18n), 'season blurbs missing');
 ['nl', 'en', 'de', 'fr', 'es'].forEach((lang) => {
   const idx = i18n.indexOf(`  ${lang}: {`);
   must(idx !== -1, `lang ${lang} missing`);
-  const slice = i18n.slice(idx, idx + 24000);
+  const slice = i18n.slice(idx, idx + 32000);
   must(/title: 'Seizoen'|title: 'Season'|title: 'Saison'|title: 'Temporada'/.test(slice),
     `season.title missing for ${lang}`);
+  must(/beat:\s*\{/.test(slice) && /hub:\s*\{/.test(slice) && /winter:/.test(slice),
+    `season.beat hub/winter missing for ${lang}`);
+  must(!/art volgt|art later|Art folgt|art neige|arte de nieve/.test(slice),
+    `season blurbs still stub "art later" copy for ${lang}`);
 });
 
 must(/seasonId\(\)/.test(audio), 'AudioSys.seasonId hook missing');

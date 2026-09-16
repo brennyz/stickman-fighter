@@ -1224,6 +1224,7 @@ const UI = {
         if (scr) scr.classList.remove('active');
       }
       if (id) {
+        try { if (typeof syncSeasonFlavorUi === 'function') syncSeasonFlavorUi(); } catch (_) {}
         const el = document.getElementById(id);
         requestAnimationFrame(() => {
           try {

@@ -995,6 +995,14 @@
       "text": "Unieke 32×32 stickman-pixel silhouetten voor alle 36 W2 art-slots (P1→P2→P3). Stacked op editor #298; geen catalog-expansie.",
       "status": "done-in-code",
       "updated": "2026-09-16"
+    },
+    {
+      "id": "w-20260916T114200",
+      "from": "user",
+      "text": "PRIORITY pixel-art partner: unify two season CSS systems. Canon nested assets/seasons/<id>/. One CSS owner. Play overlay visible with safe zones. Deprecate flat season-*-corner PNGs. No nuclear CSS.",
+      "status": "done-in-code",
+      "updated": "2026-09-16",
+      "notes": "Folded into #303. seasons.css owns show/hide; season-overlays.css is shim only; nested art URLs; play overlay visible."
     }
   ],
   "agentRules": [

@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
-"""Write coordinator-named season PNGs from the approved pixel refs.
+"""DEPRECATED: flat season-*-corner-*.png leftovers.
 
-Corners 96×96, banners ≤320×64. Mirror L/R. No new overlay CSS.
+Canon paths are nested assets/seasons/<id>/<slot>.png (see SEASON-OVERLAY.md).
+Do not wire these flat files in CSS. Corners 96×96, banners ≤320×64.
 """
 from __future__ import annotations
 

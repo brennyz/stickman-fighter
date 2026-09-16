@@ -1,16 +1,16 @@
 # Seasonal pixel overlays
 
-Stickman-pixel props for **overlay slots**. Live CSS is `#277` `styles/seasons.css` plus pack urls in `styles/season-overlays.css`.
+Stickman-pixel props for **overlay slots**. Live CSS owner is `#277` `styles/seasons.css` (nested urls). `styles/season-overlays.css` is a shim only.
 
-Coordinator pack (flat files for `--season-art-*` / `data-season-slot`):
+Canon pack (nested — wire `--season-art-*` here):
 
 ```
-assets/seasons/
-  season-jungle-corner-tl.png … corner-tr/bl/br.png  (96×96)
-  season-jungle-banner.png                           (≤320×64)
-  season-halloween-corner-tl.png … corner-tr/bl/br.png
-  season-halloween-banner.png
+assets/seasons/<seasonId>/
+  corner-tl.png … corner-tr/bl/br.png
+  banner.png  vignette.png  ground-trim.png  motif.png
 ```
+
+Deprecated leftovers (do not wire): `season-jungle-corner-*.png` / `season-halloween-*.png` at this folder root.
 
 Folder packs (same slots + vignette / ground-trim / motif):
 
@@ -27,4 +27,6 @@ Regenerate: `python3 scripts/gen-season-pixel-art.py`
 
 Preview: `preview.html`
 
-Winter/summer stay hooks. Overlay stays `pointer-events: none`.
+Winter/summer have **full CSS fallbacks** (frost / sun) in `styles/seasons.css`. PNG folders stay empty until the pixel-art agent drops files — do not uncomment `--season-art-*` until those exist.
+
+Overlay stays `pointer-events: none`.

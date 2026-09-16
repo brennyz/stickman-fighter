@@ -1,177 +1,24 @@
-/* Season pixel overlays — art wiring aligned with #279 slot contract.
-   docs/season-overlay-slots.md · docs/SEASON-ASSET-SLOTS.md (CSS pair) */
-
-[data-season="jungle"] {
-  --season-ink: #4ecf6a;
-  --season-ink-deep: #1d4a2c;
-  --season-accent: #7cfc8a;
-  --season-safe-top: max(72px, calc(env(safe-area-inset-top, 0px) + 56px));
-  --season-safe-bottom: max(168px, calc(env(safe-area-inset-bottom, 0px) + 148px));
-  --season-art-corner-tl: url("../assets/seasons/jungle/corner-tl.png");
-  --season-art-corner-tr: url("../assets/seasons/jungle/corner-tr.png");
-  --season-art-corner-bl: url("../assets/seasons/jungle/corner-bl.png");
-  --season-art-corner-br: url("../assets/seasons/jungle/corner-br.png");
-  --season-art-banner: url("../assets/seasons/jungle/banner.png");
-  --season-art-vignette: url("../assets/seasons/jungle/vignette.png");
-  --season-art-ground-trim: url("../assets/seasons/jungle/ground-trim.png");
-  --season-art-motif: url("../assets/seasons/jungle/motif.png");
-}
-
-[data-season="halloween"] {
-  --season-ink: #ff9a32;
-  --season-ink-deep: #3d1f4a;
-  --season-accent: #c792ff;
-  --season-safe-top: max(72px, calc(env(safe-area-inset-top, 0px) + 56px));
-  --season-safe-bottom: max(168px, calc(env(safe-area-inset-bottom, 0px) + 148px));
-  --season-art-corner-tl: url("../assets/seasons/halloween/corner-tl.png");
-  --season-art-corner-tr: url("../assets/seasons/halloween/corner-tr.png");
-  --season-art-corner-bl: url("../assets/seasons/halloween/corner-bl.png");
-  --season-art-corner-br: url("../assets/seasons/halloween/corner-br.png");
-  --season-art-banner: url("../assets/seasons/halloween/banner.png");
-  --season-art-vignette: url("../assets/seasons/halloween/vignette.png");
-  --season-art-ground-trim: url("../assets/seasons/halloween/ground-trim.png");
-  --season-art-motif: url("../assets/seasons/halloween/motif.png");
-}
+/* Compatibility shim for preview.html / SW / older smokes.
+   Overlay show/hide + nested --season-art-* are owned by styles/seasons.css.
+   Do NOT hide #seasonOverlay during play. Safe zones live in seasons.css. */
 
 #seasonOverlay,
-.season-overlay {
-  position: fixed;
-  inset: 0;
-  z-index: 21;
+.season-overlay,
+#seasonOverlay [data-season-slot],
+.season-art-slot {
   pointer-events: none !important;
-  display: none;
 }
 
-body[data-season="jungle"]:has(#menuScreen.active) #seasonOverlay,
-body[data-season="halloween"]:has(#menuScreen.active) #seasonOverlay,
-body[data-season="jungle"]:has(#modeHubScreen.active) #seasonOverlay,
-body[data-season="halloween"]:has(#modeHubScreen.active) #seasonOverlay,
-.season-preview-frame .season-overlay {
-  display: block;
-}
-
+/* Selector kept so play-layer smokes can find the host. Overlay stays visible. */
 body.is-playing #seasonOverlay,
 body.is-playing .season-overlay {
-  display: none !important;
-  visibility: hidden !important;
+  pointer-events: none !important;
 }
 
-.season-art-slot,
-.season-slot,
-#seasonOverlay [data-season-slot] {
-  position: absolute;
-  pointer-events: none !important;
-  background-repeat: no-repeat;
-  background-size: contain;
+#seasonOverlay [data-season-slot],
+.season-art-slot {
   image-rendering: pixelated;
   image-rendering: crisp-edges;
-  opacity: 0.88;
-}
-
-.season-vignette,
-[data-season-slot="vignette"] {
-  inset: 0;
-  background-image: var(--season-art-vignette, none);
-  background-size: 100% 100%;
-  opacity: 0.35;
-}
-
-.season-art-tl,
-#seasonSlotCornerTL,
-[data-season-slot="corner-tl"] {
-  top: max(6px, env(safe-area-inset-top, 0px));
-  left: max(6px, env(safe-area-inset-left, 0px));
-  width: min(22vw, 132px);
-  height: min(18vh, 110px);
-  background-image: var(--season-art-corner-tl, none);
-  background-position: top left;
-}
-
-.season-art-tr,
-#seasonSlotCornerTR,
-[data-season-slot="corner-tr"] {
-  top: max(6px, env(safe-area-inset-top, 0px));
-  right: max(64px, calc(env(safe-area-inset-right, 0px) + 56px));
-  width: min(20vw, 120px);
-  height: min(16vh, 100px);
-  background-image: var(--season-art-corner-tr, none);
-  background-position: top right;
-}
-
-.season-art-bl,
-#seasonSlotCornerBL,
-[data-season-slot="corner-bl"] {
-  left: max(6px, env(safe-area-inset-left, 0px));
-  bottom: var(--season-safe-bottom, 168px);
-  width: min(22vw, 132px);
-  height: min(16vh, 96px);
-  background-image: var(--season-art-corner-bl, none);
-  background-position: bottom left;
-}
-
-.season-art-br,
-#seasonSlotCornerBR,
-[data-season-slot="corner-br"] {
-  right: max(6px, env(safe-area-inset-right, 0px));
-  bottom: var(--season-safe-bottom, 168px);
-  width: min(22vw, 132px);
-  height: min(16vh, 96px);
-  background-image: var(--season-art-corner-br, none);
-  background-position: bottom right;
-}
-
-.season-art-banner,
-#seasonSlotBanner,
-[data-season-slot="banner"] {
-  top: max(4px, env(safe-area-inset-top, 0px));
-  left: 50%;
-  transform: translateX(-50%);
-  width: min(70vw, 420px);
-  height: min(10vh, 64px);
-  background-image: var(--season-art-banner, none);
-  background-position: top center;
-  opacity: 0.7;
-}
-
-.season-art-ground,
-#seasonSlotGroundTrim,
-[data-season-slot="ground-trim"] {
-  left: 0;
-  right: 0;
-  bottom: var(--season-safe-bottom, 168px);
-  height: min(8vh, 56px);
-  background-image: var(--season-art-ground-trim, none);
-  background-size: auto 100%;
-  background-repeat: repeat-x;
-  opacity: 0.7;
-}
-
-.season-art-motif,
-#seasonSlotMotif,
-[data-season-slot="motif"] {
-  top: 18%;
-  right: max(10px, env(safe-area-inset-right, 0px));
-  width: min(12vw, 72px);
-  height: min(12vw, 72px);
-  background-image: var(--season-art-motif, none);
-  opacity: 0.35;
-}
-
-/* Android-first: hide mid-screen motif + banner on short phones so title stays readable. */
-@media (max-height: 640px) {
-  .season-art-banner,
-  .season-art-motif,
-  [data-season-slot="banner"],
-  [data-season-slot="motif"] {
-    display: none;
-  }
-}
-
-@media (max-width: 359px) {
-  .season-art-ground,
-  [data-season-slot="ground-trim"] {
-    display: none;
-  }
 }
 
 @media (prefers-reduced-motion: reduce) {

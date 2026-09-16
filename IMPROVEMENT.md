@@ -145,6 +145,8 @@ Schrijf **1–3 regels** per sessie: datum, d#, wat, versie.
 
 | Datum (UTC) | d# | Update |
 |-------------|-----|--------|
+| 2026-09-16 | — | **Season CSS unify** één owner (`seasons.css`) · nested `assets/seasons/<id>/` · play overlay zichtbaar + safe zones · flat `season-*-corner` deprecated. **v1.18.169 / SW 379**. |
+| 2026-09-16 | — | **Season deepdive** winter/zomer CSS-pariteit + story beats (hub/eiland/result) + i18n nl/en/de/fr/es + tap-safe swap. Geen pixel-PNG, geen audio. **v1.18.168 / SW 378**. |
 | 2026-09-16 | — | Pixel motion: zelfde feel op catalog-stub fallback. **v1.18.172 / SW 382**. Draft #308. |
 | 2026-09-16 | — | Wave 3 monster doorontwikkeling: 18 unieke W2 P1 pixels, +18 families (144 soorten, boek **714**), frost/reef golven + biome telegraph/technique, dex Vorst-filter. Browser-verify: P1 paint in boek+combat, geen alias. **v1.18.168 / SW 378**. Draft #298, geen silent main. |
 | 2026-09-16 | — | **Gear systems equip-logic:** `gearEquipState` (locked / not-owned / wrong-slot / already-equipped / vanity-ok); `gearSlotInventory`; combat skip wrong-slot; grant no longer writes flat `ownedGear`. Schema 1. UI chrome = parallel lane. `smoke:gear` + `smoke:gear-screen` green. Draft PR, geen main. |
