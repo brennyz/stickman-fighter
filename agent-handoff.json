@@ -94,7 +94,7 @@
       "id": "w-20260916T111200",
       "from": "user",
       "text": "Systems equip-API klaar (#295): align sheets/equip-flow. Bind gearEquipState/gearCanEquip (ok|vanity-ok|already-equipped|locked|not-owned|wrong-slot|unknown), gearEquipItem(id,{expectSlot?}), gearSlotInventory(slot,save). DOM #gearScreen/[data-slot]/[data-gear-id] ongewijzigd. Schema 1 ongemoeid. Geen layout-conflict met systems. Update PR #307 met screenshots + NL API-note.",
-      "status": "in-progress",
+      "status": "done-in-code",
       "updated": "2026-09-16"
     },
     {
@@ -656,6 +656,10 @@
   ],
   "sessionLog": [
     {
+      "at": "2026-09-16T11:20:05Z",
+      "summary": "Gear UI sheets/equip-flow aligned to #295 helpers (gearEquipState, gearSlotInventory, expectSlot); DOM/schema 1 unchanged."
+    },
+    {
       "at": "2026-09-14T17:32:01Z",
       "summary": "Schema delta: UI writes only save.gear {schema,equipped,owned} + createdAt; HOME tile Uitrusting."
     },
@@ -750,10 +754,6 @@
     {
       "at": "2026-08-17T14:31:25Z",
       "summary": "Mega-merge op main: light-FX + versus-stubs + dawnblade · v1.18.152 / SW 362"
-    },
-    {
-      "at": "2026-08-17T14:01:21Z",
-      "summary": "GitHub-sync: PC==main; wachtlijst + vraag-bij-upload; tracking nog lokaal"
     }
   ],
   "implementedFeaturesSummary": "d18 char select deel 1+2 (v1.11.1-2); Mats coinrun + shuriken mik/vliegers + anti-spam (v1.12.0); speel.html (v1.12.2+). Zie HANDOFF-ZOEKINDEX.md en improvement-d20-bag.json userFeatureLog.",
