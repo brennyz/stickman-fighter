@@ -1120,6 +1120,10 @@
   ],
   "sessionLog": [
     {
+      "at": "2026-09-16T16:40:55Z",
+      "summary": "PLAYTEST HARDEN #311 C6 P1: 390px HUD/hint clear; EN Factories aria lockstep + Back to menu. v1.18.176 / SW 386."
+    },
+    {
       "at": "2026-09-16T15:53:27Z",
       "summary": "PLAYTEST HARDEN #311 FINAL C1–C6 shipped (v1.18.175 / SW 385). Live still 1.18.172. Stop + summarize."
     },
@@ -1214,10 +1218,6 @@
     {
       "at": "2026-09-14T13:44:04Z",
       "summary": "Arcade pick-mode restyle + i18n chrome volgt game-taal"
-    },
-    {
-      "at": "2026-09-14T13:22:45Z",
-      "summary": "MERGE MAIN: #259 + #260 → v1.18.159/SW369. Hit-reg gehouden. #261 closed. #256 overgeslagen. speel.html LIVE na Pages."
     }
   ],
   "implementedFeaturesSummary": "d18 char select deel 1+2 (v1.11.1-2); Mats coinrun + shuriken mik/vliegers + anti-spam (v1.12.0); speel.html (v1.12.2+). Zie HANDOFF-ZOEKINDEX.md en improvement-d20-bag.json userFeatureLog.",
