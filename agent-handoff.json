@@ -94,7 +94,7 @@
       "id": "w-20260916T110000",
       "from": "user",
       "text": "BUILDINGS PIXEL ART: GROTE DOORONTWIKKELING. Leapfrog the #289 sheet — prop-first 32×32 silhouettes for stick_lighter, woodchip_glue, chipping_wood, bamboo_boesa, echo_whistle + HOME hub. Cohesive palette, Android cards, preview sheet + 192 zooms. No variants (wire map has one card). Mega-merge only, no Versus, no external image APIs.",
-      "status": "in-progress",
+      "status": "done-in-code",
       "updated": "2026-09-16"
     },
     {
@@ -642,6 +642,10 @@
   ],
   "sessionLog": [
     {
+      "at": "2026-09-16T11:17:24Z",
+      "summary": "Factory pixel art v2: prop-first silhouettes for the 5 locked #292 factories + HOME hub; preview sheet and 192 zooms; draft PR #300, no merge to main."
+    },
+    {
       "at": "2026-09-14T17:27:40Z",
       "summary": "Wired building pixels to #292 ids: stick_lighter, woodchip_glue, chipping_wood, bamboo_boesa, echo_whistle. Mega-merge only."
     },
@@ -736,10 +740,6 @@
     {
       "at": "2026-08-17T10:21:10Z",
       "summary": "PC-pull geregeld: pull-main.sh + GITHUB-PUSH is nu pull-kaart; main LIVE"
-    },
-    {
-      "at": "2026-08-17T10:20:50Z",
-      "summary": "pull-main script + GITHUB-PUSH bijwerken zodat de pc één commando kan pullen"
     }
   ],
   "implementedFeaturesSummary": "d18 char select deel 1+2 (v1.11.1-2); Mats coinrun + shuriken mik/vliegers + anti-spam (v1.12.0); speel.html (v1.12.2+). Zie HANDOFF-ZOEKINDEX.md en improvement-d20-bag.json userFeatureLog.",
