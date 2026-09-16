@@ -39,7 +39,7 @@ Hub tiles, `#upgradeScreen`, `#settingsScreen` (aim color/radius, Lite FX, langu
 - [x] Findings received
 - [x] P0/P1 investigated on main
 - [x] Fixes on this branch (if any)
-- [ ] Smoke: `smoke:upgrades` · `smoke:menu` · `smoke:nav` · `smoke:p0p3-uiux` · `smoke:aim-indicator` · `smoke:unify-ui`
+- [x] Smoke: `smoke:upgrades` · `smoke:menu` · `smoke:p0p3-uiux` · `smoke:aim-indicator` · `smoke:unify-ui` · `smoke:pwa`
 
 **Open P0/P1:** Cycle 1 P1 — «Verse versie» only in hidden diag. **Fix:** Opties → Hulp shows `btnForceFresh` (no version clutter). Auto-apply on HOME + short toast. Bottom `#netStatus` stay. Diag/version stay 5-tap.
 
@@ -50,7 +50,7 @@ Hub tiles, `#upgradeScreen`, `#settingsScreen` (aim color/radius, Lite FX, langu
 - [x] Findings received
 - [x] P0/P1 investigated on main
 - [x] Fixes on this branch (if any)
-- [ ] Smoke: `smoke:summon` · `smoke:playtest-p1`
+- [x] Smoke: `smoke:summon` · `smoke:playtest-p1`
 
 **Open P0/P1:** Cycle 2 P1 no skip/close — `#btnSummonSkip` during pull. P2 nested X-scroll — `.summon-rail` no longer a nested scroller.
 

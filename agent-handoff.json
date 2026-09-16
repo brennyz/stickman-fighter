@@ -1099,6 +1099,10 @@
   ],
   "sessionLog": [
     {
+      "at": "2026-09-16T15:06:04Z",
+      "summary": "PLAYTEST HARDEN #311 C1+C2: Verse versie in Opties→Hulp + auto-apply toast; summons Overslaan + geen nested X-scroll. v1.18.173 / SW 383."
+    },
+    {
       "at": "2026-09-16T12:39:13Z",
       "summary": "PLAYTEST HARDEN stub PR #311 parked — cycle checklist + baseline smokes green on v1.18.172 / SW 382. Waiting for P0/P1 findings."
     },
@@ -1193,10 +1197,6 @@
     {
       "at": "2026-09-14T12:46:48Z",
       "summary": "P1 entry: Android-first landing — één install-blok, geen iPad op Android · v1.18.157 / SW 367"
-    },
-    {
-      "at": "2026-09-14T12:45:42Z",
-      "summary": "P1 entry: Android-first landing — geen iPad-blok op Android"
     }
   ],
   "implementedFeaturesSummary": "d18 char select deel 1+2 (v1.11.1-2); Mats coinrun + shuriken mik/vliegers + anti-spam (v1.12.0); speel.html (v1.12.2+). Zie HANDOFF-ZOEKINDEX.md en improvement-d20-bag.json userFeatureLog.",
