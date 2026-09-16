@@ -902,6 +902,22 @@
       "text": "verbeter de store-tool; toon wat er moet gebeuren vóór App Store deploy",
       "status": "done-in-code",
       "updated": "2026-09-10"
+    },
+    {
+      "id": "w-20260916T110800",
+      "from": "user",
+      "text": "User wil expliciet ook FR/ES/DE. Snelle main-spotcheck: buildings+fomo EN leftovers, DE Hi/Sound, EN VERLOREN, speel.html NL, FR/ES install App.",
+      "status": "done-in-code",
+      "updated": "2026-09-16",
+      "notes": "Prio: fomo + buildings DE/FR/ES (al in #299) + EN result.advLose YOU LOSE + DE Hi/Sound. Versus ongemoeid."
+    },
+    {
+      "id": "w-20260916T110000",
+      "from": "user",
+      "text": "check de talen, ook anderen dan alleen nl en en",
+      "status": "done-in-code",
+      "updated": "2026-09-16",
+      "notes": "Post-#283 Z→A factcheck alle picker-talen (nl→fr→es→en→de). Report + FR/ES/DE stringfixes, speel.html i18n + stepsIos. Versus ongemoeid."
     }
   ],
   "agentRules": [

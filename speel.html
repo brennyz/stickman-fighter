@@ -55,10 +55,10 @@
 <body>
   <img class="icon" src="./icons/icon-192.png" alt="Stickman Fighter">
   <h1>STICKMAN FIGHTER</h1>
-  <p class="sub">Gratis vechtspel — Avontuur, Training en kisten. Tik SPELEN en ga vechten.</p>
+  <p class="sub" id="speelSub">Gratis vechtspel — Avontuur, Training en kisten. Tik SPELEN en ga vechten.</p>
 
   <a class="play" href="./index.html" id="btnPlay">▶ SPELEN</a>
-  <p class="play-hint">Opent het startscherm · kies daarna <b>Avontuur</b></p>
+  <p class="play-hint" id="speelHint">Opent het startscherm · kies daarna <b>Avontuur</b></p>
 
   <div class="rowbtns">
     <button class="mini" id="btnShare" type="button">📤 Deel deze pagina</button>
@@ -66,35 +66,217 @@
   </div>
 
   <details class="install-fold" id="installFold">
-    <summary>App</summary>
+    <summary id="installSum">App</summary>
     <div class="card hide" id="stepsAndroid">
-      <b>📱 Android — als app installeren</b>
-      <div class="step"><span class="n">1</span><span>Open deze pagina in <b>Chrome</b> (niet de Instagram/WhatsApp-browser: menu → “Openen in Chrome”).</span></div>
-      <div class="step"><span class="n">2</span><span>Tik <b>SPELEN</b> en daarna in het spelmenu op <b>App</b>, of Chrome-menu ⋮ → <b>App installeren</b>.</span></div>
-      <div class="step"><span class="n">3</span><span>Open voortaan via het <b>Stickman-icoon</b> — werkt daarna ook offline.</span></div>
+      <b id="andHead">📱 Android — als app installeren</b>
+      <div class="step"><span class="n">1</span><span id="and1">Open deze pagina in <b>Chrome</b> (niet de Instagram/WhatsApp-browser: menu → “Openen in Chrome”).</span></div>
+      <div class="step"><span class="n">2</span><span id="and2">Tik <b>SPELEN</b> en daarna in het spelmenu op <b>App</b>, of Chrome-menu ⋮ → <b>App installeren</b>.</span></div>
+      <div class="step"><span class="n">3</span><span id="and3">Open voortaan via het <b>Stickman-icoon</b> — werkt daarna ook offline.</span></div>
+    </div>
+
+    <div class="card hide" id="stepsIos">
+      <b id="iosHead">📱 iPhone / iPad — op het beginscherm</b>
+      <div class="step"><span class="n">1</span><span id="ios1">Open deze pagina in <b>Safari</b> (niet in-app browsers).</span></div>
+      <div class="step"><span class="n">2</span><span id="ios2">Tik <b>Deel</b> → <b>Zet op beginscherm</b>.</span></div>
+      <div class="step"><span class="n">3</span><span id="ios3">Open daarna via het <b>Stickman-icoon</b> — werkt ook offline.</span></div>
     </div>
 
     <div class="card hide" id="stepsDesktop">
-      <b>💻 PC</b>
-      <div class="step"><span class="n">1</span><span>Klik <b>SPELEN</b> — toetsenbord: A/D lopen, J/K/L aanvallen.</span></div>
-      <div class="step"><span class="n">2</span><span>Chrome/Edge: installatie-icoon in de adresbalk = als app.</span></div>
-      <div class="step"><span class="n">3</span><span>Telefoon erbij? Scan de QR-code hieronder.</span></div>
+      <b id="deskHead">💻 PC</b>
+      <div class="step"><span class="n">1</span><span id="desk1">Klik <b>SPELEN</b> — toetsenbord: A/D lopen, J/K/L aanvallen.</span></div>
+      <div class="step"><span class="n">2</span><span id="desk2">Chrome/Edge: installatie-icoon in de adresbalk = als app.</span></div>
+      <div class="step"><span class="n">3</span><span id="desk3">Telefoon erbij? Scan de QR-code hieronder.</span></div>
     </div>
 
     <div class="qrbox hide" id="qrbox">
-      <div style="font-size:13px;color:#a8b8e8;margin-bottom:8px">Scan met je telefoon:</div>
+      <div id="qrHint" style="font-size:13px;color:#a8b8e8;margin-bottom:8px">Scan met je telefoon:</div>
       <img id="qrimg" alt="QR-code naar het spel" loading="lazy">
       <div class="linkline" id="linkline"></div>
     </div>
   </details>
 
-  <p class="legal" id="contentAge">Cartoon-gevechten · geen chat · tiener+ · save blijft op dit apparaat · <a href="./privacy.html" style="color:#7cf5ff;font-weight:700">Privacy</a></p>
+  <p class="legal" id="contentAge">Cartoon-gevechten · geen chat · tiener+ · save blijft op dit apparaat · <a href="./privacy.html" id="privacyLink" style="color:#7cf5ff;font-weight:700">Privacy</a></p>
 
-  <footer>Werkt daarna ook offline · deel deze pagina</footer>
+  <footer id="speelFoot">Werkt daarna ook offline · deel deze pagina</footer>
   <p class="offline-hint hide" id="offlineHint">Offline — deel-link uit cache · SPELEN opent het spel uit app-cache</p>
 
 <script>
 (function () {
+  var SPEEL_I18N = {
+    nl: {
+      title: 'Speel Stickman Fighter — tik SPELEN',
+      sub: 'Gratis vechtspel — Avontuur, Training en kisten. Tik SPELEN en ga vechten.',
+      play: '▶ SPELEN', hint: 'Opent het startscherm · kies daarna Avontuur',
+      share: '📤 Deel deze pagina', copy: '🔗 Kopieer link', copied: '✓ Gekopieerd',
+      copyPrompt: 'Kopieer deze link:', shareText: 'Gratis stickman vechtspel — speel mee!',
+      install: 'App',
+      andHead: '📱 Android — als app installeren',
+      and1: 'Open deze pagina in Chrome (niet de Instagram/WhatsApp-browser: menu → “Openen in Chrome”).',
+      and2: 'Tik SPELEN en daarna in het spelmenu op App, of Chrome-menu ⋮ → App installeren.',
+      and3: 'Open voortaan via het Stickman-icoon — werkt daarna ook offline.',
+      iosHead: '📱 iPhone / iPad — op het beginscherm',
+      ios1: 'Open deze pagina in Safari (niet in-app browsers).',
+      ios2: 'Tik Deel → Zet op beginscherm.',
+      ios3: 'Open daarna via het Stickman-icoon — werkt ook offline.',
+      deskHead: '💻 PC',
+      desk1: 'Klik SPELEN — toetsenbord: A/D lopen, J/K/L aanvallen.',
+      desk2: 'Chrome/Edge: installatie-icoon in de adresbalk = als app.',
+      desk3: 'Telefoon erbij? Scan de QR-code hieronder.',
+      qr: 'Scan met je telefoon:',
+      legal: 'Cartoon-gevechten · geen chat · tiener+ · save blijft op dit apparaat · ',
+      privacy: 'Privacy',
+      foot: 'Werkt daarna ook offline · deel deze pagina',
+      offline: 'Offline — deel-link uit cache · SPELEN opent het spel uit app-cache'
+    },
+    en: {
+      title: 'Play Stickman Fighter — tap PLAY',
+      sub: 'Free fighter — Adventure, Training and chests. Tap PLAY and fight.',
+      play: '▶ PLAY', hint: 'Opens the start screen · then pick Adventure',
+      share: '📤 Share this page', copy: '🔗 Copy link', copied: '✓ Copied',
+      copyPrompt: 'Copy this link:', shareText: 'Free stickman fighter — play along!',
+      install: 'App',
+      andHead: '📱 Android — install as an app',
+      and1: 'Open this page in Chrome (not Instagram/WhatsApp: menu → “Open in Chrome”).',
+      and2: 'Tap PLAY, then App in the game menu, or Chrome ⋮ → Install app.',
+      and3: 'Open later from the Stickman icon — works offline too.',
+      iosHead: '📱 iPhone / iPad — add to Home Screen',
+      ios1: 'Open this page in Safari (not in-app browsers).',
+      ios2: 'Tap Share → Add to Home Screen.',
+      ios3: 'Open later from the Stickman icon — works offline too.',
+      deskHead: '💻 PC',
+      desk1: 'Click PLAY — keyboard: A/D move, J/K/L attack.',
+      desk2: 'Chrome/Edge: install icon in the address bar = as an app.',
+      desk3: 'Got a phone? Scan the QR code below.',
+      qr: 'Scan with your phone:',
+      legal: 'Cartoon fights · no chat · teens+ · save stays on this device · ',
+      privacy: 'Privacy',
+      foot: 'Works offline after that · share this page',
+      offline: 'Offline — share link from cache · PLAY opens the game from app cache'
+    },
+    de: {
+      title: 'Spiel Stickman Fighter — tippe SPIELEN',
+      sub: 'Gratis-Kämpfer — Abenteuer, Training und Kisten. Tippe SPIELEN und kämpfe.',
+      play: '▶ SPIELEN', hint: 'Öffnet den Startbildschirm · dann Abenteuer wählen',
+      share: '📤 Seite teilen', copy: '🔗 Link kopieren', copied: '✓ Kopiert',
+      copyPrompt: 'Diesen Link kopieren:', shareText: 'Gratis Stickman-Kämpfer — spiel mit!',
+      install: 'App',
+      andHead: '📱 Android — als App installieren',
+      and1: 'Öffne diese Seite in Chrome (nicht Instagram/WhatsApp: Menü → „In Chrome öffnen“).',
+      and2: 'Tippe SPIELEN, dann App im Spielmenü, oder Chrome ⋮ → App installieren.',
+      and3: 'Danach über das Stickman-Icon — geht auch offline.',
+      iosHead: '📱 iPhone / iPad — auf den Home-Bildschirm',
+      ios1: 'Öffne diese Seite in Safari (keine In-App-Browser).',
+      ios2: 'Tippe Teilen → Zum Home-Bildschirm.',
+      ios3: 'Danach über das Stickman-Icon — geht auch offline.',
+      deskHead: '💻 PC',
+      desk1: 'Klick SPIELEN — Tastatur: A/D laufen, J/K/L angreifen.',
+      desk2: 'Chrome/Edge: Install-Icon in der Adressleiste = als App.',
+      desk3: 'Handy dabei? QR-Code unten scannen.',
+      qr: 'Mit dem Handy scannen:',
+      legal: 'Cartoon-Kämpfe · kein Chat · ab Teenager · Save bleibt hier · ',
+      privacy: 'Datenschutz',
+      foot: 'Geht danach auch offline · teile diese Seite',
+      offline: 'Offline — Share-Link aus dem Cache · SPIELEN öffnet das Spiel aus dem App-Cache'
+    },
+    fr: {
+      title: 'Joue à Stickman Fighter — tape JOUER',
+      sub: 'Jeu de combat gratuit — Aventure, Entraînement et coffres. Tape JOUER et combats.',
+      play: '▶ JOUER', hint: 'Ouvre l’écran d’accueil · puis choisis Aventure',
+      share: '📤 Partager cette page', copy: '🔗 Copier le lien', copied: '✓ Copié',
+      copyPrompt: 'Copie ce lien :', shareText: 'Jeu stickman gratuit — viens jouer !',
+      install: 'App',
+      andHead: '📱 Android — installer comme app',
+      and1: 'Ouvre cette page dans Chrome (pas Instagram/WhatsApp : menu → « Ouvrir dans Chrome »).',
+      and2: 'Tape JOUER, puis App dans le menu, ou Chrome ⋮ → Installer l’app.',
+      and3: 'Ouvre ensuite via l’icône Stickman — marche aussi hors ligne.',
+      iosHead: '📱 iPhone / iPad — sur l’écran d’accueil',
+      ios1: 'Ouvre cette page dans Safari (pas les navigateurs in-app).',
+      ios2: 'Tape Partager → Sur l’écran d’accueil.',
+      ios3: 'Ouvre ensuite via l’icône Stickman — marche aussi hors ligne.',
+      deskHead: '💻 PC',
+      desk1: 'Clique JOUER — clavier : A/D marcher, J/K/L attaquer.',
+      desk2: 'Chrome/Edge : icône d’install dans la barre d’adresse = comme app.',
+      desk3: 'Un téléphone ? Scanne le QR ci-dessous.',
+      qr: 'Scanne avec ton téléphone :',
+      legal: 'Combats cartoon · pas de chat · ados+ · sauvegarde sur cet appareil · ',
+      privacy: 'Confidentialité',
+      foot: 'Marche aussi hors ligne · partage cette page',
+      offline: 'Hors ligne — lien depuis le cache · JOUER ouvre le jeu depuis le cache'
+    },
+    es: {
+      title: 'Juega Stickman Fighter — toca JUGAR',
+      sub: 'Lucha gratis — Aventura, Entrenamiento y cofres. Toca JUGAR y pelea.',
+      play: '▶ JUGAR', hint: 'Abre la pantalla de inicio · luego elige Aventura',
+      share: '📤 Compartir esta página', copy: '🔗 Copiar enlace', copied: '✓ Copiado',
+      copyPrompt: 'Copia este enlace:', shareText: 'Lucha stickman gratis — ¡juega!',
+      install: 'App',
+      andHead: '📱 Android — instalar como app',
+      and1: 'Abre esta página en Chrome (no Instagram/WhatsApp: menú → “Abrir en Chrome”).',
+      and2: 'Toca JUGAR, luego App en el menú, o Chrome ⋮ → Instalar app.',
+      and3: 'Ábrela luego desde el icono Stickman — también sin red.',
+      iosHead: '📱 iPhone / iPad — en la pantalla de inicio',
+      ios1: 'Abre esta página en Safari (no en navegadores in-app).',
+      ios2: 'Toca Compartir → Añadir a pantalla de inicio.',
+      ios3: 'Ábrela luego desde el icono Stickman — también sin red.',
+      deskHead: '💻 PC',
+      desk1: 'Pulsa JUGAR — teclado: A/D mover, J/K/L atacar.',
+      desk2: 'Chrome/Edge: icono de instalar en la barra = como app.',
+      desk3: '¿Tienes el móvil? Escanea el QR de abajo.',
+      qr: 'Escanea con el móvil:',
+      legal: 'Combates cartoon · sin chat · adolescentes+ · la partida se queda aquí · ',
+      privacy: 'Privacidad',
+      foot: 'También funciona sin red · comparte esta página',
+      offline: 'Sin red — enlace desde la caché · JUGAR abre el juego desde la caché'
+    }
+  };
+
+  function detectSpeelLang() {
+    try {
+      var q = new URLSearchParams(location.search).get('lang');
+      if (q && SPEEL_I18N[q]) return q;
+    } catch (_) {}
+    try {
+      var raw = localStorage.getItem('stickfighter_save_v1');
+      if (raw) {
+        var s = JSON.parse(raw);
+        if (s && s.lang && SPEEL_I18N[s.lang]) return s.lang;
+      }
+    } catch (_) {}
+    try {
+      var nav = (navigator.language || navigator.userLanguage || 'nl').slice(0, 2).toLowerCase();
+      if (SPEEL_I18N[nav]) return nav;
+    } catch (_) {}
+    return 'en';
+  }
+
+  function applySpeelLang(code) {
+    var L = SPEEL_I18N[code] || SPEEL_I18N.en;
+    document.documentElement.lang = code;
+    document.title = L.title;
+    var map = [
+      ['speelSub', 'sub'], ['btnPlay', 'play'], ['speelHint', 'hint'],
+      ['btnShare', 'share'], ['btnCopy', 'copy'], ['installSum', 'install'],
+      ['andHead', 'andHead'], ['and1', 'and1'], ['and2', 'and2'], ['and3', 'and3'],
+      ['iosHead', 'iosHead'], ['ios1', 'ios1'], ['ios2', 'ios2'], ['ios3', 'ios3'],
+      ['deskHead', 'deskHead'], ['desk1', 'desk1'], ['desk2', 'desk2'], ['desk3', 'desk3'],
+      ['qrHint', 'qr'], ['privacyLink', 'privacy'], ['speelFoot', 'foot'], ['offlineHint', 'offline']
+    ];
+    for (var i = 0; i < map.length; i++) {
+      var el = document.getElementById(map[i][0]);
+      if (el) el.textContent = L[map[i][1]];
+    }
+    var age = document.getElementById('contentAge');
+    var priv = document.getElementById('privacyLink');
+    if (age && priv) {
+      age.textContent = L.legal;
+      age.appendChild(priv);
+      priv.textContent = L.privacy;
+    }
+  }
+
+  var speelLang = detectSpeelLang();
+  applySpeelLang(speelLang);
+
   var DEFAULT_SHARE = 'https://brennyz.github.io/stickman-fighter/speel.html';
   var shareUrl = location.href.split('?')[0].split('#')[0];
   var ua = navigator.userAgent;
@@ -136,7 +318,12 @@
 
   /* Android-first: toon alleen het blok van dit apparaat. Nooit iPad+Android+PC tegelijk. */
   var stepId = isAndroid ? 'stepsAndroid' : isIOS ? 'stepsIos' : 'stepsDesktop';
-  document.getElementById(stepId).classList.remove('hide');
+  var stepEl = document.getElementById(stepId);
+  if (stepEl) stepEl.classList.remove('hide');
+  else {
+    var desk = document.getElementById('stepsDesktop');
+    if (desk) desk.classList.remove('hide');
+  }
   if (!isAndroid && !isIOS) document.getElementById('qrbox').classList.remove('hide');
 
   function cachedShareUrl() {
@@ -174,18 +361,20 @@
   if (isAndroid || isIOS) document.getElementById('qrbox').classList.add('hide');
 
   document.getElementById('btnShare').addEventListener('click', function () {
+    var L = SPEEL_I18N[speelLang] || SPEEL_I18N.en;
     if (navigator.share) {
-      navigator.share({ title: 'Stickman Fighter', text: 'Gratis stickman vechtspel — speel mee!', url: shareUrl }).catch(function () {});
+      navigator.share({ title: 'Stickman Fighter', text: L.shareText, url: shareUrl }).catch(function () {});
     } else {
       copyLink();
     }
   });
   document.getElementById('btnCopy').addEventListener('click', copyLink);
   function copyLink() {
+    var L = SPEEL_I18N[speelLang] || SPEEL_I18N.en;
     (navigator.clipboard ? navigator.clipboard.writeText(shareUrl) : Promise.reject()).then(function () {
-      document.getElementById('btnCopy').textContent = '✓ Gekopieerd';
+      document.getElementById('btnCopy').textContent = L.copied;
     }).catch(function () {
-      prompt('Kopieer deze link:', shareUrl);
+      prompt(L.copyPrompt, shareUrl);
     });
   }
 })();

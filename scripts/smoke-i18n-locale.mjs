@@ -42,6 +42,8 @@ if (!/setTitle\('btnHelp', 'menu\.tips'\)/.test(i18n)) fail('help tooltip must u
 
 if (!/advLose: 'VERLOREN'/.test(catalog)) fail('NL result.advLose must be VERLOREN');
 if (!/lost: 'VERLOREN'/.test(catalog)) fail('NL banner.lost must be VERLOREN');
+if (!/advLose: 'YOU LOSE'/.test(catalogEn)) fail('EN result.advLose must be YOU LOSE');
+if (/advLose: 'VERLOREN'/.test((catalogEn.split('const CATALOG_DE')[0] || ''))) fail('EN result.advLose still Dutch VERLOREN');
 if (!/titleKey: win \? 'result\.advWin' : 'result\.advLose'/.test(game)) fail('adventure result must pass titleKey');
 if (!/tOr\(titleKey/.test(ui)) fail('showResult must re-translate title from titleKey (lang switch)');
 if (!/result\.trainDetailWin/.test(game)) fail('training detail still hardcoded Dutch/EN mix');
@@ -168,4 +170,46 @@ if (!/summonQuota:/.test(catalog)) fail('summon quota copy must be i18n');
 if (!/ui\.summonQuota/.test(ui)) fail('renderSummon quota must use i18n');
 if (!/ui\.summonLogEmpty/.test(ui) && !/ui\.summonNoPulls/.test(ui)) fail('summon log empty state must use i18n');
 
-console.log('SMOKE_OK i18n-locale: Tips/VERLOREN + #273 coverage + #283 overlays (EN-first, no Dutch leak stubs)');
+const speel = fs.readFileSync(path.join(root, 'speel.html'), 'utf8');
+if (!/id="stepsIos"/.test(speel)) fail('speel.html must restore #stepsIos for iPhone/iPad');
+if (/getElementById\('stepsIos'\)\.classList\.remove/.test(speel)) {
+  fail('speel.html must not unhide iOS steps via literal getElementById(stepsIos)');
+}
+if (!/var stepEl = document\.getElementById\(stepId\)/.test(speel)) fail('speel.html must null-guard install step card');
+if (!/var SPEEL_I18N = \{/.test(speel)) fail('speel.html must wire landing i18n');
+for (const loc of ['nl:', 'en:', 'de:', 'fr:', 'es:']) {
+  if (!speel.includes(loc)) fail('speel.html SPEEL_I18N missing ' + loc);
+}
+if (!/ritualTitle: 'Heute'/.test(i18n + locales + deChrome)) fail('DE fomo.ritualTitle still English Today');
+if (!/ritualTitle: 'Aujourd/.test(i18n + locales)) fail('FR fomo.ritualTitle still English Today');
+if (!/ritualTitle: 'Hoy'/.test(i18n + locales)) fail('ES fomo.ritualTitle still English Today');
+if (/name: 'Fists'/.test(locales)) fail('FR/ES weapon overlay still has English Fists');
+if (/name: 'Ninja sword'/.test(locales)) fail('FR/ES weapon overlay still has English Ninja sword');
+if (/name: 'Energy blade'/.test(locales)) fail('FR/ES weapon overlay still has English Energy blade');
+if (!/name: 'Poings'/.test(locales)) fail('FR weapon vuist should be Poings');
+if (!/name: 'Puños'/.test(locales)) fail('ES weapon vuist should be Puños');
+if (!/continueLastMode: 'Dernier mode'/.test(locales)) fail('FR ui.continueLastMode missing');
+if (!/continueLastMode: 'Último modo'/.test(locales)) fail('ES ui.continueLastMode missing');
+if (!/Usine Allume-Bâton/.test(i18n)) fail('FR factory names still leftover English');
+if (!/Fábrica Palo-Mechero/.test(i18n)) fail('ES factory names still leftover English');
+if (!/Stock-Anzünder-Fabrik/.test(i18n)) fail('DE factory names still leftover English');
+if (/titleGreet: 'Hi, \{name\}'/.test((i18n.split(/\n\s+de:\s+\{/)[1] || '').split(/\n\s+fr:\s+\{/)[0] || '')) {
+  fail('DE menu.titleGreet still English Hi');
+}
+if (!/titleGreet: 'Hallo, \{name\}'/.test(i18n)) fail('DE menu.titleGreet must be Hallo');
+if (!/sfx: 'Ton'/.test(i18n)) fail('DE pause.sfx must be Ton not Sound');
+if (!/pressStart: 'Münze einwerfen'/.test(i18n)) fail('DE pressStart still insert coin');
+if (!/Energie-Spezials/.test(i18n)) fail('DE hub.skillsSub still English Energy specials');
+if (/install: \{ title: 'App'/.test(i18n)) fail('FR/ES/DE install.title still short App');
+if (!/Ajouter comme app/.test(i18n)) fail('FR install.title must be longer than App');
+if (!/Añadir como app/.test(i18n)) fail('ES install.title must be longer than App');
+if (/help: \{ title: 'Tips & controls' \}/.test(i18n.split(/\n\s+en:\s+\{/)[0])) fail('NL help.title still English Tips & controls');
+if (/playLinkOk:/.test(i18n.split(/\n\s+fr:\s+\{/)[1] || '') === false) fail('FR settings.playLinkOk missing');
+if (!/wild: 'Woods'/.test(catalog)) fail('EN dexBiome.wild must be Woods (no Dutch Woud leak)');
+if (!/wild: 'Wald'/.test(deChrome + locales)) fail('DE dexBiome.wild must be Wald');
+if (!/wild: 'Bois'/.test(locales)) fail('FR dexBiome.wild must be Bois');
+if (!/wild: 'Bosque'/.test(locales)) fail('ES dexBiome.wild must be Bosque');
+if (!/scrap: 'Scrap'/.test(catalog)) fail('EN dexBiome.scrap missing');
+if (!/scrap: 'Schrott'/.test(deChrome + locales)) fail('DE dexBiome.scrap must not stay Dutch Schroot');
+
+console.log('SMOKE_OK i18n-locale: Tips/VERLOREN + #273 coverage + #283 overlays + 2026-09-16 FR/ES/DE polish');
