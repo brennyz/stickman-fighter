@@ -24,6 +24,16 @@ must(html.includes('id="seasonOverlay"'), 'missing #seasonOverlay host');
 must(!/id="seasonOverlay"[^>]*class="[^"]*\bscreen\b/.test(html), '#seasonOverlay must not be a .screen');
 must(html.includes('styles/season-overlays.css'), 'index.html must link season-overlays.css');
 must(html.includes('styles/seasons.css'), 'index.html must link seasons.css (overlay owner)');
+must(html.includes('styles/season-motion.css'), 'index.html must link season-motion.css (halloween loops)');
+const motion = fs.readFileSync(path.join(root, 'styles/season-motion.css'), 'utf8');
+must(/pointer-events:\s*none\s*!important/.test(motion), 'season-motion must keep pointer-events:none');
+must(/prefers-reduced-motion:\s*reduce/.test(motion), 'season-motion must honor reduced-motion');
+must(/@keyframes sf-season-sway-tl/.test(motion) && /@keyframes sf-season-flicker/.test(motion),
+  'season-motion must define halloween sway + flicker');
+must(/\[data-season="halloween"\]/.test(motion), 'season-motion must scope halloween loops');
+must(!/#sfSeasonOverlay/.test(motion) && !/#sfSeasonOverlay/.test(html),
+  'do not invent #sfSeasonOverlay');
+must(sw.includes('./styles/season-motion.css'), 'sw.js precache missing season-motion.css');
 must(manifest.includes('src/ui/season-overlay.js'), 'manifest missing season-overlay.js');
 
 const slots = [
