@@ -79,6 +79,19 @@ class Monster {
     this.dashT = 0; this.telegraphT = 0; this.telegraphMax = 0; this.hopT = rand(0, 0.8);
     /** Soft-feel: langere dodge-telegraphs op golf 1 / vroege levels. */
     this.softTelegraph = !!opts.softTelegraph;
+    this.biomeId = (typeof speciesBiomeId === 'function')
+      ? speciesBiomeId(sp, spId)
+      : (sp && sp.biome) || 'classic';
+    this.biomeTelegraphMul = (typeof biomeTelegraphMul === 'function')
+      ? biomeTelegraphMul(this.biomeId)
+      : 1;
+    if (opts.levelN != null && typeof pickEnemyTechnique === 'function') {
+      this.enemyTechnique = pickEnemyTechnique(spId, opts.levelN, this.biomeId);
+      if (this.enemyTechnique) {
+        this.techniqueCD = rand(3.2, 6.5);
+        this.techniqueTelegraphT = 0;
+      }
+    }
     this.face = -1;
     this.enraged = false;
     this.phase2FlashT = 0;
@@ -136,7 +149,7 @@ class Monster {
       } else {
         this.x += dir * this.speed * spdMul * dt * 0.6;
         if (dist < 240 && this.atkCD <= 0) {
-          const wind = this.enraged ? 0.28 : (this.softTelegraph ? 0.88 : 0.45);
+          const wind = (this.enraged ? 0.28 : (this.softTelegraph ? 0.88 : 0.45)) * (this.biomeTelegraphMul || 1);
           this.telegraphT = wind;
           this.telegraphMax = wind;
           this.atkCD = rand(1.6, 2.6) / (this.enraged ? 1.25 : 1);
@@ -168,7 +181,7 @@ class Monster {
       } else {
         this.x += dir * this.speed * dt;
         if (dist < this.size + 48 && this.atkCD <= 0) {
-          const wind = this.softTelegraph ? 0.98 : 0.55;
+          const wind = (this.softTelegraph ? 0.98 : 0.55) * (this.biomeTelegraphMul || 1);
           this.telegraphT = wind;
           this.telegraphMax = wind;
           this.atkCD = 2.0;
@@ -206,7 +219,7 @@ class Monster {
         } else {
           this.x += dir * this.speed * spdMul * dt * 0.78;
           if (dist < 230 && this.atkCD <= 0) {
-            const wind = this.enraged ? 0.2 : (this.softTelegraph ? 0.58 : 0.36);
+            const wind = (this.enraged ? 0.2 : (this.softTelegraph ? 0.58 : 0.36)) * (this.biomeTelegraphMul || 1);
             this.telegraphT = wind;
             this.telegraphMax = wind;
             this.atkCD = rand(1.35, 2.1) / (this.enraged ? 1.25 : 1);

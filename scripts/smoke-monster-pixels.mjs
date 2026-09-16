@@ -16,6 +16,10 @@ const NEED_ART = [
   'cow', 'pig', 'chicken', 'sheep', 'horse', 'goat', 'duck', 'rooster', 'donkey', 'goose',
   'elephant', 'lion', 'tiger', 'giraffe', 'hippo', 'rhino', 'gorilla', 'zebra', 'bear', 'croc',
   'kangaroo', 'panda', 'flamingo', 'camel',
+  'wolf', 'owl', 'frog', 'snake', 'boar',
+  'skeleton', 'mummy', 'beetle', 'wasp', 'spider',
+  'drone', 'bot', 'scrapdog', 'penguin', 'yeti',
+  'crab', 'turtle', 'squid',
 ];
 const NEED_SP = [
   'holkoe', 'razendzwijn', 'kipophol', 'razendeschaap', 'holpaard', 'kopstootgeit',
@@ -84,19 +88,48 @@ if (!artOnly) fail('draw elephant art fallback false');
 const miss = ctx.drawMonsterPixelArt(stub, { art: 'nope-pixel' }, 20, 0, false, false);
 if (miss) fail('unknown art should fallback');
 
+const W2_P1_DEDICATED = [
+  'wolf', 'owl', 'frog', 'snake', 'boar',
+  'skeleton', 'mummy', 'beetle', 'wasp', 'spider',
+  'drone', 'bot', 'scrapdog', 'penguin', 'yeti',
+  'crab', 'turtle', 'squid',
+];
+for (const art of W2_P1_DEDICATED) {
+  const paintedP1 = [];
+  const p1Stub = {
+    imageSmoothingEnabled: true,
+    fillStyle: '',
+    fillRect(x, y, w, h) { paintedP1.push([x, y, w, h, this.fillStyle]); },
+  };
+  const okP1 = ctx.drawMonsterPixelArt(p1Stub, { art, c1: '#c98850', c2: '#6b4a28' }, 20, 0, false, false);
+  if (!okP1) fail('W2 P1 dedicated should paint without .pixel alias: ' + art);
+  if (paintedP1.length < 6) fail('W2 P1 painted too few rects: ' + art + ' ' + paintedP1.length);
+}
+
 const W2_ALIAS_PAINT = {
-  wolf: 'fox', owl: 'bat', frog: 'slime', snake: 'croc', boar: 'pig',
   raven: 'bat', moose: 'cow', beaver: 'pig', badger: 'hedgehog', stag: 'horse',
-  lynx: 'tiger', mole: 'slime', skeleton: 'ghost', mummy: 'golem', beetle: 'hedgehog',
-  wasp: 'bat', spider: 'octo', wisp: 'ghost', gargoyle: 'dragon', lich: 'ghost',
-  drone: 'can', bot: 'can', scrapdog: 'fox', cog: 'can', turret: 'can',
-  rivet: 'golem', junkbat: 'bat', piston: 'golem', penguin: 'duck', yeti: 'bear',
-  walrus: 'hippo', seal: 'duck', crab: 'hedgehog', turtle: 'golem', squid: 'octo',
-  ray: 'shark',
+  lynx: 'tiger', mole: 'slime', wisp: 'ghost', gargoyle: 'dragon', lich: 'ghost',
+  cog: 'can', turret: 'can', rivet: 'golem', junkbat: 'bat', piston: 'golem',
+  walrus: 'hippo', seal: 'duck', ray: 'shark',
+  hawk: 'bat', ram: 'goat', cougar: 'tiger', weasel: 'fox', porcupine: 'hedgehog',
+  toad: 'slime', ghoul: 'ghost', wraith: 'ghost', bonehound: 'fox', revenant: 'golem',
+  shade: 'ghost', welder: 'can', sawbot: 'can', rustmite: 'hedgehog', furnace: 'golem',
+  coil: 'can', mammoth: 'elephant', urchin: 'hedgehog',
 };
 for (const [w2, pixel] of Object.entries(W2_ALIAS_PAINT)) {
   const okAlias = ctx.drawMonsterPixelArt(stub, { art: w2, pixel, c1: '#c98850', c2: '#6b4a28' }, 20, 0, false, false);
-  if (!okAlias) fail('W2 alias should paint ' + w2 + ' → ' + pixel);
+  if (!okAlias) fail('catalog alias should paint ' + w2 + ' → ' + pixel);
+}
+
+const P1_OLD_ALIAS = {
+  wolf: 'fox', owl: 'bat', frog: 'slime', snake: 'croc', boar: 'pig',
+  skeleton: 'ghost', mummy: 'golem', beetle: 'hedgehog', wasp: 'bat', spider: 'octo',
+  drone: 'can', bot: 'can', scrapdog: 'fox', penguin: 'duck', yeti: 'bear',
+  crab: 'hedgehog', turtle: 'golem', squid: 'octo',
+};
+for (const [p1, old] of Object.entries(P1_OLD_ALIAS)) {
+  if (!art[p1] || !art[old]) fail('uniqueness compare missing map ' + p1 + '/' + old);
+  if (art[p1] === art[old]) fail('P1 map still equals old alias: ' + p1 + ' === ' + old);
 }
 
 if (!fs.existsSync(path.join(dir, 'preview.html'))) fail('preview.html missing');

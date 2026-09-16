@@ -974,6 +974,13 @@
       "status": "done-in-code",
       "updated": "2026-09-16",
       "notes": "Look-only. Do not rebuild gear data model or char-slot UI."
+    },
+    {
+      "id": "w-20260916T110111",
+      "from": "user",
+      "text": "GROTE monster doorontwikkeling (Wave 3): unieke W2 P1 art, catalog +120–180, biome combat feel, boek UX, draft PR",
+      "status": "done-in-code",
+      "updated": "2026-09-16"
     }
   ],
   "agentRules": [

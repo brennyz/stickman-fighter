@@ -1163,7 +1163,7 @@ overlayI18nCatalog(CATALOG_DE, {
     colossalBossName: 'KOLOSSAL {name}!', bossNamed: 'BOSS — {name}!', eliteNamed: 'ELITE — {name}!',
     flyerWave: 'FLIEGER-WELLE', rushWave: 'RUSH-WELLE', eliteTraitWave: 'ELITE-WELLE', tideWave: 'TIDE-WELLE',
     ranchWave: 'FARM AMOK', safariWave: 'ZOO-AUSBRUCH',
-    woodsWave: 'WALD-WELLE', cryptWave: 'KRYPTEN-WELLE', scrapWave: 'SCHROTT-WELLE',
+    woodsWave: 'WALD-WELLE', frostWave: 'FROST-WELLE', cryptWave: 'KRYPTEN-WELLE', scrapWave: 'SCHROTT-WELLE', reefWave: 'RIFF-WELLE',
     emberWave: 'EMBER-WELLE · 2.0', painWave: 'SCHMERZ-WELLE · 3.0',
     waveClear: 'Welle klar +{heal} HP', waveN: 'WELLE {n}/{total}',
     fight: 'KÄMPF!', levelClear: 'LEVEL {n} FERTIG!', won: 'GEWONNEN!', lost: 'VERLOREN',

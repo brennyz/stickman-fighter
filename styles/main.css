@@ -1848,8 +1848,10 @@
   .lvl-wave-dot.trait-ranch { background:rgba(232,201,138,.92); }
   .lvl-wave-dot.trait-safari { background:rgba(67,178,91,.92); box-shadow:0 0 3px rgba(67,178,91,.35); }
   .lvl-wave-dot.trait-woods { background:rgba(110,224,110,.92); box-shadow:0 0 3px rgba(110,224,110,.35); }
+  .lvl-wave-dot.trait-frost { background:rgba(168,224,255,.95); box-shadow:0 0 3px rgba(168,224,255,.4); }
   .lvl-wave-dot.trait-crypt { background:rgba(196,122,255,.9); box-shadow:0 0 3px rgba(196,122,255,.35); }
   .lvl-wave-dot.trait-scrap { background:rgba(159,178,200,.92); }
+  .lvl-wave-dot.trait-reef { background:rgba(74,159,255,.95); box-shadow:0 0 3px rgba(74,159,255,.4); }
   .lvl-wave-dot.trait-tide { background:rgba(74,159,255,.9); }
   .lvl-stars { display:block; font-size:11px; color:#ffd75e; letter-spacing:1px; margin-top:3px; }
   .lvl-stars-empty { color:rgba(255,215,94,.42); }
