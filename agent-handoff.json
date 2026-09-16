@@ -43,7 +43,7 @@
       "id": "w-20260916T110100",
       "from": "user",
       "text": "Improve equip look (menu+combat offsets/layers/tint/pixel-align). P0: Styles head vanishes on apply/preview — head must stay visible or be replaced by a style headpiece. Versus out of scope. PR #276 already merged; stay on visual attachment + Styles head.",
-      "status": "doing",
+      "status": "done-in-code",
       "updated": "2026-09-16",
       "notes": "Look-only. Do not rebuild gear data model or char-slot UI."
     },
@@ -915,6 +915,10 @@
   ],
   "sessionLog": [
     {
+      "at": "2026-09-16T11:35:10Z",
+      "summary": "Styles-hoofd blijft zichtbaar (contrast + kin-restroke + camera); gear-sit menu/combat. v1.18.168 / SW 378. PR #301."
+    },
+    {
       "at": "2026-09-14T20:20:40Z",
       "summary": "Boot-hotfix LIVE op origin/main: game.js parseerde niet (gotoW + SEASON_ART_SLOTS). v1.18.167 / SW 377. Verse versie na Pages."
     },
@@ -1009,10 +1013,6 @@
     {
       "at": "2026-09-14T12:35:18Z",
       "summary": "SATAN-kaart dikkere duivel, groter portret, korte copy, hitte-balk zonder dubbele tekst · v1.18.155 / SW 365"
-    },
-    {
-      "at": "2026-09-14T12:31:31Z",
-      "summary": "Start SATAN-kaart kwaliteit: dikkere duivel, minder dubbele tekst"
     }
   ],
   "implementedFeaturesSummary": "d18 char select deel 1+2 (v1.11.1-2); Mats coinrun + shuriken mik/vliegers + anti-spam (v1.12.0); speel.html (v1.12.2+). Zie HANDOFF-ZOEKINDEX.md en improvement-d20-bag.json userFeatureLog.",
