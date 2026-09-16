@@ -323,9 +323,9 @@ const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const VERSION_UPDATE_SAVE_KEY = 'stickfighter_version_update_save_v1';
 const VERSION_UPDATE_FLAG_KEY = 'stickfighter_version_update_flag_v1';
 const SAVE_EXPORT_SCHEMA = 3;
-const APP_VERSION = '1.18.165';
+const APP_VERSION = '1.18.166';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 375;
+const SW_CACHE_REV = 376;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', petCoins: 0, dex: {}, summons: {}, pets: {}, activePet: null,
   eggPets: {}, activeEggPet: null, eggDaily: null,
   chestDaily: null, chestWeapons: {},
@@ -2017,6 +2017,7 @@ const I18N = {
       skills: 'Skills', skillsSub: 'Energy specials · Spiral Orb · Wave Cannon',
       upgrades: 'Upgrades', upgradesSub: 'Shards · technique uitrusten',
       dex: 'Monsterboek', dexSub: '{n} soorten · rariteit = HP · boerderij · zoo · zee',
+      buildings: 'Fabrieken', buildingsSub: 'Werken · oogst · upgrade',
       modes3: '3 snelle modi', fightersLocal: '20 vechters · lokaal', vsRecord: '{w}/{m} gewonnen',
       loadFail: 'Hub laden mislukt',
     },
@@ -2080,18 +2081,87 @@ const I18N = {
     },
     buildings: {
       title: 'Fabrieken',
-      sub: 'Eiland-fabrieken · levels · timed resources — stub voor UI/art/powers',
+      sub: 'Tik een fabriek · resource = ophalen',
+      subDetail: 'Tik Ophalen of Upgrade',
+      subUpgrade: 'Kosten en wat het volgende level doet',
       loadFail: 'Fabrieken laden mislukt',
       build: 'Bouwen', collect: 'Ophalen', upgrade: 'Upgrade',
-      buildHint: 'Bouwen als eiland open is',
+      buildHint: 'Bouwen als je het kunt betalen',
+      buildDone: 'Gebouwd · Lv 1',
+      buildFail: 'Bouwen lukte niet',
+      collectSub: '{n} {res} klaar',
+      collectEmpty: 'Hopper leeg — wacht op productie',
+      collectDone: '+{n} {res} in je voorraad',
+      upgradeOpen: 'Kosten & volgend level',
+      upgradeTitle: 'Upgrade {name}',
+      upgradeGo: 'Betaal en +1 level',
+      upgradeBroke: 'Niet genoeg — {cost}',
+      upgradeDone: 'Upgrade · Lv {n}',
+      upgradeFail: 'Upgrade lukte niet',
+      upgradeMax: 'Max level',
+      needBuild: 'Eerst bouwen',
+      cost: 'Kosten',
+      costPc: '{n} PC',
+      costRes: '{n} {res}',
+      sheetClose: 'Sluiten',
+      backList: '← Fabrieken',
       lockedWorld: 'Unlock: eiland {n}',
+      lockedWorldNamed: 'Nog dicht — speel {name} (eiland {n}) vrij.',
+      lockedShort: 'Op slot',
+      notBuilt: 'Niet gebouwd',
+      levelOf: 'Lv {n}/{max}',
       rateLine: '{n}/uur · {pending} wacht · cap {cap}',
+      islandFallback: 'eiland {n}',
+      walletPc: 'Pet coins {n}',
+      walletRate: '+{n}/uur',
+      walletIdle: '—',
+      walletAria: 'Je voorraad',
+      pillStored: '{res} {n}',
+      pillRes: '{res}',
+      desc: {
+        produce: 'Maakt {res}: {n}/uur · hopper max {cap}.',
+        produceUnbuilt: 'Bouwen: maakt daarna {res} ({n}/uur).',
+        produceLocked: 'Gaat {res} maken na unlock + bouwen.',
+        powerOn: 'Kracht rank {rank}: {label} — {blurb}',
+        powerNone: 'Geen kracht tot de fabriek gebouwd is.',
+        does: '{res} {n}/uur · {power}',
+        doesUnbuilt: 'Maakt {res} · bouw om te starten',
+        nextLv: 'Lv {n}: {res} {rate}/uur · cap {cap}{power}',
+        nextPower: ' · nieuwe kracht: {label}',
+      },
       stick_lighter: { name: 'Stok-Aansteker Fabriek', blurb: 'Scheef schuurtje dat stokken tegen elkaar wrijft tot ze vonken geven.' },
       woodchip_glue: { name: 'Houtsnipper-Lijm Fabriek', blurb: 'Kookt zaagsel tot een pasta die harder plakt dan een combo. Niet likken.' },
       chipping_wood: { name: 'Versnipper-Hout Fabriek', blurb: 'Vrolijke versnipperaar die TIMBER fluistert en nuttige snippers hoest.' },
       bamboo_boesa: { name: 'Bamboe-Boesa Ketel', blurb: 'Vuur-ketel die holle boesa-bamboe stoomt tot de stengels fluiten.' },
       echo_whistle: { name: 'Echo-Fluitmolen', blurb: 'Molenrad dat lucht tot taunts maalt. Het gebouw scheldt terug.' },
       res: { spark: 'Vonken', glue: 'Lijm', chip: 'Snippers', steam: 'Stoom', echo: 'Echo' },
+      power: {
+        spark_kindle: { label: 'Vonken-aansteek', blurb: 'Eerste melee-tik per golf laat een vonkje achter.' },
+        kindle_trail: { label: 'Vonken-spoor', blurb: 'Lopen strooit korte vonk-kruimels.' },
+        ember_pocket: { label: 'Gloed-zak', blurb: 'Wapenslagen kunnen een extra vonk-tik doen.' },
+        flare_step: { label: 'Vlam-stap', blurb: 'Korte dash met een brandlijn.' },
+        matchstick_storm: { label: 'Lucifer-storm', blurb: 'Regen van lucifers — korte vuurcone.' },
+        sticky_soles: { label: 'Plakzolen', blurb: 'Minder knockback — laarzen blijven plakken.' },
+        tacky_block: { label: 'Kleef-block', blurb: 'Block houdt een tik langer.' },
+        glue_trap: { label: 'Lijmval', blurb: 'Plas die het eerste monster vertraagt.' },
+        paste_armor: { label: 'Pasta-pantser', blurb: 'Dun lijmschild bij golfstart.' },
+        chip_golem: { label: 'Snipper-golem', blurb: 'Start elke golf met snipper-pants.' },
+        splinter_edge: { label: 'Splinter-rand', blurb: 'Wapenslagen gooien een extra splinter.' },
+        chip_spray: { label: 'Snipper-sproei', blurb: 'Combo\'s hoesten extra snippers.' },
+        sawdust_cloud: { label: 'Zaagsel-wolk', blurb: 'Korte miss-nevel voor je.' },
+        hopper_guard: { label: 'Hopper-wacht', blurb: 'Eerste hit per golf is zachter.' },
+        chipper_fury: { label: 'Versnipper-woede', blurb: 'Hoge combo\'s sproeien splinters.' },
+        boiler_hiss: { label: 'Ketel-sissen', blurb: 'Dichtbij-hitte tikt drukkers.' },
+        bamboo_vent: { label: 'Bamboe-ventiel', blurb: 'Dash blaast een stoomduw.' },
+        bamboo_burst: { label: 'Bamboe-stoot', blurb: 'Stoomstoot — korte cone, harde duw.' },
+        pressure_cook: { label: 'Druk-kook', blurb: 'Combo\'s bouwen een hitte-pip.' },
+        boesa_overheat: { label: 'Boesa-oververhitting', blurb: 'Lage HP: extra vuur-tik.' },
+        taunt_toot: { label: 'Spot-toot', blurb: 'Korte fluit — dichtstbijzijnde vijand kijkt naar jou.' },
+        mill_heckle: { label: 'Molen-scheld', blurb: 'Een hit krijgen fluit een mini-taunt.' },
+        echo_ridge: { label: 'Echo-richel', blurb: 'Kills laten een stun-rimpel.' },
+        ridge_reply: { label: 'Richel-antwoord', blurb: 'Perfect block echo\'t een stun-pip.' },
+        whistle_chorus: { label: 'Fluit-koor', blurb: 'Gebied-taunt + korte stun.' },
+      },
     },
     rarity: { common: 'Gewoon', uncommon: 'Ongewoon', rare: 'Zeldzaam', epic: 'Episch', legendary: 'Legendarisch', mythic: 'Mythisch', nightmare: 'Nachtmerrie', hell: 'Hel' },
     audio: {
@@ -2144,6 +2214,7 @@ const I18N = {
       skills: 'Skills', skillsSub: 'Energy specials · Spiral Orb · Wave Cannon',
       upgrades: 'Upgrades', upgradesSub: 'Shards · equip a technique',
       dex: 'Monster book', dexSub: '{n} species · rarity = HP · farm · zoo · sea',
+      buildings: 'Factories', buildingsSub: 'Works · collect · upgrade',
       modes3: '3 quick modes', fightersLocal: '20 fighters · local', vsRecord: '{w}/{m} won',
       loadFail: 'Could not load hub',
     },
@@ -2207,18 +2278,87 @@ const I18N = {
     },
     buildings: {
       title: 'Factories',
-      sub: 'Island factories · levels · timed resources — stub for UI/art/powers',
+      sub: 'Tap a factory · resource = collect',
+      subDetail: 'Tap Collect or Upgrade',
+      subUpgrade: 'Cost and what the next level does',
       loadFail: 'Could not load factories',
       build: 'Build', collect: 'Collect', upgrade: 'Upgrade',
-      buildHint: 'Build once the island is open',
+      buildHint: 'Build when you can pay',
+      buildDone: 'Built · Lv 1',
+      buildFail: 'Could not build',
+      collectSub: '{n} {res} ready',
+      collectEmpty: 'Hopper empty — wait for production',
+      collectDone: '+{n} {res} in your wallet',
+      upgradeOpen: 'Cost & next level',
+      upgradeTitle: 'Upgrade {name}',
+      upgradeGo: 'Pay and +1 level',
+      upgradeBroke: 'Not enough — {cost}',
+      upgradeDone: 'Upgrade · Lv {n}',
+      upgradeFail: 'Upgrade failed',
+      upgradeMax: 'Max level',
+      needBuild: 'Build first',
+      cost: 'Cost',
+      costPc: '{n} PC',
+      costRes: '{n} {res}',
+      sheetClose: 'Close',
+      backList: '← Factories',
       lockedWorld: 'Unlock: island {n}',
+      lockedWorldNamed: 'Locked — clear {name} (island {n}) first.',
+      lockedShort: 'Locked',
+      notBuilt: 'Not built',
+      levelOf: 'Lv {n}/{max}',
       rateLine: '{n}/hr · {pending} waiting · cap {cap}',
+      islandFallback: 'island {n}',
+      walletPc: 'Pet coins {n}',
+      walletRate: '+{n}/hr',
+      walletIdle: '—',
+      walletAria: 'Your resources',
+      pillStored: '{res} {n}',
+      pillRes: '{res}',
+      desc: {
+        produce: 'Makes {res}: {n}/hr · hopper max {cap}.',
+        produceUnbuilt: 'Build: then makes {res} ({n}/hr).',
+        produceLocked: 'Will make {res} after unlock + build.',
+        powerOn: 'Power rank {rank}: {label} — {blurb}',
+        powerNone: 'No power until the factory is built.',
+        does: '{res} {n}/hr · {power}',
+        doesUnbuilt: 'Makes {res} · build to start',
+        nextLv: 'Lv {n}: {res} {rate}/hr · cap {cap}{power}',
+        nextPower: ' · new power: {label}',
+      },
       stick_lighter: { name: 'Stick-Lighter Factory', blurb: 'A lopsided woodshed that rubs sticks together until they sulk into sparks.' },
       woodchip_glue: { name: 'Woodchip-Glue Factory', blurb: 'Boils yesterday’s sawdust into a paste that sticks harder than a combo. Do not lick.' },
       chipping_wood: { name: 'Chipping-Wood Factory', blurb: 'A cheerful chipper that whispers TIMBER and coughs useful chips.' },
       bamboo_boesa: { name: 'Bamboo-Boesa Boiler', blurb: 'Fire-island kettle that steams hollow “boesa” bamboo until the stalks whistle.' },
       echo_whistle: { name: 'Echo-Whistle Mill', blurb: 'A mill wheel that turns air into taunts. The building heckles you back.' },
       res: { spark: 'Spark', glue: 'Glue', chip: 'Chip', steam: 'Steam', echo: 'Echo' },
+      power: {
+        spark_kindle: { label: 'Spark Kindle', blurb: 'First melee chip each wave leaves a tiny ember.' },
+        kindle_trail: { label: 'Kindle Trail', blurb: 'Walking drops brief ember crumbs.' },
+        ember_pocket: { label: 'Ember Pocket', blurb: 'Weapon hits can pop a spark chip.' },
+        flare_step: { label: 'Flare Step', blurb: 'Short dash that leaves a burn line.' },
+        matchstick_storm: { label: 'Matchstick Storm', blurb: 'Shower of lit sticks — short fire cone.' },
+        sticky_soles: { label: 'Sticky Soles', blurb: 'Take less knockback — boots remember the floor.' },
+        tacky_block: { label: 'Tacky Block', blurb: 'Block holds a beat longer.' },
+        glue_trap: { label: 'Glue Trap', blurb: 'Puddle that slows the first monster through it.' },
+        paste_armor: { label: 'Paste Armor', blurb: 'Thin glue shield at wave start.' },
+        chip_golem: { label: 'Chip Golem', blurb: 'Start each wave with chip-armor.' },
+        splinter_edge: { label: 'Splinter Edge', blurb: 'Weapon hits fling a bonus splinter.' },
+        chip_spray: { label: 'Chip Spray', blurb: 'Combos cough extra chips.' },
+        sawdust_cloud: { label: 'Sawdust Cloud', blurb: 'Brief miss-haze in front of you.' },
+        hopper_guard: { label: 'Hopper Guard', blurb: 'First hit each wave is a bit softer.' },
+        chipper_fury: { label: 'Chipper Fury', blurb: 'High combos spray splinters.' },
+        boiler_hiss: { label: 'Boiler Hiss', blurb: 'Close-range heat aura chips crowders.' },
+        bamboo_vent: { label: 'Bamboo Vent', blurb: 'Dash puffs a steam shove.' },
+        bamboo_burst: { label: 'Bamboo Burst', blurb: 'Steam knock — short cone, heavy shove.' },
+        pressure_cook: { label: 'Pressure Cook', blurb: 'Combos build a heat pip.' },
+        boesa_overheat: { label: 'Boesa Overheat', blurb: 'Low HP: extra fire chip.' },
+        taunt_toot: { label: 'Taunt Toot', blurb: 'Short whistle — nearest foe faces you.' },
+        mill_heckle: { label: 'Mill Heckle', blurb: 'Taking a hit toots a tiny taunt.' },
+        echo_ridge: { label: 'Echo Ridge', blurb: 'Kills leave a sound-stun ripple.' },
+        ridge_reply: { label: 'Ridge Reply', blurb: 'Perfect block echoes a stun pip.' },
+        whistle_chorus: { label: 'Whistle Chorus', blurb: 'Area taunt + brief stun.' },
+      },
     },
     rarity: { common: 'Common', uncommon: 'Uncommon', rare: 'Rare', epic: 'Epic', legendary: 'Legendary', mythic: 'Mythic', nightmare: 'Nightmare', hell: 'Hell' },
     audio: {
@@ -2258,6 +2398,7 @@ const I18N = {
       skills: 'Skills', skillsSub: 'Energy specials · Spiral Orb · Wave Cannon',
       upgrades: 'Upgrades', upgradesSub: 'Splitter · Technik ausrüsten',
       dex: 'Monsterbuch', dexSub: '{n} Arten · Seltenheit = HP · Farm · Zoo · Meer',
+      buildings: 'Fabriken', buildingsSub: 'Werke · ernten · upgrade',
       modes3: '3 schnelle Modi', fightersLocal: '20 Kämpfer · lokal', vsRecord: '{w}/{m} Siege',
       loadFail: 'Hub laden fehlgeschlagen',
     },
@@ -2339,6 +2480,7 @@ const I18N = {
       skills: 'Skills', skillsSub: 'Spéciaux énergie · Spiral Orb · Wave Cannon',
       upgrades: 'Amélios', upgradesSub: 'Éclats · équiper une technique',
       dex: 'Bestiaire', dexSub: '{n} espèces · rareté = PV · ferme · zoo · mer',
+      buildings: 'Usines', buildingsSub: 'Ateliers · récolte · upgrade',
       modes3: '3 modes rapides', fightersLocal: '20 combattants · local', vsRecord: '{w}/{m} victoires',
       loadFail: 'Hub introuvable',
     },
@@ -2420,6 +2562,7 @@ const I18N = {
       skills: 'Skills', skillsSub: 'Especiales energía · Spiral Orb · Wave Cannon',
       upgrades: 'Mejoras', upgradesSub: 'Fragmentos · equipar técnica',
       dex: 'Bestiario', dexSub: '{n} especies · rareza = HP · granja · zoo · mar',
+      buildings: 'Fábricas', buildingsSub: 'Obras · cosecha · mejora',
       modes3: '3 modos rápidos', fightersLocal: '20 luchadores · local', vsRecord: '{w}/{m} ganados',
       loadFail: 'No se pudo cargar el hub',
     },
@@ -2633,6 +2776,7 @@ function applyLangStaticScreens() {
     ['btnStyle', 'hub.style', 'hub.styleSub'],
     ['btnSkills', 'hub.skills', 'hub.skillsSub'],
     ['btnUpgrades', 'hub.upgrades', 'hub.upgradesSub'],
+    ['btnBuildings', 'hub.buildings', 'hub.buildingsSub'],
     ['btnDex', 'hub.dex', 'hub.dexSub'],
   ];
   for (const [id, titleKey, subKey] of modeRows) {
@@ -7633,6 +7777,82 @@ function buildingResourceLabel(resId) {
   return fallback;
 }
 
+function buildingTxt(key, fallback, params) {
+  if (typeof tOr === 'function') return tOr(key, fallback, params);
+  if (!fallback) return key;
+  if (!params) return fallback;
+  let out = String(fallback);
+  for (const [k, v] of Object.entries(params)) out = out.split('{' + k + '}').join(String(v));
+  return out;
+}
+
+function buildingPowerLabel(power) {
+  if (!power) return '';
+  return buildingTxt('buildings.power.' + power.id + '.label', power.label || power.id);
+}
+
+function buildingPowerBlurb(power) {
+  if (!power) return '';
+  return buildingTxt('buildings.power.' + power.id + '.blurb', power.blurb || '');
+}
+
+function buildingCostLabel(cost) {
+  if (!cost) return '';
+  const bits = [];
+  const pc = Math.max(0, Math.floor(Number(cost.petCoins) || 0));
+  if (pc) bits.push(buildingTxt('buildings.costPc', '{n} PC', { n: pc }));
+  const res = (cost.resources && typeof cost.resources === 'object') ? cost.resources : {};
+  for (const [k, v] of Object.entries(res)) {
+    const n = Math.max(0, Math.floor(Number(v) || 0));
+    if (!n) continue;
+    bits.push(buildingTxt('buildings.costRes', '{n} {res}', { n, res: buildingResourceLabel(k) }));
+  }
+  return bits.join(' · ');
+}
+
+function buildingArtSrc(id) {
+  const def = BUILDING_BY_ID[buildingCanonId(id)];
+  const canon = def ? def.id : buildingCanonId(id);
+  const stroke = (def && def.artHint && def.artHint.iconFile)
+    ? def.artHint.iconFile
+    : ('assets/buttons/modes/buildings-' + String(canon || '').replace(/_/g, '-') + '.svg');
+  return {
+    pixel: 'assets/buildings/' + canon + '.svg',
+    stroke,
+    hub: 'assets/buttons/hub/buildings.svg',
+  };
+}
+
+function buildingIslandName(world) {
+  const n = Math.max(1, Math.floor(Number(world) || 1));
+  try {
+    if (typeof islandLabel === 'function') return islandLabel(n, 'name');
+  } catch (_) {}
+  return buildingTxt('buildings.islandFallback', 'eiland {n}', { n });
+}
+
+function buildingWalletModel(st) {
+  const s = ensureBuildingSave(st);
+  if (s) buildingTickAll(s);
+  const wallet = buildingWallet(null, s);
+  const pc = Math.max(0, Math.floor(Number((buildingSaveRef(s) || {}).petCoins) || 0));
+  const resources = buildingResourceIds.map((id) => {
+    const def = BUILDINGS.find((b) => b.resourceId === id);
+    const built = !!(def && buildingBuilt(def.id, s));
+    const lv = def ? buildingLevel(def.id, s) : 0;
+    const out = built ? buildingOutputAtLevel(def, lv) : { perHour: 0, cap: 0 };
+    return {
+      id,
+      name: buildingResourceLabel(id),
+      amount: wallet[id] || 0,
+      rate: out.perHour || 0,
+      factoryId: def ? def.id : '',
+      built,
+    };
+  });
+  return { petCoins: pc, resources };
+}
+
 function buildingTooltipModel(id, st) {
   const def = BUILDING_BY_ID[buildingCanonId(id)];
   if (!def) return null;
@@ -7670,7 +7890,99 @@ function buildingTooltipModel(id, st) {
     powers: def.powers || [],
     powersUnlocked: powersOn,
     nextPower,
+    artSrc: buildingArtSrc(def.id),
+    nextCostLabel: buildingCostLabel(buildingNextCost(def.id, s)),
   };
+}
+
+/** UI copy model: produce line + power line, no hardcoded factory text in the screen. */
+function buildingDescModel(id, st) {
+  const tip = buildingTooltipModel(id, st);
+  if (!tip) return null;
+  const def = BUILDING_BY_ID[tip.id];
+  const islandName = buildingIslandName(tip.worldUnlock);
+  const lv0 = def && def.resource && def.resource.perHour ? (def.resource.perHour[0] || 0) : 0;
+  const unlockLine = tip.unlocked
+    ? ''
+    : buildingTxt('buildings.lockedWorldNamed', 'Nog dicht — speel {name} (eiland {n}) vrij.', {
+      name: islandName, n: tip.worldUnlock,
+    });
+  let produceLine;
+  if (!tip.unlocked) {
+    produceLine = buildingTxt('buildings.desc.produceLocked', 'Gaat {res} maken na unlock + bouwen.', {
+      res: tip.resourceName,
+    });
+  } else if (!tip.built) {
+    produceLine = buildingTxt('buildings.desc.produceUnbuilt', 'Bouwen: maakt daarna {res} ({n}/uur).', {
+      res: tip.resourceName, n: lv0,
+    });
+  } else {
+    produceLine = buildingTxt('buildings.desc.produce', 'Maakt {res}: {n}/uur · hopper max {cap}.', {
+      res: tip.resourceName, n: tip.outputRate, cap: tip.storageCap,
+    });
+  }
+  const currentPower = (def.powers || []).filter((p) => tip.powerRank >= p.rank).pop() || null;
+  const powerLine = currentPower
+    ? buildingTxt('buildings.desc.powerOn', 'Kracht rank {rank}: {label} — {blurb}', {
+      rank: tip.powerRank,
+      label: buildingPowerLabel(currentPower),
+      blurb: buildingPowerBlurb(currentPower),
+    })
+    : buildingTxt('buildings.desc.powerNone', 'Geen kracht tot de fabriek gebouwd is.');
+  const doesLine = !tip.unlocked
+    ? unlockLine
+    : !tip.built
+      ? buildingTxt('buildings.desc.doesUnbuilt', 'Maakt {res} · bouw om te starten', { res: tip.resourceName })
+      : buildingTxt('buildings.desc.does', '{res} {n}/uur · {power}', {
+        res: tip.resourceName,
+        n: tip.outputRate,
+        power: currentPower ? buildingPowerLabel(currentPower) : '—',
+      });
+  let nextLine = '';
+  if (tip.built && tip.level < tip.maxLevel) {
+    const nextLv = tip.level + 1;
+    const nextOut = buildingOutputAtLevel(def, nextLv);
+    const nextRank = buildingPowerRank(nextLv);
+    const newPower = (def.powers || []).find((p) => p.rank === nextRank && nextRank > tip.powerRank) || null;
+    const powerBit = newPower
+      ? buildingTxt('buildings.desc.nextPower', ' · nieuwe kracht: {label}', { label: buildingPowerLabel(newPower) })
+      : '';
+    nextLine = buildingTxt('buildings.desc.nextLv', 'Lv {n}: {res} {rate}/uur · cap {cap}{power}', {
+      n: nextLv, res: tip.resourceName, rate: nextOut.perHour, cap: nextOut.cap, power: powerBit,
+    });
+  } else if (tip.built && tip.level >= tip.maxLevel) {
+    nextLine = buildingTxt('buildings.upgradeMax', 'Max level');
+  } else if (!tip.built && tip.unlocked) {
+    const firstOut = buildingOutputAtLevel(def, 1);
+    const firstPower = (def.powers || []).find((p) => p.rank === 0) || null;
+    const powerBit = firstPower
+      ? buildingTxt('buildings.desc.nextPower', ' · nieuwe kracht: {label}', { label: buildingPowerLabel(firstPower) })
+      : '';
+    nextLine = buildingTxt('buildings.desc.nextLv', 'Lv {n}: {res} {rate}/uur · cap {cap}{power}', {
+      n: 1, res: tip.resourceName, rate: firstOut.perHour, cap: firstOut.cap, power: powerBit,
+    });
+  }
+  const powersDetail = (def.powers || []).map((p) => ({
+    id: p.id,
+    rank: p.rank,
+    kind: p.kind,
+    combatHook: p.combatHook,
+    label: buildingPowerLabel(p),
+    blurb: buildingPowerBlurb(p),
+    unlocked: tip.powerRank >= p.rank,
+  }));
+  return Object.assign({}, tip, {
+    produceLine,
+    powerLine,
+    doesLine,
+    unlockLine,
+    nextLine,
+    islandName,
+    currentPower: currentPower ? currentPower.id : '',
+    currentPowerLabel: currentPower ? buildingPowerLabel(currentPower) : '',
+    currentPowerBlurb: currentPower ? buildingPowerBlurb(currentPower) : '',
+    powersDetail,
+  });
 }
 
 function countBuildingLevels(st) {
@@ -7757,6 +8069,10 @@ try {
     globalThis.BUILDINGS = BUILDINGS;
     globalThis.BUILDING_BY_ID = BUILDING_BY_ID;
     globalThis.buildingResourceIds = buildingResourceIds;
+    globalThis.buildingDescModel = buildingDescModel;
+    globalThis.buildingWalletModel = buildingWalletModel;
+    globalThis.buildingArtSrc = buildingArtSrc;
+    globalThis.buildingCostLabel = buildingCostLabel;
   }
 } catch (_) {}
 /* --- src/data/summons.js --- */
@@ -32696,6 +33012,9 @@ const UI = {
         this.show('menuScreen');
         return;
       }
+      if (active === 'buildingsScreen' && typeof this.buildingsGoBack === 'function' && this.buildingsGoBack()) {
+        return;
+      }
       if (active === 'weaponScreen' || active === 'petScreen' || active === 'styleScreen' || active === 'skillScreen' || active === 'upgradeScreen' || active === 'dexScreen' || active === 'buildingsScreen') {
         this.openModeHub('collect');
         return;
@@ -33295,6 +33614,13 @@ const UI = {
         ? `${skillsN}/${SKILLS.length} · ${skillLabel(activeSk)} · ${superLabel(activeSp)}`
         : `${SKILLS.length} specials`);
       setStat('hubStatDex', `${dexCount()}/${SPECIES_ORDER.length} · +max HP`);
+      const bLv = (typeof countBuildingLevels === 'function') ? countBuildingLevels() : 0;
+      const readyB = (typeof BUILDING_IDS !== 'undefined' && typeof buildingCanCollect === 'function')
+        ? BUILDING_IDS.filter((id) => { try { return buildingCanCollect(id); } catch (_) { return false; } }).length
+        : 0;
+      setStat('hubStatBuildings', readyB > 0
+        ? ((typeof tOr === 'function') ? tOr('buildings.collectSub', '{n} klaar', { n: readyB, res: '' }) : (readyB + ' klaar'))
+        : ((typeof tOr === 'function') ? tOr('buildings.levelOf', 'Lv {n}/{max}', { n: bLv, max: 50 }) : ('Lv ' + bLv)));
     }
   },
 
@@ -34730,104 +35056,16 @@ const UI = {
     });
   },
 
+  // Buildings UX lives in src/ui/buildings-ui.js (overview → detail → upgrade).
+  buildingsView: 'list',
+  buildingsFocusId: null,
+  buildingsTick: 0,
   openBuildings() {
     this.safeOpen('buildingsScreen', () => this.renderBuildings(), {
       msg: (typeof tOr === 'function') ? tOr('buildings.loadFail', 'Fabrieken laden mislukt') : 'Fabrieken laden mislukt',
     });
   },
-
-  renderBuildings() {
-    const head = document.getElementById('buildingsScreenHead');
-    const sub = document.getElementById('buildingsScreenSub');
-    const list = document.getElementById('buildingsList');
-    const walletEl = document.getElementById('buildingsWallet');
-    if (head) head.textContent = (typeof tOr === 'function') ? tOr('buildings.title', 'Fabrieken') : 'Fabrieken';
-    if (sub) sub.textContent = (typeof tOr === 'function')
-      ? tOr('buildings.sub', 'Eiland-fabrieken · levels · timed resources — stub voor UI/art/powers')
-      : 'Eiland-fabrieken · levels · timed resources — stub voor UI/art/powers';
-    if (typeof buildingTickAll === 'function') buildingTickAll();
-    const ids = (typeof BUILDING_IDS !== 'undefined') ? BUILDING_IDS : [];
-    if (walletEl) {
-      const parts = [];
-      const wallet = (typeof buildingWallet === 'function') ? buildingWallet() : {};
-      const resIds = (typeof buildingResourceIds !== 'undefined') ? buildingResourceIds : Object.keys(wallet);
-      for (const id of resIds) {
-        const n = wallet[id] || 0;
-        if (!n) continue;
-        const label = (typeof buildingResourceLabel === 'function') ? buildingResourceLabel(id) : id;
-        parts.push(label + ' ' + n);
-      }
-      const pc = Math.max(0, Math.floor(Number(save && save.petCoins) || 0));
-      parts.unshift('PC ' + pc);
-      walletEl.textContent = parts.join(' · ');
-    }
-    if (!list) return;
-    const byId = {};
-    list.querySelectorAll('[data-factory-id]').forEach((el) => { byId[el.getAttribute('data-factory-id')] = el; });
-    for (const id of ids) {
-      const row = (typeof buildingTooltipModel === 'function') ? buildingTooltipModel(id) : null;
-      if (!row) continue;
-      let card = byId[id];
-      if (!card) {
-        card = document.createElement('div');
-        card.className = 'step-card building-stub-card';
-        card.setAttribute('data-factory-id', id);
-        list.appendChild(card);
-      }
-      card.innerHTML = '';
-      const title = document.createElement('b');
-      title.textContent = row.name + (row.built ? ` · Lv ${row.level}/${row.maxLevel} · rank ${row.powerRank}` : ' · —');
-      const meta = document.createElement('div');
-      meta.style.cssText = 'margin-top:4px;font-size:13px;line-height:1.4;opacity:.9';
-      const lock = row.unlocked
-        ? (row.built
-          ? ((typeof tOr === 'function')
-            ? tOr('buildings.rateLine', '{n}/uur · {pending} wacht · cap {cap}', {
-              n: row.outputRate, pending: row.pending, cap: row.storageCap,
-            })
-            : `${row.outputRate}/uur · ${row.pending} wacht · cap ${row.storageCap}`)
-          : ((typeof tOr === 'function') ? tOr('buildings.buildHint', 'Bouwen als eiland open is') : 'Bouwen als eiland open is'))
-        : ((typeof tOr === 'function')
-          ? tOr('buildings.lockedWorld', 'Unlock: eiland {n}', { n: row.worldUnlock })
-          : ('Unlock: eiland ' + row.worldUnlock));
-      meta.textContent = lock;
-      const powers = document.createElement('div');
-      powers.style.cssText = 'margin-top:4px;font-size:12px;opacity:.8';
-      powers.textContent = row.powersUnlocked.length
-        ? ('powers: ' + row.powersUnlocked.join(', '))
-        : (row.nextPower ? ('next power @ rank ' + row.nextPower.rank + ': ' + row.nextPower.id) : '');
-      card.appendChild(title);
-      card.appendChild(meta);
-      if (powers.textContent) card.appendChild(powers);
-      const actions = document.createElement('div');
-      actions.style.cssText = 'display:flex;gap:8px;flex-wrap:wrap;margin-top:8px';
-      const addBtn = (label, enabled, fn) => {
-        const btn = document.createElement('button');
-        btn.type = 'button';
-        btn.className = 'btn tog';
-        btn.textContent = label;
-        btn.disabled = !enabled;
-        if (enabled) btn.addEventListener('click', (e) => { e.preventDefault(); fn(); });
-        actions.appendChild(btn);
-      };
-      if (!row.built) {
-        addBtn((typeof tOr === 'function') ? tOr('buildings.build', 'Bouwen') : 'Bouwen', row.canBuild, () => {
-          buildingBuild(row.id);
-          this.renderBuildings();
-        });
-      } else {
-        addBtn((typeof tOr === 'function') ? tOr('buildings.collect', 'Ophalen') : 'Ophalen', row.canCollect, () => {
-          buildingCollect(row.id);
-          this.renderBuildings();
-        });
-        addBtn((typeof tOr === 'function') ? tOr('buildings.upgrade', 'Upgrade') : 'Upgrade', row.canUpgrade, () => {
-          buildingUpgrade(row.id);
-          this.renderBuildings();
-        });
-      }
-      card.appendChild(actions);
-    }
-  },
+  renderBuildings() {},
 
   renderUpgrades() {
     const tab = this.upgradeTab || 'skills';
@@ -35965,6 +36203,450 @@ const UI = {
   },
 };
 
+/* --- src/ui/buildings-ui.js --- */
+/* ======================== BUILDINGS UX ======================== */
+/** Overview → detail → upgrade sheet. Collect is one tap on the resource pill. */
+
+function buildingsEsc(s) {
+  return String(s == null ? '' : s)
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
+
+function buildingsT(key, fallback, params) {
+  if (typeof tOr === 'function') return tOr(key, fallback, params);
+  if (!params) return fallback || key;
+  let out = String(fallback || key);
+  for (const [k, v] of Object.entries(params)) out = out.split('{' + k + '}').join(String(v));
+  return out;
+}
+
+function buildingsRow(id) {
+  if (typeof buildingDescModel === 'function') return buildingDescModel(id);
+  if (typeof buildingTooltipModel === 'function') return buildingTooltipModel(id);
+  return null;
+}
+
+function buildingsArtHtml(row, size) {
+  const src = (row && row.artSrc) || (typeof buildingArtSrc === 'function' ? buildingArtSrc(row && row.id) : null) || {};
+  const pixel = src.pixel || ('assets/buildings/' + (row && row.id) + '.svg');
+  const stroke = src.stroke || src.hub || 'assets/buttons/hub/buildings.svg';
+  const w = size || 48;
+  return '<img class="buildings-art-img" data-buildings-art="' + buildingsEsc(row && row.id) + '"'
+    + ' src="' + buildingsEsc(pixel) + '" alt="" width="' + w + '" height="' + w + '"'
+    + ' decoding="async" draggable="false"'
+    + ' onerror="this.onerror=null;this.src=\'' + buildingsEsc(stroke) + '\'">';
+}
+
+function buildingsIds() {
+  return (typeof BUILDING_IDS !== 'undefined' && BUILDING_IDS.length)
+    ? BUILDING_IDS
+    : ['stick_lighter', 'woodchip_glue', 'chipping_wood', 'bamboo_boesa', 'echo_whistle'];
+}
+
+if (typeof UI === 'object' && UI) {
+  UI.buildingsView = UI.buildingsView || 'list';
+  UI.buildingsFocusId = UI.buildingsFocusId || null;
+  UI.buildingsTick = UI.buildingsTick || 0;
+
+  UI.openBuildings = function openBuildings() {
+    this.buildingsView = 'list';
+    this.buildingsFocusId = null;
+    this.stopBuildingsTick();
+    this.safeOpen('buildingsScreen', () => this.renderBuildings(), {
+      msg: buildingsT('buildings.loadFail', 'Fabrieken laden mislukt'),
+    });
+    this.startBuildingsTick();
+  };
+
+  UI.startBuildingsTick = function startBuildingsTick() {
+    this.stopBuildingsTick();
+    const self = this;
+    this.buildingsTick = setInterval(() => {
+      const scr = document.getElementById('buildingsScreen');
+      if (!scr || !scr.classList.contains('active')) {
+        self.stopBuildingsTick();
+        return;
+      }
+      try { self.renderBuildings({ quiet: true }); } catch (_) {}
+    }, 1000);
+  };
+
+  UI.stopBuildingsTick = function stopBuildingsTick() {
+    if (this.buildingsTick) {
+      try { clearInterval(this.buildingsTick); } catch (_) {}
+      this.buildingsTick = 0;
+    }
+  };
+
+  UI.buildingsGoBack = function buildingsGoBack() {
+    if (this.buildingsView === 'upgrade') {
+      this.buildingsView = 'detail';
+      this.renderBuildings();
+      return true;
+    }
+    if (this.buildingsView === 'detail') {
+      this.buildingsView = 'list';
+      this.buildingsFocusId = null;
+      this.renderBuildings();
+      return true;
+    }
+    this.stopBuildingsTick();
+    return false;
+  };
+
+  UI.openBuildingDetail = function openBuildingDetail(id) {
+    if (!id) return;
+    this.buildingsView = 'detail';
+    this.buildingsFocusId = id;
+    try { if (typeof AudioSys !== 'undefined') AudioSys.sfx('select'); } catch (_) {}
+    this.renderBuildings();
+  };
+
+  UI.openBuildingUpgrade = function openBuildingUpgrade(id) {
+    if (!id) return;
+    this.buildingsView = 'upgrade';
+    this.buildingsFocusId = id;
+    try { if (typeof AudioSys !== 'undefined') AudioSys.sfx('select'); } catch (_) {}
+    this.renderBuildings();
+  };
+
+  UI.renderBuildings = function renderBuildings() {
+    if (typeof buildingTickAll === 'function') buildingTickAll();
+    const head = document.getElementById('buildingsScreenHead');
+    const sub = document.getElementById('buildingsScreenSub');
+    if (head) head.textContent = buildingsT('buildings.title', 'Fabrieken');
+    if (sub) {
+      sub.textContent = this.buildingsView === 'detail'
+        ? buildingsT('buildings.subDetail', 'Tik Ophalen of Upgrade')
+        : this.buildingsView === 'upgrade'
+          ? buildingsT('buildings.subUpgrade', 'Kosten en wat het volgende level doet')
+          : buildingsT('buildings.sub', 'Tik een fabriek · resource = ophalen');
+    }
+    this.paintBuildingsWallet();
+    this.syncBuildingsPanes();
+    this.bindBuildingsChrome();
+    if (this.buildingsView === 'upgrade') this.paintBuildingsUpgrade(this.buildingsFocusId);
+    else if (this.buildingsView === 'detail') this.paintBuildingsDetail(this.buildingsFocusId);
+    else this.paintBuildingsOverview();
+    this.syncBuildingsBackLabel();
+  };
+
+  UI.syncBuildingsPanes = function syncBuildingsPanes() {
+    const overview = document.getElementById('buildingsOverview');
+    const detail = document.getElementById('buildingsDetail');
+    const sheet = document.getElementById('buildingsUpgradeSheet');
+    const view = this.buildingsView || 'list';
+    if (overview) overview.hidden = view !== 'list';
+    if (detail) detail.hidden = view !== 'detail' && view !== 'upgrade';
+    if (sheet) {
+      sheet.hidden = view !== 'upgrade';
+      sheet.setAttribute('aria-hidden', view === 'upgrade' ? 'false' : 'true');
+    }
+    const scr = document.getElementById('buildingsScreen');
+    if (scr) scr.setAttribute('data-buildings-view', view);
+  };
+
+  UI.syncBuildingsBackLabel = function syncBuildingsBackLabel() {
+    const back = document.querySelector('#buildingsScreen .back-btn[data-back]');
+    if (!back) return;
+    const ico = back.querySelector('.back-btn-ico');
+    const label = this.buildingsView === 'list'
+      ? buildingsT('back.collect', '← Collectie')
+      : buildingsT('buildings.backList', '← Fabrieken');
+    back.textContent = '';
+    if (ico) back.appendChild(ico);
+    back.appendChild(document.createTextNode(' ' + label.replace(/^←\s*/, '')));
+  };
+
+  UI.paintBuildingsWallet = function paintBuildingsWallet() {
+    const host = document.getElementById('buildingsWallet');
+    if (!host) return;
+    const model = (typeof buildingWalletModel === 'function')
+      ? buildingWalletModel()
+      : { petCoins: Math.max(0, Math.floor(Number(save && save.petCoins) || 0)), resources: [] };
+    const pc = model.petCoins || 0;
+    let html = '<div class="buildings-wallet-pc">'
+      + buildingsT('buildings.walletPc', 'Pet coins {n}', { n: pc })
+      + '</div><div class="buildings-wallet-row">';
+    const rows = model.resources && model.resources.length
+      ? model.resources
+      : (typeof buildingResourceIds !== 'undefined' ? buildingResourceIds : []).map((id) => ({
+        id, name: id, amount: 0, rate: 0, built: false,
+      }));
+    for (const res of rows) {
+      const hint = res.built && res.rate
+        ? buildingsT('buildings.walletRate', '+{n}/uur', { n: res.rate })
+        : buildingsT('buildings.walletIdle', '—');
+      html += '<div class="buildings-wallet-pill" data-res-id="' + buildingsEsc(res.id) + '">'
+        + '<span class="buildings-wallet-name">' + buildingsEsc(res.name) + '</span>'
+        + '<b class="buildings-wallet-amt">' + buildingsEsc(res.amount) + '</b>'
+        + '<span class="buildings-wallet-hint">' + buildingsEsc(hint) + '</span>'
+        + '</div>';
+    }
+    html += '</div>';
+    host.innerHTML = html;
+    host.setAttribute('aria-label', buildingsT('buildings.walletAria', 'Je voorraad'));
+  };
+
+  UI.paintBuildingsOverview = function paintBuildingsOverview() {
+    const list = document.getElementById('buildingsList');
+    if (!list) return;
+    const byId = {};
+    list.querySelectorAll('[data-factory-id]').forEach((el) => {
+      byId[el.getAttribute('data-factory-id')] = el;
+    });
+    for (const id of buildingsIds()) {
+      const row = buildingsRow(id);
+      if (!row) continue;
+      let card = byId[id];
+      if (!card) {
+        card = document.createElement('div');
+        card.setAttribute('role', 'listitem');
+        list.appendChild(card);
+      }
+      card.setAttribute('data-factory-id', id);
+      card.className = 'buildings-card'
+        + (row.unlocked ? '' : ' is-locked')
+        + (row.built ? ' is-built' : ' is-unbuilt')
+        + (row.canCollect ? ' is-ready' : '');
+      const lvBit = row.built
+        ? buildingsT('buildings.levelOf', 'Lv {n}/{max}', { n: row.level, max: row.maxLevel })
+        : (row.unlocked
+          ? buildingsT('buildings.notBuilt', 'Niet gebouwd')
+          : buildingsT('buildings.lockedShort', 'Op slot'));
+      const pillCls = 'buildings-res-pill'
+        + (row.canCollect ? ' is-collect' : '')
+        + (row.built ? '' : ' is-empty');
+      const pillLabel = row.built
+        ? buildingsT('buildings.pillStored', '{res} {n}', { res: row.resourceName, n: row.pending })
+        : buildingsT('buildings.pillRes', '{res}', { res: row.resourceName });
+      card.innerHTML =
+        '<button type="button" class="buildings-card-hit" data-factory-open="' + buildingsEsc(id) + '">'
+        + '<span class="buildings-card-art">' + buildingsArtHtml(row, 56) + '</span>'
+        + '<span class="buildings-card-body">'
+        + '<span class="buildings-card-name">' + buildingsEsc(row.name) + '</span>'
+        + '<span class="buildings-card-lv">' + buildingsEsc(lvBit) + '</span>'
+        + '<span class="buildings-card-does">' + buildingsEsc(row.doesLine || row.produceLine || '') + '</span>'
+        + '</span></button>'
+        + '<button type="button" class="' + pillCls + '" data-buildings-collect="' + buildingsEsc(id) + '"'
+        + (row.canCollect ? '' : ' disabled') + '>'
+        + buildingsEsc(pillLabel) + '</button>';
+    }
+  };
+
+  UI.paintBuildingsDetail = function paintBuildingsDetail(id) {
+    const host = document.getElementById('buildingsDetail');
+    if (!host) return;
+    const row = buildingsRow(id);
+    if (!row) {
+      host.innerHTML = '';
+      return;
+    }
+    const powers = (row.powersDetail || []).map((p) => {
+      const on = p.unlocked ? ' is-on' : '';
+      return '<li class="buildings-power' + on + '"><b>' + buildingsEsc(p.label) + '</b>'
+        + ' <span>rank ' + p.rank + '</span><div>' + buildingsEsc(p.blurb) + '</div></li>';
+    }).join('');
+    const lockBlock = row.unlockLine
+      ? '<div class="buildings-lock">' + buildingsEsc(row.unlockLine) + '</div>'
+      : '';
+    let primary = '';
+    if (row.built) {
+      primary += '<button type="button" class="btn mode-btn b-continue big-touch buildings-cta" id="btnBuildingCollect"'
+        + (row.canCollect ? '' : ' disabled') + '>'
+        + '<span class="ico"><img src="assets/buttons/chrome/claim.svg" alt="" width="28" height="28" decoding="async" draggable="false"></span>'
+        + '<div>' + buildingsEsc(buildingsT('buildings.collect', 'Ophalen'))
+        + '<small>' + buildingsEsc(row.canCollect
+          ? buildingsT('buildings.collectSub', '{n} {res} klaar', { n: row.pending, res: row.resourceName })
+          : buildingsT('buildings.collectEmpty', 'Hopper leeg — wacht op productie'))
+        + '</small></div></button>';
+      primary += '<button type="button" class="btn mode-btn b-skills big-touch buildings-cta" id="btnBuildingUpgradeOpen"'
+        + (row.level >= row.maxLevel ? ' disabled' : '') + '>'
+        + '<span class="ico"><img src="assets/buttons/modes/upgrades.svg" alt="" width="28" height="28" decoding="async" draggable="false"></span>'
+        + '<div>' + buildingsEsc(buildingsT('buildings.upgrade', 'Upgrade'))
+        + '<small>' + buildingsEsc(row.level >= row.maxLevel
+          ? buildingsT('buildings.upgradeMax', 'Max level')
+          : buildingsT('buildings.upgradeOpen', 'Kosten & volgend level'))
+        + '</small></div></button>';
+    } else if (row.unlocked) {
+      primary += '<button type="button" class="btn mode-btn b-continue big-touch buildings-cta" id="btnBuildingBuild"'
+        + (row.canBuild ? '' : ' disabled') + '>'
+        + '<span class="ico"><img src="assets/buttons/hub/buildings.svg" alt="" width="28" height="28" decoding="async" draggable="false"></span>'
+        + '<div>' + buildingsEsc(buildingsT('buildings.build', 'Bouwen'))
+        + '<small>' + buildingsEsc(row.nextCostLabel || buildingsT('buildings.buildHint', 'Bouwen als je het kunt betalen'))
+        + '</small></div></button>';
+    }
+    host.innerHTML =
+      '<div class="buildings-detail-art">' + buildingsArtHtml(row, 72) + '</div>'
+      + '<div class="buildings-detail-name">' + buildingsEsc(row.name)
+      + ' <span class="buildings-lv">' + buildingsEsc(row.built
+        ? buildingsT('buildings.levelOf', 'Lv {n}/{max}', { n: row.level, max: row.maxLevel })
+        : buildingsT('buildings.notBuilt', 'Niet gebouwd'))
+      + '</span></div>'
+      + '<p class="buildings-detail-blurb">' + buildingsEsc(row.blurb) + '</p>'
+      + lockBlock
+      + '<div class="buildings-detail-facts">'
+      + '<div>' + buildingsEsc(row.produceLine) + '</div>'
+      + '<div>' + buildingsEsc(row.powerLine) + '</div>'
+      + (row.nextLine ? '<div class="buildings-next">' + buildingsEsc(row.nextLine) + '</div>' : '')
+      + '</div>'
+      + '<button type="button" class="'
+      + (row.canCollect ? 'buildings-res-pill is-collect' : 'buildings-res-pill')
+      + '" data-buildings-collect="' + buildingsEsc(row.id) + '">'
+      + buildingsEsc(buildingsT('buildings.pillStored', '{res} {n}', { res: row.resourceName, n: row.pending || 0 }))
+      + '</button>'
+      + '<div class="buildings-cta-row">' + primary + '</div>'
+      + (powers ? '<ul class="buildings-power-list">' + powers + '</ul>' : '');
+  };
+
+  UI.paintBuildingsUpgrade = function paintBuildingsUpgrade(id) {
+    const host = document.getElementById('buildingsUpgradeSheet');
+    if (!host) return;
+    const row = buildingsRow(id);
+    if (!row) {
+      host.innerHTML = '';
+      return;
+    }
+    const can = !!row.canUpgrade;
+    const atMax = row.built && row.level >= row.maxLevel;
+    const reason = !row.built
+      ? buildingsT('buildings.needBuild', 'Eerst bouwen')
+      : atMax
+        ? buildingsT('buildings.upgradeMax', 'Max level')
+        : can
+          ? buildingsT('buildings.upgradeGo', 'Betaal en +1 level')
+          : buildingsT('buildings.upgradeBroke', 'Niet genoeg — {cost}', { cost: row.nextCostLabel || '—' });
+    host.innerHTML =
+      '<button type="button" class="buildings-sheet-backdrop" data-buildings-sheet-close aria-label="'
+      + buildingsEsc(buildingsT('buildings.sheetClose', 'Sluiten')) + '"></button>'
+      + '<div class="buildings-sheet-panel" role="dialog" aria-modal="true" aria-labelledby="buildingsUpgradeTitle">'
+      + '<h3 id="buildingsUpgradeTitle">' + buildingsEsc(buildingsT('buildings.upgradeTitle', 'Upgrade {name}', { name: row.name })) + '</h3>'
+      + '<p class="buildings-sheet-now">' + buildingsEsc(buildingsT('buildings.levelOf', 'Lv {n}/{max}', { n: row.level, max: row.maxLevel }))
+      + (row.nextLine ? ' → ' + buildingsEsc(row.nextLine) : '') + '</p>'
+      + '<p class="buildings-sheet-cost"><b>' + buildingsEsc(buildingsT('buildings.cost', 'Kosten')) + '</b> '
+      + buildingsEsc(row.nextCostLabel || buildingsT('buildings.upgradeMax', 'Max level')) + '</p>'
+      + '<p class="buildings-sheet-why">' + buildingsEsc(reason) + '</p>'
+      + '<div class="buildings-sheet-actions">'
+      + '<button type="button" class="btn tog" data-buildings-sheet-close>' + buildingsEsc(buildingsT('buildings.sheetClose', 'Sluiten')) + '</button>'
+      + '<button type="button" class="btn mode-btn b-continue" id="btnBuildingUpgradeDo"'
+      + (can ? '' : ' disabled') + '>' + buildingsEsc(buildingsT('buildings.upgrade', 'Upgrade')) + '</button>'
+      + '</div></div>';
+  };
+
+  UI.bindBuildingsChrome = function bindBuildingsChrome() {
+    const list = document.getElementById('buildingsList');
+    if (list && !list.dataset.bound) {
+      list.dataset.bound = '1';
+      list.addEventListener('click', (e) => {
+        const pill = e.target.closest('[data-buildings-collect]');
+        if (pill) {
+          e.preventDefault();
+          e.stopPropagation();
+          UI.doBuildingCollect(pill.getAttribute('data-buildings-collect'));
+          return;
+        }
+        const open = e.target.closest('[data-factory-open], [data-factory-id]');
+        if (open) {
+          e.preventDefault();
+          UI.openBuildingDetail(open.getAttribute('data-factory-open') || open.getAttribute('data-factory-id'));
+        }
+      });
+    }
+    const detail = document.getElementById('buildingsDetail');
+    if (detail && !detail.dataset.bound) {
+      detail.dataset.bound = '1';
+      detail.addEventListener('click', (e) => {
+        const pill = e.target.closest('[data-buildings-collect]');
+        if (pill) {
+          e.preventDefault();
+          UI.doBuildingCollect(pill.getAttribute('data-buildings-collect'));
+          return;
+        }
+        if (e.target.closest('#btnBuildingCollect')) {
+          e.preventDefault();
+          UI.doBuildingCollect(UI.buildingsFocusId);
+          return;
+        }
+        if (e.target.closest('#btnBuildingUpgradeOpen')) {
+          e.preventDefault();
+          UI.openBuildingUpgrade(UI.buildingsFocusId);
+          return;
+        }
+        if (e.target.closest('#btnBuildingBuild')) {
+          e.preventDefault();
+          UI.doBuildingBuild(UI.buildingsFocusId);
+        }
+      });
+    }
+    const sheet = document.getElementById('buildingsUpgradeSheet');
+    if (sheet && !sheet.dataset.bound) {
+      sheet.dataset.bound = '1';
+      sheet.addEventListener('click', (e) => {
+        if (e.target.closest('[data-buildings-sheet-close]')) {
+          e.preventDefault();
+          UI.buildingsView = 'detail';
+          UI.renderBuildings();
+          return;
+        }
+        if (e.target.closest('#btnBuildingUpgradeDo')) {
+          e.preventDefault();
+          UI.doBuildingUpgrade(UI.buildingsFocusId);
+        }
+      });
+    }
+  };
+
+  UI.doBuildingCollect = function doBuildingCollect(id) {
+    if (!id || typeof buildingCanCollect !== 'function' || !buildingCanCollect(id)) {
+      try { this.toast(buildingsT('buildings.collectEmpty', 'Hopper leeg — wacht op productie'), 1800, { tone: 'warn' }); } catch (_) {}
+      return;
+    }
+    try { if (typeof AudioSys !== 'undefined') { AudioSys.init(); AudioSys.sfx('claim'); } } catch (_) {}
+    const res = (typeof buildingCollect === 'function') ? buildingCollect(id) : { ok: false };
+    if (res && res.ok && res.amount > 0) {
+      const label = (typeof buildingResourceLabel === 'function') ? buildingResourceLabel(res.resourceId) : (res.resourceId || '');
+      try {
+        this.toast(buildingsT('buildings.collectDone', '+{n} {res} in je voorraad', { n: res.amount, res: label }), 2400, { tone: 'ok' });
+      } catch (_) {}
+    }
+    this.renderBuildings();
+    try { this.renderMenu(); } catch (_) {}
+  };
+
+  UI.doBuildingBuild = function doBuildingBuild(id) {
+    if (!id) return;
+    try { if (typeof AudioSys !== 'undefined') { AudioSys.init(); AudioSys.sfx('select'); } } catch (_) {}
+    const res = (typeof buildingBuild === 'function') ? buildingBuild(id) : { ok: false };
+    if (res && res.ok) {
+      try { if (typeof AudioSys !== 'undefined') AudioSys.sfx('levelup'); } catch (_) {}
+      try { this.toast(buildingsT('buildings.buildDone', 'Gebouwd · Lv 1'), 2400, { tone: 'ok' }); } catch (_) {}
+    } else {
+      const why = (res && res.reason === 'broke')
+        ? buildingsT('buildings.upgradeBroke', 'Niet genoeg — {cost}', { cost: '' })
+        : buildingsT('buildings.buildFail', 'Bouwen lukte niet');
+      try { this.toast(why, 2200, { tone: 'warn' }); } catch (_) {}
+    }
+    this.renderBuildings();
+    try { this.renderMenu(); } catch (_) {}
+  };
+
+  UI.doBuildingUpgrade = function doBuildingUpgrade(id) {
+    if (!id) return;
+    try { if (typeof AudioSys !== 'undefined') { AudioSys.init(); AudioSys.sfx('select'); } } catch (_) {}
+    const res = (typeof buildingUpgrade === 'function') ? buildingUpgrade(id) : { ok: false };
+    if (res && res.ok) {
+      try { if (typeof AudioSys !== 'undefined') AudioSys.sfx('levelup'); } catch (_) {}
+      try {
+        this.toast(buildingsT('buildings.upgradeDone', 'Upgrade · Lv {n}', { n: res.level }), 2400, { tone: 'ok' });
+      } catch (_) {}
+      this.buildingsView = 'detail';
+    } else {
+      try { this.toast(buildingsT('buildings.upgradeFail', 'Upgrade lukte niet'), 2200, { tone: 'warn' }); } catch (_) {}
+    }
+    this.renderBuildings();
+    try { this.renderMenu(); } catch (_) {}
+  };
+}
 /* --- src/boot/start.js --- */
 /* ============================ SPELSTART ================================ */
 let state = 'menu';
@@ -36199,6 +36881,7 @@ bindPress(document.getElementById('btnSummonGotoPets'), () => {
   openCollectionScreen('petScreen', () => UI.renderPets());
 });
 bindPress(document.getElementById('btnBuildings'), () => {
+  AudioSys.init(); AudioSys.sfx('select');
   if (typeof UI !== 'undefined' && UI.openBuildings) UI.openBuildings();
 });
 bindPress(document.getElementById('btnDex'), () => {

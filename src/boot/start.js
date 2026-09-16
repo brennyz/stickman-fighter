@@ -231,6 +231,7 @@ bindPress(document.getElementById('btnSummonGotoPets'), () => {
   openCollectionScreen('petScreen', () => UI.renderPets());
 });
 bindPress(document.getElementById('btnBuildings'), () => {
+  AudioSys.init(); AudioSys.sfx('select');
   if (typeof UI !== 'undefined' && UI.openBuildings) UI.openBuildings();
 });
 bindPress(document.getElementById('btnDex'), () => {

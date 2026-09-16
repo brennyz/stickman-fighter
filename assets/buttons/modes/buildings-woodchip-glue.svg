@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
+     stroke="#d4e05a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+     aria-hidden="true">
+  <!-- Woodchip-Glue: vat + drip + chip (not a generic ranch) -->
+  <path d="M7 9h10l-1.2 9.2H8.2z" fill="rgba(212,224,90,.22)"/>
+  <path d="M8 9V7.2h8V9"/>
+  <path d="M12 18.2v3.2" stroke="#8a9a2a"/>
+  <circle cx="12" cy="22" r="1.1" fill="#d4e05a" stroke="none"/>
+  <path d="M4.5 6.2l2.2 1.2M6 4.8l1.2 2.1" stroke="#c98850" stroke-width="1.7"/>
+</svg>

@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
+     stroke="#4ecf6a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+     aria-hidden="true">
+  <!-- Bamboo-Boesa Boiler: stalks + kettle face (not a generic garden) -->
+  <path d="M4.5 20V6.5M7.2 20V8.5"/>
+  <path d="M3.6 10h1.8M6.3 12.2h1.8" stroke="#5a9e4a"/>
+  <circle cx="16" cy="14.5" r="5.4" fill="rgba(201,122,32,.28)" stroke="#c97a20"/>
+  <path d="M14.2 13.2h.2M17.6 13.2h.2M14.6 16.2c.8.7 2 .7 2.8 0" stroke="#c97a20"/>
+  <path d="M16 9.1V6.2" stroke="#ffd75e"/>
+  <path d="M14.2 4.4c.7-.8 1.6-.8 2.2 0" stroke="#c8e8ff" stroke-width="1.7"/>
+</svg>

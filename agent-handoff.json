@@ -91,6 +91,13 @@
   },
   "userWishlist": [
     {
+      "id": "w-20260916T105800",
+      "from": "user",
+      "text": "BUILDINGS UX (systems + screen flow): overview of 5 factories → tap card for detail → then upgrade sheet. One-tap collect on resource pill. Sticky wallet always shows owned spark/glue/chip/steam/echo. buildingDescModel produce+power lines. Dutch-first. Draft PR only — mega-merge, do NOT merge main.",
+      "status": "in-progress",
+      "updated": "2026-09-16"
+    },
+    {
       "id": "w-20260914T171552",
       "from": "user",
       "text": "BUILDINGS SYSTEMS (1 of 4): catalog of exactly 5 quirky factories (Stick-Lighter, Woodchip-Glue, Chipping-Wood, Bamboo-Boesa Boiler, Echo-Whistle Mill). Data model + save + unlock-by-world + upgrade helpers + docs/BUILDINGS.md. Android-first, no Versus, draft PR, DO NOT merge main (mega-merge batch).",

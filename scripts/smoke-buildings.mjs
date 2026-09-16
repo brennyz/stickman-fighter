@@ -27,7 +27,8 @@ function makeEl(id) {
 
 const byId = new Map();
 const getEl = (id) => { if (!byId.has(id)) byId.set(id, makeEl(id)); return byId.get(id); };
-['menuScreen', 'game', 'toastHost', 'buildingsScreen', 'buildingsList', 'buildingsWallet'].forEach(getEl);
+['menuScreen', 'game', 'toastHost', 'buildingsScreen', 'buildingsList', 'buildingsWallet',
+  'buildingsOverview', 'buildingsDetail', 'buildingsUpgradeSheet'].forEach(getEl);
 getEl('menuScreen').classList.s.add('active');
 
 const ctx = {
@@ -89,6 +90,7 @@ const EXPORTS = [
   'buildingUnlocked', 'buildingBuilt', 'buildingCanUpgrade', 'buildingCanCollect',
   'buildingTickAll', 'buildingCollect', 'buildingBuild', 'buildingUpgrade',
   'buildingPowerRank', 'buildingWallet', 'buildingResourceIds', 'buildingTooltipModel',
+  'buildingDescModel', 'buildingWalletModel',
 ];
 for (const name of EXPORTS) {
   assert(run('typeof ' + name + ' !== "undefined"'), 'missing export ' + name);
@@ -110,7 +112,12 @@ assert(/data-factory-id="stick_lighter"/.test(html), 'HTML missing data-factory-
 assert(/data-factory-id="echo_whistle"/.test(html), 'HTML missing data-factory-id echo_whistle');
 assert(/id="buildingsWallet"/.test(html), 'HTML missing #buildingsWallet');
 assert(/id="buildingsScreen"/.test(html), 'HTML missing #buildingsScreen');
+assert(/id="buildingsDetail"/.test(html), 'HTML missing #buildingsDetail');
+assert(/id="buildingsUpgradeSheet"/.test(html), 'HTML missing #buildingsUpgradeSheet');
+assert(/id="btnBuildings"/.test(html), 'HTML missing Collectie HOME tile #btnBuildings');
+assert(!/buildings-upgrade-inline/.test(html), 'upgrade must not be inline on overview HTML');
 assert(docs.includes('buildingTooltipModel'), 'docs missing buildingTooltipModel');
+assert(docs.includes('buildingDescModel'), 'docs missing buildingDescModel');
 assert(docs.includes('BUILDINGS_SCHEMA'), 'docs missing BUILDINGS_SCHEMA');
 assert(docs.includes('bamboo_boesa') && docs.includes('echo_whistle'), 'docs missing locked ids');
 
@@ -185,6 +192,12 @@ assert(run("buildingUpgrade('stick_lighter').reason === 'max'"), 'max upgrade');
 const tip = run("buildingTooltipModel('stick_lighter')");
 assert(tip && tip.id === 'stick_lighter' && tip.level === 10 && tip.powerRank === 4, 'tooltip model');
 assert(tip.artHint && tip.resourceId === 'spark', 'tooltip art/resource');
+const desc = run("buildingDescModel('stick_lighter')");
+assert(desc && desc.produceLine && desc.powerLine && desc.doesLine, 'desc model lines');
+assert(Array.isArray(desc.powersDetail) && desc.powersDetail.length === 5, 'desc powersDetail');
+const walletM = run("buildingWalletModel()");
+assert(walletM && walletM.resources && walletM.resources.length === 5, 'wallet model 5 resources');
+assert(walletM.resources.every((r) => typeof r.amount === 'number'), 'wallet amounts');
 
 setSave({
   buildings: {
