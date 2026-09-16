@@ -9577,16 +9577,47 @@ function lookLuma(color) {
   return (0.2126 * r + 0.7152 * g + 0.0722 * b) / 255;
 }
 
-/** Dark body colors vanish on the Styles grid — add a light rim so the circle reads. */
+function lookMixToward(color, toward, t) {
+  const parse = (s, fallback) => {
+    if (typeof s !== 'string') return fallback;
+    const hex = /^#([0-9a-f]{3}|[0-9a-f]{6})$/i.exec(s.trim());
+    if (!hex) return fallback;
+    const h = hex[1];
+    if (h.length === 3) {
+      return [parseInt(h[0] + h[0], 16), parseInt(h[1] + h[1], 16), parseInt(h[2] + h[2], 16)];
+    }
+    return [parseInt(h.slice(0, 2), 16), parseInt(h.slice(2, 4), 16), parseInt(h.slice(4, 6), 16)];
+  };
+  const a = parse(color, null);
+  const b = parse(toward, [232, 238, 248]);
+  if (!a) return null;
+  const k = Math.max(0, Math.min(1, Number(t) || 0));
+  const ch = (i) => Math.round(a[i] * (1 - k) + b[i] * k);
+  const hex = (n) => n.toString(16).padStart(2, '0');
+  return '#' + hex(ch(0)) + hex(ch(1)) + hex(ch(2));
+}
+
+/** Dark body colors vanish on the Styles grid — lighten the circle so it always reads. */
+function lookHeadStroke(color) {
+  if (lookLuma(color) >= 0.38) return color || '#f2f5ff';
+  return lookMixToward(color, '#e8eef8', 0.64) || 'rgba(232,238,248,.92)';
+}
+
 function lookHeadRim(color) {
-  return lookLuma(color) < 0.38 ? 'rgba(255,255,255,.48)' : null;
+  return lookLuma(color) < 0.38 ? 'rgba(255,255,255,.82)' : null;
 }
 
 function lookHeadFill(color) {
   const luma = lookLuma(color);
-  if (luma < 0.38) return 'rgba(255,255,255,.14)';
+  if (luma < 0.38) return 'rgba(255,255,255,.22)';
   if (luma > 0.82) return 'rgba(255,255,255,.10)';
   return 'rgba(255,255,255,.08)';
+}
+
+/** Preview-only: keep a dark style readable on the card without changing combat. */
+function lookPreviewBody(color) {
+  if (lookLuma(color) >= 0.28) return color || '#f2f5ff';
+  return lookMixToward(color, '#c8d2e4', 0.42) || color || '#f2f5ff';
 }
 
 function looksForStyle(st) {
@@ -9848,6 +9879,8 @@ const EquipLookApi = {
   coversHead: lookCoversHead,
   hidesBaseHead: looksHideBaseHead,
   luma: lookLuma,
+  headStroke: lookHeadStroke,
+  previewBody: lookPreviewBody,
   headR: EQUIP_LOOK_HEAD_R,
   max: EQUIP_LOOK_MAX,
 };
@@ -29848,7 +29881,7 @@ function drawStickmanHead(c, x, y, color, opts) {
   const lineW = (opts && Number.isFinite(opts.lineW)) ? opts.lineW : 4.5;
   const px = lookPx(x);
   const py = lookPx(y);
-  const col = color || '#f2f5ff';
+  const col = (typeof lookHeadStroke === 'function') ? lookHeadStroke(color || '#f2f5ff') : (color || '#f2f5ff');
   c.save();
   try {
     if (opts && opts.bald) {
@@ -29887,7 +29920,7 @@ function restrokeStickmanChin(c, x, y, color, opts) {
   const lineW = (opts && Number.isFinite(opts.lineW)) ? opts.lineW : 4.5;
   const px = lookPx(x);
   const py = lookPx(y);
-  const col = color || '#f2f5ff';
+  const col = (typeof lookHeadStroke === 'function') ? lookHeadStroke(color || '#f2f5ff') : (color || '#f2f5ff');
   c.save();
   try {
     c.strokeStyle = col;
@@ -42841,7 +42874,8 @@ function drawStyleLookPreview(cc, st, w, h) {
       cc.translate((w || 80) * 0.5, (h || 86) * 0.87);
       cc.scale(0.78, 0.78);
     }
-    const preview = new Fighter({ isPlayer: true, x: 0, y: 0, color: st.body, style: st, scale: 1, _preview: true });
+    const body = (typeof lookPreviewBody === 'function') ? lookPreviewBody(st.body) : st.body;
+    const preview = new Fighter({ isPlayer: true, x: 0, y: 0, color: body || st.body, style: st, scale: 1, _preview: true });
     preview.animT = 0.4;
     preview.draw(cc);
   } catch (_) { /* one card must not blank the style grid on Android */ }

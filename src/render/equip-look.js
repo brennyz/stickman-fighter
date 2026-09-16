@@ -486,7 +486,7 @@ function drawStickmanHead(c, x, y, color, opts) {
   const lineW = (opts && Number.isFinite(opts.lineW)) ? opts.lineW : 4.5;
   const px = lookPx(x);
   const py = lookPx(y);
-  const col = color || '#f2f5ff';
+  const col = (typeof lookHeadStroke === 'function') ? lookHeadStroke(color || '#f2f5ff') : (color || '#f2f5ff');
   c.save();
   try {
     if (opts && opts.bald) {
@@ -525,7 +525,7 @@ function restrokeStickmanChin(c, x, y, color, opts) {
   const lineW = (opts && Number.isFinite(opts.lineW)) ? opts.lineW : 4.5;
   const px = lookPx(x);
   const py = lookPx(y);
-  const col = color || '#f2f5ff';
+  const col = (typeof lookHeadStroke === 'function') ? lookHeadStroke(color || '#f2f5ff') : (color || '#f2f5ff');
   c.save();
   try {
     c.strokeStyle = col;

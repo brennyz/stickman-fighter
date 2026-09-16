@@ -249,6 +249,15 @@ if (typeof api.luma === 'function') {
   if (api.luma('#1a1424') >= 0.38) fail('crimson/void body must count as dark (contrast rim)');
   if (api.luma('#f2f5ff') < 0.75) fail('classic body must count as light');
 }
+if (typeof api.headStroke === 'function') {
+  const darkHead = api.headStroke('#1a1424');
+  if (!darkHead || darkHead === '#1a1424') fail('dark style head stroke must lighten so the circle reads');
+}
+if (typeof api.previewBody === 'function') {
+  const sam = api.previewBody('#2a2a35');
+  if (!sam || sam === '#2a2a35') fail('samurai preview body must lighten on the style card');
+  if (api.previewBody('#f2f5ff') !== '#f2f5ff') fail('classic preview body must stay light');
+}
 if (typeof api.previewCamera !== 'function') fail('previewCamera missing');
 for (const [cw, ch] of [[80, 86], [64, 64]]) {
   const cam = api.previewCamera(cw, ch);
