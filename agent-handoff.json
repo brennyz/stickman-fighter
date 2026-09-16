@@ -1058,6 +1058,10 @@
   ],
   "sessionLog": [
     {
+      "at": "2026-09-16T12:33:04Z",
+      "summary": "Mega-merge leftover GitHub PRs #297 #300 #302 #307 #308 #309 closed — content already on origin/main 0044b2e (v1.18.172 / SW 382). Pages live."
+    },
+    {
       "at": "2026-09-16T12:31:58Z",
       "summary": "MEGA-MERGE LIVE origin/main a18fc9e: #295–#309. v1.18.172 / SW 382. speel.html na Pages."
     },
@@ -1152,10 +1156,6 @@
     {
       "at": "2026-09-14T12:41:28Z",
       "summary": "Start toast-wachtrij: één tegelijk, Android Chrome/TWA"
-    },
-    {
-      "at": "2026-09-14T12:35:18Z",
-      "summary": "SATAN-kaart dikkere duivel, groter portret, korte copy, hitte-balk zonder dubbele tekst · v1.18.155 / SW 365"
     }
   ],
   "implementedFeaturesSummary": "d18 char select deel 1+2 (v1.11.1-2); Mats coinrun + shuriken mik/vliegers + anti-spam (v1.12.0); speel.html (v1.12.2+). Zie HANDOFF-ZOEKINDEX.md en improvement-d20-bag.json userFeatureLog.",
