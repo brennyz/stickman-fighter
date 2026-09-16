@@ -1,11 +1,12 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
      stroke="#d4e05a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
      aria-hidden="true">
+  <style>@media (prefers-reduced-motion:no-preference){.d{animation:d 1.6s steps(2,end) infinite}}@keyframes d{50%{opacity:.2}}</style>
   <!-- Woodchip-Glue: hopper + vat + drip (not a generic ranch) -->
   <path d="M5 8.2h8l-1.4 5.2H6.4z" fill="rgba(201,136,80,.28)" stroke="#c98850"/>
   <path d="M7.2 13.4v2.2h3.2"/>
   <circle cx="14.6" cy="15.6" r="5.1" fill="rgba(212,224,90,.28)"/>
-  <path d="M14.6 20.6v2.2" stroke="#8a9a2a"/>
-  <circle cx="14.6" cy="22.6" r="1" fill="#d4e05a" stroke="none"/>
+  <path class="d" d="M14.6 20.6v2.2" stroke="#8a9a2a"/>
+  <circle class="d" cx="14.6" cy="22.6" r="1" fill="#d4e05a" stroke="none"/>
   <path d="M3.6 5.4l1.8 1.1M5.2 4.2l1 1.8" stroke="#c98850" stroke-width="1.7"/>
 </svg>

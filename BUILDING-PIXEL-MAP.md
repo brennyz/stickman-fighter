@@ -2,7 +2,25 @@
 
 Mega-merge **3 of 4** — art + wire only. Canonical ids **exact-match** systems **#292**.
 
-**Art v2** (prop-first silhouettes, shared ink `#0a0c14` + lifted walls `#5a6788`). One card per id — the wire map has no idle/active slot, so there are **no state variants**.
+**Art v2.1** (prop-first silhouettes, shared ink `#0a0c14` + lifted walls `#5a6788`). One card per id — the wire map has no idle/active slot, so there are **no state variants**.
+
+## Motion (factory life)
+
+Brendon asked for more realism via motion. Life is **inside the card/stroke SVGs** (CSS `@keyframes`) so it still runs when the file is an `<img>` on Android Chrome / TWA. No JS, no filters, no extra files, no new `buildingId`s.
+
+| id | life | how |
+|----|------|-----|
+| `stick_lighter` | chimney / flame flicker + match-tip + fuel-window flash | `steps(2)` opacity, ~1.1s |
+| `woodchip_glue` | vat glow pulse + drip + hopper chip twinkle | glow ease 2.4s; drip `steps(2)` |
+| `chipping_wood` | chipper spin hint + flying chips | 8-step 360° on teeth only, 3.2s |
+| `bamboo_boesa` | steam fade + boiler highlight pulse | steam `steps(3)`; glow ease |
+| `echo_whistle` | mill paddle wiggle + staggered echo rings | ±14° `steps(2)`; ring opacity |
+| HOME hub pixel | tiny flame flicker + vat glint + ring pulse | same classes, fewer pixels |
+| strokes | matching accent-only flicker / drip / spin / steam / toot | one cheap loop each |
+
+Android-safe choices: one or two groups per icon, `steps()` so we do not interpolate pixels, no `filter`/`blur`/`will-change`. `@media (prefers-reduced-motion: reduce)` turns animations off — the still silhouette stays.
+
+Still frames (`_preview/*-192.png`) flatten the life layers so print/sheet shots stay readable.
 
 **Locked `buildingId` strings:**
 

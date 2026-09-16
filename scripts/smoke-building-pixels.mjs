@@ -61,7 +61,8 @@ for (const rel of FILES) {
     ok(svg.includes('<svg'), `svg tag ${rel}`);
     ok(!/[\u{1F300}-\u{1FAFF}]/u.test(svg), `no emoji ${rel}`);
     const kb = Buffer.byteLength(svg) / 1024;
-    ok(kb < 6, `small ${rel} (${kb.toFixed(2)} KB)`);
+    const cap = rel.startsWith('assets/buildings/') ? 8 : 6;
+    ok(kb < cap, `small ${rel} (${kb.toFixed(2)} KB)`);
   }
 }
 
@@ -72,9 +73,25 @@ for (const id of LOCKED) {
   ok(data.includes(`'${id}'`) || data.includes(`${id}:`), `catalog ${id}`);
 }
 
+const LIFE = {
+  stick_lighter: 'flicker',
+  woodchip_glue: 'glow',
+  chipping_wood: 'spin',
+  bamboo_boesa: 'steam',
+  echo_whistle: 'echo',
+};
+for (const [id, cls] of Object.entries(LIFE)) {
+  const svg = read(`assets/buildings/${id}.svg`);
+  ok(svg.includes('prefers-reduced-motion'), `motion reduce ${id}`);
+  ok(svg.includes(`class="${cls}"`) || svg.includes(`class='${cls}'`) || svg.includes(`class="${cls} `), `life ${cls} ${id}`);
+}
+ok(read('assets/buildings/hub-buildings.svg').includes('prefers-reduced-motion'), 'hub motion reduce');
+ok(read('assets/buttons/hub/buildings.svg').includes('prefers-reduced-motion'), 'stroke hub motion');
+
 const map = read('BUILDING-PIXEL-MAP.md');
 for (const id of LOCKED) ok(map.includes('`' + id + '`'), `map ${id}`);
 ok(map.includes('#292'), 'map cites systems #292');
+ok(map.includes('Motion (factory life)'), 'map documents motion');
 
 const ui = read('src/systems/missions.js');
 ok(ui.includes('assets/buildings/'), 'hardenButtonIcons covers buildings/');
