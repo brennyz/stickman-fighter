@@ -3,8 +3,8 @@
  * Stickman-pixel factory icons (32×32 crisp SVG) + preview sheet + PNG zooms.
  * Source of truth for assets/buildings/*.svg — run: node scripts/gen-building-pixels.mjs
  *
- * Art v2 (grote doorontwikkeling): prop-first silhouettes that read at 32×32
- * and on Android cards. No idle/active variants — wire map has a single card slot.
+ * Art v2.1: prop-first silhouettes + in-SVG factory life (CSS, img-safe).
+ * No idle/active variants — wire map has a single card slot.
  */
 import fs from 'fs';
 import path from 'path';
@@ -226,9 +226,21 @@ function paintStickLighter() {
   rect(px, 20, 6, 6, 3, C.copperHi);
   rect(px, 19, 8, 3, 2, C.v); // hinge into the body
 
-  // flame (hero)
+  // flame (hero) — core stays static; sparks / window live in life layers
   flame(px, 16, 0);
   set(px, 21, 4, C.f);
+
+  const sparks = blank();
+  set(sparks, 12, 0, C.y);
+  set(sparks, 20, 1, C.f);
+  set(sparks, 11, 2, C.r);
+  set(sparks, 21, 3, C.y);
+  set(sparks, 22, 2, C.f);
+  const tips = blank();
+  set(tips, 5, 10, C.y);
+  set(tips, 6, 10, C.f);
+  set(tips, 8, 12, C.y);
+  set(tips, 17, 16, C.i); // fuel-window flash
 
   // 2px matchsticks (stick-lighter, not a generic forge)
   rect(px, 5, 14, 2, 10, C.t);
@@ -244,7 +256,10 @@ function paintStickLighter() {
 
   stickman(px, 2, 25, C.k, C.y);
   rimLight(px, [C.l, C.m, C.g]);
-  return px;
+  return scene(px, [
+    { cls: 'flicker', px: sparks },
+    { cls: 'flicker2', px: tips },
+  ]);
 }
 
 /** Woodchip-Glue — hopper of chips feeding a dripping lime vat. */
@@ -285,12 +300,24 @@ function paintWoodchipGlue() {
   hline(px, 16, 14, 13, C.k);
   hline(px, 17, 13, 11, C.a);
   hline(px, 18, 12, 9, C.i);
-  // drips
+  // drips (static legs + animated drop)
   vline(px, 19, 28, 2, C.q);
   set(px, 19, 29, C.j);
   vline(px, 25, 28, 2, C.q);
   set(px, 25, 29, C.j);
   set(px, 22, 28, C.glueHi);
+
+  const glow = blank();
+  oval(glow, 22, 19, 4, 3, C.glueHi);
+  set(glow, 21, 18, C.i);
+  set(glow, 23, 17, C.y);
+  const drip = blank();
+  set(drip, 22, 27, C.q);
+  set(drip, 22, 29, C.j);
+  const chips = blank();
+  set(chips, 20, 4, C.o);
+  set(chips, 24, 5, C.y);
+  set(chips, 26, 6, C.h);
 
   // chip pile
   set(px, 2, 28, C.t);
@@ -303,7 +330,11 @@ function paintWoodchipGlue() {
 
   stickman(px, 7, 25, C.k, C.i);
   rimLight(px, [C.l, C.m]);
-  return px;
+  return scene(px, [
+    { cls: 'glow', px: glow },
+    { cls: 'drip', px: drip },
+    { cls: 'flicker2', px: chips },
+  ]);
 }
 
 /** Chipping-Wood — toothy chipper eating a log, chips flying. */
@@ -342,14 +373,15 @@ function paintChippingWood() {
   set(px, 21, 17, C.g);
   set(px, 20, 17, C.o);
   set(px, 22, 17, C.o);
-  // chunky teeth (the silhouette)
+  // teeth live on the spin layer so the chipper can step
   const teeth = [
     [21, 8], [26, 10], [29, 14], [29, 20], [26, 24],
     [21, 26], [16, 24], [13, 20], [13, 14], [16, 10],
   ];
+  const blade = blank();
   teeth.forEach(([x, y]) => {
-    rect(px, x - 1, y - 1, 2, 2, C.c);
-    set(px, x, y, C.i);
+    rect(blade, x - 1, y - 1, 2, 2, C.c);
+    set(blade, x, y, C.i);
   });
 
   // flying chips
@@ -357,6 +389,11 @@ function paintChippingWood() {
    [30, 7, C.t], [24, 3, C.w], [29, 10, C.o]].forEach(([x, y, c]) => {
     set(px, x, y, c);
     set(px, x + 1, y, c);
+  });
+  const chips = blank();
+  [[27, 3, C.t], [30, 5, C.o], [25, 5, C.w]].forEach(([x, y, c]) => {
+    set(chips, x, y, c);
+    set(chips, x + 1, y, c);
   });
 
   // sawdust puff
@@ -366,7 +403,10 @@ function paintChippingWood() {
 
   stickman(px, 5, 25, C.k, C.i);
   rimLight(px, [C.l, C.m, C.d]);
-  return px;
+  return scene(px, [
+    { cls: 'spin', px: blade },
+    { cls: 'flicker2', px: chips },
+  ]);
 }
 
 /** Bamboo-Boesa — grove + round copper boiler with a whistle-face. */
@@ -413,13 +453,17 @@ function paintBambooBoesa() {
   rect(px, 26, 7, 1, 4, C.copperHi);
   hline(px, 20, 11, 8, C.k);
 
-  // steam / boesa puffs
-  disk(px, 18, 3, 2, C.s);
+  // one static puff so the stack still reads; extras live in steam/glow
   disk(px, 23, 2, 2, C.i);
-  disk(px, 27, 4, 2, C.s);
-  set(px, 16, 5, C.s);
-  set(px, 25, 1, C.i);
-  set(px, 29, 2, C.s);
+  const steam = blank();
+  disk(steam, 18, 3, 2, C.s);
+  disk(steam, 27, 4, 2, C.s);
+  set(steam, 16, 5, C.s);
+  set(steam, 25, 1, C.i);
+  set(steam, 29, 2, C.s);
+  const glow = blank();
+  disk(glow, 21, 18, 2, C.y);
+  set(glow, 22, 9, C.i);
 
   // stand
   vline(px, 16, 27, 3, C.k);
@@ -427,7 +471,10 @@ function paintBambooBoesa() {
   hline(px, 16, 27, 13, C.k);
 
   stickman(px, 14, 25, C.k, C.i);
-  return px;
+  return scene(px, [
+    { cls: 'steam', px: steam },
+    { cls: 'glow', px: glow },
+  ]);
 }
 
 /** Echo-Whistle — organ-pipe mill shouting cyan/purple rings. */
@@ -448,12 +495,13 @@ function paintEchoWhistle() {
   pipe(9, 3, 5, C.u, C.purpleHi);
   pipe(14, 8, 4, C.d, C.i);
 
-  // mill paddles on the tall pipe (keeps "mill", not a plus)
-  rect(px, 6, 2, 4, 3, C.x);
-  rect(px, 13, 2, 4, 3, C.x);
-  rect(px, 10, 0, 3, 2, C.u);
+  // mill hub stays; paddles wiggle on a life layer
   disk(px, 11, 4, 1, C.g);
   set(px, 11, 4, C.k);
+  const paddles = blank();
+  rect(paddles, 6, 2, 4, 3, C.x);
+  rect(paddles, 13, 2, 4, 3, C.x);
+  rect(paddles, 10, 0, 3, 2, C.u);
 
   // factory skirt / door under pipes
   outlineBox(px, 5, 22, 13, 8, C.m);
@@ -468,10 +516,12 @@ function paintEchoWhistle() {
   rect(px, 21, 18, 3, 2, C.o);
   set(px, 23, 19, C.k);
 
-  // echo rings (signature)
+  // inner ring static; outer rings pulse
   ring(px, 25, 19, 3, C.c);
-  ring(px, 26, 19, 5, C.u);
-  ring(px, 27, 19, 7, C.c);
+  const ringA = blank();
+  ring(ringA, 26, 19, 5, C.u);
+  const ringB = blank();
+  ring(ringB, 27, 19, 7, C.c);
   // keep horn readable over rings
   outlineBox(px, 17, 16, 6, 6, C.g);
   rect(px, 18, 17, 4, 4, C.y);
@@ -479,7 +529,11 @@ function paintEchoWhistle() {
 
   stickman(px, 2, 25, C.k, C.i);
   rimLight(px, [C.l, C.m, C.u]);
-  return px;
+  return scene(px, [
+    { cls: 'wiggle', px: paddles },
+    { cls: 'echo', px: ringA },
+    { cls: 'echo2', px: ringB },
+  ]);
 }
 
 /** HOME tile — factory district: all five signatures in one skyline. */
@@ -503,6 +557,10 @@ function paintHubBuildings() {
   rect(px, 7, 9, 3, 5, C.g);
   flame(px, 8, 1);
   outlineBox(px, 7, 23, 3, 7, C.w);
+  const sparks = blank();
+  set(sparks, 5, 1, C.f);
+  set(sparks, 11, 0, C.y);
+  set(sparks, 10, 3, C.r);
 
   // glue vat
   disk(px, 16, 24, 5, C.k);
@@ -526,10 +584,19 @@ function paintHubBuildings() {
   rect(px, 29, 14, 1, 15, C.purpleHi);
   ring(px, 28, 17, 3, C.c);
   set(px, 25, 8, C.s);
+  const vatGlow = blank();
+  set(vatGlow, 15, 22, C.i);
+  set(vatGlow, 16, 21, C.y);
+  const toot = blank();
+  ring(toot, 28, 17, 3, C.c);
 
   stickman(px, 12, 25, C.k, C.y);
   rimLight(px, [C.l, C.m]);
-  return px;
+  return scene(px, [
+    { cls: 'flicker', px: sparks },
+    { cls: 'glow', px: vatGlow },
+    { cls: 'echo', px: toot },
+  ]);
 }
 
 const BUILDINGS = [
@@ -605,7 +672,18 @@ const FILE_ALIASES = [
   { file: 'shrine.svg', paint: paintEchoWhistle, of: 'echo_whistle' },
 ];
 
-function encodeSvg(px) {
+/**
+ * In-file CSS so motion runs when the SVG is an <img> (Android Chrome / TWA).
+ * steps() keeps the pixel crunch; no filters, no JS, no extra HTTP.
+ * prefers-reduced-motion leaves the static silhouette.
+ */
+const LIFE_CSS = `<style>@media (prefers-reduced-motion:no-preference){.flicker{animation:flicker 1.05s steps(2,end) infinite}.flicker2{animation:flicker 1.4s steps(2,end) infinite reverse}.glow{animation:glow 2.4s ease-in-out infinite}.drip{animation:drip 1.55s steps(2,end) infinite}.spin{transform-box:fill-box;transform-origin:center;animation:spin 3.2s steps(8,end) infinite}.wiggle{transform-box:fill-box;transform-origin:center;animation:wiggle 2.8s steps(2,end) infinite}.steam{animation:steam 2.5s steps(3,end) infinite}.echo{animation:echo 2.1s ease-in-out infinite}.echo2{animation:echo 2.7s ease-in-out .35s infinite}}@keyframes flicker{50%{opacity:.22}}@keyframes glow{0%,100%{opacity:.3}50%{opacity:.92}}@keyframes drip{0%,100%{opacity:1}50%{opacity:.15}}@keyframes spin{to{transform:rotate(360deg)}}@keyframes wiggle{0%,100%{transform:rotate(-14deg)}50%{transform:rotate(14deg)}}@keyframes steam{0%{opacity:.85}100%{opacity:0}}@keyframes echo{0%,100%{opacity:.22}50%{opacity:1}}</style>`;
+
+function scene(base, layers) {
+  return { base, layers: (layers || []).filter((L) => L && L.px) };
+}
+
+function encodePaths(px) {
   const byColor = new Map();
   for (let y = 0; y < SIZE; y++) {
     let x = 0;
@@ -620,10 +698,41 @@ function encodeSvg(px) {
       x = x2;
     }
   }
-  const paths = [...byColor.entries()]
+  return [...byColor.entries()]
     .map(([c, ds]) => `<path fill="${c}" d="${ds.join('')}"/>`)
     .join('');
-  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${SIZE} ${SIZE}" width="${SIZE}" height="${SIZE}" shape-rendering="crispEdges">${paths}</svg>\n`;
+}
+
+function asScene(sceneOrPx) {
+  if (sceneOrPx && sceneOrPx.base) return sceneOrPx;
+  return { base: sceneOrPx, layers: [] };
+}
+
+function flatten(sceneOrPx) {
+  const { base, layers } = asScene(sceneOrPx);
+  const out = blank();
+  const stamp = (src) => {
+    for (let y = 0; y < SIZE; y++) {
+      for (let x = 0; x < SIZE; x++) {
+        if (src[y][x]) out[y][x] = src[y][x];
+      }
+    }
+  };
+  stamp(base);
+  for (const L of layers) stamp(L.px);
+  return out;
+}
+
+function encodeSvg(sceneOrPx) {
+  const { base, layers } = asScene(sceneOrPx);
+  const layerXml = layers
+    .map((L) => {
+      const paths = encodePaths(L.px);
+      return paths ? `<g class="${L.cls}">${paths}</g>` : '';
+    })
+    .join('');
+  const css = layers.length ? LIFE_CSS : '';
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${SIZE} ${SIZE}" width="${SIZE}" height="${SIZE}" shape-rendering="crispEdges">${css}${encodePaths(base)}${layerXml}</svg>\n`;
 }
 
 function crc32(buf) {
@@ -750,7 +859,7 @@ function writePreview(items) {
 </head><body>
 <h1>Fabrieken — stickman pixel</h1>
 <p class="sub">Locked ids (#292): stick_lighter · woodchip_glue · chipping_wood · bamboo_boesa · echo_whistle.
-Art v2: prop-first silhouettes, shared ink + walls, no idle/active variants (wire map is one card each). Not the share URL.</p>
+Art v2.1: prop-first silhouettes + in-SVG factory life (flicker / glow / spin hint). CSS inside the SVG so <code>&lt;img&gt;</code> on Android still moves. <code>prefers-reduced-motion</code> freezes the still. No idle/active variants. Not the share URL.</p>
 
 <h2>Sheet — display names</h2>
 <div class="sheet">
@@ -796,7 +905,7 @@ ${items.map(native32).join('')}
 <figure><div class="zoom"><img src="../buttons/modes/buildings-bamboo-boesa.svg" alt="" width="48" height="48"></div><figcaption>Bamboo-Boesa Boiler</figcaption></figure>
 <figure><div class="zoom"><img src="../buttons/modes/buildings-echo-whistle.svg" alt="" width="48" height="48"></div><figcaption>Echo-Whistle Mill</figcaption></figure>
 </div>
-<p class="note">Regenerate with <code>npm run pixels:buildings</code> · map: BUILDING-PIXEL-MAP.md · share URL stays speel.html</p>
+<p class="note">Motion lives in the SVG files (not this page’s CSS). Regenerate with <code>npm run pixels:buildings</code> · map: BUILDING-PIXEL-MAP.md · share URL stays speel.html</p>
 </body></html>
 `;
   fs.writeFileSync(path.join(outDir, 'preview.html'), html);
@@ -856,13 +965,14 @@ function main() {
   fs.mkdirSync(previewDir, { recursive: true });
   const all = [...BUILDINGS, HUB];
   for (const b of all) {
-    const px = b.paint();
-    const svg = encodeSvg(px);
+    const painted = b.paint();
+    const svg = encodeSvg(painted);
     fs.writeFileSync(path.join(outDir, b.file), svg);
     const kb = (Buffer.byteLength(svg) / 1024).toFixed(2);
     console.log(`OK ${b.id} → assets/buildings/${b.file} (${kb} KB)`);
-    fs.writeFileSync(path.join(previewDir, `${b.id}-192.png`), encodePng(px, 6));
-    fs.writeFileSync(path.join(previewDir, `${b.id}-32.png`), encodePng(px, 1));
+    const flat = flatten(painted);
+    fs.writeFileSync(path.join(previewDir, `${b.id}-192.png`), encodePng(flat, 6));
+    fs.writeFileSync(path.join(previewDir, `${b.id}-32.png`), encodePng(flat, 1));
   }
   for (const a of FILE_ALIASES) {
     fs.writeFileSync(path.join(outDir, a.file), encodeSvg(a.paint()));

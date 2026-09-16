@@ -1,3 +1,4 @@
+| 2026-09-16 | **buildings motion** | In-SVG factory life (flicker / vat glow / 8-step chipper / steam / echo rings). CSS + prefers-reduced-motion. #300 draft. |
 | 2026-09-16 | **buildings art v2** | Prop-first factory pixels (flame zippo, hopper+vat, toothy chipper, bamboo boiler, organ-pipe mill) + HOME skyline. Locked #292 ids unchanged. Mega-merge only. |
 | 2026-09-14 | **buildings art** | Wired to #292 ids `stick_lighter`…`bamboo_boesa`/`echo_whistle`. Mega-merge only. **v1.18.164 / SW v374**. |
 | 2026-09-14 | **locale + toast** | #266: NL VERLOREN, geen raw menu.tips / PICK AN ISLAND; versie-banner stiller + wegklik; rest HOME. **v1.18.163 / SW v373**. |

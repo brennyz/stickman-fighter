@@ -91,6 +91,13 @@
   },
   "userWishlist": [
     {
+      "id": "w-20260916T111800",
+      "from": "user",
+      "text": "PRIORITY before mega-merge: more realism via MOTION — subtle factory life (chimney flicker, boiler glow pulse, mill spin hint) that fits. Lightweight Android-safe. Update PR #300. Document choices.",
+      "status": "in-progress",
+      "updated": "2026-09-16"
+    },
+    {
       "id": "w-20260916T110000",
       "from": "user",
       "text": "BUILDINGS PIXEL ART: GROTE DOORONTWIKKELING. Leapfrog the #289 sheet — prop-first 32×32 silhouettes for stick_lighter, woodchip_glue, chipping_wood, bamboo_boesa, echo_whistle + HOME hub. Cohesive palette, Android cards, preview sheet + 192 zooms. No variants (wire map has one card). Mega-merge only, no Versus, no external image APIs.",
