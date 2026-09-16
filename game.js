@@ -323,9 +323,9 @@ const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const VERSION_UPDATE_SAVE_KEY = 'stickfighter_version_update_save_v1';
 const VERSION_UPDATE_FLAG_KEY = 'stickfighter_version_update_flag_v1';
 const SAVE_EXPORT_SCHEMA = 3;
-const APP_VERSION = '1.18.168';
+const APP_VERSION = '1.18.169';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 378;
+const SW_CACHE_REV = 379;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', petCoins: 0, dex: {}, summons: {}, pets: {}, activePet: null,
   eggPets: {}, activeEggPet: null, eggDaily: null,
   chestDaily: null, chestWeapons: {},
@@ -42679,7 +42679,7 @@ class Game {
 /* Season overlay — resolve pack token onto body[data-season].
    Slot contract matches CSS pair #279: docs/SEASON-ASSET-SLOTS.md
    Art files: assets/seasons/<id>/<slot>.png
-   Combat hides pixel slots via CSS (body.is-playing). No gear, no FOMO.
+   Play keeps the overlay visible (safe zones in seasons.css). No gear, no FOMO.
 
    IIFE so mega-merge with src/systems/seasons.js does not redeclare
    const SEASON_ART_SLOTS (that module owns calendar/pref theme). */

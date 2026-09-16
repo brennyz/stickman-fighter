@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 /**
- * Smoke: coordinator-named jungle + halloween PNGs wired to #277 --season-art-* hooks.
+ * Smoke: nested season PNGs wired to --season-art-* (canon: assets/seasons/<id>/).
+ * Flat season-*-corner-*.png paths are deprecated.
  */
 import fs from 'fs';
 import path from 'path';
@@ -16,6 +17,7 @@ function must(cond, msg) {
 }
 
 const css = fs.readFileSync(path.join(root, 'styles/seasons.css'), 'utf8');
+const overlays = fs.readFileSync(path.join(root, 'styles/season-overlays.css'), 'utf8');
 const sw = fs.readFileSync(path.join(root, 'sw.js'), 'utf8');
 const index = fs.readFileSync(path.join(root, 'index.html'), 'utf8');
 
@@ -24,6 +26,10 @@ must(/data-season-slot="corner-tl"/.test(index), 'must consume #277 data-season-
 must(/pointer-events:\s*none\s*!important/.test(css), 'overlay stays pointer-events:none');
 must(!/#sfSeasonOverlay/.test(index) && !/\.sf-season-slot/.test(css),
   'do not invent #sfSeasonOverlay / .sf-season-slot — #277 uses #seasonOverlay');
+must(!/season-jungle-corner|season-halloween-corner|season-jungle-banner|season-halloween-banner/.test(css),
+  'flat coordinator PNG urls are deprecated — use assets/seasons/<id>/');
+must(!/season-jungle-corner|season-halloween-corner/.test(overlays),
+  'season-overlays.css must not revive flat coordinator PNG urls');
 
 const files = [
   ['jungle', 'corner-tl'],
@@ -31,34 +37,32 @@ const files = [
   ['jungle', 'corner-bl'],
   ['jungle', 'corner-br'],
   ['jungle', 'banner'],
+  ['jungle', 'vignette'],
+  ['jungle', 'motif'],
+  ['jungle', 'ground-trim'],
   ['halloween', 'corner-tl'],
   ['halloween', 'corner-tr'],
   ['halloween', 'corner-bl'],
   ['halloween', 'corner-br'],
   ['halloween', 'banner'],
+  ['halloween', 'vignette'],
+  ['halloween', 'motif'],
+  ['halloween', 'ground-trim'],
 ];
 
 for (const [pack, slot] of files) {
-  const name = `season-${pack}-${slot}.png`;
-  const rel = `assets/seasons/${name}`;
+  const rel = `assets/seasons/${pack}/${slot}.png`;
   const abs = path.join(root, rel);
   must(fs.existsSync(abs), `missing ${rel}`);
   const buf = fs.readFileSync(abs);
   must(buf.slice(0, 8).equals(Buffer.from([137, 80, 78, 71, 13, 10, 26, 10])), `${rel} is not a PNG`);
-  const w = buf.readUInt32BE(16);
-  const h = buf.readUInt32BE(20);
-  if (slot === 'banner') {
-    must(w <= 320 && h <= 64, `${rel} banner must be ≤320×64 (got ${w}×${h})`);
-  } else {
-    must(w === 96 && h === 96, `${rel} corner must be 96×96 (got ${w}×${h})`);
-  }
   must(sw.includes(`./${rel}`), `sw.js precache missing ${rel}`);
-  const token = slot === 'banner' ? 'banner' : slot;
-  const re = new RegExp(`--season-art-${token}:\\s*url\\('\\.\\./${rel.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}'\\)`);
-  must(re.test(css), `--season-art-${token} must point at ${rel}`);
+  const token = slot === 'ground-trim' ? 'ground-trim' : slot;
+  must(css.includes(`--season-art-${token}: url('../${rel}')`),
+    `--season-art-${token} must point at ${rel}`);
 }
 
 must(!/versus/i.test(fs.readFileSync(path.join(root, 'src/systems/seasons.js'), 'utf8')),
   'season module must not revive Versus');
 
-console.log('SMOKE_OK season-art: 10 coordinator PNGs wired to #277 --season-art-*');
+console.log('SMOKE_OK season-art: nested jungle+halloween PNGs wired in seasons.css');

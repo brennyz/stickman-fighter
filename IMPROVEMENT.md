@@ -143,6 +143,7 @@ Schrijf **1–3 regels** per sessie: datum, d#, wat, versie.
 
 | Datum (UTC) | d# | Update |
 |-------------|-----|--------|
+| 2026-09-16 | — | **Season CSS unify** één owner (`seasons.css`) · nested `assets/seasons/<id>/` · play overlay zichtbaar + safe zones · flat `season-*-corner` deprecated. **v1.18.169 / SW 379**. |
 | 2026-09-16 | — | **Season deepdive** winter/zomer CSS-pariteit + story beats (hub/eiland/result) + i18n nl/en/de/fr/es + tap-safe swap. Geen pixel-PNG, geen audio. **v1.18.168 / SW 378**. |
 | 2026-09-14 | — | **Boot-hotfix** live laadde niet: `gotoW` 2× in i18n + `SEASON_ART_SLOTS` 2× (seasons + overlay). DE chrome keys. **v1.18.167 / SW 377**. Menu «Verse versie» na Pages. |
 | 2026-09-14 | — | Grokbot-prompt voor Android playtest + optimaliseren: `docs/GROKBOT-ANDROID-PROMPT.md`. |

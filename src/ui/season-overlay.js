@@ -1,7 +1,7 @@
 /* Season overlay — resolve pack token onto body[data-season].
    Slot contract matches CSS pair #279: docs/SEASON-ASSET-SLOTS.md
    Art files: assets/seasons/<id>/<slot>.png
-   Combat hides pixel slots via CSS (body.is-playing). No gear, no FOMO.
+   Play keeps the overlay visible (safe zones in seasons.css). No gear, no FOMO.
 
    IIFE so mega-merge with src/systems/seasons.js does not redeclare
    const SEASON_ART_SLOTS (that module owns calendar/pref theme). */

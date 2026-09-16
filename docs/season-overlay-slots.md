@@ -42,10 +42,11 @@ SVG sources sit next to each PNG (same stem). Regenerator writes both.
 ## Safety
 
 1. Host and every slot: `pointer-events: none`.
-2. During `body.is-playing`: hide pixel-heavy slots; keep a weak vignette wash.
-3. Visible on menu / hub / settings / island-select / result (classic stays off).
-4. `--season-safe-bottom` (≥168px) keeps ground/BL/BR off Android pads and the meta dock.
-5. `image-rendering: pixelated` + 4× PNG (retina-safe chunky scale).
+2. During `body.is-playing`: overlay **stays visible**. Safe-zone tokens keep corners off pause + combat pads. Vignette is weaker.
+3. Menu/settings/hub: hide BL/BR + ground-trim on `#seasonOverlay` so HOME/toggles stay clear.
+4. `--season-safe-bottom` keeps ground/BL/BR off Android pads.
+5. `image-rendering: pixelated` + nested PNGs under `assets/seasons/<id>/`.
+6. Overlay show/hide is owned by `styles/seasons.css`. Flat `season-*-corner-*.png` paths are deprecated.
 
 ## Preview / QA
 

@@ -23,6 +23,7 @@
   --season-art-corner-br: none;
   --season-art-corner-bl: none;
   --season-art-banner: none;
+  --season-art-ground-trim: none;
   --season-wash-a: transparent;
   --season-wash-b: transparent;
   --season-wash-c: transparent;
@@ -33,7 +34,8 @@
   --season-card-wash: transparent;
 }
 
-html[data-season="jungle"] {
+html[data-season="jungle"],
+[data-season="jungle"] {
   --menu-accent: #8ef0a4;
   --season-accent: #7cfc8a;
   --season-ink: #d8ffe0;
@@ -45,14 +47,18 @@ html[data-season="jungle"] {
   --season-wash-c: rgba(90, 170, 50, 0.14);
   --season-tile-edge: rgba(110, 210, 120, 0.32);
   --season-card-wash: rgba(36, 110, 48, 0.16);
-  --season-art-corner-tl: url('../assets/seasons/season-jungle-corner-tl.png');
-  --season-art-corner-tr: url('../assets/seasons/season-jungle-corner-tr.png');
-  --season-art-corner-bl: url('../assets/seasons/season-jungle-corner-bl.png');
-  --season-art-corner-br: url('../assets/seasons/season-jungle-corner-br.png');
-  --season-art-banner: url('../assets/seasons/season-jungle-banner.png');
+  --season-art-vignette: url('../assets/seasons/jungle/vignette.png');
+  --season-art-motif: url('../assets/seasons/jungle/motif.png');
+  --season-art-corner-tl: url('../assets/seasons/jungle/corner-tl.png');
+  --season-art-corner-tr: url('../assets/seasons/jungle/corner-tr.png');
+  --season-art-corner-bl: url('../assets/seasons/jungle/corner-bl.png');
+  --season-art-corner-br: url('../assets/seasons/jungle/corner-br.png');
+  --season-art-banner: url('../assets/seasons/jungle/banner.png');
+  --season-art-ground-trim: url('../assets/seasons/jungle/ground-trim.png');
 }
 
-html[data-season="halloween"] {
+html[data-season="halloween"],
+[data-season="halloween"] {
   --menu-accent: #ffb14a;
   --season-accent: #c792ff;
   --season-ink: #ffe6c4;
@@ -64,14 +70,18 @@ html[data-season="halloween"] {
   --season-wash-c: rgba(40, 10, 28, 0.22);
   --season-tile-edge: rgba(255, 150, 60, 0.34);
   --season-card-wash: rgba(70, 20, 90, 0.18);
-  --season-art-corner-tl: url('../assets/seasons/season-halloween-corner-tl.png');
-  --season-art-corner-tr: url('../assets/seasons/season-halloween-corner-tr.png');
-  --season-art-corner-bl: url('../assets/seasons/season-halloween-corner-bl.png');
-  --season-art-corner-br: url('../assets/seasons/season-halloween-corner-br.png');
-  --season-art-banner: url('../assets/seasons/season-halloween-banner.png');
+  --season-art-vignette: url('../assets/seasons/halloween/vignette.png');
+  --season-art-motif: url('../assets/seasons/halloween/motif.png');
+  --season-art-corner-tl: url('../assets/seasons/halloween/corner-tl.png');
+  --season-art-corner-tr: url('../assets/seasons/halloween/corner-tr.png');
+  --season-art-corner-bl: url('../assets/seasons/halloween/corner-bl.png');
+  --season-art-corner-br: url('../assets/seasons/halloween/corner-br.png');
+  --season-art-banner: url('../assets/seasons/halloween/banner.png');
+  --season-art-ground-trim: url('../assets/seasons/halloween/ground-trim.png');
 }
 
-html[data-season="winter"] {
+html[data-season="winter"],
+[data-season="winter"] {
   --menu-accent: #b8e8ff;
   --season-accent: #e8f6ff;
   --season-ink: #e4f4ff;
@@ -90,9 +100,11 @@ html[data-season="winter"] {
   /* --season-art-corner-bl: url('../assets/seasons/winter/corner-bl.png'); */
   /* --season-art-corner-br: url('../assets/seasons/winter/corner-br.png'); */
   /* --season-art-banner: url('../assets/seasons/winter/banner.png'); */
+  /* --season-art-ground-trim: url('../assets/seasons/winter/ground-trim.png'); */
 }
 
-html[data-season="summer"] {
+html[data-season="summer"],
+[data-season="summer"] {
   --menu-accent: #ffd36a;
   --season-accent: #ffb14a;
   --season-ink: #fff4d2;
@@ -111,6 +123,7 @@ html[data-season="summer"] {
   /* --season-art-corner-bl: url('../assets/seasons/summer/corner-bl.png'); */
   /* --season-art-corner-br: url('../assets/seasons/summer/corner-br.png'); */
   /* --season-art-banner: url('../assets/seasons/summer/banner.png'); */
+  /* --season-art-ground-trim: url('../assets/seasons/summer/ground-trim.png'); */
 }
 
 .season-overlay,
@@ -175,16 +188,26 @@ body.is-playing {
   --season-safe-left: max(var(--safe-left), 12px);
 }
 
+/* Play: overlay STAYS visible. Safe-zone tokens keep corners off pause + pads. */
+html:not([data-season="classic"]) body.is-playing #seasonOverlay,
+html:not([data-season="classic"]) body.is-playing .season-overlay {
+  display: block;
+  visibility: visible;
+  opacity: 1;
+  pointer-events: none !important;
+}
+
 body.is-playing .season-vignette,
 body.is-playing [data-season-slot="vignette"] {
   opacity: var(--season-play-vignette);
 }
 
-/* Settings/hub: keep the card rail clear — no pumpkins/frost mounds on toggles */
-body:not(.is-playing) .season-corner-bl,
-body:not(.is-playing) .season-corner-br,
-body:not(.is-playing) [data-season-slot="corner-bl"],
-body:not(.is-playing) [data-season-slot="corner-br"] {
+/* Menu/settings/hub: no BL/BR / ground-trim over toggles or HOME */
+body:not(.is-playing) #seasonOverlay .season-corner-bl,
+body:not(.is-playing) #seasonOverlay .season-corner-br,
+body:not(.is-playing) #seasonOverlay [data-season-slot="corner-bl"],
+body:not(.is-playing) #seasonOverlay [data-season-slot="corner-br"],
+body:not(.is-playing) #seasonOverlay [data-season-slot="ground-trim"] {
   visibility: hidden;
 }
 
@@ -272,6 +295,25 @@ body:not(.is-playing) [data-season-slot="vignette"] {
   background-image: var(--season-art-banner);
   background-size: contain;
   background-position: center;
+}
+
+#seasonOverlay [data-season-slot] {
+  position: absolute;
+  pointer-events: none !important;
+  background-repeat: no-repeat;
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
+}
+
+[data-season-slot="ground-trim"] {
+  left: 0;
+  right: 0;
+  bottom: var(--season-inset-bottom);
+  height: min(8vh, 56px);
+  background-image: var(--season-art-ground-trim);
+  background-size: auto 100%;
+  background-repeat: repeat-x;
+  opacity: 0.7;
 }
 .season-banner[hidden] { display: none !important; }
 html[data-season="jungle"] .season-banner[hidden],

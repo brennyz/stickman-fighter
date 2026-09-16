@@ -83,6 +83,18 @@ must(/#settingsScreen\.screen\.active/.test(css) && /#resultScreen\.screen\.acti
   'settings/result seasonal screen wash missing');
 must(!/\.screen\s*\{[^}]*display:\s*none\s*!important/.test(css),
   'no nuclear display:none !important on .screen');
+must(/assets\/seasons\/jungle\/corner-tl\.png/.test(css)
+  && /assets\/seasons\/halloween\/corner-tl\.png/.test(css),
+  'canon art paths must be nested assets/seasons/<id>/');
+must(!/season-jungle-corner|season-halloween-corner/.test(css),
+  'flat season-*-corner-*.png urls are deprecated');
+must(/html:not\(\[data-season="classic"\]\) body\.is-playing #seasonOverlay/.test(css),
+  'play overlay must stay visible (owned by seasons.css)');
+const overlays = fs.readFileSync(path.join(root, 'styles/season-overlays.css'), 'utf8');
+must(!/display:\s*none\s*!important/.test(overlays),
+  'season-overlays.css must not fight play decor with display:none !important');
+must(/body:not\(\.is-playing\) #seasonOverlay \[data-season-slot="corner-bl"\]/.test(css),
+  'menu/settings must hide BL corners on #seasonOverlay');
 
 must(/season: \{/.test(i18n), 'i18n season block missing');
 must(/blurb: \{/.test(i18n) && /jungle:/.test(i18n), 'season blurbs missing');

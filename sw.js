@@ -2,7 +2,7 @@
  * Nieuwe SW wacht op SF_SKIP_WAITING (menu/idle). Eerste install activeert
  * vanzelf (geen actieve worker). skipWaiting() hier zou midden in een gevecht
  * claimen — dat is de classic “update tijdens combo → startscherm”. */
-const CACHE = 'stickfighter-app-v378';
+const CACHE = 'stickfighter-app-v379';
 
 
 
@@ -154,16 +154,6 @@ const ASSETS = [
   './assets/ui/island-vulkaan.svg',
   './assets/ui/satan.svg',
   './assets/ui/satan-mark.svg',
-  './assets/seasons/season-jungle-corner-tl.png',
-  './assets/seasons/season-jungle-corner-tr.png',
-  './assets/seasons/season-jungle-corner-bl.png',
-  './assets/seasons/season-jungle-corner-br.png',
-  './assets/seasons/season-jungle-banner.png',
-  './assets/seasons/season-halloween-corner-tl.png',
-  './assets/seasons/season-halloween-corner-tr.png',
-  './assets/seasons/season-halloween-corner-bl.png',
-  './assets/seasons/season-halloween-corner-br.png',
-  './assets/seasons/season-halloween-banner.png',
   './assets/seasons/jungle/corner-tl.png',
   './assets/seasons/jungle/corner-tr.png',
   './assets/seasons/jungle/corner-bl.png',
