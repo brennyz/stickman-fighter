@@ -21,3 +21,5 @@ health.json
 
 # Export voor push vanaf Mac
 *.bundle
+__pycache__/
+*.pyc
