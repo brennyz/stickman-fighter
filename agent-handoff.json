@@ -918,6 +918,30 @@
       "status": "done-in-code",
       "updated": "2026-09-16",
       "notes": "Post-#283 Z→A factcheck alle picker-talen (nl→fr→es→en→de). Report + FR/ES/DE stringfixes, speel.html i18n + stepsIos. Versus ongemoeid."
+    },
+    {
+      "id": "w-2026-09-16T111600",
+      "from": "user",
+      "text": "Summons video is VERY clunky — replace/rebuild snappy presentation (≤2–3s to ready, no stutter) on existing Summons flow.",
+      "status": "done-in-code",
+      "updated": "2026-09-16",
+      "notes": "reveal.mp4 1.6MB/10s/720p High → 265KB/2.4s/480p baseline; timers start immediately; CSS chest if decode >700ms."
+    },
+    {
+      "id": "w-2026-09-16T111700",
+      "from": "user",
+      "text": "Persistent “New version ready — tap to load” covers HOME logo; tap failed; UI showed ancient v1.18.107 while newer features live. Fix SW/cache update path.",
+      "status": "done-in-code",
+      "updated": "2026-09-16",
+      "notes": "Banner docks to HOME bottom; tap binds at parse; applySwUpdate fail-fast then nuke; nukeStale retries twice; APP/SW handshake 1.18.169/379."
+    },
+    {
+      "id": "w-2026-09-16T110307",
+      "from": "user",
+      "text": "GROTE doorontwikkeling: implement ALL open P0–P3 UI/UX (Upgrades HOME, online autosave primary + Options/drawer strip, weapons contrast, HOME-tile Upgrades/Settings, drawer trim, remaining P2/P3) + FINDINGS i18n leftovers (EN Muziek/Effecten, Profiel en missies, DE/NL Summons + drawer zin, unlock Lv, combat hints, Options 390px scrollbar). Harden gear/buildings/seasons/aim/combat to HOME-tile Android UX. No Versus/iOS. No new systems.",
+      "status": "done-in-code",
+      "updated": "2026-09-16",
+      "notes": "Canonical play URL speel.html. Android-first. NL+EN+DE via t()."
     }
   ],
   "agentRules": [

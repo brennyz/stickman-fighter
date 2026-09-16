@@ -116,8 +116,8 @@ async function run() {
       const toastBefore = (document.getElementById('toastHost') || {}).textContent || '';
       const midText = (document.getElementById('summonRevealText') || {}).textContent || '';
       const toastMid = (document.getElementById('toastHost') || {}).textContent || '';
-      // Give video a moment to start, then sample playback
-      await new Promise((r) => setTimeout(r, 1200));
+      // Give the short clip a beat to start, then sample playback
+      await new Promise((r) => setTimeout(r, 700));
       const vidEarly = document.getElementById('summonVideo');
       const stageEarly = document.getElementById('summonStage');
       const playEarly = vidEarly ? {
@@ -141,8 +141,8 @@ async function run() {
           aspect: sr.height > 0 ? sr.width / sr.height : 0,
         };
       }
-      // Wait until past card window (last 2s of ~10s) + buffer
-      await new Promise((r) => setTimeout(r, 9200));
+      // Card lands at ~1.5s of a 2.4s reveal; stay inside the pulling window
+      await new Promise((r) => setTimeout(r, 1000));
       const reveal = document.getElementById('summonReveal');
       const card = document.getElementById('summonCenterCard');
       const stage = document.getElementById('summonStage');

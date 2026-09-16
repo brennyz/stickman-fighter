@@ -109,24 +109,30 @@
   async function applySwUpdate() {
     if (!('serviceWorker' in navigator)) return false;
     try {
-      const reg = swReg || await navigator.serviceWorker.ready;
-      if (!reg || !reg.waiting) return false;
+      const reg = swReg || await navigator.serviceWorker.ready.catch(() => null);
+      if (reg) {
+        try { await reg.update(); } catch (_) {}
+      }
+      const waiting = reg && reg.waiting;
+      if (!waiting) return false;
       markSwUpdateReady(true);
-      return new Promise((resolve) => {
+      return await new Promise((resolve) => {
+        let done = false;
+        const finish = (ok) => {
+          if (done) return;
+          done = true;
+          resolve(ok);
+        };
         const onChange = () => {
           refreshing = true;
           reloadWhenIdle('applySwUpdate');
-          resolve(true);
+          finish(true);
         };
         navigator.serviceWorker.addEventListener('controllerchange', onChange, { once: true });
-        reg.waiting.postMessage({ type: 'SF_SKIP_WAITING' });
-        setTimeout(() => {
-          toastIfHub('Update duurt lang — tik «Verse versie» in Instellingen', 3600);
-          resolve(false);
-        }, 8000);
+        try { waiting.postMessage({ type: 'SF_SKIP_WAITING' }); } catch (_) { finish(false); return; }
+        setTimeout(() => finish(false), 2500);
       });
     } catch (_) {
-      toast('Update mislukt — tik «Verse versie»', 3200);
       return false;
     }
   }

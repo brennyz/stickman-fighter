@@ -158,6 +158,11 @@ function applySeasonTheme(opts) {
   try {
     document.dispatchEvent(new CustomEvent('sf-season-change', { detail: snap }));
   } catch (_) {}
+  try {
+    if (typeof window !== 'undefined' && window.__sfSeason && typeof window.__sfSeason.apply === 'function') {
+      window.__sfSeason.apply();
+    }
+  } catch (_) {}
   if (opts && opts.toast && typeof UI !== 'undefined' && UI.toast && typeof t === 'function') {
     UI.toast(t('season.picked', { name: seasonLabel(snap.id) }), 2000, { tone: 'ok' });
   }

@@ -602,9 +602,27 @@ function wireNetStatusTap() {
   if (!el || el.dataset.sfNetTap) return;
   el.dataset.sfNetTap = '1';
   const run = () => {
-    if (!window.__sfSwUpdateReady) return;
-    if (!netUpdateOnHub()) return;
-    safeAsync(runVersionUpdateWithSavePrompt(), 'swUpdateTap', t('versionUpdate.fail'));
+    if (document.body && document.body.classList.contains('is-playing')) return;
+    try {
+      if (typeof state !== 'undefined' && (state === 'play' || state === 'pause')) return;
+    } catch (_) {}
+    const bannerOn = !!(el.classList && el.classList.contains('sw-update'));
+    if (!window.__sfSwUpdateReady && !bannerOn) return;
+    const goFresh = () => {
+      if (typeof window.forceFreshVersion === 'function') return window.forceFreshVersion();
+      try {
+        const u = new URL(location.href);
+        u.searchParams.set('fresh', String(Date.now()));
+        location.replace(u.toString());
+      } catch (_) { location.reload(); }
+    };
+    if (typeof runVersionUpdateWithSavePrompt === 'function' && window.__sfBooted) {
+      safeAsync(Promise.resolve(runVersionUpdateWithSavePrompt()).then((ok) => {
+        if (ok === false) return goFresh();
+      }).catch(goFresh), 'swUpdateTap', (typeof t === 'function') ? t('versionUpdate.fail') : 'Update failed');
+      return;
+    }
+    goFresh();
   };
   el.addEventListener('click', (e) => {
     if (e.target && e.target.id === 'netStatusDismiss') return;
@@ -1083,3 +1101,4 @@ function bindUiLayerWatch() {
   setInterval(tick, 1200);
 }
 bindUiLayerWatch();
+try { wireNetStatusTap(); } catch (_) {}

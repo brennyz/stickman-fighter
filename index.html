@@ -110,7 +110,7 @@
       <div class="arcade-pre" id="menuArcadePre" hidden>KIES JE PAD</div>
       <h1 class="title arcade-logo">STICKMAN<span>FIGHTER</span></h1>
       <p class="press-start" id="pressStartLine" hidden>insert coin</p>
-      <div class="subtitle" id="menuVerLine">v1.18.169</div>
+      <div class="subtitle menu-ver-line" id="menuVerLine">v1.18.169</div>
       <p class="season-menu-blurb" id="seasonMenuBlurb" hidden></p>
     </header>
     <div class="arcade-menu-body menu-landing-body">
@@ -382,7 +382,7 @@
     <div id="summonReveal" class="summon-reveal" data-rarity="common" aria-live="polite">
       <div class="summon-stage" id="summonStage" role="button" tabindex="0" aria-label="Open kist">
         <video id="summonVideo" class="summon-video" playsinline webkit-playsinline muted
-          preload="auto" data-src="assets/summon/reveal.mp4" aria-hidden="true"></video>
+          preload="metadata" data-src="assets/summon/reveal.mp4" aria-hidden="true"></video>
         <div class="summon-stage-fallback" id="summonStageFallback" aria-hidden="true">
           <div class="summon-arena" aria-hidden="true"></div>
           <div class="summon-chest-visual" id="summonChestVisual"></div>
@@ -479,7 +479,7 @@
   <div id="gearFilterBar" class="gear-filter-bar" role="tablist" aria-label="Filter"></div>
   <div id="gearRarityBar" class="gear-filter-bar gear-rarity-bar" role="tablist" aria-label="Rarity"></div>
   <label class="gear-filter-search-wrap" for="gearFilterQ">
-    <input id="gearFilterQ" class="gear-filter-q" type="search" enterkeyhint="search" autocomplete="off" spellcheck="false" placeholder="Zoek…">
+    <input id="gearFilterQ" class="gear-filter-q" type="search" enterkeyhint="search" autocomplete="off" spellcheck="false" placeholder="">
   </label>
   <div id="gearFilterCount" class="gear-filter-count" aria-live="polite"></div>
   <div id="gearPicker" class="gear-picker" role="list"></div>
@@ -535,10 +535,12 @@
   <button class="btn back-btn" data-back><img class="back-btn-ico" src="assets/buttons/chrome/back.svg" alt="" width="18" height="18" decoding="async" draggable="false"> Terug</button>
   <h2 class="head" id="settingsHead">Instellingen</h2>
   <div class="subtitle" id="settingsSub">Geluid, trilling &amp; HUD — opgeslagen op dit apparaat</div>
-  <div class="settings-card" id="settingsSaveAutoCard">
-    <div id="settingsSaveAutoTitle" style="font-weight:900;color:#7cf5ff;margin-bottom:6px">Save gaat automatisch mee</div>
-    <div id="saveHealthLine" style="font-size:13px;line-height:1.45;color:#cfe0ff;margin-bottom:8px">Lv … · OK op dit apparaat</div>
-    <div id="settingsSaveAutoHint" style="font-size:12px;opacity:.78;line-height:1.45">Online-save blijft vanzelf bij deze speel-link. Geen extra knop.</div>
+  <div class="settings-card settings-home-tile" id="settingsSaveAutoCard">
+    <span class="hub-tile-ico" aria-hidden="true"><img src="assets/buttons/chrome/sync.svg" alt="" width="28" height="28" decoding="async" draggable="false"></span>
+    <span class="hub-tile-title" id="settingsSaveAutoTitle">Online save</span>
+    <span class="hub-tile-sub" id="saveHealthLine">Lv … · laatst gesynchroniseerd …</span>
+    <span class="hub-tile-stat" id="settingsSaveSyncPill">OK</span>
+    <p class="settings-tile-hint" id="settingsSaveAutoHint">Online-save blijft vanzelf bij deze speel-link. Geen extra knop.</p>
   </div>
   <div class="settings-card" id="settingsSeasonCard">
     <div style="font-weight:900;color:#7cf5ff;margin-bottom:6px" id="setSeasonLbl">Seizoen</div>
@@ -550,10 +552,10 @@
   <div class="settings-card">
     <div style="font-weight:900;color:#7cf5ff;margin-bottom:6px" id="setLangLbl">Taal</div>
     <div id="langSwitchBar" class="dex-filter-bar" style="margin-bottom:14px"></div>
-    <label>Muziek <span id="setMusicVolLbl">85%</span>
+    <label><span id="setMusicVolName">Muziek</span> <span id="setMusicVolLbl">85%</span>
       <input type="range" id="setMusicVol" min="0" max="100" value="85">
     </label>
-    <label>Effecten <span id="setSfxVolLbl">100%</span>
+    <label><span id="setSfxVolName">Effecten</span> <span id="setSfxVolLbl">100%</span>
       <input type="range" id="setSfxVol" min="0" max="100" value="100">
     </label>
     <div style="font-weight:900;color:#7cf5ff;margin:10px 0 6px" id="setAudioThemeLbl">Sfeer / soundtrack</div>
@@ -578,15 +580,17 @@
     <label><span><span id="setAimRadiusName">Grootte</span> <span id="setAimRadiusLbl">8</span></span>
       <input type="range" id="setAimRadius" min="4" max="18" value="8" aria-valuemin="4" aria-valuemax="18" aria-valuenow="8">
     </label>
-    <button type="button" class="btn tog" id="setShake"><span class="tog-ico"><img src="assets/buttons/chrome/shake.svg" alt="" width="24" height="24" decoding="async" draggable="false"></span>Schermschok</button>
-    <button type="button" class="btn tog" id="setHaptics"><span class="tog-ico"><img src="assets/buttons/chrome/haptics.svg" alt="" width="24" height="24" decoding="async" draggable="false"></span>Trillen</button>
-    <button type="button" class="btn tog" id="setComboHud"><span class="tog-ico"><img src="assets/buttons/chrome/combo.svg" alt="" width="24" height="24" decoding="async" draggable="false"></span>Combo-HUD</button>
-    <button type="button" class="btn tog" id="setBigTouch"><span class="tog-ico"><img src="assets/buttons/chrome/big-touch.svg" alt="" width="24" height="24" decoding="async" draggable="false"></span>Grote knoppen</button>
-    <button type="button" class="btn tog" id="setKbLegend"><span class="tog-ico"><img src="assets/buttons/chrome/combo.svg" alt="" width="24" height="24" decoding="async" draggable="false"></span>Toetsenbord-hulp</button>
-    <button type="button" class="btn tog off" id="setShowTouchPads"><span class="tog-ico"><img src="assets/buttons/chrome/big-touch.svg" alt="" width="24" height="24" decoding="async" draggable="false"></span>Touch-knoppen altijd</button>
-    <button type="button" class="btn tog" id="setReducedMotion"><span class="tog-ico"><img src="assets/buttons/chrome/reduced-motion.svg" alt="" width="24" height="24" decoding="async" draggable="false"></span>Minder beweging</button>
-    <button type="button" class="btn tog off" id="setLiteFx"><span class="tog-ico"><img src="assets/buttons/chrome/lite-fx.svg" alt="" width="24" height="24" decoding="async" draggable="false"></span>Lite FX</button>
-    <button type="button" class="btn tog off" id="setHighContrast"><span class="tog-ico"><img src="assets/buttons/chrome/contrast.svg" alt="" width="24" height="24" decoding="async" draggable="false"></span>Hoog contrast tekst</button>
+    <div class="settings-tog-grid">
+    <button type="button" class="btn tog settings-tile-tog" id="setShake"><span class="tog-ico"><img src="assets/buttons/chrome/shake.svg" alt="" width="24" height="24" decoding="async" draggable="false"></span>Schermschok</button>
+    <button type="button" class="btn tog settings-tile-tog" id="setHaptics"><span class="tog-ico"><img src="assets/buttons/chrome/haptics.svg" alt="" width="24" height="24" decoding="async" draggable="false"></span>Trillen</button>
+    <button type="button" class="btn tog settings-tile-tog" id="setComboHud"><span class="tog-ico"><img src="assets/buttons/chrome/combo.svg" alt="" width="24" height="24" decoding="async" draggable="false"></span>Combo-HUD</button>
+    <button type="button" class="btn tog settings-tile-tog" id="setBigTouch"><span class="tog-ico"><img src="assets/buttons/chrome/big-touch.svg" alt="" width="24" height="24" decoding="async" draggable="false"></span>Grote knoppen</button>
+    <button type="button" class="btn tog settings-tile-tog" id="setKbLegend"><span class="tog-ico"><img src="assets/buttons/chrome/combo.svg" alt="" width="24" height="24" decoding="async" draggable="false"></span>Toetsenbord-hulp</button>
+    <button type="button" class="btn tog settings-tile-tog off" id="setShowTouchPads"><span class="tog-ico"><img src="assets/buttons/chrome/big-touch.svg" alt="" width="24" height="24" decoding="async" draggable="false"></span>Touch-knoppen altijd</button>
+    <button type="button" class="btn tog settings-tile-tog" id="setReducedMotion"><span class="tog-ico"><img src="assets/buttons/chrome/reduced-motion.svg" alt="" width="24" height="24" decoding="async" draggable="false"></span>Minder beweging</button>
+    <button type="button" class="btn tog settings-tile-tog off" id="setLiteFx"><span class="tog-ico"><img src="assets/buttons/chrome/lite-fx.svg" alt="" width="24" height="24" decoding="async" draggable="false"></span>Lite FX</button>
+    <button type="button" class="btn tog settings-tile-tog off" id="setHighContrast"><span class="tog-ico"><img src="assets/buttons/chrome/contrast.svg" alt="" width="24" height="24" decoding="async" draggable="false"></span>Hoog contrast tekst</button>
+    </div>
   </div>
   <div class="step-card" id="settingsA11yTip">Minder beweging = rustigere banners. Hoog contrast = dikkere randen. Lite FX = soepeler op telefoon.</div>
   <div id="a11yStatusLine" class="step-card" style="font-size:13px;padding:10px 14px;margin-top:0">Toegankelijkheid laden…</div>
@@ -636,6 +640,13 @@
         <div id="btnInstallLabel">App<small>Lade</small></div>
       </button>
       <a class="btn tog" id="btnPrivacy" href="privacy.html" target="_blank" rel="noopener" style="margin-top:8px;text-decoration:none"><span class="tog-ico"><img src="assets/buttons/chrome/external.svg" alt="" width="24" height="24" decoding="async" draggable="false"></span>Privacy</a>
+      <div id="settingsDiagBlock" class="settings-diag-block" hidden>
+        <div id="settingsHelpTitle" style="font-weight:900;color:#ffd75e;margin:12px 0 6px">Vast op een oude versie?</div>
+        <div id="setAppVersion" style="font-size:12px;opacity:.7;margin-bottom:8px">v1.18.169</div>
+        <div id="settingsHelpDesc" style="font-size:12px;opacity:.85;margin-bottom:8px;line-height:1.4">Leegt de cache en laadt opnieuw. Alleen nodig als het spel niet meekomt.</div>
+        <button type="button" class="btn tog" id="btnForceFresh"><span class="tog-ico"><img src="assets/buttons/chrome/refresh.svg" alt="" width="24" height="24" decoding="async" draggable="false"></span>Verse versie</button>
+        <div id="settingsFreshHint" style="font-size:11px;opacity:.72;margin:6px 0 10px;line-height:1.4">Menu reageert niet? Tik hier voor de nieuwste versie.</div>
+      </div>
     </div>
   </details>
   <div class="sub-home-bar"><button type="button" class="btn mode-btn b-gray big-touch sub-home-btn" data-back-home><span class="ico"><img src="assets/buttons/chrome/home.svg" alt="" width="28" height="28" decoding="async" draggable="false"></span><span class="sub-home-label">Terug naar menu</span></button></div>
@@ -771,10 +782,10 @@
     <button class="btn tog" id="pauseTogSfx" type="button"><span class="tog-ico"><img src="assets/buttons/chrome/sfx.svg" alt="" width="24" height="24" decoding="async" draggable="false"></span>Geluid</button>
   </div>
   <div class="pause-audio-vol" aria-label="Volume in pauze">
-    <label>Muziek <span id="pauseMusicVolLbl">85%</span>
+    <label><span id="pauseMusicVolName">Muziek</span> <span id="pauseMusicVolLbl">85%</span>
       <input type="range" id="pauseMusicVol" min="0" max="100" value="85">
     </label>
-    <label>Geluid <span id="pauseSfxVolLbl">100%</span>
+    <label><span id="pauseSfxVolName">Geluid</span> <span id="pauseSfxVolLbl">100%</span>
       <input type="range" id="pauseSfxVol" min="0" max="100" value="100">
     </label>
     <div id="pauseAudioStatus" class="pause-audio-hint" aria-live="polite">Volume in pauze — sliders sync met Instellingen</div>
@@ -828,8 +839,10 @@ window.__SF_EXPECT_APP = '1.18.169';
   function nukeStale(reason) {
     try {
       var key = 'sf_stale_nuke_' + (window.__SF_EXPECT_REV || 'x');
-      if (sessionStorage.getItem(key)) return false;
-      sessionStorage.setItem(key, reason || '1');
+      var n = 0;
+      try { n = parseInt(sessionStorage.getItem(key) || '0', 10) || 0; } catch (_) {}
+      if (n >= 2) return false;
+      sessionStorage.setItem(key, String(n + 1));
     } catch (_) {}
     try { console.warn('[Stickman] stale cache → verse versie', reason); } catch (_) {}
     if (typeof window.forceFreshVersion === 'function') {
@@ -863,6 +876,9 @@ window.__SF_EXPECT_APP = '1.18.169';
     var jsRev = (typeof SW_CACHE_REV !== 'undefined') ? SW_CACHE_REV : null;
     var jsApp = (typeof APP_VERSION !== 'undefined') ? APP_VERSION : null;
     var missingKets = (typeof KETSBAM_BUILD_DUR === 'undefined');
+    if (expect != null && jsRev != null && Number(jsRev) === Number(expect)) {
+      try { sessionStorage.removeItem('sf_stale_nuke_' + expect); } catch (_) {}
+    }
     if (expect != null && jsRev != null && Number(jsRev) !== Number(expect)) {
       nukeStale('rev-mismatch html=' + expect + ' js=' + jsRev);
       return;

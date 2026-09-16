@@ -63,9 +63,18 @@ must(!/HTML\/game via netwerk/.test(loop), 'online banner must not dump HTML/net
 const css = fs.readFileSync(path.join(root, 'styles/main.css'), 'utf8');
 must(/#netStatus\.sw-update[^}]*pointer-events:\s*auto/.test(css),
   'tappable update banner needs pointer-events:auto (base #netStatus is none)');
+must(/#netStatus\.sw-update[^}]*bottom:/.test(css),
+  'update banner must dock to the bottom so it does not cover the HOME logo');
 must(/#netStatus\.sw-update-wait/.test(css), 'css missing sw-update-wait');
 must(/body\.is-playing #netStatus\.sw-update/.test(css),
   'update banner during play must hide so it does not crowd the HUD');
+must(/parseInt\(sessionStorage\.getItem\(key\)/.test(index),
+  'nukeStale must count retries instead of locking after one failed attempt');
+must(/n >= 2/.test(index), 'nukeStale must allow a second stale-cache retry');
+must(/try \{ wireNetStatusTap\(\); \}/.test(loop),
+  'update banner tap must bind at parse, not only after bootGame');
+must(/setTimeout\(\(\) => finish\(false\), 2500\)/.test(install) || /2500/.test(install),
+  'applySwUpdate must fail fast so forceFreshVersion can nuke a stuck worker');
 
 must(/id="installCacheStatus"/.test(index), 'install screen must show cache-ready line');
 must(!/Sluit Safari/.test(index), 'install done-copy must not assume Safari');
