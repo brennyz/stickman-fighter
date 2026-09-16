@@ -43,7 +43,7 @@
       "id": "w-20260916T110000",
       "from": "user",
       "text": "check de talen, ook anderen dan alleen nl en en",
-      "status": "in-progress",
+      "status": "done-in-code",
       "updated": "2026-09-16",
       "notes": "Post-#283 Z→A factcheck alle picker-talen (nl→fr→es→en→de). Report + FR/ES/DE stringfixes, speel.html i18n + stepsIos. Versus ongemoeid."
     },
@@ -915,6 +915,10 @@
   ],
   "sessionLog": [
     {
+      "at": "2026-09-16T11:08:14Z",
+      "summary": "Taalfactcheck alle picker-talen Z→A: rapport + FR/ES/DE fixes, speel.html i18n + stepsIos, dexBiome geen NL-leak. Versus ongemoeid. PR #299."
+    },
+    {
       "at": "2026-09-14T20:20:40Z",
       "summary": "Boot-hotfix LIVE op origin/main: game.js parseerde niet (gotoW + SEASON_ART_SLOTS). v1.18.167 / SW 377. Verse versie na Pages."
     },
@@ -1009,10 +1013,6 @@
     {
       "at": "2026-09-14T12:35:18Z",
       "summary": "SATAN-kaart dikkere duivel, groter portret, korte copy, hitte-balk zonder dubbele tekst · v1.18.155 / SW 365"
-    },
-    {
-      "at": "2026-09-14T12:31:31Z",
-      "summary": "Start SATAN-kaart kwaliteit: dikkere duivel, minder dubbele tekst"
     }
   ],
   "implementedFeaturesSummary": "d18 char select deel 1+2 (v1.11.1-2); Mats coinrun + shuriken mik/vliegers + anti-spam (v1.12.0); speel.html (v1.12.2+). Zie HANDOFF-ZOEKINDEX.md en improvement-d20-bag.json userFeatureLog.",
