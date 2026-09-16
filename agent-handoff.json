@@ -91,6 +91,13 @@
   },
   "userWishlist": [
     {
+      "id": "w-20260916T114300",
+      "from": "user",
+      "text": "Owner choices for subtle-life: ONE tiny loop per factory, 1.2–2.5s, low amplitude. flame tip; vat shimmer OR drip; one chipper tooth tick; boiler glow; echo rings; HOME shared micro-pulse. SMIL, keep ids/paths, update #300.",
+      "status": "done-in-code",
+      "updated": "2026-09-16"
+    },
+    {
       "id": "w-20260916T111800",
       "from": "user",
       "text": "PRIORITY before mega-merge: more realism via MOTION — subtle factory life (chimney flicker, boiler glow pulse, mill spin hint) that fits. Lightweight Android-safe. Update PR #300. Document choices.",
@@ -649,6 +656,10 @@
   ],
   "sessionLog": [
     {
+      "at": "2026-09-16T12:14:25Z",
+      "summary": "Owner one-loop factory life on #300: flame tip, vat shimmer, tooth tick, boiler glow, echo rings, HOME pulse (SMIL 1.2–2.5s)."
+    },
+    {
       "at": "2026-09-16T11:42:25Z",
       "summary": "Factory life motion on #300: SMIL flicker/glow/8-step chipper/steam/echo rings in the locked SVGs; CSS reduced-motion for inline. Android <img>-safe."
     },
@@ -743,10 +754,6 @@
     {
       "at": "2026-08-17T14:31:25Z",
       "summary": "Mega-merge op main: light-FX + versus-stubs + dawnblade · v1.18.152 / SW 362"
-    },
-    {
-      "at": "2026-08-17T14:01:21Z",
-      "summary": "GitHub-sync: PC==main; wachtlijst + vraag-bij-upload; tracking nog lokaal"
     }
   ],
   "implementedFeaturesSummary": "d18 char select deel 1+2 (v1.11.1-2); Mats coinrun + shuriken mik/vliegers + anti-spam (v1.12.0); speel.html (v1.12.2+). Zie HANDOFF-ZOEKINDEX.md en improvement-d20-bag.json userFeatureLog.",
