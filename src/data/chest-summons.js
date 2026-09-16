@@ -15,9 +15,9 @@ const CHEST_NICE_CHANCE = 0.14;
 const CHEST_GOOD_CHANCE = 0.30;
 const CHEST_PULL_LOG_MAX = 12;
 const CHEST_SKILL_MAX = 48;
-/** Reveal timeline: matches Gemini clip (~10s); card last 2s. */
-const SUMMON_REVEAL_TOTAL_MS = 10000;
-const SUMMON_CARD_LAST_MS = 2000;
+/** Reveal timeline: short Android clip (~2.4s); card last ~0.9s. */
+const SUMMON_REVEAL_TOTAL_MS = 2400;
+const SUMMON_CARD_LAST_MS = 900;
 const SUMMON_VIDEO_SRC = 'assets/summon/reveal.mp4';
 let _summonVideoOk = null;
 
@@ -39,6 +39,8 @@ function ensureSummonVideoPreloaded() {
     vid.setAttribute('muted', '');
     vid.setAttribute('playsinline', '');
     vid.setAttribute('webkit-playsinline', '');
+    vid.setAttribute('preload', 'metadata');
+    vid.preload = 'metadata';
     const src = summonVideoUrl();
     if (vid.getAttribute('src') !== src) {
       vid.setAttribute('src', src);

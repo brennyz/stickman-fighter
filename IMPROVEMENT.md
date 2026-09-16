@@ -1,3 +1,4 @@
+| 2026-09-16 | **P0–P3 + summon/SW** | UI/UX leftovers + FINDINGS i18n; summon reveal ≤2.4s (265KB baseline 480p, CSS fallback instantly); update-banner onderaan HOME + tap bindt vóór boot + nuke retry. **v1.18.169 / SW v379**. |
 | 2026-09-16 | **P0–P3 UI/UX + i18n** | HOME Upgrades (al live) + online-save primary, Options strip (versie/Fresh achter 5×/lange-press), wapen-contrast, Settings HOME-tegels, drawer Settings, NL/EN/DE leftovers (Muziek/Effecten, Profiel, Oproepen/Beschwörungen, vrij Lv, combat kb), 390px overflow, gear/seizoen/aim harden. **v1.18.168 / SW v378**. |
 | 2026-09-14 | **i18n Z→A rebase** | #283 rebased on #273: coverage keys + FR/ES/DE overlays; polish wording wins. **v1.18.165 / SW v375**. |
 | 2026-09-14 | **i18n harden** | Zelfde lane #273: Collectie/Settings leftover Dutch via t(); EN/DE geen NL-markers; Versus-keys vallen terug op EN. **v1.18.165 / SW v375**. |

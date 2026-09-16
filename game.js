@@ -323,9 +323,9 @@ const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const VERSION_UPDATE_SAVE_KEY = 'stickfighter_version_update_save_v1';
 const VERSION_UPDATE_FLAG_KEY = 'stickfighter_version_update_flag_v1';
 const SAVE_EXPORT_SCHEMA = 3;
-const APP_VERSION = '1.18.168';
+const APP_VERSION = '1.18.169';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 378;
+const SW_CACHE_REV = 379;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', petCoins: 0, dex: {}, summons: {}, pets: {}, activePet: null,
   eggPets: {}, activeEggPet: null, eggDaily: null,
   chestDaily: null, chestWeapons: {},
@@ -2610,7 +2610,7 @@ const I18N = {
     },
     result: { again: 'Again', next: 'Next level', menu: 'Main menu', menuArcade: 'Arcade', rematch: 'Rematch', rematchSub: 'Same fighters',
       trainAgainSub: 'vs RabbitRobot',
-      advWin: 'VICTORY!', advLose: 'YOU LOST', trainWin: 'CHAMPION!', trainLose: 'ROBOT WINS...',
+      advWin: 'VICTORY!', advLose: 'VERLOREN', trainWin: 'CHAMPION!', trainLose: 'ROBOT WINS...',
       advLoseKeep: 'XP and loot from this run stay',
       wavesStart: 'start',
       xp: '+{xp} XP earned · now Lv {lvl} ({cur}/{need} XP)' },
@@ -17406,9 +17406,9 @@ const CHEST_NICE_CHANCE = 0.14;
 const CHEST_GOOD_CHANCE = 0.30;
 const CHEST_PULL_LOG_MAX = 12;
 const CHEST_SKILL_MAX = 48;
-/** Reveal timeline: matches Gemini clip (~10s); card last 2s. */
-const SUMMON_REVEAL_TOTAL_MS = 10000;
-const SUMMON_CARD_LAST_MS = 2000;
+/** Reveal timeline: short Android clip (~2.4s); card last ~0.9s. */
+const SUMMON_REVEAL_TOTAL_MS = 2400;
+const SUMMON_CARD_LAST_MS = 900;
 const SUMMON_VIDEO_SRC = 'assets/summon/reveal.mp4';
 let _summonVideoOk = null;
 
@@ -17430,6 +17430,8 @@ function ensureSummonVideoPreloaded() {
     vid.setAttribute('muted', '');
     vid.setAttribute('playsinline', '');
     vid.setAttribute('webkit-playsinline', '');
+    vid.setAttribute('preload', 'metadata');
+    vid.preload = 'metadata';
     const src = summonVideoUrl();
     if (vid.getAttribute('src') !== src) {
       vid.setAttribute('src', src);
@@ -19453,7 +19455,7 @@ const CATALOG_EN = {
   },
   pickup: { heal: '+HP', rage: 'RAGE', energy: 'ENERGY', shield: 'SHIELD' },
   result: {
-    advWin: 'VICTORY!', advLose: 'YOU LOST', trainWin: 'CHAMPION!', trainLose: 'ROBOT WINS...',
+    advWin: 'VICTORY!', advLose: 'VERLOREN', trainWin: 'CHAMPION!', trainLose: 'ROBOT WINS...',
     advLoseKeep: 'XP and loot from this run stay',
     trainAgainSub: 'vs RabbitRobot',
     wavesStart: 'start',
@@ -45344,8 +45346,9 @@ const UI = {
         try { vid.pause(); } catch (_) {}
       }
       if (fallback) fallback.style.display = '';
-      startTimers(SUMMON_REVEAL_TOTAL_MS);
     };
+
+    startTimers(SUMMON_REVEAL_TOTAL_MS);
 
     if (_summonVideoOk === false || !vid) {
       useFallback();
@@ -45356,32 +45359,31 @@ const UI = {
       ? summonVideoUrl()
       : ((vid.getAttribute('data-src') || SUMMON_VIDEO_SRC) + '?v=' + (typeof SW_CACHE_REV !== 'undefined' ? SW_CACHE_REV : 0));
     let settled = false;
+    const videoReady = () => vid.readyState >= 3 && vid.duration && isFinite(vid.duration);
     const settleOk = () => {
       if (settled) return;
+      if (!videoReady() && vid.readyState < 2) return;
       settled = true;
       _summonVideoOk = true;
       if (fallback) fallback.style.display = 'none';
       // Must be 'block' — stylesheet sets .summon-video { display:none }
       vid.style.display = 'block';
       try { if (screen) screen.classList.add('has-video'); } catch (_) {}
-      const durMs = Math.max(
-        4000,
-        Math.round((vid.duration && isFinite(vid.duration) ? vid.duration : 10) * 1000)
-      );
-      startTimers(durMs);
+      const cap = (typeof SUMMON_REVEAL_TOTAL_MS === 'number') ? SUMMON_REVEAL_TOTAL_MS : 2400;
+      const rawSec = (vid.duration && isFinite(vid.duration)) ? vid.duration : (cap / 1000);
       try {
         vid.muted = true;
         vid.defaultMuted = true;
-        vid.currentTime = 0;
+        // Stale 10s cache: jump to the payoff so the UI stays ≤2.4s.
+        const startAt = rawSec > 3.2 ? Math.max(0, rawSec - (cap / 1000)) : 0;
+        try { vid.currentTime = startAt; } catch (_) { try { vid.currentTime = 0; } catch (__) {} }
         const p = vid.play();
-        // play() reject must NOT kill the reveal — still show frames if any
         if (p && p.catch) p.catch(() => {});
       } catch (_) {}
     };
     const settleFallback = () => {
       if (settled) return;
-      // Soft retry: if browser already has metadata, treat as ok
-      if (vid.readyState >= 1 && vid.duration && isFinite(vid.duration)) {
+      if (videoReady()) {
         settleOk();
         return;
       }
@@ -45390,30 +45392,37 @@ const UI = {
       useFallback();
     };
     vid.onerror = settleFallback;
-    vid.onloadedmetadata = settleOk;
+    vid.onloadedmetadata = () => {
+      if (videoReady()) settleOk();
+    };
     vid.oncanplay = () => {
       if (!settled && vid.readyState >= 2) settleOk();
+    };
+    vid.oncanplaythrough = () => {
+      if (!settled) settleOk();
     };
     try {
       if (fallback) fallback.style.display = '';
       vid.style.display = 'none';
       vid.muted = true;
       vid.defaultMuted = true;
+      vid.preload = 'metadata';
+      vid.setAttribute('preload', 'metadata');
       const sameSrc = vid.getAttribute('src') === src;
-      const warm = sameSrc && vid.readyState >= 1 && vid.duration && isFinite(vid.duration);
+      const warm = sameSrc && videoReady();
       if (!sameSrc) {
         vid.setAttribute('src', src);
         try { vid.load(); } catch (_) {}
-      } else if (!warm) {
+      } else if (!warm && vid.readyState < 2) {
         try { vid.load(); } catch (_) {}
       }
-      if (warm || (vid.readyState >= 1 && vid.duration && isFinite(vid.duration))) {
+      if (warm) {
         settleOk();
       } else {
-        // 1.6MB on phone — allow more than 1.1s before fallback
+        // CSS chest is ready immediately — don't stall on a cold decode.
         setTimeout(() => {
           if (!settled) settleFallback();
-        }, 4500);
+        }, 700);
       }
     } catch (_) {
       settleFallback();
@@ -49559,9 +49568,27 @@ function wireNetStatusTap() {
   if (!el || el.dataset.sfNetTap) return;
   el.dataset.sfNetTap = '1';
   const run = () => {
-    if (!window.__sfSwUpdateReady) return;
-    if (!netUpdateOnHub()) return;
-    safeAsync(runVersionUpdateWithSavePrompt(), 'swUpdateTap', t('versionUpdate.fail'));
+    if (document.body && document.body.classList.contains('is-playing')) return;
+    try {
+      if (typeof state !== 'undefined' && (state === 'play' || state === 'pause')) return;
+    } catch (_) {}
+    const bannerOn = !!(el.classList && el.classList.contains('sw-update'));
+    if (!window.__sfSwUpdateReady && !bannerOn) return;
+    const goFresh = () => {
+      if (typeof window.forceFreshVersion === 'function') return window.forceFreshVersion();
+      try {
+        const u = new URL(location.href);
+        u.searchParams.set('fresh', String(Date.now()));
+        location.replace(u.toString());
+      } catch (_) { location.reload(); }
+    };
+    if (typeof runVersionUpdateWithSavePrompt === 'function' && window.__sfBooted) {
+      safeAsync(Promise.resolve(runVersionUpdateWithSavePrompt()).then((ok) => {
+        if (ok === false) return goFresh();
+      }).catch(goFresh), 'swUpdateTap', (typeof t === 'function') ? t('versionUpdate.fail') : 'Update failed');
+      return;
+    }
+    goFresh();
   };
   el.addEventListener('click', (e) => {
     if (e.target && e.target.id === 'netStatusDismiss') return;
@@ -50040,3 +50067,4 @@ function bindUiLayerWatch() {
   setInterval(tick, 1200);
 }
 bindUiLayerWatch();
+try { wireNetStatusTap(); } catch (_) {}

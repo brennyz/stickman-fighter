@@ -2600,6 +2600,11 @@
   body.is-playing.sf-offline #netStatus { top:auto; bottom:max(108px, calc(env(safe-area-inset-bottom) + 92px)); font-size:11px; }
   #netStatus.online-flash { color:#d8ffe8; background:rgba(12,40,28,.9); border-color:rgba(80,220,140,.5); }
   #netStatus.sw-pending { color:var(--menu-ink-muted); }
+  #netStatus.sw-update,
+  #netStatus.sw-update-wait {
+      top:auto; bottom:max(14px, calc(env(safe-area-inset-bottom) + 10px));
+      z-index:24; pointer-events:auto; max-width:min(92vw, 360px);
+  }
   #netStatus.sw-update { color:var(--menu-ink); background:var(--menu-tile-solid-hi);
       border-color:rgba(255,215,94,.45); cursor:pointer; touch-action:manipulation; }
   #netStatus.sw-update-wait { color:var(--menu-ink-muted); pointer-events:auto; }

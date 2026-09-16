@@ -85,6 +85,12 @@ if (!/bindPlayerDiagUnlock/.test(start)) fail('Fresh version unlock gesture miss
 if (!/__sfSeason\.apply/.test(seasons)) fail('season pref must sync overlay apply()');
 if (!/rarity\.' \+ rar/.test(ui)) fail('gear slot rarity must use i18n');
 
+const chest = fs.readFileSync(path.join(root, 'src/data/chest-summons.js'), 'utf8');
+const revealMs = chest.match(/SUMMON_REVEAL_TOTAL_MS\s*=\s*(\d+)/);
+if (!revealMs || Number(revealMs[1]) > 3000) fail('summon reveal must be ≤3s on Android');
+if (!/preload="metadata"/.test(html)) fail('summon video must not preload=auto');
+if (!/#netStatus\.sw-update[^}]*bottom:/.test(css)) fail('update banner must sit at the bottom of HOME');
+
 const menuChunk = html.slice(html.indexOf('id="menuScreen"'), html.indexOf('id="modeHubScreen"'));
 if (/id="btnInstallApp"/.test(menuChunk)) fail('install CTA must not sit on HOME');
 if (!/menu-sr-only[\s\S]*menuLangBar/.test(menuChunk)) fail('5-lang switcher must stay off visible HOME');

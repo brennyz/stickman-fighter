@@ -13,15 +13,15 @@
     "tunnelBookmark": "https://stickfighter-ipad-b75e.loca.lt/ipad.html"
   },
   "codeTruth": {
-    "appVersion": "1.18.168",
-    "swCache": "stickfighter-app-v378",
-    "gameJsQuery": "game.js?v=378",
-    "cssQuery": "styles/main.css?v=378",
+    "appVersion": "1.18.169",
+    "swCache": "stickfighter-app-v379",
+    "gameJsQuery": "game.js?v=379",
+    "cssQuery": "styles/main.css?v=379",
     "featureBranch": "cursor/p0-p3-uiux-i18n-a9a4",
     "pushBlocked": null,
     "shareUrl": "https://brennyz.github.io/stickman-fighter/speel.html",
-    "note": "P0–P3 UI/UX + FINDINGS i18n on cursor/p0-p3-uiux-i18n-a9a4. v1.18.168 / SW 378. Not on origin/main until merge.",
-    "updated": "2026-09-16T11:20:00Z",
+    "note": "P0–P3 UI/UX + FINDINGS i18n + snappy summons + SW banner/nuke on cursor/p0-p3-uiux-i18n-a9a4. v1.18.169 / SW 379. Not on origin/main until merge.",
+    "updated": "2026-09-16T11:17:57Z",
     "localMainHead": "c245df446cdab8494b7030e3bab2b3f92c3c7242",
     "remoteMainHead": "c245df446cdab8494b7030e3bab2b3f92c3c7242"
   },
@@ -39,6 +39,22 @@
     "pendingMerge": []
   },
   "userWishlist": [
+    {
+      "id": "w-2026-09-16T111600",
+      "from": "user",
+      "text": "Summons video is VERY clunky — replace/rebuild snappy presentation (≤2–3s to ready, no stutter) on existing Summons flow.",
+      "status": "done-in-code",
+      "updated": "2026-09-16",
+      "notes": "reveal.mp4 1.6MB/10s/720p High → 265KB/2.4s/480p baseline; timers start immediately; CSS chest if decode >700ms."
+    },
+    {
+      "id": "w-2026-09-16T111700",
+      "from": "user",
+      "text": "Persistent “New version ready — tap to load” covers HOME logo; tap failed; UI showed ancient v1.18.107 while newer features live. Fix SW/cache update path.",
+      "status": "done-in-code",
+      "updated": "2026-09-16",
+      "notes": "Banner docks to HOME bottom; tap binds at parse; applySwUpdate fail-fast then nuke; nukeStale retries twice; APP/SW handshake 1.18.169/379."
+    },
     {
       "id": "w-2026-09-16T110307",
       "from": "user",

@@ -2519,8 +2519,9 @@ const UI = {
         try { vid.pause(); } catch (_) {}
       }
       if (fallback) fallback.style.display = '';
-      startTimers(SUMMON_REVEAL_TOTAL_MS);
     };
+
+    startTimers(SUMMON_REVEAL_TOTAL_MS);
 
     if (_summonVideoOk === false || !vid) {
       useFallback();
@@ -2531,32 +2532,31 @@ const UI = {
       ? summonVideoUrl()
       : ((vid.getAttribute('data-src') || SUMMON_VIDEO_SRC) + '?v=' + (typeof SW_CACHE_REV !== 'undefined' ? SW_CACHE_REV : 0));
     let settled = false;
+    const videoReady = () => vid.readyState >= 3 && vid.duration && isFinite(vid.duration);
     const settleOk = () => {
       if (settled) return;
+      if (!videoReady() && vid.readyState < 2) return;
       settled = true;
       _summonVideoOk = true;
       if (fallback) fallback.style.display = 'none';
       // Must be 'block' — stylesheet sets .summon-video { display:none }
       vid.style.display = 'block';
       try { if (screen) screen.classList.add('has-video'); } catch (_) {}
-      const durMs = Math.max(
-        4000,
-        Math.round((vid.duration && isFinite(vid.duration) ? vid.duration : 10) * 1000)
-      );
-      startTimers(durMs);
+      const cap = (typeof SUMMON_REVEAL_TOTAL_MS === 'number') ? SUMMON_REVEAL_TOTAL_MS : 2400;
+      const rawSec = (vid.duration && isFinite(vid.duration)) ? vid.duration : (cap / 1000);
       try {
         vid.muted = true;
         vid.defaultMuted = true;
-        vid.currentTime = 0;
+        // Stale 10s cache: jump to the payoff so the UI stays ≤2.4s.
+        const startAt = rawSec > 3.2 ? Math.max(0, rawSec - (cap / 1000)) : 0;
+        try { vid.currentTime = startAt; } catch (_) { try { vid.currentTime = 0; } catch (__) {} }
         const p = vid.play();
-        // play() reject must NOT kill the reveal — still show frames if any
         if (p && p.catch) p.catch(() => {});
       } catch (_) {}
     };
     const settleFallback = () => {
       if (settled) return;
-      // Soft retry: if browser already has metadata, treat as ok
-      if (vid.readyState >= 1 && vid.duration && isFinite(vid.duration)) {
+      if (videoReady()) {
         settleOk();
         return;
       }
@@ -2565,30 +2565,37 @@ const UI = {
       useFallback();
     };
     vid.onerror = settleFallback;
-    vid.onloadedmetadata = settleOk;
+    vid.onloadedmetadata = () => {
+      if (videoReady()) settleOk();
+    };
     vid.oncanplay = () => {
       if (!settled && vid.readyState >= 2) settleOk();
+    };
+    vid.oncanplaythrough = () => {
+      if (!settled) settleOk();
     };
     try {
       if (fallback) fallback.style.display = '';
       vid.style.display = 'none';
       vid.muted = true;
       vid.defaultMuted = true;
+      vid.preload = 'metadata';
+      vid.setAttribute('preload', 'metadata');
       const sameSrc = vid.getAttribute('src') === src;
-      const warm = sameSrc && vid.readyState >= 1 && vid.duration && isFinite(vid.duration);
+      const warm = sameSrc && videoReady();
       if (!sameSrc) {
         vid.setAttribute('src', src);
         try { vid.load(); } catch (_) {}
-      } else if (!warm) {
+      } else if (!warm && vid.readyState < 2) {
         try { vid.load(); } catch (_) {}
       }
-      if (warm || (vid.readyState >= 1 && vid.duration && isFinite(vid.duration))) {
+      if (warm) {
         settleOk();
       } else {
-        // 1.6MB on phone — allow more than 1.1s before fallback
+        // CSS chest is ready immediately — don't stall on a cold decode.
         setTimeout(() => {
           if (!settled) settleFallback();
-        }, 4500);
+        }, 700);
       }
     } catch (_) {
       settleFallback();
