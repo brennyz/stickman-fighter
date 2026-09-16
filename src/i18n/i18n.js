@@ -38,7 +38,7 @@ const I18N = {
       step: 'Stap 2 · Kies modus', solo: 'SOLO', collection: 'COLLECTIE',
       arcadeTitle: 'Arcade', arcadeSub: 'Snelle sessies · save blijft hier',
       collectTitle: 'Collectie', collectSub: 'Uitrusting · wapens · pets · stijl',
-      gear: 'Uitrusting', gearSub: 'Slots · look',
+      gear: 'Uitrusting', gearSub: '5 slots · look vs stats',
       training: 'Training', trainingSub: '1v1 · RabbitRobot · oefenen',
       wall: 'Muur Slopen', wallSub: '60 sec · combo = sneller',
       mats: 'Muntjes', matsSub: '45 sec · munten → pet coins',
@@ -327,7 +327,7 @@ const I18N = {
       step: 'Step 2 · Pick mode', solo: 'SOLO', collection: 'COLLECTION',
       arcadeTitle: 'Arcade', arcadeSub: 'Quick sessions · save stays here',
       collectTitle: 'Collection', collectSub: 'Gear · weapons · pets · style',
-      gear: 'Gear', gearSub: 'Slots · look',
+      gear: 'Gear', gearSub: '5 slots · look vs stats',
       training: 'Training', trainingSub: '1v1 · RabbitRobot · practice',
       wall: 'Wall Smash', wallSub: '60 sec · combo = faster',
       mats: 'Coins', matsSub: '45 sec · coins → pet coins',
@@ -1513,6 +1513,8 @@ function applyLangStaticScreens() {
     ['.hub-tile-collect .hub-tile-sub', 'menu.collectSub'],
     ['.hub-tile-buildings .hub-tile-title', 'menu.buildings'],
     ['.hub-tile-buildings .hub-tile-sub', 'menu.buildingsSub'],
+    ['#btnGearHome .hub-tile-title', 'hub.gear'],
+    ['#btnGearHome .hub-tile-sub', 'hub.gearSub'],
     ['.hub-tile-summon .hub-tile-title', 'menu.summons'],
     ['.hub-tile-summon .hub-tile-sub', 'menu.summonsSub'],
   ];
@@ -1592,6 +1594,7 @@ function applyLangStaticScreens() {
     ['btnBuildings', 'hub.buildings', 'hub.buildingsSub'],
     ['btnDex', 'hub.dex', 'hub.dexSub'],
     ['btnGear', 'hub.gear', 'hub.gearSub'],
+    ['btnGearHome', 'hub.gear', 'hub.gearSub'],
   ];
   for (const [id, titleKey, subKey] of modeRows) {
     const btn = document.getElementById(id);

@@ -894,6 +894,10 @@ function hubTileStatLine(hub) {
         return t('ui.hubStatSummonDefault');
       }
     }
+    case 'gear': {
+      const n = typeof gearEquippedCount === 'function' ? gearEquippedCount() : 0;
+      return typeof tOr === 'function' ? tOr('gear.hubStat', '{n}/5', { n }) : (n + '/5');
+    }
     default:
       return '';
   }
@@ -1034,6 +1038,9 @@ const UI = {
   gearSlotPick: 'head',
   gearFilter: 'all',
   gearFilterQ: '',
+  gearRarity: 'all',
+  gearOpenedFrom: 'collect',
+  weaponOpenedFrom: null,
   _gearFilterBound: false,
   _gearPickerScroll: 0,
   gearItemPick: null,
@@ -1071,7 +1078,17 @@ const UI = {
     const back = el.querySelector('.back-btn[data-back], .back-btn[data-back-gamble], #installBack');
     if (!back) return;
     const label = this.BACK_LABELS[active];
-    if (label) back.textContent = label;
+    if (!label) return;
+    const shown = String(label).replace(/^←\s*/, '');
+    const text = back.querySelector('.back-btn-label');
+    if (text) {
+      text.textContent = shown;
+      return;
+    }
+    const ico = back.querySelector('.back-btn-ico');
+    back.textContent = '';
+    if (ico) back.appendChild(ico);
+    back.appendChild(document.createTextNode(shown));
   },
 
   resetInnerScrolls(screenEl) {
@@ -1381,6 +1398,16 @@ const UI = {
         return;
       }
       if (active === 'buildingsScreen' && typeof this.buildingsGoBack === 'function' && this.buildingsGoBack()) {
+        return;
+      }
+      if (active === 'weaponScreen' && this.weaponOpenedFrom === 'gear') {
+        this.weaponOpenedFrom = null;
+        this.safeOpen('gearScreen', () => this.renderGear());
+        return;
+      }
+      if (active === 'gearScreen' && this.gearOpenedFrom === 'home') {
+        this.renderMenu();
+        this.show('menuScreen');
         return;
       }
       if (active === 'weaponScreen' || active === 'petScreen' || active === 'styleScreen' || active === 'gearScreen' || active === 'skillScreen' || active === 'upgradeScreen' || active === 'dexScreen' || active === 'buildingsScreen') {
@@ -4269,14 +4296,46 @@ const UI = {
       }) || items[0] || {}).id || null;
     }
 
-    const pillFor = (item, unlock) => {
+    this.BACK_LABELS.gearScreen = this.gearOpenedFrom === 'home'
+      ? tOr('back.menu', '← Menu')
+      : tOr('back.collect', '← Collectie');
+    this.syncBackLabels();
+
+    const pillFor = (item, unlock, extra) => {
+      extra = extra || {};
       if (item && unlock && !unlock.unlocked) {
-        return `<span class="gear-pill gear-pill-lock">${esc(unlock.label || tOr('gear.pillLock', 'LOCK'))}</span>`;
+        return `<span class="gear-pill gear-pill-lock">${esc(tOr('gear.pillLock', 'LOCK'))}</span>`;
       }
+      const bits = [];
+      if (extra.on) bits.push(`<span class="gear-pill gear-pill-on">${esc(tOr('gear.wearing', 'aan'))}</span>`);
       const stat = item && (typeof gearHasStats === 'function' ? gearHasStats(item) : !!(item.hasStats && item.vanity !== true));
-      if (stat) return `<span class="gear-pill gear-pill-stat">${esc(tOr('gear.pillStat', 'STAT'))}</span>`;
-      if (item) return `<span class="gear-pill gear-pill-vanity">${esc(tOr('gear.pillVanity', 'LOOK'))}</span>`;
-      return `<span class="gear-pill">${esc(tOr('gear.empty', 'Leeg'))}</span>`;
+      if (stat) bits.push(`<span class="gear-pill gear-pill-stat">${esc(tOr('gear.pillStat', 'STAT'))}</span>`);
+      else if (item) bits.push(`<span class="gear-pill gear-pill-vanity">${esc(tOr('gear.pillVanity', 'LOOK'))}</span>`);
+      else bits.push(`<span class="gear-pill gear-pill-empty">${esc(tOr('gear.empty', 'Leeg'))}</span>`);
+      return bits.join('');
+    };
+
+    const wearItem = (item) => {
+      const res = (typeof gearEquipItem === 'function') ? gearEquipItem(item.id) : equipGear(item.id);
+      if (!res || !res.ok) {
+        const fail = gearUnlockState(item);
+        UI.toast((res && res.label) || fail.label || tOr('toast.gearLocked', 'Nog op slot'), 1800, { tone: 'warn' });
+        return false;
+      }
+      AudioSys.sfx('select');
+      UI.toast(tOr('toast.gearEquipped', '{name} aangedaan', { name: gearItemName(item) }), 1400, { tone: 'ok' });
+      return true;
+    };
+    const takeOff = (item) => {
+      const sid = item.slot || item.slotId;
+      if (typeof gearUnequipSlot === 'function') gearUnequipSlot(sid);
+      else unequipGear(sid);
+      AudioSys.sfx('select');
+      UI.toast(tOr('toast.gearUnequipped', '{name} uitgedaan', { name: gearItemName(item) }), 1200);
+    };
+    const keepPickerScroll = () => {
+      const p = document.getElementById('gearPicker');
+      this._gearPickerScroll = p ? p.scrollTop : 0;
     };
 
     const sumEl = document.getElementById('gearSummary');
@@ -4288,8 +4347,8 @@ const UI = {
       }, 0);
       const catalogN = (typeof GEAR_ITEMS !== 'undefined' && Array.isArray(GEAR_ITEMS)) ? GEAR_ITEMS.length : items.length;
       sumEl.innerHTML =
-        `${tOr('gear.summarySlots', '<b>{n}</b>/5', { n: filled })} · ` +
-        `<span class="gear-pill gear-pill-stat">${esc(tOr('gear.pillStat', 'STAT'))} ${statN}</span> ` +
+        `<span class="gear-pill gear-pill-on">${tOr('gear.summarySlots', '<b>{n}</b>/5', { n: filled })}</span>` +
+        `<span class="gear-pill gear-pill-stat">${esc(tOr('gear.pillStat', 'STAT'))} ${statN}</span>` +
         `<span class="gear-pill gear-pill-vanity">${esc(tOr('gear.pillVanity', 'LOOK'))} ${Math.max(0, filled - statN)}</span>` +
         `<span class="gear-pill">${esc(tOr('gear.catalogN', '{n} items', { n: catalogN }))}</span>`;
     }
@@ -4301,6 +4360,13 @@ const UI = {
         `<span class="gear-pill gear-pill-lock">${esc(tOr('gear.pillLock', 'LOCK'))}</span>`;
     }
 
+    const slotIco = (typeof GEAR_SLOT_ICONS !== 'undefined' && GEAR_SLOT_ICONS) ? GEAR_SLOT_ICONS : {
+      head: 'assets/buttons/modes/gear-head.svg',
+      chest: 'assets/buttons/modes/gear-chest.svg',
+      hands: 'assets/buttons/modes/gear-hands.svg',
+      legs: 'assets/buttons/modes/gear-legs.svg',
+      back: 'assets/buttons/modes/gear-back.svg',
+    };
     const slotList = document.getElementById('gearSlotList');
     if (!pickerOnly && slotList) {
       slotList.innerHTML = '';
@@ -4311,7 +4377,7 @@ const UI = {
         const unlock = item && typeof gearUnlockState === 'function' ? gearUnlockState(item) : { unlocked: true };
         const btn = document.createElement('button');
         btn.type = 'button';
-        btn.className = 'gear-slot-card'
+        btn.className = 'hub-tile gear-slot-card'
           + (sid === pickSlot ? ' sel' : '')
           + (item && unlock.unlocked && gearHasStats(item) ? ' kind-stat' : '')
           + (item && !unlock.unlocked ? ' locked' : '')
@@ -4327,20 +4393,29 @@ const UI = {
           : (!unlock.unlocked
             ? (unlock.label || tOr('gear.pillLock', 'LOCK'))
             : (gearItemName(item) + (rar ? ' · ' + tOr('rarity.' + rar, tOr('gear.rar.' + rar, rar)) : '')));
+        const ico = slotIco[sid] || 'assets/buttons/modes/gear.svg';
         btn.innerHTML =
-          `<span class="gear-slot-swatch" style="background:${esc(tint)}"></span>` +
+          `<span class="hub-tile-ico gear-slot-swatch" style="background:${esc(tint)}">` +
+          `<img src="${esc(ico)}" alt="" width="22" height="22" decoding="async" draggable="false"></span>` +
           `<span class="gear-slot-copy">` +
-          `<span class="gear-slot-title">${esc(gearSlotName(sid))}</span>` +
-          `<span class="gear-slot-sub">${esc(sub)}</span>` +
+          `<span class="hub-tile-title gear-slot-title">${esc(gearSlotName(sid))}</span>` +
+          `<span class="hub-tile-sub gear-slot-sub">${esc(sub)}</span>` +
           `</span>` +
-          pillFor(item, unlock);
+          `<span class="gear-slot-pills hub-tile-stat">${pillFor(item, unlock, { on: !!item })}</span>`;
         bindPress(btn, () => {
           safeUiAction(() => {
             this.gearSlotPick = sid;
-            this.gearItemPick = null;
+            this.gearItemPick = eq[sid] || null;
             this._gearPickerScroll = 0;
             AudioSys.sfx('select');
             this.renderGear();
+            const screen = document.getElementById('gearScreen');
+            const inv = document.getElementById('gearInvSection');
+            if (screen && inv) {
+              const sr = screen.getBoundingClientRect();
+              const ir = inv.getBoundingClientRect();
+              screen.scrollTop += (ir.top - sr.top) - 10;
+            }
           }, 'gearSlot/' + sid, tOr('gear.errSlot', 'Slot pick failed'));
         });
         slotList.appendChild(btn);
@@ -4352,8 +4427,10 @@ const UI = {
       const w = typeof weaponById === 'function' ? weaponById(save.weapon) : null;
       const wName = w && typeof weaponLabel === 'function' ? weaponLabel(w) : (save.weapon || '—');
       aside.innerHTML =
-        `<b>${esc(tOr('gear.weaponAside', 'Wapen'))}</b> · ${esc(wName)}` +
-        `<div class="gear-detail-sub">${esc(tOr('gear.weaponAsideHint', 'Blijft in Collectie → Wapens — geen 6e slot.'))}</div>`;
+        `<span class="hub-tile-ico"><img src="assets/buttons/modes/weapons.svg" alt="" width="28" height="28" decoding="async" draggable="false"></span>` +
+        `<span class="hub-tile-title">${esc(tOr('gear.weaponAside', 'Wapen'))}</span>` +
+        `<span class="hub-tile-sub">${esc(wName)} · ${esc(tOr('gear.weaponAsideHint', 'Collectie · geen 6e slot'))}</span>` +
+        `<span class="hub-tile-stat">${esc(tOr('gear.weaponOpen', 'Wapens'))}</span>`;
     }
 
     const cv = document.getElementById('gearDollCanvas');
@@ -4364,69 +4441,40 @@ const UI = {
       cc.clearRect(0, 0, cv.width, cv.height);
       const st = typeof styleById === 'function' ? styleById(save.style || 'classic') : { body: '#f2f5ff' };
       cc.save();
-      cc.translate(cv.width / 2, cv.height - 18);
-      cc.scale(1.15, 1.15);
+      cc.translate(cv.width / 2, cv.height - 28);
+      cc.scale(1.7, 1.7);
       const preview = new Fighter({ isPlayer: true, x: 0, y: 0, color: st.body, style: st, scale: 1 });
       preview.animT = 0.55;
       preview.draw(cc);
       cc.restore();
     }
 
+    const kicker = document.getElementById('gearInvKicker');
+    if (kicker) {
+      kicker.textContent = tOr('gear.invKicker', '{slot}', { slot: gearSlotName(pickSlot) });
+    }
+
     const detail = document.getElementById('gearDetail');
     const rawPicked = typeof gearItemById === 'function' ? gearItemById(this.gearItemPick) : null;
     const picked = (typeof contractGearItem === 'function' && rawPicked) ? contractGearItem(rawPicked) : rawPicked;
-    if (!pickerOnly && detail) {
+    if (detail) {
       if (!picked) {
-        detail.innerHTML = `<div class="gear-detail-sub">${esc(tOr('gear.pickHint', 'Tik een slot, dan een item.'))}</div>`;
+        detail.innerHTML = `<div class="gear-detail-sub">${esc(tOr('gear.pickHint', 'Tik een item om aan of uit te doen.'))}</div>`;
       } else {
         const unlock = gearUnlockState(picked);
         const tip = unlock.model || (typeof gearTooltipModel === 'function' ? gearTooltipModel(picked) : null);
         const equippedHere = eq[picked.slot] === picked.id || eq[picked.slotId] === picked.id;
-        const kindPill = pillFor(picked, unlock);
+        const kindPill = pillFor(picked, unlock, { on: equippedHere });
         const lockLine = unlock.unlocked
           ? ''
-          : `<div class="gear-detail-sub" style="color:#ffd75e;margin-top:6px">${esc(tOr('gear.lockedLine', 'Op slot · {why}', { why: unlock.label || '' }))}</div>`;
+          : `<div class="gear-detail-sub" style="color:#ffd75e;margin-top:4px">${esc(unlock.label || tOr('gear.pillLock', 'LOCK'))}</div>`;
         const bonus = unlock.unlocked
           ? (tip && tip.desc ? esc(tip.desc) + (tip.combatLine ? ' · ' + esc(tip.combatLine) : '') : esc(gearStatLine(picked)))
           : esc(tOr('gear.lockNoStats', 'Geen stats tot het slot open is'));
-        const actions = unlock.unlocked
-          ? (`<div class="gear-detail-actions">` +
-            (equippedHere
-              ? `<button type="button" class="btn mode-btn b-gray big-touch" id="gearUnequipBtn"><div>${esc(tOr('gear.unequip', 'Uitdoen'))}</div></button>`
-              : `<button type="button" class="btn mode-btn b-continue big-touch" id="gearEquipBtn"><div>${esc(tOr('gear.equip', 'Aandoen'))}</div></button>`) +
-            `</div>`)
-          : '';
         detail.innerHTML =
           `<div class="gear-detail-title">${esc(gearItemName(picked))} ${kindPill}</div>` +
           `<div class="gear-detail-sub">${bonus}</div>` +
-          lockLine + actions;
-        const eqBtn = document.getElementById('gearEquipBtn');
-        if (eqBtn) bindPress(eqBtn, () => {
-          safeUiAction(() => {
-            const res = (typeof gearEquipItem === 'function') ? gearEquipItem(picked.id) : equipGear(picked.id);
-            if (!res || !res.ok) {
-              const fail = gearUnlockState(picked);
-              UI.toast((res && res.label) || fail.label || tOr('toast.gearLocked', 'Nog op slot'), 1800, { tone: 'warn' });
-              return;
-            }
-            AudioSys.sfx('select');
-            UI.toast(tOr('toast.gearEquipped', '{name} aangedaan', { name: gearItemName(picked) }), 1800, { tone: 'ok' });
-            this.renderGear();
-            this.renderMenu();
-          }, 'equipGear/' + picked.id, 'Uitrusten mislukt');
-        });
-        const uqBtn = document.getElementById('gearUnequipBtn');
-        if (uqBtn) bindPress(uqBtn, () => {
-          safeUiAction(() => {
-            const sid = picked.slot || picked.slotId;
-            if (typeof gearUnequipSlot === 'function') gearUnequipSlot(sid);
-            else unequipGear(sid);
-            AudioSys.sfx('select');
-            UI.toast(tOr('toast.gearUnequipped', '{name} uitgedaan', { name: gearItemName(picked) }), 1600);
-            this.renderGear();
-            this.renderMenu();
-          }, 'unequipGear/' + (picked.slot || picked.slotId), 'Uitdoen mislukt');
-        });
+          lockLine;
       }
     }
 
@@ -4568,18 +4616,22 @@ const UI = {
           : (unlock.label || tOr('gear.pillLock', 'LOCK'));
         el.innerHTML =
           `<span class="gear-card-swatch" style="background:${esc(tint)}"></span>` +
-          `<span class="gear-card-body"><span class="gear-card-name">${esc(gearItemName(it))} ${pillFor(it, unlock)} ${rarPill}</span>` +
-          `<span class="gear-card-meta">${esc(meta)}${equippedHere ? ' · ' + esc(tOr('gear.wearing', 'aan')) : ''}</span></span>`;
+          `<span class="gear-card-body"><span class="gear-card-name">${esc(gearItemName(it))} ${pillFor(it, unlock, { on: equippedHere })} ${rarPill}</span>` +
+          `<span class="gear-card-meta">${esc(meta)}</span></span>`;
         bindPress(el, () => {
           safeUiAction(() => {
             this.gearItemPick = it.id;
-            AudioSys.sfx('select');
+            keepPickerScroll();
             if (!unlock.unlocked) {
+              AudioSys.sfx('select');
               UI.toast(tOr('toast.gearLocked', 'Nog op slot · {why}', { why: unlock.label || '' }), 1800, { tone: 'warn' });
+              this.renderGear({ pickerOnly: true });
+              return;
             }
-            const p = document.getElementById('gearPicker');
-            this._gearPickerScroll = p ? p.scrollTop : 0;
+            if (equippedHere) takeOff(it);
+            else wearItem(it);
             this.renderGear();
+            this.renderMenu();
           }, 'gearPick/' + it.id, 'Item kiezen mislukt');
         });
         frag.appendChild(el);

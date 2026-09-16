@@ -36,4 +36,4 @@ Draw overlay (back → front): `back → legs → chest → head → hands → w
 
 `#gearScreen` · `[data-slot]` · `[data-gear-id]`
 
-HOME tile `#btnGear` — **Uitrusting** / Gear, subtitle `Slots · look`, pill `equippedCount/5`.
+HOME tile `#btnGearHome` (`data-hub="gear"`) + Collectie `#btnGear` — **Uitrusting** / Gear, subtitle `5 slots · look vs stats`, pill `equippedCount/5`.

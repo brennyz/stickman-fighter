@@ -6,6 +6,13 @@
  */
 const GEAR_DRAW_ORDER = ['back', 'legs', 'chest', 'head', 'hands', 'weapon', 'pet'];
 const GEAR_SLOT_DRAW_ORDER = ['back', 'legs', 'chest', 'head', 'hands'];
+const GEAR_SLOT_ICONS = {
+  head: 'assets/buttons/modes/gear-head.svg',
+  chest: 'assets/buttons/modes/gear-chest.svg',
+  hands: 'assets/buttons/modes/gear-hands.svg',
+  legs: 'assets/buttons/modes/gear-legs.svg',
+  back: 'assets/buttons/modes/gear-back.svg',
+};
 const GEAR_UI_FILTERS = ['all', 'look', 'stat', 'lock', 'owned'];
 const GEAR_RARITY_ORDER = ['common', 'uncommon', 'rare', 'epic', 'legendary', 'mythic', 'nightmare', 'hell'];
 const GEAR_RARITY_RANK = {
@@ -335,6 +342,64 @@ function startGearDollLive() {
   _gearDollRaf = requestAnimationFrame(step);
 }
 
+function _paintGearOverlay(cc, slot, tint, accent) {
+  if (!tint) return;
+  /* Fighter preview pose (animT 0.35): hips ~-46, shoulders ~-78, head ~-96. */
+  const hipY = -46, shY = -78, headCy = -96;
+  cc.save();
+  cc.fillStyle = tint;
+  cc.strokeStyle = accent || tint;
+  cc.lineWidth = 2;
+  cc.lineCap = 'round';
+  cc.lineJoin = 'round';
+  if (slot === 'back') {
+    cc.globalAlpha = 0.32;
+    cc.beginPath();
+    cc.moveTo(-6, shY + 4);
+    cc.quadraticCurveTo(-22, hipY, -16, -8);
+    cc.lineTo(16, -8);
+    cc.quadraticCurveTo(22, hipY, 6, shY + 4);
+    cc.closePath();
+    cc.fill();
+    cc.globalAlpha = 0.7;
+    cc.stroke();
+  } else if (slot === 'legs') {
+    cc.globalAlpha = 0.8;
+    cc.beginPath();
+    cc.moveTo(-11, -10); cc.lineTo(-14, 2); cc.lineTo(-4, 2); cc.lineTo(-6, -10);
+    cc.moveTo(6, -10); cc.lineTo(4, 2); cc.lineTo(14, 2); cc.lineTo(11, -10);
+    cc.fill();
+    cc.stroke();
+  } else if (slot === 'chest') {
+    cc.globalAlpha = 0.38;
+    cc.beginPath();
+    cc.moveTo(-8, shY + 2);
+    cc.lineTo(8, shY + 2);
+    cc.lineTo(7, hipY + 2);
+    cc.lineTo(-7, hipY + 2);
+    cc.closePath();
+    cc.fill();
+    cc.globalAlpha = 0.85;
+    cc.stroke();
+  } else if (slot === 'head') {
+    cc.globalAlpha = 0.88;
+    cc.beginPath();
+    cc.arc(0, headCy, 8.6, Math.PI * 1.05, -0.05, false);
+    cc.stroke();
+    cc.beginPath();
+    cc.moveTo(-9, headCy - 1);
+    cc.lineTo(9, headCy - 1);
+    cc.stroke();
+  } else if (slot === 'hands') {
+    cc.globalAlpha = 0.88;
+    cc.beginPath();
+    cc.arc(-17, shY + 20, 3.2, 0, Math.PI * 2);
+    cc.arc(17, shY + 20, 3.2, 0, Math.PI * 2);
+    cc.fill();
+  }
+  cc.restore();
+}
+
 function drawGearHeroDoll(cv, saveObj, animT) {
   if (!cv || typeof Fighter !== 'function') return;
   const cc = cv.getContext('2d');
@@ -345,18 +410,23 @@ function drawGearHeroDoll(cv, saveObj, animT) {
   if (typeof startGearDollLive === 'function') startGearDollLive();
   const desc = (typeof gearRenderDescriptor === 'function' && s) ? gearRenderDescriptor(s) : gearUiRenderDescriptor(s);
   const layers = (desc && desc.slots) ? desc.slots : [];
-  for (const sid of GEAR_SLOT_DRAW_ORDER) {
-    const layer = layers.find((L) => L.slot === sid);
-    const tint = layer && (layer.tint || layer.accent);
-    if (!tint) continue;
-    const g = cc.createRadialGradient(cv.width / 2, cv.height * 0.55, 6, cv.width / 2, cv.height * 0.55, sid === 'back' ? 78 : 52);
-    g.addColorStop(0, String(tint) + (sid === 'back' ? '66' : '33'));
-    g.addColorStop(1, 'rgba(0,0,0,0)');
-    cc.fillStyle = g;
-    cc.fillRect(0, 0, cv.width, cv.height);
-  }
-  cc.translate(cv.width / 2, cv.height - 18);
-  cc.scale(1.15, 1.15);
+  const layerOf = (sid) => layers.find((L) => L.slot === sid) || null;
+  const tintOf = (sid) => {
+    const layer = layerOf(sid);
+    return layer && (layer.tint || layer.accent) ? layer : null;
+  };
+  const floor = cc.createRadialGradient(cv.width / 2, cv.height * 0.86, 8, cv.width / 2, cv.height * 0.86, cv.width * 0.38);
+  floor.addColorStop(0, 'rgba(255,255,255,0.08)');
+  floor.addColorStop(1, 'rgba(0,0,0,0)');
+  cc.fillStyle = floor;
+  cc.beginPath();
+  cc.ellipse(cv.width / 2, cv.height * 0.88, cv.width * 0.28, 10, 0, 0, Math.PI * 2);
+  cc.fill();
+  const scale = Math.min(cv.width / 140, cv.height / 190) * 1.28;
+  cc.translate(cv.width / 2, cv.height - 36);
+  cc.scale(scale, scale);
+  const back = tintOf('back');
+  if (back) _paintGearOverlay(cc, 'back', back.tint || back.accent, back.accent);
   const st = typeof styleById === 'function' ? styleById((s && s.style) || 'classic') : { body: '#f2f5ff' };
   const wpn = (s && typeof weaponById === 'function') ? weaponById(s.weapon || 'vuist') : null;
   const preview = new Fighter({
@@ -365,14 +435,18 @@ function drawGearHeroDoll(cv, saveObj, animT) {
   });
   preview.animT = Number.isFinite(animT) ? animT : 0.55;
   preview.draw(cc);
+  for (const sid of ['legs', 'chest', 'head', 'hands']) {
+    const layer = tintOf(sid);
+    if (layer) _paintGearOverlay(cc, sid, layer.tint || layer.accent, layer.accent);
+  }
   if (s && s.activePet && typeof drawMonsterArt === 'function') {
     const def = (typeof activePetDef === 'function') ? activePetDef()
       : ((typeof petDef === 'function') ? petDef(s.activePet) : null);
     const sp = def && typeof SPECIES !== 'undefined' ? SPECIES[def.speciesId] : null;
     if (sp) {
       cc.save();
-      cc.translate(36, -6);
-      cc.scale(0.36, 0.36);
+      cc.translate(40, -4);
+      cc.scale(0.38, 0.38);
       drawMonsterArt(cc, sp, sp.size || 22, 1.1, false, false);
       cc.restore();
     }

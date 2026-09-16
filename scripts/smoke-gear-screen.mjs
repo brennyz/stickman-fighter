@@ -27,6 +27,7 @@ const i18n = fs.readFileSync(path.join(root, 'src/i18n/i18n.js'), 'utf8');
 
 must(/id="gearScreen"/.test(html), 'missing #gearScreen');
 must(/id="btnGear"/.test(html), 'missing Collection Character tile');
+must(/id="btnGearHome"/.test(html) && /data-hub="gear"/.test(html), 'HOME 1-tap Uitrusting tile missing');
 must(/id="gearSlotList"/.test(html), 'missing #gearSlotList');
 must(/id="gearWeaponAside"/.test(html), 'missing weapon aside');
 must(/id="gearDollCanvas"/.test(html), 'missing stickman preview');
@@ -50,6 +51,7 @@ must(/gearGateState/.test(uiAdapt) && /gearEquipItem/.test(uiAdapt), 'UI adapter
 must(/renderGear/.test(ui) && /gearScreen/.test(ui), 'UI must render + navigate gearScreen');
 must(/gearEquipItem/.test(ui) && /gearTooltipModel/.test(ui) && /drawGearHeroDoll/.test(ui), 'renderGear must call systems bind helpers');
 must(/btnGear',\s*'hub\.gear'/.test(i18n), 'Character tile must be i18n-wired');
+must(/btnGearHome',\s*'hub\.gear'/.test(i18n), 'HOME gear tile must be i18n-wired');
 must(/--menu-tile-solid/.test(css.match(/\.gear-slot-card \{[\s\S]*?\}/)?.[0] || ''), 'slot cards must use HOME tiles');
 must(/min-height:\s*max\(56px,\s*var\(--touch-min\)\)/.test(css), 'Android touch floor missing on slot cards');
 must(!/\.gear-picker \{[\s\S]{0,160}max-height/.test(css), 'picker must not nest-scroll (one page scroll)');
@@ -109,6 +111,11 @@ async function run() {
         return { ok: false, why: 'systems bind helpers missing' };
       }
 
+      const homeTile = document.getElementById('btnGearHome');
+      if (!homeTile || homeTile.getAttribute('data-hub') !== 'gear') {
+        return { ok: false, why: 'HOME 1-tap tile missing' };
+      }
+
       UI.openModeHub('collect');
       const tile = document.getElementById('btnGear');
       if (!tile || tile.hidden) return { ok: false, why: 'btnGear missing on collect hub' };
@@ -125,6 +132,11 @@ async function run() {
       if (cardIds.join(',') !== 'head,chest,hands,legs,back') return { ok: false, why: 'card ids', cardIds };
       const tooSmall = cards.filter((c) => c.getBoundingClientRect().height < 44);
       if (tooSmall.length) return { ok: false, why: 'touch <44', h: tooSmall[0].getBoundingClientRect().height };
+      const doll = document.getElementById('gearDollCanvas');
+      const dollBox = doll && doll.getBoundingClientRect();
+      if (!dollBox || dollBox.height < 170) {
+        return { ok: false, why: 'hero too small', h: dollBox && dollBox.height };
+      }
       const titleEl = cards[0] && cards[0].querySelector('.gear-slot-title');
       const subEl = cards[0] && cards[0].querySelector('.gear-slot-sub');
       if (!titleEl || !subEl) return { ok: false, why: 'slot title/sub missing' };
@@ -261,6 +273,18 @@ async function run() {
 
       const aside = document.getElementById('gearWeaponAside');
       if (!aside || !aside.textContent) return { ok: false, why: 'weapon aside empty' };
+      if (!aside.classList.contains('hub-tile')) return { ok: false, why: 'weapon aside not HOME tile' };
+
+      unequipGear('head');
+      UI.gearSlotPick = 'head';
+      UI.gearItemPick = 'head_wrap_cloth';
+      UI.renderGear();
+      const wrapCard = document.querySelector('#gearPicker [data-gear-id="head_wrap_cloth"]');
+      if (!wrapCard) return { ok: false, why: 'starter wrap card missing for tap-equip' };
+      wrapCard.click();
+      if (save.gear.equipped.head !== 'head_wrap_cloth') {
+        return { ok: false, why: 'tap item must equip immediately', head: save.gear.equipped.head };
+      }
       const look = [...document.querySelectorAll('.gear-pill-vanity')];
       const stat = [...document.querySelectorAll('.gear-pill-stat')];
       if (!look.length || !stat.length) return { ok: false, why: 'LOOK/STAT pills missing' };
