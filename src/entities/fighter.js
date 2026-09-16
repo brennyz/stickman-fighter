@@ -655,8 +655,14 @@ class Fighter {
       headB: 0,
     };
     if (s === 'idle') {
-      const b = Math.sin(t * 3);
-      P.hipY = -46 + b * 1.4; P.headB = b * 0.6;
+      if (typeof applyReadyStance === 'function') {
+        applyReadyStance(P, t, {
+          calm: (typeof motionReduced === 'function' && motionReduced()),
+        });
+      } else {
+        const b = Math.sin(t * 3);
+        P.hipY = -46 + b * 1.4; P.headB = b * 0.6;
+      }
     } else if (s === 'run') {
       const c = t * 11;
       P.lean = 0.14;
@@ -723,9 +729,11 @@ class Fighter {
       c.fill();
       c.globalAlpha = 1;
     }
-    // schaduw
+    // schaduw — tiny idle weight-shift so the stance reads as planted
     c.fillStyle = 'rgba(0,0,0,.3)';
-    c.beginPath(); c.ellipse(0, 2, 26 * s, 6 * s, 0, 0, TAU); c.fill();
+    const shadowX = (this.state === 'idle' && !(typeof motionReduced === 'function' && motionReduced()))
+      ? Math.sin(this.animT * 1.32) * 2.2 : 0;
+    c.beginPath(); c.ellipse(shadowX, 2, 26 * s, 6 * s, 0, 0, TAU); c.fill();
     c.scale(this.face * s, s);
 
     if (!this.alive) {

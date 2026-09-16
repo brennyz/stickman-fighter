@@ -323,9 +323,9 @@ const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const VERSION_UPDATE_SAVE_KEY = 'stickfighter_version_update_save_v1';
 const VERSION_UPDATE_FLAG_KEY = 'stickfighter_version_update_flag_v1';
 const SAVE_EXPORT_SCHEMA = 3;
-const APP_VERSION = '1.18.168';
+const APP_VERSION = '1.18.169';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 378;
+const SW_CACHE_REV = 379;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', petCoins: 0, dex: {}, summons: {}, pets: {}, activePet: null,
   eggPets: {}, activeEggPet: null, eggDaily: null,
   chestDaily: null, chestWeapons: {},
@@ -28001,13 +28001,33 @@ function gearUiRenderDescriptor(s) {
   return { schema: 1, slots: _gearSlotIds().map((id) => ({ slot: id, itemId: null })) };
 }
 
-function drawGearHeroDoll(cv, saveObj) {
+let _gearDollRaf = 0;
+let _gearDollTick = 0;
+
+function startGearDollLive() {
+  if (_gearDollRaf) return;
+  const step = (now) => {
+    const el = typeof document !== 'undefined' ? document.getElementById('gearScreen') : null;
+    if (!el || !el.classList.contains('active')) { _gearDollRaf = 0; return; }
+    _gearDollTick++;
+    const skip = (typeof fxLite === 'function' && fxLite()) ? 3 : 2;
+    if (_gearDollTick % skip === 0) {
+      const cv = document.getElementById('gearDollCanvas');
+      if (cv) drawGearHeroDoll(cv, typeof save === 'object' ? save : null, now * 0.001);
+    }
+    _gearDollRaf = requestAnimationFrame(step);
+  };
+  _gearDollRaf = requestAnimationFrame(step);
+}
+
+function drawGearHeroDoll(cv, saveObj, animT) {
   if (!cv || typeof Fighter !== 'function') return;
   const cc = cv.getContext('2d');
   if (!cc) return;
   const s = saveObj || (typeof save === 'object' ? save : null);
   cc.clearRect(0, 0, cv.width, cv.height);
   cc.save();
+  if (typeof startGearDollLive === 'function') startGearDollLive();
   const desc = (typeof gearRenderDescriptor === 'function' && s) ? gearRenderDescriptor(s) : gearUiRenderDescriptor(s);
   const layers = (desc && desc.slots) ? desc.slots : [];
   for (const sid of GEAR_SLOT_DRAW_ORDER) {
@@ -28028,7 +28048,7 @@ function drawGearHeroDoll(cv, saveObj) {
     isPlayer: true, x: 0, y: 0, color: (st && st.body) || '#f2f5ff', style: st, scale: 1,
     weapon: wpn || undefined,
   });
-  preview.animT = 0.35;
+  preview.animT = Number.isFinite(animT) ? animT : 0.55;
   preview.draw(cc);
   if (s && s.activePet && typeof drawMonsterArt === 'function') {
     const def = (typeof activePetDef === 'function') ? activePetDef()
@@ -28804,6 +28824,9 @@ function drawWeaponShape(c, id, spin, moveIdx) {
     drawWeaponLightMotes(c, light, spin, lite);
     c.restore();
   }
+  if (typeof drawWeaponLiveFx === 'function') {
+    try { drawWeaponLiveFx(c, id, spin); } catch (_) {}
+  }
   if (mi) c.restore();
 }
 
@@ -29392,6 +29415,161 @@ function drawPixelJoyKnob(c, cx, cy, r, color, alpha) {
   c.imageSmoothingEnabled = prev;
 }
 
+/* --- src/render/live-fx.js --- */
+/* ======================== LIVE FX / READY POSE ======================== */
+/**
+ * Look-only motion. Shared by menu dolls and combat draw.
+ * Cheap canvas paths — no particles array, no WebGL, no video.
+ * Skip or shrink when motionReduced / fxLite (Android).
+ */
+const LIVE_FLAME_IDS = {
+  vlamzweep: 1, nachtkaars: 1, hellevork: 1, lavalepel: 1, infernoijsje: 1,
+  pyroeend: 1, spooktoaster: 1, chiliketting: 1, brimstonebanaan: 1,
+  zwavelzeep: 1, asaccordeon: 1, helgitaar: 1, apocalypslepel: 1,
+  duiveltrommel: 1,
+};
+const LIVE_SPARK_IDS = {
+  donder: 1, laser: 1, sterkling: 1, kristal: 1, dawnblade: 1, master_sword: 1,
+};
+const LIVE_FLAME_EFFECTS = {
+  burn: 1, popburn: 1, inferno: 1, magma: 1, soapburn: 1, chainburn: 1,
+  frostfire: 1, explodepeel: 1, quakboom: 1,
+};
+const LIVE_TIP_X = {
+  vlamzweep: 60, nachtkaars: 36, laser: 50, donder: 50, sterkling: 48,
+  kristal: 50, hellevork: 52, lavalepel: 52, pyroeend: 68, chiliketting: 54,
+};
+
+function liveFxQuiet() {
+  if (typeof motionReduced === 'function' && motionReduced()) return true;
+  return false;
+}
+
+function liveFxLite() {
+  return liveFxQuiet() || (typeof fxLite === 'function' && fxLite());
+}
+
+/** Street Fighter–like guard: weight back, knees bent, hands up. */
+function applyReadyStance(P, t, opts) {
+  if (!P) return P;
+  const calm = !!(opts && opts.calm) || liveFxQuiet();
+  const breathe = calm ? 0 : Math.sin((t || 0) * 2.15);
+  const shift = calm ? 0 : Math.sin((t || 0) * 1.32);
+  P.hipY = -42.6 + breathe * 1.55;
+  P.lean = 0.11 + shift * 0.038;
+  P.headB = breathe * 0.75 + shift * 0.28;
+  P.legs = [
+    [2.02 + shift * 0.03, 1.86],
+    [1.20 - shift * 0.04, 1.46 + breathe * 0.03],
+  ];
+  P.arms = [
+    [2.22, -1.42 + breathe * 0.05],
+    [0.70 + breathe * 0.035, -0.92 + shift * 0.03],
+  ];
+  P.ready = true;
+  return P;
+}
+
+function weaponLiveKind(w) {
+  const base = typeof w === 'string'
+    ? (typeof weaponById === 'function' ? weaponById(w) : { id: w })
+    : (w || null);
+  const id = base && base.id;
+  if (!id || id === 'vuist') return null;
+  if (LIVE_FLAME_IDS[id] || (base.effect && LIVE_FLAME_EFFECTS[base.effect])) {
+    return 'flame';
+  }
+  if (LIVE_SPARK_IDS[id]) return 'spark';
+  if (typeof weaponLightFx === 'function' && weaponLightFx(base)) return 'pulse';
+  return null;
+}
+
+function weaponLiveColors(w) {
+  const base = typeof w === 'string'
+    ? (typeof weaponById === 'function' ? weaponById(w) : { id: w })
+    : (w || null);
+  if (typeof weaponLightFx === 'function') {
+    const light = weaponLightFx(base);
+    if (light) return [light.color || '#ff8c42', light.color2 || '#ffd75e'];
+  }
+  return ['#ff6b3f', '#ffd75e'];
+}
+
+function drawWeaponFlameTip(c, t, tipX, lite, cols) {
+  const flicker = 0.72 + 0.28 * Math.sin(t * 13.5) + (lite ? 0 : 0.07 * Math.sin(t * 29));
+  const h = (lite ? 7 : 11) * flicker;
+  c.save();
+  c.globalCompositeOperation = 'lighter';
+  c.fillStyle = cols[0] || '#ff6b3f';
+  c.globalAlpha = lite ? 0.7 : 0.88;
+  c.beginPath();
+  c.moveTo(tipX - 2.4, 1.2);
+  c.quadraticCurveTo(tipX + 3, -h * 0.35, tipX + h * 0.2, -h);
+  c.quadraticCurveTo(tipX + 7, 0.4, tipX - 2.4, 1.2);
+  c.fill();
+  c.fillStyle = cols[1] || '#ffd75e';
+  c.globalAlpha = 0.9;
+  c.beginPath();
+  c.moveTo(tipX - 0.6, 0.4);
+  c.quadraticCurveTo(tipX + 1.4, -h * 0.28, tipX + 2.2, -h * 0.52);
+  c.quadraticCurveTo(tipX + 3.2, -0.2, tipX - 0.6, 0.4);
+  c.fill();
+  c.restore();
+}
+
+function drawWeaponSparkTip(c, t, tipX, lite, cols) {
+  if (lite && (Math.sin(t * 11) < 0.15)) return;
+  const pulse = 0.45 + 0.55 * Math.max(0, Math.sin(t * 16));
+  c.save();
+  c.globalCompositeOperation = 'lighter';
+  c.strokeStyle = cols[0] || '#7cf5ff';
+  c.globalAlpha = 0.35 + pulse * 0.5;
+  c.lineWidth = lite ? 1.1 : 1.6;
+  c.beginPath();
+  c.moveTo(tipX - 2, -5 * pulse);
+  c.lineTo(tipX + 6, 1);
+  c.lineTo(tipX - 1, 5 * pulse);
+  c.stroke();
+  if (!lite) {
+    c.strokeStyle = cols[1] || '#fff8d0';
+    c.lineWidth = 1;
+    c.beginPath();
+    c.moveTo(tipX, -3);
+    c.lineTo(tipX + 8, 0);
+    c.stroke();
+  }
+  c.restore();
+}
+
+/** Call in weapon local space (hand at 0,0, blade +x) after the silhouette. */
+function drawWeaponLiveFx(c, id, spin) {
+  if (!c || liveFxQuiet()) return;
+  const kind = weaponLiveKind(id);
+  if (!kind || kind === 'pulse') return;
+  const lite = liveFxLite();
+  const cols = weaponLiveColors(id);
+  const tip = LIVE_TIP_X[id] || 44;
+  const t = Number.isFinite(spin) ? spin : 0;
+  if (kind === 'flame') drawWeaponFlameTip(c, t, tip, lite, cols);
+  else if (kind === 'spark') drawWeaponSparkTip(c, t, tip, lite, cols);
+}
+
+function lookClothSway(bones, amp) {
+  if (liveFxQuiet()) return 0;
+  const a = (amp == null ? 2.6 : amp) * (liveFxLite() ? 0.4 : 1);
+  const t = bones && Number.isFinite(bones.animT) ? bones.animT : 0;
+  return Math.sin(t * 3.05 + 0.4) * a;
+}
+
+const LiveFxApi = {
+  ready: applyReadyStance,
+  weaponKind: weaponLiveKind,
+  drawWeapon: drawWeaponLiveFx,
+  clothSway: lookClothSway,
+  quiet: liveFxQuiet,
+};
+
+if (typeof globalThis !== 'undefined') globalThis.LiveFxApi = LiveFxApi;
 /* --- src/render/equip-look.js --- */
 /* ======================== EQUIP LOOK DRAW ============================== */
 function lookPx(v) {
@@ -29471,8 +29649,9 @@ function drawEquipPiece(c, look, bones, fighter) {
   }
 }
 
-function drawLookBandana(c, look, x, y, sc) {
+function drawLookBandana(c, look, x, y, sc, bones) {
   const r = (typeof EQUIP_LOOK_HEAD_R === 'number' ? EQUIP_LOOK_HEAD_R : 10.5) * sc;
+  const sway = typeof lookClothSway === 'function' ? lookClothSway(bones, 1.8 * sc) : 0;
   /* Forehead wrap only — never swallow the face / chin of the stick head. */
   const y0 = y - r * 0.92;
   const h = 4.6 * sc;
@@ -29505,12 +29684,12 @@ function drawLookBandana(c, look, x, y, sc) {
   c.lineWidth = 2.4 * sc;
   c.beginPath();
   c.moveTo(x - r * 0.86, y0 + 1.2 * sc);
-  c.quadraticCurveTo(x - r * 1.4, y0 + 4 * sc, x - r * 1.55, y0 + 11 * sc);
+  c.quadraticCurveTo(x - r * 1.4 + sway * 0.4, y0 + 4 * sc, x - r * 1.55 + sway, y0 + 11 * sc);
   c.stroke();
   c.lineWidth = 1.7 * sc;
   c.beginPath();
   c.moveTo(x - r * 0.8, y0 + 2 * sc);
-  c.quadraticCurveTo(x - r * 1.24, y0 + 6 * sc, x - r * 1.32, y0 + 13 * sc);
+  c.quadraticCurveTo(x - r * 1.24 + sway * 0.3, y0 + 6 * sc, x - r * 1.32 + sway * 0.85, y0 + 13 * sc);
   c.stroke();
 }
 
@@ -29621,16 +29800,17 @@ function drawLookHelmet(c, look, x, y, sc, bones, fighter) {
 function drawLookCoat(c, look, x, y, sc, bones) {
   const sh = lookBoneOk(bones && bones.shoulder) ? bones.shoulder : { x, y };
   const hip = lookBoneOk(bones && bones.hip) ? bones.hip : { x, y: y + 32 };
+  const sway = typeof lookClothSway === 'function' ? lookClothSway(bones, 2.8 * sc) : 0;
   const flare = 17 * sc;
   c.fillStyle = look.fill || look.color;
   c.beginPath();
-  c.moveTo(lookPx(hip.x - 5), lookPx(hip.y + 10 * sc));
-  c.quadraticCurveTo(hip.x - flare - 2, hip.y + 3, hip.x - flare, hip.y - 6);
+  c.moveTo(lookPx(hip.x - 5 + sway * 0.3), lookPx(hip.y + 10 * sc));
+  c.quadraticCurveTo(hip.x - flare - 2 + sway, hip.y + 3, hip.x - flare + sway, hip.y - 6);
   c.lineTo(lookPx(sh.x - 16 * sc), lookPx(sh.y - 5));
   c.quadraticCurveTo(sh.x, sh.y - 12 * sc, sh.x + 16 * sc, sh.y - 5);
-  c.lineTo(lookPx(hip.x + flare), lookPx(hip.y - 6));
-  c.quadraticCurveTo(hip.x + flare + 2, hip.y + 3, hip.x + 5, hip.y + 10 * sc);
-  c.quadraticCurveTo(hip.x, hip.y + 6 * sc, hip.x - 5, hip.y + 10 * sc);
+  c.lineTo(lookPx(hip.x + flare + sway), lookPx(hip.y - 6));
+  c.quadraticCurveTo(hip.x + flare + 2 + sway, hip.y + 3, hip.x + 5 + sway * 0.3, hip.y + 10 * sc);
+  c.quadraticCurveTo(hip.x + sway * 0.2, hip.y + 6 * sc, hip.x - 5 + sway * 0.3, hip.y + 10 * sc);
   c.closePath();
   c.fill();
   c.strokeStyle = look.accent;
@@ -29645,11 +29825,12 @@ function drawLookCoat(c, look, x, y, sc, bones) {
 function drawLookCape(c, look, x, y, sc, bones) {
   const sh = lookBoneOk(bones && bones.shoulder) ? bones.shoulder : { x, y };
   const hip = lookBoneOk(bones && bones.hip) ? bones.hip : { x, y: y + 32 };
+  const sway = typeof lookClothSway === 'function' ? lookClothSway(bones, 3.2 * sc) : 0;
   c.fillStyle = look.fill || look.color;
   c.beginPath();
   c.moveTo(sh.x - 12 * sc, sh.y - 4);
-  c.quadraticCurveTo(sh.x - 22 * sc, hip.y - 4, hip.x - 14 * sc, hip.y + 12 * sc);
-  c.quadraticCurveTo(hip.x, hip.y + 8 * sc, hip.x + 6 * sc, hip.y + 10 * sc);
+  c.quadraticCurveTo(sh.x - 22 * sc + sway, hip.y - 4, hip.x - 14 * sc + sway, hip.y + 12 * sc);
+  c.quadraticCurveTo(hip.x + sway * 0.4, hip.y + 8 * sc, hip.x + 6 * sc + sway * 0.5, hip.y + 10 * sc);
   c.lineTo(sh.x + 4 * sc, sh.y - 2);
   c.quadraticCurveTo(sh.x, sh.y - 8 * sc, sh.x - 12 * sc, sh.y - 4);
   c.closePath();
@@ -29826,27 +30007,29 @@ function drawLookTail(c, look, x, y, sc, bones) {
   c.lineCap = 'round';
   c.lineWidth = 4.4 * sc;
   c.beginPath();
+  const sway = typeof lookClothSway === 'function' ? lookClothSway(bones, 3.6 * sc) : 0;
   c.moveTo(hip.x + 3 * sc, hip.y + 2 * sc);
-  c.quadraticCurveTo(hip.x + 16 * sc, hip.y + 6 * sc, hip.x + 14 * sc, hip.y + 18 * sc);
+  c.quadraticCurveTo(hip.x + 16 * sc + sway, hip.y + 6 * sc, hip.x + 14 * sc + sway * 0.7, hip.y + 18 * sc);
   c.stroke();
   c.fillStyle = look.accent || '#fff4d6';
   c.beginPath();
-  c.arc(hip.x + 14 * sc, hip.y + 18 * sc, 3.2 * sc, 0, TAU);
+  c.arc(hip.x + 14 * sc + sway * 0.7, hip.y + 18 * sc, 3.2 * sc, 0, TAU);
   c.fill();
 }
 
 function drawLookWings(c, look, x, y, sc, bones) {
   const sh = lookBoneOk(bones && bones.shoulder) ? bones.shoulder : { x, y };
+  const flap = typeof lookClothSway === 'function' ? lookClothSway(bones, 4.2 * sc) : 0;
   c.fillStyle = look.fill || look.color || 'rgba(200,208,220,.55)';
   c.beginPath();
   c.moveTo(sh.x - 6 * sc, sh.y);
-  c.quadraticCurveTo(sh.x - 28 * sc, sh.y - 18 * sc, sh.x - 22 * sc, sh.y + 16 * sc);
+  c.quadraticCurveTo(sh.x - 28 * sc, sh.y - 18 * sc - flap, sh.x - 22 * sc, sh.y + 16 * sc);
   c.quadraticCurveTo(sh.x - 12 * sc, sh.y + 8 * sc, sh.x - 6 * sc, sh.y + 4 * sc);
   c.closePath();
   c.fill();
   c.beginPath();
   c.moveTo(sh.x + 4 * sc, sh.y);
-  c.quadraticCurveTo(sh.x + 26 * sc, sh.y - 16 * sc, sh.x + 20 * sc, sh.y + 16 * sc);
+  c.quadraticCurveTo(sh.x + 26 * sc, sh.y - 16 * sc - flap, sh.x + 20 * sc, sh.y + 16 * sc);
   c.quadraticCurveTo(sh.x + 10 * sc, sh.y + 8 * sc, sh.x + 4 * sc, sh.y + 4 * sc);
   c.closePath();
   c.fill();
@@ -29961,7 +30144,7 @@ function drawEquipLookPreview(c, styleId, gear) {
       gear: gear || null,
       _preview: true,
     });
-    f.animT = 0.4;
+    f.animT = 0.55;
     f.draw(c);
     return f;
   } catch (_) {
@@ -31790,8 +31973,14 @@ class Fighter {
       headB: 0,
     };
     if (s === 'idle') {
-      const b = Math.sin(t * 3);
-      P.hipY = -46 + b * 1.4; P.headB = b * 0.6;
+      if (typeof applyReadyStance === 'function') {
+        applyReadyStance(P, t, {
+          calm: (typeof motionReduced === 'function' && motionReduced()),
+        });
+      } else {
+        const b = Math.sin(t * 3);
+        P.hipY = -46 + b * 1.4; P.headB = b * 0.6;
+      }
     } else if (s === 'run') {
       const c = t * 11;
       P.lean = 0.14;
@@ -31858,9 +32047,11 @@ class Fighter {
       c.fill();
       c.globalAlpha = 1;
     }
-    // schaduw
+    // schaduw — tiny idle weight-shift so the stance reads as planted
     c.fillStyle = 'rgba(0,0,0,.3)';
-    c.beginPath(); c.ellipse(0, 2, 26 * s, 6 * s, 0, 0, TAU); c.fill();
+    const shadowX = (this.state === 'idle' && !(typeof motionReduced === 'function' && motionReduced()))
+      ? Math.sin(this.animT * 1.32) * 2.2 : 0;
+    c.beginPath(); c.ellipse(shadowX, 2, 26 * s, 6 * s, 0, 0, TAU); c.fill();
     c.scale(this.face * s, s);
 
     if (!this.alive) {
@@ -42876,7 +43067,7 @@ function drawStyleLookPreview(cc, st, w, h) {
     }
     const body = (typeof lookPreviewBody === 'function') ? lookPreviewBody(st.body) : st.body;
     const preview = new Fighter({ isPlayer: true, x: 0, y: 0, color: body || st.body, style: st, scale: 1, _preview: true });
-    preview.animT = 0.4;
+    preview.animT = 0.55;
     preview.draw(cc);
   } catch (_) { /* one card must not blank the style grid on Android */ }
 }
@@ -47248,7 +47439,7 @@ const UI = {
       cc.translate(cv.width / 2, cv.height - 18);
       cc.scale(1.15, 1.15);
       const preview = new Fighter({ isPlayer: true, x: 0, y: 0, color: st.body, style: st, scale: 1 });
-      preview.animT = 0.35;
+      preview.animT = 0.55;
       preview.draw(cc);
       cc.restore();
     }

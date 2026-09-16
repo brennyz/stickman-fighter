@@ -494,4 +494,23 @@ try {
 if (!rec.calls.some((c) => c[0] === 'quad')) fail('bandana/coat should use curved paths, not only rects');
 if (!rec.calls.some((c) => c[0] === 'fill')) fail('preview produced no fills');
 
+const live = ctx.LiveFxApi;
+if (!live) fail('LiveFxApi missing — motion module not bundled');
+const ready = { hipY: -46, lean: 0, arms: [[1.9, -1.1], [1.15, -0.85]], legs: [[1.82, 1.72], [1.34, 1.55]], headB: 0 };
+live.ready(ready, 0.55, { calm: true });
+if (!ready.ready) fail('applyReadyStance must mark ready');
+if (!(ready.lean > 0.05)) fail('ready stance needs forward lean (not T-pose)');
+if (!(ready.arms[1][0] < 1.0)) fail('lead guard hand must come up (front shoulder < 1.0)');
+if (!(ready.hipY > -45)) fail('ready stance should crouch (hips lower than old -46)');
+if (live.weaponKind('vuist')) fail('fists must not grow a torch');
+if (live.weaponKind('nachtkaars') !== 'flame') fail('nachtkaars should be flame/fakkel');
+if (live.weaponKind('vlamzweep') !== 'flame') fail('vlamzweep should be flame');
+if (live.weaponKind('donder') !== 'spark') fail('donder should spark');
+const swayA = live.clothSway({ animT: 0.2 }, 3);
+const swayB = live.clothSway({ animT: 1.8 }, 3);
+if (swayA === swayB) fail('cloth sway must change with animT');
+const recFlame = recordingContext();
+live.drawWeapon(recFlame, 'nachtkaars', 0.4);
+if (!recFlame.calls.some((c) => c[0] === 'fill' || c[0] === 'quad')) fail('flame tip must paint');
+
 console.log('SMOKE_OK equip-look slots=' + api.slots.join(',') + ' styles=' + Object.keys(expectKind).length);

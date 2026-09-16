@@ -24,6 +24,7 @@ const REGRESSION_MUST_DEFINE = [
   'combatEntryFor', 'applySignatureToSpec', 'trackVsRosterUse', 'vsRosterName', 'weaponLightFx', 'spawnWeaponLightHit',
   'resolveFighterLooks', 'drawEquipLayer', 'safeDrawEquipLayer',
   'drawStickmanHead', 'ensureEquipHeadVisible', 'looksHideBaseHead',
+  'applyReadyStance', 'drawWeaponLiveFx', 'weaponLiveKind', 'lookClothSway', 'startGearDollLive',
   'speciesBlurb', 'speciesBiomeId', 'dexBiomeDiscovered',
   'listGearSlots', 'equipGear', 'unequipGear', 'getEquippedGear',
   'gearEquipItem', 'gearTooltipModel', 'gearRenderDescriptor',

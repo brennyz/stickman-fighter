@@ -61,7 +61,7 @@ function drawStyleLookPreview(cc, st, w, h) {
     }
     const body = (typeof lookPreviewBody === 'function') ? lookPreviewBody(st.body) : st.body;
     const preview = new Fighter({ isPlayer: true, x: 0, y: 0, color: body || st.body, style: st, scale: 1, _preview: true });
-    preview.animT = 0.4;
+    preview.animT = 0.55;
     preview.draw(cc);
   } catch (_) { /* one card must not blank the style grid on Android */ }
 }
@@ -4433,7 +4433,7 @@ const UI = {
       cc.translate(cv.width / 2, cv.height - 18);
       cc.scale(1.15, 1.15);
       const preview = new Fighter({ isPlayer: true, x: 0, y: 0, color: st.body, style: st, scale: 1 });
-      preview.animT = 0.35;
+      preview.animT = 0.55;
       preview.draw(cc);
       cc.restore();
     }

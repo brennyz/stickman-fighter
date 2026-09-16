@@ -76,8 +76,9 @@ function drawEquipPiece(c, look, bones, fighter) {
   }
 }
 
-function drawLookBandana(c, look, x, y, sc) {
+function drawLookBandana(c, look, x, y, sc, bones) {
   const r = (typeof EQUIP_LOOK_HEAD_R === 'number' ? EQUIP_LOOK_HEAD_R : 10.5) * sc;
+  const sway = typeof lookClothSway === 'function' ? lookClothSway(bones, 1.8 * sc) : 0;
   /* Forehead wrap only — never swallow the face / chin of the stick head. */
   const y0 = y - r * 0.92;
   const h = 4.6 * sc;
@@ -110,12 +111,12 @@ function drawLookBandana(c, look, x, y, sc) {
   c.lineWidth = 2.4 * sc;
   c.beginPath();
   c.moveTo(x - r * 0.86, y0 + 1.2 * sc);
-  c.quadraticCurveTo(x - r * 1.4, y0 + 4 * sc, x - r * 1.55, y0 + 11 * sc);
+  c.quadraticCurveTo(x - r * 1.4 + sway * 0.4, y0 + 4 * sc, x - r * 1.55 + sway, y0 + 11 * sc);
   c.stroke();
   c.lineWidth = 1.7 * sc;
   c.beginPath();
   c.moveTo(x - r * 0.8, y0 + 2 * sc);
-  c.quadraticCurveTo(x - r * 1.24, y0 + 6 * sc, x - r * 1.32, y0 + 13 * sc);
+  c.quadraticCurveTo(x - r * 1.24 + sway * 0.3, y0 + 6 * sc, x - r * 1.32 + sway * 0.85, y0 + 13 * sc);
   c.stroke();
 }
 
@@ -226,16 +227,17 @@ function drawLookHelmet(c, look, x, y, sc, bones, fighter) {
 function drawLookCoat(c, look, x, y, sc, bones) {
   const sh = lookBoneOk(bones && bones.shoulder) ? bones.shoulder : { x, y };
   const hip = lookBoneOk(bones && bones.hip) ? bones.hip : { x, y: y + 32 };
+  const sway = typeof lookClothSway === 'function' ? lookClothSway(bones, 2.8 * sc) : 0;
   const flare = 17 * sc;
   c.fillStyle = look.fill || look.color;
   c.beginPath();
-  c.moveTo(lookPx(hip.x - 5), lookPx(hip.y + 10 * sc));
-  c.quadraticCurveTo(hip.x - flare - 2, hip.y + 3, hip.x - flare, hip.y - 6);
+  c.moveTo(lookPx(hip.x - 5 + sway * 0.3), lookPx(hip.y + 10 * sc));
+  c.quadraticCurveTo(hip.x - flare - 2 + sway, hip.y + 3, hip.x - flare + sway, hip.y - 6);
   c.lineTo(lookPx(sh.x - 16 * sc), lookPx(sh.y - 5));
   c.quadraticCurveTo(sh.x, sh.y - 12 * sc, sh.x + 16 * sc, sh.y - 5);
-  c.lineTo(lookPx(hip.x + flare), lookPx(hip.y - 6));
-  c.quadraticCurveTo(hip.x + flare + 2, hip.y + 3, hip.x + 5, hip.y + 10 * sc);
-  c.quadraticCurveTo(hip.x, hip.y + 6 * sc, hip.x - 5, hip.y + 10 * sc);
+  c.lineTo(lookPx(hip.x + flare + sway), lookPx(hip.y - 6));
+  c.quadraticCurveTo(hip.x + flare + 2 + sway, hip.y + 3, hip.x + 5 + sway * 0.3, hip.y + 10 * sc);
+  c.quadraticCurveTo(hip.x + sway * 0.2, hip.y + 6 * sc, hip.x - 5 + sway * 0.3, hip.y + 10 * sc);
   c.closePath();
   c.fill();
   c.strokeStyle = look.accent;
@@ -250,11 +252,12 @@ function drawLookCoat(c, look, x, y, sc, bones) {
 function drawLookCape(c, look, x, y, sc, bones) {
   const sh = lookBoneOk(bones && bones.shoulder) ? bones.shoulder : { x, y };
   const hip = lookBoneOk(bones && bones.hip) ? bones.hip : { x, y: y + 32 };
+  const sway = typeof lookClothSway === 'function' ? lookClothSway(bones, 3.2 * sc) : 0;
   c.fillStyle = look.fill || look.color;
   c.beginPath();
   c.moveTo(sh.x - 12 * sc, sh.y - 4);
-  c.quadraticCurveTo(sh.x - 22 * sc, hip.y - 4, hip.x - 14 * sc, hip.y + 12 * sc);
-  c.quadraticCurveTo(hip.x, hip.y + 8 * sc, hip.x + 6 * sc, hip.y + 10 * sc);
+  c.quadraticCurveTo(sh.x - 22 * sc + sway, hip.y - 4, hip.x - 14 * sc + sway, hip.y + 12 * sc);
+  c.quadraticCurveTo(hip.x + sway * 0.4, hip.y + 8 * sc, hip.x + 6 * sc + sway * 0.5, hip.y + 10 * sc);
   c.lineTo(sh.x + 4 * sc, sh.y - 2);
   c.quadraticCurveTo(sh.x, sh.y - 8 * sc, sh.x - 12 * sc, sh.y - 4);
   c.closePath();
@@ -431,27 +434,29 @@ function drawLookTail(c, look, x, y, sc, bones) {
   c.lineCap = 'round';
   c.lineWidth = 4.4 * sc;
   c.beginPath();
+  const sway = typeof lookClothSway === 'function' ? lookClothSway(bones, 3.6 * sc) : 0;
   c.moveTo(hip.x + 3 * sc, hip.y + 2 * sc);
-  c.quadraticCurveTo(hip.x + 16 * sc, hip.y + 6 * sc, hip.x + 14 * sc, hip.y + 18 * sc);
+  c.quadraticCurveTo(hip.x + 16 * sc + sway, hip.y + 6 * sc, hip.x + 14 * sc + sway * 0.7, hip.y + 18 * sc);
   c.stroke();
   c.fillStyle = look.accent || '#fff4d6';
   c.beginPath();
-  c.arc(hip.x + 14 * sc, hip.y + 18 * sc, 3.2 * sc, 0, TAU);
+  c.arc(hip.x + 14 * sc + sway * 0.7, hip.y + 18 * sc, 3.2 * sc, 0, TAU);
   c.fill();
 }
 
 function drawLookWings(c, look, x, y, sc, bones) {
   const sh = lookBoneOk(bones && bones.shoulder) ? bones.shoulder : { x, y };
+  const flap = typeof lookClothSway === 'function' ? lookClothSway(bones, 4.2 * sc) : 0;
   c.fillStyle = look.fill || look.color || 'rgba(200,208,220,.55)';
   c.beginPath();
   c.moveTo(sh.x - 6 * sc, sh.y);
-  c.quadraticCurveTo(sh.x - 28 * sc, sh.y - 18 * sc, sh.x - 22 * sc, sh.y + 16 * sc);
+  c.quadraticCurveTo(sh.x - 28 * sc, sh.y - 18 * sc - flap, sh.x - 22 * sc, sh.y + 16 * sc);
   c.quadraticCurveTo(sh.x - 12 * sc, sh.y + 8 * sc, sh.x - 6 * sc, sh.y + 4 * sc);
   c.closePath();
   c.fill();
   c.beginPath();
   c.moveTo(sh.x + 4 * sc, sh.y);
-  c.quadraticCurveTo(sh.x + 26 * sc, sh.y - 16 * sc, sh.x + 20 * sc, sh.y + 16 * sc);
+  c.quadraticCurveTo(sh.x + 26 * sc, sh.y - 16 * sc - flap, sh.x + 20 * sc, sh.y + 16 * sc);
   c.quadraticCurveTo(sh.x + 10 * sc, sh.y + 8 * sc, sh.x + 4 * sc, sh.y + 4 * sc);
   c.closePath();
   c.fill();
@@ -566,7 +571,7 @@ function drawEquipLookPreview(c, styleId, gear) {
       gear: gear || null,
       _preview: true,
     });
-    f.animT = 0.4;
+    f.animT = 0.55;
     f.draw(c);
     return f;
   } catch (_) {
