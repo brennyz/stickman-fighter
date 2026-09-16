@@ -20,6 +20,9 @@ const NEED_ART = [
   'skeleton', 'mummy', 'beetle', 'wasp', 'spider',
   'drone', 'bot', 'scrapdog', 'penguin', 'yeti',
   'crab', 'turtle', 'squid',
+  'raven', 'moose', 'beaver', 'badger', 'stag', 'lynx',
+  'wisp', 'gargoyle', 'lich', 'cog', 'turret', 'rivet', 'piston',
+  'walrus', 'ray', 'mole', 'junkbat', 'seal',
 ];
 const NEED_SP = [
   'holkoe', 'razendzwijn', 'kipophol', 'razendeschaap', 'holpaard', 'kopstootgeit',
@@ -38,7 +41,7 @@ function fail(why) {
 const ctx = { console };
 vm.createContext(ctx);
 vm.runInContext(
-  fs.readFileSync(mapsPath, 'utf8') + '\n' + fs.readFileSync(paintPath, 'utf8') + '\nthis.MONSTER_PIXEL_ART=MONSTER_PIXEL_ART;this.MONSTER_PIXEL_SPECIES=MONSTER_PIXEL_SPECIES;this.drawMonsterPixelArt=drawMonsterPixelArt;\n',
+  fs.readFileSync(mapsPath, 'utf8') + '\n' + fs.readFileSync(paintPath, 'utf8') + '\nthis.MONSTER_PIXEL_ART=MONSTER_PIXEL_ART;this.MONSTER_PIXEL_SPECIES=MONSTER_PIXEL_SPECIES;this.drawMonsterPixelArt=drawMonsterPixelArt;this.monsterPixelMotion=monsterPixelMotion;this.monsterPixelFeel=monsterPixelFeel;\n',
   ctx,
   { filename: 'monster-pixels.js' }
 );
@@ -106,31 +109,80 @@ for (const art of W2_P1_DEDICATED) {
   if (paintedP1.length < 6) fail('W2 P1 painted too few rects: ' + art + ' ' + paintedP1.length);
 }
 
-const W2_ALIAS_PAINT = {
-  raven: 'bat', moose: 'cow', beaver: 'pig', badger: 'hedgehog', stag: 'horse',
-  lynx: 'tiger', mole: 'slime', wisp: 'ghost', gargoyle: 'dragon', lich: 'ghost',
-  cog: 'can', turret: 'can', rivet: 'golem', junkbat: 'bat', piston: 'golem',
-  walrus: 'hippo', seal: 'duck', ray: 'shark',
+const W2_P2P3_DEDICATED = [
+  'raven', 'moose', 'beaver', 'badger', 'stag', 'lynx',
+  'wisp', 'gargoyle', 'lich', 'cog', 'turret', 'rivet', 'piston',
+  'walrus', 'ray', 'mole', 'junkbat', 'seal',
+];
+for (const art of W2_P2P3_DEDICATED) {
+  const paintedP2 = [];
+  const p2Stub = {
+    imageSmoothingEnabled: true,
+    fillStyle: '',
+    fillRect(x, y, w, h) { paintedP2.push([x, y, w, h, this.fillStyle]); },
+  };
+  const okP2 = ctx.drawMonsterPixelArt(p2Stub, { art, c1: '#c98850', c2: '#6b4a28' }, 20, 0, false, false);
+  if (!okP2) fail('W2 P2/P3 dedicated should paint without .pixel alias: ' + art);
+  if (paintedP2.length < 6) fail('W2 P2/P3 painted too few rects: ' + art + ' ' + paintedP2.length);
+}
+
+const W3_ALIAS_PAINT = {
   hawk: 'bat', ram: 'goat', cougar: 'tiger', weasel: 'fox', porcupine: 'hedgehog',
   toad: 'slime', ghoul: 'ghost', wraith: 'ghost', bonehound: 'fox', revenant: 'golem',
   shade: 'ghost', welder: 'can', sawbot: 'can', rustmite: 'hedgehog', furnace: 'golem',
   coil: 'can', mammoth: 'elephant', urchin: 'hedgehog',
 };
-for (const [w2, pixel] of Object.entries(W2_ALIAS_PAINT)) {
-  const okAlias = ctx.drawMonsterPixelArt(stub, { art: w2, pixel, c1: '#c98850', c2: '#6b4a28' }, 20, 0, false, false);
-  if (!okAlias) fail('catalog alias should paint ' + w2 + ' → ' + pixel);
+for (const [w3, pixel] of Object.entries(W3_ALIAS_PAINT)) {
+  const okAlias = ctx.drawMonsterPixelArt(stub, { art: w3, pixel, c1: '#c98850', c2: '#6b4a28' }, 20, 0, false, false);
+  if (!okAlias) fail('catalog alias should paint ' + w3 + ' → ' + pixel);
 }
 
-const P1_OLD_ALIAS = {
+const W2_OLD_ALIAS = {
   wolf: 'fox', owl: 'bat', frog: 'slime', snake: 'croc', boar: 'pig',
   skeleton: 'ghost', mummy: 'golem', beetle: 'hedgehog', wasp: 'bat', spider: 'octo',
   drone: 'can', bot: 'can', scrapdog: 'fox', penguin: 'duck', yeti: 'bear',
   crab: 'hedgehog', turtle: 'golem', squid: 'octo',
+  raven: 'bat', moose: 'cow', beaver: 'pig', badger: 'hedgehog', stag: 'horse',
+  lynx: 'tiger', mole: 'slime', wisp: 'ghost', gargoyle: 'dragon', lich: 'ghost',
+  cog: 'can', turret: 'can', rivet: 'golem', junkbat: 'bat', piston: 'golem',
+  walrus: 'hippo', seal: 'duck', ray: 'shark',
 };
-for (const [p1, old] of Object.entries(P1_OLD_ALIAS)) {
-  if (!art[p1] || !art[old]) fail('uniqueness compare missing map ' + p1 + '/' + old);
-  if (art[p1] === art[old]) fail('P1 map still equals old alias: ' + p1 + ' === ' + old);
+for (const [w2, old] of Object.entries(W2_OLD_ALIAS)) {
+  if (!art[w2] || !art[old]) fail('uniqueness compare missing map ' + w2 + '/' + old);
+  if (art[w2] === art[old]) fail('W2 map still equals old alias: ' + w2 + ' === ' + old);
 }
+const w2Ids = W2_P1_DEDICATED.concat(W2_P2P3_DEDICATED);
+for (let i = 0; i < w2Ids.length; i++) {
+  for (let j = i + 1; j < w2Ids.length; j++) {
+    if (art[w2Ids[i]] === art[w2Ids[j]]) fail('W2 maps not unique: ' + w2Ids[i] + ' === ' + w2Ids[j]);
+  }
+}
+
+function paintYs(sp, t, telegraph, motion) {
+  const ys = [];
+  const s = {
+    imageSmoothingEnabled: true,
+    fillStyle: '',
+    fillRect(x, y) { ys.push(y); },
+  };
+  ctx.drawMonsterPixelArt(s, sp, 32, t, false, telegraph, motion);
+  return ys;
+}
+const wolfSp = { id: 'wolfling', art: 'wolf', type: 'charge', shape: 'quad', c1: '#c98850', c2: '#6b4a28' };
+const yIdle0 = paintYs(wolfSp, 0, false, { hopT: 0 });
+const yIdle1 = paintYs(wolfSp, Math.PI / 9.6, false, { hopT: 0 });
+if (!yIdle0.length || yIdle0[0] === yIdle1[0]) fail('idle bob should shift paint y');
+const flyFeel = ctx.monsterPixelFeel({ art: 'owl', type: 'fly', shape: 'flyer' });
+const tankFeel = ctx.monsterPixelFeel({ art: 'yeti', type: 'tank', shape: 'tank' });
+if (!(flyFeel.amp > tankFeel.amp)) fail('flyer bob should exceed tank bob');
+const idleM = ctx.monsterPixelMotion(wolfSp, 20, 0, false, { hopT: 0.1 });
+const windM = ctx.monsterPixelMotion(wolfSp, 20, 0, true, { hopT: 0.1, telegraphT: 0.1, telegraphMax: 0.4 });
+if (!(windM.sx > idleM.sx && windM.sy < idleM.sy && windM.ox < idleM.ox)) {
+  fail('telegraph wind-up should squash and lean');
+}
+const preview = fs.readFileSync(path.join(dir, 'preview.html'), 'utf8');
+if (!preview.includes('pixel-bob-md')) fail('preview missing idle-bob animation');
+if (!preview.includes('scaleX(1.08)')) fail('preview missing telegraph hover');
 
 if (!fs.existsSync(path.join(dir, 'preview.html'))) fail('preview.html missing');
 if (!fs.existsSync(path.join(root, 'MONSTER-PIXEL-MAP.md'))) fail('MONSTER-PIXEL-MAP.md missing');

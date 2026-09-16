@@ -7,6 +7,7 @@
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import { attachP2P3Builders, P2P3_ART_IDS, P2P3_PREVIEW_PAL } from './w2-p2p3-pixel-drawers.mjs';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const outDir = path.join(root, 'assets', 'monsters');
@@ -94,6 +95,7 @@ const FAMILY_PREVIEW = {
   turtle: { B: '#43b25b', D: '#1e4a28' },
   squid: { B: '#c47aff', D: '#5a2080' },
 };
+Object.assign(FAMILY_PREVIEW, P2P3_PREVIEW_PAL);
 
 /** W2 catalog art → #282 map (first-paint aliases). Keep in sync with MONSTER_PIXEL_ALIAS. */
 const W2_PIXEL_ALIAS = {
@@ -163,6 +165,15 @@ const P1_DEDICATED_ARTS = new Set([
   'drone', 'bot', 'scrapdog', 'penguin', 'yeti',
   'crab', 'turtle', 'squid',
 ]);
+const P2P3_DEDICATED_ARTS = new Set(P2P3_ART_IDS);
+const W2_DEDICATED_ARTS = new Set([...P1_DEDICATED_ARTS, ...P2P3_DEDICATED_ARTS]);
+const W2_COMBAT_BIOMES = [
+  { id: 'wild', label: 'Wild', arts: ['wolf', 'owl', 'frog', 'snake', 'boar', 'raven', 'moose', 'beaver', 'badger', 'stag', 'lynx', 'mole'] },
+  { id: 'crypt', label: 'Crypt', arts: ['skeleton', 'mummy', 'beetle', 'wasp', 'spider', 'wisp', 'gargoyle', 'lich'] },
+  { id: 'scrap', label: 'Scrap', arts: ['drone', 'bot', 'scrapdog', 'cog', 'turret', 'rivet', 'piston', 'junkbat'] },
+  { id: 'frost', label: 'Frost', arts: ['penguin', 'yeti', 'walrus', 'seal'] },
+  { id: 'sea', label: 'Sea', arts: ['crab', 'turtle', 'squid', 'ray'] },
+];
 
 function grid() {
   return Array.from({ length: N }, () => Array(N).fill(CH.empty));
@@ -852,16 +863,18 @@ function artWasp() {
 
 function artSpider() {
   const g = grid();
-  fillEllipse(g, 16, 16, 5, 4, CH.body);
-  fillEllipse(g, 22, 18, 5, 4, CH.dark);
+  fillEllipse(g, 14, 16, 4, 4, CH.body);
+  fillEllipse(g, 21, 17, 6, 5, CH.dark);
   for (const s of [-1, 1]) {
-    fillRect(g, 16 + s * 6, 12, 5, 1, CH.ink);
-    fillRect(g, 16 + s * 7, 15, 6, 1, CH.ink);
-    fillRect(g, 16 + s * 6, 19, 5, 1, CH.ink);
-    fillRect(g, 16 + s * 5, 22, 4, 1, CH.ink);
+    fillRect(g, 14 + s * 5, 11, 2, 4, CH.ink);
+    fillRect(g, 14 + s * 8, 14, 3, 2, CH.ink);
+    fillRect(g, 14 + s * 6, 18, 3, 2, CH.ink);
+    fillRect(g, 14 + s * 5, 21, 2, 3, CH.ink);
   }
-  eyes(g, 14, 15, 1);
-  eyes(g, 17, 15, 1);
+  eyes(g, 12, 15, 1);
+  eyes(g, 15, 15, 1);
+  set(g, 13, 14, CH.eye);
+  set(g, 16, 14, CH.eye);
   return outline(g);
 }
 
@@ -896,16 +909,18 @@ function artBot() {
 
 function artScrapdog() {
   const g = grid();
-  fillRect(g, 12, 16, 12, 6, CH.body);
-  fillRect(g, 6, 15, 7, 6, CH.dark);
-  fillRect(g, 7, 12, 2, 3, CH.ink);
-  fillRect(g, 11, 12, 2, 3, CH.ink);
-  fillRect(g, 23, 17, 5, 2, CH.ink);
-  set(g, 27, 16, CH.orange);
-  fillRect(g, 13, 22, 2, 4, CH.dark);
+  fillEllipse(g, 18, 18, 8, 5, CH.body);
+  fillEllipse(g, 8, 16, 5, 4, CH.dark);
+  fillTri(g, 6, 13, 5, 8, 8, 14, CH.ink);
+  fillTri(g, 10, 13, 12, 8, 12, 14, CH.ink);
+  fillEllipse(g, 6, 17, 2, 2, CH.orange);
+  fillRect(g, 24, 17, 5, 2, CH.ink);
+  set(g, 28, 16, CH.orange);
+  set(g, 16, 16, CH.accent);
+  set(g, 20, 16, CH.accent);
+  fillRect(g, 12, 22, 2, 4, CH.dark);
   fillRect(g, 17, 22, 2, 4, CH.dark);
   fillRect(g, 21, 22, 2, 4, CH.dark);
-  fillEllipse(g, 8, 17, 2, 2, CH.orange);
   return outline(g);
 }
 
@@ -927,11 +942,14 @@ function artYeti() {
   const g = grid();
   fillEllipse(g, 16, 16, 8, 8, CH.body);
   fillEllipse(g, 16, 8, 5, 5, CH.body);
+  fillRect(g, 12, 6, 8, 2, CH.dark);
   fillEllipse(g, 8, 18, 3, 4, CH.dark);
   fillEllipse(g, 24, 18, 3, 4, CH.dark);
   fillEllipse(g, 16, 18, 3, 2, CH.accent);
   eyes(g, 14, 8, 1);
   eyes(g, 18, 8, 1);
+  fillRect(g, 14, 11, 1, 2, CH.accent);
+  fillRect(g, 18, 11, 1, 2, CH.accent);
   fillRect(g, 13, 23, 2, 5, CH.dark);
   fillRect(g, 18, 23, 2, 5, CH.dark);
   return outline(g);
@@ -1036,6 +1054,9 @@ const ART_BUILDERS = {
   turtle: artTurtle,
   squid: artSquid,
 };
+Object.assign(ART_BUILDERS, attachP2P3Builders({
+  grid, fillEllipse, fillRect, fillTri, eyes, outline, set, CH,
+}));
 
 /** Flagship species — family sprite + a readable extra mark. */
 const SPECIES_VARIANTS = {
@@ -1135,6 +1156,27 @@ function emitJs(artMaps, speciesMaps) {
   return lines.join('\n');
 }
 
+const W2_MOTION_CLASS = {
+  wolf: 'charge', owl: 'flyer', frog: 'hopper', snake: 'swim', boar: 'charge',
+  skeleton: 'undead', mummy: 'undead', beetle: 'insect', wasp: 'flyer', spider: 'insect',
+  drone: 'mech', bot: 'mech', scrapdog: 'charge', penguin: 'hopper', yeti: 'tank',
+  crab: 'insect', turtle: 'tank', squid: 'swim',
+  raven: 'flyer', moose: 'tank', beaver: 'charge', badger: 'charge', stag: 'charge', lynx: 'charge',
+  wisp: 'shoot', gargoyle: 'flyer', lich: 'undead',
+  cog: 'mech', turret: 'shoot', rivet: 'tank', piston: 'mech',
+  walrus: 'tank', ray: 'swim', mole: 'hopper', junkbat: 'flyer', seal: 'hopper',
+};
+
+function artFigure(id, kind) {
+  const motion = W2_MOTION_CLASS[id] || 'charge';
+  return `<figure class="motion-${motion}" data-id="${id}" data-kind="${kind}" data-art="${id}" data-motion="${motion}"><div class="zoom"><img src="art-${id}.svg" alt="${id}" width="96" height="96"></div><figcaption>${id}<small>${kind} · ${id}</small></figcaption></figure>`;
+}
+
+function combatFigure(id) {
+  const motion = W2_MOTION_CLASS[id] || 'charge';
+  return `<figure class="motion-${motion}" data-id="${id}" data-kind="combat" data-art="${id}" data-motion="${motion}"><div class="arena"><img src="art-${id}.svg" alt="${id}" width="48" height="48"></div><figcaption>${id}</figcaption></figure>`;
+}
+
 function emitPreview(artMaps, speciesMaps) {
   const cards = [];
   const add = (id, file, art, kind) => {
@@ -1142,8 +1184,15 @@ function emitPreview(artMaps, speciesMaps) {
   };
   for (const id of Object.keys(artMaps)) add(id, `art-${id}.svg`, id, 'art');
   for (const [id, spec] of Object.entries(SPECIES_VARIANTS)) add(id, `sp-${id}.svg`, spec.art, 'species');
-  const aliasRows = Object.entries(W2_PIXEL_ALIAS).filter(([art]) => !P1_DEDICATED_ARTS.has(art)).map(([art, a]) =>
-    `<tr><td><code>${art}</code></td><td><code>${a.pixel}</code></td><td>${a.high ? `<code>${a.high}</code>` : '—'}</td></tr>`).join('');
+  const p1Cards = [...P1_DEDICATED_ARTS].map((id) => artFigure(id, 'w2-p1')).join('');
+  const p2p3Cards = [...P2P3_DEDICATED_ARTS].map((id) => artFigure(id, 'w2-p2p3')).join('');
+  const combatBlocks = W2_COMBAT_BIOMES.map((b) =>
+    `<h3 id="combat-${b.id}">${b.label}</h3><div class="combat-row" data-biome="${b.id}">${b.arts.map(combatFigure).join('')}</div>`).join('');
+  const leftoverAlias = Object.entries(W2_PIXEL_ALIAS).filter(([art]) => !W2_DEDICATED_ARTS.has(art));
+  const aliasRows = leftoverAlias.length
+    ? leftoverAlias.map(([art, a]) =>
+      `<tr><td><code>${art}</code></td><td><code>${a.pixel}</code></td><td>${a.high ? `<code>${a.high}</code>` : '—'}</td></tr>`).join('')
+    : '<tr><td colspan="3">geen — alle 36 W2 arts hebben een eigen map</td></tr>';
   const w3Rows = Object.entries(W3_PIXEL_ALIAS).map(([art, a]) =>
     `<tr><td><code>${art}</code></td><td><code>${a.pixel}</code></td><td>${a.high ? `<code>${a.high}</code>` : '—'}</td></tr>`).join('');
   return `<!doctype html>
@@ -1159,6 +1208,7 @@ function emitPreview(artMaps, speciesMaps) {
   p { margin: 0 20px 16px; color: #9db1e3; max-width: 72ch; }
   section { padding: 8px 16px 24px; }
   h2 { font-size: .95rem; color: #ffd75e; margin: 18px 4px 8px; }
+  h3 { font-size: .85rem; color: #cfe6ff; margin: 12px 4px 6px; }
   .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(132px, 1fr)); gap: 10px; }
   figure { margin: 0; background: #1a2030; border: 1px solid #333c55; border-radius: 10px; padding: 8px; text-align: center; }
   .zoom { image-rendering: pixelated; background:
@@ -1168,7 +1218,20 @@ function emitPreview(artMaps, speciesMaps) {
     linear-gradient(-45deg,transparent 75%,#20283c 75%);
     background-size: 12px 12px; background-position: 0 0,0 6px,6px -6px,-6px 0;
     border-radius: 6px; padding: 8px; }
-  .zoom img { width: 96px; height: 96px; image-rendering: pixelated; }
+  .zoom img { width: 96px; height: 96px; image-rendering: pixelated; animation: pixel-bob-md .9s ease-in-out infinite; }
+  .arena { image-rendering: pixelated; background: #0e1224; border-radius: 6px; padding: 10px; min-height: 68px; display: flex; align-items: center; justify-content: center; }
+  .arena img { width: 48px; height: 48px; image-rendering: pixelated; animation: pixel-bob-md .9s ease-in-out infinite; }
+  .motion-flyer img, .motion-hopper img { animation-name: pixel-bob-lg; animation-duration: .7s; }
+  .motion-tank img, .motion-undead img, .motion-mech img, .motion-shoot img { animation-name: pixel-bob-sm; animation-duration: 1.15s; }
+  .combat-row figure:hover img { animation: none; transform: translateX(-3px) scaleX(1.08) scaleY(.93); }
+  @keyframes pixel-bob-sm { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-3%); } }
+  @keyframes pixel-bob-md { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-5%); } }
+  @keyframes pixel-bob-lg { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-7%); } }
+  @media (prefers-reduced-motion: reduce) {
+    .zoom img, .arena img { animation: none !important; }
+  }
+  .combat-row { display: flex; flex-wrap: wrap; gap: 10px; background: #0b1020; border: 1px solid #2a3348; border-radius: 10px; padding: 10px; }
+  .combat-row figure { width: 76px; }
   figcaption { margin-top: 6px; font-weight: 700; }
   figcaption small { display: block; font-weight: 500; color: #9db1e3; }
   table { border-collapse: collapse; margin: 8px 4px 16px; font-size: 13px; }
@@ -1178,17 +1241,29 @@ function emitPreview(artMaps, speciesMaps) {
 </head>
 <body>
 <h1>Monster pixel set</h1>
-<p>32×32 stickman-pixel sprites for farm/zoo/classic plus <strong>18 unique W2 P1</strong> silhouettes
-(wolf, owl, frog, snake, boar, skeleton, mummy, beetle, wasp, spider, drone, bot, scrapdog, penguin, yeti, crab, turtle, squid).
-Combat tints <code>B</code>/<code>D</code> with each species <code>c1</code>/<code>c2</code>.
-P2/P3 W2 and W3 arts still reuse #282 maps via <code>sp.pixel</code> aliases.
+<p>32×32 stickman-pixel sprites for farm/zoo/classic plus <strong>36 unique W2</strong> silhouettes
+(P1 18 from #298, P2+P3 18 stacked). Combat tints <code>B</code>/<code>D</code> with each species <code>c1</code>/<code>c2</code>.
+W3 arts still reuse #282 maps via <code>sp.pixel</code> aliases.
 Share URL stays <code>speel.html</code>.</p>
+<section id="w2-p1">
+<h2>W2 P1 unique (18)</h2>
+<div class="grid">${p1Cards}</div>
+</section>
+<section id="w2-p2p3">
+<h2>W2 P2 + P3 unique (18)</h2>
+<div class="grid">${p2p3Cards}</div>
+</section>
+<section id="w2-combat">
+<h2>Combat size (~48px) per biome</h2>
+<p>Same maps at typical combat footprint on a dark arena. Sprites idle-bob (flyer/hopper more, tank/mech less). Hover a row = telegraph squash/lean. Combat uses the same feel in <code>drawMonsterPixelArt</code>.</p>
+${combatBlocks}
+</section>
 <section>
 <h2>Art-family slots (${Object.keys(artMaps).length})</h2>
 <div class="grid">${cards.filter((_, i) => i < Object.keys(artMaps).length).join('')}</div>
 <h2>Flagship species slots (${Object.keys(speciesMaps).length})</h2>
 <div class="grid">${cards.filter((_, i) => i >= Object.keys(artMaps).length).join('')}</div>
-<h2>W2 P2/P3 aliases → #282 maps</h2>
+<h2>W2 leftover aliases → #282 maps</h2>
 <table><thead><tr><th>W2 art</th><th>.pixel</th><th>mythic+</th></tr></thead><tbody>${aliasRows}</tbody></table>
 <h2>W3 catalog aliases → #282 maps</h2>
 <table><thead><tr><th>W3 art</th><th>.pixel</th><th>mythic+</th></tr></thead><tbody>${w3Rows}</tbody></table>
@@ -1202,21 +1277,24 @@ function emitMapping(artMaps, speciesMaps) {
     `| \`${id}\` | art | \`assets/monsters/art-${id}.svg\` | all SPECIES with \`art:'${id}'\` without a species pixel |`);
   const spRows = Object.entries(SPECIES_VARIANTS).map(([id, spec]) =>
     `| \`${id}\` | species | \`assets/monsters/sp-${id}.svg\` | \`${id}\` (art \`${spec.art}\`) |`);
-  const aliasRows = Object.entries(W2_PIXEL_ALIAS).filter(([art]) => !P1_DEDICATED_ARTS.has(art)).map(([art, a]) =>
-    `| \`${art}\` | \`${a.pixel}\` | ${a.high ? `\`${a.high}\`` : '—'} |`);
+  const leftoverAlias = Object.entries(W2_PIXEL_ALIAS).filter(([art]) => !W2_DEDICATED_ARTS.has(art));
+  const aliasRows = leftoverAlias.length
+    ? leftoverAlias.map(([art, a]) => `| \`${art}\` | \`${a.pixel}\` | ${a.high ? `\`${a.high}\`` : '—'} |`)
+    : ['| — | — | alle 36 W2 arts hebben een eigen map |'];
   const w3Rows = Object.entries(W3_PIXEL_ALIAS).map(([art, a]) =>
     `| \`${art}\` | \`${a.pixel}\` | ${a.high ? `\`${a.high}\`` : '—'} |`);
   const p1List = [...P1_DEDICATED_ARTS].map((id) => `\`${id}\``).join(', ');
+  const p2p3List = [...P2P3_DEDICATED_ARTS].map((id) => `\`${id}\``).join(', ');
   return `# Monster pixel ID map
 
-#282 farm/zoo/classic maps plus **unique W2 P1 drawers** (Wave 3) and leftover W2/W3 aliases.
+#282 farm/zoo/classic maps plus **unique W2 P1 + P2 + P3 drawers**. W3 leftover aliases remain.
 
-Editor: [Monster editor double roster](https://cursor.com/agents/bc-43a25a67-7182-5f4f-ab63-6412cd05e154)
+Stacked on editor Wave 3 ([PR #298](https://github.com/brennyz/stickman-fighter/pull/298)). P1 drawers stay in \`scripts/gen-monster-pixels.mjs\`; P2+P3 live in \`scripts/w2-p2p3-pixel-drawers.mjs\`.
 
 Resolution order in combat / dex:
 
-1. Dedicated map when \`MONSTER_ART_SLOTS[sp.art].pixelStatus === 'pixel'\` and \`MONSTER_PIXEL_ART[art]\` exists (W2 P1: ${p1List})
-2. \`sp.pixel\` if it names a species or art map (W2 P2/P3 + W3 aliases + #282 flagships)
+1. Dedicated map when \`MONSTER_ART_SLOTS[sp.art].pixelStatus === 'pixel'\` and \`MONSTER_PIXEL_ART[art]\` exists (W2 P1: ${p1List}; W2 P2+P3: ${p2p3List})
+2. \`sp.pixel\` if it names a species or art map (W3 aliases + #282 flagships)
 3. \`sp.id\` species map (flagship)
 4. \`sp.art\` family map
 5. canvas stub / \`drawBeastArt\` / \`drawMonsterArt\` fallback
@@ -1225,9 +1303,17 @@ Preview: [assets/monsters/preview.html](assets/monsters/preview.html)
 
 ## W2 P1 — dedicated maps
 
-These 18 arts paint their own 32×32 map. \`SPECIES[id].pixel\` is omitted so combat/book do not reuse fox/bat/slime stand-ins.
+These 18 arts paint their own 32×32 map (from #298). \`SPECIES[id].pixel\` is omitted.
 
-## W2 P2/P3 art → #282 pixel alias
+${p1List}
+
+## W2 P2 + P3 — dedicated maps
+
+These 18 arts now also paint their own 32×32 map. Aliases are not assigned (\`catalogPixelFor\` returns null when \`pixelStatus === 'pixel'\`).
+
+${p2p3List}
+
+## W2 leftover aliases
 
 | W2 art | .pixel (common–legendary) | .pixel mythic+ |
 |--------|---------------------------|----------------|
@@ -1239,7 +1325,7 @@ ${aliasRows.join('\n')}
 |--------|---------------------------|----------------|
 ${w3Rows.join('\n')}
 
-## #282 slots
+## #282 + W2 slots
 
 | provisionalId | kind | file | wires to |
 |---------------|------|------|----------|
@@ -1248,12 +1334,13 @@ ${spRows.join('\n')}
 
 ## Coverage
 
-- **${Object.keys(artMaps).length} art families** — farm (10) + zoo (14) + classic/sea (10) + W2 P1 (18).
+- **${Object.keys(artMaps).length} art families** — farm (10) + zoo (14) + classic/sea (10) + W2 P1 (18) + W2 P2/P3 (18).
 - **${Object.keys(speciesMaps).length} flagship species** — farm/zoo commons + a few mythic/void variants.
-- **18 W2 P1 arts** have dedicated maps + \`pixelStatus='pixel'\`.
-- **W2 P2/P3 + W3** stay aliased onto the #282 set until a later unique-pixel pass.
+- **36 W2 arts** have dedicated maps + \`pixelStatus='pixel'\`.
+- **W3 (18)** stay aliased onto the #282 set until a later unique-pixel pass.
 - Files are 32×32 crisp SVG (RLE rects), typically 1–3 KB.
 - Combat paint is from JS maps (no Image decode) so a missing SVG never blanks a fighter.
+- Combat motion (visual only): idle bob ≤ 3.8% of radius, phase from \`hopT\` / id hash; telegraph squash + lean-in; dash recover stretch. \`prefers-reduced-motion\` / \`motionReduced()\` disables it. Hitboxes unchanged.
 
 ## Do not
 
@@ -1267,6 +1354,25 @@ function main() {
   const artMaps = {};
   for (const [id, fn] of Object.entries(ART_BUILDERS)) {
     artMaps[id] = encode(fn());
+  }
+  for (const id of W2_DEDICATED_ARTS) {
+    if (!artMaps[id]) throw new Error('missing dedicated W2 map ' + id);
+    const filled = [...artMaps[id]].filter((ch) => ch !== CH.empty).length;
+    if (filled < 40) throw new Error('sparse dedicated map ' + id + ' filled=' + filled);
+  }
+  const dedicatedIds = [...W2_DEDICATED_ARTS];
+  for (let i = 0; i < dedicatedIds.length; i++) {
+    for (let j = i + 1; j < dedicatedIds.length; j++) {
+      if (artMaps[dedicatedIds[i]] === artMaps[dedicatedIds[j]]) {
+        throw new Error('duplicate dedicated maps ' + dedicatedIds[i] + ' === ' + dedicatedIds[j]);
+      }
+    }
+  }
+  for (const [id, a] of Object.entries(W2_PIXEL_ALIAS)) {
+    if (!W2_DEDICATED_ARTS.has(id) || !artMaps[a.pixel]) continue;
+    if (artMaps[id] === artMaps[a.pixel]) {
+      throw new Error('dedicated still equals old alias ' + id + ' === ' + a.pixel);
+    }
   }
   const speciesMaps = {};
   for (const [id, spec] of Object.entries(SPECIES_VARIANTS)) {

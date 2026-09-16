@@ -981,6 +981,20 @@
       "text": "GROTE monster doorontwikkeling (Wave 3): unieke W2 P1 art, catalog +120–180, biome combat feel, boek UX, draft PR",
       "status": "done-in-code",
       "updated": "2026-09-16"
+    },
+    {
+      "id": "w-20260916T112600",
+      "from": "user",
+      "text": "Monster-pixels meer leven via motion (idle bob + telegraph wind-up) in #308. Visueel only.",
+      "status": "done-in-code",
+      "updated": "2026-09-16"
+    },
+    {
+      "id": "w-20260916T105700",
+      "from": "user",
+      "text": "Unieke 32×32 stickman-pixel silhouetten voor alle 36 W2 art-slots (P1→P2→P3). Stacked op editor #298; geen catalog-expansie.",
+      "status": "done-in-code",
+      "updated": "2026-09-16"
     }
   ],
   "agentRules": [
