@@ -110,6 +110,17 @@ function buildingsWorldLocked(world) {
 }
 
 function buildingsArtPath(id) {
+  if (typeof buildingArtSrc === 'function') {
+    try {
+      const raw = buildingArtSrc(id);
+      if (raw && typeof raw === 'object' && (raw.pixel || raw.stroke || raw.hub)) {
+        return { pixel: raw.pixel, svg: raw.stroke || raw.pixel, hub: raw.hub || 'assets/buttons/hub/buildings.svg' };
+      }
+      if (typeof raw === 'string' && raw) {
+        return { pixel: raw, svg: raw, hub: 'assets/buttons/hub/buildings.svg' };
+      }
+    } catch (_) {}
+  }
   const pixel = 'assets/buildings/pixel/' + id + '.png';
   const svg = 'assets/buildings/' + id + '.svg';
   if (typeof document !== 'undefined' && document) {
@@ -221,6 +232,15 @@ function buildingsStubView(def, state, now) {
     artSvg: art.svg,
     artHub: art.hub,
     stub: true,
+    built: level >= 1,
+    canBuild: !locked && level < 1,
+    powerRank: level >= 1 ? Math.floor((level - 1) / 2) : -1,
+    powers: [],
+    powersUnlocked: [],
+    nextPower: null,
+    nextCost: { petCoins: upgradeCost, resources: {} },
+    blurb: buildingsI18nSub(def.id) || buildingsI18nName(def.id),
+    outputRate: 0,
   };
 }
 
@@ -256,8 +276,63 @@ function buildingsNormalizeView(raw) {
     art: raw.art || art.pixel,
     artSvg: raw.artSvg || art.svg,
     artHub: art.hub,
-    stub: false,
+    stub: !!raw.stub,
+    built: raw.built != null ? !!raw.built : Math.max(0, Math.floor(Number(raw.level ?? raw.lv) || 0)) >= 1,
+    canBuild: !!raw.canBuild,
+    powerRank: raw.powerRank != null ? Math.floor(Number(raw.powerRank)) : (Math.max(0, Math.floor(Number(raw.level ?? raw.lv) || 0)) >= 1 ? Math.floor((Math.max(0, Math.floor(Number(raw.level ?? raw.lv) || 0)) - 1) / 2) : -1),
+    powers: Array.isArray(raw.powers) ? raw.powers : [],
+    powersUnlocked: Array.isArray(raw.powersUnlocked) ? raw.powersUnlocked : [],
+    nextPower: raw.nextPower || null,
+    nextCost: raw.nextCost && typeof raw.nextCost === 'object' ? raw.nextCost : { petCoins: Math.max(0, Math.floor(Number(raw.upgradeCost) || 0)), resources: {} },
+    blurb: raw.blurb || raw.sub || buildingsI18nSub(id),
+    outputRate: Math.max(0, Math.floor(Number(raw.outputRate) || 0)),
   };
+}
+
+function buildingsAttachTooltip(view) {
+  if (!view || !view.id) return view;
+  const live = (typeof buildingDescModel === 'function')
+    ? buildingDescModel
+    : (typeof buildingTooltipModel === 'function') ? buildingTooltipModel : null;
+  if (!live) return view;
+  try {
+    const tip = live(view.id);
+    if (!tip) return view;
+    if (tip.blurb) view.blurb = tip.blurb;
+    if (tip.name) view.name = tip.name;
+    if (Array.isArray(tip.powers)) view.powers = tip.powers;
+    if (Array.isArray(tip.powersUnlocked)) view.powersUnlocked = tip.powersUnlocked;
+    if (tip.nextPower) view.nextPower = tip.nextPower;
+    if (tip.powerRank != null) view.powerRank = tip.powerRank;
+    if (tip.built != null) view.built = !!tip.built;
+    if (tip.canBuild != null) view.canBuild = !!tip.canBuild;
+    if (tip.nextCost) view.nextCost = tip.nextCost;
+    if (tip.outputRate != null) view.outputRate = tip.outputRate;
+    if (tip.pending != null) view.pending = Math.max(0, Math.floor(Number(tip.pending) || 0));
+    if (tip.storageCap != null) view.capacity = Math.max(1, Math.floor(Number(tip.storageCap) || 1));
+    if (tip.canCollect != null) view.canCollect = !!tip.canCollect;
+    if (tip.canUpgrade != null || tip.canBuild != null) view.canUpgrade = !!(tip.canUpgrade || tip.canBuild);
+    if (tip.level != null) view.level = Math.max(0, Math.floor(Number(tip.level) || 0));
+    if (tip.maxLevel != null) view.maxLevel = Math.max(1, Math.floor(Number(tip.maxLevel) || 10));
+    if (tip.resourceId) view.resourceId = tip.resourceId;
+    if (tip.resourceName) view.resourceLabel = tip.resourceName;
+    if (tip.unlocked != null) {
+      view.locked = !tip.unlocked;
+      if (view.locked && !view.lockHint && typeof t === 'function') {
+        view.lockHint = t('buildings.lockWorld', {
+          name: buildingsWorldName(tip.worldUnlock || view.world || 1),
+          n: tip.worldUnlock || view.world || 1,
+        });
+      }
+    }
+    if (tip.doesLine) view.doesLine = tip.doesLine;
+    if (tip.produceLine) view.produceLine = tip.produceLine;
+    if (tip.powerLine) view.powerLine = tip.powerLine;
+    if (tip.nextLine) view.nextLine = tip.nextLine;
+    if (tip.nextCostLabel) view.nextCostLabel = tip.nextCostLabel;
+    if (tip.artSrc) view.artSrc = tip.artSrc;
+  } catch (_) {}
+  return view;
 }
 
 const BuildingsStub = {
@@ -405,6 +480,15 @@ const BuildingsLiveSys = {
       artSvg: art.svg,
       artHub: art.hub,
       stub: false,
+      built: !!raw.built,
+      canBuild: !!raw.canBuild,
+      powerRank: raw.powerRank,
+      powers: raw.powers || [],
+      powersUnlocked: raw.powersUnlocked || [],
+      nextPower: raw.nextPower || null,
+      nextCost: raw.nextCost || { petCoins: costPc, resources: {} },
+      blurb: raw.blurb || buildingsI18nSub(raw.id),
+      outputRate: raw.outputRate || 0,
     };
   },
   list() {
@@ -459,6 +543,12 @@ const BuildingsLiveSys = {
     this._sel = id;
   },
   selectedId() { return this._sel || 'stick_lighter'; },
+  wallet() {
+    try {
+      if (typeof buildingWallet === 'function') return buildingWallet() || {};
+    } catch (_) {}
+    return {};
+  },
 };
 
 function buildingsApi() {
@@ -473,14 +563,17 @@ function buildingsList() {
   if (!Array.isArray(rows) || !rows.length) {
     try { rows = BuildingsStub.list(); } catch (_) { rows = []; }
   }
-  return rows.map((r) => (r && r.id && r.name != null && r.pending != null) ? r : buildingsNormalizeView(r)).filter(Boolean);
+  return rows.map((r) => {
+    const base = (r && r.id && r.name != null && r.pending != null) ? r : buildingsNormalizeView(r);
+    return buildingsAttachTooltip(base);
+  }).filter(Boolean);
 }
 
 function buildingsGet(id) {
   const api = buildingsApi();
   let row = null;
   try { row = api.get ? api.get(id) : null; } catch (_) { row = null; }
-  if (row) return buildingsNormalizeView(row) || row;
+  if (row) return buildingsAttachTooltip(buildingsNormalizeView(row) || row);
   return buildingsList().find((r) => r.id === id) || null;
 }
 

@@ -3256,7 +3256,7 @@
     .gear-slot-title { font-size: 14px; }
   }
 
-  /* Buildings HOME screen — Android-first list/detail */
+  /* Buildings HOME screen — Android-first list → detail */
   #buildingsScreen.buildings-screen { align-items: stretch; }
   #buildingsScreen .buildings-body {
     width: min(94vw, 480px);
@@ -3274,6 +3274,51 @@
     color: #ffd75e;
     opacity: .85;
     text-align: center;
+  }
+  #buildingsWallet.buildings-wallet,
+  #buildingsScreen .buildings-wallet {
+    position: sticky;
+    top: 0;
+    z-index: 3;
+    width: min(94vw, 480px);
+    margin: 0 auto 10px;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 6px 8px;
+    padding: 8px 6px;
+    background: var(--menu-bg, #151b33);
+    border: 0;
+    box-shadow: none;
+  }
+  #buildingsScreen .buildings-wallet-chip {
+    display: inline-flex;
+    align-items: baseline;
+    gap: 6px;
+    min-width: 4.6em;
+    padding: 6px 10px;
+    border-radius: 999px;
+    border: 1px solid var(--menu-edge);
+    background: var(--menu-tile-solid);
+    box-shadow: 0 2px 0 rgba(0,0,0,.22);
+    font-weight: 800;
+    line-height: 1.1;
+  }
+  #buildingsScreen .buildings-wallet-lbl {
+    font-size: 11px;
+    letter-spacing: .02em;
+    color: var(--menu-ink-muted);
+    text-transform: uppercase;
+  }
+  #buildingsScreen .buildings-wallet-amt {
+    font-size: 16px;
+    font-variant-numeric: tabular-nums;
+    color: var(--menu-ink);
+  }
+  #buildingsScreen .buildings-wallet-pc .buildings-wallet-amt { color: #ffd75e; }
+  #buildingsScreen .buildings-wallet-chip.is-flash {
+    border-color: rgba(124, 252, 138, .7);
+    box-shadow: 0 0 0 2px rgba(124, 252, 138, .28);
   }
   #buildingsScreen .buildings-list {
     display: flex;
@@ -3306,13 +3351,27 @@
     flex-direction: column;
     gap: 8px;
   }
+  #buildingsScreen[data-buildings-pane="list"] .buildings-detail { display: none; }
+  #buildingsScreen[data-buildings-pane="detail"] .buildings-list { display: none; }
+  #buildingsScreen .buildings-overview-btn {
+    align-self: flex-start;
+    margin: 0;
+    padding: 6px 2px;
+    border: 0;
+    background: none;
+    color: #7cf5ff;
+    font-weight: 800;
+    font-size: 13px;
+    min-height: 44px;
+  }
   #buildingsScreen .buildings-detail-art {
     display: flex;
     justify-content: center;
   }
-  #buildingsScreen .buildings-detail-art img {
-    width: 48px;
-    height: 48px;
+  #buildingsScreen .buildings-detail-art img,
+  #buildingsScreen .buildings-art-lg {
+    width: 56px;
+    height: 56px;
     object-fit: contain;
   }
   #buildingsScreen .buildings-art-img {
@@ -3332,12 +3391,40 @@
   }
   #buildingsScreen .buildings-detail-sub,
   #buildingsScreen .buildings-stock-lbl,
-  #buildingsScreen .buildings-lock {
+  #buildingsScreen .buildings-lock,
+  #buildingsScreen .buildings-effect-blurb,
+  #buildingsScreen .buildings-effect-now,
+  #buildingsScreen .buildings-effect-next,
+  #buildingsScreen .buildings-upgrade-ask,
+  #buildingsScreen .buildings-upgrade-cost {
     font-size: var(--type-caption);
     font-weight: 700;
     color: var(--menu-ink-muted);
   }
   #buildingsScreen .buildings-lock { color: #ffd75e; }
+  #buildingsScreen .buildings-effect {
+    margin: 8px 0 4px;
+    padding: 8px 10px;
+    border-radius: 12px;
+    border: 1px solid rgba(124, 245, 255, .22);
+    background: rgba(10, 16, 32, .35);
+  }
+  #buildingsScreen .buildings-effect-kicker {
+    font-size: 10px;
+    font-weight: 900;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    color: #7cf5ff;
+    margin-bottom: 4px;
+  }
+  #buildingsScreen .buildings-effect-blurb,
+  #buildingsScreen .buildings-effect-now,
+  #buildingsScreen .buildings-effect-next {
+    margin: 0 0 4px;
+    line-height: 1.35;
+  }
+  #buildingsScreen .buildings-effect-now { color: var(--menu-ink); }
+  #buildingsScreen .buildings-effect-next { color: #ffd75e; margin-bottom: 0; }
   #buildingsScreen .buildings-stock-bar {
     height: 8px;
     border-radius: 999px;
@@ -3350,22 +3437,63 @@
     height: 100%;
     background: linear-gradient(90deg, #c97a20, #ffd75e);
   }
-  #buildingsScreen .buildings-cta-row {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
+  #buildingsScreen .buildings-collect-flash {
+    margin-top: 6px;
+    font-weight: 900;
+    color: #7cfc8a;
+    font-size: 15px;
+  }
+  #buildingsScreen .buildings-cta-row,
+  #buildingsScreen .buildings-cta-stack,
+  #buildingsScreen .buildings-upgrade-step {
+    display: flex;
+    flex-direction: column;
     gap: 8px;
   }
   #buildingsScreen .buildings-cta {
     width: 100%;
     justify-content: center;
   }
+  #buildingsScreen .buildings-cta-collect { order: 0; }
+  #buildingsScreen .buildings-cta-upgrade { order: 1; }
   #buildingsScreen .buildings-cta[disabled] {
     opacity: .45;
     pointer-events: none;
   }
+  #buildingsUpgradeSheet.buildings-upgrade-sheet {
+    position: fixed;
+    inset: 0;
+    z-index: 40;
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+  }
+  #buildingsUpgradeSheet[hidden] { display: none; }
+  #buildingsUpgradeSheet .buildings-sheet-backdrop {
+    position: absolute;
+    inset: 0;
+    border: 0;
+    background: rgba(6, 8, 16, .55);
+  }
+  #buildingsUpgradeSheet .buildings-sheet-panel {
+    position: relative;
+    width: min(94vw, 420px);
+    margin-bottom: 12px;
+    padding: 16px 14px 14px;
+    border-radius: 18px 18px 14px 14px;
+    border: 1px solid var(--menu-edge);
+    background: var(--menu-tile-solid);
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
   body.high-contrast #buildingsScreen .buildings-detail,
-  body.high-contrast #buildingsScreen .buildings-row {
+  body.high-contrast #buildingsScreen .buildings-row,
+  body.high-contrast #buildingsScreen .buildings-wallet-chip {
     border-width: 2px;
+  }
+  body.big-touch #buildingsScreen .buildings-wallet-chip {
+    min-height: 36px;
   }
   @media (min-width: 720px) and (orientation: landscape) {
     #buildingsScreen .buildings-body {
@@ -3374,7 +3502,10 @@
       grid-template-columns: minmax(280px, 1fr) minmax(0, 1.1fr);
       align-items: start;
     }
-    #buildingsScreen .buildings-detail { order: 0; }
-    #buildingsScreen .buildings-list { order: 1; }
+    #buildingsScreen .buildings-wallet { width: min(94vw, 860px); }
+    #buildingsScreen .buildings-detail { order: 0; display: flex; }
+    #buildingsScreen .buildings-list { order: 1; display: flex; }
+    #buildingsScreen[data-buildings-pane="list"] .buildings-detail { display: flex; }
+    #buildingsScreen[data-buildings-pane="detail"] .buildings-list { display: flex; }
   }
 

@@ -950,6 +950,14 @@
       "status": "done-in-code",
       "updated": "2026-09-16",
       "notes": "Systems lane: unambiguous locked/not-owned/wrong-slot/already-equipped/vanity-ok; persist save.gear.equipped; combat via gearItemHasCombatStats."
+    },
+    {
+      "id": "w-20260916T111800",
+      "from": "user",
+      "text": "Align Buildings UI harden #296 with systems #297 bind API (buildingDescModel / buildingWalletModel / buildingArtSrc). Do not duplicate models. Mega-merge only, no merge to main.",
+      "status": "done-in-code",
+      "updated": "2026-09-16",
+      "notes": "Consume #297 symbols; keep list→detail UX on #296."
     }
   ],
   "agentRules": [
