@@ -4077,15 +4077,19 @@ const UI = {
     }
     if (!this.gearRarity) this.gearRarity = 'all';
     const pickSlot = this.gearSlotPick;
-    const items = typeof listGearItems === 'function' ? listGearItems(pickSlot) : [];
-    let shown = typeof gearFilterItems === 'function'
-      ? gearFilterItems(items, this.gearFilter, this.gearFilterQ, this.gearRarity)
-      : items;
+    const items = typeof gearSheetRows === 'function'
+      ? gearSheetRows(pickSlot, save)
+      : (typeof listGearItems === 'function' ? listGearItems(pickSlot) : []);
+    let shown = typeof gearFilterInventory === 'function'
+      ? gearFilterInventory(items, this.gearFilter, this.gearFilterQ, this.gearRarity)
+      : (typeof gearFilterItems === 'function'
+        ? gearFilterItems(items, this.gearFilter, this.gearFilterQ, this.gearRarity)
+        : items);
     if (typeof gearSortItems === 'function') shown = gearSortItems(shown, eq);
     if (this.gearItemPick && !items.some((it) => it.id === this.gearItemPick)) this.gearItemPick = null;
     if (!this.gearItemPick) {
       this.gearItemPick = eq[pickSlot] || (items.find((it) => {
-        const u = typeof gearUnlockState === 'function' ? gearUnlockState(it) : { unlocked: true };
+        const u = typeof gearUnlockState === 'function' ? gearUnlockState(it, pickSlot) : { unlocked: true };
         return u.unlocked;
       }) || items[0] || {}).id || null;
     }
@@ -4110,9 +4114,12 @@ const UI = {
     };
 
     const wearItem = (item) => {
-      const res = (typeof gearEquipItem === 'function') ? gearEquipItem(item.id) : equipGear(item.id);
+      const expectSlot = item.slot || item.slotId || pickSlot;
+      const res = (typeof gearEquipItem === 'function')
+        ? gearEquipItem(item.id, { expectSlot })
+        : equipGear(item.id, { expectSlot });
       if (!res || !res.ok) {
-        const fail = gearUnlockState(item);
+        const fail = gearUnlockState(item, expectSlot);
         UI.toast((res && res.label) || fail.label || tOr('toast.gearLocked', 'Nog op slot'), 1800, { tone: 'warn' });
         return false;
       }
@@ -4168,7 +4175,7 @@ const UI = {
         const sid = slot.id;
         const rawItem = typeof gearItemById === 'function' ? gearItemById(eq[sid]) : null;
         const item = (typeof contractGearItem === 'function' && rawItem) ? contractGearItem(rawItem) : rawItem;
-        const unlock = item && typeof gearUnlockState === 'function' ? gearUnlockState(item) : { unlocked: true };
+        const unlock = item && typeof gearUnlockState === 'function' ? gearUnlockState(item, sid) : { unlocked: true };
         const btn = document.createElement('button');
         btn.type = 'button';
         btn.className = 'hub-tile gear-slot-card'
@@ -4255,7 +4262,7 @@ const UI = {
       if (!picked) {
         detail.innerHTML = `<div class="gear-detail-sub">${esc(tOr('gear.pickHint', 'Tik een item om aan of uit te doen.'))}</div>`;
       } else {
-        const unlock = gearUnlockState(picked);
+        const unlock = gearUnlockState(picked, pickSlot);
         const tip = unlock.model || (typeof gearTooltipModel === 'function' ? gearTooltipModel(picked) : null);
         const equippedHere = eq[picked.slot] === picked.id || eq[picked.slotId] === picked.id;
         const kindPill = pillFor(picked, unlock, { on: equippedHere });
@@ -4389,8 +4396,9 @@ const UI = {
         frag.appendChild(empty);
       }
       for (const it of shown) {
-        const unlock = gearUnlockState(it);
-        const equippedHere = eq[it.slot] === it.id || eq[it.slotId] === it.id;
+        const unlock = gearUnlockState(it, pickSlot);
+        const equippedHere = eq[it.slot] === it.id || eq[it.slotId] === it.id
+          || unlock.state === 'already-equipped';
         const el = document.createElement('button');
         el.type = 'button';
         el.className = 'gear-card'
@@ -4398,6 +4406,7 @@ const UI = {
           + (unlock.unlocked ? '' : ' locked')
           + (equippedHere ? ' equipped' : '');
         el.setAttribute('data-gear-id', it.id);
+        el.setAttribute('data-equip-state', unlock.state || '');
         el.setAttribute('data-rarity', it.rarity || '');
         el.setAttribute('aria-disabled', unlock.unlocked ? 'false' : 'true');
         const tint = (it.look && it.look.tint) || it.color || '#333c55';

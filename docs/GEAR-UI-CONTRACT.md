@@ -23,9 +23,18 @@ Equip requires **owned + unlocked + slot match**. Sanitize strips locked / wrong
 
 ## Bind helpers (systems)
 
-`gearItemById` · `gearItemsForSlot` · `gearGateState` · `gearTooltipModel` · `gearEquipItem` · `gearUnequipSlot` · `gearRenderDescriptor` · `sanitizeGearSave` · `grantStarterGear`
+`gearItemById` · `gearItemsForSlot` · `gearGateState` · `gearTooltipModel` · `gearEquipState` · `gearCanEquip` · `gearEquipItem` · `gearUnequipSlot` · `gearSlotInventory` · `gearRenderDescriptor` · `sanitizeGearSave` · `grantStarterGear`
 
-UI wrappers (non-colliding): `listGearSlots` · `listGearItems` · `getEquippedGear` · `equipGear` · `unequipGear` · `gearFilterItems`
+Equip states (`GEAR_EQUIP_STATES`): `ok` · `vanity-ok` · `already-equipped` · `locked` · `not-owned` · `wrong-slot` · `unknown`
+
+```
+gearEquipState(id, save, now, expectSlot)
+gearCanEquip(...)              // alias → gearEquipState
+gearEquipItem(id, { expectSlot? })   // also (id, save, now, expectSlot)
+gearSlotInventory(slot, save)  // owned + locked preview + gate copy
+```
+
+UI wrappers (non-colliding): `listGearSlots` · `listGearItems` · `gearSheetRows` · `getEquippedGear` · `equipGear` · `unequipGear` · `gearFilterItems` · `gearFilterInventory`
 
 ## LOOK vs STAT
 

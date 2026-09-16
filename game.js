@@ -323,9 +323,9 @@ const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const VERSION_UPDATE_SAVE_KEY = 'stickfighter_version_update_save_v1';
 const VERSION_UPDATE_FLAG_KEY = 'stickfighter_version_update_flag_v1';
 const SAVE_EXPORT_SCHEMA = 3;
-const APP_VERSION = '1.18.170';
+const APP_VERSION = '1.18.171';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 380;
+const SW_CACHE_REV = 381;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', petCoins: 0, dex: {}, summons: {}, pets: {}, activePet: null,
   eggPets: {}, activeEggPet: null, eggDaily: null,
   chestDaily: null, chestWeapons: {},
@@ -6596,6 +6596,11 @@ function applyStyleToSpec(fighter, spec) {
  *
  * MOST cosmetics are vanity. SOME cosmetics have stats. Armour has stats.
  * Every lootable item has BOTH unlockLvl (save.lvl) AND unlockDays (account age).
+ *
+ * Equip API (#295-compat, same names for merge):
+ *   gearEquipState / gearCanEquip → ok | vanity-ok | already-equipped | locked | not-owned | wrong-slot | unknown
+ *   gearEquipItem(id, s, now, expectSlot) OR gearEquipItem(id, { expectSlot? })
+ *   gearSlotInventory(slot, save) → owned + locked preview + gate copy
  */
 const GEAR_SCHEMA = 1;
 const GEAR_MS_PER_DAY = 86400000;
@@ -6999,7 +7004,29 @@ function gearGateState(item, s, now) {
   }
   out.ok = out.levelOk && out.timeOk && out.advOk && out.diffOk;
   out.lootable = out.ok;
+  out.state = out.ok ? 'ok' : 'locked';
   return out;
+}
+
+function gearGateCopy(item, s, now) {
+  const tr = (key, fallback, vars) => {
+    if (typeof tOr === 'function') return tOr(key, fallback, vars);
+    if (vars && vars.n != null) return String(fallback).split('{n}').join(String(vars.n));
+    return fallback;
+  };
+  if (!item) return '';
+  if (!gearItemOwned(item.id, s)) return tr('gear.lockOwned', 'Nog niet gevonden');
+  const gate = gearGateState(item, s, now);
+  if (!gate || gate.ok) return '';
+  const why = (gate.reasons && gate.reasons[0]) || 'locked';
+  if (why === 'level') return tr('gear.lockLevel', 'Lv {n}', { n: gate.needLvl });
+  if (why === 'time') return tr('gear.lockDays', '{n} dagen', { n: gate.needDays });
+  if (why === 'adventure') {
+    const n = item.needAdvUnlocked != null ? item.needAdvUnlocked : gate.needLvl;
+    return tr('gear.lockAdv', 'Avontuur Lv {n}', { n });
+  }
+  if (why === 'diff') return tr('gear.lockDiff', 'Nog niet vrij');
+  return tr('gear.pillLock', 'LOCK');
 }
 
 function gearItemLootable(item, s, now) {
@@ -7155,13 +7182,139 @@ function gearCanGrant(id, s, now) {
   return { ok: true, item };
 }
 
-function gearCanEquip(id, s, now) {
+const GEAR_EQUIP_STATES = {
+  OK: 'ok',
+  VANITY_OK: 'vanity-ok',
+  ALREADY_EQUIPPED: 'already-equipped',
+  LOCKED: 'locked',
+  NOT_OWNED: 'not-owned',
+  WRONG_SLOT: 'wrong-slot',
+  UNKNOWN: 'unknown',
+  EMPTY: 'empty',
+  NOSAVE: 'nosave',
+};
+
+function _gearIsSaveLike(obj) {
+  return !!(obj && typeof obj === 'object' && !Array.isArray(obj) && (
+    obj.gear != null || obj.lvl != null || obj.createdAt != null
+    || obj.unlocked != null || obj.advCleared != null
+    || obj.coins != null || obj.weapon != null
+  ));
+}
+
+function _gearIsEquipOpts(obj) {
+  if (!obj || typeof obj !== 'object' || Array.isArray(obj)) return false;
+  if (_gearIsSaveLike(obj)) return false;
+  const keys = Object.keys(obj);
+  if (!keys.length) return true;
+  return keys.every((k) => k === 'expectSlot' || k === 'now');
+}
+
+function _gearParseCall(sOrOpts, now, expectSlot) {
+  if (_gearIsEquipOpts(sOrOpts)) {
+    return {
+      s: (typeof save !== 'undefined' ? save : null),
+      now: sOrOpts.now != null ? sOrOpts.now : now,
+      expectSlot: sOrOpts.expectSlot != null ? sOrOpts.expectSlot : expectSlot,
+    };
+  }
+  return {
+    s: sOrOpts || (typeof save !== 'undefined' ? save : null),
+    now,
+    expectSlot,
+  };
+}
+
+function _gearEquipResult(partial) {
+  const item = partial.item || null;
+  const state = partial.state || GEAR_EQUIP_STATES.UNKNOWN;
+  const ok = partial.ok === true;
+  return {
+    ok,
+    state,
+    reason: state,
+    item,
+    slot: partial.slot || (item && item.slot) || null,
+    owned: !!partial.owned,
+    equipped: !!partial.equipped,
+    vanity: !!(item && item.vanity === true),
+    appliesStats: !!(item && gearItemHasCombatStats(item) && ok),
+    gate: partial.gate || null,
+    label: partial.label || '',
+    canEquip: ok && state !== GEAR_EQUIP_STATES.ALREADY_EQUIPPED,
+  };
+}
+
+/** Canonical equip-flow state. expectSlot (optional) → wrong-slot if mismatch. */
+function gearEquipState(id, s, now, expectSlot) {
+  const parsed = _gearParseCall(s, now, expectSlot);
   const item = gearItemById(id);
-  if (!item) return { ok: false, reason: 'unknown' };
-  if (!gearItemOwned(item.id, s)) return { ok: false, reason: 'unowned', item };
-  const gate = gearGateState(item, s, now);
-  if (!gate.ok) return { ok: false, reason: 'gated', gate, item };
-  return { ok: true, item, slot: item.slot };
+  if (!item) return _gearEquipResult({ ok: false, state: GEAR_EQUIP_STATES.UNKNOWN });
+  if (parsed.expectSlot != null && parsed.expectSlot !== '') {
+    const want = gearCanonSlot(parsed.expectSlot);
+    if (!want || want !== item.slot) {
+      return _gearEquipResult({
+        ok: false,
+        state: GEAR_EQUIP_STATES.WRONG_SLOT,
+        item,
+        owned: gearItemOwned(item.id, parsed.s),
+        label: (typeof tOr === 'function') ? tOr('gear.lockSlot', 'Verkeerd slot') : 'Verkeerd slot',
+      });
+    }
+  }
+  const owned = gearItemOwned(item.id, parsed.s);
+  if (!owned) {
+    return _gearEquipResult({
+      ok: false,
+      state: GEAR_EQUIP_STATES.NOT_OWNED,
+      item,
+      gate: gearGateState(item, parsed.s, parsed.now),
+      owned: false,
+      label: gearGateCopy(item, parsed.s, parsed.now),
+    });
+  }
+  const gate = gearGateState(item, parsed.s, parsed.now);
+  if (!gate.ok) {
+    return _gearEquipResult({
+      ok: false,
+      state: GEAR_EQUIP_STATES.LOCKED,
+      item,
+      gate,
+      owned: true,
+      label: gearGateCopy(item, parsed.s, parsed.now),
+    });
+  }
+  const wearing = gearEquippedId(item.slot, parsed.s) === item.id;
+  if (wearing) {
+    return _gearEquipResult({
+      ok: true,
+      state: GEAR_EQUIP_STATES.ALREADY_EQUIPPED,
+      item,
+      gate,
+      owned: true,
+      equipped: true,
+    });
+  }
+  if (item.vanity === true) {
+    return _gearEquipResult({
+      ok: true,
+      state: GEAR_EQUIP_STATES.VANITY_OK,
+      item,
+      gate,
+      owned: true,
+    });
+  }
+  return _gearEquipResult({
+    ok: true,
+    state: GEAR_EQUIP_STATES.OK,
+    item,
+    gate,
+    owned: true,
+  });
+}
+
+function gearCanEquip(id, s, now, expectSlot) {
+  return gearEquipState(id, s, now, expectSlot);
 }
 
 function _persistGearIfLive(st) {
@@ -7210,26 +7363,87 @@ function gearGrantItem(id, src, s, now) {
   return result;
 }
 
-function gearEquipItem(id, s, now) {
-  const st = s || (typeof save !== 'undefined' ? save : null);
-  if (!st) return { ok: false, reason: 'nosave' };
-  const can = gearCanEquip(id, s, now);
+function gearEquipItem(id, s, now, expectSlot) {
+  const parsed = _gearParseCall(s, now, expectSlot);
+  const st = parsed.s;
+  if (!st) return _gearEquipResult({ ok: false, state: GEAR_EQUIP_STATES.NOSAVE });
+  const can = gearEquipState(id, st, parsed.now, parsed.expectSlot);
   if (!can.ok) return can;
   const bag = ensureGearSave(st);
-  bag.equipped[can.slot] = can.item.id;
+  bag.equipped[can.item.slot] = can.item.id;
   _persistGearIfLive(st);
-  return { ok: true, item: can.item, slot: can.slot };
+  return {
+    ok: true,
+    state: can.state,
+    reason: can.state,
+    item: can.item,
+    slot: can.item.slot,
+    owned: true,
+    equipped: true,
+    vanity: can.vanity,
+    appliesStats: can.appliesStats,
+    gate: can.gate,
+    label: '',
+    canEquip: false,
+  };
 }
 
 function gearUnequipSlot(slot, s) {
   const st = s || (typeof save !== 'undefined' ? save : null);
-  if (!st) return { ok: false, reason: 'nosave' };
+  if (!st) return { ok: false, state: GEAR_EQUIP_STATES.NOSAVE, reason: 'nosave' };
   const canon = gearCanonSlot(slot);
-  if (!canon) return { ok: false, reason: 'badslot' };
+  if (!canon) return { ok: false, state: GEAR_EQUIP_STATES.WRONG_SLOT, reason: 'badslot', slot: null };
   const bag = ensureGearSave(st);
+  const prevId = typeof bag.equipped[canon] === 'string' ? bag.equipped[canon] : null;
   bag.equipped[canon] = null;
   _persistGearIfLive(st);
-  return { ok: true, slot: canon };
+  return {
+    ok: true,
+    state: prevId ? GEAR_EQUIP_STATES.OK : GEAR_EQUIP_STATES.EMPTY,
+    reason: prevId ? 'ok' : 'empty',
+    slot: canon,
+    prevId,
+  };
+}
+
+/** Owned items + locked/not-owned preview for one slot. Schema 1, no new save shape. */
+function gearSlotInventory(slot, s, now) {
+  const parsed = _gearIsEquipOpts(s)
+    ? { s: (typeof save !== 'undefined' ? save : null), now: s.now != null ? s.now : now }
+    : { s: s || (typeof save !== 'undefined' ? save : null), now };
+  const canon = gearCanonSlot(slot);
+  const st = parsed.s;
+  if (!canon) return { slot: null, equippedId: null, items: [] };
+  const equippedId = gearEquippedId(canon, st);
+  const items = [];
+  for (const item of gearItemsForSlot(canon)) {
+    const eq = gearEquipState(item.id, st, parsed.now, canon);
+    const owned = !!eq.owned;
+    items.push({
+      id: item.id,
+      item,
+      slot: canon,
+      owned,
+      locked: eq.state === GEAR_EQUIP_STATES.LOCKED || eq.state === GEAR_EQUIP_STATES.NOT_OWNED,
+      preview: !owned || eq.state === GEAR_EQUIP_STATES.LOCKED,
+      equipped: eq.state === GEAR_EQUIP_STATES.ALREADY_EQUIPPED,
+      vanity: item.vanity === true,
+      hasStats: item.hasStats === true && item.vanity !== true,
+      appliesStats: !!(eq.ok && gearItemHasCombatStats(item)),
+      state: eq.state,
+      ok: eq.ok,
+      canEquip: !!eq.canEquip,
+      gate: eq.gate,
+      label: eq.label,
+    });
+  }
+  items.sort((a, b) => {
+    if (a.equipped !== b.equipped) return a.equipped ? -1 : 1;
+    if (a.owned !== b.owned) return a.owned ? -1 : 1;
+    if (a.ok !== b.ok) return a.ok ? -1 : 1;
+    return String(a.id).localeCompare(String(b.id));
+  });
+  return { slot: canon, equippedId, items };
 }
 
 function _emptyGearMods() {
@@ -7357,7 +7571,8 @@ function gearSlotLabel(slot) {
 function gearTooltipModel(item, s, now) {
   if (!item) return null;
   const gate = gearGateState(item, s, now);
-  const applies = gearItemHasCombatStats(item);
+  const eq = gearEquipState(item.id, s, now, item.slot);
+  const applies = !!(eq.ok && gearItemHasCombatStats(item));
   return {
     id: item.id,
     slot: item.slot,
@@ -7366,15 +7581,18 @@ function gearTooltipModel(item, s, now) {
     desc: gearItemLabel(item, 'desc'),
     rarity: item.rarity,
     vanity: item.vanity === true,
-    hasStats: item.hasStats === true,
+    hasStats: item.hasStats === true && item.vanity !== true,
     appliesStats: applies,
     combatLine: applies ? gearCombatLine(item) : '',
     mods: applies ? Object.assign({}, item.mods) : null,
     unlockLvl: item.unlockLvl,
     unlockDays: item.unlockDays,
     gate,
-    owned: gearItemOwned(item.id, s),
-    equipped: gearEquippedId(item.slot, s) === item.id,
+    owned: !!eq.owned,
+    equipped: eq.state === GEAR_EQUIP_STATES.ALREADY_EQUIPPED,
+    state: eq.state,
+    canEquip: !!eq.canEquip,
+    lockLabel: eq.label,
     starter: !!item.starter,
     look: item.look || null,
   };
@@ -13633,6 +13851,7 @@ function seedNlFromRuntime() {
     lockAdv: 'Avontuur Lv {n}',
     lockDiff: 'Nog niet vrij',
     lockOwned: 'Nog niet gevonden',
+    lockSlot: 'Verkeerd slot',
     lockNoStats: 'Geen stats tot het slot open is',
     filterAll: 'Alles',
     filterOwned: 'Van jou',
@@ -13693,6 +13912,7 @@ const CATALOG_EN = {
     lockAdv: 'Adventure Lv {n}',
     lockDiff: 'Not open yet',
     lockOwned: 'Not found yet',
+    lockSlot: 'Wrong slot',
     lockNoStats: 'No stats until unlocked',
     filterAll: 'All',
     filterOwned: 'Owned',
@@ -18183,7 +18403,8 @@ function applyFighterMove(f, mv, dt, opts) {
  * Char-screen lane. Schema: docs/GEAR-SYSTEM.md (#280).
  * Save: createdAt + save.gear { schema, equipped, owned:{id:{at,src}} }.
  * Flat save.equipment / save.ownedGear migrate once then drop.
- * Do not redeclare GEAR_SLOT_IDS, gearItemById, sanitizeGearSave, gearEquipItem.
+ * Do not redeclare GEAR_SLOT_IDS, gearItemById, sanitizeGearSave, gearEquipItem,
+ * gearEquipState, gearCanEquip, gearSlotInventory, GEAR_EQUIP_STATES.
  */
 const GEAR_DRAW_ORDER = ['back', 'legs', 'chest', 'head', 'hands', 'weapon', 'pet'];
 const GEAR_SLOT_DRAW_ORDER = ['back', 'legs', 'chest', 'head', 'hands'];
@@ -18352,47 +18573,92 @@ function _dexN() {
   return 0;
 }
 
-function gearUnlockState(item) {
+function _gearWearableState(state) {
+  return state === 'ok' || state === 'vanity-ok' || state === 'already-equipped';
+}
+
+function gearUnlockState(item, expectSlot) {
+  if (item && item.equipState) {
+    const wearable = _gearWearableState(item.equipState);
+    return {
+      unlocked: wearable,
+      state: item.equipState,
+      canEquip: !!item.canEquip,
+      gate: item.equipState === 'not-owned' ? 'owned'
+        : (item.equipState === 'locked' ? 'locked'
+          : (item.equipState === 'wrong-slot' ? 'slot'
+            : (item.equipState === 'unknown' ? 'unknown' : null))),
+      label: item.lockLabel || '',
+      model: null,
+    };
+  }
   const raw = (item && item.id && typeof gearItemById === 'function') ? (gearItemById(item.id) || item) : item;
   const it = contractGearItem(raw) || raw;
-  if (!it) return { unlocked: true, gate: null, label: '', model: null };
+  if (!it) return { unlocked: true, gate: null, label: '', model: null, state: 'unknown' };
+  if (typeof gearEquipState === 'function') {
+    const slot = (expectSlot != null && expectSlot !== '') ? expectSlot : (it.slot || it.slotId || null);
+    const eq = gearEquipState(it.id, slot ? { expectSlot: slot } : undefined);
+    const wearable = _gearWearableState(eq.state);
+    const why = (eq.gate && eq.gate.reasons && eq.gate.reasons[0]) || null;
+    let gate = null;
+    if (eq.state === 'not-owned') gate = 'owned';
+    else if (eq.state === 'locked') gate = why || 'locked';
+    else if (eq.state === 'wrong-slot') gate = 'slot';
+    else if (eq.state === 'unknown') gate = 'unknown';
+    const tip = typeof gearTooltipModel === 'function' ? gearTooltipModel(raw) : null;
+    return {
+      unlocked: wearable,
+      state: eq.state,
+      canEquip: !!eq.canEquip,
+      gate,
+      label: eq.label || '',
+      model: tip || eq.gate,
+      need: (eq.gate && (eq.gate.needLvl || eq.gate.needDays)) || null,
+    };
+  }
   if (!gearOwned(it)) {
-    return { unlocked: false, gate: 'owned', label: _lockCopy('owned'), model: null };
+    return { unlocked: false, gate: 'owned', label: _lockCopy('owned'), model: null, state: 'not-owned' };
   }
   if (typeof gearGateState === 'function') {
     const g = gearGateState(raw && raw.unlockLvl != null ? raw : it);
     if (g && !g.ok) {
       const why = (g.reasons && g.reasons[0]) || 'locked';
-      if (why === 'level') return { unlocked: false, gate: 'level', need: g.needLvl, label: _lockCopy('level', g.needLvl), model: g };
-      if (why === 'time') return { unlocked: false, gate: 'time', need: g.needDays, label: _lockCopy('days', g.needDays), model: g };
-      if (why === 'adventure') return { unlocked: false, gate: 'adv', need: it.needAdvUnlocked || g.needLvl, label: _lockCopy('adv', it.needAdvUnlocked || g.needLvl), model: g };
-      if (why === 'diff') return { unlocked: false, gate: 'diff', label: _lockCopy('diff'), model: g };
-      return { unlocked: false, gate: why, label: _lockCopy(why, g.needLvl), model: g };
+      if (why === 'level') return { unlocked: false, gate: 'level', need: g.needLvl, label: _lockCopy('level', g.needLvl), model: g, state: 'locked' };
+      if (why === 'time') return { unlocked: false, gate: 'time', need: g.needDays, label: _lockCopy('days', g.needDays), model: g, state: 'locked' };
+      if (why === 'adventure') return { unlocked: false, gate: 'adv', need: it.needAdvUnlocked || g.needLvl, label: _lockCopy('adv', it.needAdvUnlocked || g.needLvl), model: g, state: 'locked' };
+      if (why === 'diff') return { unlocked: false, gate: 'diff', label: _lockCopy('diff'), model: g, state: 'locked' };
+      return { unlocked: false, gate: why, label: _lockCopy(why, g.needLvl), model: g, state: 'locked' };
     }
     const tip = typeof gearTooltipModel === 'function' ? gearTooltipModel(raw) : null;
-    return { unlocked: true, gate: null, label: '', model: tip || g };
+    return { unlocked: true, gate: null, label: '', model: tip || g, state: it.vanity ? 'vanity-ok' : 'ok' };
   }
   const lvl = (typeof save === 'object' && save) ? (save.lvl || 1) : 1;
   if ((it.unlockLvl || it.needLvl) && lvl < (it.unlockLvl || it.needLvl)) {
     const need = it.unlockLvl || it.needLvl;
-    return { unlocked: false, gate: 'level', need, label: _lockCopy('level', need) };
+    return { unlocked: false, gate: 'level', need, label: _lockCopy('level', need), state: 'locked' };
   }
-  return { unlocked: true, gate: null, label: '', model: null };
+  return { unlocked: true, gate: null, label: '', model: null, state: 'ok' };
 }
 
-function gearCanWear(item) {
-  if (!item) return { ok: false, reason: 'missing' };
+function gearCanWear(item, expectSlot) {
+  if (!item) return { ok: false, reason: 'missing', state: 'unknown' };
   if (typeof gearCanEquip === 'function') {
-    const can = gearCanEquip(item.id);
-    if (!can || !can.ok) {
-      const unlock = gearUnlockState(item);
-      return { ok: false, reason: (can && can.reason) || unlock.gate || 'locked', label: unlock.label };
+    const opts = (expectSlot != null && expectSlot !== '') ? { expectSlot } : undefined;
+    const can = gearCanEquip(item.id, opts);
+    if (!can || !can.ok || can.canEquip === false) {
+      const unlock = gearUnlockState(item, expectSlot);
+      return {
+        ok: false,
+        reason: (can && can.state) || unlock.gate || 'locked',
+        state: (can && can.state) || unlock.state || 'locked',
+        label: (can && can.label) || unlock.label,
+      };
     }
-    return { ok: true };
+    return { ok: true, state: can.state };
   }
-  const unlock = gearUnlockState(item);
-  if (!unlock.unlocked) return { ok: false, reason: unlock.gate || 'locked', label: unlock.label };
-  return { ok: true };
+  const unlock = gearUnlockState(item, expectSlot);
+  if (!unlock.unlocked) return { ok: false, reason: unlock.gate || 'locked', state: unlock.state, label: unlock.label };
+  return { ok: true, state: unlock.state || 'ok' };
 }
 
 function gearItemName(item) {
@@ -18435,20 +18701,21 @@ function gearStatLine(item) {
   return typeof tOr === 'function' ? tOr('gear.vanityHint', 'Geen stats — alleen look') : 'Geen stats — alleen look';
 }
 
-function equipGear(itemId) {
+function equipGear(itemId, opts) {
   const raw = (typeof gearItemById === 'function') ? gearItemById(itemId) : null;
   const item = contractGearItem(raw) || raw;
-  if (!item) return { ok: false, reason: 'missing' };
-  const can = gearCanWear(item);
+  if (!item) return { ok: false, reason: 'missing', state: 'unknown' };
+  const expectSlot = (opts && opts.expectSlot) || item.slotId || item.slot || null;
+  const can = gearCanWear(item, expectSlot);
   if (!can.ok) return can;
   if (typeof gearEquipItem === 'function') {
-    const res = gearEquipItem(itemId);
+    const res = gearEquipItem(itemId, expectSlot ? { expectSlot } : undefined);
     if (!res || !res.ok) {
-      const unlock = gearUnlockState(item);
-      return { ok: false, reason: (res && res.reason) || unlock.gate || 'locked', label: unlock.label, item };
+      const unlock = gearUnlockState(item, expectSlot);
+      return { ok: false, reason: (res && res.state) || unlock.gate || 'locked', state: (res && res.state) || unlock.state, label: (res && res.label) || unlock.label, item };
     }
     if (typeof save === 'object' && save) _dropFlatGearKeys(save);
-    return { ok: true, item };
+    return { ok: true, item, state: res.state || can.state };
   }
   if (typeof save === 'object' && save) {
     _ensureGearBag(save);
@@ -18606,6 +18873,50 @@ function gearRaritiesInList(items) {
   }
   out.sort((a, b) => (GEAR_RARITY_RANK[a] || 0) - (GEAR_RARITY_RANK[b] || 0));
   return out;
+}
+
+function gearSheetRows(slot, s) {
+  if (typeof gearSlotInventory !== 'function') {
+    return (typeof listGearItems === 'function' ? listGearItems(slot) : []).map((it) => {
+      const unlock = gearUnlockState(it, slot);
+      return Object.assign({}, it, {
+        equipState: unlock.state || (unlock.unlocked ? 'ok' : 'locked'),
+        canEquip: unlock.unlocked,
+        lockLabel: unlock.label || '',
+        preview: !unlock.unlocked,
+        locked: !unlock.unlocked,
+      });
+    });
+  }
+  const inv = gearSlotInventory(slot, s);
+  return (inv.items || []).map((row) => {
+    const contracted = contractGearItem(row.item) || row.item;
+    if (!contracted) return null;
+    return Object.assign({}, contracted, {
+      equipState: row.state,
+      canEquip: !!row.canEquip,
+      lockLabel: row.label || '',
+      preview: !!row.preview,
+      locked: !!row.locked,
+    });
+  }).filter(Boolean);
+}
+
+function gearFilterInventory(rows, filter, q, rarity) {
+  const list = (rows || []).map((row) => {
+    if (row && row.item && row.state && !row.equipState) {
+      const it = contractGearItem(row.item) || row.item;
+      return Object.assign({}, it, {
+        equipState: row.state,
+        canEquip: !!row.canEquip,
+        lockLabel: row.label || '',
+        preview: !!row.preview,
+        locked: !!row.locked,
+      });
+    }
+    return row;
+  });
+  return gearFilterItems(list, filter, q, rarity);
 }
 
 function gearFilterItems(items, filter, q, rarity) {
@@ -36297,15 +36608,19 @@ const UI = {
     }
     if (!this.gearRarity) this.gearRarity = 'all';
     const pickSlot = this.gearSlotPick;
-    const items = typeof listGearItems === 'function' ? listGearItems(pickSlot) : [];
-    let shown = typeof gearFilterItems === 'function'
-      ? gearFilterItems(items, this.gearFilter, this.gearFilterQ, this.gearRarity)
-      : items;
+    const items = typeof gearSheetRows === 'function'
+      ? gearSheetRows(pickSlot, save)
+      : (typeof listGearItems === 'function' ? listGearItems(pickSlot) : []);
+    let shown = typeof gearFilterInventory === 'function'
+      ? gearFilterInventory(items, this.gearFilter, this.gearFilterQ, this.gearRarity)
+      : (typeof gearFilterItems === 'function'
+        ? gearFilterItems(items, this.gearFilter, this.gearFilterQ, this.gearRarity)
+        : items);
     if (typeof gearSortItems === 'function') shown = gearSortItems(shown, eq);
     if (this.gearItemPick && !items.some((it) => it.id === this.gearItemPick)) this.gearItemPick = null;
     if (!this.gearItemPick) {
       this.gearItemPick = eq[pickSlot] || (items.find((it) => {
-        const u = typeof gearUnlockState === 'function' ? gearUnlockState(it) : { unlocked: true };
+        const u = typeof gearUnlockState === 'function' ? gearUnlockState(it, pickSlot) : { unlocked: true };
         return u.unlocked;
       }) || items[0] || {}).id || null;
     }
@@ -36330,9 +36645,12 @@ const UI = {
     };
 
     const wearItem = (item) => {
-      const res = (typeof gearEquipItem === 'function') ? gearEquipItem(item.id) : equipGear(item.id);
+      const expectSlot = item.slot || item.slotId || pickSlot;
+      const res = (typeof gearEquipItem === 'function')
+        ? gearEquipItem(item.id, { expectSlot })
+        : equipGear(item.id, { expectSlot });
       if (!res || !res.ok) {
-        const fail = gearUnlockState(item);
+        const fail = gearUnlockState(item, expectSlot);
         UI.toast((res && res.label) || fail.label || tOr('toast.gearLocked', 'Nog op slot'), 1800, { tone: 'warn' });
         return false;
       }
@@ -36388,7 +36706,7 @@ const UI = {
         const sid = slot.id;
         const rawItem = typeof gearItemById === 'function' ? gearItemById(eq[sid]) : null;
         const item = (typeof contractGearItem === 'function' && rawItem) ? contractGearItem(rawItem) : rawItem;
-        const unlock = item && typeof gearUnlockState === 'function' ? gearUnlockState(item) : { unlocked: true };
+        const unlock = item && typeof gearUnlockState === 'function' ? gearUnlockState(item, sid) : { unlocked: true };
         const btn = document.createElement('button');
         btn.type = 'button';
         btn.className = 'hub-tile gear-slot-card'
@@ -36475,7 +36793,7 @@ const UI = {
       if (!picked) {
         detail.innerHTML = `<div class="gear-detail-sub">${esc(tOr('gear.pickHint', 'Tik een item om aan of uit te doen.'))}</div>`;
       } else {
-        const unlock = gearUnlockState(picked);
+        const unlock = gearUnlockState(picked, pickSlot);
         const tip = unlock.model || (typeof gearTooltipModel === 'function' ? gearTooltipModel(picked) : null);
         const equippedHere = eq[picked.slot] === picked.id || eq[picked.slotId] === picked.id;
         const kindPill = pillFor(picked, unlock, { on: equippedHere });
@@ -36609,8 +36927,9 @@ const UI = {
         frag.appendChild(empty);
       }
       for (const it of shown) {
-        const unlock = gearUnlockState(it);
-        const equippedHere = eq[it.slot] === it.id || eq[it.slotId] === it.id;
+        const unlock = gearUnlockState(it, pickSlot);
+        const equippedHere = eq[it.slot] === it.id || eq[it.slotId] === it.id
+          || unlock.state === 'already-equipped';
         const el = document.createElement('button');
         el.type = 'button';
         el.className = 'gear-card'
@@ -36618,6 +36937,7 @@ const UI = {
           + (unlock.unlocked ? '' : ' locked')
           + (equippedHere ? ' equipped' : '');
         el.setAttribute('data-gear-id', it.id);
+        el.setAttribute('data-equip-state', unlock.state || '');
         el.setAttribute('data-rarity', it.rarity || '');
         el.setAttribute('aria-disabled', unlock.unlocked ? 'false' : 'true');
         const tint = (it.look && it.look.tint) || it.color || '#333c55';

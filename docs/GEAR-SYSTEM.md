@@ -62,8 +62,9 @@ GEAR_SLOT_IDS · GEAR_SLOTS · GEAR_ITEMS · GEAR_BY_ID · GEAR_SCHEMA
 gearItemById(id) · gearItemsForSlot(slot) · gearSlotById(id)
 gearUnlockContext(s, now) · gearGateState(item, s, now)
 gearItemUnlocked / gearItemLootable / gearItemUsable
-gearCanGrant(id) · gearCanEquip(id)
-gearGrantItem · gearEquipItem · gearUnequipSlot
+gearCanGrant(id) · gearCanEquip(id) · gearEquipState(id)
+gearGrantItem · gearEquipItem(id, { expectSlot? }) · gearUnequipSlot
+gearSlotInventory(slot, save)
 gearTooltipModel · gearTooltipLines · gearCombatLine
 gearRenderDescriptor(s)   // look tint/accent/layer — pixel art later
 rollGearDrop(ctx)         // stub, always null until world spawners

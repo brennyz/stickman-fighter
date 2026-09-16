@@ -91,6 +91,13 @@
   },
   "userWishlist": [
     {
+      "id": "w-20260916T111200",
+      "from": "user",
+      "text": "Systems equip-API klaar (#295): align sheets/equip-flow. Bind gearEquipState/gearCanEquip (ok|vanity-ok|already-equipped|locked|not-owned|wrong-slot|unknown), gearEquipItem(id,{expectSlot?}), gearSlotInventory(slot,save). DOM #gearScreen/[data-slot]/[data-gear-id] ongewijzigd. Schema 1 ongemoeid. Geen layout-conflict met systems. Update PR #307 met screenshots + NL API-note.",
+      "status": "in-progress",
+      "updated": "2026-09-16"
+    },
+    {
       "id": "w-20260916T105800",
       "from": "user",
       "text": "GROTE gear UI/UX pass: Uitrusting als premium HOME-sibling (navy cards, ico/titel/sub/pills, WCAG AA). 1 tap HOME→Uitrusting; snelle equip/unequip; grotere hero; draw-order back→legs→chest→head→hands→weapon→pet; 5 slots vaste volgorde; weapon aside; safe-area Back; één page-scroll; empty/equipped/locked/LOOK states. Schema save.gear blijft. Android 390×844, NL+EN, geen Versus, niet forceren naar main.",

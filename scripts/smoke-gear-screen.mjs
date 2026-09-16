@@ -39,9 +39,13 @@ must(/hub-tile-gear/.test(html), 'Character tile must use HOME hub-tile chrome')
 must(/const GEAR_SLOT_IDS = \['head', 'chest', 'hands', 'legs', 'back'\]/.test(data), 'GEAR_SLOT_IDS contract');
 must(/function gearTooltipModel/.test(data), 'gearTooltipModel missing');
 must(/function gearEquipItem/.test(data), 'gearEquipItem missing');
+must(/function gearEquipState/.test(data), 'gearEquipState missing');
+must(/function gearSlotInventory/.test(data), 'gearSlotInventory missing');
+must(/GEAR_EQUIP_STATES/.test(data) && /vanity-ok/.test(data) && /already-equipped/.test(data) && /wrong-slot/.test(data), 'GEAR_EQUIP_STATES contract');
 must(/function gearRenderDescriptor/.test(data), 'gearRenderDescriptor missing');
 must(/function sanitizeGearSave/.test(data), 'sanitizeGearSave missing');
 must(/gearEquipItem/.test(uiAdapt) && /gearTooltipModel/.test(uiAdapt) && /gearRenderDescriptor/.test(uiAdapt), 'UI adapter must bind systems helpers');
+must(/gearSlotInventory/.test(uiAdapt) && /gearFilterInventory/.test(uiAdapt) && /gearSheetRows/.test(uiAdapt), 'adapter must bind slot inventory');
 must(/merged\.gear/.test(storage) && /out\.gear = sanitizeGearSave/.test(storage), 'storage must wire save.gear');
 must(/createdAt: 0/.test(storage), 'DEFAULT_SAVE.createdAt missing');
 must(!/equipment: \{ head: null, chest: null, hands: null, legs: null, back: null \}/.test(storage), 'DEFAULT_SAVE must not keep flat equipment');
@@ -50,6 +54,7 @@ must(/_dropFlatGearKeys/.test(uiAdapt) && /_ensureGearBag/.test(uiAdapt), 'schem
 must(/gearGateState/.test(uiAdapt) && /gearEquipItem/.test(uiAdapt), 'UI adapter must call #280 gate/equip');
 must(/renderGear/.test(ui) && /gearScreen/.test(ui), 'UI must render + navigate gearScreen');
 must(/gearEquipItem/.test(ui) && /gearTooltipModel/.test(ui) && /drawGearHeroDoll/.test(ui), 'renderGear must call systems bind helpers');
+must(/expectSlot/.test(ui) && /gearSheetRows|gearSlotInventory/.test(ui), 'renderGear must pass expectSlot and use slot inventory');
 must(/btnGear',\s*'hub\.gear'/.test(i18n), 'Character tile must be i18n-wired');
 must(/btnGearHome',\s*'hub\.gear'/.test(i18n), 'HOME gear tile must be i18n-wired');
 must(/--menu-tile-solid/.test(css.match(/\.gear-slot-card \{[\s\S]*?\}/)?.[0] || ''), 'slot cards must use HOME tiles');
@@ -109,6 +114,9 @@ async function run() {
       }
       if (typeof gearTooltipModel !== 'function' || typeof gearEquipItem !== 'function' || typeof gearRenderDescriptor !== 'function') {
         return { ok: false, why: 'systems bind helpers missing' };
+      }
+      if (typeof gearEquipState !== 'function' || typeof gearCanEquip !== 'function' || typeof gearSlotInventory !== 'function') {
+        return { ok: false, why: 'equip-API helpers missing' };
       }
 
       const homeTile = document.getElementById('btnGearHome');
@@ -189,16 +197,64 @@ async function run() {
         return { ok: false, why: 'hub tile must show equippedCount/5', text: hub.textContent };
       }
 
+      const already = gearEquipState('head_wrap_cloth');
+      if (!already || already.state !== 'already-equipped' || !already.ok || already.canEquip) {
+        return { ok: false, why: 'starter wrap must be already-equipped', already };
+      }
+      const wrong = gearEquipState('head_wrap_cloth', { expectSlot: 'chest' });
+      if (!wrong || wrong.state !== 'wrong-slot' || wrong.ok) {
+        return { ok: false, why: 'expectSlot chest vs head wrap must be wrong-slot', wrong };
+      }
+      const unknown = gearEquipState('no_such_gear');
+      if (!unknown || unknown.state !== 'unknown' || unknown.ok) {
+        return { ok: false, why: 'unknown id must be unknown', unknown };
+      }
+      const missing = gearEquipItem('head_bandana_blue');
+      if (missing && missing.ok) return { ok: false, why: 'unowned bandana must refuse' };
+      if (!missing || missing.state !== 'not-owned') {
+        return { ok: false, why: 'unowned bandana must be not-owned', missing };
+      }
+      save.gear.owned.head_helm_iron = { at: Date.now(), src: 'smoke' };
+      const lockedSt = gearCanEquip('head_helm_iron');
+      if (!lockedSt || lockedSt.state !== 'locked' || lockedSt.ok) {
+        return { ok: false, why: 'owned-but-gated helm must be locked', lockedSt };
+      }
       const locked = gearEquipItem('head_helm_iron');
       if (locked && locked.ok) return { ok: false, why: 'lvl-gated helm must refuse at default lvl' };
+      if (locked.state !== 'locked') return { ok: false, why: 'gated helm state', locked };
       if (save.gear.equipped.head === 'head_helm_iron') {
         return { ok: false, why: 'locked item leaked into slot' };
       }
+      delete save.gear.owned.head_helm_iron;
 
-      const missing = gearEquipItem('head_bandana_blue');
-      if (missing && missing.ok) return { ok: false, why: 'unowned/gated bandana must refuse' };
+      const inv = gearSlotInventory('head', save);
+      if (!inv || inv.slot !== 'head' || !inv.items || inv.items.length < 10) {
+        return { ok: false, why: 'gearSlotInventory head', inv: inv && { slot: inv.slot, n: inv.items && inv.items.length } };
+      }
+      if (!inv.items.some((r) => r.state === 'already-equipped' && r.id === 'head_wrap_cloth')) {
+        return { ok: false, why: 'slot inventory missing equipped wrap' };
+      }
+      if (!inv.items.some((r) => r.locked && r.label && (r.state === 'locked' || r.state === 'not-owned'))) {
+        return { ok: false, why: 'slot inventory must include locked preview + gate copy' };
+      }
+      const refuseWrong = gearEquipItem('head_wrap_cloth', { expectSlot: 'legs' });
+      if (!refuseWrong || refuseWrong.state !== 'wrong-slot' || refuseWrong.ok) {
+        return { ok: false, why: 'gearEquipItem expectSlot must refuse wrong-slot', refuseWrong };
+      }
+
+      save.lvl = Math.max(save.lvl || 1, 20);
+      save.createdAt = Math.min(save.createdAt || Date.now(), Date.now() - 90 * 86400000);
+      save.gear.owned.head_visor_neon = save.gear.owned.head_visor_neon || { at: Date.now(), src: 'smoke' };
+      const statOk = gearCanEquip('head_visor_neon', { expectSlot: 'head' });
+      if (!statOk || statOk.state !== 'ok' || !statOk.canEquip) {
+        return { ok: false, why: 'owned unlocked visor must be ok', statOk };
+      }
 
       unequipGear('head');
+      const vanity = gearEquipState('head_wrap_cloth');
+      if (!vanity || vanity.state !== 'vanity-ok' || !vanity.ok || !vanity.canEquip) {
+        return { ok: false, why: 'unequipped wrap must be vanity-ok', vanity };
+      }
       if (save.gear.equipped.head) return { ok: false, why: 'unequip did not clear gear.equipped.head' };
       if (save.equipment != null) return { ok: false, why: 'unequip recreated flat equipment' };
       const wear = equipGear('head_wrap_cloth');
@@ -284,6 +340,14 @@ async function run() {
       wrapCard.click();
       if (save.gear.equipped.head !== 'head_wrap_cloth') {
         return { ok: false, why: 'tap item must equip immediately', head: save.gear.equipped.head };
+      }
+      if (wrapCard.getAttribute('data-equip-state') !== 'already-equipped'
+        && document.querySelector('#gearPicker [data-gear-id="head_wrap_cloth"]')?.getAttribute('data-equip-state') !== 'already-equipped') {
+        UI.renderGear();
+        const after = document.querySelector('#gearPicker [data-gear-id="head_wrap_cloth"]');
+        if (!after || after.getAttribute('data-equip-state') !== 'already-equipped') {
+          return { ok: false, why: 'picker must stamp data-equip-state', state: after && after.getAttribute('data-equip-state') };
+        }
       }
       const look = [...document.querySelectorAll('.gear-pill-vanity')];
       const stat = [...document.querySelectorAll('.gear-pill-stat')];
