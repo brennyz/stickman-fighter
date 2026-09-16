@@ -1,11 +1,11 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
-     stroke="#c792ff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+     stroke="#c792ff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"
      aria-hidden="true">
-  <!-- Echo-Whistle Mill: mill + toot rings (not a generic shrine) -->
-  <path d="M7 20V11.2h6.4V20z" fill="rgba(199,146,255,.18)"/>
-  <path d="M6.2 11.2l3.6-4.6 3.6 4.6"/>
-  <path d="M9.8 6.6V4.4"/>
-  <path d="M6.4 7.2h7.2M10 3.8v6.6" stroke="#e8f0ff" stroke-width="1.7"/>
-  <path d="M15.4 13.6h3.4v2.6h-3.4z" fill="rgba(255,215,94,.25)" stroke="#ffd75e"/>
-  <path d="M19.2 12.4c1.6 1.2 1.6 3.6 0 4.8M21.4 11.2c2.4 1.8 2.4 5.6 0 7.4"/>
+  <!-- Echo-Whistle: mill + fat toot rings -->
+  <path d="M6.4 20.2V10.8h7.2V20.2z" fill="rgba(199,146,255,.22)"/>
+  <path d="M5.6 10.8l4-5.2 4 5.2"/>
+  <path d="M9.6 5.6V3.4"/>
+  <path d="M5.8 6.6h8M9.6 3.2v7.2" stroke="#e8f0ff" stroke-width="2"/>
+  <path d="M15.2 13.2h3.8v3h-3.8z" fill="rgba(255,215,94,.3)" stroke="#ffd75e"/>
+  <path d="M19.4 12c1.8 1.3 1.8 4 0 5.3M21.8 10.6c2.7 2 2.7 6.2 0 8.2"/>
 </svg>

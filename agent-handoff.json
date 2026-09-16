@@ -91,6 +91,13 @@
   },
   "userWishlist": [
     {
+      "id": "w-20260916T110000",
+      "from": "user",
+      "text": "de gebouwen nog wat upfreshen + harden — sterkere silhouetten, hoger contrast, quirky identity per fabriek. Locked #292 ids. Draft PR, geen merge naar main.",
+      "status": "open",
+      "updated": "2026-09-16"
+    },
+    {
       "id": "w-20260914T172600",
       "from": "user",
       "text": "Systems PR READY #292 — wire pixel art to stick_lighter, woodchip_glue, chipping_wood, bamboo_boesa, echo_whistle. Mega-merge only.",
