@@ -30,8 +30,8 @@ Contract v1 (Grok): `ownedGear[id] = { gearId, at }`. Catalog IDs are **#280**, 
 | File | Role |
 |------|------|
 | `src/data/gear.js` | #280 catalog + gate/grant API + `rollGearDrop` |
-| `src/data/gear-world.js` | kill / stage-clear / chest spawners + pixels |
-| `assets/gear/<id>.svg` | generated 16×16; **not** SW-precached |
+| `src/data/gear-world.js` | kill / stage-clear / chest spawners + unique 16×16 pixels + pickup feel |
+| `assets/gear/<id>.svg` | generated 16×16 from `gearPixelsToSvg`; **not** SW-precached |
 
 ## Hooks
 
@@ -43,6 +43,7 @@ Contract v1 (Grok): `ownedGear[id] = { gearId, at }`. Catalog IDs are **#280**, 
 | Zone (NM island 51–60 / Hell 61–70, or 2.0/3.0 tab) | `needDiff` pieces enter the roll pool |
 
 Android: max 3 gear orbs, skip Satan/Tide, 58px touch grab, canvas pixels (`imageSmoothingEnabled = false`).
+Rare / epic+ pickups draw a thin rarity ring and scale 2.25–2.75 (elite / superBoss bump). Common stays scale 2.
 
 ## Art preview
 

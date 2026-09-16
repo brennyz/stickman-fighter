@@ -243,6 +243,46 @@ run(`
 `);
 if (!(run('__gearRects > 8'))) fail('drawGearPixels drew too few pixels');
 
+/* Unique silhouettes: early commons + one strong set per slot + NM/Hell accents */
+const earlyUnique = [
+  'head_wrap_cloth', 'head_bandana_blue', 'head_beanie_wool', 'head_hat_paper', 'head_crown_cardboard',
+  'chest_shirt_plain', 'chest_hoodie_gray', 'chest_vest_denim', 'chest_coat_red',
+  'hands_wrap', 'hands_mittens_wool', 'hands_rings_plastic',
+  'legs_wrap', 'legs_socks_plain', 'legs_shorts_stripe', 'legs_boots_clown',
+  'back_pin_dot', 'back_backpack_school', 'back_scarf_long', 'back_cape_red',
+];
+const occSeen = {};
+for (const id of earlyUnique) {
+  const occ = run('gearPixelOccupancy(' + JSON.stringify(id) + ')');
+  if (!occ || occ.length !== 256) fail('occupancy missing/short for ' + id);
+  if (occSeen[occ]) fail('silhouette collision ' + id + ' vs ' + occSeen[occ]);
+  occSeen[occ] = id;
+}
+const slotSet = ['head_helm_knight', 'chest_plate_iron', 'hands_gauntlet_iron', 'legs_greaves_knight', 'back_cape_red'];
+const slotOcc = {};
+for (const id of slotSet) {
+  const occ = run('gearPixelOccupancy(' + JSON.stringify(id) + ')');
+  if (slotOcc[occ]) fail('slot-set collision ' + id + ' vs ' + slotOcc[occ]);
+  slotOcc[occ] = id;
+}
+if (run("gearTintKey(gearById('head_helm_nightmare'))") !== 'night') fail('nightmare helm tint');
+if (run("gearTintKey(gearById('head_helm_hell'))") !== 'lava') fail('hell helm tint');
+if (run("gearTintKey(gearById('chest_plate_nightmare'))") !== 'night') fail('nightmare plate tint');
+if (run("gearTintKey(gearById('chest_plate_hell'))") !== 'lava') fail('hell plate tint');
+if (run("gearPixelKey(gearById('head_helm_nightmare'))") === run("gearPixelKey(gearById('head_helm_hell'))")) {
+  fail('nightmare/hell helm must use distinct silhouettes');
+}
+const feelCommon = run("gearPickupFeel('head_bandana_blue', 'normal')");
+if (!feelCommon || feelCommon.scale !== 2 || feelCommon.ring) fail('common pickup should stay scale 2, no ring');
+const feelRare = run("gearPickupFeel('head_helm_iron', 'normal')");
+if (!feelRare || !(feelRare.scale > 2) || !feelRare.ring) fail('rare pickup needs larger scale + ring');
+const feelElite = run("gearPickupFeel('head_bandana_blue', 'elite')");
+if (!feelElite || !(feelElite.scale >= 2.5) || !feelElite.ring) fail('elite drop should bump scale + ring');
+const feelBoss = run("gearPickupFeel('back_wings_hell', 'superBoss')");
+if (!feelBoss || !(feelBoss.scale >= 2.75) || !feelBoss.ring) fail('superBoss hell pickup should be largest + ring');
+if (run('GEAR_MAX_FIELD') !== 3) fail('GEAR_MAX_FIELD must stay 3');
+if (run('Object.keys(GEAR_PIXEL_BY_ID).length') !== 131) fail('GEAR_PIXEL_BY_ID must cover 131 ids');
+
 run(`
   globalThis.__gearPk = null;
   globalThis.__gearHost = { pickups: [], clampPickupPos(x, y) { return { x, y }; }, spawnPickup: Game.prototype.spawnPickup };

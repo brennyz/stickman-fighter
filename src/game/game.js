@@ -3478,12 +3478,20 @@ class Game {
         const pkBlur = (save.liteFx || Perf.tier >= 1 || motionReduced()) ? 0 : 14;
         c.shadowColor = pkCol; c.shadowBlur = pkBlur;
         c.fillStyle = pkCol;
-        const orbR = pk.kind === 'gear' ? 16 : 14;
+        const gearFeel = (pk.kind === 'gear' && typeof gearPickupFeel === 'function')
+          ? gearPickupFeel(pk.gearId, pk.dropTier)
+          : null;
+        const orbR = gearFeel ? gearFeel.orbR : (pk.kind === 'gear' ? 16 : 14);
         c.beginPath(); c.arc(pk.x, y, orbR, 0, TAU); c.fill();
         c.strokeStyle = '#fff'; c.lineWidth = 2;
         c.beginPath(); c.arc(pk.x, y, orbR, 0, TAU); c.stroke();
+        if (gearFeel && gearFeel.ring) {
+          c.strokeStyle = gearFeel.ring;
+          c.lineWidth = 2;
+          c.beginPath(); c.arc(pk.x, y, orbR + 3, 0, TAU); c.stroke();
+        }
         if (pk.kind === 'gear' && pk.gearId && typeof drawGearPixels === 'function') {
-          drawGearPixels(c, pk.gearId, pk.x, y, 2);
+          drawGearPixels(c, pk.gearId, pk.x, y, gearFeel ? gearFeel.scale : 2);
         } else {
           drawPickupIcon(c, pk.kind, pk.x, y, pkCol);
         }

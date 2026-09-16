@@ -40,6 +40,13 @@
   },
   "userWishlist": [
     {
+      "id": "w-20260916T110200",
+      "from": "user",
+      "text": "UPGRADE world-drop PIXEL ART + pickup feel (loot lane). Unique readable silhouettes (expand templates / per-id overrides) so early/common lootable items and each slot archetype are distinguishable at pickup scale on Android. Keep SVG assets in sync via gearPixelsToSvg. Rare/elite/superBoss pickup scale + rarity ring. Gates untouched. No Versus.",
+      "status": "active",
+      "updated": "2026-09-16"
+    },
+    {
       "id": "w-20260914T200700",
       "from": "user",
       "text": "Hij laad niet lekker, what is up",
