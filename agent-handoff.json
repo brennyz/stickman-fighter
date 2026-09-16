@@ -43,6 +43,13 @@
       "id": "w-20260916T110200",
       "from": "user",
       "text": "UPGRADE world-drop PIXEL ART + pickup feel (loot lane). Unique readable silhouettes (expand templates / per-id overrides) so early/common lootable items and each slot archetype are distinguishable at pickup scale on Android. Keep SVG assets in sync via gearPixelsToSvg. Rare/elite/superBoss pickup scale + rarity ring. Gates untouched. No Versus.",
+      "status": "done-in-code",
+      "updated": "2026-09-16"
+    },
+    {
+      "id": "w-20260916T112000",
+      "from": "user",
+      "text": "PRIORITY before mega-merge — more realism via motion on gear/pixel art. Flame flicker, glow pulse, rarity ring pulse, elite sparkle. Android-first, cheap, respect motionReduced/fxLite. Unique silhouettes stay. No Versus / schema / gates.",
       "status": "active",
       "updated": "2026-09-16"
     },
@@ -914,6 +921,10 @@
   ],
   "sessionLog": [
     {
+      "at": "2026-09-16T11:20:09Z",
+      "summary": "Unique gear pickup silhouettes + rarity ring (107 templates, 131-id map). smoke:gear-drops green. Draft #305. v1.18.168 / SW 378."
+    },
+    {
       "at": "2026-09-14T20:20:40Z",
       "summary": "Boot-hotfix LIVE op origin/main: game.js parseerde niet (gotoW + SEASON_ART_SLOTS). v1.18.167 / SW 377. Verse versie na Pages."
     },
@@ -1008,10 +1019,6 @@
     {
       "at": "2026-09-14T12:35:18Z",
       "summary": "SATAN-kaart dikkere duivel, groter portret, korte copy, hitte-balk zonder dubbele tekst · v1.18.155 / SW 365"
-    },
-    {
-      "at": "2026-09-14T12:31:31Z",
-      "summary": "Start SATAN-kaart kwaliteit: dikkere duivel, minder dubbele tekst"
     }
   ],
   "implementedFeaturesSummary": "d18 char select deel 1+2 (v1.11.1-2); Mats coinrun + shuriken mik/vliegers + anti-spam (v1.12.0); speel.html (v1.12.2+). Zie HANDOFF-ZOEKINDEX.md en improvement-d20-bag.json userFeatureLog.",

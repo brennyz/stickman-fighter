@@ -281,6 +281,19 @@ if (!feelElite || !(feelElite.scale >= 2.5) || !feelElite.ring) fail('elite drop
 const feelBoss = run("gearPickupFeel('back_wings_hell', 'superBoss')");
 if (!feelBoss || !(feelBoss.scale >= 2.75) || !feelBoss.ring) fail('superBoss hell pickup should be largest + ring');
 if (run('GEAR_MAX_FIELD') !== 3) fail('GEAR_MAX_FIELD must stay 3');
+run(`
+  globalThis.__fxCalls = 0;
+  globalThis.__fxOk = gearPickupDrawFx({
+    save() {}, restore() {}, beginPath() {}, arc() {}, stroke() {}, fillRect() { globalThis.__fxCalls++; },
+  }, { gearId: 'back_wings_hell', dropTier: 'superBoss', t: 0.4, x: 10 }, 20, gearPickupFeel('back_wings_hell', 'superBoss'));
+`);
+if (run('__fxOk') !== true) fail('gearPickupDrawFx should run when lite/motion flags off');
+if (!(run('__fxCalls >= 1'))) fail('hell pickup FX should draw flicker pixels');
+run('save.liteFx = true');
+if (run("gearPickupDrawFx({ save(){}, restore(){}, beginPath(){}, arc(){}, stroke(){}, fillRect(){} }, { gearId: 'back_wings_hell', t: 1, x: 0 }, 0, gearPickupFeel('back_wings_hell', 'superBoss'))") !== false) {
+  fail('liteFx must skip pickup motion FX');
+}
+run('save.liteFx = false');
 if (run('Object.keys(GEAR_PIXEL_BY_ID).length') !== 131) fail('GEAR_PIXEL_BY_ID must cover 131 ids');
 
 run(`

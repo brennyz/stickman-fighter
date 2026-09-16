@@ -1296,6 +1296,73 @@ function gearPickupFeel(itemOrId, dropTier) {
   return { scale: scale, ring: ring, orbR: orbR, rank: rank };
 }
 
+function gearPickupFxAllowed() {
+  try {
+    if (typeof motionReduced === 'function' && motionReduced()) return false;
+    if (typeof fxLite === 'function' && fxLite()) return false;
+    if (typeof save !== 'undefined' && save && save.liteFx) return false;
+  } catch (_) {}
+  return true;
+}
+
+function gearPickupTheme(item) {
+  const id = item && item.id ? String(item.id) : '';
+  const rar = item && item.rarity ? item.rarity : '';
+  return {
+    flame: /hell|ash|sulfur|lava/.test(id) || rar === 'hell',
+    glow: /void|crystal|aura|mythic/.test(id) || rar === 'mythic' || rar === 'legendary',
+  };
+}
+
+/**
+ * Cheap on-orb motion: flame flicker, glow pulse, rarity-ring pulse, elite sparkle.
+ * Only called for on-screen gear pickups (≤ GEAR_MAX_FIELD). No particle storms.
+ */
+function gearPickupDrawFx(c, pk, y, feel) {
+  if (!c || !pk || !feel || !gearPickupFxAllowed()) return false;
+  const it = typeof gearById === 'function' ? gearById(pk.gearId) : null;
+  const theme = gearPickupTheme(it);
+  const t = Number(pk.t) || 0;
+  const tau = Math.PI * 2;
+  c.save();
+  if (feel.ring) {
+    const pulse = 0.5 + 0.5 * Math.sin(t * 3.1);
+    c.globalAlpha = 0.28 + pulse * 0.42;
+    c.strokeStyle = feel.ring;
+    c.lineWidth = 2;
+    c.beginPath();
+    c.arc(pk.x, y, feel.orbR + 3 + pulse * 1.8, 0, tau);
+    c.stroke();
+  }
+  if (theme.flame) {
+    const flick = 0.45 + 0.55 * (0.5 + 0.5 * Math.sin(t * 13.7 + (pk.x || 0)));
+    c.globalAlpha = 0.2 + flick * 0.3;
+    c.fillStyle = '#ff6a3d';
+    c.fillRect(Math.round(pk.x - 1), Math.round(y - feel.orbR - 2 - flick * 3), 2, 3);
+    c.fillStyle = '#ffd75e';
+    c.fillRect(Math.round(pk.x - 1), Math.round(y - feel.orbR - 1), 2, 2);
+  }
+  if (theme.glow) {
+    const glow = 0.5 + 0.5 * Math.sin(t * 2.2);
+    c.globalAlpha = 0.1 + glow * 0.16;
+    c.strokeStyle = '#7cf5ff';
+    c.lineWidth = 1.5;
+    c.beginPath();
+    c.arc(pk.x, y, feel.orbR + 6 + glow * 2.2, 0, tau);
+    c.stroke();
+  }
+  if (pk.dropTier === 'elite' || pk.dropTier === 'superBoss') {
+    if (Math.sin(t * 9 + 1.2) > 0.35) {
+      c.globalAlpha = 0.85;
+      c.fillStyle = '#ffe259';
+      c.fillRect(Math.round(pk.x + 8), Math.round(y - 10), 2, 2);
+      c.fillRect(Math.round(pk.x - 10), Math.round(y + 6), 2, 2);
+    }
+  }
+  c.restore();
+  return true;
+}
+
 function gearAssetPath(id) {
   const it = gearById(id);
   return it ? ('assets/gear/' + it.id + '.svg') : '';

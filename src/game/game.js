@@ -680,7 +680,13 @@ class Game {
     const p = this.player;
     for (const pk of this.pickups) {
       pk.t += dt;
-      pk.bob = Math.sin(pk.t * 5) * 6;
+      let bobAmp = 6;
+      if (pk.kind === 'gear' && typeof gearPickupFeel === 'function') {
+        const feelBob = gearPickupFeel(pk.gearId, pk.dropTier);
+        if (feelBob && feelBob.rank >= 2) bobAmp = 8;
+        if (pk.dropTier === 'elite' || pk.dropTier === 'superBoss') bobAmp = 9;
+      }
+      pk.bob = Math.sin(pk.t * 5) * bobAmp;
       pk.life -= dt;
       if (!p.alive) continue;
       const dy = (p.y - 48) - pk.y;
@@ -3492,6 +3498,9 @@ class Game {
         }
         if (pk.kind === 'gear' && pk.gearId && typeof drawGearPixels === 'function') {
           drawGearPixels(c, pk.gearId, pk.x, y, gearFeel ? gearFeel.scale : 2);
+          if (gearFeel && typeof gearPickupDrawFx === 'function') {
+            gearPickupDrawFx(c, pk, y, gearFeel);
+          }
         } else {
           drawPickupIcon(c, pk.kind, pk.x, y, pkCol);
         }
