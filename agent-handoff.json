@@ -938,6 +938,10 @@
   ],
   "sessionLog": [
     {
+      "at": "2026-09-16T11:23:38Z",
+      "summary": "Bevestigd: pixels-only op #298-stack. Geen catalog-expansie. Draft #308 body documenteert W3-afstemming."
+    },
+    {
       "at": "2026-09-16T11:21:57Z",
       "summary": "W2 P2+P3 unique 32x32 pixels stacked on #298; all 36 W2 dedicated, W3 aliased. v1.18.169 / SW 379."
     },
@@ -1032,10 +1036,6 @@
     {
       "at": "2026-09-14T12:45:42Z",
       "summary": "P1 entry: Android-first landing — geen iPad-blok op Android"
-    },
-    {
-      "at": "2026-09-14T12:44:05Z",
-      "summary": "Toast-wachtrij: één tegelijk, Android Chrome/TWA zelfde HTML onder statusbalk · v1.18.156 / SW 366"
     }
   ],
   "implementedFeaturesSummary": "d18 char select deel 1+2 (v1.11.1-2); Mats coinrun + shuriken mik/vliegers + anti-spam (v1.12.0); speel.html (v1.12.2+). Zie HANDOFF-ZOEKINDEX.md en improvement-d20-bag.json userFeatureLog.",
