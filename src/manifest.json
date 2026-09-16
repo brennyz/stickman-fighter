@@ -24,6 +24,7 @@
   "src/data/satan-encounter.js",
   "src/data/pets.js",
   "src/data/buildings-powers.js",
+  "src/systems/buildings-combat.js",
   "src/systems/buildings-bridge.js",
   "src/data/egg-pets.js",
   "src/data/chest-summons.js",

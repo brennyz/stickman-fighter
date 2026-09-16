@@ -110,9 +110,10 @@ run(`
   });
 `);
 assert(run('save.buildings.factories.stick_lighter.level === 1'), 'built lighter');
-assert(run('buildingPowerBonus().critBonus === 0.01'), 'lv1 lighter +1% crit');
+assert(run('buildingPowerBonus().critBonus === 0.02'), 'lv1 lighter +2% crit');
 assert(run('buildingPowerBonus().dmgMul === 1'), 'starter rank 0 does not touch DMG');
 assert(run('buildingPowerBonus().maxHp === 0'), 'no boiler HP at lv0');
+assert(run('buildingPowerIdentity("stick_lighter").powerId === "spark_kindle"'), 'rank 0 identity spark_kindle');
 
 run(`
   save.buildings = sanitizeBuildingsBag({
@@ -132,12 +133,14 @@ assert(run('!save.buildings.wallet.chips'), 'no plural chips key');
 
 const bonus = run('JSON.stringify(buildingPowerBonus())');
 const b = JSON.parse(bonus);
-assert(b.dmgMul > 1.07 && b.dmgMul <= 1.12, 'stacked dmg within cap, got ' + b.dmgMul);
-assert(b.critBonus >= 0.029 && b.critBonus <= 0.05, 'lighter crit, got ' + b.critBonus);
-assert(b.maxHp === 12, 'boiler +12 HP at lv5');
-assert(b.energyMul >= 1.09 && b.energyMul <= 1.16, 'whistle energy, got ' + b.energyMul);
+assert(b.dmgMul > 1.10 && b.dmgMul <= 1.18, 'stacked dmg within cap, got ' + b.dmgMul);
+assert(b.critBonus >= 0.059 && b.critBonus <= 0.10, 'lighter crit, got ' + b.critBonus);
+assert(b.maxHp === 18, 'boiler +18 HP at lv5');
+assert(b.energyMul >= 1.13 && b.energyMul <= 1.24, 'whistle energy, got ' + b.energyMul);
 assert(b.healBetween > 0, 'boiler adventure heal');
-assert(b.defMul < 1 && b.defMul >= 0.92, 'glue def, got ' + b.defMul);
+assert(b.defMul < 1 && b.defMul >= 0.88, 'glue def, got ' + b.defMul);
+assert(b.powers && b.powers.indexOf('ember_pocket') >= 0, 'lv5 lighter identity ember_pocket');
+assert(b.powers && b.powers.indexOf('sawdust_cloud') >= 0, 'lv5 chipper identity sawdust_cloud');
 
 const t0 = 1_700_000_000_000;
 run(`
@@ -221,9 +224,9 @@ run(`
   globalThis.__game = {};
   applyBuildingPowersToPlayer(globalThis.__game, globalThis.__player);
 `);
-assert(run('globalThis.__player.baseDmg === 11'), 'chipping_wood lv5 ×1.06 → 11 dmg');
+assert(run('globalThis.__player.baseDmg === 11'), 'chipping_wood lv5 ×1.12 → 11 dmg');
 assert(run('globalThis.__player.maxhp === 100'), 'no boiler HP');
-assert(run('globalThis.__game.buildingDmgMul === 1.06'), 'game dmg mul set');
+assert(run('globalThis.__game.buildingDmgMul === 1.12'), 'game dmg mul set');
 assert(run('globalThis.__game.buildingCritBonus === 0'), 'no lighter crit');
 assert(run('save.buildings.wallet.chip === 7'), 'legacy stock → wallet.chip');
 assert(run('save.buildings.factories.chipping_wood.stored === 3'), 'legacy pending → stored');
@@ -328,8 +331,70 @@ if (systemsCode && run('typeof buildingBuild === "function" && typeof BUILDING_I
   `);
   assert(run('globalThis.__sysCol && globalThis.__sysCol.resourceId === "spark"'), 'systems collect spark');
   assert(run('save.buildings.wallet.spark >= 8'), 'systems collect filled wallet');
-  assert(run('globalThis.__g.buildingCritBonus === 0.01'), 'powers apply against systems bag');
+  assert(run('globalThis.__g.buildingCritBonus === 0.02'), 'powers apply against systems bag');
   assert(run('globalThis.__p.baseDmg === 10'), 'lv1 lighter does not change DMG');
 }
 
-console.log('SMOKE_OK buildings-powers · 5 factories · #292 bag · spark/chip/echo · 8h cap · collect→wallet · powers');
+run(`
+  save.buildings = sanitizeBuildingsBag({
+    factories: { stick_lighter: { level: 1, lastTickAt: ${t0}, stored: 0 } },
+    wallet: {},
+  });
+  tickBuildingResources(${t0 + 30 * 60 * 1000}, { skipPersist: true });
+`);
+assert(run('Math.abs(save.buildings.factories.stick_lighter.stored - 4) < 1e-6'), '30min lighter = 4 spark (half hour)');
+
+run(`
+  save.buildings = sanitizeBuildingsBag({
+    factories: { echo_whistle: { level: 5, lastTickAt: ${t0}, stored: 0 } },
+    wallet: {},
+  });
+  tickBuildingResources(${t0 + 10 * 60 * 1000}, { skipPersist: true });
+`);
+assert(run('save.buildings.factories.echo_whistle.stored > 1 && save.buildings.factories.echo_whistle.stored < 2'), '10min echo lv5 keeps fractional hopper');
+
+run(`
+  save.buildings = sanitizeBuildingsBag({
+    factories: { stick_lighter: { level: 1, lastTickAt: Date.now(), stored: 9 } },
+    wallet: { spark: 1 },
+  });
+  globalThis.__c1 = collectBuildingResource('stick_lighter', { silent: true, skipPersist: true });
+  globalThis.__c2 = collectBuildingResource('stick_lighter', { silent: true, skipPersist: true });
+`);
+assert(run('globalThis.__c1 && globalThis.__c1.ok && globalThis.__c1.amount === 9'), 'first collect pays once');
+assert(run('globalThis.__c2 && !globalThis.__c2.ok && globalThis.__c2.amount === 0'), 'second collect does not double-pay');
+assert(run('save.buildings.wallet.spark === 10'), 'wallet credited once');
+
+run(`
+  const raw = {
+    wallet: { spark: 5, embers: 5, glue: 2 },
+    factories: { stick_lighter: { level: 2, lastTickAt: 9, stored: 1 } },
+  };
+  save.buildings = sanitizeBuildingsBag(raw);
+  const once = JSON.stringify(save.buildings);
+  save.buildings = sanitizeBuildingsBag(save.buildings);
+  globalThis.__idempoWallet = save.buildings.wallet.spark;
+  globalThis.__idempoSame = JSON.stringify(save.buildings) === once;
+`);
+assert(run('globalThis.__idempoWallet === 5'), 'embers+spark migrate with max, not sum');
+assert(run('globalThis.__idempoSame === true'), 'sanitize is idempotent');
+
+assert(run('typeof applyBuildingCombatHook === "function" && typeof tickBuildingCombat === "function"'), 'combat identity hooks exported');
+run(`
+  save.buildings = sanitizeBuildingsBag({
+    factories: {
+      stick_lighter: { level: 9 }, woodchip_glue: { level: 9 }, chipping_wood: { level: 9 },
+      bamboo_boesa: { level: 9 }, echo_whistle: { level: 9 },
+    },
+  });
+  globalThis.__full = buildingPowerBonus();
+  globalThis.__gVs = { mode: 'versus' };
+  globalThis.__pVs = { maxhp: 100, hp: 100, baseDmg: 10, speed: 260 };
+  applyBuildingPowersToPlayer(globalThis.__gVs, globalThis.__pVs);
+  applyBuildingCombatHook({ mode: 'versus', player: { alive: true } }, 'onWeaponHit', { target: { alive: true, x: 0, y: 0 } });
+`);
+assert(run('globalThis.__full.dmgMul === 1.18 && globalThis.__full.critBonus === 0.10 && globalThis.__full.maxHp === 36'), 'rank 4 caps');
+assert(run('globalThis.__full.powers.indexOf("matchstick_storm") >= 0 && globalThis.__full.powers.indexOf("whistle_chorus") >= 0'), 'rank 4 identities');
+assert(run('globalThis.__pVs.baseDmg === 10 && globalThis.__pVs.maxhp === 100'), 'versus apply is a no-op');
+
+console.log('SMOKE_OK buildings-powers · 5 factories · #292 bag · spark/chip/echo · 8h cap · collect→wallet · identities 0–4');

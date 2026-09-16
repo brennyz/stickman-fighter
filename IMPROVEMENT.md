@@ -1,3 +1,4 @@
+| 2026-09-16 | **buildings 2.0** | Powers depth: distinct identities per factory ranks 0–4 (catalog hooks wired). Timed hopper 2.0: wall-clock, fractional stored, collect lock. #292 rates. Draft — no main. **v1.18.168 / SW v378**. |
 | 2026-09-14 | **i18n Z→A rebase** | #283 rebased on #273: coverage keys + FR/ES/DE overlays; polish wording wins. **v1.18.165 / SW v375**. |
 | 2026-09-14 | **i18n harden** | Zelfde lane #273: Collectie/Settings leftover Dutch via t(); EN/DE geen NL-markers; Versus-keys vallen terug op EN. **v1.18.165 / SW v375**. |
 | 2026-09-14 | **i18n chrome** | EN/DE/NL: locale in scope (geen NL-fallback op EN/DE); HOME/Collectie/Upgrades/Wapens/Opties/HUD/tips in alle 3 talen. **v1.18.164 / SW v374**. |

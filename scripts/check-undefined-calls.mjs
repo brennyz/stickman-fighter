@@ -27,6 +27,7 @@ const REGRESSION_MUST_DEFINE = [
   'listGearSlots', 'equipGear', 'unequipGear', 'getEquippedGear',
   'gearEquipItem', 'gearTooltipModel', 'gearRenderDescriptor',
   'tickBuildingResources', 'collectBuildingResource', 'applyBuildingPowersToPlayer', 'buildingPowerBonus',
+  'applyBuildingCombatHook', 'tickBuildingCombat',
 ];
 
 /** Consts / values that must appear in the bundle (not only functions). */

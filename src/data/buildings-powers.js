@@ -84,43 +84,57 @@
     echo: 'echo'
   };
 
-  /* Rank 0–4 at Lv 1/3/5/7/9. Conservative stacked caps match pets/styles. */
+  /* Rank 0–4 at Lv 1/3/5/7/9. Identity per factory — catalog power ids + sane caps. */
   var POWER_BY_RANK = {
     stick_lighter: [
-      { critBonus: 0.01 },
-      { critBonus: 0.02 },
-      { critBonus: 0.03, dmgMul: 1.02 },
-      { critBonus: 0.04, dmgMul: 1.04 },
-      { critBonus: 0.05, dmgMul: 1.06 }
+      { id: 'spark_kindle', critBonus: 0.02 },
+      { id: 'kindle_trail', critBonus: 0.04 },
+      { id: 'ember_pocket', critBonus: 0.06 },
+      { id: 'flare_step', critBonus: 0.08 },
+      { id: 'matchstick_storm', critBonus: 0.10 }
     ],
     woodchip_glue: [
-      { shieldWave: 0.35 },
-      { shieldWave: 0.70 },
-      { shieldWave: 1.00, defMul: 0.96 },
-      { shieldWave: 1.40, defMul: 0.94 },
-      { shieldWave: 1.80, defMul: 0.92 }
+      { id: 'sticky_soles', shieldWave: 0.55, kbMul: 0.78 },
+      { id: 'tacky_block', shieldWave: 0.90, kbMul: 0.78, blockMul: 0.72 },
+      { id: 'glue_trap', shieldWave: 1.25, kbMul: 0.72, blockMul: 0.72, defMul: 0.95 },
+      { id: 'paste_armor', shieldWave: 1.80, kbMul: 0.72, blockMul: 0.68, defMul: 0.92 },
+      { id: 'chip_golem', shieldWave: 2.40, kbMul: 0.68, blockMul: 0.64, defMul: 0.88 }
     ],
     chipping_wood: [
-      { dmgMul: 1.02 },
-      { dmgMul: 1.04 },
-      { dmgMul: 1.06, speedMul: 1.02 },
-      { dmgMul: 1.09, speedMul: 1.04 },
-      { dmgMul: 1.12, speedMul: 1.06 }
+      { id: 'splinter_edge', dmgMul: 1.04 },
+      { id: 'chip_spray', dmgMul: 1.08 },
+      { id: 'sawdust_cloud', dmgMul: 1.12, speedMul: 1.04 },
+      { id: 'hopper_guard', dmgMul: 1.15, speedMul: 1.07 },
+      { id: 'chipper_fury', dmgMul: 1.18, speedMul: 1.10 }
     ],
     bamboo_boesa: [
-      { maxHp: 4 },
-      { maxHp: 8 },
-      { maxHp: 12, healBetween: 0.02 },
-      { maxHp: 16, healBetween: 0.03 },
-      { maxHp: 20, healBetween: 0.04 }
+      { id: 'boiler_hiss', maxHp: 6 },
+      { id: 'bamboo_vent', maxHp: 12 },
+      { id: 'bamboo_burst', maxHp: 18, healBetween: 0.04 },
+      { id: 'pressure_cook', maxHp: 26, healBetween: 0.06 },
+      { id: 'boesa_overheat', maxHp: 36, healBetween: 0.08 }
     ],
     echo_whistle: [
-      { energyMul: 1.04 },
-      { energyMul: 1.08 },
-      { energyMul: 1.10, techniqueMul: 1.04 },
-      { energyMul: 1.13, techniqueMul: 1.06 },
-      { energyMul: 1.16, techniqueMul: 1.08 }
+      { id: 'taunt_toot', energyMul: 1.06 },
+      { id: 'mill_heckle', energyMul: 1.10 },
+      { id: 'echo_ridge', energyMul: 1.14, techniqueMul: 1.08 },
+      { id: 'ridge_reply', energyMul: 1.18, techniqueMul: 1.12 },
+      { id: 'whistle_chorus', energyMul: 1.24, techniqueMul: 1.16 }
     ]
+  };
+
+  var POWER_CAPS = {
+    dmgMul: 1.18,
+    speedMul: 1.10,
+    energyMul: 1.24,
+    techniqueMul: 1.16,
+    critBonus: 0.10,
+    maxHp: 36,
+    shieldWave: 2.4,
+    defMul: 0.88,
+    healBetween: 0.08,
+    kbMul: 0.68,
+    blockMul: 0.64
   };
 
   function hasSystems() {
@@ -236,7 +250,8 @@
       if (!id || !row || typeof row !== 'object') return;
       var prev = factories[id] || emptySite();
       var level = Math.max(prev.level, clampInt(row.level != null ? row.level : row.lv, 0, MAX_LEVEL));
-      var stored = Math.max(prev.stored, Math.max(0, Math.floor(Number(row.stored) || Number(row.pending) || 0)));
+      var storedIn = Number(row.stored != null ? row.stored : row.pending);
+      var stored = Math.max(prev.stored, (Number.isFinite(storedIn) && storedIn > 0) ? storedIn : 0);
       var last = Math.max(prev.lastTickAt, Math.floor(Number(row.lastTickAt) || 0));
       factories[id] = { level: level, lastTickAt: last, stored: stored };
       var stock = Math.max(0, Math.floor(Number(row.stock) || 0));
@@ -305,7 +320,7 @@
     Object.keys(walIn).forEach(function (k) {
       var dest = canonRes(k);
       var n = Math.floor(Number(walIn[k]) || 0);
-      if (dest && n > 0) wallet[dest] = (wallet[dest] || 0) + n;
+      if (dest && n > 0) wallet[dest] = Math.max(wallet[dest] || 0, n);
     });
 
     return { factories: factories, wallet: wallet };
@@ -319,7 +334,11 @@
       var entry = (migrated.factories && migrated.factories[id]) || {};
       var lv = clampInt(entry.level, 0, MAX_LEVEL);
       var out = rateCapAt(id, lv);
-      var stored = lv >= 1 ? clampInt(entry.stored, 0, out.cap || STORED_ABS) : 0;
+      var storedRaw = Number(entry.stored);
+      var stored = 0;
+      if (lv >= 1 && Number.isFinite(storedRaw) && storedRaw > 0) {
+        stored = clampNum(Math.round(storedRaw * 1000) / 1000, 0, out.cap || STORED_ABS);
+      }
       var last = Math.floor(Number(entry.lastTickAt) || 0);
       if (last < 0 || last > 4102444800000) last = 0;
       if (lv <= 0 && stored <= 0 && last <= 0) continue;
@@ -389,6 +408,9 @@
       shieldWave: 0,
       defMul: 1,
       healBetween: 0,
+      kbMul: 1,
+      blockMul: 1,
+      powers: [],
       ranks: {}
     };
   }
@@ -417,16 +439,21 @@
       if (p.shieldWave) out.shieldWave += p.shieldWave;
       if (p.defMul) out.defMul *= p.defMul;
       if (p.healBetween) out.healBetween += p.healBetween;
+      if (p.kbMul) out.kbMul *= p.kbMul;
+      if (p.blockMul) out.blockMul *= p.blockMul;
+      if (p.id) out.powers.push(p.id);
     }
-    out.dmgMul = clampNum(out.dmgMul, 1, 1.12);
-    out.speedMul = clampNum(out.speedMul, 1, 1.06);
-    out.energyMul = clampNum(out.energyMul, 1, 1.16);
-    out.techniqueMul = clampNum(out.techniqueMul, 1, 1.08);
-    out.critBonus = clampNum(out.critBonus, 0, 0.05);
-    out.maxHp = clampInt(out.maxHp, 0, 20);
-    out.shieldWave = clampNum(out.shieldWave, 0, 2.2);
-    out.defMul = clampNum(out.defMul, 0.92, 1);
-    out.healBetween = clampNum(out.healBetween, 0, 0.04);
+    out.dmgMul = clampNum(out.dmgMul, 1, POWER_CAPS.dmgMul);
+    out.speedMul = clampNum(out.speedMul, 1, POWER_CAPS.speedMul);
+    out.energyMul = clampNum(out.energyMul, 1, POWER_CAPS.energyMul);
+    out.techniqueMul = clampNum(out.techniqueMul, 1, POWER_CAPS.techniqueMul);
+    out.critBonus = clampNum(out.critBonus, 0, POWER_CAPS.critBonus);
+    out.maxHp = clampInt(out.maxHp, 0, POWER_CAPS.maxHp);
+    out.shieldWave = clampNum(out.shieldWave, 0, POWER_CAPS.shieldWave);
+    out.defMul = clampNum(out.defMul, POWER_CAPS.defMul, 1);
+    out.healBetween = clampNum(out.healBetween, 0, POWER_CAPS.healBetween);
+    out.kbMul = clampNum(out.kbMul, POWER_CAPS.kbMul, 1);
+    out.blockMul = clampNum(out.blockMul, POWER_CAPS.blockMul, 1);
     return out;
   }
 
@@ -441,7 +468,14 @@
     game.buildingShieldWave = b.shieldWave || 0;
     game.buildingDefMul = b.defMul || 1;
     game.buildingHealBetween = b.healBetween || 0;
+    game.buildingKbMul = b.kbMul || 1;
+    game.buildingBlockMul = b.blockMul || 1;
     game.buildingPowerRanks = b.ranks;
+    game.buildingPowerIds = b.powers || [];
+    game.buildingSawdustT = 0;
+    if (typeof resetBuildingCombatWave === 'function') {
+      try { resetBuildingCombatWave(game); } catch (e0) { /* ignore */ }
+    }
     if (b.maxHp) {
       if (player.maxhp != null) {
         player.maxhp += b.maxHp;
@@ -470,6 +504,12 @@
     return spec;
   }
 
+  function storedFloor(n) {
+    var v = Number(n);
+    if (!Number.isFinite(v) || v < 0) return 0;
+    return Math.floor(v + 1e-9);
+  }
+
   function tickOneLocal(id, row, now) {
     if (!row || row.level < 1) {
       if (row) row.lastTickAt = now;
@@ -484,19 +524,21 @@
     }
     var elapsed = Math.min(now - last, OFFLINE_HOURS * MS_PER_HOUR);
     if (elapsed <= 0) return 0;
-    var stored = clampInt(row.stored, 0, out.cap);
+    var stored = clampNum(Number(row.stored) || 0, 0, out.cap);
     if (stored >= out.cap) {
       row.lastTickAt = now;
       row.stored = out.cap;
       return 0;
     }
-    var units = Math.floor((elapsed / MS_PER_HOUR) * out.perHour);
-    if (units <= 0) return 0;
-    var usedMs = Math.floor((units / out.perHour) * MS_PER_HOUR);
+    var units = (elapsed / MS_PER_HOUR) * out.perHour;
+    if (!(units > 0)) return 0;
     var before = stored;
-    row.stored = clampInt(stored + units, 0, out.cap);
-    row.lastTickAt = last + usedMs;
-    if (row.stored >= out.cap) row.lastTickAt = now;
+    row.stored = clampNum(stored + units, 0, out.cap);
+    row.lastTickAt = now;
+    if (row.stored >= out.cap) {
+      row.stored = out.cap;
+      row.lastTickAt = now;
+    }
     return row.stored - before;
   }
 
@@ -548,27 +590,34 @@
         }
       } catch (e) { /* fall */ }
     }
-    tickBuildingResources(Date.now(), { skipPersist: true });
     var row = siteOf(save, canon);
-    var amount = Math.floor(Number(row.stored) || 0);
-    var res = resourceOf(canon);
-    if (amount < 1) return { ok: false, amount: 0, resource: res, resourceId: res, id: canon };
-    row.stored = 0;
-    row.lastTickAt = Date.now();
-    save.buildings.wallet[res] = clampInt((save.buildings.wallet[res] || 0) + amount, 0, WALLET_CAP);
-    if (!opts.skipPersist && typeof persist === 'function') persist();
-    if (!opts.silent && typeof userToast === 'function') {
-      var name = (typeof root.buildingLabel === 'function') ? root.buildingLabel(canon) : canon;
-      var resName = (typeof root.buildingResourceLabel === 'function') ? root.buildingResourceLabel(res) : res;
-      userToast(
-        (typeof tOr === 'function')
-          ? tOr('buildings.collected', '+{n} {res} · {name}', { n: amount, res: resName, name: name })
-          : ('+' + amount + ' ' + resName + ' · ' + name),
-        2400,
-        { tone: 'ok' }
-      );
+    if (row._collectLock) return { ok: false, amount: 0, resource: resourceOf(canon), resourceId: resourceOf(canon), id: canon };
+    row._collectLock = true;
+    try {
+      tickBuildingResources(Date.now(), { skipPersist: true });
+      row = siteOf(save, canon);
+      var amount = storedFloor(row.stored);
+      var res = resourceOf(canon);
+      if (amount < 1) return { ok: false, amount: 0, resource: res, resourceId: res, id: canon };
+      row.stored = 0;
+      row.lastTickAt = Date.now();
+      save.buildings.wallet[res] = clampInt((save.buildings.wallet[res] || 0) + amount, 0, WALLET_CAP);
+      if (!opts.skipPersist && typeof persist === 'function') persist();
+      if (!opts.silent && typeof userToast === 'function') {
+        var name = (typeof root.buildingLabel === 'function') ? root.buildingLabel(canon) : canon;
+        var resName = (typeof root.buildingResourceLabel === 'function') ? root.buildingResourceLabel(res) : res;
+        userToast(
+          (typeof tOr === 'function')
+            ? tOr('buildings.collected', '+{n} {res} · {name}', { n: amount, res: resName, name: name })
+            : ('+' + amount + ' ' + resName + ' · ' + name),
+          2400,
+          { tone: 'ok' }
+        );
+      }
+      return { ok: true, amount: amount, resource: res, resourceId: res, id: canon, buildingId: canon };
+    } finally {
+      row._collectLock = false;
     }
-    return { ok: true, amount: amount, resource: res, resourceId: res, id: canon, buildingId: canon };
   }
 
   function collectAllBuildingResources(opts) {
@@ -682,7 +731,7 @@
       resource: resourceOf(canon),
       resourceName: resourceOf(canon),
       ratePerHour: out.perHour,
-      collectable: Math.floor(row.stored || 0) >= 1,
+      collectable: storedFloor(row.stored) >= 1,
       powerRank: powerRankOfLevel(lv)
     };
   }
@@ -729,6 +778,16 @@
   root.BUILDING_POWER_LEVELS = POWER_LEVELS.slice();
   root.BUILDING_RESOURCE_CAP_MS = OFFLINE_HOURS * MS_PER_HOUR;
   root.BUILDING_POWER_TABLE = POWER_BY_RANK;
+  root.BUILDING_POWER_CAPS = POWER_CAPS;
+
+  function buildingPowerIdentity(id, saveObj) {
+    var canon = canonId(id);
+    if (!canon) return null;
+    var rank = powerRank(canon, saveObj);
+    var p = powerForRank(canon, rank);
+    return { id: canon, rank: rank, powerId: p.id || null, bonus: p };
+  }
+  root.buildingPowerIdentity = buildingPowerIdentity;
 
   root.sanitizeBuildingsBag = sanitizeBuildingsBag;
   root.emptyBuildingsBag = emptyBag;

@@ -50,7 +50,7 @@ Sanitize migrates the previous draft shape (`buildingRes`, flat `buildings.<id>`
 
 Unlock uses **`advUnlockedLevel('normal')`** (same math as islands): island N opens when unlock `> (N-1)*10`. Island 1 always open.
 
-Offline production: **8 hours** max. Hopper cap ≈ 8h × rate.
+Offline production: **8 hours** max. Hopper cap ≈ 8h × rate. Combat identities + daily rate table: `docs/BUILDINGS-POWERS.md`.
 
 ---
 

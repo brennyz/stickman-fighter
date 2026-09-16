@@ -323,9 +323,9 @@ const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const VERSION_UPDATE_SAVE_KEY = 'stickfighter_version_update_save_v1';
 const VERSION_UPDATE_FLAG_KEY = 'stickfighter_version_update_flag_v1';
 const SAVE_EXPORT_SCHEMA = 3;
-const APP_VERSION = '1.18.167';
+const APP_VERSION = '1.18.168';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 377;
+const SW_CACHE_REV = 378;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', petCoins: 0, dex: {}, summons: {}, pets: {}, activePet: null,
   eggPets: {}, activeEggPet: null, eggDaily: null,
   chestDaily: null, chestWeapons: {},
@@ -2495,6 +2495,12 @@ const I18N = {
       collected: '+{n} {res} · {name}',
       collectedAll: 'Oogst +{n} uit {k} gebouwen',
       waveHeal: '+{n} HP',
+      power: {
+        spark_kindle: 'Kindle', ember_pocket: 'Vonken', matchstick_storm: 'Match',
+        glue_trap: 'Lijm', splinter_edge: 'Snipper', chip_spray: 'Spray',
+        bamboo_vent: 'Vent', bamboo_burst: 'Boesa', pressure_cook: 'Stoom', boesa_overheat: 'Hitte',
+        taunt_toot: 'Toot', whistle_chorus: 'Koor',
+      },
       stick_lighter: { name: 'Stok-Aansteker Fabriek', blurb: 'Scheef schuurtje dat stokken tegen elkaar wrijft tot ze vonken geven.' },
       stick_lighterSub: 'Vonken · Oost-eiland',
       woodchip_glue: { name: 'Houtsnipper-Lijm Fabriek', blurb: 'Kookt zaagsel tot een pasta die harder plakt dan een combo. Niet likken.' },
@@ -2712,6 +2718,12 @@ const I18N = {
       collected: '+{n} {res} · {name}',
       collectedAll: 'Harvest +{n} from {k} buildings',
       waveHeal: '+{n} HP',
+      power: {
+        spark_kindle: 'Kindle', ember_pocket: 'Spark', matchstick_storm: 'Match',
+        glue_trap: 'Glue', splinter_edge: 'Chip', chip_spray: 'Spray',
+        bamboo_vent: 'Vent', bamboo_burst: 'Boesa', pressure_cook: 'Steam', boesa_overheat: 'Heat',
+        taunt_toot: 'Toot', whistle_chorus: 'Chorus',
+      },
       stick_lighter: { name: 'Stick-Lighter Factory', blurb: 'A lopsided woodshed that rubs sticks together until they sulk into sparks.' },
       stick_lighterSub: 'Sparks · East island',
       woodchip_glue: { name: 'Woodchip-Glue Factory', blurb: 'Boils yesterday’s sawdust into a paste that sticks harder than a combo. Do not lick.' },
@@ -2806,6 +2818,12 @@ const I18N = {
       collected: '+{n} {res} · {name}',
       collectedAll: 'Ernte +{n} aus {k} Gebäuden',
       waveHeal: '+{n} HP',
+      power: {
+        spark_kindle: 'Kindle', ember_pocket: 'Funke', matchstick_storm: 'Streichholz',
+        glue_trap: 'Leim', splinter_edge: 'Span', chip_spray: 'Spray',
+        bamboo_vent: 'Dampf', bamboo_burst: 'Boesa', pressure_cook: 'Druck', boesa_overheat: 'Hitze',
+        taunt_toot: 'Toot', whistle_chorus: 'Chor',
+      },
       stick_lighter: { name: 'Stick-Lighter Factory', blurb: 'A lopsided woodshed that rubs sticks together until they sulk into sparks.' },
       stick_lighterSub: 'Funken · Ostinsel',
       woodchip_glue: { name: 'Woodchip-Glue Factory', blurb: 'Boils yesterday’s sawdust into a paste that sticks harder than a combo. Do not lick.' },
@@ -3009,6 +3027,12 @@ const I18N = {
       collected: '+{n} {res} · {name}',
       collectedAll: 'Récolte +{n} de {k} bâtiments',
       waveHeal: '+{n} PV',
+      power: {
+        spark_kindle: 'Kindle', ember_pocket: 'Étincelle', matchstick_storm: 'Allumette',
+        glue_trap: 'Colle', splinter_edge: 'Copeau', chip_spray: 'Spray',
+        bamboo_vent: 'Vapeur', bamboo_burst: 'Boesa', pressure_cook: 'Pression', boesa_overheat: 'Chaleur',
+        taunt_toot: 'Toot', whistle_chorus: 'Chœur',
+      },
       stick_lighter: { name: 'Stick-Lighter Factory', blurb: 'A lopsided woodshed that rubs sticks together until they sulk into sparks.' },
       stick_lighterSub: 'Étincelles · île de l’Est',
       woodchip_glue: { name: 'Woodchip-Glue Factory', blurb: 'Boils yesterday’s sawdust into a paste that sticks harder than a combo. Do not lick.' },
@@ -3207,6 +3231,12 @@ const I18N = {
       collected: '+{n} {res} · {name}',
       collectedAll: 'Cosecha +{n} de {k} edificios',
       waveHeal: '+{n} HP',
+      power: {
+        spark_kindle: 'Kindle', ember_pocket: 'Chispa', matchstick_storm: 'Cerilla',
+        glue_trap: 'Cola', splinter_edge: 'Astilla', chip_spray: 'Spray',
+        bamboo_vent: 'Vapor', bamboo_burst: 'Boesa', pressure_cook: 'Presión', boesa_overheat: 'Calor',
+        taunt_toot: 'Toot', whistle_chorus: 'Coro',
+      },
       stick_lighter: { name: 'Stick-Lighter Factory', blurb: 'A lopsided woodshed that rubs sticks together until they sulk into sparks.' },
       stick_lighterSub: 'Chispas · isla Este',
       woodchip_glue: { name: 'Woodchip-Glue Factory', blurb: 'Boils yesterday’s sawdust into a paste that sticks harder than a combo. Do not lick.' },
@@ -10708,6 +10738,19 @@ function buildingCanUpgrade(id, st) {
   return !!(cost && buildingCanPay(cost, st));
 }
 
+function buildingStoredFloor(n) {
+  const v = Number(n);
+  if (!Number.isFinite(v) || v < 0) return 0;
+  return Math.floor(v + 1e-9);
+}
+
+function buildingQuantizeStored(n, cap) {
+  const v = Number(n);
+  if (!Number.isFinite(v) || v <= 0) return 0;
+  const hi = cap > 0 ? cap : BUILDING_STORED_CAP_ABS;
+  return clamp(Math.round(v * 1000) / 1000, 0, hi);
+}
+
 function buildingPendingAmount(id, st) {
   const def = BUILDING_BY_ID[buildingCanonId(id)];
   if (!def || !buildingBuilt(def.id, st)) return 0;
@@ -10715,7 +10758,7 @@ function buildingPendingAmount(id, st) {
   tickOneBuilding(def.id, buildingNowMs(), s);
   const site = buildingSite(def.id, s);
   const cap = buildingOutputAtLevel(def, buildingLevel(def.id, s)).cap;
-  return clamp(Math.floor(Number(site && site.stored) || 0), 0, cap || BUILDING_STORED_CAP_ABS);
+  return clamp(buildingStoredFloor(site && site.stored), 0, cap || BUILDING_STORED_CAP_ABS);
 }
 
 function buildingCanCollect(id, st) {
@@ -10774,18 +10817,22 @@ function tickOneBuilding(id, now, st) {
   const maxMs = BUILDING_OFFLINE_HOURS * BUILDING_MS_PER_HOUR;
   const elapsed = Math.min(now - last, maxMs);
   if (elapsed <= 0) return false;
-  const stored = clamp(Math.floor(Number(site.stored) || 0), 0, out.cap);
+  const stored = clamp(Number(site.stored) || 0, 0, out.cap);
   if (stored >= out.cap) {
     site.lastTickAt = now;
     site.stored = out.cap;
     return true;
   }
-  const units = Math.floor((elapsed / BUILDING_MS_PER_HOUR) * out.perHour);
-  if (units <= 0) return false;
-  const usedMs = Math.floor((units / out.perHour) * BUILDING_MS_PER_HOUR);
-  site.stored = clamp(stored + units, 0, out.cap);
-  site.lastTickAt = last + usedMs;
-  if (site.stored >= out.cap) site.lastTickAt = now;
+  const units = (elapsed / BUILDING_MS_PER_HOUR) * out.perHour;
+  if (!(units > 0)) return false;
+  const next = clamp(stored + units, 0, out.cap);
+  if (next <= stored) return false;
+  site.stored = next;
+  site.lastTickAt = now;
+  if (site.stored >= out.cap) {
+    site.stored = out.cap;
+    site.lastTickAt = now;
+  }
   return true;
 }
 
@@ -10804,16 +10851,22 @@ function buildingCollect(id, st) {
   const def = BUILDING_BY_ID[buildingCanonId(id)];
   if (!def || !buildingBuilt(def.id, st)) return { ok: false, reason: 'unbuilt', amount: 0 };
   const s = ensureBuildingSave(st);
-  tickOneBuilding(def.id, buildingNowMs(), s);
   const site = buildingSite(def.id, s);
-  const amount = clamp(Math.floor(Number(site.stored) || 0), 0, BUILDING_STORED_CAP_ABS);
   const res = def.resourceId;
-  if (amount <= 0) return { ok: true, amount: 0, resourceId: res };
-  site.stored = 0;
-  site.lastTickAt = buildingNowMs();
-  s.buildings.wallet[res] = clamp(buildingWallet(res, s) + amount, 0, BUILDING_WALLET_CAP);
-  if (typeof save !== 'undefined' && s === save) persistOrToast('building/collect/' + def.id);
-  return { ok: true, amount, resourceId: res, buildingId: def.id };
+  if (site._collectLock) return { ok: true, amount: 0, resourceId: res, reason: 'busy' };
+  site._collectLock = true;
+  try {
+    tickOneBuilding(def.id, buildingNowMs(), s);
+    const amount = clamp(buildingStoredFloor(site.stored), 0, BUILDING_STORED_CAP_ABS);
+    if (amount <= 0) return { ok: true, amount: 0, resourceId: res };
+    site.stored = 0;
+    site.lastTickAt = buildingNowMs();
+    s.buildings.wallet[res] = clamp(buildingWallet(res, s) + amount, 0, BUILDING_WALLET_CAP);
+    if (typeof save !== 'undefined' && s === save) persistOrToast('building/collect/' + def.id);
+    return { ok: true, amount, resourceId: res, buildingId: def.id };
+  } finally {
+    site._collectLock = false;
+  }
 }
 
 function buildingLabel(id, field) {
@@ -10898,7 +10951,7 @@ function migrateLegacyBuildingBag(raw) {
     if (!BUILDING_BY_ID[id] || !v || typeof v !== 'object') continue;
     const prev = factories[id] || emptyBuildingSite();
     const lv = Math.max(prev.level, Math.floor(Number(v.level) || 0));
-    const stored = Math.max(prev.stored, Math.floor(Number(v.stored) || 0));
+    const stored = Math.max(prev.stored, Number.isFinite(Number(v.stored)) ? Math.max(0, Number(v.stored)) : 0);
     const last = Math.max(prev.lastTickAt, Math.floor(Number(v.lastTickAt) || 0));
     factories[id] = { level: lv, stored, lastTickAt: last };
   }
@@ -10928,7 +10981,7 @@ function sanitizeBuildingSave(s) {
     const entry = migrated.factories[id] || {};
     const lv = clamp(Math.floor(Number(entry.level) || 0), 0, def.maxLevel);
     const cap = lv >= 1 ? (buildingOutputAtLevel(def, lv).cap || BUILDING_STORED_CAP_ABS) : 0;
-    const stored = lv >= 1 ? clamp(Math.floor(Number(entry.stored) || 0), 0, cap) : 0;
+    const stored = lv >= 1 ? buildingQuantizeStored(entry.stored, cap) : 0;
     let last = Math.floor(Number(entry.lastTickAt) || 0);
     if (last < 0 || last > 4102444800000) last = 0;
     if (lv <= 0 && stored <= 0 && last <= 0) continue;
@@ -15874,43 +15927,57 @@ function petProgressLine(speciesId) {
     echo: 'echo'
   };
 
-  /* Rank 0–4 at Lv 1/3/5/7/9. Conservative stacked caps match pets/styles. */
+  /* Rank 0–4 at Lv 1/3/5/7/9. Identity per factory — catalog power ids + sane caps. */
   var POWER_BY_RANK = {
     stick_lighter: [
-      { critBonus: 0.01 },
-      { critBonus: 0.02 },
-      { critBonus: 0.03, dmgMul: 1.02 },
-      { critBonus: 0.04, dmgMul: 1.04 },
-      { critBonus: 0.05, dmgMul: 1.06 }
+      { id: 'spark_kindle', critBonus: 0.02 },
+      { id: 'kindle_trail', critBonus: 0.04 },
+      { id: 'ember_pocket', critBonus: 0.06 },
+      { id: 'flare_step', critBonus: 0.08 },
+      { id: 'matchstick_storm', critBonus: 0.10 }
     ],
     woodchip_glue: [
-      { shieldWave: 0.35 },
-      { shieldWave: 0.70 },
-      { shieldWave: 1.00, defMul: 0.96 },
-      { shieldWave: 1.40, defMul: 0.94 },
-      { shieldWave: 1.80, defMul: 0.92 }
+      { id: 'sticky_soles', shieldWave: 0.55, kbMul: 0.78 },
+      { id: 'tacky_block', shieldWave: 0.90, kbMul: 0.78, blockMul: 0.72 },
+      { id: 'glue_trap', shieldWave: 1.25, kbMul: 0.72, blockMul: 0.72, defMul: 0.95 },
+      { id: 'paste_armor', shieldWave: 1.80, kbMul: 0.72, blockMul: 0.68, defMul: 0.92 },
+      { id: 'chip_golem', shieldWave: 2.40, kbMul: 0.68, blockMul: 0.64, defMul: 0.88 }
     ],
     chipping_wood: [
-      { dmgMul: 1.02 },
-      { dmgMul: 1.04 },
-      { dmgMul: 1.06, speedMul: 1.02 },
-      { dmgMul: 1.09, speedMul: 1.04 },
-      { dmgMul: 1.12, speedMul: 1.06 }
+      { id: 'splinter_edge', dmgMul: 1.04 },
+      { id: 'chip_spray', dmgMul: 1.08 },
+      { id: 'sawdust_cloud', dmgMul: 1.12, speedMul: 1.04 },
+      { id: 'hopper_guard', dmgMul: 1.15, speedMul: 1.07 },
+      { id: 'chipper_fury', dmgMul: 1.18, speedMul: 1.10 }
     ],
     bamboo_boesa: [
-      { maxHp: 4 },
-      { maxHp: 8 },
-      { maxHp: 12, healBetween: 0.02 },
-      { maxHp: 16, healBetween: 0.03 },
-      { maxHp: 20, healBetween: 0.04 }
+      { id: 'boiler_hiss', maxHp: 6 },
+      { id: 'bamboo_vent', maxHp: 12 },
+      { id: 'bamboo_burst', maxHp: 18, healBetween: 0.04 },
+      { id: 'pressure_cook', maxHp: 26, healBetween: 0.06 },
+      { id: 'boesa_overheat', maxHp: 36, healBetween: 0.08 }
     ],
     echo_whistle: [
-      { energyMul: 1.04 },
-      { energyMul: 1.08 },
-      { energyMul: 1.10, techniqueMul: 1.04 },
-      { energyMul: 1.13, techniqueMul: 1.06 },
-      { energyMul: 1.16, techniqueMul: 1.08 }
+      { id: 'taunt_toot', energyMul: 1.06 },
+      { id: 'mill_heckle', energyMul: 1.10 },
+      { id: 'echo_ridge', energyMul: 1.14, techniqueMul: 1.08 },
+      { id: 'ridge_reply', energyMul: 1.18, techniqueMul: 1.12 },
+      { id: 'whistle_chorus', energyMul: 1.24, techniqueMul: 1.16 }
     ]
+  };
+
+  var POWER_CAPS = {
+    dmgMul: 1.18,
+    speedMul: 1.10,
+    energyMul: 1.24,
+    techniqueMul: 1.16,
+    critBonus: 0.10,
+    maxHp: 36,
+    shieldWave: 2.4,
+    defMul: 0.88,
+    healBetween: 0.08,
+    kbMul: 0.68,
+    blockMul: 0.64
   };
 
   function hasSystems() {
@@ -16026,7 +16093,8 @@ function petProgressLine(speciesId) {
       if (!id || !row || typeof row !== 'object') return;
       var prev = factories[id] || emptySite();
       var level = Math.max(prev.level, clampInt(row.level != null ? row.level : row.lv, 0, MAX_LEVEL));
-      var stored = Math.max(prev.stored, Math.max(0, Math.floor(Number(row.stored) || Number(row.pending) || 0)));
+      var storedIn = Number(row.stored != null ? row.stored : row.pending);
+      var stored = Math.max(prev.stored, (Number.isFinite(storedIn) && storedIn > 0) ? storedIn : 0);
       var last = Math.max(prev.lastTickAt, Math.floor(Number(row.lastTickAt) || 0));
       factories[id] = { level: level, lastTickAt: last, stored: stored };
       var stock = Math.max(0, Math.floor(Number(row.stock) || 0));
@@ -16095,7 +16163,7 @@ function petProgressLine(speciesId) {
     Object.keys(walIn).forEach(function (k) {
       var dest = canonRes(k);
       var n = Math.floor(Number(walIn[k]) || 0);
-      if (dest && n > 0) wallet[dest] = (wallet[dest] || 0) + n;
+      if (dest && n > 0) wallet[dest] = Math.max(wallet[dest] || 0, n);
     });
 
     return { factories: factories, wallet: wallet };
@@ -16109,7 +16177,11 @@ function petProgressLine(speciesId) {
       var entry = (migrated.factories && migrated.factories[id]) || {};
       var lv = clampInt(entry.level, 0, MAX_LEVEL);
       var out = rateCapAt(id, lv);
-      var stored = lv >= 1 ? clampInt(entry.stored, 0, out.cap || STORED_ABS) : 0;
+      var storedRaw = Number(entry.stored);
+      var stored = 0;
+      if (lv >= 1 && Number.isFinite(storedRaw) && storedRaw > 0) {
+        stored = clampNum(Math.round(storedRaw * 1000) / 1000, 0, out.cap || STORED_ABS);
+      }
       var last = Math.floor(Number(entry.lastTickAt) || 0);
       if (last < 0 || last > 4102444800000) last = 0;
       if (lv <= 0 && stored <= 0 && last <= 0) continue;
@@ -16179,6 +16251,9 @@ function petProgressLine(speciesId) {
       shieldWave: 0,
       defMul: 1,
       healBetween: 0,
+      kbMul: 1,
+      blockMul: 1,
+      powers: [],
       ranks: {}
     };
   }
@@ -16207,16 +16282,21 @@ function petProgressLine(speciesId) {
       if (p.shieldWave) out.shieldWave += p.shieldWave;
       if (p.defMul) out.defMul *= p.defMul;
       if (p.healBetween) out.healBetween += p.healBetween;
+      if (p.kbMul) out.kbMul *= p.kbMul;
+      if (p.blockMul) out.blockMul *= p.blockMul;
+      if (p.id) out.powers.push(p.id);
     }
-    out.dmgMul = clampNum(out.dmgMul, 1, 1.12);
-    out.speedMul = clampNum(out.speedMul, 1, 1.06);
-    out.energyMul = clampNum(out.energyMul, 1, 1.16);
-    out.techniqueMul = clampNum(out.techniqueMul, 1, 1.08);
-    out.critBonus = clampNum(out.critBonus, 0, 0.05);
-    out.maxHp = clampInt(out.maxHp, 0, 20);
-    out.shieldWave = clampNum(out.shieldWave, 0, 2.2);
-    out.defMul = clampNum(out.defMul, 0.92, 1);
-    out.healBetween = clampNum(out.healBetween, 0, 0.04);
+    out.dmgMul = clampNum(out.dmgMul, 1, POWER_CAPS.dmgMul);
+    out.speedMul = clampNum(out.speedMul, 1, POWER_CAPS.speedMul);
+    out.energyMul = clampNum(out.energyMul, 1, POWER_CAPS.energyMul);
+    out.techniqueMul = clampNum(out.techniqueMul, 1, POWER_CAPS.techniqueMul);
+    out.critBonus = clampNum(out.critBonus, 0, POWER_CAPS.critBonus);
+    out.maxHp = clampInt(out.maxHp, 0, POWER_CAPS.maxHp);
+    out.shieldWave = clampNum(out.shieldWave, 0, POWER_CAPS.shieldWave);
+    out.defMul = clampNum(out.defMul, POWER_CAPS.defMul, 1);
+    out.healBetween = clampNum(out.healBetween, 0, POWER_CAPS.healBetween);
+    out.kbMul = clampNum(out.kbMul, POWER_CAPS.kbMul, 1);
+    out.blockMul = clampNum(out.blockMul, POWER_CAPS.blockMul, 1);
     return out;
   }
 
@@ -16231,7 +16311,14 @@ function petProgressLine(speciesId) {
     game.buildingShieldWave = b.shieldWave || 0;
     game.buildingDefMul = b.defMul || 1;
     game.buildingHealBetween = b.healBetween || 0;
+    game.buildingKbMul = b.kbMul || 1;
+    game.buildingBlockMul = b.blockMul || 1;
     game.buildingPowerRanks = b.ranks;
+    game.buildingPowerIds = b.powers || [];
+    game.buildingSawdustT = 0;
+    if (typeof resetBuildingCombatWave === 'function') {
+      try { resetBuildingCombatWave(game); } catch (e0) { /* ignore */ }
+    }
     if (b.maxHp) {
       if (player.maxhp != null) {
         player.maxhp += b.maxHp;
@@ -16260,6 +16347,12 @@ function petProgressLine(speciesId) {
     return spec;
   }
 
+  function storedFloor(n) {
+    var v = Number(n);
+    if (!Number.isFinite(v) || v < 0) return 0;
+    return Math.floor(v + 1e-9);
+  }
+
   function tickOneLocal(id, row, now) {
     if (!row || row.level < 1) {
       if (row) row.lastTickAt = now;
@@ -16274,19 +16367,21 @@ function petProgressLine(speciesId) {
     }
     var elapsed = Math.min(now - last, OFFLINE_HOURS * MS_PER_HOUR);
     if (elapsed <= 0) return 0;
-    var stored = clampInt(row.stored, 0, out.cap);
+    var stored = clampNum(Number(row.stored) || 0, 0, out.cap);
     if (stored >= out.cap) {
       row.lastTickAt = now;
       row.stored = out.cap;
       return 0;
     }
-    var units = Math.floor((elapsed / MS_PER_HOUR) * out.perHour);
-    if (units <= 0) return 0;
-    var usedMs = Math.floor((units / out.perHour) * MS_PER_HOUR);
+    var units = (elapsed / MS_PER_HOUR) * out.perHour;
+    if (!(units > 0)) return 0;
     var before = stored;
-    row.stored = clampInt(stored + units, 0, out.cap);
-    row.lastTickAt = last + usedMs;
-    if (row.stored >= out.cap) row.lastTickAt = now;
+    row.stored = clampNum(stored + units, 0, out.cap);
+    row.lastTickAt = now;
+    if (row.stored >= out.cap) {
+      row.stored = out.cap;
+      row.lastTickAt = now;
+    }
     return row.stored - before;
   }
 
@@ -16338,27 +16433,34 @@ function petProgressLine(speciesId) {
         }
       } catch (e) { /* fall */ }
     }
-    tickBuildingResources(Date.now(), { skipPersist: true });
     var row = siteOf(save, canon);
-    var amount = Math.floor(Number(row.stored) || 0);
-    var res = resourceOf(canon);
-    if (amount < 1) return { ok: false, amount: 0, resource: res, resourceId: res, id: canon };
-    row.stored = 0;
-    row.lastTickAt = Date.now();
-    save.buildings.wallet[res] = clampInt((save.buildings.wallet[res] || 0) + amount, 0, WALLET_CAP);
-    if (!opts.skipPersist && typeof persist === 'function') persist();
-    if (!opts.silent && typeof userToast === 'function') {
-      var name = (typeof root.buildingLabel === 'function') ? root.buildingLabel(canon) : canon;
-      var resName = (typeof root.buildingResourceLabel === 'function') ? root.buildingResourceLabel(res) : res;
-      userToast(
-        (typeof tOr === 'function')
-          ? tOr('buildings.collected', '+{n} {res} · {name}', { n: amount, res: resName, name: name })
-          : ('+' + amount + ' ' + resName + ' · ' + name),
-        2400,
-        { tone: 'ok' }
-      );
+    if (row._collectLock) return { ok: false, amount: 0, resource: resourceOf(canon), resourceId: resourceOf(canon), id: canon };
+    row._collectLock = true;
+    try {
+      tickBuildingResources(Date.now(), { skipPersist: true });
+      row = siteOf(save, canon);
+      var amount = storedFloor(row.stored);
+      var res = resourceOf(canon);
+      if (amount < 1) return { ok: false, amount: 0, resource: res, resourceId: res, id: canon };
+      row.stored = 0;
+      row.lastTickAt = Date.now();
+      save.buildings.wallet[res] = clampInt((save.buildings.wallet[res] || 0) + amount, 0, WALLET_CAP);
+      if (!opts.skipPersist && typeof persist === 'function') persist();
+      if (!opts.silent && typeof userToast === 'function') {
+        var name = (typeof root.buildingLabel === 'function') ? root.buildingLabel(canon) : canon;
+        var resName = (typeof root.buildingResourceLabel === 'function') ? root.buildingResourceLabel(res) : res;
+        userToast(
+          (typeof tOr === 'function')
+            ? tOr('buildings.collected', '+{n} {res} · {name}', { n: amount, res: resName, name: name })
+            : ('+' + amount + ' ' + resName + ' · ' + name),
+          2400,
+          { tone: 'ok' }
+        );
+      }
+      return { ok: true, amount: amount, resource: res, resourceId: res, id: canon, buildingId: canon };
+    } finally {
+      row._collectLock = false;
     }
-    return { ok: true, amount: amount, resource: res, resourceId: res, id: canon, buildingId: canon };
   }
 
   function collectAllBuildingResources(opts) {
@@ -16472,7 +16574,7 @@ function petProgressLine(speciesId) {
       resource: resourceOf(canon),
       resourceName: resourceOf(canon),
       ratePerHour: out.perHour,
-      collectable: Math.floor(row.stored || 0) >= 1,
+      collectable: storedFloor(row.stored) >= 1,
       powerRank: powerRankOfLevel(lv)
     };
   }
@@ -16519,6 +16621,16 @@ function petProgressLine(speciesId) {
   root.BUILDING_POWER_LEVELS = POWER_LEVELS.slice();
   root.BUILDING_RESOURCE_CAP_MS = OFFLINE_HOURS * MS_PER_HOUR;
   root.BUILDING_POWER_TABLE = POWER_BY_RANK;
+  root.BUILDING_POWER_CAPS = POWER_CAPS;
+
+  function buildingPowerIdentity(id, saveObj) {
+    var canon = canonId(id);
+    if (!canon) return null;
+    var rank = powerRank(canon, saveObj);
+    var p = powerForRank(canon, rank);
+    return { id: canon, rank: rank, powerId: p.id || null, bonus: p };
+  }
+  root.buildingPowerIdentity = buildingPowerIdentity;
 
   root.sanitizeBuildingsBag = sanitizeBuildingsBag;
   root.emptyBuildingsBag = emptyBag;
@@ -16550,6 +16662,380 @@ function petProgressLine(speciesId) {
       applyBuildingPowersToPlayer: applyBuildingPowersToPlayer,
       buildingPowerBonus: buildingPowerBonus
     };
+  }
+})(typeof window !== 'undefined' ? window : globalThis);
+/* --- src/systems/buildings-combat.js --- */
+/* Stickman Fighter — building combat identities (powers depth)
+ * Applies catalog hooks from src/data/buildings.js (rank 0–4 @ Lv 1/3/5/7/9).
+ * Versus stays off. Never throw — fight must continue if a proc hiccups.
+ */
+(function (root) {
+  'use strict';
+
+  var POWER_MIN_RANK = {
+    spark_kindle: { building: 'stick_lighter', rank: 0 },
+    kindle_trail: { building: 'stick_lighter', rank: 1 },
+    ember_pocket: { building: 'stick_lighter', rank: 2 },
+    flare_step: { building: 'stick_lighter', rank: 3 },
+    matchstick_storm: { building: 'stick_lighter', rank: 4 },
+    sticky_soles: { building: 'woodchip_glue', rank: 0 },
+    tacky_block: { building: 'woodchip_glue', rank: 1 },
+    glue_trap: { building: 'woodchip_glue', rank: 2 },
+    paste_armor: { building: 'woodchip_glue', rank: 3 },
+    chip_golem: { building: 'woodchip_glue', rank: 4 },
+    splinter_edge: { building: 'chipping_wood', rank: 0 },
+    chip_spray: { building: 'chipping_wood', rank: 1 },
+    sawdust_cloud: { building: 'chipping_wood', rank: 2 },
+    hopper_guard: { building: 'chipping_wood', rank: 3 },
+    chipper_fury: { building: 'chipping_wood', rank: 4 },
+    boiler_hiss: { building: 'bamboo_boesa', rank: 0 },
+    bamboo_vent: { building: 'bamboo_boesa', rank: 1 },
+    bamboo_burst: { building: 'bamboo_boesa', rank: 2 },
+    pressure_cook: { building: 'bamboo_boesa', rank: 3 },
+    boesa_overheat: { building: 'bamboo_boesa', rank: 4 },
+    taunt_toot: { building: 'echo_whistle', rank: 0 },
+    mill_heckle: { building: 'echo_whistle', rank: 1 },
+    echo_ridge: { building: 'echo_whistle', rank: 2 },
+    ridge_reply: { building: 'echo_whistle', rank: 3 },
+    whistle_chorus: { building: 'echo_whistle', rank: 4 }
+  };
+
+  function combatOk(game) {
+    return !!(game && game.mode !== 'versus' && game.player && game.player.alive);
+  }
+
+  function saveOf(game) {
+    return (game && game.save) || (typeof save !== 'undefined' ? save : null);
+  }
+
+  function hasPower(powerId, game) {
+    if (typeof buildingHasPower === 'function') {
+      try { return !!buildingHasPower(powerId, saveOf(game)); } catch (e) { /* fall */ }
+    }
+    var meta = POWER_MIN_RANK[powerId];
+    if (!meta) return false;
+    var ranks = (game && game.buildingPowerRanks) || {};
+    var rank = ranks[meta.building];
+    if (rank == null && typeof buildingPowerRank === 'function') {
+      try { rank = buildingPowerRank(meta.building, saveOf(game)); } catch (e) { rank = -1; }
+    }
+    return (rank | 0) >= meta.rank;
+  }
+
+  function nowT(game) {
+    return (game && game.t) || 0;
+  }
+
+  function stateOf(game) {
+    if (!game.buildingCombat) {
+      game.buildingCombat = {
+        waveMelee: false,
+        waveHurt: false,
+        hopperGuard: false,
+        glueArmed: false,
+        cds: {},
+        heat: 0,
+        lastX: (game.player && game.player.x) || 0
+      };
+    }
+    return game.buildingCombat;
+  }
+
+  function resetBuildingCombatWave(game) {
+    if (!game) return;
+    var st = stateOf(game);
+    st.waveMelee = false;
+    st.waveHurt = false;
+    st.hopperGuard = false;
+    st.glueArmed = hasPower('glue_trap', game);
+    st.heat = 0;
+    if (game.player) st.lastX = game.player.x || 0;
+    if (hasPower('chip_golem', game) && game.player) {
+      game.playerShieldT = Math.max(game.playerShieldT || 0, 2.4);
+    }
+  }
+
+  function cdReady(st, key, t, cd) {
+    if ((st.cds[key] || 0) > t) return false;
+    st.cds[key] = t + cd;
+    return true;
+  }
+
+  function labelOf(key, fallback) {
+    if (typeof tOr === 'function') return tOr('buildings.power.' + key, fallback);
+    return fallback;
+  }
+
+  function nearestMonster(game, x, maxR) {
+    var best = null;
+    var bestD = maxR * maxR;
+    var list = game.monsters || [];
+    for (var i = 0; i < list.length; i++) {
+      var m = list[i];
+      if (!m || !m.alive) continue;
+      var dx = m.x - x;
+      var d = dx * dx;
+      if (d < bestD) { bestD = d; best = m; }
+    }
+    return best;
+  }
+
+  function eachNear(game, x, maxR, fn) {
+    var r2 = maxR * maxR;
+    var list = game.monsters || [];
+    for (var i = 0; i < list.length; i++) {
+      var m = list[i];
+      if (!m || !m.alive) continue;
+      var dx = m.x - x;
+      if (dx * dx <= r2) fn(m);
+    }
+  }
+
+  function dealChip(game, target, dmg, kb, text, color) {
+    if (!target || !target.alive || !game) return 0;
+    var n = Math.max(1, Math.round(dmg));
+    try {
+      if (typeof target.takeDamage === 'function') {
+        target.takeDamage(n, kb || 0, game, { quiet: n <= 2, kind: 'building', skipHitSfx: n <= 2 });
+      }
+    } catch (e) { return 0; }
+    if (text && n >= 2 && game.floater) {
+      try {
+        game.floater(target.x, (target.y || 0) - ((target.size || 40) + 8), text, color || '#ff9a4d', 11, 'fx');
+      } catch (e2) { /* ignore */ }
+    }
+    return n;
+  }
+
+  function emberOn(target, ticks, tickDmg) {
+    if (!target || !target.alive) return;
+    target.wpnBurnT = Math.max(target.wpnBurnT || 0, (ticks || 2) * 0.5);
+    target.wpnBurnDmg = Math.max(target.wpnBurnDmg || 0, tickDmg || 1);
+    target.wpnBurnTick = 0.5;
+  }
+
+  function slowTarget(target, dur, mul) {
+    if (typeof applySuperMonsterSlow === 'function') {
+      try { applySuperMonsterSlow(target, dur, mul); return; } catch (e) { /* fall */ }
+    }
+    if (!target) return;
+    target.superSlowT = Math.max(target.superSlowT || 0, dur || 1);
+    target.superSlowMul = Math.min(target.superSlowMul || 1, mul != null ? mul : 0.6);
+  }
+
+  function faceToward(target, player) {
+    if (!target || !player) return;
+    var dir = Math.sign(player.x - target.x) || 1;
+    target.face = dir;
+    target.vx = (target.vx || 0) * 0.35 + dir * 40;
+  }
+
+  function burstAt(game, x, y, color, n) {
+    if (!game || typeof game.burst !== 'function') return;
+    try {
+      if (typeof fxLite === 'function' && fxLite()) return;
+      game.burst(x, y, color, n || 6, { kind: 'spark', size: 2 });
+    } catch (e) { /* ignore */ }
+  }
+
+  function applyBuildingCombatHook(game, hook, ctx) {
+    if (!combatOk(game) || !hook) return;
+    if (game.mode === 'wall' || game.mode === 'coinrun') return;
+    ctx = ctx || {};
+    try {
+      var st = stateOf(game);
+      var t = nowT(game);
+      var player = game.player;
+      var target = ctx.target;
+
+      if (hook === 'onWaveStart') {
+        resetBuildingCombatWave(game);
+        return;
+      }
+
+      if (hook === 'onFirstMeleeHit' || hook === 'onWeaponHit' || hook === 'onComboStep') {
+        if (!target) return;
+        if (!st.waveMelee && hasPower('spark_kindle', game)) {
+          st.waveMelee = true;
+          emberOn(target, 3, 1);
+          burstAt(game, target.x, target.y - 20, '#ff9a4d', 5);
+        } else {
+          st.waveMelee = true;
+        }
+        if (hook === 'onWeaponHit' && hasPower('ember_pocket', game) && cdReady(st, 'ember', t, 0.55)) {
+          if (Math.random() < 0.22) {
+            dealChip(game, target, 2, (player.face || 1) * 40, labelOf('ember_pocket', 'Spark'), '#ff9a4d');
+            emberOn(target, 2, 1);
+          }
+        }
+        if (hook === 'onWeaponHit' && hasPower('splinter_edge', game) && cdReady(st, 'splinter', t, 0.4)) {
+          dealChip(game, target, 1, (player.face || 1) * 70, labelOf('splinter_edge', 'Chip'), '#7cfc8a');
+        }
+        var combo = game.combo || 0;
+        if (hasPower('chip_spray', game) && combo >= 3 && cdReady(st, 'spray', t, 0.7)) {
+          dealChip(game, target, 2, 0, labelOf('chip_spray', 'Spray'), '#7cfc8a');
+        }
+        if (hasPower('chipper_fury', game) && combo >= 6 && cdReady(st, 'fury', t, 0.9)) {
+          eachNear(game, target.x, 90, function (m) {
+            dealChip(game, m, 3, 0, null, '#7cfc8a');
+          });
+          burstAt(game, target.x, target.y - 16, '#7cfc8a', 8);
+        }
+        if (hasPower('pressure_cook', game)) {
+          st.heat = (st.heat || 0) + 1;
+          if (st.heat >= 5) {
+            st.heat = 0;
+            dealChip(game, target, 3, (player.face || 1) * 90, labelOf('pressure_cook', 'Steam'), '#ff7a4d');
+          }
+        }
+        if (hasPower('boesa_overheat', game) && player.hp <= player.maxhp * 0.3 && cdReady(st, 'overhit', t, 0.45)) {
+          dealChip(game, target, 2, 0, labelOf('boesa_overheat', 'Heat'), '#ff7a4d');
+        }
+        if (st.glueArmed && hasPower('glue_trap', game)) {
+          st.glueArmed = false;
+          slowTarget(target, 1.35, 0.55);
+          if (game.floater) {
+            try { game.floater(target.x, target.y - 28, labelOf('glue_trap', 'Glue'), '#c9a66b', 12, 'fx'); } catch (e3) { /* ignore */ }
+          }
+        }
+        return;
+      }
+
+      if (hook === 'onActiveCast') {
+        if (hasPower('sawdust_cloud', game)) {
+          game.buildingSawdustT = Math.max(game.buildingSawdustT || 0, 0.85);
+          burstAt(game, player.x + (player.face || 1) * 36, player.y - 40, '#c9b691', 7);
+        }
+        if (hasPower('bamboo_burst', game) && cdReady(st, 'burst', t, 3.2)) {
+          eachNear(game, player.x + (player.face || 1) * 50, 88, function (m) {
+            dealChip(game, m, 4, (player.face || 1) * 160, labelOf('bamboo_burst', 'Boesa'), '#ff7a4d');
+          });
+        }
+        if (hasPower('matchstick_storm', game) && cdReady(st, 'storm', t, 7.5)) {
+          eachNear(game, player.x + (player.face || 1) * 40, 100, function (m) {
+            emberOn(m, 4, 1);
+            dealChip(game, m, 3, (player.face || 1) * 50, labelOf('matchstick_storm', 'Match'), '#ff9a4d');
+          });
+        } else if (hasPower('flare_step', game) && cdReady(st, 'flarecast', t, 4.5)) {
+          var lined = nearestMonster(game, player.x + (player.face || 1) * 70, 110);
+          if (lined) emberOn(lined, 3, 1);
+        }
+        if (hasPower('whistle_chorus', game) && cdReady(st, 'chorus', t, 6.5)) {
+          eachNear(game, player.x, 150, function (m) {
+            faceToward(m, player);
+            slowTarget(m, 0.85, 0.62);
+          });
+          if (game.floater) {
+            try { game.floater(player.x, player.y - 100, labelOf('whistle_chorus', 'Chorus'), '#7cf5ff', 13, 'fx'); } catch (e4) { /* ignore */ }
+          }
+        } else if (hasPower('taunt_toot', game) && cdReady(st, 'toot', t, 2.8)) {
+          var foe = nearestMonster(game, player.x, 160);
+          if (foe) {
+            faceToward(foe, player);
+            if (game.floater) {
+              try { game.floater(foe.x, foe.y - 22, labelOf('taunt_toot', 'Toot'), '#7cf5ff', 12, 'fx'); } catch (e5) { /* ignore */ }
+            }
+          }
+        }
+        if (hasPower('glue_trap', game)) st.glueArmed = true;
+        return;
+      }
+
+      if (hook === 'onDash') {
+        if (hasPower('flare_step', game) && cdReady(st, 'flare', t, 1.1)) {
+          eachNear(game, player.x, 70, function (m) { emberOn(m, 2, 1); });
+          burstAt(game, player.x, player.y - 30, '#ff9a4d', 6);
+        }
+        if (hasPower('bamboo_vent', game) && cdReady(st, 'vent', t, 1.2)) {
+          var shove = nearestMonster(game, player.x + (player.face || 1) * 40, 95);
+          if (shove) {
+            shove.vx = (shove.vx || 0) + (player.face || 1) * 220;
+            dealChip(game, shove, 1, (player.face || 1) * 120, labelOf('bamboo_vent', 'Vent'), '#ff7a4d');
+          }
+        }
+        return;
+      }
+
+      if (hook === 'onHurt' || hook === 'onKnockback') {
+        if (!st.waveHurt) st.waveHurt = true;
+        if (hasPower('mill_heckle', game) && cdReady(st, 'heckle', t, 1.4)) {
+          var heck = nearestMonster(game, player.x, 140);
+          if (heck) faceToward(heck, player);
+        }
+        return;
+      }
+
+      if (hook === 'onBlock') {
+        if (hasPower('ridge_reply', game) && ctx.parry && cdReady(st, 'reply', t, 1.6)) {
+          var pip = nearestMonster(game, player.x, 120);
+          if (pip) slowTarget(pip, 0.7, 0.5);
+        }
+        return;
+      }
+
+      if (hook === 'onKill' && target) {
+        if (hasPower('echo_ridge', game) && cdReady(st, 'ridge', t, 0.35)) {
+          eachNear(game, target.x, 96, function (m) { slowTarget(m, 0.9, 0.58); });
+          burstAt(game, target.x, target.y - 18, '#7cf5ff', 7);
+        }
+      }
+    } catch (err) {
+      try { if (typeof sfReportError === 'function') sfReportError('building/combat', err, 'Fabriek-proc hiccup'); } catch (e6) { /* ignore */ }
+    }
+  }
+
+  function tickBuildingCombat(game, dt) {
+    if (!combatOk(game) || game.mode === 'wall' || game.mode === 'coinrun') return;
+    if (!(dt > 0)) return;
+    try {
+      var st = stateOf(game);
+      var player = game.player;
+      var t = nowT(game);
+      if (game.buildingSawdustT > 0) game.buildingSawdustT -= dt;
+
+      if (hasPower('kindle_trail', game) && Math.abs((player.x || 0) - (st.lastX || 0)) > 36 && cdReady(st, 'trail', t, 1.55)) {
+        var crumb = nearestMonster(game, player.x, 78);
+        if (crumb) emberOn(crumb, 2, 1);
+        burstAt(game, player.x, player.y - 8, '#ff9a4d', 4);
+        st.lastX = player.x;
+      } else if (Math.abs((player.x || 0) - (st.lastX || 0)) > 8) {
+        st.lastX = player.x;
+      }
+
+      var auraCd = hasPower('boesa_overheat', game) && player.hp <= player.maxhp * 0.3 ? 0.95 : 1.45;
+      if (hasPower('boiler_hiss', game) && cdReady(st, 'hiss', t, auraCd)) {
+        eachNear(game, player.x, 62, function (m) {
+          dealChip(game, m, 1, 0, null, '#ff7a4d');
+        });
+      }
+    } catch (err) {
+      try { if (typeof sfReportError === 'function') sfReportError('building/tick', err); } catch (e) { /* ignore */ }
+    }
+  }
+
+  function applyBuildingIncoming(game, player, dmg, opts) {
+    if (!combatOk(game) || !player || !player.isPlayer) return dmg;
+    opts = opts || {};
+    var st = stateOf(game);
+    var n = dmg;
+    if (!st.hopperGuard && hasPower('hopper_guard', game)) {
+      st.hopperGuard = true;
+      n = Math.max(1, Math.round(n * 0.55));
+    }
+    if ((game.buildingSawdustT || 0) > 0) {
+      n = Math.max(1, Math.round(n * 0.72));
+    }
+    return n;
+  }
+
+  root.applyBuildingCombatHook = applyBuildingCombatHook;
+  root.tickBuildingCombat = tickBuildingCombat;
+  root.resetBuildingCombatWave = resetBuildingCombatWave;
+  root.applyBuildingIncoming = applyBuildingIncoming;
+  root.BUILDING_POWER_MIN_RANK = POWER_MIN_RANK;
+
+  if (typeof module !== 'undefined' && module.exports) {
+    module.exports = { applyBuildingCombatHook: applyBuildingCombatHook, tickBuildingCombat: tickBuildingCombat };
   }
 })(typeof window !== 'undefined' ? window : globalThis);
 /* --- src/systems/buildings-bridge.js --- */
@@ -31027,6 +31513,9 @@ class Fighter {
       if (this.isPlayer || this.playerSlot) {
         game.banner(skillBanner(sk), 0.7, skillHudColor(sk), 40);
       }
+      if (this.isPlayer && typeof applyBuildingCombatHook === 'function') {
+        try { applyBuildingCombatHook(game, 'onActiveCast', { player: this, technique: jKind }); } catch (_) {}
+      }
     } else {
       AudioSys.sfx(weaponSwingSfx(this.weapon, kind));
     }
@@ -31092,6 +31581,9 @@ class Fighter {
     this.vx = dir * 340 * (db.dashSpeedMul || 1);
     game.burst(this.x, this.y - 38, this.style?.accent || '#7cf5ff', 8);
     game.floater(this.x, this.y - 92, 'Dash!', '#7cf5ff', 12);
+    if (this.isPlayer && typeof applyBuildingCombatHook === 'function') {
+      try { applyBuildingCombatHook(game, 'onDash', { player: this, dir: dir }); } catch (_) {}
+    }
   }
 
   /** Nood-super (Kets-slot): omringd/stunlock → tik midden-symbool of druk E. */
@@ -31479,7 +31971,9 @@ class Fighter {
     }
     if (this.blocking && !opts.unblockable) {
       const blockMul = (this.isPlayer && game && game.styleBlockMul) ? game.styleBlockMul : 1;
-      dmg = Math.max(1, Math.round(dmg * 0.15 * blockMul));
+      const glueBlock = (this.isPlayer && game && game.buildingBlockMul && game.buildingBlockMul !== 1)
+        ? game.buildingBlockMul : 1;
+      dmg = Math.max(1, Math.round(dmg * 0.15 * blockMul * glueBlock));
       AudioSys.sfx('block');
       const atk = opts.attacker && opts.attacker.attack;
       const parry = atk && atk.t >= atk.windup && atk.t <= atk.windup + 0.16;
@@ -31496,6 +31990,9 @@ class Fighter {
         spawnFxRing(game, this.x, this.y - 42, parry ? '#ffd75e' : '#9fd8ff', fxLite() ? 6 : 10);
       }
       if (save.haptics !== false) haptic(parry ? 9 : 4);
+      if (this.isPlayer && game && typeof applyBuildingCombatHook === 'function') {
+        try { applyBuildingCombatHook(game, 'onBlock', { player: this, dmg: dmg, parry: parry }); } catch (_) {}
+      }
       const hpBefore = this.hp;
       this.hp -= dmg;
       if ((this.hpGhostT || 0) <= 0) this.hpGhost = hpBefore;
@@ -31514,6 +32011,9 @@ class Fighter {
     if (this.isPlayer && game && game.buildingDefMul && game.buildingDefMul !== 1) {
       dmg = Math.max(1, Math.round(dmg * game.buildingDefMul));
     }
+    if (this.isPlayer && game && typeof applyBuildingIncoming === 'function') {
+      try { dmg = applyBuildingIncoming(game, this, dmg, opts); } catch (_) {}
+    }
     const hpBefore = this.hp;
     this.hp -= dmg;
     if ((this.hpGhostT || 0) <= 0) this.hpGhost = hpBefore;
@@ -31529,7 +32029,13 @@ class Fighter {
     this.hurtT = dmg >= 18 ? 0.28 : 0.24;
     this.hitFlashT = motionReduced() ? 0.06 : (dmg >= 18 ? 0.18 : 0.14);
     this.attack = null;
-    const kbScaled = scaleKnockback(kbx, dmg, { heavy: dmg >= 18 });
+    let kbScaled = scaleKnockback(kbx, dmg, { heavy: dmg >= 18 });
+    if (this.isPlayer && game && game.buildingKbMul && game.buildingKbMul !== 1) {
+      kbScaled *= game.buildingKbMul;
+    }
+    if (this.isPlayer && game && typeof applyBuildingCombatHook === 'function') {
+      try { applyBuildingCombatHook(game, 'onHurt', { player: this, dmg: dmg }); } catch (_) {}
+    }
     this.vx = kbScaled;
     this.vy = Math.min(this.vy, -120);
     if (this.isPlayer || this.playerSlot) {
@@ -36934,6 +37440,9 @@ class Game {
     if (this.buildingShieldWave > 0 && this.player) {
       this.playerShieldT = Math.max(this.playerShieldT, this.buildingShieldWave);
     }
+    if (typeof applyBuildingCombatHook === 'function') {
+      try { applyBuildingCombatHook(this, 'onWaveStart', {}); } catch (_) {}
+    }
     if (bossWave) {
       try {
         this.banner(t('banner.bossWave'), 2.2, '#ff6b6b', 58);
@@ -37536,6 +38045,9 @@ class Game {
 
   _onMonsterKilledInner(m) {
     if (!m) return;
+    if (typeof applyBuildingCombatHook === 'function') {
+      try { applyBuildingCombatHook(this, 'onKill', { target: m }); } catch (_) {}
+    }
     this.kills++;
     this.killStreak = (this.killStreak || 0) + 1;
     const ks = this.killStreak;
@@ -39195,6 +39707,14 @@ class Game {
           if (save.haptics !== false) haptic(9);
         }
         m.takeDamage(hitRoll.dmg, kbHit, this, { crit: hitRoll.crit, kind: spec.kind });
+        if (f.isPlayer && typeof applyBuildingCombatHook === 'function') {
+          try {
+            applyBuildingCombatHook(this, spec.kind === 'weapon' ? 'onWeaponHit' : 'onFirstMeleeHit', {
+              target: m, spec: spec, crit: hitRoll.crit,
+            });
+            applyBuildingCombatHook(this, 'onComboStep', { target: m, spec: spec });
+          } catch (_) {}
+        }
         applyHitStop(this, spec, { crit: hitRoll.crit, combo: this.combo, heavy: hitRoll.dmg >= 18 });
         if (spec.kind === 'weapon' && typeof applyWeaponOnHitEffect === 'function') {
           try {
@@ -39262,6 +39782,14 @@ class Game {
           unblockable: spec.unblockable, attacker: f, kind: spec.kind,
         });
         if (dmg <= 0) continue;
+        if (f.isPlayer && typeof applyBuildingCombatHook === 'function') {
+          try {
+            applyBuildingCombatHook(this, spec.kind === 'weapon' ? 'onWeaponHit' : 'onFirstMeleeHit', {
+              target: tgt, spec: spec, crit: hitRoll.crit,
+            });
+            applyBuildingCombatHook(this, 'onComboStep', { target: tgt, spec: spec });
+          } catch (_) {}
+        }
         if (this.mode === 'training' && f.isPlayer) {
           this.combo = Math.min(12, this.combo + 1);
           f._chainKind = spec.kind;
@@ -39451,6 +39979,7 @@ class Game {
       }
     }
     try { if (typeof tickWeaponStatusEffects === 'function') tickWeaponStatusEffects(this, dt); } catch (_) {}
+    try { if (typeof tickBuildingCombat === 'function') tickBuildingCombat(this, dt); } catch (_) {}
     if (this.player && this.player._wpnCritSurgeT > 0) this.player._wpnCritSurgeT -= dt;
     if (this.p2 && this.p2._wpnCritSurgeT > 0) this.p2._wpnCritSurgeT -= dt;
     this.monsters = this.monsters.filter(m => m.alive || m.deadT < 1);
@@ -49248,6 +49777,7 @@ function updateNetStatus(ev) {
 window.addEventListener('online', updateNetStatus);
 window.addEventListener('offline', updateNetStatus);
 window.addEventListener('pageshow', (ev) => {
+  try { tickBuildingsNow(Date.now()); } catch (_) {}
   if (ev.persisted) {
     try { cancelGambleStart(); } catch (_) {}
     try { Input.releaseAll(); } catch (_) {}

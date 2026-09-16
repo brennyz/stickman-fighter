@@ -408,6 +408,9 @@ class Game {
     if (this.buildingShieldWave > 0 && this.player) {
       this.playerShieldT = Math.max(this.playerShieldT, this.buildingShieldWave);
     }
+    if (typeof applyBuildingCombatHook === 'function') {
+      try { applyBuildingCombatHook(this, 'onWaveStart', {}); } catch (_) {}
+    }
     if (bossWave) {
       try {
         this.banner(t('banner.bossWave'), 2.2, '#ff6b6b', 58);
@@ -1010,6 +1013,9 @@ class Game {
 
   _onMonsterKilledInner(m) {
     if (!m) return;
+    if (typeof applyBuildingCombatHook === 'function') {
+      try { applyBuildingCombatHook(this, 'onKill', { target: m }); } catch (_) {}
+    }
     this.kills++;
     this.killStreak = (this.killStreak || 0) + 1;
     const ks = this.killStreak;
@@ -2669,6 +2675,14 @@ class Game {
           if (save.haptics !== false) haptic(9);
         }
         m.takeDamage(hitRoll.dmg, kbHit, this, { crit: hitRoll.crit, kind: spec.kind });
+        if (f.isPlayer && typeof applyBuildingCombatHook === 'function') {
+          try {
+            applyBuildingCombatHook(this, spec.kind === 'weapon' ? 'onWeaponHit' : 'onFirstMeleeHit', {
+              target: m, spec: spec, crit: hitRoll.crit,
+            });
+            applyBuildingCombatHook(this, 'onComboStep', { target: m, spec: spec });
+          } catch (_) {}
+        }
         applyHitStop(this, spec, { crit: hitRoll.crit, combo: this.combo, heavy: hitRoll.dmg >= 18 });
         if (spec.kind === 'weapon' && typeof applyWeaponOnHitEffect === 'function') {
           try {
@@ -2736,6 +2750,14 @@ class Game {
           unblockable: spec.unblockable, attacker: f, kind: spec.kind,
         });
         if (dmg <= 0) continue;
+        if (f.isPlayer && typeof applyBuildingCombatHook === 'function') {
+          try {
+            applyBuildingCombatHook(this, spec.kind === 'weapon' ? 'onWeaponHit' : 'onFirstMeleeHit', {
+              target: tgt, spec: spec, crit: hitRoll.crit,
+            });
+            applyBuildingCombatHook(this, 'onComboStep', { target: tgt, spec: spec });
+          } catch (_) {}
+        }
         if (this.mode === 'training' && f.isPlayer) {
           this.combo = Math.min(12, this.combo + 1);
           f._chainKind = spec.kind;
@@ -2925,6 +2947,7 @@ class Game {
       }
     }
     try { if (typeof tickWeaponStatusEffects === 'function') tickWeaponStatusEffects(this, dt); } catch (_) {}
+    try { if (typeof tickBuildingCombat === 'function') tickBuildingCombat(this, dt); } catch (_) {}
     if (this.player && this.player._wpnCritSurgeT > 0) this.player._wpnCritSurgeT -= dt;
     if (this.p2 && this.p2._wpnCritSurgeT > 0) this.p2._wpnCritSurgeT -= dt;
     this.monsters = this.monsters.filter(m => m.alive || m.deadT < 1);

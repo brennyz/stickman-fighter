@@ -115,6 +115,9 @@ class Fighter {
       if (this.isPlayer || this.playerSlot) {
         game.banner(skillBanner(sk), 0.7, skillHudColor(sk), 40);
       }
+      if (this.isPlayer && typeof applyBuildingCombatHook === 'function') {
+        try { applyBuildingCombatHook(game, 'onActiveCast', { player: this, technique: jKind }); } catch (_) {}
+      }
     } else {
       AudioSys.sfx(weaponSwingSfx(this.weapon, kind));
     }
@@ -180,6 +183,9 @@ class Fighter {
     this.vx = dir * 340 * (db.dashSpeedMul || 1);
     game.burst(this.x, this.y - 38, this.style?.accent || '#7cf5ff', 8);
     game.floater(this.x, this.y - 92, 'Dash!', '#7cf5ff', 12);
+    if (this.isPlayer && typeof applyBuildingCombatHook === 'function') {
+      try { applyBuildingCombatHook(game, 'onDash', { player: this, dir: dir }); } catch (_) {}
+    }
   }
 
   /** Nood-super (Kets-slot): omringd/stunlock → tik midden-symbool of druk E. */
@@ -567,7 +573,9 @@ class Fighter {
     }
     if (this.blocking && !opts.unblockable) {
       const blockMul = (this.isPlayer && game && game.styleBlockMul) ? game.styleBlockMul : 1;
-      dmg = Math.max(1, Math.round(dmg * 0.15 * blockMul));
+      const glueBlock = (this.isPlayer && game && game.buildingBlockMul && game.buildingBlockMul !== 1)
+        ? game.buildingBlockMul : 1;
+      dmg = Math.max(1, Math.round(dmg * 0.15 * blockMul * glueBlock));
       AudioSys.sfx('block');
       const atk = opts.attacker && opts.attacker.attack;
       const parry = atk && atk.t >= atk.windup && atk.t <= atk.windup + 0.16;
@@ -584,6 +592,9 @@ class Fighter {
         spawnFxRing(game, this.x, this.y - 42, parry ? '#ffd75e' : '#9fd8ff', fxLite() ? 6 : 10);
       }
       if (save.haptics !== false) haptic(parry ? 9 : 4);
+      if (this.isPlayer && game && typeof applyBuildingCombatHook === 'function') {
+        try { applyBuildingCombatHook(game, 'onBlock', { player: this, dmg: dmg, parry: parry }); } catch (_) {}
+      }
       const hpBefore = this.hp;
       this.hp -= dmg;
       if ((this.hpGhostT || 0) <= 0) this.hpGhost = hpBefore;
@@ -602,6 +613,9 @@ class Fighter {
     if (this.isPlayer && game && game.buildingDefMul && game.buildingDefMul !== 1) {
       dmg = Math.max(1, Math.round(dmg * game.buildingDefMul));
     }
+    if (this.isPlayer && game && typeof applyBuildingIncoming === 'function') {
+      try { dmg = applyBuildingIncoming(game, this, dmg, opts); } catch (_) {}
+    }
     const hpBefore = this.hp;
     this.hp -= dmg;
     if ((this.hpGhostT || 0) <= 0) this.hpGhost = hpBefore;
@@ -617,7 +631,13 @@ class Fighter {
     this.hurtT = dmg >= 18 ? 0.28 : 0.24;
     this.hitFlashT = motionReduced() ? 0.06 : (dmg >= 18 ? 0.18 : 0.14);
     this.attack = null;
-    const kbScaled = scaleKnockback(kbx, dmg, { heavy: dmg >= 18 });
+    let kbScaled = scaleKnockback(kbx, dmg, { heavy: dmg >= 18 });
+    if (this.isPlayer && game && game.buildingKbMul && game.buildingKbMul !== 1) {
+      kbScaled *= game.buildingKbMul;
+    }
+    if (this.isPlayer && game && typeof applyBuildingCombatHook === 'function') {
+      try { applyBuildingCombatHook(game, 'onHurt', { player: this, dmg: dmg }); } catch (_) {}
+    }
     this.vx = kbScaled;
     this.vy = Math.min(this.vy, -120);
     if (this.isPlayer || this.playerSlot) {

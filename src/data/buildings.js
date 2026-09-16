@@ -406,6 +406,19 @@ function buildingCanUpgrade(id, st) {
   return !!(cost && buildingCanPay(cost, st));
 }
 
+function buildingStoredFloor(n) {
+  const v = Number(n);
+  if (!Number.isFinite(v) || v < 0) return 0;
+  return Math.floor(v + 1e-9);
+}
+
+function buildingQuantizeStored(n, cap) {
+  const v = Number(n);
+  if (!Number.isFinite(v) || v <= 0) return 0;
+  const hi = cap > 0 ? cap : BUILDING_STORED_CAP_ABS;
+  return clamp(Math.round(v * 1000) / 1000, 0, hi);
+}
+
 function buildingPendingAmount(id, st) {
   const def = BUILDING_BY_ID[buildingCanonId(id)];
   if (!def || !buildingBuilt(def.id, st)) return 0;
@@ -413,7 +426,7 @@ function buildingPendingAmount(id, st) {
   tickOneBuilding(def.id, buildingNowMs(), s);
   const site = buildingSite(def.id, s);
   const cap = buildingOutputAtLevel(def, buildingLevel(def.id, s)).cap;
-  return clamp(Math.floor(Number(site && site.stored) || 0), 0, cap || BUILDING_STORED_CAP_ABS);
+  return clamp(buildingStoredFloor(site && site.stored), 0, cap || BUILDING_STORED_CAP_ABS);
 }
 
 function buildingCanCollect(id, st) {
@@ -472,18 +485,22 @@ function tickOneBuilding(id, now, st) {
   const maxMs = BUILDING_OFFLINE_HOURS * BUILDING_MS_PER_HOUR;
   const elapsed = Math.min(now - last, maxMs);
   if (elapsed <= 0) return false;
-  const stored = clamp(Math.floor(Number(site.stored) || 0), 0, out.cap);
+  const stored = clamp(Number(site.stored) || 0, 0, out.cap);
   if (stored >= out.cap) {
     site.lastTickAt = now;
     site.stored = out.cap;
     return true;
   }
-  const units = Math.floor((elapsed / BUILDING_MS_PER_HOUR) * out.perHour);
-  if (units <= 0) return false;
-  const usedMs = Math.floor((units / out.perHour) * BUILDING_MS_PER_HOUR);
-  site.stored = clamp(stored + units, 0, out.cap);
-  site.lastTickAt = last + usedMs;
-  if (site.stored >= out.cap) site.lastTickAt = now;
+  const units = (elapsed / BUILDING_MS_PER_HOUR) * out.perHour;
+  if (!(units > 0)) return false;
+  const next = clamp(stored + units, 0, out.cap);
+  if (next <= stored) return false;
+  site.stored = next;
+  site.lastTickAt = now;
+  if (site.stored >= out.cap) {
+    site.stored = out.cap;
+    site.lastTickAt = now;
+  }
   return true;
 }
 
@@ -502,16 +519,22 @@ function buildingCollect(id, st) {
   const def = BUILDING_BY_ID[buildingCanonId(id)];
   if (!def || !buildingBuilt(def.id, st)) return { ok: false, reason: 'unbuilt', amount: 0 };
   const s = ensureBuildingSave(st);
-  tickOneBuilding(def.id, buildingNowMs(), s);
   const site = buildingSite(def.id, s);
-  const amount = clamp(Math.floor(Number(site.stored) || 0), 0, BUILDING_STORED_CAP_ABS);
   const res = def.resourceId;
-  if (amount <= 0) return { ok: true, amount: 0, resourceId: res };
-  site.stored = 0;
-  site.lastTickAt = buildingNowMs();
-  s.buildings.wallet[res] = clamp(buildingWallet(res, s) + amount, 0, BUILDING_WALLET_CAP);
-  if (typeof save !== 'undefined' && s === save) persistOrToast('building/collect/' + def.id);
-  return { ok: true, amount, resourceId: res, buildingId: def.id };
+  if (site._collectLock) return { ok: true, amount: 0, resourceId: res, reason: 'busy' };
+  site._collectLock = true;
+  try {
+    tickOneBuilding(def.id, buildingNowMs(), s);
+    const amount = clamp(buildingStoredFloor(site.stored), 0, BUILDING_STORED_CAP_ABS);
+    if (amount <= 0) return { ok: true, amount: 0, resourceId: res };
+    site.stored = 0;
+    site.lastTickAt = buildingNowMs();
+    s.buildings.wallet[res] = clamp(buildingWallet(res, s) + amount, 0, BUILDING_WALLET_CAP);
+    if (typeof save !== 'undefined' && s === save) persistOrToast('building/collect/' + def.id);
+    return { ok: true, amount, resourceId: res, buildingId: def.id };
+  } finally {
+    site._collectLock = false;
+  }
 }
 
 function buildingLabel(id, field) {
@@ -596,7 +619,7 @@ function migrateLegacyBuildingBag(raw) {
     if (!BUILDING_BY_ID[id] || !v || typeof v !== 'object') continue;
     const prev = factories[id] || emptyBuildingSite();
     const lv = Math.max(prev.level, Math.floor(Number(v.level) || 0));
-    const stored = Math.max(prev.stored, Math.floor(Number(v.stored) || 0));
+    const stored = Math.max(prev.stored, Number.isFinite(Number(v.stored)) ? Math.max(0, Number(v.stored)) : 0);
     const last = Math.max(prev.lastTickAt, Math.floor(Number(v.lastTickAt) || 0));
     factories[id] = { level: lv, stored, lastTickAt: last };
   }
@@ -626,7 +649,7 @@ function sanitizeBuildingSave(s) {
     const entry = migrated.factories[id] || {};
     const lv = clamp(Math.floor(Number(entry.level) || 0), 0, def.maxLevel);
     const cap = lv >= 1 ? (buildingOutputAtLevel(def, lv).cap || BUILDING_STORED_CAP_ABS) : 0;
-    const stored = lv >= 1 ? clamp(Math.floor(Number(entry.stored) || 0), 0, cap) : 0;
+    const stored = lv >= 1 ? buildingQuantizeStored(entry.stored, cap) : 0;
     let last = Math.floor(Number(entry.lastTickAt) || 0);
     if (last < 0 || last > 4102444800000) last = 0;
     if (lv <= 0 && stored <= 0 && last <= 0) continue;
