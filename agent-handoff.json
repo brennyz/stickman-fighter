@@ -1031,6 +1031,13 @@
       "text": "PRIORITY before mega-merge — more realism via motion on gear/pixel art. Flame flicker, glow pulse, rarity ring pulse, elite sparkle. Android-first, cheap, respect motionReduced/fxLite. Unique silhouettes stay. No Versus / schema / gates.",
       "status": "done-in-code",
       "updated": "2026-09-16"
+    },
+    {
+      "id": "w-20260916T105800",
+      "from": "user",
+      "text": "BUILDINGS UX (systems + screen flow): overview of 5 factories → tap card for detail → then upgrade sheet. One-tap collect on resource pill. Sticky wallet always shows owned spark/glue/chip/steam/echo. buildingDescModel produce+power lines. Dutch-first. Draft PR only — mega-merge, do NOT merge main.",
+      "status": "in-progress",
+      "updated": "2026-09-16"
     }
   ],
   "agentRules": [

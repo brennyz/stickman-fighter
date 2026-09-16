@@ -554,6 +554,82 @@ function buildingResourceLabel(resId) {
   return fallback;
 }
 
+function buildingTxt(key, fallback, params) {
+  if (typeof tOr === 'function') return tOr(key, fallback, params);
+  if (!fallback) return key;
+  if (!params) return fallback;
+  let out = String(fallback);
+  for (const [k, v] of Object.entries(params)) out = out.split('{' + k + '}').join(String(v));
+  return out;
+}
+
+function buildingPowerLabel(power) {
+  if (!power) return '';
+  return buildingTxt('buildings.power.' + power.id + '.label', power.label || power.id);
+}
+
+function buildingPowerBlurb(power) {
+  if (!power) return '';
+  return buildingTxt('buildings.power.' + power.id + '.blurb', power.blurb || '');
+}
+
+function buildingCostLabel(cost) {
+  if (!cost) return '';
+  const bits = [];
+  const pc = Math.max(0, Math.floor(Number(cost.petCoins) || 0));
+  if (pc) bits.push(buildingTxt('buildings.costPc', '{n} PC', { n: pc }));
+  const res = (cost.resources && typeof cost.resources === 'object') ? cost.resources : {};
+  for (const [k, v] of Object.entries(res)) {
+    const n = Math.max(0, Math.floor(Number(v) || 0));
+    if (!n) continue;
+    bits.push(buildingTxt('buildings.costRes', '{n} {res}', { n, res: buildingResourceLabel(k) }));
+  }
+  return bits.join(' · ');
+}
+
+function buildingArtSrc(id) {
+  const def = BUILDING_BY_ID[buildingCanonId(id)];
+  const canon = def ? def.id : buildingCanonId(id);
+  const stroke = (def && def.artHint && def.artHint.iconFile)
+    ? def.artHint.iconFile
+    : ('assets/buttons/modes/buildings-' + String(canon || '').replace(/_/g, '-') + '.svg');
+  return {
+    pixel: 'assets/buildings/' + canon + '.svg',
+    stroke,
+    hub: 'assets/buttons/hub/buildings.svg',
+  };
+}
+
+function buildingIslandName(world) {
+  const n = Math.max(1, Math.floor(Number(world) || 1));
+  try {
+    if (typeof islandLabel === 'function') return islandLabel(n, 'name');
+  } catch (_) {}
+  return buildingTxt('buildings.islandFallback', 'eiland {n}', { n });
+}
+
+function buildingWalletModel(st) {
+  const s = ensureBuildingSave(st);
+  if (s) buildingTickAll(s);
+  const wallet = buildingWallet(null, s);
+  const pc = Math.max(0, Math.floor(Number((buildingSaveRef(s) || {}).petCoins) || 0));
+  const resources = buildingResourceIds.map((id) => {
+    const def = BUILDINGS.find((b) => b.resourceId === id);
+    const built = !!(def && buildingBuilt(def.id, s));
+    const lv = def ? buildingLevel(def.id, s) : 0;
+    const out = built ? buildingOutputAtLevel(def, lv) : { perHour: 0, cap: 0 };
+    return {
+      id,
+      name: buildingResourceLabel(id),
+      amount: wallet[id] || 0,
+      rate: out.perHour || 0,
+      factoryId: def ? def.id : '',
+      built,
+    };
+  });
+  return { petCoins: pc, resources };
+}
+
 function buildingTooltipModel(id, st) {
   const def = BUILDING_BY_ID[buildingCanonId(id)];
   if (!def) return null;
@@ -591,7 +667,99 @@ function buildingTooltipModel(id, st) {
     powers: def.powers || [],
     powersUnlocked: powersOn,
     nextPower,
+    artSrc: buildingArtSrc(def.id),
+    nextCostLabel: buildingCostLabel(buildingNextCost(def.id, s)),
   };
+}
+
+/** UI copy model: produce line + power line, no hardcoded factory text in the screen. */
+function buildingDescModel(id, st) {
+  const tip = buildingTooltipModel(id, st);
+  if (!tip) return null;
+  const def = BUILDING_BY_ID[tip.id];
+  const islandName = buildingIslandName(tip.worldUnlock);
+  const lv0 = def && def.resource && def.resource.perHour ? (def.resource.perHour[0] || 0) : 0;
+  const unlockLine = tip.unlocked
+    ? ''
+    : buildingTxt('buildings.lockedWorldNamed', 'Nog dicht — speel {name} (eiland {n}) vrij.', {
+      name: islandName, n: tip.worldUnlock,
+    });
+  let produceLine;
+  if (!tip.unlocked) {
+    produceLine = buildingTxt('buildings.desc.produceLocked', 'Gaat {res} maken na unlock + bouwen.', {
+      res: tip.resourceName,
+    });
+  } else if (!tip.built) {
+    produceLine = buildingTxt('buildings.desc.produceUnbuilt', 'Bouwen: maakt daarna {res} ({n}/uur).', {
+      res: tip.resourceName, n: lv0,
+    });
+  } else {
+    produceLine = buildingTxt('buildings.desc.produce', 'Maakt {res}: {n}/uur · hopper max {cap}.', {
+      res: tip.resourceName, n: tip.outputRate, cap: tip.storageCap,
+    });
+  }
+  const currentPower = (def.powers || []).filter((p) => tip.powerRank >= p.rank).pop() || null;
+  const powerLine = currentPower
+    ? buildingTxt('buildings.desc.powerOn', 'Kracht rank {rank}: {label} — {blurb}', {
+      rank: tip.powerRank,
+      label: buildingPowerLabel(currentPower),
+      blurb: buildingPowerBlurb(currentPower),
+    })
+    : buildingTxt('buildings.desc.powerNone', 'Geen kracht tot de fabriek gebouwd is.');
+  const doesLine = !tip.unlocked
+    ? unlockLine
+    : !tip.built
+      ? buildingTxt('buildings.desc.doesUnbuilt', 'Maakt {res} · bouw om te starten', { res: tip.resourceName })
+      : buildingTxt('buildings.desc.does', '{res} {n}/uur · {power}', {
+        res: tip.resourceName,
+        n: tip.outputRate,
+        power: currentPower ? buildingPowerLabel(currentPower) : '—',
+      });
+  let nextLine = '';
+  if (tip.built && tip.level < tip.maxLevel) {
+    const nextLv = tip.level + 1;
+    const nextOut = buildingOutputAtLevel(def, nextLv);
+    const nextRank = buildingPowerRank(nextLv);
+    const newPower = (def.powers || []).find((p) => p.rank === nextRank && nextRank > tip.powerRank) || null;
+    const powerBit = newPower
+      ? buildingTxt('buildings.desc.nextPower', ' · nieuwe kracht: {label}', { label: buildingPowerLabel(newPower) })
+      : '';
+    nextLine = buildingTxt('buildings.desc.nextLv', 'Lv {n}: {res} {rate}/uur · cap {cap}{power}', {
+      n: nextLv, res: tip.resourceName, rate: nextOut.perHour, cap: nextOut.cap, power: powerBit,
+    });
+  } else if (tip.built && tip.level >= tip.maxLevel) {
+    nextLine = buildingTxt('buildings.upgradeMax', 'Max level');
+  } else if (!tip.built && tip.unlocked) {
+    const firstOut = buildingOutputAtLevel(def, 1);
+    const firstPower = (def.powers || []).find((p) => p.rank === 0) || null;
+    const powerBit = firstPower
+      ? buildingTxt('buildings.desc.nextPower', ' · nieuwe kracht: {label}', { label: buildingPowerLabel(firstPower) })
+      : '';
+    nextLine = buildingTxt('buildings.desc.nextLv', 'Lv {n}: {res} {rate}/uur · cap {cap}{power}', {
+      n: 1, res: tip.resourceName, rate: firstOut.perHour, cap: firstOut.cap, power: powerBit,
+    });
+  }
+  const powersDetail = (def.powers || []).map((p) => ({
+    id: p.id,
+    rank: p.rank,
+    kind: p.kind,
+    combatHook: p.combatHook,
+    label: buildingPowerLabel(p),
+    blurb: buildingPowerBlurb(p),
+    unlocked: tip.powerRank >= p.rank,
+  }));
+  return Object.assign({}, tip, {
+    produceLine,
+    powerLine,
+    doesLine,
+    unlockLine,
+    nextLine,
+    islandName,
+    currentPower: currentPower ? currentPower.id : '',
+    currentPowerLabel: currentPower ? buildingPowerLabel(currentPower) : '',
+    currentPowerBlurb: currentPower ? buildingPowerBlurb(currentPower) : '',
+    powersDetail,
+  });
 }
 
 function countBuildingLevels(st) {
@@ -678,5 +846,9 @@ try {
     globalThis.BUILDINGS = BUILDINGS;
     globalThis.BUILDING_BY_ID = BUILDING_BY_ID;
     globalThis.buildingResourceIds = buildingResourceIds;
+    globalThis.buildingDescModel = buildingDescModel;
+    globalThis.buildingWalletModel = buildingWalletModel;
+    globalThis.buildingArtSrc = buildingArtSrc;
+    globalThis.buildingCostLabel = buildingCostLabel;
   }
 } catch (_) {}

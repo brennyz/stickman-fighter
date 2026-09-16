@@ -96,8 +96,25 @@ Clock override: `globalThis.__sfBuildingNow = epochMs`.
 | `buildingPowerRank(id\|level, save?)` | `floor((lvl-1)/2)` (`-1` if unbuilt) |
 | `buildingWallet(resId?, save?)` | one amount, or full wallet if omitted |
 | `buildingTooltipModel(id, save?)` | card row: name, island, level, rank, costs, pending, `artHint`, `powersUnlocked` |
+| `buildingDescModel(id, save?)` | tooltip + `produceLine` + `powerLine` + `doesLine` + `unlockLine` + `nextLine` + `powersDetail` |
+| `buildingWalletModel(save?)` | `{ petCoins, resources: [{ id, name, amount, rate, factoryId, built }] }` |
+| `buildingArtSrc(id)` | `{ pixel, stroke, hub }` paths |
+| `buildingCostLabel(cost)` | localized PC + resource cost string |
 
 Power rows on each def: `{ rank, id, kind, combatHook, label, blurb }`. Unlocked when `buildingPowerRank(factory) >= rank`. Combat apply is the powers agent.
+
+`buildingDescModel` is the UI “does what” helper — do not hardcode factory copy in the screen. Schema unchanged.
+
+---
+
+## Screen flow (this UX PR)
+
+Overview (`#buildingsOverview` / `#buildingsList`) → tap card (`[data-factory-id]`) → detail (`#buildingsDetail`) → Upgrade opens `#buildingsUpgradeSheet`.
+
+- Resource pill `[data-buildings-collect]` = one-tap collect when `buildingCanCollect` (overview and detail).
+- Sticky `#buildingsWallet` always shows all five owned resources (+ pet coins).
+- Upgrade is **not** inline on overview cards.
+- HOME tile: Collectie hub `#btnBuildings` (HOME-stijl). Share URL stays `speel.html`.
 
 ---
 
@@ -106,10 +123,12 @@ Power rows on each def: `{ rank, id, kind, combatHook, label, blurb }`. Unlocked
 ```
 #buildingsScreen
 #buildingsWallet
-#buildingsList [data-factory-id="stick_lighter"|woodchip_glue|chipping_wood|bamboo_boesa|echo_whistle]
+#buildingsOverview #buildingsList [data-factory-id]
+#buildingsDetail
+#buildingsUpgradeSheet
 ```
 
-`UI.openBuildings()` / `UI.renderBuildings()` fill the stub. Optional hub tile `#btnBuildings` is already bound if UI adds the button.
+`UI.openBuildings()` / `UI.renderBuildings()` paint overview → detail → upgrade. Collectie hub tile `#btnBuildings`.
 
 Art: `def.artHint` + `ASSET-STYLE.md` (stroke-first, no emoji). Suggested files under `assets/buttons/modes/buildings-*.svg`.
 
