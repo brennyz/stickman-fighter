@@ -6,7 +6,7 @@ Mega-merge **3 of 4** — art + wire only. Canonical ids **exact-match** systems
 
 ## Motion (factory life)
 
-Brendon asked for more realism via motion. Life is **inside the card/stroke SVGs** (CSS `@keyframes`) so it still runs when the file is an `<img>` on Android Chrome / TWA. No JS, no filters, no extra files, no new `buildingId`s.
+Brendon asked for more realism via motion. Life is **inside the card/stroke SVGs** so it still runs when the file is an `<img>` on Android Chrome / TWA. **SMIL** (`<animate>` / `<animateTransform>`) is the Chrome-`<img>` path; CSS `@keyframes` + `prefers-reduced-motion` cover inline/object embeds. No JS, no filters, no extra files, no new `buildingId`s.
 
 | id | life | how |
 |----|------|-----|
