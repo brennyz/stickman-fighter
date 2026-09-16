@@ -2,41 +2,31 @@
 
 A **separate** cloud agent owns leftover stub pixels. This file is the contract.
 
-## W2 P1 — dedicated maps (Wave 3)
+## W2 — dedicated maps (36)
 
-These 18 arts paint unique 32×32 stickman-pixel maps. `MONSTER_ART_SLOTS[id].pixelStatus = 'pixel'`. Combat / book resolve the dedicated `MONSTER_PIXEL_ART[art]` first — **no `sp.pixel` alias**.
+All 36 W2 arts paint unique 32×32 stickman-pixel maps. `MONSTER_ART_SLOTS[id].pixelStatus = 'pixel'`. Combat / book resolve the dedicated `MONSTER_PIXEL_ART[art]` first — **no `sp.pixel` alias**.
 
-`wolf` `owl` `frog` `snake` `boar` `skeleton` `mummy` `beetle` `wasp` `spider` `drone` `bot` `scrapdog` `penguin` `yeti` `crab` `turtle` `squid`
+P1 (18, from #298): `wolf` `owl` `frog` `snake` `boar` `skeleton` `mummy` `beetle` `wasp` `spider` `drone` `bot` `scrapdog` `penguin` `yeti` `crab` `turtle` `squid`
+
+P2 (15): `raven` `moose` `beaver` `badger` `stag` `lynx` `wisp` `gargoyle` `lich` `cog` `turret` `rivet` `piston` `walrus` `ray`
+
+P3 (3): `mole` `junkbat` `seal`
 
 Canvas stub (`drawCatalogStubArt`) stays as fallback if a map is missing.
 
-## Reuse #282 pixels — P2/P3 + Wave 3
+## Reuse #282 pixels — Wave 3 only
 
 PR **#282** already shipped 34 art-family maps + 31 flagship species maps. Combat resolves:
 
 1. Dedicated map when `pixelStatus === 'pixel'` and `MONSTER_PIXEL_ART[art]` exists
 2. `sp.pixel` → `sp.id` → `sp.art` → canvas stub
 
-W2 P2/P3 and **Wave 3** species keep unique `art` IDs (biome / woods-crypt-scrap-frost-reef waves) but set **`SPECIES[id].pixel`** to a provisional ID. Tint uses each species `c1`/`c2`.
+**Wave 3** species keep unique `art` IDs (biome / woods-crypt-scrap-frost-reef waves) but set **`SPECIES[id].pixel`** to a provisional ID. Tint uses each species `c1`/`c2`.
 
 Aliases live in `src/data/monster-catalog.js` → `MONSTER_PIXEL_ALIAS`.
 
 | leftover `art` | `.pixel` (common–legendary) | `.pixel` mythic+ |
 |----------------|-----------------------------|------------------|
-| owl-family leftovers: `raven` `junkbat` | `bat` | — |
-| `moose` | `cow` | `holkoe` |
-| `beaver` | `pig` | — |
-| `badger` | `hedgehog` | — |
-| `stag` | `horse` | `holpaard` |
-| `lynx` | `tiger` | `razendetijger` |
-| `mole` | `slime` | `frostbub` |
-| `wisp` `lich` | `ghost` | — |
-| `gargoyle` | `dragon` | `omegadrake` |
-| `cog` `turret` | `can` | — |
-| `rivet` `piston` | `golem` | — |
-| `walrus` | `hippo` | `razendnijlpaard` |
-| `seal` | `duck` | — |
-| `ray` | `shark` | `levihaai` |
 | W3 `hawk` | `bat` | — |
 | W3 `ram` | `goat` | `kopstootgeit` |
 | W3 `cougar` | `tiger` | `razendetijger` |
@@ -80,7 +70,7 @@ Each row: `{ art, biome, type, shape, priority, pixelStatus, species[], count }`
 
 `art` is the **stable ID**. Filenames / canvas cases must match exactly.
 
-### P1 — unique pixels shipped
+### P1 — unique pixels shipped (#298)
 
 | art | biome | type | shape | variants (ids) |
 |-----|-------|------|-------|----------------|
@@ -103,7 +93,7 @@ Each row: `{ art, biome, type, shape, priority, pixelStatus, species[], count }`
 | `turtle` | sea | swim | tank | schildpadjong … helschild |
 | `squid` | sea | swim | swimmer | inktling … helinkt |
 
-### P2
+### P2 — unique pixels shipped
 
 | art | biome | type | shape |
 |-----|-------|------|-------|
@@ -123,7 +113,7 @@ Each row: `{ art, biome, type, shape, priority, pixelStatus, species[], count }`
 | `walrus` | frost | tank | tank |
 | `ray` | sea | swim | swimmer |
 
-### P3
+### P3 — unique pixels shipped
 
 | art | biome | type | shape |
 |-----|-------|------|-------|

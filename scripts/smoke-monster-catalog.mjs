@@ -19,6 +19,11 @@ const P1 = [
   'drone', 'bot', 'scrapdog', 'penguin', 'yeti',
   'crab', 'turtle', 'squid',
 ];
+const P2P3 = [
+  'raven', 'moose', 'beaver', 'badger', 'stag', 'lynx',
+  'wisp', 'gargoyle', 'lich', 'cog', 'turret', 'rivet', 'piston',
+  'walrus', 'ray', 'mole', 'junkbat', 'seal',
+];
 
 function fail(why) {
   console.error('SMOKE_FAIL monster-catalog:', why);
@@ -91,15 +96,15 @@ for (const art of arts) {
   if (ctx.__slots[art].pixelStatus === 'stub') stub++;
   if (ctx.__slots[art].pixelStatus === 'pixel') pixel++;
 }
-if (pixel !== 18) fail('expected 18 dedicated P1 pixel slots, got ' + pixel);
-if (stub < 30) fail('expected leftover stubs for P2/P3 + W3, got ' + stub);
+if (pixel !== 36) fail('expected 36 dedicated W2 pixel slots, got ' + pixel);
+if (stub !== 18) fail('expected 18 leftover W3 stubs, got ' + stub);
 
 const prov = ctx.__prov;
 const alias = ctx.__alias;
 if (!prov || prov.size < 60) fail('provisional pixel set missing');
-for (const art of P1) {
-  if (ctx.__slots[art].pixelStatus !== 'pixel') fail('P1 art not pixel: ' + art);
-  if (!maps.includes(art + ':')) fail('P1 map missing in monster-pixel-maps.js: ' + art);
+for (const art of P1.concat(P2P3)) {
+  if (ctx.__slots[art].pixelStatus !== 'pixel') fail('W2 art not pixel: ' + art);
+  if (!maps.includes(art + ':')) fail('W2 map missing in monster-pixel-maps.js: ' + art);
 }
 for (const art of arts) {
   if (ctx.__slots[art].pixelStatus === 'pixel') continue;
@@ -118,7 +123,7 @@ for (const id of ids) {
     missingPixel++;
   }
 }
-if (strayAlias) fail('P1 species still carry .pixel alias: ' + strayAlias);
+if (strayAlias) fail('dedicated W2 species still carry .pixel alias: ' + strayAlias);
 if (missingPixel) fail('stub species missing #282 pixel alias: ' + missingPixel);
 
 if (!game.includes('drawMonsterPixelArt')) fail('game.js missing drawMonsterPixelArt');

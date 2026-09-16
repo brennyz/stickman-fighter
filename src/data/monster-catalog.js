@@ -1,8 +1,8 @@
 /* ====================== MONSTER CATALOG W2+W3 (editor) ================= */
 /**
  * Data-driven family table — expands into SPECIES + UNLOCK_AT.
- * W2 P1 arts paint dedicated 32×32 maps (`pixelStatus: 'pixel'`).
- * W2 P2/P3 + W3 reuse #282 maps via SPECIES[id].pixel aliases.
+ * All 36 W2 arts paint dedicated 32×32 maps (`pixelStatus: 'pixel'`).
+ * W3 still reuses #282 maps via SPECIES[id].pixel aliases.
  *
  * Do not edit SPECIES by hand for catalog beasts — add a family row here.
  */
@@ -24,37 +24,37 @@ const MONSTER_ART_SLOTS = {
   frog:      { biome: 'wild',  type: 'hop',    shape: 'hopper',  priority: 1, pixelStatus: 'pixel', blurb: 'Eén sprong, twee problemen.' },
   snake:     { biome: 'wild',  type: 'charge', shape: 'swimmer', priority: 1, pixelStatus: 'pixel', blurb: 'Geen benen, wél tempo.' },
   boar:      { biome: 'wild',  type: 'charge', shape: 'quad',    priority: 1, pixelStatus: 'pixel', blurb: 'Slagtanden als bumper.' },
-  raven:     { biome: 'wild',  type: 'fly',    shape: 'flyer',   priority: 2, pixelStatus: 'stub', blurb: 'Krast alsof hij gelijk heeft.' },
-  moose:     { biome: 'wild',  type: 'tank',   shape: 'tank',    priority: 2, pixelStatus: 'stub', blurb: 'Gewei breder dan je plan.' },
-  beaver:    { biome: 'wild',  type: 'tank',   shape: 'quad',    priority: 2, pixelStatus: 'stub', blurb: 'Bouwt een dam van jouw combo.' },
-  badger:    { biome: 'wild',  type: 'charge', shape: 'quad',    priority: 2, pixelStatus: 'stub', blurb: 'Graaft eerst, bijt daarna.' },
-  stag:      { biome: 'wild',  type: 'charge', shape: 'quad',    priority: 2, pixelStatus: 'stub', blurb: 'Woud-koning met piek-gewei.' },
-  lynx:      { biome: 'wild',  type: 'charge', shape: 'quad',    priority: 2, pixelStatus: 'stub', blurb: 'Pluimoor, scherpe mening.' },
-  mole:      { biome: 'wild',  type: 'hop',    shape: 'hopper',  priority: 3, pixelStatus: 'stub', blurb: 'Komt van onder. Altijd.' },
+  raven:     { biome: 'wild',  type: 'fly',    shape: 'flyer',   priority: 2, pixelStatus: 'pixel', blurb: 'Krast alsof hij gelijk heeft.' },
+  moose:     { biome: 'wild',  type: 'tank',   shape: 'tank',    priority: 2, pixelStatus: 'pixel', blurb: 'Gewei breder dan je plan.' },
+  beaver:    { biome: 'wild',  type: 'tank',   shape: 'quad',    priority: 2, pixelStatus: 'pixel', blurb: 'Bouwt een dam van jouw combo.' },
+  badger:    { biome: 'wild',  type: 'charge', shape: 'quad',    priority: 2, pixelStatus: 'pixel', blurb: 'Graaft eerst, bijt daarna.' },
+  stag:      { biome: 'wild',  type: 'charge', shape: 'quad',    priority: 2, pixelStatus: 'pixel', blurb: 'Woud-koning met piek-gewei.' },
+  lynx:      { biome: 'wild',  type: 'charge', shape: 'quad',    priority: 2, pixelStatus: 'pixel', blurb: 'Pluimoor, scherpe mening.' },
+  mole:      { biome: 'wild',  type: 'hop',    shape: 'hopper',  priority: 3, pixelStatus: 'pixel', blurb: 'Komt van onder. Altijd.' },
   skeleton:  { biome: 'crypt', type: 'charge', shape: 'undead',  priority: 1, pixelStatus: 'pixel', blurb: 'Rammelt, maar raakt wél.' },
   mummy:     { biome: 'crypt', type: 'tank',   shape: 'undead',  priority: 1, pixelStatus: 'pixel', blurb: 'Verband als pantser.' },
   beetle:    { biome: 'crypt', type: 'hop',    shape: 'insect',  priority: 1, pixelStatus: 'pixel', blurb: 'Schild-kever, weinig praat.' },
   wasp:      { biome: 'crypt', type: 'fly',    shape: 'insect',  priority: 1, pixelStatus: 'pixel', blurb: 'Angel eerst, excuses nooit.' },
   spider:    { biome: 'crypt', type: 'shoot',  shape: 'insect',  priority: 1, pixelStatus: 'pixel', blurb: 'Web + afstand = irritant.' },
-  wisp:      { biome: 'crypt', type: 'shoot',  shape: 'shooter', priority: 2, pixelStatus: 'stub', blurb: 'Dwaallicht met slechte bedoelingen.' },
-  gargoyle:  { biome: 'crypt', type: 'fly',    shape: 'flyer',   priority: 2, pixelStatus: 'stub', blurb: 'Steen die dacht dat hij kon vliegen.' },
-  lich:      { biome: 'crypt', type: 'shoot',  shape: 'undead',  priority: 2, pixelStatus: 'stub', blurb: 'Te veel botten, te veel magie.' },
+  wisp:      { biome: 'crypt', type: 'shoot',  shape: 'shooter', priority: 2, pixelStatus: 'pixel', blurb: 'Dwaallicht met slechte bedoelingen.' },
+  gargoyle:  { biome: 'crypt', type: 'fly',    shape: 'flyer',   priority: 2, pixelStatus: 'pixel', blurb: 'Steen die dacht dat hij kon vliegen.' },
+  lich:      { biome: 'crypt', type: 'shoot',  shape: 'undead',  priority: 2, pixelStatus: 'pixel', blurb: 'Te veel botten, te veel magie.' },
   drone:     { biome: 'scrap', type: 'fly',    shape: 'mech',    priority: 1, pixelStatus: 'pixel', blurb: 'Zoemt, mikt, piept.' },
   bot:       { biome: 'scrap', type: 'shoot',  shape: 'mech',    priority: 1, pixelStatus: 'pixel', blurb: 'Blik met een laser-mening.' },
   scrapdog:  { biome: 'scrap', type: 'charge', shape: 'quad',    priority: 1, pixelStatus: 'pixel', blurb: 'Roest-hond. Kwispelt met ketting.' },
-  cog:       { biome: 'scrap', type: 'hop',    shape: 'mech',    priority: 2, pixelStatus: 'stub', blurb: 'Tandwiel dat terugbijt.' },
-  turret:    { biome: 'scrap', type: 'shoot',  shape: 'shooter', priority: 2, pixelStatus: 'stub', blurb: 'Blijft staan. Jij beweegt.' },
-  rivet:     { biome: 'scrap', type: 'tank',   shape: 'tank',    priority: 2, pixelStatus: 'stub', blurb: 'Klinknagels en slechte ideeën.' },
-  junkbat:   { biome: 'scrap', type: 'fly',    shape: 'flyer',   priority: 3, pixelStatus: 'stub', blurb: 'Vleermuis van sloopafval.' },
-  piston:    { biome: 'scrap', type: 'charge', shape: 'mech',    priority: 2, pixelStatus: 'stub', blurb: 'Hydrauliek met een deadline.' },
+  cog:       { biome: 'scrap', type: 'hop',    shape: 'mech',    priority: 2, pixelStatus: 'pixel', blurb: 'Tandwiel dat terugbijt.' },
+  turret:    { biome: 'scrap', type: 'shoot',  shape: 'shooter', priority: 2, pixelStatus: 'pixel', blurb: 'Blijft staan. Jij beweegt.' },
+  rivet:     { biome: 'scrap', type: 'tank',   shape: 'tank',    priority: 2, pixelStatus: 'pixel', blurb: 'Klinknagels en slechte ideeën.' },
+  junkbat:   { biome: 'scrap', type: 'fly',    shape: 'flyer',   priority: 3, pixelStatus: 'pixel', blurb: 'Vleermuis van sloopafval.' },
+  piston:    { biome: 'scrap', type: 'charge', shape: 'mech',    priority: 2, pixelStatus: 'pixel', blurb: 'Hydrauliek met een deadline.' },
   penguin:   { biome: 'frost', type: 'hop',    shape: 'hopper',  priority: 1, pixelStatus: 'pixel', blurb: 'Waddelt. Tot hij sprint.' },
   yeti:      { biome: 'frost', type: 'tank',   shape: 'tank',    priority: 1, pixelStatus: 'pixel', blurb: 'Sneeuwman die terugslaat.' },
-  walrus:    { biome: 'frost', type: 'tank',   shape: 'tank',    priority: 2, pixelStatus: 'stub', blurb: 'Slagtand-zee. Zwaar.' },
-  seal:      { biome: 'frost', type: 'hop',    shape: 'hopper',  priority: 3, pixelStatus: 'stub', blurb: 'Glibbert uit je timing.' },
+  walrus:    { biome: 'frost', type: 'tank',   shape: 'tank',    priority: 2, pixelStatus: 'pixel', blurb: 'Slagtand-zee. Zwaar.' },
+  seal:      { biome: 'frost', type: 'hop',    shape: 'hopper',  priority: 3, pixelStatus: 'pixel', blurb: 'Glibbert uit je timing.' },
   crab:      { biome: 'sea',   type: 'swim',   shape: 'insect',  priority: 1, pixelStatus: 'pixel', blurb: 'Schaar links, schaar rechts.' },
   turtle:    { biome: 'sea',   type: 'swim',   shape: 'tank',    priority: 1, pixelStatus: 'pixel', blurb: 'Schild. Daarna nog een schild.' },
   squid:     { biome: 'sea',   type: 'swim',   shape: 'swimmer', priority: 1, pixelStatus: 'pixel', blurb: 'Armen genoeg voor iedereen.' },
-  ray:       { biome: 'sea',   type: 'swim',   shape: 'swimmer', priority: 2, pixelStatus: 'stub', blurb: 'Glijdt alsof water optioneel is.' },
+  ray:       { biome: 'sea',   type: 'swim',   shape: 'swimmer', priority: 2, pixelStatus: 'pixel', blurb: 'Glijdt alsof water optioneel is.' },
   /* Wave 3 — deepen wild / crypt / scrap (+ frost/sea). Stub + alias until unique pixels. */
   hawk:      { biome: 'wild',  type: 'fly',    shape: 'flyer',   priority: 1, pixelStatus: 'stub', blurb: 'Duikt alsof jij de muis bent.' },
   ram:       { biome: 'wild',  type: 'charge', shape: 'quad',    priority: 1, pixelStatus: 'stub', blurb: 'Hoorns eerst, excuses later.' },
@@ -85,8 +85,8 @@ const CATALOG_P1_PIXEL_ARTS = new Set(Object.keys(MONSTER_ART_SLOTS).filter((id)
 
 /**
  * #282 provisional pixel IDs (art families + flagship SPECIES keys).
- * W2 keeps unique `art` for biome/waves; `sp.pixel` aliases these so
- * `monsterPixelKey` (pixel PR) can tint existing maps — no art redo.
+ * W3 keeps unique `art` for biome/waves; `sp.pixel` aliases these so
+ * stub slots can tint existing #282 maps. Dedicated W2 slots skip aliases.
  * See MONSTER-PIXEL-MAP.md on cursor/monster-pixel-art-6c6b / PR #282.
  */
 const MONSTER_PIXEL_PROVISIONAL = {

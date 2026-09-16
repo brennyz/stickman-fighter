@@ -1,13 +1,13 @@
 # Monster pixel ID map
 
-#282 farm/zoo/classic maps plus **unique W2 P1 drawers** (Wave 3) and leftover W2/W3 aliases.
+#282 farm/zoo/classic maps plus **unique W2 P1 + P2 + P3 drawers**. W3 leftover aliases remain.
 
-Editor: [Monster editor double roster](https://cursor.com/agents/bc-43a25a67-7182-5f4f-ab63-6412cd05e154)
+Stacked on editor Wave 3 ([PR #298](https://github.com/brennyz/stickman-fighter/pull/298)). P1 drawers stay in `scripts/gen-monster-pixels.mjs`; P2+P3 live in `scripts/w2-p2p3-pixel-drawers.mjs`.
 
 Resolution order in combat / dex:
 
-1. Dedicated map when `MONSTER_ART_SLOTS[sp.art].pixelStatus === 'pixel'` and `MONSTER_PIXEL_ART[art]` exists (W2 P1: `wolf`, `owl`, `frog`, `snake`, `boar`, `skeleton`, `mummy`, `beetle`, `wasp`, `spider`, `drone`, `bot`, `scrapdog`, `penguin`, `yeti`, `crab`, `turtle`, `squid`)
-2. `sp.pixel` if it names a species or art map (W2 P2/P3 + W3 aliases + #282 flagships)
+1. Dedicated map when `MONSTER_ART_SLOTS[sp.art].pixelStatus === 'pixel'` and `MONSTER_PIXEL_ART[art]` exists (W2 P1: `wolf`, `owl`, `frog`, `snake`, `boar`, `skeleton`, `mummy`, `beetle`, `wasp`, `spider`, `drone`, `bot`, `scrapdog`, `penguin`, `yeti`, `crab`, `turtle`, `squid`; W2 P2+P3: `raven`, `moose`, `beaver`, `badger`, `stag`, `lynx`, `wisp`, `gargoyle`, `lich`, `cog`, `turret`, `rivet`, `piston`, `walrus`, `ray`, `mole`, `junkbat`, `seal`)
+2. `sp.pixel` if it names a species or art map (W3 aliases + #282 flagships)
 3. `sp.id` species map (flagship)
 4. `sp.art` family map
 5. canvas stub / `drawBeastArt` / `drawMonsterArt` fallback
@@ -16,30 +16,21 @@ Preview: [assets/monsters/preview.html](assets/monsters/preview.html)
 
 ## W2 P1 — dedicated maps
 
-These 18 arts paint their own 32×32 map. `SPECIES[id].pixel` is omitted so combat/book do not reuse fox/bat/slime stand-ins.
+These 18 arts paint their own 32×32 map (from #298). `SPECIES[id].pixel` is omitted.
 
-## W2 P2/P3 art → #282 pixel alias
+`wolf`, `owl`, `frog`, `snake`, `boar`, `skeleton`, `mummy`, `beetle`, `wasp`, `spider`, `drone`, `bot`, `scrapdog`, `penguin`, `yeti`, `crab`, `turtle`, `squid`
+
+## W2 P2 + P3 — dedicated maps
+
+These 18 arts now also paint their own 32×32 map. Aliases are not assigned (`catalogPixelFor` returns null when `pixelStatus === 'pixel'`).
+
+`raven`, `moose`, `beaver`, `badger`, `stag`, `lynx`, `wisp`, `gargoyle`, `lich`, `cog`, `turret`, `rivet`, `piston`, `walrus`, `ray`, `mole`, `junkbat`, `seal`
+
+## W2 leftover aliases
 
 | W2 art | .pixel (common–legendary) | .pixel mythic+ |
 |--------|---------------------------|----------------|
-| `raven` | `bat` | — |
-| `moose` | `cow` | `holkoe` |
-| `beaver` | `pig` | — |
-| `badger` | `hedgehog` | — |
-| `stag` | `horse` | `holpaard` |
-| `lynx` | `tiger` | `razendetijger` |
-| `mole` | `slime` | `frostbub` |
-| `wisp` | `ghost` | — |
-| `gargoyle` | `dragon` | `omegadrake` |
-| `lich` | `ghost` | — |
-| `cog` | `can` | — |
-| `turret` | `can` | — |
-| `rivet` | `golem` | — |
-| `junkbat` | `bat` | — |
-| `piston` | `golem` | — |
-| `walrus` | `hippo` | `razendnijlpaard` |
-| `seal` | `duck` | — |
-| `ray` | `shark` | `levihaai` |
+| — | — | alle 36 W2 arts hebben een eigen map |
 
 ## W3 art → #282 pixel alias
 
@@ -64,7 +55,7 @@ These 18 arts paint their own 32×32 map. `SPECIES[id].pixel` is omitted so comb
 | `mammoth` | `elephant` | `reuzenolifant` |
 | `urchin` | `hedgehog` | — |
 
-## #282 slots
+## #282 + W2 slots
 
 | provisionalId | kind | file | wires to |
 |---------------|------|------|----------|
@@ -120,6 +111,24 @@ These 18 arts paint their own 32×32 map. `SPECIES[id].pixel` is omitted so comb
 | `crab` | art | `assets/monsters/art-crab.svg` | all SPECIES with `art:'crab'` without a species pixel |
 | `turtle` | art | `assets/monsters/art-turtle.svg` | all SPECIES with `art:'turtle'` without a species pixel |
 | `squid` | art | `assets/monsters/art-squid.svg` | all SPECIES with `art:'squid'` without a species pixel |
+| `raven` | art | `assets/monsters/art-raven.svg` | all SPECIES with `art:'raven'` without a species pixel |
+| `moose` | art | `assets/monsters/art-moose.svg` | all SPECIES with `art:'moose'` without a species pixel |
+| `beaver` | art | `assets/monsters/art-beaver.svg` | all SPECIES with `art:'beaver'` without a species pixel |
+| `badger` | art | `assets/monsters/art-badger.svg` | all SPECIES with `art:'badger'` without a species pixel |
+| `stag` | art | `assets/monsters/art-stag.svg` | all SPECIES with `art:'stag'` without a species pixel |
+| `lynx` | art | `assets/monsters/art-lynx.svg` | all SPECIES with `art:'lynx'` without a species pixel |
+| `wisp` | art | `assets/monsters/art-wisp.svg` | all SPECIES with `art:'wisp'` without a species pixel |
+| `gargoyle` | art | `assets/monsters/art-gargoyle.svg` | all SPECIES with `art:'gargoyle'` without a species pixel |
+| `lich` | art | `assets/monsters/art-lich.svg` | all SPECIES with `art:'lich'` without a species pixel |
+| `cog` | art | `assets/monsters/art-cog.svg` | all SPECIES with `art:'cog'` without a species pixel |
+| `turret` | art | `assets/monsters/art-turret.svg` | all SPECIES with `art:'turret'` without a species pixel |
+| `rivet` | art | `assets/monsters/art-rivet.svg` | all SPECIES with `art:'rivet'` without a species pixel |
+| `piston` | art | `assets/monsters/art-piston.svg` | all SPECIES with `art:'piston'` without a species pixel |
+| `walrus` | art | `assets/monsters/art-walrus.svg` | all SPECIES with `art:'walrus'` without a species pixel |
+| `ray` | art | `assets/monsters/art-ray.svg` | all SPECIES with `art:'ray'` without a species pixel |
+| `mole` | art | `assets/monsters/art-mole.svg` | all SPECIES with `art:'mole'` without a species pixel |
+| `junkbat` | art | `assets/monsters/art-junkbat.svg` | all SPECIES with `art:'junkbat'` without a species pixel |
+| `seal` | art | `assets/monsters/art-seal.svg` | all SPECIES with `art:'seal'` without a species pixel |
 | `holkoe` | species | `assets/monsters/sp-holkoe.svg` | `holkoe` (art `cow`) |
 | `razendzwijn` | species | `assets/monsters/sp-razendzwijn.svg` | `razendzwijn` (art `pig`) |
 | `kipophol` | species | `assets/monsters/sp-kipophol.svg` | `kipophol` (art `chicken`) |
@@ -154,10 +163,10 @@ These 18 arts paint their own 32×32 map. `SPECIES[id].pixel` is omitted so comb
 
 ## Coverage
 
-- **52 art families** — farm (10) + zoo (14) + classic/sea (10) + W2 P1 (18).
+- **70 art families** — farm (10) + zoo (14) + classic/sea (10) + W2 P1 (18) + W2 P2/P3 (18).
 - **31 flagship species** — farm/zoo commons + a few mythic/void variants.
-- **18 W2 P1 arts** have dedicated maps + `pixelStatus='pixel'`.
-- **W2 P2/P3 + W3** stay aliased onto the #282 set until a later unique-pixel pass.
+- **36 W2 arts** have dedicated maps + `pixelStatus='pixel'`.
+- **W3 (18)** stay aliased onto the #282 set until a later unique-pixel pass.
 - Files are 32×32 crisp SVG (RLE rects), typically 1–3 KB.
 - Combat paint is from JS maps (no Image decode) so a missing SVG never blanks a fighter.
 
