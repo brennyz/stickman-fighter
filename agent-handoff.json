@@ -39,7 +39,7 @@
     "pendingMerge": [
       {
         "pr": 305,
-        "title": "Unique gear pickup silhouettes + rarity ring",
+        "title": "Unique gear pickup silhouettes + living motion",
         "branch": "cursor/gear-pixel-pickup-dace"
       }
     ]
@@ -49,6 +49,13 @@
       "id": "w-20260916T110200",
       "from": "user",
       "text": "UPGRADE world-drop PIXEL ART + pickup feel (loot lane). Unique readable silhouettes (expand templates / per-id overrides) so early/common lootable items and each slot archetype are distinguishable at pickup scale on Android. Keep SVG assets in sync via gearPixelsToSvg. Rare/elite/superBoss pickup scale + rarity ring. Gates untouched. No Versus.",
+      "status": "done-in-code",
+      "updated": "2026-09-16"
+    },
+    {
+      "id": "w-20260916T112200",
+      "from": "user",
+      "text": "PRIORITY before mega-merge — MORE REALISM VIA MOTION on gear/pixel art. Living weapon FX (flickering flame/fakkel, glow pulse), snappier pickup/equip motion, stickman-ready pose energy where loot lane draws gear. Android-first, lightweight, no Versus. Document on PR #305.",
       "status": "done-in-code",
       "updated": "2026-09-16"
     },
@@ -927,6 +934,10 @@
   ],
   "sessionLog": [
     {
+      "at": "2026-09-16T11:38:37Z",
+      "summary": "Living gear pickup motion on #305: spawn pop, 3-frame hell fakkel, ready tilt, collect snap-to-stickman; liteFx skips. smoke:gear-drops green."
+    },
+    {
       "at": "2026-09-16T11:22:00Z",
       "summary": "Cheap gear pickup motion on #305: hell flicker, void/aura glow, ring pulse, elite sparkle; liteFx skips. smoke:gear-drops still green."
     },
@@ -1021,10 +1032,6 @@
     {
       "at": "2026-09-14T12:44:05Z",
       "summary": "Toast-wachtrij: één tegelijk, Android Chrome/TWA zelfde HTML onder statusbalk · v1.18.156 / SW 366"
-    },
-    {
-      "at": "2026-09-14T12:41:28Z",
-      "summary": "Start toast-wachtrij: één tegelijk, Android Chrome/TWA"
     }
   ],
   "implementedFeaturesSummary": "d18 char select deel 1+2 (v1.11.1-2); Mats coinrun + shuriken mik/vliegers + anti-spam (v1.12.0); speel.html (v1.12.2+). Zie HANDOFF-ZOEKINDEX.md en improvement-d20-bag.json userFeatureLog.",

@@ -1215,9 +1215,20 @@ function gearPixelColor(ch, tint) {
   return GEAR_PIXEL_PALETTE[ch] || null;
 }
 
-function drawGearPixels(c, id, x, y, scale) {
+function gearLivingPixels(id, frame) {
+  const it = gearById(id);
+  const theme = gearPickupTheme(it);
+  if (!theme || !theme.flame) return [];
+  const f = ((frame % 3) + 3) % 3;
+  if (f === 0) return [{ i: 7, j: 2, ch: 'C' }, { i: 7, j: 0, ch: 'C' }, { i: 8, j: 1, ch: 'f' }];
+  if (f === 1) return [{ i: 7, j: 2, ch: 'f' }, { i: 6, j: 1, ch: 'C' }, { i: 7, j: 0, ch: 'f' }, { i: 8, j: 0, ch: 'C' }];
+  return [{ i: 7, j: 2, ch: 'C' }, { i: 8, j: 0, ch: 'C' }, { i: 7, j: 1, ch: 'f' }, { i: 9, j: 1, ch: 'C' }];
+}
+
+function drawGearPixels(c, id, x, y, scale, opts) {
   const rows = gearPixelRows(id);
   if (!rows || !c) return false;
+  opts = opts || {};
   const tint = rows._tint || GEAR_TINTS.cloth;
   const sc = scale > 0 ? scale : 2;
   const n = rows.length;
@@ -1225,6 +1236,11 @@ function drawGearPixels(c, id, x, y, scale) {
   c.imageSmoothingEnabled = false;
   if ('webkitImageSmoothingEnabled' in c) c.webkitImageSmoothingEnabled = false;
   if ('mozImageSmoothingEnabled' in c) c.mozImageSmoothingEnabled = false;
+  if (opts.tilt) {
+    c.translate(x, y);
+    c.rotate(opts.tilt);
+    c.translate(-x, -y);
+  }
   const ox = Math.round(x - (n * sc) / 2);
   const oy = Math.round(y - (n * sc) / 2);
   for (let j = 0; j < n; j++) {
@@ -1235,6 +1251,13 @@ function drawGearPixels(c, id, x, y, scale) {
       c.fillStyle = col;
       c.fillRect(ox + i * sc, oy + j * sc, sc, sc);
     }
+  }
+  const extras = (opts.live !== false) ? gearLivingPixels(id, opts.frame || 0) : [];
+  for (let e = 0; e < extras.length; e++) {
+    const col = gearPixelColor(extras[e].ch, tint);
+    if (!col) continue;
+    c.fillStyle = col;
+    c.fillRect(ox + extras[e].i * sc, oy + extras[e].j * sc, sc, sc);
   }
   c.restore();
   return true;
@@ -1296,6 +1319,23 @@ function gearPickupFeel(itemOrId, dropTier) {
   return { scale: scale, ring: ring, orbR: orbR, rank: rank };
 }
 
+/** Spawn pop + ready tilt. Snappy overshoot, then settle. */
+function gearPickupMotion(pk, feel) {
+  const age = pk && pk.age != null ? Number(pk.age) : 1;
+  let pop = 1;
+  if (age < 0.2) {
+    const u = Math.max(0, Math.min(1, age / 0.2));
+    pop = 0.28 + u * u * 1.02;
+    if (u > 0.7) pop = 1.3 - (u - 0.7) * 1;
+  }
+  const snap = pk && pk._snapT > 0 ? Math.max(0.22, pk._snapT / 0.16) : 1;
+  pop *= snap;
+  const live = typeof gearPickupFxAllowed === 'function' ? gearPickupFxAllowed() : true;
+  const tilt = live ? Math.sin((pk && pk.t) || 0) * 0.18 : 0;
+  const frame = Math.floor((((pk && pk.t) || 0) * 8)) % 3;
+  return { pop: pop, tilt: tilt, frame: frame, sway: live ? Math.sin(((pk && pk.t) || 0) * 4.3) * ((feel && feel.rank >= 2) ? 2.1 : 1.1) : 0 };
+}
+
 function gearPickupFxAllowed() {
   try {
     if (typeof motionReduced === 'function' && motionReduced()) return false;
@@ -1324,6 +1364,7 @@ function gearPickupDrawFx(c, pk, y, feel) {
   const theme = gearPickupTheme(it);
   const t = Number(pk.t) || 0;
   const tau = Math.PI * 2;
+  const frame = Math.floor(t * 8) % 3;
   c.save();
   if (feel.ring) {
     const pulse = 0.5 + 0.5 * Math.sin(t * 3.1);
@@ -1335,28 +1376,40 @@ function gearPickupDrawFx(c, pk, y, feel) {
     c.stroke();
   }
   if (theme.flame) {
-    const flick = 0.45 + 0.55 * (0.5 + 0.5 * Math.sin(t * 13.7 + (pk.x || 0)));
-    c.globalAlpha = 0.2 + flick * 0.3;
+    const tongues = frame === 0
+      ? [[0, -4], [2, -7]]
+      : (frame === 1 ? [[-3, -5], [0, -8], [3, -4]] : [[2, -6], [-2, -3]]);
     c.fillStyle = '#ff6a3d';
-    c.fillRect(Math.round(pk.x - 1), Math.round(y - feel.orbR - 2 - flick * 3), 2, 3);
+    for (let i = 0; i < tongues.length; i++) {
+      c.globalAlpha = 0.6 + (i === 0 ? 0.28 : 0);
+      c.fillRect(Math.round(pk.x + tongues[i][0]), Math.round(y - feel.orbR + tongues[i][1]), 2, 4);
+    }
+    c.globalAlpha = 0.9;
     c.fillStyle = '#ffd75e';
-    c.fillRect(Math.round(pk.x - 1), Math.round(y - feel.orbR - 1), 2, 2);
+    c.fillRect(Math.round(pk.x - 1), Math.round(y - feel.orbR - 2), 2, 3);
   }
   if (theme.glow) {
     const glow = 0.5 + 0.5 * Math.sin(t * 2.2);
-    c.globalAlpha = 0.1 + glow * 0.16;
     c.strokeStyle = '#7cf5ff';
     c.lineWidth = 1.5;
+    c.globalAlpha = 0.1 + glow * 0.14;
     c.beginPath();
     c.arc(pk.x, y, feel.orbR + 6 + glow * 2.2, 0, tau);
     c.stroke();
+    c.globalAlpha = 0.06 + glow * 0.08;
+    c.beginPath();
+    c.arc(pk.x, y, feel.orbR + 9 + glow * 2, 0, tau);
+    c.stroke();
   }
   if (pk.dropTier === 'elite' || pk.dropTier === 'superBoss') {
-    if (Math.sin(t * 9 + 1.2) > 0.35) {
-      c.globalAlpha = 0.85;
+    if (Math.sin(t * 9 + 1.2) > 0.2) {
+      c.globalAlpha = 0.9;
       c.fillStyle = '#ffe259';
       c.fillRect(Math.round(pk.x + 8), Math.round(y - 10), 2, 2);
       c.fillRect(Math.round(pk.x - 10), Math.round(y + 6), 2, 2);
+      if (pk.dropTier === 'superBoss') {
+        c.fillRect(Math.round(pk.x + 4), Math.round(y + 9), 2, 2);
+      }
     }
   }
   c.restore();

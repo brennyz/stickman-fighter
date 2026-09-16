@@ -295,6 +295,27 @@ if (run("gearPickupDrawFx({ save(){}, restore(){}, beginPath(){}, arc(){}, strok
 }
 run('save.liteFx = false');
 if (run('Object.keys(GEAR_PIXEL_BY_ID).length') !== 131) fail('GEAR_PIXEL_BY_ID must cover 131 ids');
+const pop0 = run("gearPickupMotion({ age: 0, t: 0 }, { rank: 0 })");
+if (!pop0 || !(pop0.pop < 0.5)) fail('spawn pop should start small');
+const pop1 = run("gearPickupMotion({ age: 1, t: 2 }, { rank: 2 })");
+if (!pop1 || Math.abs(pop1.pop - 1) > 0.05) fail('settled pickup pop should be ~1');
+const live0 = run("gearLivingPixels('back_wings_hell', 0).length");
+const live1 = run("gearLivingPixels('back_wings_hell', 1).length");
+const live2 = run("gearLivingPixels('back_wings_hell', 2).length");
+if (!(live0 >= 2 && live1 >= 2 && live2 >= 2)) fail('hell living pixels need 3-frame fakkel');
+if (run("gearLivingPixels('head_bandana_blue', 0).length") !== 0) fail('common cloth should not grow flame pixels');
+run(`
+  globalThis.__gearRects2 = 0;
+  drawGearPixels({
+    save() {}, restore() {}, imageSmoothingEnabled: true, translate() {}, rotate() {},
+    fillRect() { globalThis.__gearRects2++; },
+  }, 'back_wings_hell', 0, 0, 2, { frame: 1, tilt: 0.1 });
+`);
+if (!(run('__gearRects2 > 8'))) fail('drawGearPixels+opts drew too few pixels');
+run('save.liteFx = true');
+const liteM = run("gearPickupMotion({ age: 1, t: 2 }, { rank: 3 })");
+if (!liteM || liteM.tilt !== 0 || liteM.sway !== 0) fail('liteFx should zero tilt/sway');
+run('save.liteFx = false');
 
 run(`
   globalThis.__gearPk = null;

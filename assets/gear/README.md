@@ -9,3 +9,5 @@ node scripts/render-gear-assets.mjs
 ```
 
 Not SW-precached (Android first-load). Combat pickups blit pixels from JS.
+
+Canvas-only pickup motion (skipped when `motionReduced()` / `fxLite()` / `save.liteFx`): spawn pop, ready tilt, hell 3-frame fakkel, glow/ring pulse, collect snap. SVGs stay static. Preview: `_preview/_pickup-motion.html`.

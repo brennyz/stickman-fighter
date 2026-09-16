@@ -44,7 +44,12 @@ Contract v1 (Grok): `ownedGear[id] = { gearId, at }`. Catalog IDs are **#280**, 
 
 Android: max 3 gear orbs, skip Satan/Tide, 58px touch grab, canvas pixels (`imageSmoothingEnabled = false`).
 Rare / epic+ pickups draw a thin rarity ring and scale 2.25–2.75 (elite / superBoss bump). Common stays scale 2.
-Canvas-only motion (skipped when `motionReduced()` / `fxLite()` / `save.liteFx`): hell flame flicker, void/crystal/aura glow pulse, rarity-ring pulse, elite sparkle. Static SVGs stay still.
+Canvas-only motion (skipped when `motionReduced()` / `fxLite()` / `save.liteFx`):
+- spawn pop (0.2s overshoot) + snappy bounce bob + ready tilt
+- hell 3-frame fakkel on the sprite + tongue flicker
+- void/crystal/aura double glow pulse + rarity-ring pulse
+- collect snap (orb flies to the stickman, 0.16s) + fatter burst
+Static SVGs stay still. Preview: `assets/gear/_preview/_pickup-motion.html`.
 
 ## Art preview
 
