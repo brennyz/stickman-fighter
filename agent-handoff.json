@@ -21,22 +21,48 @@
     "pushBlocked": null,
     "shareUrl": "https://brennyz.github.io/stickman-fighter/speel.html",
     "note": "PLAYTEST HARDEN lane on cursor/playtest-harden-cycles-a78c. Base still v1.18.172 / SW 382. Waiting for cycle P0/P1 findings.",
-    "updated": "2026-09-16T12:37:39Z",
-    "localMainHead": "a18fc9e67633773cb18b638c64c9a86916d02d27",
-    "remoteMainHead": "a18fc9e67633773cb18b638c64c9a86916d02d27"
+    "updated": "2026-09-16T12:39:17Z",
+    "localMainHead": "aa24036e617729d9893b6520902ca190afb5d0d7",
+    "remoteMainHead": "a7a4b74ed34c3e8c131dc4e2a6cf4579bfca8631"
   },
   "githubSync": {
     "policy": "Trigger van de user: «merge main» = commit (als nodig) + push origin/main. Daarna GitHub Pages (~1–3 min) → speel.html is LIVE. Niet stil pushen. Houd pendingUpload bij tot origin/main gelijk is.",
-    "pcEqualsMain": true,
-    "localHead": "a18fc9e67633773cb18b638c64c9a86916d02d27",
-    "remoteMainHead": "a18fc9e67633773cb18b638c64c9a86916d02d27",
-    "ahead": 0,
+    "pcEqualsMain": false,
+    "localHead": "aa24036e617729d9893b6520902ca190afb5d0d7",
+    "remoteMainHead": "a7a4b74ed34c3e8c131dc4e2a6cf4579bfca8631",
+    "ahead": 1,
     "behind": 0,
-    "dirty": false,
-    "lastChecked": "2026-09-16T12:31:58Z",
+    "dirty": true,
+    "lastChecked": "2026-09-16T12:39:17Z",
     "lastAsked": "2026-08-17T14:01:21Z",
-    "pendingUpload": [],
-    "pendingMerge": []
+    "pendingUpload": [
+      {
+        "id": "file-agent-handoff.json",
+        "kind": "file",
+        "text": "agent-handoff.json"
+      },
+      {
+        "id": "file-docs-PLAYTEST-HARDEN-CYCLES.md",
+        "kind": "file",
+        "text": "docs/PLAYTEST-HARDEN-CYCLES.md"
+      },
+      {
+        "id": "commit-aa24036",
+        "kind": "commit",
+        "text": "aa24036 docs: stub playtest-harden-cycles checklist (parked)"
+      }
+    ],
+    "pendingMerge": [
+      {
+        "id": "pr-311",
+        "kind": "pr",
+        "ref": "#311",
+        "title": "playtest-harden-cycles",
+        "status": "draft",
+        "url": "https://github.com/brennyz/stickman-fighter/pull/311",
+        "note": "Niet op main."
+      }
+    ]
   },
   "userWishlist": [
     {
@@ -1066,6 +1092,10 @@
   ],
   "sessionLog": [
     {
+      "at": "2026-09-16T12:39:13Z",
+      "summary": "PLAYTEST HARDEN stub PR #311 parked — cycle checklist + baseline smokes green on v1.18.172 / SW 382. Waiting for P0/P1 findings."
+    },
+    {
       "at": "2026-09-16T12:37:39Z",
       "summary": "PLAYTEST HARDEN stub: branch + checklist PR playtest-harden-cycles. Parked for cycle findings. Base v1.18.172 / SW 382."
     },
@@ -1160,10 +1190,6 @@
     {
       "at": "2026-09-14T12:45:42Z",
       "summary": "P1 entry: Android-first landing — geen iPad-blok op Android"
-    },
-    {
-      "at": "2026-09-14T12:44:05Z",
-      "summary": "Toast-wachtrij: één tegelijk, Android Chrome/TWA zelfde HTML onder statusbalk · v1.18.156 / SW 366"
     }
   ],
   "implementedFeaturesSummary": "d18 char select deel 1+2 (v1.11.1-2); Mats coinrun + shuriken mik/vliegers + anti-spam (v1.12.0); speel.html (v1.12.2+). Zie HANDOFF-ZOEKINDEX.md en improvement-d20-bag.json userFeatureLog.",

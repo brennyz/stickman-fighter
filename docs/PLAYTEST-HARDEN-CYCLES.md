@@ -98,11 +98,25 @@ Adventure + Training feel · `#fomoRitual` (todayKey / streak / missions) · EN/
 
 **Open P0/P1:** _(none yet)_
 
+## Baseline smoke (2026-09-16, no findings yet)
+
+Ran on this branch (docs-only, same `game.js` as `origin/main` v1.18.172 / SW 382). All green:
+
+- A: `smoke:upgrades` · `smoke:menu` · `smoke:nav` · `smoke:p0p3-uiux` · `smoke:aim-indicator` · `smoke:unify-ui`
+- B: `smoke:summon` · `smoke:playtest-p1`
+- C: `smoke:gear` · `smoke:gear-screen` · `smoke:equip-look` · `smoke:gear-drops`
+- D: `smoke:buildings` · `smoke:buildings-ui` · `smoke:buildings-powers` · `smoke:building-pixels`
+- E: `smoke:seasons` · `smoke:season` · `smoke:season-art` · `smoke:audio-themes`
+- F: `smoke:training` · `smoke:adventure` · `smoke:fomo-pra` · `smoke:i18n-locale` · `smoke:i18n-switch` · `smoke:toast-queue` · `smoke:aim-tutorial`
+- Boot: `npm run check` · `npm run smoke` · `npm run check:critical`
+
+Note (main, not a new bug): `smoke:buildings-powers` still prints `systems overlay skipped: Identifier 'BUILDINGS_SCHEMA' has already been declared` then `SMOKE_OK`. Live Pages `speel.html` / `game.js?v=382` is **v1.18.172**.
+
 ## Findings log
 
 | When | Cycle | Pri | Title | Status |
 |------|-------|-----|-------|--------|
-| — | — | — | Waiting for playtest follow-ups | parked |
+| 2026-09-16 | — | — | Waiting for playtest follow-ups | parked |
 
 ## Out of scope
 
