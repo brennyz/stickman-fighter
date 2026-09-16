@@ -35,6 +35,8 @@ must(/id="buildingsScreen"/.test(html), 'missing #buildingsScreen');
 must(/id="buildingsList"/.test(html), 'missing #buildingsList');
 must(/id="buildingsDetail"/.test(html), 'missing #buildingsDetail');
 must(/id="buildingsWallet"/.test(html), 'missing #buildingsWallet');
+must(/id="buildingsOverview"/.test(html), 'missing #buildingsOverview (systems #297 DOM)');
+must(/id="buildingsUpgradeSheet"/.test(html), 'missing #buildingsUpgradeSheet (systems #297 DOM)');
 must(html.indexOf('id="buildingsDetail"') < html.indexOf('id="buildingsList"'),
   'detail must sit above the list on Android');
 must(/id="buildingsApiNote"/.test(html), 'missing stub/live API note');
@@ -71,7 +73,12 @@ must(ui.includes('buildingsShowUpgradeStep'), 'upgrade must be a separate step')
 must(ui.includes('paintBuildingsWallet'), 'wallet painter missing');
 must(ui.includes('whatItDoes') || ui.includes('buildingsEffectHtml'), 'power/effect copy missing');
 must(ui.includes('data-factory-id'), 'rows must bind data-factory-id');
-must(bridge.includes('buildingsWalletModel'), 'bridge must expose wallet model');
+must(ui.includes('buildingDescModel'), 'UI must consume systems buildingDescModel');
+must(ui.includes('buildingWalletModel'), 'UI must consume systems buildingWalletModel');
+must(ui.includes('buildingArtSrc'), 'UI must consume systems buildingArtSrc');
+must(!/\bfunction buildingsWalletModel\b/.test(bridge) && !/\bfunction buildingsWalletModel\b/.test(ui),
+  'do not ship a parallel buildingsWalletModel — systems #297 owns buildingWalletModel');
+must(bridge.includes('buildingDescModel') || ui.includes('buildingDescModel'), 'must bind buildingDescModel');
 must(bridge.includes('buildingTooltipModel'), 'bridge must prefer live tooltip model');
 must(start.includes("hub === 'buildings'"), 'start.js must route buildings hub tile');
 must(coreUi.includes("'buildingsScreen'"), 'UI.screens must include buildingsScreen');
@@ -179,6 +186,11 @@ async function runBrowser() {
       if (typeof UI.buildingsShowUpgradeStep === 'function') UI.buildingsShowUpgradeStep();
       const upgradeConfirm = document.getElementById('btnBuildingUpgradeConfirm');
       const collectGoneOnUpgrade = !document.getElementById('btnBuildingCollect');
+      const sheet = document.getElementById('buildingsUpgradeSheet');
+      const sheetOpen = !!(sheet && !sheet.hidden);
+      const usesDesc = typeof buildingDescModel === 'function';
+      const usesWallet = typeof buildingWalletModel === 'function';
+      const usesArt = typeof buildingArtSrc === 'function';
       if (typeof UI.buildingsShowList === 'function') UI.buildingsShowList();
       const backToList = (scr && scr.getAttribute('data-buildings-pane')) === 'list';
       return {
@@ -195,6 +207,7 @@ async function runBrowser() {
           && chips.includes('spark') && chips.includes('echo') && chips.includes('petCoins')
           && !mashed
           && collected && flash && upgradeConfirm && collectGoneOnUpgrade && backToList
+          && sheet && sheetOpen && usesArt
           && echoOpen
           && versusGone
           && apiLive),
@@ -215,6 +228,10 @@ async function runBrowser() {
         upgradeConfirm: !!upgradeConfirm,
         collectGoneOnUpgrade,
         backToList,
+        sheetOpen,
+        usesDesc,
+        usesWallet,
+        usesArt,
         head: (document.getElementById('buildingsScreenHead') || {}).textContent || '',
       };
     } catch (e) {

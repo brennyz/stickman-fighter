@@ -3224,6 +3224,9 @@
   }
   #buildingsWallet.buildings-wallet,
   #buildingsScreen .buildings-wallet {
+    position: sticky;
+    top: 0;
+    z-index: 3;
     width: min(94vw, 480px);
     margin: 0 auto 10px;
     display: flex;
@@ -3231,7 +3234,7 @@
     justify-content: center;
     gap: 6px 8px;
     padding: 8px 6px;
-    background: transparent;
+    background: var(--menu-bg, #151b33);
     border: 0;
     box-shadow: none;
   }
@@ -3403,6 +3406,33 @@
   #buildingsScreen .buildings-cta[disabled] {
     opacity: .45;
     pointer-events: none;
+  }
+  #buildingsUpgradeSheet.buildings-upgrade-sheet {
+    position: fixed;
+    inset: 0;
+    z-index: 40;
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+  }
+  #buildingsUpgradeSheet[hidden] { display: none; }
+  #buildingsUpgradeSheet .buildings-sheet-backdrop {
+    position: absolute;
+    inset: 0;
+    border: 0;
+    background: rgba(6, 8, 16, .55);
+  }
+  #buildingsUpgradeSheet .buildings-sheet-panel {
+    position: relative;
+    width: min(94vw, 420px);
+    margin-bottom: 12px;
+    padding: 16px 14px 14px;
+    border-radius: 18px 18px 14px 14px;
+    border: 1px solid var(--menu-edge);
+    background: var(--menu-tile-solid);
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
   }
   body.high-contrast #buildingsScreen .buildings-detail,
   body.high-contrast #buildingsScreen .buildings-row,

@@ -110,6 +110,17 @@ function buildingsWorldLocked(world) {
 }
 
 function buildingsArtPath(id) {
+  if (typeof buildingArtSrc === 'function') {
+    try {
+      const raw = buildingArtSrc(id);
+      if (raw && typeof raw === 'object' && (raw.pixel || raw.stroke || raw.hub)) {
+        return { pixel: raw.pixel, svg: raw.stroke || raw.pixel, hub: raw.hub || 'assets/buttons/hub/buildings.svg' };
+      }
+      if (typeof raw === 'string' && raw) {
+        return { pixel: raw, svg: raw, hub: 'assets/buttons/hub/buildings.svg' };
+      }
+    } catch (_) {}
+  }
   const pixel = 'assets/buildings/pixel/' + id + '.png';
   const svg = 'assets/buildings/' + id + '.svg';
   if (typeof document !== 'undefined' && document) {
@@ -280,9 +291,12 @@ function buildingsNormalizeView(raw) {
 
 function buildingsAttachTooltip(view) {
   if (!view || !view.id) return view;
-  if (typeof buildingTooltipModel !== 'function') return view;
+  const live = (typeof buildingDescModel === 'function')
+    ? buildingDescModel
+    : (typeof buildingTooltipModel === 'function') ? buildingTooltipModel : null;
+  if (!live) return view;
   try {
-    const tip = buildingTooltipModel(view.id);
+    const tip = live(view.id);
     if (!tip) return view;
     if (tip.blurb) view.blurb = tip.blurb;
     if (tip.name) view.name = tip.name;
@@ -311,57 +325,14 @@ function buildingsAttachTooltip(view) {
         });
       }
     }
+    if (tip.doesLine) view.doesLine = tip.doesLine;
+    if (tip.produceLine) view.produceLine = tip.produceLine;
+    if (tip.powerLine) view.powerLine = tip.powerLine;
+    if (tip.nextLine) view.nextLine = tip.nextLine;
+    if (tip.nextCostLabel) view.nextCostLabel = tip.nextCostLabel;
+    if (tip.artSrc) view.artSrc = tip.artSrc;
   } catch (_) {}
   return view;
-}
-
-function buildingsWalletModel() {
-  const resIds = (typeof buildingResourceIds !== 'undefined' && buildingResourceIds && buildingResourceIds.length)
-    ? buildingResourceIds.slice()
-    : ['spark', 'glue', 'chip', 'steam', 'echo'];
-  let bag = {};
-  try {
-    if (typeof buildingWallet === 'function') {
-      const live = buildingWallet();
-      if (live && typeof live === 'object') bag = live;
-    }
-  } catch (_) {}
-  if (!Object.keys(bag).length) {
-    try {
-      const api = buildingsApi();
-      if (api && typeof api.wallet === 'function') {
-        const stub = api.wallet();
-        if (stub && typeof stub === 'object') bag = stub;
-      }
-    } catch (_) {}
-  }
-  const pc = (typeof petCoinsBalance === 'function')
-    ? petCoinsBalance()
-    : Math.max(0, Math.floor(Number((typeof save !== 'undefined' && save && save.petCoins) || 0)));
-  return {
-    petCoins: Math.max(0, Math.floor(Number(pc) || 0)),
-    resources: resIds.map((id) => ({
-      id,
-      label: buildingsResourceLabel(id),
-      amount: Math.max(0, Math.floor(Number(bag[id]) || 0)),
-    })),
-  };
-}
-
-function buildingsCostHint(view) {
-  if (!view) return '';
-  if (view.upgradeHint) return view.upgradeHint;
-  const cost = view.nextCost || {};
-  const bits = [];
-  const pc = Math.max(0, Math.floor(Number(cost.petCoins) || 0));
-  if (pc) bits.push(pc + ' PC');
-  const res = (cost.resources && typeof cost.resources === 'object') ? cost.resources : {};
-  for (const [k, n] of Object.entries(res)) {
-    const amt = Math.max(0, Math.floor(Number(n) || 0));
-    if (!amt) continue;
-    bits.push(amt + ' ' + buildingsResourceLabel(k));
-  }
-  return bits.join(' · ');
 }
 
 const BuildingsStub = {

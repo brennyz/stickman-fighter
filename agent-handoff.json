@@ -47,6 +47,14 @@
   },
   "userWishlist": [
     {
+      "id": "w-20260916T111800",
+      "from": "user",
+      "text": "Align Buildings UI harden #296 with systems #297 bind API (buildingDescModel / buildingWalletModel / buildingArtSrc). Do not duplicate models. Mega-merge only, no merge to main.",
+      "status": "done-in-code",
+      "updated": "2026-09-16",
+      "notes": "Consume #297 symbols; keep list→detail UX on #296."
+    },
+    {
       "id": "w-20260916T105900",
       "from": "user",
       "text": "BUILDINGS UI HARDEN (UX doorontwikkeling): list→detail, collect één tap, duidelijke wallet, power/effect copy. Bind docs/BUILDINGS.md. Draft PR, no merge to main, no Versus.",
@@ -922,6 +930,10 @@
   ],
   "sessionLog": [
     {
+      "at": "2026-09-16T11:21:56Z",
+      "summary": "Aligned #296 with systems #297 bind API: consume buildingDescModel/buildingWalletModel/buildingArtSrc, dropped parallel models. Draft only."
+    },
+    {
       "at": "2026-09-14T20:20:40Z",
       "summary": "Boot-hotfix LIVE op origin/main: game.js parseerde niet (gotoW + SEASON_ART_SLOTS). v1.18.167 / SW 377. Verse versie na Pages."
     },
@@ -1016,10 +1028,6 @@
     {
       "at": "2026-09-14T12:35:18Z",
       "summary": "SATAN-kaart dikkere duivel, groter portret, korte copy, hitte-balk zonder dubbele tekst · v1.18.155 / SW 365"
-    },
-    {
-      "at": "2026-09-14T12:31:31Z",
-      "summary": "Start SATAN-kaart kwaliteit: dikkere duivel, minder dubbele tekst"
     }
   ],
   "implementedFeaturesSummary": "d18 char select deel 1+2 (v1.11.1-2); Mats coinrun + shuriken mik/vliegers + anti-spam (v1.12.0); speel.html (v1.12.2+). Zie HANDOFF-ZOEKINDEX.md en improvement-d20-bag.json userFeatureLog.",

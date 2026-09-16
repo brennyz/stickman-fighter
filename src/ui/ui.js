@@ -1356,6 +1356,7 @@ const UI = {
         return;
       }
       if (active === 'buildingsScreen') {
+        if (typeof this.buildingsGoBack === 'function' && this.buildingsGoBack()) return;
         if (this.buildingsPane === 'detail') {
           try { this.buildingsShowList(); } catch (_) { this.buildingsPane = 'list'; this.renderBuildings(); }
           return;

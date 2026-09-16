@@ -16,6 +16,21 @@ Mega-merge: **do not merge this branch to `main` alone.**
 
 Share / playtest URL stays **`speel.html`**. No Versus. Android-first (portrait list, detail under).
 
+## Coordination with systems #297
+
+Systems draft [PR #297](https://github.com/brennyz/stickman-fighter/pull/297) (`cursor/buildings-ux-flow-e580`, base `catalog-1419`) **owns** the bind helpers:
+
+- `buildingDescModel(id)` — produce / power / does / next lines (`docs/BUILDINGS.md`)
+- `buildingWalletModel()` — `{ petCoins, resources[{ id, name, amount, rate }] }`
+- `buildingArtSrc(id)` — `{ pixel, stroke, hub }` (pixels module may still expose a string slot form)
+- `buildingCostLabel(cost)`
+
+This UI PR **consumes those symbols when present**. It does **not** re-declare them. Fallback uses `buildingTooltipModel` + `buildingWallet` + pixel/SVG paths so this branch still boots on `main` before mega-merge.
+
+DOM aligned: `#buildingsOverview` · `#buildingsUpgradeSheet` · sticky `#buildingsWallet`.
+
+Rebasing this branch onto catalog-1419 / #297 is not practical (different base, two complete UIs). Mega-merge later.
+
 ## Systems API (consume, do not fork)
 
 Preferred global (systems PR):
