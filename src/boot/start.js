@@ -134,6 +134,8 @@ document.querySelectorAll('[data-hub]').forEach((el) => {
       try { toastVersusRetired(); } catch (_) {}
     } else if (hub === 'summon') {
       UI.openSummonHub();
+    } else if (hub === 'gear') {
+      openGearScreen('home');
     } else {
       UI.openModeHub(hub);
     }
@@ -182,8 +184,13 @@ function openCollectionScreen(screenId, renderFn) {
   AudioSys.sfx('select');
   UI.safeOpen(screenId, renderFn, { msg: 'Scherm laden mislukt — herlaad via Verse versie' });
 }
+function openGearScreen(from) {
+  UI.gearOpenedFrom = from === 'home' ? 'home' : 'collect';
+  openCollectionScreen('gearScreen', () => UI.renderGear());
+}
 
 bindPress(document.getElementById('btnWeapons'), () => {
+  UI.weaponOpenedFrom = null;
   openCollectionScreen('weaponScreen', () => UI.renderWeapons());
 });
 bindPress(document.getElementById('btnSkills'), () => {
@@ -238,7 +245,12 @@ bindPress(btnStyle, () => {
   openCollectionScreen('styleScreen', () => UI.renderStyle());
 });
 bindPress(document.getElementById('btnGear'), () => {
-  openCollectionScreen('gearScreen', () => UI.renderGear());
+  openGearScreen('collect');
+});
+const gearWeaponAside = document.getElementById('gearWeaponAside');
+if (gearWeaponAside) bindPress(gearWeaponAside, () => {
+  UI.weaponOpenedFrom = 'gear';
+  openCollectionScreen('weaponScreen', () => UI.renderWeapons());
 });
 const btnSettings = document.getElementById('btnSettings');
 bindPress(btnSettings, () => {

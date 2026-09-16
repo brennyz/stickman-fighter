@@ -323,9 +323,9 @@ const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const VERSION_UPDATE_SAVE_KEY = 'stickfighter_version_update_save_v1';
 const VERSION_UPDATE_FLAG_KEY = 'stickfighter_version_update_flag_v1';
 const SAVE_EXPORT_SCHEMA = 3;
-const APP_VERSION = '1.18.169';
+const APP_VERSION = '1.18.170';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 379;
+const SW_CACHE_REV = 380;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', petCoins: 0, dex: {}, summons: {}, pets: {}, activePet: null,
   eggPets: {}, activeEggPet: null, eggDaily: null,
   chestDaily: null, chestWeapons: {},
@@ -2045,7 +2045,7 @@ const I18N = {
       step: 'Stap 2 · Kies modus', solo: 'SOLO', collection: 'COLLECTIE',
       arcadeTitle: 'Arcade', arcadeSub: 'Snelle sessies · save blijft hier',
       collectTitle: 'Collectie', collectSub: 'Uitrusting · wapens · pets · stijl',
-      gear: 'Uitrusting', gearSub: 'Slots · look',
+      gear: 'Uitrusting', gearSub: '5 slots · look vs stats',
       training: 'Training', trainingSub: '1v1 · RabbitRobot · oefenen',
       wall: 'Muur Slopen', wallSub: '60 sec · combo = sneller',
       mats: 'Muntjes', matsSub: '45 sec · munten → pet coins',
@@ -2158,7 +2158,7 @@ const I18N = {
       step: 'Step 2 · Pick mode', solo: 'SOLO', collection: 'COLLECTION',
       arcadeTitle: 'Arcade', arcadeSub: 'Quick sessions · save stays here',
       collectTitle: 'Collection', collectSub: 'Gear · weapons · pets · style',
-      gear: 'Gear', gearSub: 'Slots · look',
+      gear: 'Gear', gearSub: '5 slots · look vs stats',
       training: 'Training', trainingSub: '1v1 · RabbitRobot · practice',
       wall: 'Wall Smash', wallSub: '60 sec · combo = faster',
       mats: 'Coins', matsSub: '45 sec · coins → pet coins',
@@ -2602,6 +2602,8 @@ function applyLangStaticScreens() {
     ['.hub-tile-arcade .hub-tile-sub', 'menu.arcadeSub'],
     ['.hub-tile-collect .hub-tile-title', 'menu.collect'],
     ['.hub-tile-collect .hub-tile-sub', 'menu.collectSub'],
+    ['#btnGearHome .hub-tile-title', 'hub.gear'],
+    ['#btnGearHome .hub-tile-sub', 'hub.gearSub'],
     ['.hub-tile-summon .hub-tile-title', 'menu.summons'],
     ['.hub-tile-summon .hub-tile-sub', 'menu.summonsSub'],
   ];
@@ -2647,6 +2649,7 @@ function applyLangStaticScreens() {
     ['btnUpgrades', 'hub.upgrades', 'hub.upgradesSub'],
     ['btnDex', 'hub.dex', 'hub.dexSub'],
     ['btnGear', 'hub.gear', 'hub.gearSub'],
+    ['btnGearHome', 'hub.gear', 'hub.gearSub'],
   ];
   for (const [id, titleKey, subKey] of modeRows) {
     const btn = document.getElementById(id);
@@ -13269,7 +13272,7 @@ function seedNlGameStrings() {
     styleHead: 'Stijl',
     styleSub: 'Outfits met bonus — level, training, monsterboek · hover voor tooltip',
     gearHead: 'Uitrusting',
-    gearSub: '5 slots · look vs stats · level- en tijdslot',
+    gearSub: 'Tik een slot · tik een item = aan of uit',
     styleActive: 'Actief',
     stylePick: 'Tik om te kiezen',
     styleIslandGate: 'Avontuur-cap Lv {cap} · stijl unlock Lv {need}',
@@ -13612,7 +13615,9 @@ function seedNlFromRuntime() {
     pillStat: 'STAT',
     pillLock: 'LOCK',
     empty: 'Leeg',
-    pickHint: 'Tik een slot, dan een item.',
+    pickHint: 'Tik een item om aan of uit te doen.',
+    invKicker: '{slot}',
+    weaponOpen: 'Wapens',
     lockedLine: 'Op slot · {why}',
     equip: 'Aandoen',
     unequip: 'Uitdoen',
@@ -13641,7 +13646,7 @@ function seedNlFromRuntime() {
     },
     catalogN: '{n} items',
     weaponAside: 'Wapen',
-    weaponAsideHint: 'Blijft in Collectie → Wapens — geen 6e slot.',
+    weaponAsideHint: 'Collectie · geen 6e slot',
     slot: { head: 'Hoofd', chest: 'Borst', hands: 'Handen', legs: 'Benen', back: 'Rug' },
     item: {
       cap_plain: 'Linnen pet', helm_leaf: 'Leaf-helm', helm_iron: 'IJzeren helm', helm_moon: 'Maan-kap', helm_relic: 'Relikwie-helm',
@@ -13670,7 +13675,9 @@ const CATALOG_EN = {
     pillStat: 'STAT',
     pillLock: 'LOCK',
     empty: 'empty',
-    pickHint: 'Tap a slot, then an item.',
+    pickHint: 'Tap an item to equip or remove.',
+    invKicker: '{slot}',
+    weaponOpen: 'Weapons',
     lockedLine: 'Locked · {why}',
     equip: 'Equip',
     unequip: 'Unequip',
@@ -13699,7 +13706,7 @@ const CATALOG_EN = {
     },
     catalogN: '{n} items',
     weaponAside: 'Weapon',
-    weaponAsideHint: 'Stays in Collection → Weapons — not a 6th slot.',
+    weaponAsideHint: 'Collection · not a 6th slot',
     slot: { head: 'Head', chest: 'Chest', hands: 'Hands', legs: 'Legs', back: 'Back' },
     item: {
       cap_plain: 'Linen cap', helm_leaf: 'Leaf helm', helm_iron: 'Iron helm', helm_moon: 'Moon cap', helm_relic: 'Relic helm',
@@ -14201,7 +14208,7 @@ const CATALOG_EN = {
     styleHead: 'Style',
     styleSub: 'Outfits with bonus — level, training, monster book · hover for tooltip',
     gearHead: 'Gear',
-    gearSub: '5 slots · look vs stats · level and time locks',
+    gearSub: 'Tap a slot · tap an item to equip or remove',
     styleActive: 'Active',
     stylePick: 'Tap to equip',
     styleIslandGate: 'Adventure cap Lv {cap} · style unlock Lv {need}',
@@ -18180,6 +18187,13 @@ function applyFighterMove(f, mv, dt, opts) {
  */
 const GEAR_DRAW_ORDER = ['back', 'legs', 'chest', 'head', 'hands', 'weapon', 'pet'];
 const GEAR_SLOT_DRAW_ORDER = ['back', 'legs', 'chest', 'head', 'hands'];
+const GEAR_SLOT_ICONS = {
+  head: 'assets/buttons/modes/gear-head.svg',
+  chest: 'assets/buttons/modes/gear-chest.svg',
+  hands: 'assets/buttons/modes/gear-hands.svg',
+  legs: 'assets/buttons/modes/gear-legs.svg',
+  back: 'assets/buttons/modes/gear-back.svg',
+};
 const GEAR_UI_FILTERS = ['all', 'look', 'stat', 'lock', 'owned'];
 const GEAR_RARITY_ORDER = ['common', 'uncommon', 'rare', 'epic', 'legendary', 'mythic', 'nightmare', 'hell'];
 const GEAR_RARITY_RANK = {
@@ -18470,6 +18484,64 @@ function gearUiRenderDescriptor(s) {
   return { schema: 1, slots: _gearSlotIds().map((id) => ({ slot: id, itemId: null })) };
 }
 
+function _paintGearOverlay(cc, slot, tint, accent) {
+  if (!tint) return;
+  /* Fighter preview pose (animT 0.35): hips ~-46, shoulders ~-78, head ~-96. */
+  const hipY = -46, shY = -78, headCy = -96;
+  cc.save();
+  cc.fillStyle = tint;
+  cc.strokeStyle = accent || tint;
+  cc.lineWidth = 2;
+  cc.lineCap = 'round';
+  cc.lineJoin = 'round';
+  if (slot === 'back') {
+    cc.globalAlpha = 0.32;
+    cc.beginPath();
+    cc.moveTo(-6, shY + 4);
+    cc.quadraticCurveTo(-22, hipY, -16, -8);
+    cc.lineTo(16, -8);
+    cc.quadraticCurveTo(22, hipY, 6, shY + 4);
+    cc.closePath();
+    cc.fill();
+    cc.globalAlpha = 0.7;
+    cc.stroke();
+  } else if (slot === 'legs') {
+    cc.globalAlpha = 0.8;
+    cc.beginPath();
+    cc.moveTo(-11, -10); cc.lineTo(-14, 2); cc.lineTo(-4, 2); cc.lineTo(-6, -10);
+    cc.moveTo(6, -10); cc.lineTo(4, 2); cc.lineTo(14, 2); cc.lineTo(11, -10);
+    cc.fill();
+    cc.stroke();
+  } else if (slot === 'chest') {
+    cc.globalAlpha = 0.38;
+    cc.beginPath();
+    cc.moveTo(-8, shY + 2);
+    cc.lineTo(8, shY + 2);
+    cc.lineTo(7, hipY + 2);
+    cc.lineTo(-7, hipY + 2);
+    cc.closePath();
+    cc.fill();
+    cc.globalAlpha = 0.85;
+    cc.stroke();
+  } else if (slot === 'head') {
+    cc.globalAlpha = 0.88;
+    cc.beginPath();
+    cc.arc(0, headCy, 8.6, Math.PI * 1.05, -0.05, false);
+    cc.stroke();
+    cc.beginPath();
+    cc.moveTo(-9, headCy - 1);
+    cc.lineTo(9, headCy - 1);
+    cc.stroke();
+  } else if (slot === 'hands') {
+    cc.globalAlpha = 0.88;
+    cc.beginPath();
+    cc.arc(-17, shY + 20, 3.2, 0, Math.PI * 2);
+    cc.arc(17, shY + 20, 3.2, 0, Math.PI * 2);
+    cc.fill();
+  }
+  cc.restore();
+}
+
 function drawGearHeroDoll(cv, saveObj) {
   if (!cv || typeof Fighter !== 'function') return;
   const cc = cv.getContext('2d');
@@ -18479,18 +18551,23 @@ function drawGearHeroDoll(cv, saveObj) {
   cc.save();
   const desc = (typeof gearRenderDescriptor === 'function' && s) ? gearRenderDescriptor(s) : gearUiRenderDescriptor(s);
   const layers = (desc && desc.slots) ? desc.slots : [];
-  for (const sid of GEAR_SLOT_DRAW_ORDER) {
-    const layer = layers.find((L) => L.slot === sid);
-    const tint = layer && (layer.tint || layer.accent);
-    if (!tint) continue;
-    const g = cc.createRadialGradient(cv.width / 2, cv.height * 0.55, 6, cv.width / 2, cv.height * 0.55, sid === 'back' ? 78 : 52);
-    g.addColorStop(0, String(tint) + (sid === 'back' ? '66' : '33'));
-    g.addColorStop(1, 'rgba(0,0,0,0)');
-    cc.fillStyle = g;
-    cc.fillRect(0, 0, cv.width, cv.height);
-  }
-  cc.translate(cv.width / 2, cv.height - 18);
-  cc.scale(1.15, 1.15);
+  const layerOf = (sid) => layers.find((L) => L.slot === sid) || null;
+  const tintOf = (sid) => {
+    const layer = layerOf(sid);
+    return layer && (layer.tint || layer.accent) ? layer : null;
+  };
+  const floor = cc.createRadialGradient(cv.width / 2, cv.height * 0.86, 8, cv.width / 2, cv.height * 0.86, cv.width * 0.38);
+  floor.addColorStop(0, 'rgba(255,255,255,0.08)');
+  floor.addColorStop(1, 'rgba(0,0,0,0)');
+  cc.fillStyle = floor;
+  cc.beginPath();
+  cc.ellipse(cv.width / 2, cv.height * 0.88, cv.width * 0.28, 10, 0, 0, Math.PI * 2);
+  cc.fill();
+  const scale = Math.min(cv.width / 140, cv.height / 190) * 1.28;
+  cc.translate(cv.width / 2, cv.height - 36);
+  cc.scale(scale, scale);
+  const back = tintOf('back');
+  if (back) _paintGearOverlay(cc, 'back', back.tint || back.accent, back.accent);
   const st = typeof styleById === 'function' ? styleById((s && s.style) || 'classic') : { body: '#f2f5ff' };
   const wpn = (s && typeof weaponById === 'function') ? weaponById(s.weapon || 'vuist') : null;
   const preview = new Fighter({
@@ -18499,14 +18576,18 @@ function drawGearHeroDoll(cv, saveObj) {
   });
   preview.animT = 0.35;
   preview.draw(cc);
+  for (const sid of ['legs', 'chest', 'head', 'hands']) {
+    const layer = tintOf(sid);
+    if (layer) _paintGearOverlay(cc, sid, layer.tint || layer.accent, layer.accent);
+  }
   if (s && s.activePet && typeof drawMonsterArt === 'function') {
     const def = (typeof activePetDef === 'function') ? activePetDef()
       : ((typeof petDef === 'function') ? petDef(s.activePet) : null);
     const sp = def && typeof SPECIES !== 'undefined' ? SPECIES[def.speciesId] : null;
     if (sp) {
       cc.save();
-      cc.translate(36, -6);
-      cc.scale(0.36, 0.36);
+      cc.translate(40, -4);
+      cc.scale(0.38, 0.38);
       drawMonsterArt(cc, sp, sp.size || 22, 1.1, false, false);
       cc.restore();
     }
@@ -33004,6 +33085,10 @@ function hubTileStatLine(hub) {
         return '10 vandaag';
       }
     }
+    case 'gear': {
+      const n = typeof gearEquippedCount === 'function' ? gearEquippedCount() : 0;
+      return typeof tOr === 'function' ? tOr('gear.hubStat', '{n}/5', { n }) : (n + '/5');
+    }
     default:
       return '';
   }
@@ -33144,6 +33229,9 @@ const UI = {
   gearSlotPick: 'head',
   gearFilter: 'all',
   gearFilterQ: '',
+  gearRarity: 'all',
+  gearOpenedFrom: 'collect',
+  weaponOpenedFrom: null,
   _gearFilterBound: false,
   _gearPickerScroll: 0,
   gearItemPick: null,
@@ -33181,7 +33269,17 @@ const UI = {
     const back = el.querySelector('.back-btn[data-back], .back-btn[data-back-gamble], #installBack');
     if (!back) return;
     const label = this.BACK_LABELS[active];
-    if (label) back.textContent = label;
+    if (!label) return;
+    const shown = String(label).replace(/^←\s*/, '');
+    const text = back.querySelector('.back-btn-label');
+    if (text) {
+      text.textContent = shown;
+      return;
+    }
+    const ico = back.querySelector('.back-btn-ico');
+    back.textContent = '';
+    if (ico) back.appendChild(ico);
+    back.appendChild(document.createTextNode(shown));
   },
 
   resetInnerScrolls(screenEl) {
@@ -33473,6 +33571,16 @@ const UI = {
         return;
       }
       if (active === 'charSelectScreen') {
+        this.renderMenu();
+        this.show('menuScreen');
+        return;
+      }
+      if (active === 'weaponScreen' && this.weaponOpenedFrom === 'gear') {
+        this.weaponOpenedFrom = null;
+        this.safeOpen('gearScreen', () => this.renderGear());
+        return;
+      }
+      if (active === 'gearScreen' && this.gearOpenedFrom === 'home') {
         this.renderMenu();
         this.show('menuScreen');
         return;
@@ -36202,14 +36310,46 @@ const UI = {
       }) || items[0] || {}).id || null;
     }
 
-    const pillFor = (item, unlock) => {
+    this.BACK_LABELS.gearScreen = this.gearOpenedFrom === 'home'
+      ? tOr('back.menu', '← Menu')
+      : tOr('back.collect', '← Collectie');
+    this.syncBackLabels();
+
+    const pillFor = (item, unlock, extra) => {
+      extra = extra || {};
       if (item && unlock && !unlock.unlocked) {
-        return `<span class="gear-pill gear-pill-lock">${esc(unlock.label || tOr('gear.pillLock', 'LOCK'))}</span>`;
+        return `<span class="gear-pill gear-pill-lock">${esc(tOr('gear.pillLock', 'LOCK'))}</span>`;
       }
+      const bits = [];
+      if (extra.on) bits.push(`<span class="gear-pill gear-pill-on">${esc(tOr('gear.wearing', 'aan'))}</span>`);
       const stat = item && (typeof gearHasStats === 'function' ? gearHasStats(item) : !!(item.hasStats && item.vanity !== true));
-      if (stat) return `<span class="gear-pill gear-pill-stat">${esc(tOr('gear.pillStat', 'STAT'))}</span>`;
-      if (item) return `<span class="gear-pill gear-pill-vanity">${esc(tOr('gear.pillVanity', 'LOOK'))}</span>`;
-      return `<span class="gear-pill">${esc(tOr('gear.empty', 'Leeg'))}</span>`;
+      if (stat) bits.push(`<span class="gear-pill gear-pill-stat">${esc(tOr('gear.pillStat', 'STAT'))}</span>`);
+      else if (item) bits.push(`<span class="gear-pill gear-pill-vanity">${esc(tOr('gear.pillVanity', 'LOOK'))}</span>`);
+      else bits.push(`<span class="gear-pill gear-pill-empty">${esc(tOr('gear.empty', 'Leeg'))}</span>`);
+      return bits.join('');
+    };
+
+    const wearItem = (item) => {
+      const res = (typeof gearEquipItem === 'function') ? gearEquipItem(item.id) : equipGear(item.id);
+      if (!res || !res.ok) {
+        const fail = gearUnlockState(item);
+        UI.toast((res && res.label) || fail.label || tOr('toast.gearLocked', 'Nog op slot'), 1800, { tone: 'warn' });
+        return false;
+      }
+      AudioSys.sfx('select');
+      UI.toast(tOr('toast.gearEquipped', '{name} aangedaan', { name: gearItemName(item) }), 1400, { tone: 'ok' });
+      return true;
+    };
+    const takeOff = (item) => {
+      const sid = item.slot || item.slotId;
+      if (typeof gearUnequipSlot === 'function') gearUnequipSlot(sid);
+      else unequipGear(sid);
+      AudioSys.sfx('select');
+      UI.toast(tOr('toast.gearUnequipped', '{name} uitgedaan', { name: gearItemName(item) }), 1200);
+    };
+    const keepPickerScroll = () => {
+      const p = document.getElementById('gearPicker');
+      this._gearPickerScroll = p ? p.scrollTop : 0;
     };
 
     const sumEl = document.getElementById('gearSummary');
@@ -36221,8 +36361,8 @@ const UI = {
       }, 0);
       const catalogN = (typeof GEAR_ITEMS !== 'undefined' && Array.isArray(GEAR_ITEMS)) ? GEAR_ITEMS.length : items.length;
       sumEl.innerHTML =
-        `${tOr('gear.summarySlots', '<b>{n}</b>/5', { n: filled })} · ` +
-        `<span class="gear-pill gear-pill-stat">${esc(tOr('gear.pillStat', 'STAT'))} ${statN}</span> ` +
+        `<span class="gear-pill gear-pill-on">${tOr('gear.summarySlots', '<b>{n}</b>/5', { n: filled })}</span>` +
+        `<span class="gear-pill gear-pill-stat">${esc(tOr('gear.pillStat', 'STAT'))} ${statN}</span>` +
         `<span class="gear-pill gear-pill-vanity">${esc(tOr('gear.pillVanity', 'LOOK'))} ${Math.max(0, filled - statN)}</span>` +
         `<span class="gear-pill">${esc(tOr('gear.catalogN', '{n} items', { n: catalogN }))}</span>`;
     }
@@ -36234,6 +36374,13 @@ const UI = {
         `<span class="gear-pill gear-pill-lock">${esc(tOr('gear.pillLock', 'LOCK'))}</span>`;
     }
 
+    const slotIco = (typeof GEAR_SLOT_ICONS !== 'undefined' && GEAR_SLOT_ICONS) ? GEAR_SLOT_ICONS : {
+      head: 'assets/buttons/modes/gear-head.svg',
+      chest: 'assets/buttons/modes/gear-chest.svg',
+      hands: 'assets/buttons/modes/gear-hands.svg',
+      legs: 'assets/buttons/modes/gear-legs.svg',
+      back: 'assets/buttons/modes/gear-back.svg',
+    };
     const slotList = document.getElementById('gearSlotList');
     if (!pickerOnly && slotList) {
       slotList.innerHTML = '';
@@ -36244,7 +36391,7 @@ const UI = {
         const unlock = item && typeof gearUnlockState === 'function' ? gearUnlockState(item) : { unlocked: true };
         const btn = document.createElement('button');
         btn.type = 'button';
-        btn.className = 'gear-slot-card'
+        btn.className = 'hub-tile gear-slot-card'
           + (sid === pickSlot ? ' sel' : '')
           + (item && unlock.unlocked && gearHasStats(item) ? ' kind-stat' : '')
           + (item && !unlock.unlocked ? ' locked' : '')
@@ -36260,20 +36407,29 @@ const UI = {
           : (!unlock.unlocked
             ? (unlock.label || tOr('gear.pillLock', 'LOCK'))
             : (gearItemName(item) + (rar ? ' · ' + rar : '')));
+        const ico = slotIco[sid] || 'assets/buttons/modes/gear.svg';
         btn.innerHTML =
-          `<span class="gear-slot-swatch" style="background:${esc(tint)}"></span>` +
+          `<span class="hub-tile-ico gear-slot-swatch" style="background:${esc(tint)}">` +
+          `<img src="${esc(ico)}" alt="" width="22" height="22" decoding="async" draggable="false"></span>` +
           `<span class="gear-slot-copy">` +
-          `<span class="gear-slot-title">${esc(gearSlotName(sid))}</span>` +
-          `<span class="gear-slot-sub">${esc(sub)}</span>` +
+          `<span class="hub-tile-title gear-slot-title">${esc(gearSlotName(sid))}</span>` +
+          `<span class="hub-tile-sub gear-slot-sub">${esc(sub)}</span>` +
           `</span>` +
-          pillFor(item, unlock);
+          `<span class="gear-slot-pills hub-tile-stat">${pillFor(item, unlock, { on: !!item })}</span>`;
         bindPress(btn, () => {
           safeUiAction(() => {
             this.gearSlotPick = sid;
-            this.gearItemPick = null;
+            this.gearItemPick = eq[sid] || null;
             this._gearPickerScroll = 0;
             AudioSys.sfx('select');
             this.renderGear();
+            const screen = document.getElementById('gearScreen');
+            const inv = document.getElementById('gearInvSection');
+            if (screen && inv) {
+              const sr = screen.getBoundingClientRect();
+              const ir = inv.getBoundingClientRect();
+              screen.scrollTop += (ir.top - sr.top) - 10;
+            }
           }, 'gearSlot/' + sid, 'Slot kiezen mislukt');
         });
         slotList.appendChild(btn);
@@ -36285,8 +36441,10 @@ const UI = {
       const w = typeof weaponById === 'function' ? weaponById(save.weapon) : null;
       const wName = w && typeof weaponLabel === 'function' ? weaponLabel(w) : (save.weapon || '—');
       aside.innerHTML =
-        `<b>${esc(tOr('gear.weaponAside', 'Wapen'))}</b> · ${esc(wName)}` +
-        `<div class="gear-detail-sub">${esc(tOr('gear.weaponAsideHint', 'Blijft in Collectie → Wapens — geen 6e slot.'))}</div>`;
+        `<span class="hub-tile-ico"><img src="assets/buttons/modes/weapons.svg" alt="" width="28" height="28" decoding="async" draggable="false"></span>` +
+        `<span class="hub-tile-title">${esc(tOr('gear.weaponAside', 'Wapen'))}</span>` +
+        `<span class="hub-tile-sub">${esc(wName)} · ${esc(tOr('gear.weaponAsideHint', 'Collectie · geen 6e slot'))}</span>` +
+        `<span class="hub-tile-stat">${esc(tOr('gear.weaponOpen', 'Wapens'))}</span>`;
     }
 
     const cv = document.getElementById('gearDollCanvas');
@@ -36297,69 +36455,40 @@ const UI = {
       cc.clearRect(0, 0, cv.width, cv.height);
       const st = typeof styleById === 'function' ? styleById(save.style || 'classic') : { body: '#f2f5ff' };
       cc.save();
-      cc.translate(cv.width / 2, cv.height - 18);
-      cc.scale(1.15, 1.15);
+      cc.translate(cv.width / 2, cv.height - 28);
+      cc.scale(1.7, 1.7);
       const preview = new Fighter({ isPlayer: true, x: 0, y: 0, color: st.body, style: st, scale: 1 });
       preview.animT = 0.35;
       preview.draw(cc);
       cc.restore();
     }
 
+    const kicker = document.getElementById('gearInvKicker');
+    if (kicker) {
+      kicker.textContent = tOr('gear.invKicker', '{slot}', { slot: gearSlotName(pickSlot) });
+    }
+
     const detail = document.getElementById('gearDetail');
     const rawPicked = typeof gearItemById === 'function' ? gearItemById(this.gearItemPick) : null;
     const picked = (typeof contractGearItem === 'function' && rawPicked) ? contractGearItem(rawPicked) : rawPicked;
-    if (!pickerOnly && detail) {
+    if (detail) {
       if (!picked) {
-        detail.innerHTML = `<div class="gear-detail-sub">${esc(tOr('gear.pickHint', 'Tik een slot, dan een item.'))}</div>`;
+        detail.innerHTML = `<div class="gear-detail-sub">${esc(tOr('gear.pickHint', 'Tik een item om aan of uit te doen.'))}</div>`;
       } else {
         const unlock = gearUnlockState(picked);
         const tip = unlock.model || (typeof gearTooltipModel === 'function' ? gearTooltipModel(picked) : null);
         const equippedHere = eq[picked.slot] === picked.id || eq[picked.slotId] === picked.id;
-        const kindPill = pillFor(picked, unlock);
+        const kindPill = pillFor(picked, unlock, { on: equippedHere });
         const lockLine = unlock.unlocked
           ? ''
-          : `<div class="gear-detail-sub" style="color:#ffd75e;margin-top:6px">${esc(tOr('gear.lockedLine', 'Op slot · {why}', { why: unlock.label || '' }))}</div>`;
+          : `<div class="gear-detail-sub" style="color:#ffd75e;margin-top:4px">${esc(unlock.label || tOr('gear.pillLock', 'LOCK'))}</div>`;
         const bonus = unlock.unlocked
           ? (tip && tip.desc ? esc(tip.desc) + (tip.combatLine ? ' · ' + esc(tip.combatLine) : '') : esc(gearStatLine(picked)))
           : esc(tOr('gear.lockNoStats', 'Geen stats tot het slot open is'));
-        const actions = unlock.unlocked
-          ? (`<div class="gear-detail-actions">` +
-            (equippedHere
-              ? `<button type="button" class="btn mode-btn b-gray big-touch" id="gearUnequipBtn"><div>${esc(tOr('gear.unequip', 'Uitdoen'))}</div></button>`
-              : `<button type="button" class="btn mode-btn b-continue big-touch" id="gearEquipBtn"><div>${esc(tOr('gear.equip', 'Aandoen'))}</div></button>`) +
-            `</div>`)
-          : '';
         detail.innerHTML =
           `<div class="gear-detail-title">${esc(gearItemName(picked))} ${kindPill}</div>` +
           `<div class="gear-detail-sub">${bonus}</div>` +
-          lockLine + actions;
-        const eqBtn = document.getElementById('gearEquipBtn');
-        if (eqBtn) bindPress(eqBtn, () => {
-          safeUiAction(() => {
-            const res = (typeof gearEquipItem === 'function') ? gearEquipItem(picked.id) : equipGear(picked.id);
-            if (!res || !res.ok) {
-              const fail = gearUnlockState(picked);
-              UI.toast((res && res.label) || fail.label || tOr('toast.gearLocked', 'Nog op slot'), 1800, { tone: 'warn' });
-              return;
-            }
-            AudioSys.sfx('select');
-            UI.toast(tOr('toast.gearEquipped', '{name} aangedaan', { name: gearItemName(picked) }), 1800, { tone: 'ok' });
-            this.renderGear();
-            this.renderMenu();
-          }, 'equipGear/' + picked.id, 'Uitrusten mislukt');
-        });
-        const uqBtn = document.getElementById('gearUnequipBtn');
-        if (uqBtn) bindPress(uqBtn, () => {
-          safeUiAction(() => {
-            const sid = picked.slot || picked.slotId;
-            if (typeof gearUnequipSlot === 'function') gearUnequipSlot(sid);
-            else unequipGear(sid);
-            AudioSys.sfx('select');
-            UI.toast(tOr('toast.gearUnequipped', '{name} uitgedaan', { name: gearItemName(picked) }), 1600);
-            this.renderGear();
-            this.renderMenu();
-          }, 'unequipGear/' + (picked.slot || picked.slotId), 'Uitdoen mislukt');
-        });
+          lockLine;
       }
     }
 
@@ -36501,18 +36630,22 @@ const UI = {
           : (unlock.label || tOr('gear.pillLock', 'LOCK'));
         el.innerHTML =
           `<span class="gear-card-swatch" style="background:${esc(tint)}"></span>` +
-          `<span class="gear-card-body"><span class="gear-card-name">${esc(gearItemName(it))} ${pillFor(it, unlock)} ${rarPill}</span>` +
-          `<span class="gear-card-meta">${esc(meta)}${equippedHere ? ' · ' + esc(tOr('gear.wearing', 'aan')) : ''}</span></span>`;
+          `<span class="gear-card-body"><span class="gear-card-name">${esc(gearItemName(it))} ${pillFor(it, unlock, { on: equippedHere })} ${rarPill}</span>` +
+          `<span class="gear-card-meta">${esc(meta)}</span></span>`;
         bindPress(el, () => {
           safeUiAction(() => {
             this.gearItemPick = it.id;
-            AudioSys.sfx('select');
+            keepPickerScroll();
             if (!unlock.unlocked) {
+              AudioSys.sfx('select');
               UI.toast(tOr('toast.gearLocked', 'Nog op slot · {why}', { why: unlock.label || '' }), 1800, { tone: 'warn' });
+              this.renderGear({ pickerOnly: true });
+              return;
             }
-            const p = document.getElementById('gearPicker');
-            this._gearPickerScroll = p ? p.scrollTop : 0;
+            if (equippedHere) takeOff(it);
+            else wearItem(it);
             this.renderGear();
+            this.renderMenu();
           }, 'gearPick/' + it.id, 'Item kiezen mislukt');
         });
         frag.appendChild(el);
@@ -37139,6 +37272,8 @@ document.querySelectorAll('[data-hub]').forEach((el) => {
       try { toastVersusRetired(); } catch (_) {}
     } else if (hub === 'summon') {
       UI.openSummonHub();
+    } else if (hub === 'gear') {
+      openGearScreen('home');
     } else {
       UI.openModeHub(hub);
     }
@@ -37187,8 +37322,13 @@ function openCollectionScreen(screenId, renderFn) {
   AudioSys.sfx('select');
   UI.safeOpen(screenId, renderFn, { msg: 'Scherm laden mislukt — herlaad via Verse versie' });
 }
+function openGearScreen(from) {
+  UI.gearOpenedFrom = from === 'home' ? 'home' : 'collect';
+  openCollectionScreen('gearScreen', () => UI.renderGear());
+}
 
 bindPress(document.getElementById('btnWeapons'), () => {
+  UI.weaponOpenedFrom = null;
   openCollectionScreen('weaponScreen', () => UI.renderWeapons());
 });
 bindPress(document.getElementById('btnSkills'), () => {
@@ -37243,7 +37383,12 @@ bindPress(btnStyle, () => {
   openCollectionScreen('styleScreen', () => UI.renderStyle());
 });
 bindPress(document.getElementById('btnGear'), () => {
-  openCollectionScreen('gearScreen', () => UI.renderGear());
+  openGearScreen('collect');
+});
+const gearWeaponAside = document.getElementById('gearWeaponAside');
+if (gearWeaponAside) bindPress(gearWeaponAside, () => {
+  UI.weaponOpenedFrom = 'gear';
+  openCollectionScreen('weaponScreen', () => UI.renderWeapons());
 });
 const btnSettings = document.getElementById('btnSettings');
 bindPress(btnSettings, () => {

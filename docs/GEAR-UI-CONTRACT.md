@@ -43,8 +43,8 @@ From `gearTooltipModel`: **LOOK** if vanity / `!appliesStats`. **STAT** if `appl
 
 ## Catalog UX
 
-131 items. Filter chips (all / LOOK / STAT / LOCK / owned) + search. Picker scrolls (`max-height` + `overflow-y`).
+131 items. Filter chips (all / LOOK / STAT / LOCK / owned) + rarity + search. **One page-scroll** (no nested picker `max-height`). Tap item = equip/unequip. HOME tile `#btnGearHome` (`data-hub="gear"`) is 1 tap from HOME.
 
 ## UI IDs
 
-`#gearScreen` · `#btnGear` · `#gearDollCanvas` · `#gearSlotList` (`data-slot`) · `#gearWeaponAside` · `#gearDetail` · `#gearFilterBar` · `#gearFilterQ` · `#gearPicker` (`data-gear-id`)
+`#gearScreen` · `#btnGear` · `#btnGearHome` · `#gearDollCanvas` · `#gearSlotList` (`data-slot`) · `#gearWeaponAside` · `#gearDetail` · `#gearFilterBar` · `#gearFilterQ` · `#gearPicker` (`data-gear-id`)

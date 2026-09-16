@@ -91,6 +91,13 @@
   },
   "userWishlist": [
     {
+      "id": "w-20260916T105800",
+      "from": "user",
+      "text": "GROTE gear UI/UX pass: Uitrusting als premium HOME-sibling (navy cards, ico/titel/sub/pills, WCAG AA). 1 tap HOME→Uitrusting; snelle equip/unequip; grotere hero; draw-order back→legs→chest→head→hands→weapon→pet; 5 slots vaste volgorde; weapon aside; safe-area Back; één page-scroll; empty/equipped/locked/LOOK states. Schema save.gear blijft. Android 390×844, NL+EN, geen Versus, niet forceren naar main.",
+      "status": "done-in-code",
+      "updated": "2026-09-16"
+    },
+    {
       "id": "w-20260914T172800",
       "from": "user",
       "text": "SCHEMA DELTA: bind UI to save.gear {schema,equipped,owned} + createdAt. Drop flat save.equipment/ownedGear. Hub tile Uitrusting. Use #280 helpers (gearGateState, gearEquipItem, …).",
