@@ -10041,7 +10041,7 @@ function gearPickupTheme(item) {
   const id = item && item.id ? String(item.id) : '';
   const rar = item && item.rarity ? item.rarity : '';
   return {
-    flame: /hell|ash|sulfur|lava/.test(id) || rar === 'hell',
+    flame: /hell|ash|sulfur|lava|flame|torch|fakkel/.test(id) || rar === 'hell',
     glow: /void|crystal|aura|mythic/.test(id) || rar === 'mythic' || rar === 'legendary',
   };
 }

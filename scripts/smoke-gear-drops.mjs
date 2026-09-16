@@ -304,6 +304,18 @@ const live1 = run("gearLivingPixels('back_wings_hell', 1).length");
 const live2 = run("gearLivingPixels('back_wings_hell', 2).length");
 if (!(live0 >= 2 && live1 >= 2 && live2 >= 2)) fail('hell living pixels need 3-frame fakkel');
 if (run("gearLivingPixels('head_bandana_blue', 0).length") !== 0) fail('common cloth should not grow flame pixels');
+const thHell = run("gearPickupTheme(gearById('back_wings_hell'))");
+if (!thHell || !thHell.flame) fail('hell gear must be flame-themed');
+const thAsh = run("gearPickupTheme(gearById('chest_robe_ash'))");
+if (!thAsh || !thAsh.flame) fail('ash/lava look must be flame-themed');
+const thVoid = run("gearPickupTheme(gearById('head_helm_void'))");
+if (!thVoid || !thVoid.glow || thVoid.flame) fail('void helm should glow, not flame');
+const thAura = run("gearPickupTheme(gearById('back_aura_glow'))");
+if (!thAura || !thAura.glow) fail('aura pickup should glow-pulse');
+const thCrystal = run("gearPickupTheme(gearById('head_helm_crystal'))");
+if (!thCrystal || !thCrystal.glow) fail('crystal pickup should glow-pulse');
+const thCloth = run("gearPickupTheme(gearById('head_bandana_blue'))");
+if (!thCloth || thCloth.flame || thCloth.glow) fail('common cloth must stay still');
 run(`
   globalThis.__gearRects2 = 0;
   drawGearPixels({

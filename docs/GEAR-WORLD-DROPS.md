@@ -51,6 +51,8 @@ Canvas-only motion (skipped when `motionReduced()` / `fxLite()` / `save.liteFx`)
 - collect snap (orb flies to the stickman, 0.16s) + fatter burst
 Static SVGs stay still. Preview: `assets/gear/_preview/_pickup-motion.html`.
 
+UI-scanner (cheap lived-in FX, pre mega-merge): flame/torch is a 3-frame canvas cycle on hell/lava/ash only; glow pulse is mythic/void/aura/crystal; rare+ gets a ring pulse; elite/superBoss add 2–3 sparkle pixels. No particle storms. `GEAR_MAX_FIELD = 3`.
+
 ## Art preview
 
 ```bash
