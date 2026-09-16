@@ -189,4 +189,97 @@ for (const r of ['common', 'uncommon', 'rare', 'epic', 'legendary', 'mythic', 'n
   assert(rarities.includes(r), 'rarity spread includes ' + r);
 }
 
+/* —— Equip-flow states: locked / not-owned / wrong-slot / already-equipped / vanity-ok —— */
+run(`
+  save = sanitizeSave(Object.assign({}, DEFAULT_SAVE, {
+    createdAt: ${now},
+    lvl: 1,
+    unlocked: 1,
+  }));
+`);
+assert(run("gearEquipState('head_wrap_cloth').state === 'already-equipped'"), 'starter wrap already-equipped');
+assert(run("gearCanEquip('head_wrap_cloth').ok === true"), 'already-equipped stays wearable');
+assert(run("gearCanEquip('head_wrap_cloth').canEquip === false"), 'already-equipped is not a fresh Equip');
+assert(run("gearEquipState('nope_item').state === 'unknown'"), 'unknown id');
+assert(run("gearCanEquip('head_bandana_blue').ok === false"), 'unowned bandana blocked');
+assert(run("gearCanEquip('head_bandana_blue').state === 'not-owned'"), 'unowned state');
+assert(run("gearCanEquip('head_helm_iron').state === 'not-owned' || gearCanEquip('head_helm_iron').state === 'locked'"), 'iron helm not wearable at lvl 1');
+assert(run("gearCanEquip('head_wrap_cloth', save, Date.now(), 'chest').state === 'wrong-slot'"), 'wrap into chest = wrong-slot');
+assert(run("gearCanEquip('head_wrap_cloth', save, Date.now(), 'chest').ok === false"), 'wrong-slot not ok');
+assert(run("gearEquipItem('head_wrap_cloth', save, Date.now(), 'chest').ok === false"), 'equip refuses wrong-slot');
+assert(run("save.gear.equipped.head === 'head_wrap_cloth'"), 'failed wrong-slot must not clear head');
+assert(run("gearEquipItem('chest_hoodie_gray').ok === false"), 'unowned chest hoodie cannot equip');
+
+run("gearUnequipSlot('head')");
+assert(run("save.gear.equipped.head === null"), 'unequip persists null on schema bag');
+assert(run("gearEquipState('head_wrap_cloth').state === 'vanity-ok'"), 'owned vanity after unequip');
+assert(run("gearEquipState('head_wrap_cloth').canEquip === true"), 'vanity-ok can Equip');
+const wearAgain = run("JSON.stringify(gearEquipItem('head_wrap_cloth'))");
+assert(run("save.gear.equipped.head === 'head_wrap_cloth'"), 're-equip writes save.gear.equipped.head');
+assert(JSON.parse(wearAgain).ok === true, 're-equip vanity ok: ' + wearAgain);
+assert(run("!save.ownedGear || !save.ownedGear.head_wrap_cloth"), 'grant/equip must not recreate flat ownedGear');
+
+const inv = run("gearSlotInventory('head')");
+assert(inv && inv.slot === 'head', 'inventory slot');
+assert(Array.isArray(inv.items) && inv.items.length >= 20, 'inventory lists slot catalog as owned+preview');
+assert(inv.items.every((row) => row.slot === 'head' && row.item && row.item.slot === 'head'), 'inventory slot-pure');
+const wrapRow = inv.items.find((row) => row.id === 'head_wrap_cloth');
+assert(wrapRow && wrapRow.owned && wrapRow.equipped && wrapRow.state === 'already-equipped', 'inventory marks equipped wrap');
+assert(wrapRow.vanity === true && wrapRow.appliesStats === false, 'vanity row never applies stats');
+assert(wrapRow.canEquip === false, 'equipped row cannot Equip again');
+const helmRow = inv.items.find((row) => row.id === 'head_helm_iron');
+assert(helmRow && helmRow.canEquip === false, 'locked/unowned helm not equippable');
+assert(helmRow.locked === true && helmRow.label, 'locked preview has gate copy');
+assert(inv.items.every((row) => row.slot !== 'chest'), 'no wrong-slot rows in head inventory');
+
+run(`
+  save = sanitizeSave(Object.assign({}, DEFAULT_SAVE, {
+    createdAt: ${now - 20 * DAY},
+    lvl: 20,
+    unlocked: 20,
+    gear: { schema: 1, equipped: {}, owned: { head_visor_neon: { at: 1, src: 'drop' }, head_wrap_cloth: { at: 1, src: 'starter' } } },
+  }));
+`);
+assert(run("gearItemHasCombatStats(gearItemById('head_visor_neon'))"), 'visor has combat stats');
+assert(run("gearCanEquip('head_visor_neon').state === 'ok'"), 'stat cosmetic wearable state=ok');
+run("gearEquipItem('head_visor_neon')");
+assert(run("save.gear.equipped.head === 'head_visor_neon'"), 'visor persist to equipped.head');
+const visorMods = run('gearCombatMods()');
+assert(visorMods.energyMul > 1, 'stat cosmetic applies after equip');
+const visorTip = run("gearTooltipModel(gearItemById('head_visor_neon'))");
+assert(visorTip && visorTip.appliesStats && visorTip.state === 'already-equipped', 'tooltip appliesStats only when wearable');
+
+run("save.gear.equipped.head = 'chest_plate_iron'");
+const leakMods = run('gearCombatMods()');
+assert(leakMods.energyMul === 1 && leakMods.maxHp === 0, 'wrong-slot id in bag must not apply combat mods');
+const leakDesc = run('gearRenderDescriptor(save)');
+assert(leakDesc.slots.find((row) => row.slot === 'head').itemId === null, 'descriptor ignores wrong-slot id');
+
+run(`
+  save = sanitizeSave(Object.assign({}, DEFAULT_SAVE, {
+    createdAt: ${now},
+    lvl: 1,
+    gear: { schema: 1, equipped: { head: 'head_wrap_cloth' }, owned: { head_wrap_cloth: { at: 1, src: 'starter' } } },
+  }));
+  const fakeVanity = Object.assign({}, gearItemById('head_wrap_cloth'), { hasStats: true, mods: { dmgMul: 2 } });
+  globalThis.__fakeVanityStats = gearItemHasCombatStats(fakeVanity);
+`);
+assert(run('__fakeVanityStats === false'), 'vanity + stuffed mods still has no combat stats');
+
+run("gearGrantItem('head_bandana_blue', 'drop')");
+assert(run("!!save.gear.owned.head_bandana_blue"), 'grant writes owned bag');
+assert(run("!save.ownedGear || !save.ownedGear.head_bandana_blue"), 'grant must not write flat ownedGear');
+assert(run("gearCanEquip('head_bandana_blue').ok === false"), 'grant is can-own-locked; equip still gated');
+assert(run("gearCanEquip('head_bandana_blue').state === 'locked'"), 'owned-but-gated bandana is locked');
+
+run(`
+  save = sanitizeSave(Object.assign({}, DEFAULT_SAVE, {
+    createdAt: ${now - 2 * DAY},
+    lvl: 40,
+    gear: { owned: { head_visor_neon: { at: 1 } }, equipped: { head: 'head_visor_neon' } },
+  }));
+`);
+assert(run("gearTooltipModel(gearItemById('head_visor_neon')).appliesStats === false"), 'locked stat item never shows fake stats');
+assert(run("gearCanEquip('head_visor_neon').state === 'locked'"), 'time-gated owned visor is locked');
+
 console.log('SMOKE_OK gear: ' + total + ' items · slots ' + slots.join('/') + ' · vanity cosmetics ' + vanity.length + ' · stat cosmetics ' + statCos.length);

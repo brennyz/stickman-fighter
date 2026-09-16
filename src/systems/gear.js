@@ -192,19 +192,39 @@ function gearUnlockState(item) {
   return { unlocked: true, gate: null, label: '', model: null };
 }
 
-function gearCanWear(item) {
-  if (!item) return { ok: false, reason: 'missing' };
+function gearCanWear(item, expectSlot) {
+  if (!item) return { ok: false, reason: 'unknown', state: 'unknown', canEquip: false };
   if (typeof gearCanEquip === 'function') {
-    const can = gearCanEquip(item.id);
+    const can = gearCanEquip(item.id, typeof save !== 'undefined' ? save : null, Date.now(), expectSlot);
     if (!can || !can.ok) {
       const unlock = gearUnlockState(item);
-      return { ok: false, reason: (can && can.reason) || unlock.gate || 'locked', label: unlock.label };
+      return {
+        ok: false,
+        state: (can && can.state) || 'locked',
+        reason: (can && can.reason) || unlock.gate || 'locked',
+        label: (can && can.label) || unlock.label,
+        canEquip: false,
+        item: can && can.item,
+        slot: can && can.slot,
+      };
     }
-    return { ok: true };
+    return {
+      ok: true,
+      state: can.state,
+      reason: can.reason || can.state,
+      canEquip: !!can.canEquip,
+      item: can.item,
+      slot: can.slot,
+    };
   }
   const unlock = gearUnlockState(item);
-  if (!unlock.unlocked) return { ok: false, reason: unlock.gate || 'locked', label: unlock.label };
-  return { ok: true };
+  if (!unlock.unlocked) return { ok: false, reason: unlock.gate || 'locked', state: 'locked', label: unlock.label, canEquip: false };
+  return { ok: true, state: 'ok', canEquip: true };
+}
+
+function listGearSlotInventory(slot) {
+  if (typeof gearSlotInventory === 'function') return gearSlotInventory(slot);
+  return { slot: slot || null, equippedId: null, items: [] };
 }
 
 function gearItemName(item) {

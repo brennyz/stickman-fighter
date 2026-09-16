@@ -59,15 +59,21 @@ Optional: `needAdvUnlocked`, `needDiff` (`nightmare` \| `hell`).
 
 ```
 GEAR_SLOT_IDS · GEAR_SLOTS · GEAR_ITEMS · GEAR_BY_ID · GEAR_SCHEMA
+GEAR_EQUIP_STATES
 gearItemById(id) · gearItemsForSlot(slot) · gearSlotById(id)
-gearUnlockContext(s, now) · gearGateState(item, s, now)
+gearUnlockContext(s, now) · gearGateState(item, s, now) · gearGateCopy(item, s, now)
+gearEquipState(id, s, now, expectSlot?)
 gearItemUnlocked / gearItemLootable / gearItemUsable
-gearCanGrant(id) · gearCanEquip(id)
-gearGrantItem · gearEquipItem · gearUnequipSlot
+gearCanGrant(id) · gearCanEquip(id, s, now, expectSlot?)
+gearGrantItem · gearEquipItem(id, s, now, expectSlot?) · gearUnequipSlot
+gearSlotInventory(slot, s)   // owned + locked preview + gate copy (schema 1)
 gearTooltipModel · gearTooltipLines · gearCombatLine
 gearRenderDescriptor(s)   // look tint/accent/layer — pixel art later
 rollGearDrop(ctx)         // stub, always null until world spawners
 ```
+
+`gearCanEquip` / `gearEquipState` `.state`: `ok` · `vanity-ok` · `already-equipped` · `locked` · `not-owned` · `wrong-slot` · `unknown`.
+`.ok` is true only for wearable rows (`ok` / `vanity-ok` / `already-equipped`). Locked / not-owned / wrong-slot never equip. Combat apply stays `gearItemHasCombatStats` (`hasStats && !vanity && mods`).
 
 DOM stub: `#gearScreen`, `#gearSlotRow` (`data-slot`), `#gearList` (`data-gear-id`).
 

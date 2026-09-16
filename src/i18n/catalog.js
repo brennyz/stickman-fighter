@@ -1150,6 +1150,7 @@ function seedNlFromRuntime() {
     lockAdv: 'Avontuur Lv {n}',
     lockDiff: 'Nog niet vrij',
     lockOwned: 'Nog niet gevonden',
+    lockSlot: 'Verkeerd slot',
     lockNoStats: 'Geen stats tot het slot open is',
     filterAll: 'Alles',
     filterOwned: 'Van jou',
@@ -1212,6 +1213,7 @@ const CATALOG_EN = {
     lockAdv: 'Adventure Lv {n}',
     lockDiff: 'Not open yet',
     lockOwned: 'Not found yet',
+    lockSlot: 'Wrong slot',
     lockNoStats: 'No stats until unlocked',
     filterAll: 'All',
     filterOwned: 'Owned',
@@ -1405,6 +1407,7 @@ const CATALOG_EN = {
   },
   gear: {
     slot: { head: 'Head', chest: 'Chest', hands: 'Hands', legs: 'Legs', back: 'Back' },
+    lockSlot: 'Wrong slot',
   },
 
   banner: {

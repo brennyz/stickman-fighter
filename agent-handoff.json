@@ -40,6 +40,14 @@
   },
   "userWishlist": [
     {
+      "id": "w-20260916T105900",
+      "from": "user",
+      "text": "Gear equip UX polish — LANE SPLIT: this run owns SYSTEMS equip-flow logic + API/gates only (gearCanEquip / gearEquipItem / gearUnequipSlot / gearGateState / gearSlotInventory). Parallel bc-f23eda03 owns visual/layout. Schema 1. No Versus. Open PR, no silent main merge.",
+      "status": "active",
+      "updated": "2026-09-16",
+      "notes": "Systems lane: unambiguous locked/not-owned/wrong-slot/already-equipped/vanity-ok; persist save.gear.equipped; combat via gearItemHasCombatStats."
+    },
+    {
       "id": "w-20260914T200700",
       "from": "user",
       "text": "Hij laad niet lekker, what is up",

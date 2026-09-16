@@ -30,7 +30,7 @@ Draw overlay (back → front): `back → legs → chest → head → hands → w
 
 ## Helpers (#280)
 
-`GEAR_SLOT_IDS` · `gearItemById` · `gearGateState` · `gearTooltipModel` · `gearEquipItem` · `gearRenderDescriptor` · `rollGearDrop`
+`GEAR_SLOT_IDS` · `gearItemById` · `gearGateState` · `gearEquipState` · `gearCanEquip` · `gearTooltipModel` · `gearEquipItem` · `gearUnequipSlot` · `gearSlotInventory` · `gearRenderDescriptor` · `rollGearDrop`
 
 ## DOM
 
