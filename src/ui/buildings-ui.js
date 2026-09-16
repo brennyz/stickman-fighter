@@ -545,11 +545,16 @@ if (typeof UI === 'object' && UI) {
     const pct = view.capacity ? Math.min(100, Math.round((view.pending / view.capacity) * 100)) : 0;
     if (bar) bar.style.width = pct + '%';
     if (lbl) {
-      const eta = (!view.locked && view.pending < view.capacity && view.nextMs > 0)
-        ? buildingsTxt('buildings.nextIn', 'Volgende over {t}', { t: (typeof buildingsFormatEta === 'function') ? buildingsFormatEta(view.nextMs) : '' })
-        : '';
-      lbl.textContent = buildingsTxt('buildings.stored', '{n}/{cap} opgeslagen', { n: view.pending, cap: view.capacity })
-        + (eta ? ' · ' + eta : '');
+      const unbuilt = !view.locked && Number(view.level) < 1;
+      if (unbuilt) {
+        lbl.textContent = buildingsCostText(view) || buildingsTxt('buildings.unbuilt', 'Nog niet gebouwd');
+      } else {
+        const eta = (!view.locked && view.pending < view.capacity && view.nextMs > 0)
+          ? buildingsTxt('buildings.nextIn', 'Volgende over {t}', { t: (typeof buildingsFormatEta === 'function') ? buildingsFormatEta(view.nextMs) : '' })
+          : '';
+        lbl.textContent = buildingsTxt('buildings.stored', '{n}/{cap} opgeslagen', { n: view.pending, cap: view.capacity })
+          + (eta ? ' · ' + eta : '');
+      }
     }
     if (collectBtn) {
       collectBtn.disabled = !view.canCollect;

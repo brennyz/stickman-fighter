@@ -61,7 +61,7 @@ Hub tiles, `#upgradeScreen`, `#settingsScreen` (aim color/radius, Lite FX, langu
 - [x] Findings received
 - [x] P0/P1 investigated on main
 - [x] Fixes on this branch (if any)
-- [ ] Smoke: `smoke:gear` · `smoke:gear-screen` · `smoke:equip-look` · `smoke:gear-drops`
+- [x] Smoke: `smoke:gear` · `smoke:gear-screen` · `smoke:equip-look` · `smoke:gear-drops`
 
 **Open P0/P1:** Cycle 3 P2 — detached orange Stip-pin near feet. **Fix:** pin kind on chest/shoulder (not back-cape); skip generic doll cape for pin/aura/hanger.
 
