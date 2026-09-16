@@ -1120,6 +1120,10 @@
   ],
   "sessionLog": [
     {
+      "at": "2026-09-16T15:52:24Z",
+      "summary": "PLAYTEST HARDEN #311 C6: HUD banners top-strip + 390px hint/pads clear; EN Factories + Back to menu. v1.18.175 / SW 385."
+    },
+    {
       "at": "2026-09-16T15:36:58Z",
       "summary": "PLAYTEST HARDEN #311 C3+C4: Stip-pin on chest (no feet overlay); unbuilt Fabrieken show 20 PC not 0/1 Vonken. v1.18.174 / SW 384."
     },
@@ -1214,10 +1218,6 @@
     {
       "at": "2026-09-14T13:07:40Z",
       "summary": "PARKED #259 v1.18.158/SW368 tot «merge». Hit-reg van ons; #261 draft niet herschrijven. LIVE blijft 1.18.153."
-    },
-    {
-      "at": "2026-09-14T13:00:52Z",
-      "summary": "Training hit-reg: capsule + face-naar-robot; W-aim J/K chippen RabbitRobot. Floaters niet links clippen. Resultaat VERLOREN/YOU LOST. v1.18.158 / SW 368."
     }
   ],
   "implementedFeaturesSummary": "d18 char select deel 1+2 (v1.11.1-2); Mats coinrun + shuriken mik/vliegers + anti-spam (v1.12.0); speel.html (v1.12.2+). Zie HANDOFF-ZOEKINDEX.md en improvement-d20-bag.json userFeatureLog.",
