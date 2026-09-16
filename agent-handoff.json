@@ -36,7 +36,14 @@
     "lastChecked": "2026-09-14T20:21:12Z",
     "lastAsked": "2026-08-17T14:01:21Z",
     "pendingUpload": [],
-    "pendingMerge": []
+    "pendingMerge": [
+      {
+        "pr": 296,
+        "url": "https://github.com/brennyz/stickman-fighter/pull/296",
+        "branch": "cursor/buildings-ui-harden-6f04",
+        "note": "Buildings UI harden — draft / mega-merge only, do not merge to main"
+      }
+    ]
   },
   "userWishlist": [
     {

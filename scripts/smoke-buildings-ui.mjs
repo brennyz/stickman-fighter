@@ -161,6 +161,26 @@ async function runBrowser() {
       const mashed = !!(collect && upgrade && collect.parentElement && collect.parentElement === upgrade.parentElement
         && getComputedStyle(collect.parentElement).gridTemplateColumns.split(' ').length > 1
         && getComputedStyle(collect.parentElement).display === 'grid');
+      if (typeof save !== 'undefined') {
+        save.petCoins = Math.max(save.petCoins || 0, 80);
+        save.buildings = save.buildings || { schema: 1, factories: {}, wallet: {} };
+        save.buildings.schema = 1;
+        save.buildings.factories = save.buildings.factories || {};
+        save.buildings.wallet = save.buildings.wallet || {};
+        save.buildings.factories.stick_lighter = { level: 3, lastTickAt: Date.now() - 4 * 3600000, stored: 12 };
+        if (typeof persist === 'function') persist();
+      }
+      if (typeof UI.renderBuildings === 'function') UI.renderBuildings();
+      const sparkBefore = (typeof buildingWallet === 'function') ? Number(buildingWallet('spark') || 0) : 0;
+      if (typeof UI.doBuildingCollect === 'function') UI.doBuildingCollect('stick_lighter');
+      const sparkAfter = (typeof buildingWallet === 'function') ? Number(buildingWallet('spark') || 0) : 0;
+      const collected = sparkAfter > sparkBefore;
+      const flash = !!document.querySelector('.buildings-collect-flash, .buildings-wallet-chip.is-flash');
+      if (typeof UI.buildingsShowUpgradeStep === 'function') UI.buildingsShowUpgradeStep();
+      const upgradeConfirm = document.getElementById('btnBuildingUpgradeConfirm');
+      const collectGoneOnUpgrade = !document.getElementById('btnBuildingCollect');
+      if (typeof UI.buildingsShowList === 'function') UI.buildingsShowList();
+      const backToList = (scr && scr.getAttribute('data-buildings-pane')) === 'list';
       return {
         ok: !!(scr && scr.classList.contains('active')
           && ids.length === 5
@@ -174,6 +194,7 @@ async function runBrowser() {
           && effect && overview
           && chips.includes('spark') && chips.includes('echo') && chips.includes('petCoins')
           && !mashed
+          && collected && flash && upgradeConfirm && collectGoneOnUpgrade && backToList
           && echoOpen
           && versusGone
           && apiLive),
@@ -189,6 +210,11 @@ async function runBrowser() {
         versusGone,
         apiLive,
         mashed,
+        collected,
+        flash,
+        upgradeConfirm: !!upgradeConfirm,
+        collectGoneOnUpgrade,
+        backToList,
         head: (document.getElementById('buildingsScreenHead') || {}).textContent || '',
       };
     } catch (e) {
