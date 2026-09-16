@@ -94,7 +94,7 @@
       "id": "w-20260916T111800",
       "from": "user",
       "text": "PRIORITY before mega-merge: more realism via MOTION — subtle factory life (chimney flicker, boiler glow pulse, mill spin hint) that fits. Lightweight Android-safe. Update PR #300. Document choices.",
-      "status": "in-progress",
+      "status": "done-in-code",
       "updated": "2026-09-16"
     },
     {
@@ -649,6 +649,10 @@
   ],
   "sessionLog": [
     {
+      "at": "2026-09-16T11:42:25Z",
+      "summary": "Factory life motion on #300: SMIL flicker/glow/8-step chipper/steam/echo rings in the locked SVGs; CSS reduced-motion for inline. Android <img>-safe."
+    },
+    {
       "at": "2026-09-16T11:17:24Z",
       "summary": "Factory pixel art v2: prop-first silhouettes for the 5 locked #292 factories + HOME hub; preview sheet and 192 zooms; draft PR #300, no merge to main."
     },
@@ -743,10 +747,6 @@
     {
       "at": "2026-08-17T14:01:21Z",
       "summary": "GitHub-sync: PC==main; wachtlijst + vraag-bij-upload; tracking nog lokaal"
-    },
-    {
-      "at": "2026-08-17T10:21:10Z",
-      "summary": "PC-pull geregeld: pull-main.sh + GITHUB-PUSH is nu pull-kaart; main LIVE"
     }
   ],
   "implementedFeaturesSummary": "d18 char select deel 1+2 (v1.11.1-2); Mats coinrun + shuriken mik/vliegers + anti-spam (v1.12.0); speel.html (v1.12.2+). Zie HANDOFF-ZOEKINDEX.md en improvement-d20-bag.json userFeatureLog.",
