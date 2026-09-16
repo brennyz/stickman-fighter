@@ -21,3 +21,5 @@ Per-factory stroke: `assets/buttons/modes/buildings-*.svg`
 Wire map: [`../../BUILDING-PIXEL-MAP.md`](../../BUILDING-PIXEL-MAP.md)  
 Regenerate: `npm run pixels:buildings`  
 Preview: `preview.html` (not the player share URL).
+
+Harden pass: darker halo, 2px outlines, lighter walls, oversized signature prop per factory so 32×32 Android cards still read.

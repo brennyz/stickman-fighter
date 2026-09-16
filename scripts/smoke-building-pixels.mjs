@@ -53,6 +53,15 @@ function ok(cond, label) {
   }
 }
 
+const ACCENT = {
+  'assets/buildings/stick_lighter.svg': '#ffd75e',
+  'assets/buildings/woodchip_glue.svg': '#d4e05a',
+  'assets/buildings/chipping_wood.svg': '#7cf5ff',
+  'assets/buildings/bamboo_boesa.svg': '#4ecf6a',
+  'assets/buildings/echo_whistle.svg': '#c792ff',
+  'assets/buildings/hub-buildings.svg': '#ffd75e',
+};
+
 for (const rel of FILES) {
   const abs = path.join(root, rel);
   ok(fs.existsSync(abs), `exists ${rel}`);
@@ -60,11 +69,23 @@ for (const rel of FILES) {
     const svg = fs.readFileSync(abs, 'utf8');
     ok(svg.includes('<svg'), `svg tag ${rel}`);
     ok(!/[\u{1F300}-\u{1FAFF}]/u.test(svg), `no emoji ${rel}`);
+    ok(!/<image\b/i.test(svg) && !/data:image/i.test(svg), `no raster ${rel}`);
     const kb = Buffer.byteLength(svg) / 1024;
     const cap = rel.startsWith('assets/buildings/') ? 8 : 6;
     ok(kb < cap, `small ${rel} (${kb.toFixed(2)} KB)`);
+    if (rel.startsWith('assets/buildings/') && rel.endsWith('.svg')) {
+      ok(svg.includes('viewBox="0 0 32 32"'), `32 viewBox ${rel}`);
+      ok(svg.includes('shape-rendering="crispEdges"'), `crisp ${rel}`);
+    }
+    if (ACCENT[rel]) ok(svg.includes(ACCENT[rel]), `accent ${rel}`);
   }
 }
+
+const preview = read('assets/buildings/preview.html');
+ok(preview.includes('stick_lighter.svg'), 'preview stick_lighter');
+ok(preview.includes('32 · 48 · 96'), 'preview size ladder');
+ok(preview.includes('Silhouette proof'), 'preview silhouette row');
+ok(!preview.includes('versus'), 'preview has no Versus');
 
 const data = read('src/data/building-pixels.js');
 ok(data.includes('const BUILDING_PIXELS'), 'BUILDING_PIXELS');

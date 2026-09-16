@@ -34,7 +34,7 @@ Still frames (`_preview/*-192.png`) flatten life layers. `_preview/life-sheet.pn
 
 HOME tile: `buildings` → stroke `assets/buttons/hub/buildings.svg` · pixel `assets/buildings/hub-buildings.svg`
 
-Preview: [assets/buildings/preview.html](assets/buildings/preview.html)
+Preview: [assets/buildings/preview.html](assets/buildings/preview.html) — harden pass: 2px outlines, halo, bigger signature props. Paths unchanged.
 
 ## Resolution
 
