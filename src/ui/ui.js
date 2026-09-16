@@ -2082,6 +2082,10 @@ const UI = {
       // hubTileStatLine may include SVG_COIN_ICON <img> — must be HTML, not textContent
       el.innerHTML = hubTileStatLine(el.dataset.hubStat);
     });
+    const buildingsTile = document.getElementById('btnBuildings');
+    if (buildingsTile) {
+      buildingsTile.setAttribute('aria-label', t('hub.buildings'));
+    }
     const summonTile = document.getElementById('btnSummons');
     if (summonTile) {
       let left = 0;

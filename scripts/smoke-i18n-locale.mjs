@@ -212,4 +212,19 @@ if (!/wild: 'Bosque'/.test(locales)) fail('ES dexBiome.wild must be Bosque');
 if (!/scrap: 'Scrap'/.test(catalog)) fail('EN dexBiome.scrap missing');
 if (!/scrap: 'Schrott'/.test(deChrome + locales)) fail('DE dexBiome.scrap must not stay Dutch Schroot');
 
+if (/id="btnBuildings"[^>]*aria-label="Fabrieken"/.test(html)) fail('HOME buildings aria-label still hardcoded Fabrieken');
+if (/sub-home-btn"[^>]*>[\s\S]*?<\/span>Terug naar menu<\/button>/.test(html)) {
+  fail('sub-home-btn still has raw Terug naar menu without .sub-home-label');
+}
+if (!/\.sub-home-btn'\)\.forEach/.test(i18n) && !/querySelectorAll\('\.sub-home-btn'\)/.test(i18n)) {
+  fail('applyLang must translate every .sub-home-btn, not only .sub-home-label');
+}
+if (!/buildingsHome\.setAttribute\('aria-label', t\('hub\.buildings'\)\)/.test(i18n)
+    && !/btnBuildings[\s\S]{0,80}aria-label[\s\S]{0,40}hub\.buildings/.test(i18n)) {
+  fail('applyLang must set #btnBuildings aria-label from hub.buildings');
+}
+if (!/\.hub-tile-buildings \.hub-tile-title', 'hub\.buildings'/.test(i18n)) {
+  fail('HOME buildings title must use hub.buildings (Factories in EN)');
+}
+
 console.log('SMOKE_OK i18n-locale: Tips/VERLOREN + #273 coverage + #283 overlays + 2026-09-16 FR/ES/DE polish');

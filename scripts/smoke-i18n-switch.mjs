@@ -68,8 +68,13 @@ async function run() {
       const sfxName = txt('setSfxVolName');
       const profileAria = (document.getElementById('menuProfileBar') || {}).getAttribute('aria-label') || '';
       const summons = (document.querySelector('.hub-tile-summon .hub-tile-title') || {}).textContent || '';
-      const leftover = [adv, collect, weapons, settings, dexSum, dexTypes, eggBtn, exportHint, musicName, sfxName, profileAria].join(' ');
-      return { lang, adv, collect, help, weapons, settings, dexSum, dexTypes, eggBtn, exportHint, musicName, sfxName, profileAria, summons, tAdv, tHud, leftover };
+      const buildings = (document.querySelector('#btnBuildings .hub-tile-title') || {}).textContent || '';
+      const buildingsAria = (document.getElementById('btnBuildings') || {}).getAttribute('aria-label') || '';
+      const backHome = Array.from(document.querySelectorAll('.sub-home-btn .sub-home-label'))
+        .map((el) => (el.textContent || '').trim())
+        .filter(Boolean);
+      const leftover = [adv, collect, weapons, settings, dexSum, dexTypes, eggBtn, exportHint, musicName, sfxName, profileAria, buildings, buildingsAria].join(' ');
+      return { lang, adv, collect, help, weapons, settings, dexSum, dexTypes, eggBtn, exportHint, musicName, sfxName, profileAria, summons, buildings, buildingsAria, backHome, tAdv, tHud, leftover };
     }
     const en = snap('en');
     const de = snap('de');
@@ -80,7 +85,10 @@ async function run() {
       && /Wave/.test(en.tHud) && !/Golf/.test(en.tHud)
       && /Book|All types|All biomes/i.test(en.dexSum + ' ' + en.dexTypes)
       && /Music/i.test(en.musicName) && /Effect/i.test(en.sfxName)
-      && /Profile/i.test(en.profileAria);
+      && /Profile/i.test(en.profileAria)
+      && /Factor/i.test(en.buildings) && /Factor/i.test(en.buildingsAria)
+      && !/Fabriek/i.test(en.buildings + ' ' + en.buildingsAria)
+      && en.backHome.length > 0 && en.backHome.every((s) => /Back to menu/i.test(s));
     const deOk = /Abenteuer/i.test(de.adv) && /Sammlung/i.test(de.collect)
       && /Waffen/i.test(de.weapons) && /Einstellungen/i.test(de.settings)
       && /Tipp/i.test(de.help) && !DUTCH.test(de.leftover)

@@ -164,9 +164,24 @@ function pickBannerLane(banners) {
   return pick;
 }
 
+function combatBannerMaxSize(requested) {
+  const req = requested || 40;
+  const portraitTight = (typeof W === 'number') && W < 420 && (typeof H === 'number') && H > W * 1.02;
+  if (portraitTight) return Math.min(req, 26);
+  if (typeof W === 'number' && W < 520) return Math.min(req, 32);
+  return req;
+}
+
 function bannerLaneY(H, lane, size) {
-  const baseY = H * 0.31;
-  const step = Math.max(32, Math.min(48, H * 0.052));
+  const portraitTight = (typeof W === 'number') && W < 420 && H > W * 1.02;
+  const inset = (typeof hudInsetTop === 'function') ? hudInsetTop() : 16;
+  const sizeN = size || 28;
+  // Slim strip under HP/WAVE chrome — never mid-playfield (old 31%).
+  const baseY = Math.min(
+    inset + (portraitTight ? 44 : 56),
+    portraitTight ? H * 0.145 : H * 0.18
+  );
+  const step = Math.max(18, Math.min(portraitTight ? 24 : 34, sizeN * 0.72));
   const mid = (BANNER_LANES - 1) * 0.5;
   const laneN = typeof lane === 'number' ? lane : 1;
   return baseY + (laneN - mid) * step;
@@ -323,9 +338,9 @@ const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const VERSION_UPDATE_SAVE_KEY = 'stickfighter_version_update_save_v1';
 const VERSION_UPDATE_FLAG_KEY = 'stickfighter_version_update_flag_v1';
 const SAVE_EXPORT_SCHEMA = 3;
-const APP_VERSION = '1.18.174';
+const APP_VERSION = '1.18.175';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 384;
+const SW_CACHE_REV = 385;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', petCoins: 0, dex: {}, summons: {}, pets: {}, activePet: null,
   eggPets: {}, activeEggPet: null, eggDaily: null,
   chestDaily: null, chestWeapons: {},
@@ -3813,8 +3828,8 @@ function applyLangStaticScreens() {
     ['.hub-tile-arcade .hub-tile-sub', 'menu.arcadeSub'],
     ['.hub-tile-collect .hub-tile-title', 'menu.collect'],
     ['.hub-tile-collect .hub-tile-sub', 'menu.collectSub'],
-    ['.hub-tile-buildings .hub-tile-title', 'menu.buildings'],
-    ['.hub-tile-buildings .hub-tile-sub', 'menu.buildingsSub'],
+    ['.hub-tile-buildings .hub-tile-title', 'hub.buildings'],
+    ['.hub-tile-buildings .hub-tile-sub', 'hub.buildingsSub'],
     ['#btnGearHome .hub-tile-title', 'hub.gear'],
     ['#btnGearHome .hub-tile-sub', 'hub.gearSub'],
     ['.hub-tile-summon .hub-tile-title', 'menu.summons'],
@@ -3850,6 +3865,8 @@ function applyLangStaticScreens() {
   if (profileBar) profileBar.setAttribute('aria-label', t('menu.profileAria'));
   const upgradesHome = document.getElementById('btnUpgradesHome');
   if (upgradesHome) upgradesHome.setAttribute('aria-label', t('hub.upgrades'));
+  const buildingsHome = document.getElementById('btnBuildings');
+  if (buildingsHome) buildingsHome.setAttribute('aria-label', t('hub.buildings'));
   const summonHome = document.getElementById('btnSummons');
   if (summonHome && !summonHome.getAttribute('data-hub-stat')) {
     summonHome.setAttribute('aria-label', t('menu.summons'));
@@ -3910,8 +3927,17 @@ function applyLangStaticScreens() {
     if (sub) sub.textContent = t(subKey, subParams);
   }
 
-  document.querySelectorAll('.sub-home-btn .sub-home-label').forEach((el) => {
-    el.textContent = t('common.backHome');
+  document.querySelectorAll('.sub-home-btn').forEach((btn) => {
+    let label = btn.querySelector('.sub-home-label');
+    if (!label) {
+      const ico = btn.querySelector('.ico');
+      label = document.createElement('span');
+      label.className = 'sub-home-label';
+      btn.textContent = '';
+      if (ico) btn.appendChild(ico);
+      btn.appendChild(label);
+    }
+    label.textContent = t('common.backHome');
   });
 
   setText('settingsHead', 'settings.title');
@@ -29380,6 +29406,52 @@ function hudInsetTop() {
   return Math.max(readSafeInsets().top, 6) + 10;
 }
 
+/** Top edge of the touch pad cluster (buttons + joystick). Used to keep HUD/hints off strike pads. */
+function touchClusterTopY() {
+  let top = (typeof H === 'number' && H > 0) ? H : 800;
+  const pads = [];
+  if (typeof Input !== 'undefined' && Input && Input.buttons) pads.push(Input);
+  if (typeof InputP2 !== 'undefined' && InputP2 && InputP2.buttons) pads.push(InputP2);
+  for (const pad of pads) {
+    for (const b of pad.buttons || []) {
+      if (b && typeof b.y === 'number' && typeof b.r === 'number') {
+        top = Math.min(top, b.y - b.r);
+      }
+    }
+    const home = pad.joyHome;
+    if (home && typeof home.y === 'number') {
+      const r = typeof joyGuardRadius === 'function' ? joyGuardRadius(pad) : 56;
+      top = Math.min(top, home.y - r);
+    }
+  }
+  return top;
+}
+
+function wavePauseRingY(H) {
+  const padTop = typeof touchClusterTopY === 'function' ? touchClusterTopY() : H - 120;
+  return Math.min(H * 0.56, padTop - 40);
+}
+
+function nextWavePreviewY(H) {
+  const padTop = typeof touchClusterTopY === 'function' ? touchClusterTopY() : H - 120;
+  return Math.min(H - 52, padTop - 26);
+}
+
+function combatHintAnchorY(game, W, H) {
+  const hudY = (game && game.mode === 'adventure' && game.advHudBottom > 0)
+    ? game.advHudBottom + 18
+    : H * 0.16;
+  const padsOn = typeof useTouchFightPads === 'function'
+    ? useTouchFightPads()
+    : (typeof IS_TOUCH !== 'undefined' && IS_TOUCH);
+  if (!padsOn) return hudY;
+  const padTop = typeof touchClusterTopY === 'function' ? touchClusterTopY() : H;
+  const abovePads = padTop - 28;
+  if (hudY + 22 < abovePads) return hudY;
+  const floor = (game && game.advHudBottom) ? game.advHudBottom + 14 : H * 0.12;
+  return Math.max(floor, Math.min(abovePads, H * 0.22));
+}
+
 function playfieldGroundY(H, W) {
   const portrait = H > W * 1.02;
   const dualVs = typeof Input !== 'undefined' && Input.dualMode;
@@ -40455,7 +40527,8 @@ class Game {
             }
           } catch (_) {}
         }
-      } else {
+      } else if (!(W < 420 && H > W * 1.02)) {
+        // HUD already shows WAVE n/total — skip the mid-field duplicate on phones.
         this.banner(t('banner.waveN', { n: this.waveIdx + 1, total: this.level.waves.length }), 1.1, '#cfe0ff', 38);
       }
     }
@@ -43355,6 +43428,7 @@ class Game {
       dur = Math.min(dur, 1.15);
       size = Math.min(size || 40, 32);
     }
+    if (typeof combatBannerMaxSize === 'function') size = combatBannerMaxSize(size || 40);
     const lane = pickBannerLane(this.banners);
     this.banners = this.banners.filter((b) => b.lane !== lane);
     this.banners.push({
@@ -43822,9 +43896,11 @@ class Game {
       c.textAlign = 'center';
       const tw = c.measureText(hintTxt).width;
       const padX = 16;
-      const hintY = (this.mode === 'adventure' && this.advHudBottom > 0)
-        ? Math.max(H * 0.2, this.advHudBottom + 20)
-        : H * 0.2;
+      const hintY = (typeof combatHintAnchorY === 'function')
+        ? combatHintAnchorY(this, W, H)
+        : ((this.mode === 'adventure' && this.advHudBottom > 0)
+          ? Math.max(H * 0.2, this.advHudBottom + 20)
+          : H * 0.2);
       const pillY = hintY - 24;
       c.fillStyle = 'rgba(6,10,24,.78)';
       this.rr(c, W / 2 - tw / 2 - padX, pillY, tw + padX * 2, 30, 10);
@@ -44233,7 +44309,7 @@ class Game {
     const chips = Math.min(5, next.length);
     const gap = 22;
     const x0 = W / 2 - ((chips - 1) * gap) / 2;
-    const y = H - 52;
+    const y = (typeof nextWavePreviewY === 'function') ? nextWavePreviewY(H) : H - 52;
     c.save();
     c.font = '700 9px sans-serif';
     c.fillStyle = 'rgba(255,255,255,.55)';
@@ -45136,7 +45212,7 @@ class Game {
         const totalPause = this.wavePauseTotal || 1.55;
         const pauseFrac = clamp(1 - this.wavePause / totalPause, 0, 1);
         const ringX = W / 2;
-        const ringY = H - 78;
+        const ringY = (typeof wavePauseRingY === 'function') ? wavePauseRingY(H) : H - 78;
         const ringR = 24;
         const stageClear = !!this._levelClearPending;
         if (!motionReduced()) {
@@ -48236,6 +48312,10 @@ const UI = {
       // hubTileStatLine may include SVG_COIN_ICON <img> — must be HTML, not textContent
       el.innerHTML = hubTileStatLine(el.dataset.hubStat);
     });
+    const buildingsTile = document.getElementById('btnBuildings');
+    if (buildingsTile) {
+      buildingsTile.setAttribute('aria-label', t('hub.buildings'));
+    }
     const summonTile = document.getElementById('btnSummons');
     if (summonTile) {
       let left = 0;

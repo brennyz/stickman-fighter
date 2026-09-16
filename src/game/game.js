@@ -447,7 +447,8 @@ class Game {
             }
           } catch (_) {}
         }
-      } else {
+      } else if (!(W < 420 && H > W * 1.02)) {
+        // HUD already shows WAVE n/total — skip the mid-field duplicate on phones.
         this.banner(t('banner.waveN', { n: this.waveIdx + 1, total: this.level.waves.length }), 1.1, '#cfe0ff', 38);
       }
     }
@@ -3347,6 +3348,7 @@ class Game {
       dur = Math.min(dur, 1.15);
       size = Math.min(size || 40, 32);
     }
+    if (typeof combatBannerMaxSize === 'function') size = combatBannerMaxSize(size || 40);
     const lane = pickBannerLane(this.banners);
     this.banners = this.banners.filter((b) => b.lane !== lane);
     this.banners.push({
@@ -3814,9 +3816,11 @@ class Game {
       c.textAlign = 'center';
       const tw = c.measureText(hintTxt).width;
       const padX = 16;
-      const hintY = (this.mode === 'adventure' && this.advHudBottom > 0)
-        ? Math.max(H * 0.2, this.advHudBottom + 20)
-        : H * 0.2;
+      const hintY = (typeof combatHintAnchorY === 'function')
+        ? combatHintAnchorY(this, W, H)
+        : ((this.mode === 'adventure' && this.advHudBottom > 0)
+          ? Math.max(H * 0.2, this.advHudBottom + 20)
+          : H * 0.2);
       const pillY = hintY - 24;
       c.fillStyle = 'rgba(6,10,24,.78)';
       this.rr(c, W / 2 - tw / 2 - padX, pillY, tw + padX * 2, 30, 10);
@@ -4225,7 +4229,7 @@ class Game {
     const chips = Math.min(5, next.length);
     const gap = 22;
     const x0 = W / 2 - ((chips - 1) * gap) / 2;
-    const y = H - 52;
+    const y = (typeof nextWavePreviewY === 'function') ? nextWavePreviewY(H) : H - 52;
     c.save();
     c.font = '700 9px sans-serif';
     c.fillStyle = 'rgba(255,255,255,.55)';
@@ -5128,7 +5132,7 @@ class Game {
         const totalPause = this.wavePauseTotal || 1.55;
         const pauseFrac = clamp(1 - this.wavePause / totalPause, 0, 1);
         const ringX = W / 2;
-        const ringY = H - 78;
+        const ringY = (typeof wavePauseRingY === 'function') ? wavePauseRingY(H) : H - 78;
         const ringR = 24;
         const stageClear = !!this._levelClearPending;
         if (!motionReduced()) {

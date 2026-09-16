@@ -789,6 +789,52 @@ function hudInsetTop() {
   return Math.max(readSafeInsets().top, 6) + 10;
 }
 
+/** Top edge of the touch pad cluster (buttons + joystick). Used to keep HUD/hints off strike pads. */
+function touchClusterTopY() {
+  let top = (typeof H === 'number' && H > 0) ? H : 800;
+  const pads = [];
+  if (typeof Input !== 'undefined' && Input && Input.buttons) pads.push(Input);
+  if (typeof InputP2 !== 'undefined' && InputP2 && InputP2.buttons) pads.push(InputP2);
+  for (const pad of pads) {
+    for (const b of pad.buttons || []) {
+      if (b && typeof b.y === 'number' && typeof b.r === 'number') {
+        top = Math.min(top, b.y - b.r);
+      }
+    }
+    const home = pad.joyHome;
+    if (home && typeof home.y === 'number') {
+      const r = typeof joyGuardRadius === 'function' ? joyGuardRadius(pad) : 56;
+      top = Math.min(top, home.y - r);
+    }
+  }
+  return top;
+}
+
+function wavePauseRingY(H) {
+  const padTop = typeof touchClusterTopY === 'function' ? touchClusterTopY() : H - 120;
+  return Math.min(H * 0.56, padTop - 40);
+}
+
+function nextWavePreviewY(H) {
+  const padTop = typeof touchClusterTopY === 'function' ? touchClusterTopY() : H - 120;
+  return Math.min(H - 52, padTop - 26);
+}
+
+function combatHintAnchorY(game, W, H) {
+  const hudY = (game && game.mode === 'adventure' && game.advHudBottom > 0)
+    ? game.advHudBottom + 18
+    : H * 0.16;
+  const padsOn = typeof useTouchFightPads === 'function'
+    ? useTouchFightPads()
+    : (typeof IS_TOUCH !== 'undefined' && IS_TOUCH);
+  if (!padsOn) return hudY;
+  const padTop = typeof touchClusterTopY === 'function' ? touchClusterTopY() : H;
+  const abovePads = padTop - 28;
+  if (hudY + 22 < abovePads) return hudY;
+  const floor = (game && game.advHudBottom) ? game.advHudBottom + 14 : H * 0.12;
+  return Math.max(floor, Math.min(abovePads, H * 0.22));
+}
+
 function playfieldGroundY(H, W) {
   const portrait = H > W * 1.02;
   const dualVs = typeof Input !== 'undefined' && Input.dualMode;

@@ -1516,8 +1516,8 @@ function applyLangStaticScreens() {
     ['.hub-tile-arcade .hub-tile-sub', 'menu.arcadeSub'],
     ['.hub-tile-collect .hub-tile-title', 'menu.collect'],
     ['.hub-tile-collect .hub-tile-sub', 'menu.collectSub'],
-    ['.hub-tile-buildings .hub-tile-title', 'menu.buildings'],
-    ['.hub-tile-buildings .hub-tile-sub', 'menu.buildingsSub'],
+    ['.hub-tile-buildings .hub-tile-title', 'hub.buildings'],
+    ['.hub-tile-buildings .hub-tile-sub', 'hub.buildingsSub'],
     ['#btnGearHome .hub-tile-title', 'hub.gear'],
     ['#btnGearHome .hub-tile-sub', 'hub.gearSub'],
     ['.hub-tile-summon .hub-tile-title', 'menu.summons'],
@@ -1553,6 +1553,8 @@ function applyLangStaticScreens() {
   if (profileBar) profileBar.setAttribute('aria-label', t('menu.profileAria'));
   const upgradesHome = document.getElementById('btnUpgradesHome');
   if (upgradesHome) upgradesHome.setAttribute('aria-label', t('hub.upgrades'));
+  const buildingsHome = document.getElementById('btnBuildings');
+  if (buildingsHome) buildingsHome.setAttribute('aria-label', t('hub.buildings'));
   const summonHome = document.getElementById('btnSummons');
   if (summonHome && !summonHome.getAttribute('data-hub-stat')) {
     summonHome.setAttribute('aria-label', t('menu.summons'));
@@ -1613,8 +1615,17 @@ function applyLangStaticScreens() {
     if (sub) sub.textContent = t(subKey, subParams);
   }
 
-  document.querySelectorAll('.sub-home-btn .sub-home-label').forEach((el) => {
-    el.textContent = t('common.backHome');
+  document.querySelectorAll('.sub-home-btn').forEach((btn) => {
+    let label = btn.querySelector('.sub-home-label');
+    if (!label) {
+      const ico = btn.querySelector('.ico');
+      label = document.createElement('span');
+      label.className = 'sub-home-label';
+      btn.textContent = '';
+      if (ico) btn.appendChild(ico);
+      btn.appendChild(label);
+    }
+    label.textContent = t('common.backHome');
   });
 
   setText('settingsHead', 'settings.title');
