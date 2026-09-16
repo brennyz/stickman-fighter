@@ -15,10 +15,10 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Bangers&family=Black+Ops+One&family=Nunito:wght@600;800;900&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="styles/main.css?v=382">
-<link rel="stylesheet" href="styles/seasons.css?v=382">
-<link rel="stylesheet" href="styles/season-overlays.css?v=382">
-<link rel="stylesheet" href="styles/season-motion.css?v=382">
+<link rel="stylesheet" href="styles/main.css?v=383">
+<link rel="stylesheet" href="styles/seasons.css?v=383">
+<link rel="stylesheet" href="styles/season-overlays.css?v=383">
+<link rel="stylesheet" href="styles/season-motion.css?v=383">
 
 
 
@@ -111,7 +111,7 @@
       <div class="arcade-pre" id="menuArcadePre" hidden>KIES JE PAD</div>
       <h1 class="title arcade-logo">STICKMAN<span>FIGHTER</span></h1>
       <p class="press-start" id="pressStartLine" hidden>insert coin</p>
-      <div class="subtitle menu-ver-line" id="menuVerLine">v1.18.172</div>
+      <div class="subtitle menu-ver-line" id="menuVerLine">v1.18.173</div>
       <p class="season-menu-blurb" id="seasonMenuBlurb" hidden></p>
     </header>
     <div class="arcade-menu-body menu-landing-body">
@@ -384,6 +384,7 @@
 
 <div id="summonScreen" class="screen summon-screen">
   <button class="btn back-btn" data-back type="button"><img class="back-btn-ico" src="assets/buttons/chrome/back.svg" alt="" width="18" height="18" decoding="async" draggable="false"> Menu</button>
+  <button type="button" class="btn tog summon-skip" id="btnSummonSkip">Overslaan</button>
   <h2 class="head" id="summonScreenHead">Summons</h2>
   <div class="subtitle" id="summonScreenSub">Dagelijkse kist · 10× random · wapen of pet</div>
   <div class="summon-rail">
@@ -647,6 +648,8 @@
   <details class="settings-fold" id="settingsHelpFold">
     <summary id="settingsHelpFoldSum">Hulp</summary>
     <div class="settings-card settings-fold-body">
+      <button type="button" class="btn tog settings-fresh-btn" id="btnForceFresh"><span class="tog-ico"><img src="assets/buttons/chrome/refresh.svg" alt="" width="24" height="24" decoding="async" draggable="false"></span>Verse versie</button>
+      <div id="settingsFreshHint" style="font-size:11px;opacity:.72;margin:6px 0 10px;line-height:1.4">Oude cache? Tik om te herladen — zonder debug-rommel.</div>
       <button class="btn mode-btn b-install" id="btnInstallApp" type="button" style="width:100%;margin-top:4px">
         <span class="ico"><img src="assets/buttons/chrome/install.svg" alt="" width="28" height="28" decoding="async" draggable="false"></span>
         <div id="btnInstallLabel">App<small>Lade</small></div>
@@ -654,10 +657,8 @@
       <a class="btn tog" id="btnPrivacy" href="privacy.html" target="_blank" rel="noopener" style="margin-top:8px;text-decoration:none"><span class="tog-ico"><img src="assets/buttons/chrome/external.svg" alt="" width="24" height="24" decoding="async" draggable="false"></span>Privacy</a>
       <div id="settingsDiagBlock" class="settings-diag-block" hidden>
         <div id="settingsHelpTitle" style="font-weight:900;color:#ffd75e;margin:12px 0 6px">Vast op een oude versie?</div>
-        <div id="setAppVersion" style="font-size:12px;opacity:.7;margin-bottom:8px">v1.18.172</div>
+        <div id="setAppVersion" style="font-size:12px;opacity:.7;margin-bottom:8px">v1.18.173</div>
         <div id="settingsHelpDesc" style="font-size:12px;opacity:.85;margin-bottom:8px;line-height:1.4">Leegt de cache en laadt opnieuw. Alleen nodig als het spel niet meekomt.</div>
-        <button type="button" class="btn tog" id="btnForceFresh"><span class="tog-ico"><img src="assets/buttons/chrome/refresh.svg" alt="" width="24" height="24" decoding="async" draggable="false"></span>Verse versie</button>
-        <div id="settingsFreshHint" style="font-size:11px;opacity:.72;margin:6px 0 10px;line-height:1.4">Menu reageert niet? Tik hier voor de nieuwste versie.</div>
       </div>
     </div>
   </details>
@@ -841,12 +842,12 @@
 
 <script>
 /* HTML↔JS handshake: als oude SW nog oude game.js serveert terwijl menu-HTML nieuw is. */
-window.__SF_EXPECT_REV = 382;
-window.__SF_EXPECT_APP = '1.18.172';
+window.__SF_EXPECT_REV = 383;
+window.__SF_EXPECT_APP = '1.18.173';
 </script>
-<script src="tunnel-check.js?v=382"></script>
-<script src="game.js?v=382"></script>
-<script src="install.js?v=382"></script>
+<script src="tunnel-check.js?v=383"></script>
+<script src="game.js?v=383"></script>
+<script src="install.js?v=383"></script>
 <script>
 (function () {
   function nukeStale(reason) {

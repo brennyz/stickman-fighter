@@ -106,6 +106,13 @@
     toast(msg, ms);
   }
 
+  function hubCopy(key, fallback) {
+    try {
+      if (typeof tOr === 'function') return tOr(key, fallback);
+    } catch (_) {}
+    return fallback;
+  }
+
   async function applySwUpdate() {
     if (!('serviceWorker' in navigator)) return false;
     try {
@@ -212,11 +219,11 @@
           setTimeout(tryReload, 2000);
           return;
         }
-        // Niet forceren midden in flow — banner blijft, user tikt «Verse versie».
+        // Niet forceren midden in flow — HOME-balk + Opties → Hulp blijven.
         pendingReload = null;
         refreshing = false;
         markSwUpdateReady(true);
-        try { toastIfHub('Nieuwe versie — tik om te laden als je in het menu bent', 4500); } catch (_) {}
+        try { toastIfHub(hubCopy('net.updateWait', 'Nieuwe versie — laadt in het menu'), 4500); } catch (_) {}
         return;
       }
       pendingReload = null;
@@ -228,7 +235,12 @@
   function trackWaitingWorker(reg) {
     if (reg && reg.waiting && navigator.serviceWorker.controller) {
       markSwUpdateReady(true);
-      toastIfHub('Nieuwe versie klaar — tik de gouden balk', 4200);
+      if (safeToReload()) {
+        toastIfHub(hubCopy('net.updateApplying', 'Nieuwe versie — even laden…'), 2800);
+        applySwUpdate();
+      } else {
+        toastIfHub(hubCopy('net.updateReady', 'Nieuwe versie klaar — tik om te laden'), 4200);
+      }
     }
   }
 
@@ -263,11 +275,14 @@
                   setTimeout(apply, 2000);
                   return;
                 }
-                toastIfHub('Nieuwe versie klaar — tik de gouden balk', 4500);
+                toastIfHub(hubCopy('net.updateReady', 'Nieuwe versie klaar — tik om te laden'), 4500);
                 return;
               }
-              try { nw.postMessage({ type: 'SF_SKIP_WAITING' }); }
-              catch (_) { toastIfHub('Nieuwe versie klaar — tik de gouden balk', 4500); }
+              try {
+                toastIfHub(hubCopy('net.updateApplying', 'Nieuwe versie — even laden…'), 2800);
+                nw.postMessage({ type: 'SF_SKIP_WAITING' });
+              }
+              catch (_) { toastIfHub(hubCopy('net.updateReady', 'Nieuwe versie klaar — tik om te laden'), 4500); }
             };
             apply();
           });

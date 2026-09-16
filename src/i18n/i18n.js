@@ -9,6 +9,7 @@ const I18N = {
     net: {
       updateReady: 'Nieuwe versie klaar — tik om te laden',
       updateWait: 'Nieuwe versie — laadt in het menu',
+      updateApplying: 'Nieuwe versie — even laden…',
       dismiss: 'Sluiten',
       offlinePlay: 'Offline — speelt uit cache · save blijft hier',
       offlinePlayHint: 'Offline — uit cache · icoon in de lade = altijd spelen',
@@ -298,6 +299,7 @@ const I18N = {
     net: {
       updateReady: 'New version ready — tap to load',
       updateWait: 'New version — loads in the menu',
+      updateApplying: 'New version — loading…',
       dismiss: 'Dismiss',
       offlinePlay: 'Offline — playing from cache · save stays here',
       offlinePlayHint: 'Offline — from cache · home-screen icon = always play',
@@ -587,6 +589,7 @@ const I18N = {
     net: {
       updateReady: 'Neue Version bereit — tippen zum Laden',
       updateWait: 'Neue Version — lädt im Menü',
+      updateApplying: 'Neue Version — lädt kurz…',
       dismiss: 'Schließen',
       offlinePlay: 'Offline — spielt aus dem Cache · Save bleibt hier',
       offlinePlayHint: 'Offline — aus dem Cache · Icon auf dem Startbildschirm = immer spielen',
@@ -869,6 +872,7 @@ const I18N = {
     net: {
       updateReady: 'Nouvelle version prête — tape pour charger',
       updateWait: 'Nouvelle version — se charge dans le menu',
+      updateApplying: 'Nouvelle version — chargement…',
       dismiss: 'Fermer',
       offlinePlay: 'Hors ligne — depuis le cache · sauvegarde ici',
       offlinePlayHint: 'Hors ligne — cache · icône d’accueil = toujours jouer',
@@ -1129,6 +1133,7 @@ const I18N = {
     net: {
       updateReady: 'Nueva versión lista — toca para cargar',
       updateWait: 'Nueva versión — se carga en el menú',
+      updateApplying: 'Nueva versión — cargando…',
       dismiss: 'Cerrar',
       offlinePlay: 'Sin conexión — desde la caché · la partida se queda aquí',
       offlinePlayHint: 'Sin conexión — caché · icono de inicio = jugar siempre',
@@ -1735,6 +1740,7 @@ function applyLangStaticScreens() {
   setText('summonWhereStrip', 'ui.summonWhere');
   setText('summonStageHint', 'ui.summonHint');
   setText('summonRevealText', 'ui.summonReveal');
+  setText('btnSummonSkip', 'ui.summonSkip');
   const chestPullLbl = document.getElementById('btnChestPull');
   if (chestPullLbl) {
     const d = chestPullLbl.querySelector('div');

@@ -323,9 +323,9 @@ const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const VERSION_UPDATE_SAVE_KEY = 'stickfighter_version_update_save_v1';
 const VERSION_UPDATE_FLAG_KEY = 'stickfighter_version_update_flag_v1';
 const SAVE_EXPORT_SCHEMA = 3;
-const APP_VERSION = '1.18.172';
+const APP_VERSION = '1.18.173';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 382;
+const SW_CACHE_REV = 383;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', petCoins: 0, dex: {}, summons: {}, pets: {}, activePet: null,
   eggPets: {}, activeEggPet: null, eggDaily: null,
   chestDaily: null, chestWeapons: {},
@@ -2306,6 +2306,7 @@ const I18N = {
     net: {
       updateReady: 'Nieuwe versie klaar — tik om te laden',
       updateWait: 'Nieuwe versie — laadt in het menu',
+      updateApplying: 'Nieuwe versie — even laden…',
       dismiss: 'Sluiten',
       offlinePlay: 'Offline — speelt uit cache · save blijft hier',
       offlinePlayHint: 'Offline — uit cache · icoon in de lade = altijd spelen',
@@ -2595,6 +2596,7 @@ const I18N = {
     net: {
       updateReady: 'New version ready — tap to load',
       updateWait: 'New version — loads in the menu',
+      updateApplying: 'New version — loading…',
       dismiss: 'Dismiss',
       offlinePlay: 'Offline — playing from cache · save stays here',
       offlinePlayHint: 'Offline — from cache · home-screen icon = always play',
@@ -2884,6 +2886,7 @@ const I18N = {
     net: {
       updateReady: 'Neue Version bereit — tippen zum Laden',
       updateWait: 'Neue Version — lädt im Menü',
+      updateApplying: 'Neue Version — lädt kurz…',
       dismiss: 'Schließen',
       offlinePlay: 'Offline — spielt aus dem Cache · Save bleibt hier',
       offlinePlayHint: 'Offline — aus dem Cache · Icon auf dem Startbildschirm = immer spielen',
@@ -3166,6 +3169,7 @@ const I18N = {
     net: {
       updateReady: 'Nouvelle version prête — tape pour charger',
       updateWait: 'Nouvelle version — se charge dans le menu',
+      updateApplying: 'Nouvelle version — chargement…',
       dismiss: 'Fermer',
       offlinePlay: 'Hors ligne — depuis le cache · sauvegarde ici',
       offlinePlayHint: 'Hors ligne — cache · icône d’accueil = toujours jouer',
@@ -3426,6 +3430,7 @@ const I18N = {
     net: {
       updateReady: 'Nueva versión lista — toca para cargar',
       updateWait: 'Nueva versión — se carga en el menú',
+      updateApplying: 'Nueva versión — cargando…',
       dismiss: 'Cerrar',
       offlinePlay: 'Sin conexión — desde la caché · la partida se queda aquí',
       offlinePlayHint: 'Sin conexión — caché · icono de inicio = jugar siempre',
@@ -4032,6 +4037,7 @@ function applyLangStaticScreens() {
   setText('summonWhereStrip', 'ui.summonWhere');
   setText('summonStageHint', 'ui.summonHint');
   setText('summonRevealText', 'ui.summonReveal');
+  setText('btnSummonSkip', 'ui.summonSkip');
   const chestPullLbl = document.getElementById('btnChestPull');
   if (chestPullLbl) {
     const d = chestPullLbl.querySelector('div');
@@ -21412,6 +21418,7 @@ function seedNlGameStrings() {
     summonAriaEmpty: 'Geen summons meer vandaag',
     summonAriaBusy: 'Kist opent…',
     summonHint: 'Tik kist om te openen',
+    summonSkip: 'Overslaan',
     summonReveal: 'Tik de kist of Open — buit verschijnt in de kist',
     summonGotoWeapons: 'Naar wapens',
     summonGotoPets: 'Naar pets',
@@ -22572,6 +22579,7 @@ const CATALOG_EN = {
     summonAriaEmpty: 'No summons left today',
     summonAriaBusy: 'Chest opening…',
     summonHint: 'Tap chest to open',
+    summonSkip: 'Skip',
     summonReveal: 'Tap the chest or Open — loot appears in the chest',
     summonGotoWeapons: 'To weapons',
     summonGotoPets: 'To pets',
@@ -24185,6 +24193,7 @@ const CATALOG_DE_CHROME = {
     summonAriaEmpty: 'Keine Summons mehr heute',
     summonAriaBusy: 'Kiste öffnet…',
     summonHint: 'Kiste tippen zum Öffnen',
+    summonSkip: 'Überspringen',
     summonReveal: 'Kiste oder Öffnen tippen — Beute erscheint in der Kiste',
     summonGotoWeapons: 'Zu Waffen',
     summonGotoPets: 'Zu Pets',
@@ -24688,6 +24697,7 @@ overlayI18nCatalog(CATALOG_FR, {
     charLocked: 'Verrouillé', charHead: 'CHOISIS UN COMBATTANT',
     charBig5Hint: 'Tes combattants · choix rapide',
     continueLastMode: 'Dernier mode',
+    summonSkip: 'Passer',
     gearHead: 'Équipement',
     gearSub: '5 emplacements · look vs stats · niveau et temps',
     dexAllBiomes: 'Tous les biomes',
@@ -25205,6 +25215,7 @@ overlayI18nCatalog(CATALOG_ES, {
     charLocked: 'Bloqueado', charHead: 'ELIGE LUCHADOR',
     charBig5Hint: 'Tus luchadores · elección rápida',
     continueLastMode: 'Último modo',
+    summonSkip: 'Saltar',
     gearHead: 'Equipo',
     gearSub: '5 huecos · look vs stats · nivel y tiempo',
     dexAllBiomes: 'Todos los biomas',
@@ -25736,6 +25747,7 @@ overlayI18nCatalog(CATALOG_DE, {
     charLocked: 'Gesperrt', charHead: 'KÄMPFER WÄHLEN',
     charBig5Hint: 'Deine Kämpfer · schnell wählen',
     continueLastMode: 'Letzter Modus',
+    summonSkip: 'Überspringen',
     gearHead: 'Ausrüstung',
     gearSub: '5 Slots · Look vs Stats · Level und Zeit',
     dexAllBiomes: 'Alle Biome',
@@ -48425,6 +48437,17 @@ const UI = {
     }
   },
 
+  skipSummonReveal() {
+    const screen = document.getElementById('summonScreen');
+    const pulling = !!(screen && screen.classList.contains('is-pulling'));
+    if (!this._chestPullBusy && !pulling) return;
+    try { this.showSummonCenterCard(); } catch (_) {}
+    this.clearSummonRevealTimers();
+    this._chestPullBusy = false;
+    this._chestPullLeftSnap = null;
+    try { this.renderSummon(); } catch (_) {}
+  },
+
   clearSummonRevealTimers() {
     if (this._summonCardTimer) {
       clearTimeout(this._summonCardTimer);
@@ -52060,10 +52083,18 @@ bindPress(document.getElementById('btnChestPull'), () => {
   AudioSys.init();
   UI.doChestPull('random');
 });
+bindPress(document.getElementById('btnSummonSkip'), () => {
+  AudioSys.init();
+  AudioSys.sfx('select');
+  UI.skipSummonReveal();
+});
 bindPress(document.getElementById('summonStage'), () => {
+  if (UI._chestPullBusy) {
+    UI.skipSummonReveal();
+    return;
+  }
   const stage = document.getElementById('summonStage');
   if (!stage || !stage.classList.contains('is-pullable')) return;
-  if (UI._chestPullBusy) return;
   AudioSys.init();
   UI.doChestPull('random');
 });
@@ -53126,6 +53157,8 @@ function updateNetStatus(ev) {
     document.body.classList.toggle('sf-offline', off);
     document.body.classList.toggle('sf-sw-ready', swReady);
     document.body.classList.toggle('sf-sw-update', swUpdate && !playing);
+    const setBtn = document.getElementById('btnSettings');
+    if (setBtn) setBtn.classList.toggle('sw-update', !!(swUpdate && !playing));
   } catch (_) {}
 
   const paintUpdateBanner = () => {

@@ -214,10 +214,18 @@ bindPress(document.getElementById('btnChestPull'), () => {
   AudioSys.init();
   UI.doChestPull('random');
 });
+bindPress(document.getElementById('btnSummonSkip'), () => {
+  AudioSys.init();
+  AudioSys.sfx('select');
+  UI.skipSummonReveal();
+});
 bindPress(document.getElementById('summonStage'), () => {
+  if (UI._chestPullBusy) {
+    UI.skipSummonReveal();
+    return;
+  }
   const stage = document.getElementById('summonStage');
   if (!stage || !stage.classList.contains('is-pullable')) return;
-  if (UI._chestPullBusy) return;
   AudioSys.init();
   UI.doChestPull('random');
 });

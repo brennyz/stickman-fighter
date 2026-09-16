@@ -145,6 +145,7 @@ Schrijf **1–3 regels** per sessie: datum, d#, wat, versie.
 
 | Datum (UTC) | d# | Update |
 |-------------|-----|--------|
+| 2026-09-16 | — | **PLAYTEST HARDEN C1+C2** #311: Verse versie in Opties→Hulp (geen debug-rommel); auto-apply + toast; summons Overslaan + geen nested X-scroll. **v1.18.173 / SW 383**. |
 | 2026-09-16 | — | **PLAYTEST HARDEN** lane parked: stub PR `playtest-harden-cycles` + `docs/PLAYTEST-HARDEN-CYCLES.md` (HOME/Upgrades/Options · Summons · Gear/motion · Buildings · Seasons · Combat/FOMO/i18n). Wacht op P0/P1 findings. Geen game-code nog. Base **v1.18.172 / SW 382**. |
 | 2026-09-16 | — | **MEGA-MERGE → main** Grok wave #295–#309 (i18n → systems → UI → pixels → polish). Feature-base PRs (#297/#300/#307/#309) cherry-picked. **v1.18.172 / SW 382**. speel.html na Pages. |
 | 2026-09-16 | — | Gear UI ↔ #295 equip-API: sheets via gearSlotInventory, tap via gearEquipItem(id,{expectSlot}), states ok/vanity-ok/already-equipped/locked/not-owned/wrong-slot/unknown. DOM/schema 1 ongewijzigd. v1.18.171 / SW 381. Draft, niet main. |

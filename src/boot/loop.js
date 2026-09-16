@@ -470,6 +470,8 @@ function updateNetStatus(ev) {
     document.body.classList.toggle('sf-offline', off);
     document.body.classList.toggle('sf-sw-ready', swReady);
     document.body.classList.toggle('sf-sw-update', swUpdate && !playing);
+    const setBtn = document.getElementById('btnSettings');
+    if (setBtn) setBtn.classList.toggle('sw-update', !!(swUpdate && !playing));
   } catch (_) {}
 
   const paintUpdateBanner = () => {

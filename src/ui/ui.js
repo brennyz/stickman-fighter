@@ -2324,6 +2324,17 @@ const UI = {
     }
   },
 
+  skipSummonReveal() {
+    const screen = document.getElementById('summonScreen');
+    const pulling = !!(screen && screen.classList.contains('is-pulling'));
+    if (!this._chestPullBusy && !pulling) return;
+    try { this.showSummonCenterCard(); } catch (_) {}
+    this.clearSummonRevealTimers();
+    this._chestPullBusy = false;
+    this._chestPullLeftSnap = null;
+    try { this.renderSummon(); } catch (_) {}
+  },
+
   clearSummonRevealTimers() {
     if (this._summonCardTimer) {
       clearTimeout(this._summonCardTimer);

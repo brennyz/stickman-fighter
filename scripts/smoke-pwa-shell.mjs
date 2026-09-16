@@ -75,6 +75,14 @@ must(/try \{ wireNetStatusTap\(\); \}/.test(loop),
   'update banner tap must bind at parse, not only after bootGame');
 must(/setTimeout\(\(\) => finish\(false\), 2500\)/.test(install) || /2500/.test(install),
   'applySwUpdate must fail fast so forceFreshVersion can nuke a stuck worker');
+must(!/tik de gouden balk/.test(install),
+  'update toast must not send players to a hidden gold bar');
+must(/net\.updateApplying/.test(install),
+  'auto-apply on HOME must toast net.updateApplying');
+must(/id="btnForceFresh"/.test(index) && index.indexOf('id="settingsHelpFold"') < index.indexOf('id="btnForceFresh"'),
+  'Verse versie must stay in Options Help');
+must(index.indexOf('id="btnForceFresh"') < index.indexOf('id="settingsDiagBlock"'),
+  'Verse versie must sit before the hidden diagnostic block');
 
 must(/id="installCacheStatus"/.test(index), 'install screen must show cache-ready line');
 must(!/Sluit Safari/.test(index), 'install done-copy must not assume Safari');

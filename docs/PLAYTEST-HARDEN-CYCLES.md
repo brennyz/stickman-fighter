@@ -36,23 +36,23 @@ Verdacht: play-laag / touch / FX / save / audio / i18n / anders
 
 Hub tiles, `#upgradeScreen`, `#settingsScreen` (aim color/radius, Lite FX, language, Verse versie).
 
-- [ ] Findings received
-- [ ] P0/P1 investigated on main
-- [ ] Fixes on this branch (if any)
+- [x] Findings received
+- [x] P0/P1 investigated on main
+- [x] Fixes on this branch (if any)
 - [ ] Smoke: `smoke:upgrades` · `smoke:menu` · `smoke:nav` · `smoke:p0p3-uiux` · `smoke:aim-indicator` · `smoke:unify-ui`
 
-**Open P0/P1:** _(none yet)_
+**Open P0/P1:** Cycle 1 P1 — «Verse versie» only in hidden diag. **Fix:** Opties → Hulp shows `btnForceFresh` (no version clutter). Auto-apply on HOME + short toast. Bottom `#netStatus` stay. Diag/version stay 5-tap.
 
 ## Cycle B — Summons
 
 `#summonScreen` · daily chest · HOME `#btnSummons` · back to hub without stuck canvas.
 
-- [ ] Findings received
-- [ ] P0/P1 investigated on main
-- [ ] Fixes on this branch (if any)
+- [x] Findings received
+- [x] P0/P1 investigated on main
+- [x] Fixes on this branch (if any)
 - [ ] Smoke: `smoke:summon` · `smoke:playtest-p1`
 
-**Open P0/P1:** _(none yet)_
+**Open P0/P1:** Cycle 2 P1 no skip/close — `#btnSummonSkip` during pull. P2 nested X-scroll — `.summon-rail` no longer a nested scroller.
 
 ## Cycle C — Gear / motion
 
@@ -116,7 +116,11 @@ Note (main, not a new bug): `smoke:buildings-powers` still prints `systems overl
 
 | When | Cycle | Pri | Title | Status |
 |------|-------|-----|-------|--------|
-| 2026-09-16 | — | — | Waiting for playtest follow-ups | parked |
+| 2026-09-16 | A | P1 | Verse versie not visible — only hidden DOM/debug | fixed on branch |
+| 2026-09-16 | A | — | HOME Upgrades 1-tap · Online save GESYNCHRONISEERD · no banner over logo | PASS |
+| 2026-09-16 | B | — | Summons snappy | PASS |
+| 2026-09-16 | B | P1 | No skip/close during pull | fixed on branch |
+| 2026-09-16 | B | P2 | Nested horizontal scroll awkward | fixed on branch |
 
 ## Out of scope
 
