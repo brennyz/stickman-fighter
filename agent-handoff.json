@@ -17,11 +17,11 @@
     "swCache": "stickfighter-app-v382",
     "gameJsQuery": "game.js?v=382",
     "cssQuery": "styles/main.css?v=382",
-    "featureBranch": "main",
+    "featureBranch": "cursor/playtest-harden-cycles-a78c",
     "pushBlocked": null,
     "shareUrl": "https://brennyz.github.io/stickman-fighter/speel.html",
-    "note": "MEGA-MERGE LIVE on origin/main a18fc9e. #295–#309. v1.18.172 / SW 382. Pages ~1–3 min then Verse versie.",
-    "updated": "2026-09-16T12:31:58Z",
+    "note": "PLAYTEST HARDEN lane on cursor/playtest-harden-cycles-a78c. Base still v1.18.172 / SW 382. Waiting for cycle P0/P1 findings.",
+    "updated": "2026-09-16T12:37:39Z",
     "localMainHead": "a18fc9e67633773cb18b638c64c9a86916d02d27",
     "remoteMainHead": "a18fc9e67633773cb18b638c64c9a86916d02d27"
   },
@@ -39,6 +39,14 @@
     "pendingMerge": []
   },
   "userWishlist": [
+    {
+      "id": "w-20260916T123739",
+      "from": "user",
+      "text": "PLAYTEST HARDEN lane (Grok 4.6 only). Per cycle batch (HOME/Upgrades/Options, Summons, Gear/motion, Buildings, Seasons, Combat/FOMO/i18n): investigate on main, fix P0/P1 on ONE PR playtest-harden-cycles. Android-first, no Versus, no new features. Wait for findings before large code changes.",
+      "status": "active",
+      "updated": "2026-09-16",
+      "notes": "Stub checklist + draft PR on cursor/playtest-harden-cycles-a78c. Parked until cycle findings."
+    },
     {
       "id": "w-20260916T121500",
       "from": "user",
@@ -1058,6 +1066,10 @@
   ],
   "sessionLog": [
     {
+      "at": "2026-09-16T12:37:39Z",
+      "summary": "PLAYTEST HARDEN stub: branch + checklist PR playtest-harden-cycles. Parked for cycle findings. Base v1.18.172 / SW 382."
+    },
+    {
       "at": "2026-09-16T12:33:04Z",
       "summary": "Mega-merge leftover GitHub PRs #297 #300 #302 #307 #308 #309 closed — content already on origin/main 0044b2e (v1.18.172 / SW 382). Pages live."
     },
@@ -1152,10 +1164,6 @@
     {
       "at": "2026-09-14T12:44:05Z",
       "summary": "Toast-wachtrij: één tegelijk, Android Chrome/TWA zelfde HTML onder statusbalk · v1.18.156 / SW 366"
-    },
-    {
-      "at": "2026-09-14T12:41:28Z",
-      "summary": "Start toast-wachtrij: één tegelijk, Android Chrome/TWA"
     }
   ],
   "implementedFeaturesSummary": "d18 char select deel 1+2 (v1.11.1-2); Mats coinrun + shuriken mik/vliegers + anti-spam (v1.12.0); speel.html (v1.12.2+). Zie HANDOFF-ZOEKINDEX.md en improvement-d20-bag.json userFeatureLog.",

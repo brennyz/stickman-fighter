@@ -19,6 +19,7 @@ rg -l "handoff|coinrun|projAimVelocity|charSelectScreen|ASSET-STYLE" .
 
 | Gebruiker vroeg | Versie | Commit | Waar in code |
 |-----------------|--------|--------|----------------|
+| **PLAYTEST HARDEN cycles** | 1.18.172 | this branch | `docs/PLAYTEST-HARDEN-CYCLES.md` — P0/P1 only, Android-first, no Versus |
 | **MOTION lived-in + Styles head** | 1.18.170 | #301 `cursor/equip-look-head-a6cb` | `src/render/live-fx.js` ready/flame/spark/cloth; `fighter.pose` idle; gear doll rAF. Versus out. |
 | **Buildings UI harden** | 1.18.168 | this branch | list→detail · `#buildingsWallet` · collect once · `src/ui/buildings-ui.js` |
 | **Buildings powers + timed loot (4/4)** | 1.18.165 | this branch | binds #292 ids `stick_lighter`…`echo_whistle` · factories/wallet · `src/data/buildings-powers.js` |
