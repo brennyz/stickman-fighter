@@ -36,7 +36,13 @@
     "lastChecked": "2026-09-14T20:21:12Z",
     "lastAsked": "2026-08-17T14:01:21Z",
     "pendingUpload": [],
-    "pendingMerge": []
+    "pendingMerge": [
+      {
+        "pr": 305,
+        "title": "Unique gear pickup silhouettes + rarity ring",
+        "branch": "cursor/gear-pixel-pickup-dace"
+      }
+    ]
   },
   "userWishlist": [
     {
@@ -50,7 +56,7 @@
       "id": "w-20260916T112000",
       "from": "user",
       "text": "PRIORITY before mega-merge — more realism via motion on gear/pixel art. Flame flicker, glow pulse, rarity ring pulse, elite sparkle. Android-first, cheap, respect motionReduced/fxLite. Unique silhouettes stay. No Versus / schema / gates.",
-      "status": "active",
+      "status": "done-in-code",
       "updated": "2026-09-16"
     },
     {
@@ -921,6 +927,10 @@
   ],
   "sessionLog": [
     {
+      "at": "2026-09-16T11:22:00Z",
+      "summary": "Cheap gear pickup motion on #305: hell flicker, void/aura glow, ring pulse, elite sparkle; liteFx skips. smoke:gear-drops still green."
+    },
+    {
       "at": "2026-09-16T11:20:09Z",
       "summary": "Unique gear pickup silhouettes + rarity ring (107 templates, 131-id map). smoke:gear-drops green. Draft #305. v1.18.168 / SW 378."
     },
@@ -1015,10 +1025,6 @@
     {
       "at": "2026-09-14T12:41:28Z",
       "summary": "Start toast-wachtrij: één tegelijk, Android Chrome/TWA"
-    },
-    {
-      "at": "2026-09-14T12:35:18Z",
-      "summary": "SATAN-kaart dikkere duivel, groter portret, korte copy, hitte-balk zonder dubbele tekst · v1.18.155 / SW 365"
     }
   ],
   "implementedFeaturesSummary": "d18 char select deel 1+2 (v1.11.1-2); Mats coinrun + shuriken mik/vliegers + anti-spam (v1.12.0); speel.html (v1.12.2+). Zie HANDOFF-ZOEKINDEX.md en improvement-d20-bag.json userFeatureLog.",
