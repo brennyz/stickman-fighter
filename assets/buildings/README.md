@@ -1,8 +1,8 @@
 # assets/buildings — factory pixel icons
 
-32×32 stickman-pixel SVGs (**art v2.1**, prop-first + in-SVG factory life). **Locked ids = systems #292.**
+32×32 stickman-pixel SVGs (**art v2.2**, prop-first + one SMIL life loop each). **Locked ids = systems #292.**
 No idle/active variants — `buildingArtSrc` exposes one `card` per id.
-Motion: CSS inside each SVG (`prefers-reduced-motion` freezes). See `BUILDING-PIXEL-MAP.md`.
+Motion: SMIL inside each SVG (Android `<img>`); CSS + `prefers-reduced-motion` for inline. See `BUILDING-PIXEL-MAP.md`.
 
 | File | buildingId |
 |------|------------|

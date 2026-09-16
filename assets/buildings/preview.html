@@ -40,7 +40,7 @@
 </head><body>
 <h1>Fabrieken — stickman pixel</h1>
 <p class="sub">Locked ids (#292): stick_lighter · woodchip_glue · chipping_wood · bamboo_boesa · echo_whistle.
-Art v2.1: prop-first silhouettes + in-SVG factory life (flicker / glow / spin hint). CSS inside the SVG so <code>&lt;img&gt;</code> on Android still moves. <code>prefers-reduced-motion</code> freezes the still. No idle/active variants. Not the share URL.</p>
+Art v2.2: one tiny SMIL loop per factory (1.2–2.5s). Flame-tip flicker · vat shimmer · chipper-tooth tick · boiler glow · echo rings · HOME micro-pulse. Readable if motion is ignored. Not the share URL.</p>
 
 <h2>Sheet — display names</h2>
 <div class="sheet">
@@ -166,5 +166,5 @@ Art v2.1: prop-first silhouettes + in-SVG factory life (flicker / glow / spin hi
 <figure><div class="zoom"><img src="../buttons/modes/buildings-bamboo-boesa.svg" alt="" width="48" height="48"></div><figcaption>Bamboo-Boesa Boiler</figcaption></figure>
 <figure><div class="zoom"><img src="../buttons/modes/buildings-echo-whistle.svg" alt="" width="48" height="48"></div><figcaption>Echo-Whistle Mill</figcaption></figure>
 </div>
-<p class="note">Motion lives in the SVG files (not this page’s CSS). Regenerate with <code>npm run pixels:buildings</code> · map: BUILDING-PIXEL-MAP.md · share URL stays speel.html</p>
+<p class="note">Motion is one SMIL loop inside each SVG (Android <code>&lt;img&gt;</code>). This page adds no extra CSS motion. <code>prefers-reduced-motion</code> freezes. Regenerate with <code>npm run pixels:buildings</code> · map: BUILDING-PIXEL-MAP.md · share URL stays speel.html</p>
 </body></html>

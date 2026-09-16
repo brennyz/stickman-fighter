@@ -3,8 +3,9 @@
  * Stickman-pixel factory icons (32×32 crisp SVG) + preview sheet + PNG zooms.
  * Source of truth for assets/buildings/*.svg — run: node scripts/gen-building-pixels.mjs
  *
- * Art v2.1: prop-first silhouettes + in-SVG factory life (CSS, img-safe).
- * No idle/active variants — wire map has a single card slot.
+ * Art v2.2: prop-first silhouettes + ONE tiny SMIL loop per factory
+ * (1.2–2.5s, low amplitude, pause-friendly). CSS is a fallback for
+ * inline/object; Chrome <img> runs SMIL. No idle/active variants.
  */
 import fs from 'fs';
 import path from 'path';
@@ -226,21 +227,20 @@ function paintStickLighter() {
   rect(px, 20, 6, 6, 3, C.copperHi);
   rect(px, 19, 8, 3, 2, C.v); // hinge into the body
 
-  // flame (hero) — core stays static; sparks / window live in life layers
+  // flame body stays on the base; tip lives only on the flicker layer
+  // so SMIL opacity is not covered by an identical still pixel.
   flame(px, 16, 0);
   set(px, 21, 4, C.f);
-
-  const sparks = blank();
-  set(sparks, 12, 0, C.y);
-  set(sparks, 20, 1, C.f);
-  set(sparks, 11, 2, C.r);
-  set(sparks, 21, 3, C.y);
-  set(sparks, 22, 2, C.f);
-  const tips = blank();
-  set(tips, 5, 10, C.y);
-  set(tips, 6, 10, C.f);
-  set(tips, 8, 12, C.y);
-  set(tips, 17, 16, C.i); // fuel-window flash
+  const tip = blank();
+  set(tip, 16, 0, C.flameCore);
+  hline(tip, 15, 1, 3, C.y);
+  set(tip, 16, 1, C.flameCore);
+  set(tip, 16, 2, C.y);
+  set(px, 16, 0, null);
+  set(px, 15, 1, null);
+  set(px, 16, 1, null);
+  set(px, 17, 1, null);
+  set(px, 16, 2, null);
 
   // 2px matchsticks (stick-lighter, not a generic forge)
   rect(px, 5, 14, 2, 10, C.t);
@@ -256,10 +256,7 @@ function paintStickLighter() {
 
   stickman(px, 2, 25, C.k, C.y);
   rimLight(px, [C.l, C.m, C.g]);
-  return scene(px, [
-    { cls: 'flicker', px: sparks },
-    { cls: 'flicker2', px: tips },
-  ]);
+  return scene(px, [{ cls: 'flicker', px: tip }]);
 }
 
 /** Woodchip-Glue — hopper of chips feeding a dripping lime vat. */
@@ -290,10 +287,9 @@ function paintWoodchipGlue() {
   disk(px, 22, 21, 8, C.k);
   disk(px, 22, 21, 7, C.j);
   oval(px, 22, 20, 6, 5, C.q);
-  oval(px, 22, 19, 5, 3, C.glueHi);
+  // brightest vat highlight is the shimmer layer only
   // bubbles
   set(px, 19, 18, C.i);
-  set(px, 23, 17, C.i);
   set(px, 25, 19, C.y);
   set(px, 20, 20, C.q);
   // rim
@@ -307,17 +303,10 @@ function paintWoodchipGlue() {
   set(px, 25, 29, C.j);
   set(px, 22, 28, C.glueHi);
 
-  const glow = blank();
-  oval(glow, 22, 19, 4, 3, C.glueHi);
-  set(glow, 21, 18, C.i);
-  set(glow, 23, 17, C.y);
-  const drip = blank();
-  set(drip, 22, 27, C.q);
-  set(drip, 22, 29, C.j);
-  const chips = blank();
-  set(chips, 20, 4, C.o);
-  set(chips, 24, 5, C.y);
-  set(chips, 26, 6, C.h);
+  const shimmer = blank();
+  oval(shimmer, 22, 19, 4, 3, C.glueHi);
+  set(shimmer, 21, 18, C.i);
+  set(shimmer, 23, 17, C.y);
 
   // chip pile
   set(px, 2, 28, C.t);
@@ -330,11 +319,7 @@ function paintWoodchipGlue() {
 
   stickman(px, 7, 25, C.k, C.i);
   rimLight(px, [C.l, C.m]);
-  return scene(px, [
-    { cls: 'glow', px: glow },
-    { cls: 'drip', px: drip },
-    { cls: 'flicker2', px: chips },
-  ]);
+  return scene(px, [{ cls: 'glow', px: shimmer }]);
 }
 
 /** Chipping-Wood — toothy chipper eating a log, chips flying. */
@@ -373,27 +358,26 @@ function paintChippingWood() {
   set(px, 21, 17, C.g);
   set(px, 20, 17, C.o);
   set(px, 22, 17, C.o);
-  // teeth live on the spin layer so the chipper can step
   const teeth = [
     [21, 8], [26, 10], [29, 14], [29, 20], [26, 24],
     [21, 26], [16, 24], [13, 20], [13, 14], [16, 10],
   ];
-  const blade = blank();
   teeth.forEach(([x, y]) => {
-    rect(blade, x - 1, y - 1, 2, 2, C.c);
-    set(blade, x, y, C.i);
+    rect(px, x - 1, y - 1, 2, 2, C.c);
+    set(px, x, y, C.i);
   });
+  // one bite-tick: log-face tooth lives on the tick layer so it can nudge
+  const tick = blank();
+  rect(tick, 12, 19, 2, 2, C.c);
+  set(tick, 13, 20, C.i);
+  rect(px, 12, 19, 2, 2, null);
+  set(px, 13, 20, null);
 
-  // flying chips
+  // flying chips (static)
   [[26, 4, C.t], [28, 6, C.w], [30, 3, C.o], [27, 8, C.h],
    [30, 7, C.t], [24, 3, C.w], [29, 10, C.o]].forEach(([x, y, c]) => {
     set(px, x, y, c);
     set(px, x + 1, y, c);
-  });
-  const chips = blank();
-  [[27, 3, C.t], [30, 5, C.o], [25, 5, C.w]].forEach(([x, y, c]) => {
-    set(chips, x, y, c);
-    set(chips, x + 1, y, c);
   });
 
   // sawdust puff
@@ -403,10 +387,7 @@ function paintChippingWood() {
 
   stickman(px, 5, 25, C.k, C.i);
   rimLight(px, [C.l, C.m, C.d]);
-  return scene(px, [
-    { cls: 'spin', px: blade, origin: [21, 17] },
-    { cls: 'flicker2', px: chips },
-  ]);
+  return scene(px, [{ cls: 'tick', px: tick }]);
 }
 
 /** Bamboo-Boesa — grove + round copper boiler with a whistle-face. */
@@ -430,7 +411,7 @@ function paintBambooBoesa() {
   disk(px, 22, 20, 8, C.k);
   disk(px, 22, 20, 7, C.v);
   disk(px, 22, 19, 6, C.o);
-  disk(px, 21, 18, 3, C.copperHi);
+  disk(px, 21, 18, 3, C.o);
   // rivets
   [[16, 17], [28, 17], [16, 23], [28, 23], [22, 13], [15, 20], [29, 20]].forEach(([x, y]) => {
     set(px, x, y, C.k);
@@ -453,17 +434,14 @@ function paintBambooBoesa() {
   rect(px, 26, 7, 1, 4, C.copperHi);
   hline(px, 20, 11, 8, C.k);
 
-  // one static puff so the stack still reads; extras live in steam/glow
+  disk(px, 18, 3, 2, C.s);
   disk(px, 23, 2, 2, C.i);
-  const steam = blank();
-  disk(steam, 18, 3, 2, C.s);
-  disk(steam, 27, 4, 2, C.s);
-  set(steam, 16, 5, C.s);
-  set(steam, 25, 1, C.i);
-  set(steam, 29, 2, C.s);
+  disk(px, 27, 4, 2, C.s);
   const glow = blank();
   disk(glow, 21, 18, 2, C.y);
+  set(glow, 20, 17, C.copperHi);
   set(glow, 22, 9, C.i);
+  set(glow, 25, 1, C.s); // optional chimney puff on the same pulse
 
   // stand
   vline(px, 16, 27, 3, C.k);
@@ -471,10 +449,7 @@ function paintBambooBoesa() {
   hline(px, 16, 27, 13, C.k);
 
   stickman(px, 14, 25, C.k, C.i);
-  return scene(px, [
-    { cls: 'steam', px: steam },
-    { cls: 'glow', px: glow },
-  ]);
+  return scene(px, [{ cls: 'glow', px: glow }]);
 }
 
 /** Echo-Whistle — organ-pipe mill shouting cyan/purple rings. */
@@ -495,13 +470,11 @@ function paintEchoWhistle() {
   pipe(9, 3, 5, C.u, C.purpleHi);
   pipe(14, 8, 4, C.d, C.i);
 
-  // mill hub stays; paddles wiggle on a life layer
+  rect(px, 6, 2, 4, 3, C.x);
+  rect(px, 13, 2, 4, 3, C.x);
+  rect(px, 10, 0, 3, 2, C.u);
   disk(px, 11, 4, 1, C.g);
   set(px, 11, 4, C.k);
-  const paddles = blank();
-  rect(paddles, 6, 2, 4, 3, C.x);
-  rect(paddles, 13, 2, 4, 3, C.x);
-  rect(paddles, 10, 0, 3, 2, C.u);
 
   // factory skirt / door under pipes
   outlineBox(px, 5, 22, 13, 8, C.m);
@@ -516,12 +489,10 @@ function paintEchoWhistle() {
   rect(px, 21, 18, 3, 2, C.o);
   set(px, 23, 19, C.k);
 
-  // inner ring static; outer rings pulse
   ring(px, 25, 19, 3, C.c);
-  const ringA = blank();
-  ring(ringA, 26, 19, 5, C.u);
-  const ringB = blank();
-  ring(ringB, 27, 19, 7, C.c);
+  const rings = blank();
+  ring(rings, 26, 19, 5, C.u);
+  ring(rings, 27, 19, 7, C.c);
   // keep horn readable over rings
   outlineBox(px, 17, 16, 6, 6, C.g);
   rect(px, 18, 17, 4, 4, C.y);
@@ -529,11 +500,7 @@ function paintEchoWhistle() {
 
   stickman(px, 2, 25, C.k, C.i);
   rimLight(px, [C.l, C.m, C.u]);
-  return scene(px, [
-    { cls: 'wiggle', px: paddles, origin: [11, 4] },
-    { cls: 'echo', px: ringA },
-    { cls: 'echo2', px: ringB },
-  ]);
+  return scene(px, [{ cls: 'echo', px: rings }]);
 }
 
 /** HOME tile — factory district: all five signatures in one skyline. */
@@ -556,17 +523,14 @@ function paintHubBuildings() {
   outlineBox(px, 6, 8, 5, 7, C.o);
   rect(px, 7, 9, 3, 5, C.g);
   flame(px, 8, 1);
+  set(px, 8, 1, null);
+  set(px, 8, 2, null);
   outlineBox(px, 7, 23, 3, 7, C.w);
-  const sparks = blank();
-  set(sparks, 5, 1, C.f);
-  set(sparks, 11, 0, C.y);
-  set(sparks, 10, 3, C.r);
 
   // glue vat
   disk(px, 16, 24, 5, C.k);
   disk(px, 16, 24, 4, C.q);
   disk(px, 16, 23, 3, C.glueHi);
-  set(px, 15, 22, C.i);
   hline(px, 13, 19, 7, C.a);
 
   // chipping saw — chunky teeth so it is not a plus
@@ -584,19 +548,16 @@ function paintHubBuildings() {
   rect(px, 29, 14, 1, 15, C.purpleHi);
   ring(px, 28, 17, 3, C.c);
   set(px, 25, 8, C.s);
-  const vatGlow = blank();
-  set(vatGlow, 15, 22, C.i);
-  set(vatGlow, 16, 21, C.y);
-  const toot = blank();
-  ring(toot, 28, 17, 3, C.c);
+  const pulse = blank();
+  set(pulse, 8, 1, C.y);
+  set(pulse, 8, 2, C.f);
+  set(pulse, 15, 22, C.i);
+  set(pulse, 16, 21, C.glueHi);
+  ring(pulse, 28, 17, 3, C.c);
 
   stickman(px, 12, 25, C.k, C.y);
   rimLight(px, [C.l, C.m]);
-  return scene(px, [
-    { cls: 'flicker', px: sparks },
-    { cls: 'glow', px: vatGlow },
-    { cls: 'echo', px: toot },
-  ]);
+  return scene(px, [{ cls: 'pulse', px: pulse }]);
 }
 
 const BUILDINGS = [
@@ -673,11 +634,11 @@ const FILE_ALIASES = [
 ];
 
 /**
- * In-file CSS so motion runs when the SVG is an <img> (Android Chrome / TWA).
- * steps() keeps the pixel crunch; no filters, no JS, no extra HTTP.
- * prefers-reduced-motion leaves the static silhouette.
+ * CSS fallback for inline/object embeds + prefers-reduced-motion.
+ * Chrome/Android <img> ignores CSS-in-SVG — SMIL in lifeAnim() is the
+ * real path. One class per factory; still silhouette if motion is off.
  */
-const LIFE_CSS = `<style>@media (prefers-reduced-motion:no-preference){.flicker{animation:flicker 1.05s steps(2,end) infinite}.flicker2{animation:flicker 1.4s steps(2,end) infinite reverse}.glow{animation:glow 2.4s ease-in-out infinite}.drip{animation:drip 1.55s steps(2,end) infinite}.spin{transform-box:fill-box;transform-origin:center;animation:spin 3.2s steps(8,end) infinite}.wiggle{transform-box:fill-box;transform-origin:center;animation:wiggle 2.8s steps(2,end) infinite}.steam{animation:steam 2.5s steps(3,end) infinite}.echo{animation:echo 2.1s ease-in-out infinite}.echo2{animation:echo 2.7s ease-in-out .35s infinite}}@keyframes flicker{50%{opacity:.22}}@keyframes glow{0%,100%{opacity:.3}50%{opacity:.92}}@keyframes drip{0%,100%{opacity:1}50%{opacity:.15}}@keyframes spin{to{transform:rotate(360deg)}}@keyframes wiggle{0%,100%{transform:rotate(-14deg)}50%{transform:rotate(14deg)}}@keyframes steam{0%{opacity:.85}100%{opacity:0}}@keyframes echo{0%,100%{opacity:.22}50%{opacity:1}}</style>`;
+const LIFE_CSS = `<style>@media (prefers-reduced-motion:no-preference){.flicker{animation:flicker 1.4s steps(2,end) infinite}.glow{animation:glow 2.2s ease-in-out infinite}.tick{animation:tick 1.6s steps(2,end) infinite}.echo{animation:echo 2.2s ease-in-out infinite}.pulse{animation:pulse 2.4s ease-in-out infinite}}@keyframes flicker{50%{opacity:.62;transform:translateY(1px)}}@keyframes glow{0%,100%{opacity:1}50%{opacity:.62}}@keyframes tick{50%{transform:translate(-1px,0)}}@keyframes echo{0%,100%{opacity:.88}50%{opacity:.4}}@keyframes pulse{0%,100%{opacity:1}50%{opacity:.74}}</style>`;
 
 function scene(base, layers) {
   return { base, layers: (layers || []).filter((L) => L && L.px) };
@@ -711,10 +672,13 @@ function asScene(sceneOrPx) {
 function flatten(sceneOrPx) {
   const { base, layers } = asScene(sceneOrPx);
   const out = blank();
-  const stamp = (src) => {
+  const stamp = (src, ox = 0, oy = 0) => {
     for (let y = 0; y < SIZE; y++) {
       for (let x = 0; x < SIZE; x++) {
-        if (src[y][x]) out[y][x] = src[y][x];
+        if (!src[y][x]) continue;
+        const dx = x + ox;
+        const dy = y + oy;
+        if (dx >= 0 && dy >= 0 && dx < SIZE && dy < SIZE) out[dy][dx] = src[y][x];
       }
     }
   };
@@ -723,33 +687,46 @@ function flatten(sceneOrPx) {
   return out;
 }
 
-/** SMIL is what Chrome/Android actually run on SVG-as-<img>; CSS covers inline + reduced-motion. */
-function lifeAnim(cls, origin) {
-  const [ox, oy] = origin || [16, 16];
-  if (cls === 'flicker') {
-    return '<animate attributeName="opacity" values="1;.22;1" dur="1.05s" repeatCount="indefinite" calcMode="discrete"/>';
+/** Mid-cycle still for the LIFE sheet: opacity loops hide; tick/flicker nudge 1px. */
+function flattenMid(sceneOrPx) {
+  const { base, layers } = asScene(sceneOrPx);
+  const out = blank();
+  const stamp = (src, ox = 0, oy = 0) => {
+    for (let y = 0; y < SIZE; y++) {
+      for (let x = 0; x < SIZE; x++) {
+        if (!src[y][x]) continue;
+        const dx = x + ox;
+        const dy = y + oy;
+        if (dx >= 0 && dy >= 0 && dx < SIZE && dy < SIZE) out[dy][dx] = src[y][x];
+      }
+    }
+  };
+  stamp(base);
+  for (const L of layers) {
+    if (L.cls === 'tick') stamp(L.px, -1, 0);
+    else if (L.cls === 'flicker') stamp(L.px, 0, 1);
+    // glow / echo / pulse: omit = opacity dip
   }
-  if (cls === 'flicker2') {
-    return '<animate attributeName="opacity" values="1;.22;1" dur="1.4s" repeatCount="indefinite" calcMode="discrete"/>';
+  return out;
+}
+
+/** SMIL is what Chrome/Android actually run on SVG-as-<img>; CSS covers inline + reduced-motion. */
+function lifeAnim(cls) {
+  // First keyframe = rest so a paused/ignored loop still reads.
+  if (cls === 'flicker') {
+    return '<animate attributeName="opacity" values="1;.62;1" dur="1.4s" repeatCount="indefinite" calcMode="discrete"/><animateTransform attributeName="transform" type="translate" values="0 0;0 1;0 0" dur="1.4s" repeatCount="indefinite" calcMode="discrete"/>';
   }
   if (cls === 'glow') {
-    return '<animate attributeName="opacity" values=".3;.92;.3" dur="2.4s" repeatCount="indefinite"/>';
+    return '<animate attributeName="opacity" values="1;.62;1" dur="2.2s" repeatCount="indefinite"/>';
   }
-  if (cls === 'drip') {
-    return '<animate attributeName="opacity" values="1;.15;1" dur="1.55s" repeatCount="indefinite" calcMode="discrete"/>';
+  if (cls === 'tick') {
+    return '<animateTransform attributeName="transform" type="translate" values="0 0;-1 0;0 0" dur="1.6s" repeatCount="indefinite" calcMode="discrete"/>';
   }
-  if (cls === 'spin') {
-    return `<animateTransform attributeName="transform" type="rotate" values="0 ${ox} ${oy};45 ${ox} ${oy};90 ${ox} ${oy};135 ${ox} ${oy};180 ${ox} ${oy};225 ${ox} ${oy};270 ${ox} ${oy};315 ${ox} ${oy};360 ${ox} ${oy}" dur="3.2s" repeatCount="indefinite" calcMode="discrete"/>`;
+  if (cls === 'echo') {
+    return '<animate attributeName="opacity" values=".88;.4;.88" dur="2.2s" repeatCount="indefinite"/>';
   }
-  if (cls === 'wiggle') {
-    return `<animateTransform attributeName="transform" type="rotate" values="-14 ${ox} ${oy};14 ${ox} ${oy};-14 ${ox} ${oy}" dur="2.8s" repeatCount="indefinite" calcMode="discrete"/>`;
-  }
-  if (cls === 'steam') {
-    return '<animate attributeName="opacity" values=".85;0;.85" dur="2.5s" repeatCount="indefinite" calcMode="discrete"/>';
-  }
-  if (cls === 'echo' || cls === 'echo2') {
-    const dur = cls === 'echo2' ? '2.7s' : '2.1s';
-    return `<animate attributeName="opacity" values=".22;1;.22" dur="${dur}" repeatCount="indefinite"/>`;
+  if (cls === 'pulse') {
+    return '<animate attributeName="opacity" values="1;.74;1" dur="2.4s" repeatCount="indefinite"/>';
   }
   return '';
 }
@@ -760,7 +737,7 @@ function encodeSvg(sceneOrPx) {
     .map((L) => {
       const paths = encodePaths(L.px);
       if (!paths) return '';
-      return `<g class="${L.cls}">${lifeAnim(L.cls, L.origin)}${paths}</g>`;
+      return `<g class="${L.cls}">${lifeAnim(L.cls)}${paths}</g>`;
     })
     .join('');
   const css = layers.length ? LIFE_CSS : '';
@@ -891,7 +868,7 @@ function writePreview(items) {
 </head><body>
 <h1>Fabrieken — stickman pixel</h1>
 <p class="sub">Locked ids (#292): stick_lighter · woodchip_glue · chipping_wood · bamboo_boesa · echo_whistle.
-Art v2.1: prop-first silhouettes + in-SVG factory life (flicker / glow / spin hint). CSS inside the SVG so <code>&lt;img&gt;</code> on Android still moves. <code>prefers-reduced-motion</code> freezes the still. No idle/active variants. Not the share URL.</p>
+Art v2.2: one tiny SMIL loop per factory (1.2–2.5s). Flame-tip flicker · vat shimmer · chipper-tooth tick · boiler glow · echo rings · HOME micro-pulse. Readable if motion is ignored. Not the share URL.</p>
 
 <h2>Sheet — display names</h2>
 <div class="sheet">
@@ -937,7 +914,7 @@ ${items.map(native32).join('')}
 <figure><div class="zoom"><img src="../buttons/modes/buildings-bamboo-boesa.svg" alt="" width="48" height="48"></div><figcaption>Bamboo-Boesa Boiler</figcaption></figure>
 <figure><div class="zoom"><img src="../buttons/modes/buildings-echo-whistle.svg" alt="" width="48" height="48"></div><figcaption>Echo-Whistle Mill</figcaption></figure>
 </div>
-<p class="note">Motion lives in the SVG files (not this page’s CSS). Regenerate with <code>npm run pixels:buildings</code> · map: BUILDING-PIXEL-MAP.md · share URL stays speel.html</p>
+<p class="note">Motion is one SMIL loop inside each SVG (Android <code>&lt;img&gt;</code>). This page adds no extra CSS motion. <code>prefers-reduced-motion</code> freezes. Regenerate with <code>npm run pixels:buildings</code> · map: BUILDING-PIXEL-MAP.md · share URL stays speel.html</p>
 </body></html>
 `;
   fs.writeFileSync(path.join(outDir, 'preview.html'), html);
@@ -992,6 +969,69 @@ ${[...items, HUB].map((b) => `
   fs.writeFileSync(path.join(previewDir, 'zooms.html'), zooms);
 }
 
+function writeLifeSheet(items) {
+  const scale = 4;
+  const gap = 10;
+  const cell = SIZE * scale;
+  const cols = 2;
+  const rows = items.length;
+  const w = cols * cell + (cols + 1) * gap;
+  const h = rows * cell + (rows + 1) * gap;
+  const parse = (hex) => [
+    parseInt(hex.slice(1, 3), 16),
+    parseInt(hex.slice(3, 5), 16),
+    parseInt(hex.slice(5, 7), 16),
+  ];
+  const bg = parse('#0e1424');
+  const raw = Buffer.alloc((w * 4 + 1) * h);
+  const paintPx = (px, ox, oy) => {
+    for (let y = 0; y < cell; y++) {
+      for (let x = 0; x < cell; x++) {
+        const hex = px[(y / scale) | 0][(x / scale) | 0];
+        const gx = ox + x;
+        const gy = oy + y;
+        const row = gy * (w * 4 + 1);
+        raw[row] = 0;
+        const i = row + 1 + gx * 4;
+        if (!hex) {
+          raw[i] = bg[0]; raw[i + 1] = bg[1]; raw[i + 2] = bg[2]; raw[i + 3] = 255;
+        } else {
+          const [r, g, b] = parse(hex);
+          raw[i] = r; raw[i + 1] = g; raw[i + 2] = b; raw[i + 3] = 255;
+        }
+      }
+    }
+  };
+  for (let y = 0; y < h; y++) {
+    const row = y * (w * 4 + 1);
+    raw[row] = 0;
+    for (let x = 0; x < w; x++) {
+      const i = row + 1 + x * 4;
+      raw[i] = bg[0]; raw[i + 1] = bg[1]; raw[i + 2] = bg[2]; raw[i + 3] = 255;
+    }
+  }
+  items.forEach((b, i) => {
+    const painted = b.paint();
+    const oy = gap + i * (cell + gap);
+    paintPx(flatten(painted), gap, oy);
+    paintPx(flattenMid(painted), gap + cell + gap, oy);
+    fs.writeFileSync(path.join(previewDir, `${b.id}-mid-192.png`), encodePng(flattenMid(painted), 6));
+  });
+  const ihdr = Buffer.alloc(13);
+  ihdr.writeUInt32BE(w, 0);
+  ihdr.writeUInt32BE(h, 4);
+  ihdr[8] = 8;
+  ihdr[9] = 6;
+  const png = Buffer.concat([
+    Buffer.from([137, 80, 78, 71, 13, 10, 26, 10]),
+    pngChunk('IHDR', ihdr),
+    pngChunk('IDAT', zlib.deflateSync(raw)),
+    pngChunk('IEND', Buffer.alloc(0)),
+  ]);
+  fs.writeFileSync(path.join(previewDir, 'life-sheet.png'), png);
+  console.log('OK life sheet → assets/buildings/_preview/life-sheet.png');
+}
+
 function main() {
   fs.mkdirSync(outDir, { recursive: true });
   fs.mkdirSync(previewDir, { recursive: true });
@@ -1012,6 +1052,7 @@ function main() {
   }
   writePreview(BUILDINGS);
   writeShotSheet(BUILDINGS);
+  writeLifeSheet([...BUILDINGS, HUB]);
   console.log('OK preview → assets/buildings/preview.html');
 }
 

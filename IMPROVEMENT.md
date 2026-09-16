@@ -1,3 +1,4 @@
+| 2026-09-16 | **buildings life** | Owner one-loop pass: flame tip / vat shimmer / tooth tick / boiler glow / echo rings / HOME pulse. SMIL 1.2–2.5s. #300 draft. |
 | 2026-09-16 | **buildings motion** | In-SVG factory life (flicker / vat glow / 8-step chipper / steam / echo rings). CSS + prefers-reduced-motion. #300 draft. |
 | 2026-09-16 | **buildings art v2** | Prop-first factory pixels (flame zippo, hopper+vat, toothy chipper, bamboo boiler, organ-pipe mill) + HOME skyline. Locked #292 ids unchanged. Mega-merge only. |
 | 2026-09-14 | **buildings art** | Wired to #292 ids `stick_lighter`…`bamboo_boesa`/`echo_whistle`. Mega-merge only. **v1.18.164 / SW v374**. |
