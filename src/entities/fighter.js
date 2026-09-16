@@ -675,8 +675,14 @@ class Fighter {
       headB: 0,
     };
     if (s === 'idle') {
-      const b = Math.sin(t * 3);
-      P.hipY = -46 + b * 1.4; P.headB = b * 0.6;
+      if (typeof applyReadyStance === 'function') {
+        applyReadyStance(P, t, {
+          calm: (typeof motionReduced === 'function' && motionReduced()),
+        });
+      } else {
+        const b = Math.sin(t * 3);
+        P.hipY = -46 + b * 1.4; P.headB = b * 0.6;
+      }
     } else if (s === 'run') {
       const c = t * 11;
       P.lean = 0.14;
@@ -743,9 +749,11 @@ class Fighter {
       c.fill();
       c.globalAlpha = 1;
     }
-    // schaduw
+    // schaduw — tiny idle weight-shift so the stance reads as planted
     c.fillStyle = 'rgba(0,0,0,.3)';
-    c.beginPath(); c.ellipse(0, 2, 26 * s, 6 * s, 0, 0, TAU); c.fill();
+    const shadowX = (this.state === 'idle' && !(typeof motionReduced === 'function' && motionReduced()))
+      ? Math.sin(this.animT * 1.32) * 2.2 : 0;
+    c.beginPath(); c.ellipse(shadowX, 2, 26 * s, 6 * s, 0, 0, TAU); c.fill();
     c.scale(this.face * s, s);
 
     if (!this.alive) {
@@ -805,16 +813,22 @@ class Fighter {
     drawLimb(hipX, hipY, P.legs[1][0], P.legs[1][1], legL, legL);
     paintLook('legs');
     paintLook('chest');
-    // hoofd
-    if (this.bald) {
+    // hoofd — never leave a hole. Helmets replace the disc; styles only sit on it.
+    const headCX = (this._preview && typeof lookPx === 'function') ? lookPx(headX) : headX;
+    const headCY = (this._preview && typeof lookPx === 'function') ? lookPx(headY - 9) : (headY - 9);
+    bones.head = { x: headCX, y: headCY };
+    /* Always paint a head disc first. Helmets sit on it; they must never leave a hole. */
+    if (typeof drawStickmanHead === 'function') {
+      drawStickmanHead(c, headCX, headCY, this.color, { lineW: this.lineW, bald: !!this.bald });
+    } else if (this.bald) {
       c.fillStyle = '#ffe8c8';
-      c.beginPath(); c.arc(headX, headY - 9, 10.5, 0, TAU); c.fill();
+      c.beginPath(); c.arc(headCX, headCY, 10.5, 0, TAU); c.fill();
       c.strokeStyle = 'rgba(0,0,0,.35)'; c.lineWidth = 1.2;
-      c.beginPath(); c.arc(headX, headY - 9, 10.5, 0, TAU); c.stroke();
+      c.beginPath(); c.arc(headCX, headCY, 10.5, 0, TAU); c.stroke();
       c.fillStyle = 'rgba(255,255,255,.4)';
-      c.beginPath(); c.arc(headX - 3, headY - 12, 2.8, 0, TAU); c.fill();
+      c.beginPath(); c.arc(headCX - 3, headCY - 3, 2.8, 0, TAU); c.fill();
     } else {
-      c.beginPath(); c.arc(headX, headY - 9, 10.5, 0, TAU); c.stroke();
+      c.beginPath(); c.arc(headCX, headCY, 10.5, 0, TAU); c.stroke();
     }
     if (this.gi === 'white' || this.gi === 'red' || this.gi === 'hero') {
       const giFill = this.gi === 'red' ? 'rgba(220,48,48,.55)' : this.gi === 'hero' ? 'rgba(255,226,89,.72)' : 'rgba(255,255,255,.78)';
@@ -830,9 +844,17 @@ class Fighter {
     if (looks.length) {
       paintLook('head');
     } else if (this.isPlayer && this.style) {
-      try { this.drawStyleExtras(c, headX, headY - 9, shX, shY, hipX, hipY); } catch (_) {}
+      try { this.drawStyleExtras(c, headCX, headCY, shX, shY, hipX, hipY); } catch (_) {}
     }
-    if (this.isRobot) this.drawRobotHead(c, headX, headY - 9);
+    if (typeof ensureEquipHeadVisible === 'function') {
+      try { ensureEquipHeadVisible(c, looks, bones, this); } catch (_) {}
+    } else {
+      c.strokeStyle = this.color;
+      c.lineWidth = this.lineW;
+      c.beginPath(); c.arc(headCX, headCY, 10.5, 0.18, Math.PI - 0.18); c.stroke();
+    }
+    if (this.isRobot) this.drawRobotHead(c, headCX, headCY);
+    c.strokeStyle = this.color; c.lineWidth = this.lineW; c.lineCap = 'round';
 
     // voorste arm + wapen
     const [hx, hy] = drawLimb(shX, shY, P.arms[1][0], P.arms[1][1], armL, armL);

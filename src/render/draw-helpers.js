@@ -517,6 +517,9 @@ function drawWeaponShape(c, id, spin, moveIdx) {
     drawWeaponLightMotes(c, light, spin, lite);
     c.restore();
   }
+  if (typeof drawWeaponLiveFx === 'function') {
+    try { drawWeaponLiveFx(c, id, spin); } catch (_) {}
+  }
   if (mi) c.restore();
 }
 

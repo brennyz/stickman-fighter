@@ -316,13 +316,33 @@ function gearUiRenderDescriptor(s) {
   return { schema: 1, slots: _gearSlotIds().map((id) => ({ slot: id, itemId: null })) };
 }
 
-function drawGearHeroDoll(cv, saveObj) {
+let _gearDollRaf = 0;
+let _gearDollTick = 0;
+
+function startGearDollLive() {
+  if (_gearDollRaf) return;
+  const step = (now) => {
+    const el = typeof document !== 'undefined' ? document.getElementById('gearScreen') : null;
+    if (!el || !el.classList.contains('active')) { _gearDollRaf = 0; return; }
+    _gearDollTick++;
+    const skip = (typeof fxLite === 'function' && fxLite()) ? 3 : 2;
+    if (_gearDollTick % skip === 0) {
+      const cv = document.getElementById('gearDollCanvas');
+      if (cv) drawGearHeroDoll(cv, typeof save === 'object' ? save : null, now * 0.001);
+    }
+    _gearDollRaf = requestAnimationFrame(step);
+  };
+  _gearDollRaf = requestAnimationFrame(step);
+}
+
+function drawGearHeroDoll(cv, saveObj, animT) {
   if (!cv || typeof Fighter !== 'function') return;
   const cc = cv.getContext('2d');
   if (!cc) return;
   const s = saveObj || (typeof save === 'object' ? save : null);
   cc.clearRect(0, 0, cv.width, cv.height);
   cc.save();
+  if (typeof startGearDollLive === 'function') startGearDollLive();
   const desc = (typeof gearRenderDescriptor === 'function' && s) ? gearRenderDescriptor(s) : gearUiRenderDescriptor(s);
   const layers = (desc && desc.slots) ? desc.slots : [];
   for (const sid of GEAR_SLOT_DRAW_ORDER) {
@@ -343,7 +363,7 @@ function drawGearHeroDoll(cv, saveObj) {
     isPlayer: true, x: 0, y: 0, color: (st && st.body) || '#f2f5ff', style: st, scale: 1,
     weapon: wpn || undefined,
   });
-  preview.animT = 0.35;
+  preview.animT = Number.isFinite(animT) ? animT : 0.55;
   preview.draw(cc);
   if (s && s.activePet && typeof drawMonsterArt === 'function') {
     const def = (typeof activePetDef === 'function') ? activePetDef()

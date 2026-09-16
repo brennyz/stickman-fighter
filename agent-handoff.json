@@ -958,6 +958,22 @@
       "status": "done-in-code",
       "updated": "2026-09-16",
       "notes": "Consume #297 symbols; keep list→detail UX on #296."
+    },
+    {
+      "id": "w-20260916T113500",
+      "from": "user",
+      "text": "PRIORITY before mega-merge — add MOTION / lived-in feel on #301: SF-like ready pose + idle breathe; lightweight weapon/cosmetic FX (flame/spark/cloth sway). Menu + combat match. Android-first, no Versus, no hitbox/save/gear-id changes.",
+      "status": "done-in-code",
+      "updated": "2026-09-16",
+      "notes": "Shipped on #301. Ready guard + breathe; wick flame/spark; cloth sway; gear-doll rAF. Hitboxes/save/gear IDs unchanged. v1.18.170 / SW 380."
+    },
+    {
+      "id": "w-20260916T110100",
+      "from": "user",
+      "text": "Improve equip look (menu+combat offsets/layers/tint/pixel-align). P0: Styles head vanishes on apply/preview — head must stay visible or be replaced by a style headpiece. Versus out of scope. PR #276 already merged; stay on visual attachment + Styles head.",
+      "status": "done-in-code",
+      "updated": "2026-09-16",
+      "notes": "Look-only. Do not rebuild gear data model or char-slot UI."
     }
   ],
   "agentRules": [

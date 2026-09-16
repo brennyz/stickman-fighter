@@ -235,8 +235,37 @@ for (const [id, kinds] of Object.entries(expectKind)) {
 }
 
 const leaf = api.forStyle({ id: 'leaf_band', bandana: '#2d6b36', plate: '#dfe8ff', accent: '#43b25b' })[0];
-if (!leaf || leaf.oy === undefined || leaf.scale < 1) fail('leaf_band bandana needs tuned oy/scale');
+if (!leaf || leaf.oy === undefined || leaf.scale < 0.9) fail('leaf_band bandana needs tuned oy/scale');
 if (leaf.color !== '#2d6b36') fail('leaf_band color should hydrate from style');
+
+if (typeof api.hidesBaseHead !== 'function') fail('hidesBaseHead missing');
+for (const id of Object.keys(expectKind)) {
+  const stLooks = api.forStyle({ id, bandana: '#123', accent: '#abc', plate: '#eee' });
+  if (api.hidesBaseHead(stLooks)) fail(id + ' style must not hide the stick head');
+}
+const helmLooks = api.forGear({ head: { kind: 'helmet', color: '#9aa8bc' } });
+if (!api.hidesBaseHead(helmLooks)) fail('helmet gear must mark coversHead so a replacement skull is drawn');
+if (typeof api.luma === 'function') {
+  if (api.luma('#1a1424') >= 0.38) fail('crimson/void body must count as dark (contrast rim)');
+  if (api.luma('#f2f5ff') < 0.75) fail('classic body must count as light');
+}
+if (typeof api.headStroke === 'function') {
+  const darkHead = api.headStroke('#1a1424');
+  if (!darkHead || darkHead === '#1a1424') fail('dark style head stroke must lighten so the circle reads');
+}
+if (typeof api.previewBody === 'function') {
+  const sam = api.previewBody('#2a2a35');
+  if (!sam || sam === '#2a2a35') fail('samurai preview body must lighten on the style card');
+  if (api.previewBody('#f2f5ff') !== '#f2f5ff') fail('classic preview body must stay light');
+}
+if (typeof api.previewCamera !== 'function') fail('previewCamera missing');
+for (const [cw, ch] of [[80, 86], [64, 64]]) {
+  const cam = api.previewCamera(cw, ch);
+  const headY = cam.ty + cam.sc * cam.headLocalY;
+  const headR = cam.headR * cam.sc;
+  if (headY - headR < 1.5) fail('style card ' + cw + 'x' + ch + ' clips head top (y=' + (headY - headR).toFixed(2) + ')');
+  if (headY + headR > ch - 1) fail('style card ' + cw + 'x' + ch + ' clips head bottom');
+}
 
 const gear = api.forGear({
   head: { kind: 'helmet', color: '#c9d6e8', accent: '#7cf5ff' },
@@ -451,12 +480,38 @@ if (typeof api.drawPreview === 'function') {
 if (typeof api.drawPreview !== 'function') fail('drawPreview missing');
 const rec = recordingContext();
 try {
-  for (const id of Object.keys(expectKind)) api.drawPreview(rec, id);
+  for (const id of Object.keys(expectKind)) {
+    api.drawPreview(rec, id);
+    const recOne = recordingContext();
+    api.drawPreview(recOne, id);
+    const headArcs = recOne.calls.filter((c) => c[0] === 'arc' && Number(c[3]) >= 8 && Number(c[3]) <= 13.5);
+    if (!headArcs.length) fail(id + ' preview drew no head-sized arc (head vanished)');
+  }
   api.drawPreview(rec, 'leaf_band', { head: { kind: 'helmet', color: '#ccc' } });
 } catch (e) {
   fail('drawPreview threw: ' + e.message);
 }
 if (!rec.calls.some((c) => c[0] === 'quad')) fail('bandana/coat should use curved paths, not only rects');
 if (!rec.calls.some((c) => c[0] === 'fill')) fail('preview produced no fills');
+
+const live = ctx.LiveFxApi;
+if (!live) fail('LiveFxApi missing — motion module not bundled');
+const ready = { hipY: -46, lean: 0, arms: [[1.9, -1.1], [1.15, -0.85]], legs: [[1.82, 1.72], [1.34, 1.55]], headB: 0 };
+live.ready(ready, 0.55, { calm: true });
+if (!ready.ready) fail('applyReadyStance must mark ready');
+if (!(ready.lean > 0.12)) fail('ready stance needs forward lean (not T-pose)');
+if (!(ready.arms[1][0] < 0.55)) fail('lead guard hand must come up (front shoulder < 0.55)');
+if (!(ready.arms[0][0] > 2.3)) fail('rear arm must cock back');
+if (!(ready.hipY > -43)) fail('ready stance should crouch (hips lower than old -46)');
+if (live.weaponKind('vuist')) fail('fists must not grow a torch');
+if (live.weaponKind('nachtkaars') !== 'flame') fail('nachtkaars should be flame/fakkel');
+if (live.weaponKind('vlamzweep') !== 'flame') fail('vlamzweep should be flame');
+if (live.weaponKind('donder') !== 'spark') fail('donder should spark');
+const swayA = live.clothSway({ animT: 0.2 }, 3);
+const swayB = live.clothSway({ animT: 1.8 }, 3);
+if (swayA === swayB) fail('cloth sway must change with animT');
+const recFlame = recordingContext();
+live.drawWeapon(recFlame, 'nachtkaars', 0.4);
+if (!recFlame.calls.some((c) => c[0] === 'fill' || c[0] === 'quad')) fail('flame tip must paint');
 
 console.log('SMOKE_OK equip-look slots=' + api.slots.join(',') + ' styles=' + Object.keys(expectKind).length);

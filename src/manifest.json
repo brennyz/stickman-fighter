@@ -41,6 +41,7 @@
   "src/systems/gear.js",
   "src/core/canvas.js",
   "src/render/draw-helpers.js",
+  "src/render/live-fx.js",
   "src/render/equip-look.js",
   "src/render/tide-art.js",
   "src/render/beast-art.js",
