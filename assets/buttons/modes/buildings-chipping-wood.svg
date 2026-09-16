@@ -1,15 +1,15 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
      stroke="#7cf5ff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
      aria-hidden="true">
-  <style>@media (prefers-reduced-motion:no-preference){.s{transform-origin:16.2px 14.6px;animation:s 3.2s steps(8,end) infinite}}@keyframes s{to{transform:rotate(360deg)}}</style>
-  <!-- Chipping-Wood: log + toothy chipper (not a sawmill/dojo) -->
+  <style>@media (prefers-reduced-motion:no-preference){.t{animation:t 1.6s steps(2,end) infinite}}@keyframes t{50%{transform:translate(-1px,0)}}</style>
+  <!-- Chipping-Wood: log + chipper; one tooth bite-tick (not a full spin) -->
   <path d="M2.6 13.6h10.2" stroke="#c98850"/>
   <path d="M2.6 16h9.2" stroke="#6b4a28"/>
-  <g class="s">
-  <animateTransform attributeName="transform" type="rotate" values="0 16.2 14.6;45 16.2 14.6;90 16.2 14.6;135 16.2 14.6;180 16.2 14.6;225 16.2 14.6;270 16.2 14.6;315 16.2 14.6;360 16.2 14.6" dur="3.2s" repeatCount="indefinite" calcMode="discrete"/>
   <circle cx="16.2" cy="14.6" r="5.6" fill="rgba(124,245,255,.2)"/>
   <circle cx="16.2" cy="14.6" r="1.5" fill="#7cf5ff" stroke="none"/>
-  <path d="M16.2 8.2v1.4M21.4 14.6h-1.4M16.2 21v-1.4M11 14.6h1.4" stroke-width="2.1"/>
-  </g>
+  <path d="M16.2 8.2v1.4M21.4 14.6h-1.4M16.2 21v-1.4"/>
+  <path class="t" d="M11 14.6h1.4" stroke-width="2.1">
+    <animateTransform attributeName="transform" type="translate" values="0 0;-1 0;0 0" dur="1.6s" repeatCount="indefinite" calcMode="discrete"/>
+  </path>
   <path d="M20.6 7.2l1.5-2M22.2 10l1.8.2M21.4 12.6l1.7 1" stroke="#c98850" stroke-width="1.7"/>
 </svg>

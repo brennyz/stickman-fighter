@@ -76,8 +76,8 @@ for (const id of LOCKED) {
 const LIFE = {
   stick_lighter: 'flicker',
   woodchip_glue: 'glow',
-  chipping_wood: 'spin',
-  bamboo_boesa: 'steam',
+  chipping_wood: 'tick',
+  bamboo_boesa: 'glow',
   echo_whistle: 'echo',
 };
 for (const [id, cls] of Object.entries(LIFE)) {
@@ -86,8 +86,14 @@ for (const [id, cls] of Object.entries(LIFE)) {
   ok(svg.includes('<animate') || svg.includes('<animateTransform'), `smil ${id}`);
   ok(svg.includes(`class="${cls}"`) || svg.includes(`class='${cls}'`) || svg.includes(`class="${cls} `), `life ${cls} ${id}`);
 }
-ok(read('assets/buildings/hub-buildings.svg').includes('prefers-reduced-motion'), 'hub motion reduce');
+const hubPx = read('assets/buildings/hub-buildings.svg');
+ok(hubPx.includes('prefers-reduced-motion'), 'hub motion reduce');
+ok(hubPx.includes('class="pulse"'), 'hub pulse');
 ok(read('assets/buttons/hub/buildings.svg').includes('prefers-reduced-motion'), 'stroke hub motion');
+ok(!read('assets/buildings/chipping_wood.svg').includes('class="spin"'), 'chipper not full spin');
+ok(!read('assets/buildings/bamboo_boesa.svg').includes('class="steam"'), 'bamboo one glow loop');
+ok(!read('assets/buildings/woodchip_glue.svg').includes('class="drip"'), 'glue shimmer not drip');
+ok(read('BUILDING-PIXEL-MAP.md').includes('one tiny loop'), 'map documents one-loop life');
 
 const map = read('BUILDING-PIXEL-MAP.md');
 for (const id of LOCKED) ok(map.includes('`' + id + '`'), `map ${id}`);
