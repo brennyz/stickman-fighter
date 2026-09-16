@@ -463,7 +463,19 @@ const catalogIds = [
   ['back', 'void_spine'], ['back', 'wings_nightmare'], ['back', 'wings_hell'],
 ];
 if (catalogIds.length !== 131) fail('catalog snapshot must stay 131');
-const drawable = new Set(['bandana', 'visor', 'fox', 'horns', 'halo', 'glow', 'helmet', 'gloves', 'charm', 'greaves', 'wrap', 'wings', 'cape', 'tome', 'crystal', 'chestplate', 'vest', 'tail']);
+const drawable = new Set(['bandana', 'visor', 'fox', 'horns', 'halo', 'glow', 'helmet', 'gloves', 'charm', 'pin', 'greaves', 'wrap', 'wings', 'cape', 'tome', 'crystal', 'chestplate', 'vest', 'tail']);
+if (api.kindFromId('back_pin_dot', 'back') !== 'pin') fail('back_pin_dot → pin (not charm/cape)');
+const pinLook = api.fromDescriptor({
+  schema: 1,
+  slots: [{ slot: 'back', itemId: 'back_pin_dot', tint: '#ffd75e', accent: '#c97a20', layer: 'back' }],
+})[0];
+if (!pinLook || pinLook.kind !== 'pin') fail('descriptor pin kind');
+if (pinLook.layer !== 'chest') fail('pin must paint on chest (not a back-cape / feet orphan)');
+if (pinLook.anchor !== 'shoulder') fail('pin must anchor on shoulder');
+if (!(pinLook.oy >= 8) || Math.abs(pinLook.ox) < 3) fail('pin offset must sit on the lapel, not origin/feet');
+const hunterCharm = (api.forStyle({ id: 'hunter', bandana: '#3d5c32', accent: '#5ad06a', plate: '#6b5344' }) || [])
+  .find((l) => l.kind === 'charm');
+if (hunterCharm && hunterCharm.slot !== 'head') fail('hunter style charm stays on the head');
 for (const [slot, suf] of catalogIds) {
   const id = slot + '_' + suf;
   const kind = api.kindFromId(id, slot);

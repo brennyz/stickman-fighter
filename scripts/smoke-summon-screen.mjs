@@ -74,8 +74,27 @@ async function run() {
         fullW: rect ? Math.round(rect.width) : 0,
         fullH: rect ? Math.round(rect.height) : 0,
         hasPull: !!document.getElementById('btnChestPull'),
+        hasSkip: !!document.getElementById('btnSummonSkip'),
+        railOverflowX: (() => {
+          const rail = document.querySelector('.summon-rail');
+          return rail ? getComputedStyle(rail).overflowX : null;
+        })(),
+        railOverflowY: (() => {
+          const rail = document.querySelector('.summon-rail');
+          return rail ? getComputedStyle(rail).overflowY : null;
+        })(),
+        screenOverflowX: (() => {
+          const sc = document.getElementById('summonScreen');
+          return sc ? getComputedStyle(sc).overflowX : null;
+        })(),
       };
     });
+    must(openSnap.hasSkip, 'summon skip/close control missing');
+    must(openSnap.railOverflowX !== 'auto' && openSnap.railOverflowX !== 'scroll',
+      'summon rail must not nest horizontal scroll: ' + openSnap.railOverflowX);
+    must(openSnap.railOverflowY !== 'auto' && openSnap.railOverflowY !== 'scroll',
+      'summon rail must not be a nested Y scroller: ' + openSnap.railOverflowY);
+    must(openSnap.screenOverflowX === 'hidden', 'summon screen must clip X: ' + openSnap.screenOverflowX);
     must(openSnap.summonActive, 'summonScreen not active: ' + JSON.stringify(openSnap.active));
     must(openSnap.active.length === 1 && openSnap.active[0] === 'summonScreen', 'expected only summonScreen: ' + JSON.stringify(openSnap.active));
     must(openSnap.canvasVis === 'hidden' || openSnap.canvasVis === '', 'canvas should be hidden on UI: ' + openSnap.canvasVis);
@@ -175,6 +194,13 @@ async function run() {
         railW: railRect ? Math.round(railRect.width) : 0,
         hasVideo: !!(screen && screen.classList.contains('has-video')),
         pulling: !!(screen && screen.classList.contains('is-pulling')),
+        skipVisible: (() => {
+          const b = document.getElementById('btnSummonSkip');
+          if (!b) return false;
+          const cs = getComputedStyle(b);
+          const r = b.getBoundingClientRect();
+          return cs.display !== 'none' && cs.visibility !== 'hidden' && cs.pointerEvents !== 'none' && r.height >= 40;
+        })(),
         videoDisplay: (() => {
           const v = document.getElementById('summonVideo');
           return v ? getComputedStyle(v).display : null;
@@ -196,6 +222,16 @@ async function run() {
       'counter changed during reveal: ' + JSON.stringify(pullSnap));
     must(pullSnap.stillSummon, 'summon screen lost during pull');
     must(!pullSnap.isPlaying, 'is-playing flipped during pull');
+    must(pullSnap.pulling, 'expected is-pulling during reveal');
+    must(pullSnap.skipVisible, 'skip/close must be tappable during pull: ' + JSON.stringify(pullSnap));
+    const skipped = await page.evaluate(() => {
+      UI.skipSummonReveal();
+      return {
+        pulling: !!(document.getElementById('summonScreen')?.classList.contains('is-pulling')),
+        busy: !!UI._chestPullBusy,
+      };
+    });
+    must(!skipped.pulling && !skipped.busy, 'skip must close the reveal: ' + JSON.stringify(skipped));
     must(pullSnap.cardShow, 'center card not shown after reveal window');
     must(pullSnap.cardName.length > 0, 'empty center card name');
     if (pullSnap.cardCenter) {

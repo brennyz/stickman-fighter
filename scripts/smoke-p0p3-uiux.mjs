@@ -35,12 +35,21 @@ if (!/id="setMusicVolName"/.test(html) || !/id="setSfxVolName"/.test(html)) {
 if (!/id="pauseMusicVolName"/.test(html) || !/id="pauseSfxVolName"/.test(html)) {
   fail('Pause volume names must be spannable for i18n');
 }
-if (!/id="settingsDiagBlock"/.test(html)) fail('Fresh version must live in hidden diagnostic block');
+if (!/id="settingsDiagBlock"/.test(html)) fail('diagnostic block missing');
 if (html.indexOf('id="settingsHelpFold"') > html.indexOf('id="btnForceFresh"')) {
   fail('Fresh version must stay inside Help fold');
 }
-if (html.indexOf('id="settingsDiagBlock"') > html.indexOf('id="btnForceFresh"')) {
-  fail('btnForceFresh must sit inside settingsDiagBlock');
+const helpStart = html.indexOf('id="settingsHelpFold"');
+const helpEnd = html.indexOf('</details>', helpStart);
+const helpChunk = html.slice(helpStart, helpEnd);
+if (!/id="btnForceFresh"/.test(helpChunk)) fail('btnForceFresh must stay in Help fold');
+const diagStart = html.indexOf('id="settingsDiagBlock"');
+const diagChunk = html.slice(diagStart, diagStart + 900);
+if (/id="btnForceFresh"/.test(diagChunk)) {
+  fail('btnForceFresh must be player-visible, not inside settingsDiagBlock');
+}
+if (!/id="setAppVersion"/.test(diagChunk)) {
+  fail('version number must stay in hidden diagnostic block');
 }
 if (!/class="[^"]*menu-ver-line/.test(html)) fail('HOME version line must be player-hidden');
 
@@ -53,6 +62,8 @@ if (!/\.card \.right\.picked/.test(css)) fail('weapon chosen state must not be c
 if (!/\.settings-home-tile/.test(css)) fail('online save must use HOME-tile settings card');
 if (!/\.settings-tile-tog/.test(css)) fail('settings toggles must use HOME-tile rows');
 
+if (!/updateApplying:/.test(i18n)) fail('net.updateApplying toast missing');
+if (!/summonSkip: 'Overslaan'/.test(catalog)) fail('NL summon skip missing');
 if (!/profileAria: 'Profiel en missies'/.test(i18n)) fail('NL profile aria missing');
 if (!/profileAria: 'Profile and missions'/.test(i18n)) fail('EN profile aria missing');
 if (!/profileAria: 'Profil und Missionen'/.test(i18n)) fail('DE profile aria missing');
@@ -81,7 +92,10 @@ if (!/tOr\('hud\.' \+ key/.test(game)) fail('keyboard legend must use hud.* i18n
 if (/lab: 'stomp'/.test(game) || /lab: 'technique'/.test(game)) fail('keyboard legend still hardcodes EN/NL mix');
 if (!/function audioThemeLabel/.test(themes)) fail('audio theme labels must be i18n');
 if (/UI\.toast\('Sfeer:/.test(themes)) fail('audio theme toast still hardcoded Dutch');
-if (!/bindPlayerDiagUnlock/.test(start)) fail('Fresh version unlock gesture missing');
+if (!/bindPlayerDiagUnlock/.test(start)) fail('diag unlock gesture missing');
+if (!/skipSummonReveal/.test(ui) || !/btnSummonSkip/.test(html)) {
+  fail('summon pull must have a skip/close control');
+}
 if (!/__sfSeason\.apply/.test(seasons)) fail('season pref must sync overlay apply()');
 if (!/rarity\.' \+ rar/.test(ui)) fail('gear slot rarity must use i18n');
 

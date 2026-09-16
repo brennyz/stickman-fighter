@@ -846,17 +846,36 @@
     line-height: 1.35;
   }
   .summon-rail {
-    width: var(--ui-rail-wide);
-    max-width: 100%;
+    width: 100%;
+    max-width: var(--ui-rail-wide);
     margin: 0 auto;
-    padding: 0 var(--ui-pad-x);
+    padding: 0;
     display: flex;
     flex-direction: column;
     gap: clamp(8px, 1.4vw, 12px);
-    flex: 1 1 auto;
+    flex: 0 1 auto;
     min-height: 0;
-    overflow: auto;
-    -webkit-overflow-scrolling: touch;
+    overflow: visible;
+  }
+  .summon-skip {
+    display: none;
+  }
+  .summon-screen.is-pulling .summon-skip {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: fixed;
+    top: max(10px, env(safe-area-inset-top));
+    right: max(10px, env(safe-area-inset-right));
+    z-index: 50;
+    min-height: var(--touch-min);
+    min-width: var(--touch-min);
+    padding: 8px 14px;
+    pointer-events: auto;
+    visibility: visible;
+    background: var(--menu-tile-solid-hi);
+    color: var(--menu-ink);
+    border: 1px solid rgba(255,215,94,.4);
   }
   .summon-where {
     width: 100%;
@@ -943,6 +962,7 @@
   }
   .summon-screen.is-pulling .summon-rail {
     overflow: hidden;
+    overflow-x: hidden;
     padding: 0;
     flex: 1 1 auto;
     justify-content: center;
@@ -2312,6 +2332,7 @@
     background:var(--menu-tile-solid-hi); border:1px solid var(--menu-edge);
     border-radius:14px; color:var(--menu-ink); padding:10px 14px;
   }
+  .settings-fresh-btn { width:100%; min-height:var(--touch-min); margin:4px 0 0; }
   .settings-diag-block[hidden] { display:none !important; }
   body.sf-player-diag #settingsDiagBlock { display:block !important; }
   .menu-ver-line {

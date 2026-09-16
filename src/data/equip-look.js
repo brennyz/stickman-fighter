@@ -53,7 +53,8 @@ const EQUIP_LOOK_DEFAULTS = {
   helmet: { slot: 'head', layer: 'head', ox: 0, oy: 0, scale: 1 },
   glow: { slot: 'head', layer: 'head', ox: 0, oy: 0, scale: 1 },
   lightning: { slot: 'head', layer: 'head', ox: 0, oy: 0, scale: 1 },
-  charm: { slot: 'head', layer: 'head', ox: 0, oy: 2, scale: 1 },
+  charm: { slot: 'back', layer: 'chest', ox: 7, oy: 8, scale: 1, anchor: 'shoulder' },
+  pin: { slot: 'back', layer: 'chest', ox: 6, oy: 14, scale: 1, anchor: 'shoulder' },
   coat: { slot: 'back', layer: 'back', ox: 0, oy: 1, scale: 1 },
   cape: { slot: 'back', layer: 'back', ox: 0, oy: 2, scale: 1 },
   tome: { slot: 'back', layer: 'back', ox: -1, oy: 3, scale: 1 },
@@ -88,7 +89,8 @@ const GEAR_ID_KIND_RULES = [
   [/cape|scarf|banner|kite|capelet/, 'cape'],
   [/backpack|pack_|shell|plate_back|banner_iron/, 'tome'],
   [/crystal_shard|void_spine/, 'crystal'],
-  [/pin_|balloon|back_leaf\b|back_void\b/, 'charm'],
+  [/pin_/, 'pin'],
+  [/balloon|back_leaf\b|back_void\b/, 'charm'],
   [/plate_|mail_|cuirass/, 'chestplate'],
   [/vest_|shirt_|hoodie|gi_|tunic|sash|jacket|robe|coat_|poncho/, 'vest'],
 ];
@@ -168,7 +170,7 @@ const EQUIP_LOOK_BY_STYLE = {
   hunter: [
     { kind: 'vest', fill: 'rgba(61,92,50,.58)', oy: 0, scale: 1.04 },
     { kind: 'bandana', oy: -1, scale: 1.0 },
-    { kind: 'charm', ox: -12, oy: -6, scale: 1.0 },
+    { kind: 'charm', slot: 'head', layer: 'head', ox: -12, oy: -6, scale: 1.0 },
   ],
   crystal: [
     { kind: 'glow', scale: 1.04 },
@@ -464,13 +466,17 @@ function lookPieceFromDescriptorRow(row) {
   const rawLayer = row.layer != null ? String(row.layer).toLowerCase() : '';
   const layer = (rawLayer && EQUIP_GENERIC_LAYERS.includes(rawLayer)) ? slot : (row.layer || slot);
   const kind = lookKindFromGearId(row.itemId, slot);
+  const pin = kind === 'pin';
   return hydrateEquipLook({
     id: row.itemId,
     kind,
     slot,
-    layer,
-    color: row.tint,
-    accent: row.accent,
+    layer: pin ? 'chest' : layer,
+    anchor: pin ? 'shoulder' : undefined,
+    ox: pin ? 6 : undefined,
+    oy: pin ? 14 : undefined,
+    color: pin ? (row.tint || '#ffd75e') : row.tint,
+    accent: pin ? (row.accent || '#c97a20') : row.accent,
   });
 }
 

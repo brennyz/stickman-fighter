@@ -162,9 +162,24 @@ function pickBannerLane(banners) {
   return pick;
 }
 
+function combatBannerMaxSize(requested) {
+  const req = requested || 40;
+  const portraitTight = (typeof W === 'number') && W < 420 && (typeof H === 'number') && H > W * 1.02;
+  if (portraitTight) return Math.min(req, 26);
+  if (typeof W === 'number' && W < 520) return Math.min(req, 32);
+  return req;
+}
+
 function bannerLaneY(H, lane, size) {
-  const baseY = H * 0.31;
-  const step = Math.max(32, Math.min(48, H * 0.052));
+  const portraitTight = (typeof W === 'number') && W < 420 && H > W * 1.02;
+  const inset = (typeof hudInsetTop === 'function') ? hudInsetTop() : 16;
+  const sizeN = size || 28;
+  // Slim strip under HP/WAVE chrome — never mid-playfield (old 31%).
+  const baseY = Math.min(
+    inset + (portraitTight ? 44 : 56),
+    portraitTight ? H * 0.145 : H * 0.18
+  );
+  const step = Math.max(18, Math.min(portraitTight ? 24 : 34, sizeN * 0.72));
   const mid = (BANNER_LANES - 1) * 0.5;
   const laneN = typeof lane === 'number' ? lane : 1;
   return baseY + (laneN - mid) * step;

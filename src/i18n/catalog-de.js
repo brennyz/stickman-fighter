@@ -759,6 +759,7 @@ const CATALOG_DE_CHROME = {
     summonAriaEmpty: 'Keine Summons mehr heute',
     summonAriaBusy: 'Kiste öffnet…',
     summonHint: 'Kiste tippen zum Öffnen',
+    summonSkip: 'Überspringen',
     summonReveal: 'Kiste oder Öffnen tippen — Beute erscheint in der Kiste',
     summonGotoWeapons: 'Zu Waffen',
     summonGotoPets: 'Zu Pets',

@@ -322,21 +322,28 @@ if (typeof UI === 'object' && UI) {
       btn.setAttribute('data-factory-id', view.id);
       btn.dataset.buildingId = view.id;
       btn.dataset.factoryId = view.id;
+      const unbuilt = !view.locked && Number(view.level) < 1;
       if (view.id === sel) {
         btn.setAttribute('data-hub-badge', view.canCollect
           ? buildingsTxt('buildings.collect', 'Oogsten')
-          : buildingsTxt('buildings.level', 'Lv {n}', { n: view.level }));
+          : (unbuilt
+            ? buildingsTxt('buildings.unbuilt', 'Nog niet gebouwd')
+            : buildingsTxt('buildings.level', 'Lv {n}', { n: view.level })));
       } else {
         btn.removeAttribute('data-hub-badge');
       }
       const lockBit = view.locked
         ? buildingsEscape(view.lockHint || buildingsTxt('buildings.locked', 'Op slot'))
-        : buildingsTxt('buildings.level', 'Lv {n}', { n: view.level });
+        : (unbuilt
+          ? buildingsTxt('buildings.unbuilt', 'Nog niet gebouwd')
+          : buildingsTxt('buildings.level', 'Lv {n}', { n: view.level }));
       const desc = buildingsDesc(view.id, view) || view;
       const does = desc.doesLine || view.sub || '';
       const stock = view.locked
         ? ''
-        : (view.pending + '/' + view.capacity + ' ' + buildingsEscape(view.resourceLabel));
+        : (unbuilt
+          ? buildingsEscape(buildingsCostText(view) || buildingsTxt('buildings.costPc', '{n} PC', { n: 20 }))
+          : (view.pending + '/' + view.capacity + ' ' + buildingsEscape(view.resourceLabel)));
       btn.innerHTML =
         '<span class="hub-tile-ico">' + buildingsArtHtml(view) + '</span>'
         + '<span class="hub-tile-title">' + buildingsEscape(view.name) + '</span>'
@@ -393,7 +400,7 @@ if (typeof UI === 'object' && UI) {
     host.dataset.factoryId = view.id;
     host.setAttribute('data-factory-id', view.id);
     const locked = !!view.locked;
-    const unbuilt = !locked && !(view.built || view.level >= 1);
+    const unbuilt = !locked && Number(view.level) < 1;
     const step = this.buildingsStep === 'upgrade' ? 'upgrade' : 'harvest';
     const pct = view.capacity ? Math.min(100, Math.round((view.pending / view.capacity) * 100)) : 0;
     const eta = (!locked && view.pending < view.capacity && view.nextMs > 0)
@@ -459,13 +466,15 @@ if (typeof UI === 'object' && UI) {
       + this.buildingsEffectHtml(view)
       + (locked
         ? '<div class="buildings-lock">' + buildingsEscape(view.lockHint) + '</div>'
-        : '<div class="buildings-stock">'
+        : (unbuilt
+          ? (costHint ? '<div class="buildings-stock-lbl">' + buildingsEscape(costHint) + '</div>' : '')
+          : '<div class="buildings-stock">'
           + '<div class="buildings-stock-bar" role="progressbar" aria-valuenow="' + view.pending + '" aria-valuemax="' + view.capacity + '">'
           + '<span style="width:' + pct + '%"></span></div>'
           + '<div class="buildings-stock-lbl">'
           + buildingsEscape(buildingsTxt('buildings.stored', '{n}/{cap} opgeslagen', { n: view.pending, cap: view.capacity }))
           + (eta ? ' · ' + buildingsEscape(eta) : '')
-          + '</div></div>')
+          + '</div></div>'))
       + flash
       + '</div>'
       + cta;
@@ -536,11 +545,16 @@ if (typeof UI === 'object' && UI) {
     const pct = view.capacity ? Math.min(100, Math.round((view.pending / view.capacity) * 100)) : 0;
     if (bar) bar.style.width = pct + '%';
     if (lbl) {
-      const eta = (!view.locked && view.pending < view.capacity && view.nextMs > 0)
-        ? buildingsTxt('buildings.nextIn', 'Volgende over {t}', { t: (typeof buildingsFormatEta === 'function') ? buildingsFormatEta(view.nextMs) : '' })
-        : '';
-      lbl.textContent = buildingsTxt('buildings.stored', '{n}/{cap} opgeslagen', { n: view.pending, cap: view.capacity })
-        + (eta ? ' · ' + eta : '');
+      const unbuilt = !view.locked && Number(view.level) < 1;
+      if (unbuilt) {
+        lbl.textContent = buildingsCostText(view) || buildingsTxt('buildings.unbuilt', 'Nog niet gebouwd');
+      } else {
+        const eta = (!view.locked && view.pending < view.capacity && view.nextMs > 0)
+          ? buildingsTxt('buildings.nextIn', 'Volgende over {t}', { t: (typeof buildingsFormatEta === 'function') ? buildingsFormatEta(view.nextMs) : '' })
+          : '';
+        lbl.textContent = buildingsTxt('buildings.stored', '{n}/{cap} opgeslagen', { n: view.pending, cap: view.capacity })
+          + (eta ? ' · ' + eta : '');
+      }
     }
     if (collectBtn) {
       collectBtn.disabled = !view.canCollect;

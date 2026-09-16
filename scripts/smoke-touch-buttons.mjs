@@ -250,6 +250,36 @@ async function run() {
       }
     }
 
+    // Cycle 6 P1: MASTER/WAVE banners stay in the top chrome; next-wave /
+    // pause-ring / strike-hint pill stay above the 390px pad cluster.
+    const hudAudit = {};
+    const hudFail = [];
+    try {
+      Input.layout(W, H);
+      const padTop = typeof touchClusterTopY === 'function' ? touchClusterTopY() : H;
+      const b0 = typeof bannerLaneY === 'function' ? bannerLaneY(H, 0, 26) : H * 0.31;
+      const b1 = typeof bannerLaneY === 'function' ? bannerLaneY(H, 1, 26) : H * 0.31;
+      const b2 = typeof bannerLaneY === 'function' ? bannerLaneY(H, 2, 26) : H * 0.31;
+      const bannerMax = Math.max(b0, b1, b2);
+      const cap = typeof combatBannerMaxSize === 'function' ? combatBannerMaxSize(58) : 58;
+      const hintY = typeof combatHintAnchorY === 'function' ? combatHintAnchorY(g, W, H) : H * 0.2;
+      const ringY = typeof wavePauseRingY === 'function' ? wavePauseRingY(H) : H - 78;
+      const previewY = typeof nextWavePreviewY === 'function' ? nextWavePreviewY(H) : H - 52;
+      hudAudit.padTop = Math.round(padTop);
+      hudAudit.bannerMax = Math.round(bannerMax);
+      hudAudit.bannerCap = cap;
+      hudAudit.hintY = Math.round(hintY);
+      hudAudit.ringY = Math.round(ringY);
+      hudAudit.previewY = Math.round(previewY);
+      if (bannerMax > H * 0.22) hudFail.push('bannerMidField:' + Math.round(bannerMax));
+      if (cap > 28) hudFail.push('bannerTooBig:' + cap);
+      if (hintY + 16 > padTop) hudFail.push('hintOverPads:' + Math.round(hintY) + '>' + Math.round(padTop));
+      if (ringY + 24 > padTop) hudFail.push('ringOverPads:' + Math.round(ringY) + '>' + Math.round(padTop));
+      if (previewY + 10 > padTop) hudFail.push('previewOverPads:' + Math.round(previewY) + '>' + Math.round(padTop));
+    } catch (e) {
+      hudFail.push('hudAudit:' + (e && e.message ? e.message : e));
+    }
+
     const punchOk = punch.kind === 'punch' && !punch.threw;
     const kickOk = kick.kind === 'kick' && !kick.threw;
     // vuist weapon maps to punch; any started attack counts
@@ -264,6 +294,7 @@ async function run() {
       && overlaps.length === 0
       && sweepBad.length === 0
       && iconFail.length === 0
+      && hudFail.length === 0
       && errors.length === 0
       && g.player.rosterId === 'hero';
 
@@ -279,6 +310,8 @@ async function run() {
       weaponOk,
       iconAudit,
       iconFail,
+      hudAudit,
+      hudFail,
       missingBtns,
       layout,
       tooSmall,

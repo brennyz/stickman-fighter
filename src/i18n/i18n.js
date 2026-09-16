@@ -9,6 +9,7 @@ const I18N = {
     net: {
       updateReady: 'Nieuwe versie klaar — tik om te laden',
       updateWait: 'Nieuwe versie — laadt in het menu',
+      updateApplying: 'Nieuwe versie — even laden…',
       dismiss: 'Sluiten',
       offlinePlay: 'Offline — speelt uit cache · save blijft hier',
       offlinePlayHint: 'Offline — uit cache · icoon in de lade = altijd spelen',
@@ -298,6 +299,7 @@ const I18N = {
     net: {
       updateReady: 'New version ready — tap to load',
       updateWait: 'New version — loads in the menu',
+      updateApplying: 'New version — loading…',
       dismiss: 'Dismiss',
       offlinePlay: 'Offline — playing from cache · save stays here',
       offlinePlayHint: 'Offline — from cache · home-screen icon = always play',
@@ -587,6 +589,7 @@ const I18N = {
     net: {
       updateReady: 'Neue Version bereit — tippen zum Laden',
       updateWait: 'Neue Version — lädt im Menü',
+      updateApplying: 'Neue Version — lädt kurz…',
       dismiss: 'Schließen',
       offlinePlay: 'Offline — spielt aus dem Cache · Save bleibt hier',
       offlinePlayHint: 'Offline — aus dem Cache · Icon auf dem Startbildschirm = immer spielen',
@@ -869,6 +872,7 @@ const I18N = {
     net: {
       updateReady: 'Nouvelle version prête — tape pour charger',
       updateWait: 'Nouvelle version — se charge dans le menu',
+      updateApplying: 'Nouvelle version — chargement…',
       dismiss: 'Fermer',
       offlinePlay: 'Hors ligne — depuis le cache · sauvegarde ici',
       offlinePlayHint: 'Hors ligne — cache · icône d’accueil = toujours jouer',
@@ -1129,6 +1133,7 @@ const I18N = {
     net: {
       updateReady: 'Nueva versión lista — toca para cargar',
       updateWait: 'Nueva versión — se carga en el menú',
+      updateApplying: 'Nueva versión — cargando…',
       dismiss: 'Cerrar',
       offlinePlay: 'Sin conexión — desde la caché · la partida se queda aquí',
       offlinePlayHint: 'Sin conexión — caché · icono de inicio = jugar siempre',
@@ -1511,8 +1516,8 @@ function applyLangStaticScreens() {
     ['.hub-tile-arcade .hub-tile-sub', 'menu.arcadeSub'],
     ['.hub-tile-collect .hub-tile-title', 'menu.collect'],
     ['.hub-tile-collect .hub-tile-sub', 'menu.collectSub'],
-    ['.hub-tile-buildings .hub-tile-title', 'menu.buildings'],
-    ['.hub-tile-buildings .hub-tile-sub', 'menu.buildingsSub'],
+    ['.hub-tile-buildings .hub-tile-title', 'hub.buildings'],
+    ['.hub-tile-buildings .hub-tile-sub', 'hub.buildingsSub'],
     ['#btnGearHome .hub-tile-title', 'hub.gear'],
     ['#btnGearHome .hub-tile-sub', 'hub.gearSub'],
     ['.hub-tile-summon .hub-tile-title', 'menu.summons'],
@@ -1548,6 +1553,8 @@ function applyLangStaticScreens() {
   if (profileBar) profileBar.setAttribute('aria-label', t('menu.profileAria'));
   const upgradesHome = document.getElementById('btnUpgradesHome');
   if (upgradesHome) upgradesHome.setAttribute('aria-label', t('hub.upgrades'));
+  const buildingsHome = document.getElementById('btnBuildings');
+  if (buildingsHome) buildingsHome.setAttribute('aria-label', t('hub.buildings'));
   const summonHome = document.getElementById('btnSummons');
   if (summonHome && !summonHome.getAttribute('data-hub-stat')) {
     summonHome.setAttribute('aria-label', t('menu.summons'));
@@ -1606,10 +1613,20 @@ function applyLangStaticScreens() {
       : undefined;
     if (title) title.textContent = t(titleKey);
     if (sub) sub.textContent = t(subKey, subParams);
+    if (title) btn.setAttribute('aria-label', t(titleKey));
   }
 
-  document.querySelectorAll('.sub-home-btn .sub-home-label').forEach((el) => {
-    el.textContent = t('common.backHome');
+  document.querySelectorAll('.sub-home-btn').forEach((btn) => {
+    let label = btn.querySelector('.sub-home-label');
+    if (!label) {
+      const ico = btn.querySelector('.ico');
+      label = document.createElement('span');
+      label.className = 'sub-home-label';
+      btn.textContent = '';
+      if (ico) btn.appendChild(ico);
+      btn.appendChild(label);
+    }
+    label.textContent = t('common.backHome');
   });
 
   setText('settingsHead', 'settings.title');
@@ -1735,6 +1752,7 @@ function applyLangStaticScreens() {
   setText('summonWhereStrip', 'ui.summonWhere');
   setText('summonStageHint', 'ui.summonHint');
   setText('summonRevealText', 'ui.summonReveal');
+  setText('btnSummonSkip', 'ui.summonSkip');
   const chestPullLbl = document.getElementById('btnChestPull');
   if (chestPullLbl) {
     const d = chestPullLbl.querySelector('div');
@@ -1933,6 +1951,15 @@ function applyLang() {
   }
   try { if (typeof syncTitleGateCopy === 'function') syncTitleGateCopy(); } catch (_) {}
   try { if (typeof updateNetStatus === 'function') updateNetStatus(); } catch (_) {}
+  // Keep hub aria in lockstep with the visible title (lang-bar click + renderMenu).
+  const buildingsHomeFinal = document.getElementById('btnBuildings');
+  if (buildingsHomeFinal) {
+    const visible = buildingsHomeFinal.querySelector('.hub-tile-title');
+    buildingsHomeFinal.setAttribute(
+      'aria-label',
+      (visible && visible.textContent.trim()) || t('hub.buildings')
+    );
+  }
 }
 
 function initLang() {

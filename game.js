@@ -164,9 +164,24 @@ function pickBannerLane(banners) {
   return pick;
 }
 
+function combatBannerMaxSize(requested) {
+  const req = requested || 40;
+  const portraitTight = (typeof W === 'number') && W < 420 && (typeof H === 'number') && H > W * 1.02;
+  if (portraitTight) return Math.min(req, 26);
+  if (typeof W === 'number' && W < 520) return Math.min(req, 32);
+  return req;
+}
+
 function bannerLaneY(H, lane, size) {
-  const baseY = H * 0.31;
-  const step = Math.max(32, Math.min(48, H * 0.052));
+  const portraitTight = (typeof W === 'number') && W < 420 && H > W * 1.02;
+  const inset = (typeof hudInsetTop === 'function') ? hudInsetTop() : 16;
+  const sizeN = size || 28;
+  // Slim strip under HP/WAVE chrome — never mid-playfield (old 31%).
+  const baseY = Math.min(
+    inset + (portraitTight ? 44 : 56),
+    portraitTight ? H * 0.145 : H * 0.18
+  );
+  const step = Math.max(18, Math.min(portraitTight ? 24 : 34, sizeN * 0.72));
   const mid = (BANNER_LANES - 1) * 0.5;
   const laneN = typeof lane === 'number' ? lane : 1;
   return baseY + (laneN - mid) * step;
@@ -323,9 +338,9 @@ const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const VERSION_UPDATE_SAVE_KEY = 'stickfighter_version_update_save_v1';
 const VERSION_UPDATE_FLAG_KEY = 'stickfighter_version_update_flag_v1';
 const SAVE_EXPORT_SCHEMA = 3;
-const APP_VERSION = '1.18.172';
+const APP_VERSION = '1.18.176';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 382;
+const SW_CACHE_REV = 386;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', petCoins: 0, dex: {}, summons: {}, pets: {}, activePet: null,
   eggPets: {}, activeEggPet: null, eggDaily: null,
   chestDaily: null, chestWeapons: {},
@@ -2306,6 +2321,7 @@ const I18N = {
     net: {
       updateReady: 'Nieuwe versie klaar — tik om te laden',
       updateWait: 'Nieuwe versie — laadt in het menu',
+      updateApplying: 'Nieuwe versie — even laden…',
       dismiss: 'Sluiten',
       offlinePlay: 'Offline — speelt uit cache · save blijft hier',
       offlinePlayHint: 'Offline — uit cache · icoon in de lade = altijd spelen',
@@ -2595,6 +2611,7 @@ const I18N = {
     net: {
       updateReady: 'New version ready — tap to load',
       updateWait: 'New version — loads in the menu',
+      updateApplying: 'New version — loading…',
       dismiss: 'Dismiss',
       offlinePlay: 'Offline — playing from cache · save stays here',
       offlinePlayHint: 'Offline — from cache · home-screen icon = always play',
@@ -2884,6 +2901,7 @@ const I18N = {
     net: {
       updateReady: 'Neue Version bereit — tippen zum Laden',
       updateWait: 'Neue Version — lädt im Menü',
+      updateApplying: 'Neue Version — lädt kurz…',
       dismiss: 'Schließen',
       offlinePlay: 'Offline — spielt aus dem Cache · Save bleibt hier',
       offlinePlayHint: 'Offline — aus dem Cache · Icon auf dem Startbildschirm = immer spielen',
@@ -3166,6 +3184,7 @@ const I18N = {
     net: {
       updateReady: 'Nouvelle version prête — tape pour charger',
       updateWait: 'Nouvelle version — se charge dans le menu',
+      updateApplying: 'Nouvelle version — chargement…',
       dismiss: 'Fermer',
       offlinePlay: 'Hors ligne — depuis le cache · sauvegarde ici',
       offlinePlayHint: 'Hors ligne — cache · icône d’accueil = toujours jouer',
@@ -3426,6 +3445,7 @@ const I18N = {
     net: {
       updateReady: 'Nueva versión lista — toca para cargar',
       updateWait: 'Nueva versión — se carga en el menú',
+      updateApplying: 'Nueva versión — cargando…',
       dismiss: 'Cerrar',
       offlinePlay: 'Sin conexión — desde la caché · la partida se queda aquí',
       offlinePlayHint: 'Sin conexión — caché · icono de inicio = jugar siempre',
@@ -3808,8 +3828,8 @@ function applyLangStaticScreens() {
     ['.hub-tile-arcade .hub-tile-sub', 'menu.arcadeSub'],
     ['.hub-tile-collect .hub-tile-title', 'menu.collect'],
     ['.hub-tile-collect .hub-tile-sub', 'menu.collectSub'],
-    ['.hub-tile-buildings .hub-tile-title', 'menu.buildings'],
-    ['.hub-tile-buildings .hub-tile-sub', 'menu.buildingsSub'],
+    ['.hub-tile-buildings .hub-tile-title', 'hub.buildings'],
+    ['.hub-tile-buildings .hub-tile-sub', 'hub.buildingsSub'],
     ['#btnGearHome .hub-tile-title', 'hub.gear'],
     ['#btnGearHome .hub-tile-sub', 'hub.gearSub'],
     ['.hub-tile-summon .hub-tile-title', 'menu.summons'],
@@ -3845,6 +3865,8 @@ function applyLangStaticScreens() {
   if (profileBar) profileBar.setAttribute('aria-label', t('menu.profileAria'));
   const upgradesHome = document.getElementById('btnUpgradesHome');
   if (upgradesHome) upgradesHome.setAttribute('aria-label', t('hub.upgrades'));
+  const buildingsHome = document.getElementById('btnBuildings');
+  if (buildingsHome) buildingsHome.setAttribute('aria-label', t('hub.buildings'));
   const summonHome = document.getElementById('btnSummons');
   if (summonHome && !summonHome.getAttribute('data-hub-stat')) {
     summonHome.setAttribute('aria-label', t('menu.summons'));
@@ -3903,10 +3925,20 @@ function applyLangStaticScreens() {
       : undefined;
     if (title) title.textContent = t(titleKey);
     if (sub) sub.textContent = t(subKey, subParams);
+    if (title) btn.setAttribute('aria-label', t(titleKey));
   }
 
-  document.querySelectorAll('.sub-home-btn .sub-home-label').forEach((el) => {
-    el.textContent = t('common.backHome');
+  document.querySelectorAll('.sub-home-btn').forEach((btn) => {
+    let label = btn.querySelector('.sub-home-label');
+    if (!label) {
+      const ico = btn.querySelector('.ico');
+      label = document.createElement('span');
+      label.className = 'sub-home-label';
+      btn.textContent = '';
+      if (ico) btn.appendChild(ico);
+      btn.appendChild(label);
+    }
+    label.textContent = t('common.backHome');
   });
 
   setText('settingsHead', 'settings.title');
@@ -4032,6 +4064,7 @@ function applyLangStaticScreens() {
   setText('summonWhereStrip', 'ui.summonWhere');
   setText('summonStageHint', 'ui.summonHint');
   setText('summonRevealText', 'ui.summonReveal');
+  setText('btnSummonSkip', 'ui.summonSkip');
   const chestPullLbl = document.getElementById('btnChestPull');
   if (chestPullLbl) {
     const d = chestPullLbl.querySelector('div');
@@ -4230,6 +4263,15 @@ function applyLang() {
   }
   try { if (typeof syncTitleGateCopy === 'function') syncTitleGateCopy(); } catch (_) {}
   try { if (typeof updateNetStatus === 'function') updateNetStatus(); } catch (_) {}
+  // Keep hub aria in lockstep with the visible title (lang-bar click + renderMenu).
+  const buildingsHomeFinal = document.getElementById('btnBuildings');
+  if (buildingsHomeFinal) {
+    const visible = buildingsHomeFinal.querySelector('.hub-tile-title');
+    buildingsHomeFinal.setAttribute(
+      'aria-label',
+      (visible && visible.textContent.trim()) || t('hub.buildings')
+    );
+  }
 }
 
 function initLang() {
@@ -8462,7 +8504,7 @@ const GEAR_ITEMS = [
   _g('legs', 'greaves_hell', 'a', 's', 'hell', 68, 45, 'Hel-scheen', 'Hell greaves', 'Lava-plaat. HP + schade.', 'Lava plate. HP + damage.', { maxHp: 6, dmgMul: 1.03 }, { adv: 61, diff: 'hell' }),
 
   /* ════════ BACK ════════ */
-  _g('back', 'pin_dot', 'c', 'v1', 'common', 1, 1, 'Stip-pin', 'Dot pin', 'Klein speldje. Alleen look.', 'Tiny pin. Look only.'),
+  _g('back', 'pin_dot', 'c', 'v1', 'common', 1, 1, 'Stip-pin', 'Dot pin', 'Klein speldje. Alleen look.', 'Tiny pin. Look only.', null, { look: _gearLook('#ffd75e', '#c97a20', 'chest') }),
   _g('back', 'pin_star', 'c', 'v', 'uncommon', 8, 4, 'Ster-pin', 'Star pin', 'Glitter-speld. Geen stats.', 'Glitter pin. No stats.'),
   _g('back', 'backpack_school', 'c', 'v', 'common', 3, 2, 'Schooltas', 'School backpack', 'Boeken, geen pantser.', 'Books, not armour.'),
   _g('back', 'scarf_long', 'c', 'v', 'common', 4, 2, 'Lange sjaal', 'Long scarf', 'Wappert. Geen stats.', 'Flutters. No stats.'),
@@ -10809,7 +10851,8 @@ const EQUIP_LOOK_DEFAULTS = {
   helmet: { slot: 'head', layer: 'head', ox: 0, oy: 0, scale: 1 },
   glow: { slot: 'head', layer: 'head', ox: 0, oy: 0, scale: 1 },
   lightning: { slot: 'head', layer: 'head', ox: 0, oy: 0, scale: 1 },
-  charm: { slot: 'head', layer: 'head', ox: 0, oy: 2, scale: 1 },
+  charm: { slot: 'back', layer: 'chest', ox: 7, oy: 8, scale: 1, anchor: 'shoulder' },
+  pin: { slot: 'back', layer: 'chest', ox: 6, oy: 14, scale: 1, anchor: 'shoulder' },
   coat: { slot: 'back', layer: 'back', ox: 0, oy: 1, scale: 1 },
   cape: { slot: 'back', layer: 'back', ox: 0, oy: 2, scale: 1 },
   tome: { slot: 'back', layer: 'back', ox: -1, oy: 3, scale: 1 },
@@ -10844,7 +10887,8 @@ const GEAR_ID_KIND_RULES = [
   [/cape|scarf|banner|kite|capelet/, 'cape'],
   [/backpack|pack_|shell|plate_back|banner_iron/, 'tome'],
   [/crystal_shard|void_spine/, 'crystal'],
-  [/pin_|balloon|back_leaf\b|back_void\b/, 'charm'],
+  [/pin_/, 'pin'],
+  [/balloon|back_leaf\b|back_void\b/, 'charm'],
   [/plate_|mail_|cuirass/, 'chestplate'],
   [/vest_|shirt_|hoodie|gi_|tunic|sash|jacket|robe|coat_|poncho/, 'vest'],
 ];
@@ -10924,7 +10968,7 @@ const EQUIP_LOOK_BY_STYLE = {
   hunter: [
     { kind: 'vest', fill: 'rgba(61,92,50,.58)', oy: 0, scale: 1.04 },
     { kind: 'bandana', oy: -1, scale: 1.0 },
-    { kind: 'charm', ox: -12, oy: -6, scale: 1.0 },
+    { kind: 'charm', slot: 'head', layer: 'head', ox: -12, oy: -6, scale: 1.0 },
   ],
   crystal: [
     { kind: 'glow', scale: 1.04 },
@@ -11220,13 +11264,17 @@ function lookPieceFromDescriptorRow(row) {
   const rawLayer = row.layer != null ? String(row.layer).toLowerCase() : '';
   const layer = (rawLayer && EQUIP_GENERIC_LAYERS.includes(rawLayer)) ? slot : (row.layer || slot);
   const kind = lookKindFromGearId(row.itemId, slot);
+  const pin = kind === 'pin';
   return hydrateEquipLook({
     id: row.itemId,
     kind,
     slot,
-    layer,
-    color: row.tint,
-    accent: row.accent,
+    layer: pin ? 'chest' : layer,
+    anchor: pin ? 'shoulder' : undefined,
+    ox: pin ? 6 : undefined,
+    oy: pin ? 14 : undefined,
+    color: pin ? (row.tint || '#ffd75e') : row.tint,
+    accent: pin ? (row.accent || '#c97a20') : row.accent,
   });
 }
 
@@ -21412,6 +21460,7 @@ function seedNlGameStrings() {
     summonAriaEmpty: 'Geen summons meer vandaag',
     summonAriaBusy: 'Kist opent…',
     summonHint: 'Tik kist om te openen',
+    summonSkip: 'Overslaan',
     summonReveal: 'Tik de kist of Open — buit verschijnt in de kist',
     summonGotoWeapons: 'Naar wapens',
     summonGotoPets: 'Naar pets',
@@ -22572,6 +22621,7 @@ const CATALOG_EN = {
     summonAriaEmpty: 'No summons left today',
     summonAriaBusy: 'Chest opening…',
     summonHint: 'Tap chest to open',
+    summonSkip: 'Skip',
     summonReveal: 'Tap the chest or Open — loot appears in the chest',
     summonGotoWeapons: 'To weapons',
     summonGotoPets: 'To pets',
@@ -24185,6 +24235,7 @@ const CATALOG_DE_CHROME = {
     summonAriaEmpty: 'Keine Summons mehr heute',
     summonAriaBusy: 'Kiste öffnet…',
     summonHint: 'Kiste tippen zum Öffnen',
+    summonSkip: 'Überspringen',
     summonReveal: 'Kiste oder Öffnen tippen — Beute erscheint in der Kiste',
     summonGotoWeapons: 'Zu Waffen',
     summonGotoPets: 'Zu Pets',
@@ -24688,6 +24739,7 @@ overlayI18nCatalog(CATALOG_FR, {
     charLocked: 'Verrouillé', charHead: 'CHOISIS UN COMBATTANT',
     charBig5Hint: 'Tes combattants · choix rapide',
     continueLastMode: 'Dernier mode',
+    summonSkip: 'Passer',
     gearHead: 'Équipement',
     gearSub: '5 emplacements · look vs stats · niveau et temps',
     dexAllBiomes: 'Tous les biomes',
@@ -25205,6 +25257,7 @@ overlayI18nCatalog(CATALOG_ES, {
     charLocked: 'Bloqueado', charHead: 'ELIGE LUCHADOR',
     charBig5Hint: 'Tus luchadores · elección rápida',
     continueLastMode: 'Último modo',
+    summonSkip: 'Saltar',
     gearHead: 'Equipo',
     gearSub: '5 huecos · look vs stats · nivel y tiempo',
     dexAllBiomes: 'Todos los biomas',
@@ -25736,6 +25789,7 @@ overlayI18nCatalog(CATALOG_DE, {
     charLocked: 'Gesperrt', charHead: 'KÄMPFER WÄHLEN',
     charBig5Hint: 'Deine Kämpfer · schnell wählen',
     continueLastMode: 'Letzter Modus',
+    summonSkip: 'Überspringen',
     gearHead: 'Ausrüstung',
     gearSub: '5 Slots · Look vs Stats · Level und Zeit',
     dexAllBiomes: 'Alle Biome',
@@ -29362,6 +29416,52 @@ function hudInsetTop() {
   return Math.max(readSafeInsets().top, 6) + 10;
 }
 
+/** Top edge of the touch pad cluster (buttons + joystick). Used to keep HUD/hints off strike pads. */
+function touchClusterTopY() {
+  let top = (typeof H === 'number' && H > 0) ? H : 800;
+  const pads = [];
+  if (typeof Input !== 'undefined' && Input && Input.buttons) pads.push(Input);
+  if (typeof InputP2 !== 'undefined' && InputP2 && InputP2.buttons) pads.push(InputP2);
+  for (const pad of pads) {
+    for (const b of pad.buttons || []) {
+      if (b && typeof b.y === 'number' && typeof b.r === 'number') {
+        top = Math.min(top, b.y - b.r);
+      }
+    }
+    const home = pad.joyHome;
+    if (home && typeof home.y === 'number') {
+      const r = typeof joyGuardRadius === 'function' ? joyGuardRadius(pad) : 56;
+      top = Math.min(top, home.y - r);
+    }
+  }
+  return top;
+}
+
+function wavePauseRingY(H) {
+  const padTop = typeof touchClusterTopY === 'function' ? touchClusterTopY() : H - 120;
+  return Math.min(H * 0.56, padTop - 40);
+}
+
+function nextWavePreviewY(H) {
+  const padTop = typeof touchClusterTopY === 'function' ? touchClusterTopY() : H - 120;
+  return Math.min(H - 52, padTop - 26);
+}
+
+function combatHintAnchorY(game, W, H) {
+  const hudY = (game && game.mode === 'adventure' && game.advHudBottom > 0)
+    ? game.advHudBottom + 18
+    : H * 0.16;
+  const padsOn = typeof useTouchFightPads === 'function'
+    ? useTouchFightPads()
+    : (typeof IS_TOUCH !== 'undefined' && IS_TOUCH);
+  if (!padsOn) return hudY;
+  const padTop = typeof touchClusterTopY === 'function' ? touchClusterTopY() : H;
+  const abovePads = padTop - 28;
+  if (hudY + 22 < abovePads) return hudY;
+  const floor = (game && game.advHudBottom) ? game.advHudBottom + 14 : H * 0.12;
+  return Math.max(floor, Math.min(abovePads, H * 0.22));
+}
+
 function playfieldGroundY(H, W) {
   const portrait = H > W * 1.02;
   const dualVs = typeof Input !== 'undefined' && Input.dualMode;
@@ -30739,6 +30839,14 @@ function startGearDollLive() {
   _gearDollRaf = requestAnimationFrame(step);
 }
 
+/** Pins / hangers / auras are look-pieces — a generic cape to the feet is an orphan overlay. */
+function _gearBackOverlayKind(itemId) {
+  const id = String(itemId || '').toLowerCase();
+  if (!id) return 'cape';
+  if (/pin_|balloon|aura_|back_leaf\b|back_void\b/.test(id)) return 'none';
+  return 'cape';
+}
+
 function _paintGearOverlay(cc, slot, tint, accent) {
   if (!tint) return;
   /* Fighter preview pose (animT 0.35): hips ~-46, shoulders ~-78, head ~-96. */
@@ -30822,8 +30930,6 @@ function drawGearHeroDoll(cv, saveObj, animT) {
   const scale = Math.min(cv.width / 140, cv.height / 190) * 1.28;
   cc.translate(cv.width / 2, cv.height - 36);
   cc.scale(scale, scale);
-  const back = tintOf('back');
-  if (back) _paintGearOverlay(cc, 'back', back.tint || back.accent, back.accent);
   const st = typeof styleById === 'function' ? styleById((s && s.style) || 'classic') : { body: '#f2f5ff' };
   const wpn = (s && typeof weaponById === 'function') ? weaponById(s.weapon || 'vuist') : null;
   const preview = new Fighter({
@@ -30831,11 +30937,9 @@ function drawGearHeroDoll(cv, saveObj, animT) {
     weapon: wpn || undefined,
   });
   preview.animT = Number.isFinite(animT) ? animT : 0.55;
+  /* Fighter.draw already paints equipped looks on live bones.
+     The old slot overlays used a stale idle pose (cape-to-feet, floating dots). */
   preview.draw(cc);
-  for (const sid of ['legs', 'chest', 'head', 'hands']) {
-    const layer = tintOf(sid);
-    if (layer) _paintGearOverlay(cc, sid, layer.tint || layer.accent, layer.accent);
-  }
   if (s && s.activePet && typeof drawMonsterArt === 'function') {
     const def = (typeof activePetDef === 'function') ? activePetDef()
       : ((typeof petDef === 'function') ? petDef(s.activePet) : null);
@@ -32922,6 +33026,36 @@ function drawLookCharm(c, look, x, y, sc) {
   c.fill();
 }
 
+/** Stip-pin / catalog pin — lapel disc + short stem. Never a back-cape blob. */
+function drawLookPin(c, look, x, y, sc) {
+  if (!(y < -24)) return;
+  if (typeof drawGearPixels === 'function' && look && look.id) {
+    try {
+      if (drawGearPixels(c, look.id, x, y, Math.max(1.15, 1.35 * sc), { live: false })) return;
+    } catch (_) { /* fall through to vector pin */ }
+  }
+  const fill = look.color || '#ffd75e';
+  const rim = look.accent || '#c97a20';
+  c.fillStyle = fill;
+  c.beginPath();
+  c.arc(x, y, 3.4 * sc, 0, TAU);
+  c.fill();
+  c.strokeStyle = rim;
+  c.lineWidth = Math.max(0.9, 1.15 * sc);
+  c.stroke();
+  c.fillStyle = 'rgba(255,255,255,.45)';
+  c.beginPath();
+  c.arc(x - 0.9 * sc, y - 0.9 * sc, 1.15 * sc, 0, TAU);
+  c.fill();
+  c.strokeStyle = rim;
+  c.lineCap = 'round';
+  c.lineWidth = Math.max(1, 1.35 * sc);
+  c.beginPath();
+  c.moveTo(x, y + 3.2 * sc);
+  c.lineTo(x + 0.35 * sc, y + 7.4 * sc);
+  c.stroke();
+}
+
 function drawStickmanHead(c, x, y, color, opts) {
   if (!c) return;
   const r = (opts && Number.isFinite(opts.r)) ? opts.r
@@ -33044,6 +33178,7 @@ const EQUIP_LOOK_DRAW = {
   glow: drawLookGlow,
   lightning: drawLookLightning,
   charm: drawLookCharm,
+  pin: drawLookPin,
   gloves: drawLookGloves,
   horns: drawLookHorns,
   halo: drawLookHalo,
@@ -40402,7 +40537,8 @@ class Game {
             }
           } catch (_) {}
         }
-      } else {
+      } else if (!(W < 420 && H > W * 1.02)) {
+        // HUD already shows WAVE n/total — skip the mid-field duplicate on phones.
         this.banner(t('banner.waveN', { n: this.waveIdx + 1, total: this.level.waves.length }), 1.1, '#cfe0ff', 38);
       }
     }
@@ -43302,6 +43438,7 @@ class Game {
       dur = Math.min(dur, 1.15);
       size = Math.min(size || 40, 32);
     }
+    if (typeof combatBannerMaxSize === 'function') size = combatBannerMaxSize(size || 40);
     const lane = pickBannerLane(this.banners);
     this.banners = this.banners.filter((b) => b.lane !== lane);
     this.banners.push({
@@ -43769,9 +43906,11 @@ class Game {
       c.textAlign = 'center';
       const tw = c.measureText(hintTxt).width;
       const padX = 16;
-      const hintY = (this.mode === 'adventure' && this.advHudBottom > 0)
-        ? Math.max(H * 0.2, this.advHudBottom + 20)
-        : H * 0.2;
+      const hintY = (typeof combatHintAnchorY === 'function')
+        ? combatHintAnchorY(this, W, H)
+        : ((this.mode === 'adventure' && this.advHudBottom > 0)
+          ? Math.max(H * 0.2, this.advHudBottom + 20)
+          : H * 0.2);
       const pillY = hintY - 24;
       c.fillStyle = 'rgba(6,10,24,.78)';
       this.rr(c, W / 2 - tw / 2 - padX, pillY, tw + padX * 2, 30, 10);
@@ -44180,7 +44319,7 @@ class Game {
     const chips = Math.min(5, next.length);
     const gap = 22;
     const x0 = W / 2 - ((chips - 1) * gap) / 2;
-    const y = H - 52;
+    const y = (typeof nextWavePreviewY === 'function') ? nextWavePreviewY(H) : H - 52;
     c.save();
     c.font = '700 9px sans-serif';
     c.fillStyle = 'rgba(255,255,255,.55)';
@@ -45083,7 +45222,7 @@ class Game {
         const totalPause = this.wavePauseTotal || 1.55;
         const pauseFrac = clamp(1 - this.wavePause / totalPause, 0, 1);
         const ringX = W / 2;
-        const ringY = H - 78;
+        const ringY = (typeof wavePauseRingY === 'function') ? wavePauseRingY(H) : H - 78;
         const ringR = 24;
         const stageClear = !!this._levelClearPending;
         if (!motionReduced()) {
@@ -48183,6 +48322,14 @@ const UI = {
       // hubTileStatLine may include SVG_COIN_ICON <img> — must be HTML, not textContent
       el.innerHTML = hubTileStatLine(el.dataset.hubStat);
     });
+    const buildingsTile = document.getElementById('btnBuildings');
+    if (buildingsTile) {
+      const visible = buildingsTile.querySelector('.hub-tile-title');
+      buildingsTile.setAttribute(
+        'aria-label',
+        (visible && visible.textContent.trim()) || t('hub.buildings')
+      );
+    }
     const summonTile = document.getElementById('btnSummons');
     if (summonTile) {
       let left = 0;
@@ -48423,6 +48570,17 @@ const UI = {
       sfReportError('renderSummon', err, 'Summons laden mislukt');
       try { this.goMenu(); } catch (_) { ensureVisibleScreen(); }
     }
+  },
+
+  skipSummonReveal() {
+    const screen = document.getElementById('summonScreen');
+    const pulling = !!(screen && screen.classList.contains('is-pulling'));
+    if (!this._chestPullBusy && !pulling) return;
+    try { this.showSummonCenterCard(); } catch (_) {}
+    this.clearSummonRevealTimers();
+    this._chestPullBusy = false;
+    this._chestPullLeftSnap = null;
+    try { this.renderSummon(); } catch (_) {}
   },
 
   clearSummonRevealTimers() {
@@ -51562,21 +51720,28 @@ if (typeof UI === 'object' && UI) {
       btn.setAttribute('data-factory-id', view.id);
       btn.dataset.buildingId = view.id;
       btn.dataset.factoryId = view.id;
+      const unbuilt = !view.locked && Number(view.level) < 1;
       if (view.id === sel) {
         btn.setAttribute('data-hub-badge', view.canCollect
           ? buildingsTxt('buildings.collect', 'Oogsten')
-          : buildingsTxt('buildings.level', 'Lv {n}', { n: view.level }));
+          : (unbuilt
+            ? buildingsTxt('buildings.unbuilt', 'Nog niet gebouwd')
+            : buildingsTxt('buildings.level', 'Lv {n}', { n: view.level })));
       } else {
         btn.removeAttribute('data-hub-badge');
       }
       const lockBit = view.locked
         ? buildingsEscape(view.lockHint || buildingsTxt('buildings.locked', 'Op slot'))
-        : buildingsTxt('buildings.level', 'Lv {n}', { n: view.level });
+        : (unbuilt
+          ? buildingsTxt('buildings.unbuilt', 'Nog niet gebouwd')
+          : buildingsTxt('buildings.level', 'Lv {n}', { n: view.level }));
       const desc = buildingsDesc(view.id, view) || view;
       const does = desc.doesLine || view.sub || '';
       const stock = view.locked
         ? ''
-        : (view.pending + '/' + view.capacity + ' ' + buildingsEscape(view.resourceLabel));
+        : (unbuilt
+          ? buildingsEscape(buildingsCostText(view) || buildingsTxt('buildings.costPc', '{n} PC', { n: 20 }))
+          : (view.pending + '/' + view.capacity + ' ' + buildingsEscape(view.resourceLabel)));
       btn.innerHTML =
         '<span class="hub-tile-ico">' + buildingsArtHtml(view) + '</span>'
         + '<span class="hub-tile-title">' + buildingsEscape(view.name) + '</span>'
@@ -51633,7 +51798,7 @@ if (typeof UI === 'object' && UI) {
     host.dataset.factoryId = view.id;
     host.setAttribute('data-factory-id', view.id);
     const locked = !!view.locked;
-    const unbuilt = !locked && !(view.built || view.level >= 1);
+    const unbuilt = !locked && Number(view.level) < 1;
     const step = this.buildingsStep === 'upgrade' ? 'upgrade' : 'harvest';
     const pct = view.capacity ? Math.min(100, Math.round((view.pending / view.capacity) * 100)) : 0;
     const eta = (!locked && view.pending < view.capacity && view.nextMs > 0)
@@ -51699,13 +51864,15 @@ if (typeof UI === 'object' && UI) {
       + this.buildingsEffectHtml(view)
       + (locked
         ? '<div class="buildings-lock">' + buildingsEscape(view.lockHint) + '</div>'
-        : '<div class="buildings-stock">'
+        : (unbuilt
+          ? (costHint ? '<div class="buildings-stock-lbl">' + buildingsEscape(costHint) + '</div>' : '')
+          : '<div class="buildings-stock">'
           + '<div class="buildings-stock-bar" role="progressbar" aria-valuenow="' + view.pending + '" aria-valuemax="' + view.capacity + '">'
           + '<span style="width:' + pct + '%"></span></div>'
           + '<div class="buildings-stock-lbl">'
           + buildingsEscape(buildingsTxt('buildings.stored', '{n}/{cap} opgeslagen', { n: view.pending, cap: view.capacity }))
           + (eta ? ' · ' + buildingsEscape(eta) : '')
-          + '</div></div>')
+          + '</div></div>'))
       + flash
       + '</div>'
       + cta;
@@ -51776,11 +51943,16 @@ if (typeof UI === 'object' && UI) {
     const pct = view.capacity ? Math.min(100, Math.round((view.pending / view.capacity) * 100)) : 0;
     if (bar) bar.style.width = pct + '%';
     if (lbl) {
-      const eta = (!view.locked && view.pending < view.capacity && view.nextMs > 0)
-        ? buildingsTxt('buildings.nextIn', 'Volgende over {t}', { t: (typeof buildingsFormatEta === 'function') ? buildingsFormatEta(view.nextMs) : '' })
-        : '';
-      lbl.textContent = buildingsTxt('buildings.stored', '{n}/{cap} opgeslagen', { n: view.pending, cap: view.capacity })
-        + (eta ? ' · ' + eta : '');
+      const unbuilt = !view.locked && Number(view.level) < 1;
+      if (unbuilt) {
+        lbl.textContent = buildingsCostText(view) || buildingsTxt('buildings.unbuilt', 'Nog niet gebouwd');
+      } else {
+        const eta = (!view.locked && view.pending < view.capacity && view.nextMs > 0)
+          ? buildingsTxt('buildings.nextIn', 'Volgende over {t}', { t: (typeof buildingsFormatEta === 'function') ? buildingsFormatEta(view.nextMs) : '' })
+          : '';
+        lbl.textContent = buildingsTxt('buildings.stored', '{n}/{cap} opgeslagen', { n: view.pending, cap: view.capacity })
+          + (eta ? ' · ' + eta : '');
+      }
     }
     if (collectBtn) {
       collectBtn.disabled = !view.canCollect;
@@ -52060,10 +52232,18 @@ bindPress(document.getElementById('btnChestPull'), () => {
   AudioSys.init();
   UI.doChestPull('random');
 });
+bindPress(document.getElementById('btnSummonSkip'), () => {
+  AudioSys.init();
+  AudioSys.sfx('select');
+  UI.skipSummonReveal();
+});
 bindPress(document.getElementById('summonStage'), () => {
+  if (UI._chestPullBusy) {
+    UI.skipSummonReveal();
+    return;
+  }
   const stage = document.getElementById('summonStage');
   if (!stage || !stage.classList.contains('is-pullable')) return;
-  if (UI._chestPullBusy) return;
   AudioSys.init();
   UI.doChestPull('random');
 });
@@ -53126,6 +53306,8 @@ function updateNetStatus(ev) {
     document.body.classList.toggle('sf-offline', off);
     document.body.classList.toggle('sf-sw-ready', swReady);
     document.body.classList.toggle('sf-sw-update', swUpdate && !playing);
+    const setBtn = document.getElementById('btnSettings');
+    if (setBtn) setBtn.classList.toggle('sw-update', !!(swUpdate && !playing));
   } catch (_) {}
 
   const paintUpdateBanner = () => {

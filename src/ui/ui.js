@@ -2082,6 +2082,14 @@ const UI = {
       // hubTileStatLine may include SVG_COIN_ICON <img> — must be HTML, not textContent
       el.innerHTML = hubTileStatLine(el.dataset.hubStat);
     });
+    const buildingsTile = document.getElementById('btnBuildings');
+    if (buildingsTile) {
+      const visible = buildingsTile.querySelector('.hub-tile-title');
+      buildingsTile.setAttribute(
+        'aria-label',
+        (visible && visible.textContent.trim()) || t('hub.buildings')
+      );
+    }
     const summonTile = document.getElementById('btnSummons');
     if (summonTile) {
       let left = 0;
@@ -2322,6 +2330,17 @@ const UI = {
       sfReportError('renderSummon', err, 'Summons laden mislukt');
       try { this.goMenu(); } catch (_) { ensureVisibleScreen(); }
     }
+  },
+
+  skipSummonReveal() {
+    const screen = document.getElementById('summonScreen');
+    const pulling = !!(screen && screen.classList.contains('is-pulling'));
+    if (!this._chestPullBusy && !pulling) return;
+    try { this.showSummonCenterCard(); } catch (_) {}
+    this.clearSummonRevealTimers();
+    this._chestPullBusy = false;
+    this._chestPullLeftSnap = null;
+    try { this.renderSummon(); } catch (_) {}
   },
 
   clearSummonRevealTimers() {
