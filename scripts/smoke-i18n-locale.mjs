@@ -42,6 +42,8 @@ if (!/setTitle\('btnHelp', 'menu\.tips'\)/.test(i18n)) fail('help tooltip must u
 
 if (!/advLose: 'VERLOREN'/.test(catalog)) fail('NL result.advLose must be VERLOREN');
 if (!/lost: 'VERLOREN'/.test(catalog)) fail('NL banner.lost must be VERLOREN');
+if (!/advLose: 'YOU LOSE'/.test(catalogEn)) fail('EN result.advLose must be YOU LOSE');
+if (/advLose: 'VERLOREN'/.test((catalogEn.split('const CATALOG_DE')[0] || ''))) fail('EN result.advLose still Dutch VERLOREN');
 if (!/titleKey: win \? 'result\.advWin' : 'result\.advLose'/.test(game)) fail('adventure result must pass titleKey');
 if (!/tOr\(titleKey/.test(ui)) fail('showResult must re-translate title from titleKey (lang switch)');
 if (!/result\.trainDetailWin/.test(game)) fail('training detail still hardcoded Dutch/EN mix');
@@ -191,6 +193,16 @@ if (!/continueLastMode: 'Último modo'/.test(locales)) fail('ES ui.continueLastM
 if (!/Usine Allume-Bâton/.test(i18n)) fail('FR factory names still leftover English');
 if (!/Fábrica Palo-Mechero/.test(i18n)) fail('ES factory names still leftover English');
 if (!/Stock-Anzünder-Fabrik/.test(i18n)) fail('DE factory names still leftover English');
+if (/titleGreet: 'Hi, \{name\}'/.test((i18n.split(/\n\s+de:\s+\{/)[1] || '').split(/\n\s+fr:\s+\{/)[0] || '')) {
+  fail('DE menu.titleGreet still English Hi');
+}
+if (!/titleGreet: 'Hallo, \{name\}'/.test(i18n)) fail('DE menu.titleGreet must be Hallo');
+if (!/sfx: 'Ton'/.test(i18n)) fail('DE pause.sfx must be Ton not Sound');
+if (!/pressStart: 'Münze einwerfen'/.test(i18n)) fail('DE pressStart still insert coin');
+if (!/Energie-Spezials/.test(i18n)) fail('DE hub.skillsSub still English Energy specials');
+if (/install: \{ title: 'App'/.test(i18n)) fail('FR/ES/DE install.title still short App');
+if (!/Ajouter comme app/.test(i18n)) fail('FR install.title must be longer than App');
+if (!/Añadir como app/.test(i18n)) fail('ES install.title must be longer than App');
 if (/help: \{ title: 'Tips & controls' \}/.test(i18n.split(/\n\s+en:\s+\{/)[0])) fail('NL help.title still English Tips & controls');
 if (/playLinkOk:/.test(i18n.split(/\n\s+fr:\s+\{/)[1] || '') === false) fail('FR settings.playLinkOk missing');
 if (!/wild: 'Woods'/.test(catalog)) fail('EN dexBiome.wild must be Woods (no Dutch Woud leak)');

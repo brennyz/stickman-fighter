@@ -1324,7 +1324,7 @@ const CATALOG_EN = {
   },
   pickup: { heal: '+HP', rage: 'RAGE', energy: 'ENERGY', shield: 'SHIELD' },
   result: {
-    advWin: 'VICTORY!', advLose: 'VERLOREN', trainWin: 'CHAMPION!', trainLose: 'ROBOT WINS...',
+    advWin: 'VICTORY!', advLose: 'YOU LOSE', trainWin: 'CHAMPION!', trainLose: 'ROBOT WINS...',
     advLoseKeep: 'XP and loot from this run stay',
     trainAgainSub: 'vs RabbitRobot',
     wavesStart: 'start',
@@ -1424,7 +1424,7 @@ const CATALOG_EN = {
     woodsWave: 'WOODS WAVE', cryptWave: 'CRYPT WAVE', scrapWave: 'SCRAP WAVE',
     emberWave: 'EMBER WAVE · 2.0', painWave: 'PAIN WAVE · 3.0',
     waveClear: 'Wave cleared +{heal} HP', waveN: 'WAVE {n}/{total}',
-    fight: 'FIGHT!', levelClear: 'LEVEL {n} CLEAR!', won: 'VICTORY!', lost: 'VERLOREN', spiral_orbTriple: 'TRIPLE SPIRAL ORB!', spiral_orbDual: 'DUAL SPIRAL ORB!',
+    fight: 'FIGHT!', levelClear: 'LEVEL {n} CLEAR!', won: 'VICTORY!', lost: 'YOU LOSE', spiral_orbTriple: 'TRIPLE SPIRAL ORB!', spiral_orbDual: 'DUAL SPIRAL ORB!',
     round: 'ROUND {n}', roundDecisive: 'ROUND {n} · decisive round', roundMatchPoint: 'ROUND {n} · match point',
     roundWon: 'ROUND WON!', roundLost: 'ROUND LOST',
     p1RoundWin: 'P1 WINS ROUND!', p2RoundWin: 'P2 WINS ROUND!',

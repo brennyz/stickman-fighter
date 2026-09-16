@@ -323,9 +323,9 @@ const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const VERSION_UPDATE_SAVE_KEY = 'stickfighter_version_update_save_v1';
 const VERSION_UPDATE_FLAG_KEY = 'stickfighter_version_update_flag_v1';
 const SAVE_EXPORT_SCHEMA = 3;
-const APP_VERSION = '1.18.168';
+const APP_VERSION = '1.18.169';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 378;
+const SW_CACHE_REV = 379;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', petCoins: 0, dex: {}, summons: {}, pets: {}, activePet: null,
   eggPets: {}, activeEggPet: null, eggDaily: null,
   chestDaily: null, chestWeapons: {},
@@ -2581,7 +2581,7 @@ const I18N = {
     },
     result: { again: 'Again', next: 'Next level', menu: 'Main menu', menuArcade: 'Arcade', rematch: 'Rematch', rematchSub: 'Same fighters',
       trainAgainSub: 'vs RabbitRobot',
-      advWin: 'VICTORY!', advLose: 'VERLOREN', trainWin: 'CHAMPION!', trainLose: 'ROBOT WINS...',
+      advWin: 'VICTORY!', advLose: 'YOU LOSE', trainWin: 'CHAMPION!', trainLose: 'ROBOT WINS...',
       advLoseKeep: 'XP and loot from this run stay',
       wavesStart: 'start',
       xp: '+{xp} XP earned · now Lv {lvl} ({cur}/{need} XP)' },
@@ -2757,12 +2757,12 @@ const I18N = {
       music: 'Musik', missions: 'Missionen',
       summons: 'Summons', summonsSub: 'Tägliche Kiste · Waffe & Pet',
       options: 'Optionen', tips: 'Tipps', fresh: 'Neue Version', install: 'Als App speichern', installSub: 'Ein Icon, wie eine echte App',
-      pressStart: 'insert coin', missionReady: 'Mission bereit', dayBonus: 'Tagesbonus',
+      pressStart: 'Münze einwerfen', missionReady: 'Mission bereit', dayBonus: 'Tagesbonus',
       choosePath: 'WÄHLE DEINEN WEG', lastPlayed: 'ZULETZT', playHere: 'SPIEL', saveSync: 'save OK',
       startGame: 'SPIELEN', startSub: 'Starte den Kampf',
       titleName: 'Name — optional', titleNamePh: 'Spitzname (optional)',
       titleNote: 'Kein Konto — dein Save bleibt auf diesem Handy',
-      titleGreet: 'Hi, {name}',
+      titleGreet: 'Hallo, {name}',
       splash0: 'Laden…', splash1: 'Laden…', splash2: 'Laden…', splash3: 'Fertig',
     },
     hub: {
@@ -2777,7 +2777,7 @@ const I18N = {
       pets: 'Pets', petsSub: 'Münzen · Dex zähmen',
       style: 'Stil', styleSub: 'Outfit-Freischaltungen',
       gear: 'Ausrüstung', gearSub: '5 Slots · Rüstung & Kosmetik',
-      skills: 'Skills', skillsSub: 'Energy specials · Spiral Orb · Wave Cannon',
+      skills: 'Skills', skillsSub: 'Energie-Spezials · Spiral Orb · Wave Cannon',
       upgrades: 'Upgrades', upgradesSub: 'Splitter · Technik ausrüsten',
       dex: 'Monsterbuch', dexSub: '{n} Arten · Seltenheit = HP · Farm · Zoo · Meer · Wald',
       modes3: '3 schnelle Modi', fightersLocal: '20 Kämpfer · lokal', vsRecord: '{w}/{m} Siege',
@@ -2825,7 +2825,7 @@ const I18N = {
       wallTime: '{n}s übrig', wallStones: '{n} Steine', wallCombo: 'Combo ×{n}',
       wallPaceAhead: '+{n} vs Rekordtempo', wallPaceBehind: '−{n} vs Rekordtempo',
       wallGap: 'noch {gap} bis Rekord',
-      resume: 'Weiter', music: 'Musik', sfx: 'Sound', quit: 'Zum Menü',
+      resume: 'Weiter', music: 'Musik', sfx: 'Ton', quit: 'Zum Menü',
       quitArcade: 'Stopp & Arcade',
       vsRestart: 'Match neu starten', vsRestartSub: '0-0 · gleiche Kämpfer',
       vsSwap: 'Seite tauschen', vsSwapSub: 'P1 ↔ P2 · gleicher Stand',
@@ -2933,7 +2933,7 @@ const I18N = {
       equip: 'Anlegen', equipped: 'An', empty: 'Leer',
       slot: { head: 'Kopf', chest: 'Brust', hands: 'Hände', legs: 'Beine', back: 'Rücken' },
     },
-    install: { title: 'App', sub: 'Homebildschirm' },
+    install: { title: 'Als App speichern', sub: 'Ein Icon, wie eine echte App' },
     island: {
       1: { name: 'Ost-Insel', sub: 'Lv 1–10' }, 2: { name: 'Feuer-Insel', sub: 'Lv 11–20' },
       3: { name: 'Neon-Insel', sub: 'Lv 21–30' }, 4: { name: 'Tempel-Insel', sub: 'Lv 31–40' },
@@ -3151,7 +3151,7 @@ const I18N = {
       equip: 'Équiper', equipped: 'Sur toi', empty: 'Vide',
       slot: { head: 'Tête', chest: 'Torse', hands: 'Mains', legs: 'Jambes', back: 'Dos' },
     },
-    install: { title: 'App', sub: 'Écran d\'accueil' },
+    install: { title: 'Ajouter comme app', sub: 'Une icône, comme une vraie app' },
     island: {
       1: { name: 'Île de l\'Est', sub: 'Lv 1–10' }, 2: { name: 'Île de Feu', sub: 'Lv 11–20' },
       3: { name: 'Île Néon', sub: 'Lv 21–30' }, 4: { name: 'Île Temple', sub: 'Lv 31–40' },
@@ -3369,7 +3369,7 @@ const I18N = {
       equip: 'Equipar', equipped: 'Puesto', empty: 'Vacío',
       slot: { head: 'Cabeza', chest: 'Pecho', hands: 'Manos', legs: 'Piernas', back: 'Espalda' },
     },
-    install: { title: 'App', sub: 'Pantalla de inicio' },
+    install: { title: 'Añadir como app', sub: 'Un icono, como una app real' },
     island: {
       1: { name: 'Isla Este', sub: 'Lv 1–10' }, 2: { name: 'Isla Fuego', sub: 'Lv 11–20' },
       3: { name: 'Isla Neón', sub: 'Lv 21–30' }, 4: { name: 'Isla Templo', sub: 'Lv 31–40' },
@@ -19332,7 +19332,7 @@ const CATALOG_EN = {
   },
   pickup: { heal: '+HP', rage: 'RAGE', energy: 'ENERGY', shield: 'SHIELD' },
   result: {
-    advWin: 'VICTORY!', advLose: 'VERLOREN', trainWin: 'CHAMPION!', trainLose: 'ROBOT WINS...',
+    advWin: 'VICTORY!', advLose: 'YOU LOSE', trainWin: 'CHAMPION!', trainLose: 'ROBOT WINS...',
     advLoseKeep: 'XP and loot from this run stay',
     trainAgainSub: 'vs RabbitRobot',
     wavesStart: 'start',
@@ -19432,7 +19432,7 @@ const CATALOG_EN = {
     woodsWave: 'WOODS WAVE', cryptWave: 'CRYPT WAVE', scrapWave: 'SCRAP WAVE',
     emberWave: 'EMBER WAVE · 2.0', painWave: 'PAIN WAVE · 3.0',
     waveClear: 'Wave cleared +{heal} HP', waveN: 'WAVE {n}/{total}',
-    fight: 'FIGHT!', levelClear: 'LEVEL {n} CLEAR!', won: 'VICTORY!', lost: 'VERLOREN', spiral_orbTriple: 'TRIPLE SPIRAL ORB!', spiral_orbDual: 'DUAL SPIRAL ORB!',
+    fight: 'FIGHT!', levelClear: 'LEVEL {n} CLEAR!', won: 'VICTORY!', lost: 'YOU LOSE', spiral_orbTriple: 'TRIPLE SPIRAL ORB!', spiral_orbDual: 'DUAL SPIRAL ORB!',
     round: 'ROUND {n}', roundDecisive: 'ROUND {n} · decisive round', roundMatchPoint: 'ROUND {n} · match point',
     roundWon: 'ROUND WON!', roundLost: 'ROUND LOST',
     p1RoundWin: 'P1 WINS ROUND!', p2RoundWin: 'P2 WINS ROUND!',
