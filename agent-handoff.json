@@ -43,7 +43,7 @@
       "id": "w-20260916T110800",
       "from": "user",
       "text": "User wil expliciet ook FR/ES/DE. Snelle main-spotcheck: buildings+fomo EN leftovers, DE Hi/Sound, EN VERLOREN, speel.html NL, FR/ES install App.",
-      "status": "in-progress",
+      "status": "done-in-code",
       "updated": "2026-09-16",
       "notes": "Prio: fomo + buildings DE/FR/ES (al in #299) + EN result.advLose YOU LOSE + DE Hi/Sound. Versus ongemoeid."
     },
@@ -923,6 +923,10 @@
   ],
   "sessionLog": [
     {
+      "at": "2026-09-16T11:11:54Z",
+      "summary": "Main-spotcheck: EN YOU LOSE, DE Hallo/Ton/Münze, FR/ES install-titel. Fomo+buildings+speel al in #299. Versus ongemoeid."
+    },
+    {
       "at": "2026-09-16T11:08:14Z",
       "summary": "Taalfactcheck alle picker-talen Z→A: rapport + FR/ES/DE fixes, speel.html i18n + stepsIos, dexBiome geen NL-leak. Versus ongemoeid. PR #299."
     },
@@ -1017,10 +1021,6 @@
     {
       "at": "2026-09-14T12:41:28Z",
       "summary": "Start toast-wachtrij: één tegelijk, Android Chrome/TWA"
-    },
-    {
-      "at": "2026-09-14T12:35:18Z",
-      "summary": "SATAN-kaart dikkere duivel, groter portret, korte copy, hitte-balk zonder dubbele tekst · v1.18.155 / SW 365"
     }
   ],
   "implementedFeaturesSummary": "d18 char select deel 1+2 (v1.11.1-2); Mats coinrun + shuriken mik/vliegers + anti-spam (v1.12.0); speel.html (v1.12.2+). Zie HANDOFF-ZOEKINDEX.md en improvement-d20-bag.json userFeatureLog.",
