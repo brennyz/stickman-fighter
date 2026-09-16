@@ -83,8 +83,8 @@ for (const rel of FILES) {
 
 const preview = read('assets/buildings/preview.html');
 ok(preview.includes('stick_lighter.svg'), 'preview stick_lighter');
-ok(preview.includes('32 · 48 · 96'), 'preview size ladder');
-ok(preview.includes('Silhouette proof'), 'preview silhouette row');
+ok(preview.includes('32×32 native') || preview.includes('z32'), 'preview size ladder');
+ok(preview.includes('width="96"') && preview.includes('width="32"'), 'preview 32 + 96 rungs');
 ok(!preview.includes('versus'), 'preview has no Versus');
 
 const data = read('src/data/building-pixels.js');

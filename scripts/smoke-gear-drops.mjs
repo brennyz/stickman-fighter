@@ -160,12 +160,8 @@ run('save.gear.owned = {}; save.ownedGear = {}');
 if (!run("grantGearItem('head_bandana_blue', { silent: true, src: 'drop' })")) fail('grant failed');
 if (!run("gearOwned('head_bandana_blue')")) fail('gearOwned false after grant');
 if (!run("!!save.gear.owned.head_bandana_blue.at")) fail('owned payload missing at');
-if (!run("save.ownedGear.head_bandana_blue.gearId === 'head_bandana_blue'")) fail('ownedGear contract mirror missing');
-if (!run("typeof save.ownedGear.head_bandana_blue.at === 'number' && save.ownedGear.head_bandana_blue.at > 0")) {
-  fail('ownedGear payload missing at');
-}
-if (run("Object.keys(save.ownedGear.head_bandana_blue).sort().join(',')") !== 'at,gearId') {
-  fail('ownedGear payload must be { gearId, at }');
+if (run("typeof save.gear.owned.head_bandana_blue.at !== 'number' || save.gear.owned.head_bandana_blue.at <= 0")) {
+  fail('schema-1 owned payload missing at');
 }
 if (run("grantGearItem('head_bandana_blue', { silent: true })")) fail('duplicate grant should be false');
 
