@@ -13442,9 +13442,7 @@ function syncSeasonFlavorUi(snap) {
   let autoLine = '';
   if (typeof t === 'function') {
     if (s.query) {
-      autoLine = typeof tOr === 'function'
-        ? tOr('season.queryNow', t('season.picked', { name }))
-        : t('season.picked', { name });
+      autoLine = typeof t === 'function' ? t('season.queryNow', { name }) : name;
     } else {
       autoLine = s.pref === 'auto'
         ? t('season.autoSuggest', { name })
