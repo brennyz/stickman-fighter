@@ -323,9 +323,9 @@ const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const VERSION_UPDATE_SAVE_KEY = 'stickfighter_version_update_save_v1';
 const VERSION_UPDATE_FLAG_KEY = 'stickfighter_version_update_flag_v1';
 const SAVE_EXPORT_SCHEMA = 3;
-const APP_VERSION = '1.18.167';
+const APP_VERSION = '1.18.168';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 377;
+const SW_CACHE_REV = 378;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', petCoins: 0, dex: {}, summons: {}, pets: {}, activePet: null,
   eggPets: {}, activeEggPet: null, eggDaily: null,
   chestDaily: null, chestWeapons: {},
@@ -9281,6 +9281,15 @@ const EQUIP_LOOK_MAX = 5;
 const EQUIP_LOOK_OX_MAX = 48;
 const EQUIP_LOOK_SCALE_MIN = 0.35;
 const EQUIP_LOOK_SCALE_MAX = 1.75;
+/** Matches Fighter.draw head radius — keep overlays sitting on this circle. */
+const EQUIP_LOOK_HEAD_R = 10.5;
+/** Kinds that replace the hollow stick-head (must draw a skull/helm disc). */
+const EQUIP_COVERS_HEAD = { helmet: true };
+/**
+ * Scale-1 stickman: feet at origin, head centre ≈ −104, crown/ears ≈ −126.
+ * Preview camera uses this so the head never clips off a style card.
+ */
+const EQUIP_LOOK_STICK_TOP = 126;
 
 const EQUIP_LAYER_ALIAS = {
   under: 'back', behind: 'back', underbody: 'back', cape: 'back', cloak: 'back',
@@ -9305,26 +9314,26 @@ const EQUIP_SLOT_ALIAS = {
 
 const EQUIP_LOOK_DEFAULTS = {
   bandana: { slot: 'head', layer: 'head', ox: 0, oy: -1, scale: 1 },
-  visor: { slot: 'head', layer: 'head', ox: 0, oy: 1, scale: 1 },
+  visor: { slot: 'head', layer: 'head', ox: 0, oy: 0, scale: 1 },
   fox: { slot: 'head', layer: 'head', ox: 0, oy: -1, scale: 1 },
   duck: { slot: 'head', layer: 'head', ox: 1, oy: 1, scale: 1 },
   topknot: { slot: 'head', layer: 'head', ox: 0, oy: -1, scale: 1 },
-  helmet: { slot: 'head', layer: 'head', ox: 0, oy: -1, scale: 1 },
+  helmet: { slot: 'head', layer: 'head', ox: 0, oy: 0, scale: 1 },
   glow: { slot: 'head', layer: 'head', ox: 0, oy: 0, scale: 1 },
   lightning: { slot: 'head', layer: 'head', ox: 0, oy: 0, scale: 1 },
   charm: { slot: 'head', layer: 'head', ox: 0, oy: 2, scale: 1 },
   coat: { slot: 'back', layer: 'back', ox: 0, oy: 1, scale: 1 },
   cape: { slot: 'back', layer: 'back', ox: 0, oy: 2, scale: 1 },
-  tome: { slot: 'back', layer: 'back', ox: -1, oy: 2, scale: 1 },
+  tome: { slot: 'back', layer: 'back', ox: -1, oy: 3, scale: 1 },
   vest: { slot: 'chest', layer: 'chest', ox: 0, oy: 0, scale: 1 },
-  chestplate: { slot: 'chest', layer: 'chest', ox: 0, oy: 0, scale: 1 },
+  chestplate: { slot: 'chest', layer: 'chest', ox: 0, oy: 1, scale: 1 },
   crystal: { slot: 'chest', layer: 'chest', ox: 1, oy: 0, scale: 1 },
-  wrap: { slot: 'legs', layer: 'legs', ox: 0, oy: 0, scale: 1 },
-  greaves: { slot: 'legs', layer: 'legs', ox: 0, oy: 1, scale: 1 },
+  wrap: { slot: 'legs', layer: 'legs', ox: 0, oy: 1, scale: 1 },
+  greaves: { slot: 'legs', layer: 'legs', ox: 0, oy: 4, scale: 1 },
   gloves: { slot: 'hands', layer: 'hands', ox: 0, oy: 0, scale: 1 },
   horns: { slot: 'head', layer: 'head', ox: 0, oy: -2, scale: 1 },
-  halo: { slot: 'head', layer: 'head', ox: 0, oy: -4, scale: 1 },
-  wings: { slot: 'back', layer: 'back', ox: 0, oy: 0, scale: 1 },
+  halo: { slot: 'head', layer: 'head', ox: 0, oy: -3, scale: 1 },
+  wings: { slot: 'back', layer: 'back', ox: 0, oy: 1, scale: 1 },
   tail: { slot: 'back', layer: 'back', ox: 2, oy: 4, scale: 1 },
 };
 
@@ -9375,54 +9384,54 @@ const EQUIP_LOOK = Object.create(null);
 const EQUIP_LOOK_BY_STYLE = {
   classic: [],
   leaf_band: [
-    { kind: 'bandana', ox: 0, oy: -1, scale: 1.04 },
+    { kind: 'bandana', ox: 0, oy: -1, scale: 1.0 },
   ],
   energy_glow: [
-    { kind: 'glow', scale: 1.05 },
-    { kind: 'bandana', oy: -0.5, scale: 0.96 },
+    { kind: 'glow', scale: 1.04 },
+    { kind: 'bandana', oy: -1, scale: 0.96 },
   ],
   crimson_pact: [
     { kind: 'coat', oy: 1, scale: 1.06, fill: 'rgba(224,79,79,.46)' },
-    { kind: 'bandana', oy: -1, scale: 1.02 },
+    { kind: 'bandana', oy: -1, scale: 1.0 },
   ],
   shadow: [
     { kind: 'cape', oy: 2, scale: 1.02, fill: 'rgba(42,24,64,.42)' },
     { kind: 'bandana', oy: -1, scale: 1.0 },
   ],
   guvve: [
-    { kind: 'bandana', oy: -1, scale: 1.02 },
-    { kind: 'duck', ox: 1, oy: 1.5, scale: 1.08 },
+    { kind: 'bandana', oy: -1, scale: 1.0 },
+    { kind: 'duck', ox: 1, oy: 1.5, scale: 1.04 },
   ],
   gold: [
-    { kind: 'glow', scale: 1.12 },
-    { kind: 'bandana', oy: -1, scale: 1.04 },
+    { kind: 'glow', scale: 1.08 },
+    { kind: 'bandana', oy: -1, scale: 1.0 },
   ],
   sand: [
     { kind: 'vest', fill: 'rgba(201,122,32,.34)', oy: 0, scale: 1.02 },
     { kind: 'wrap', fill: 'rgba(138,96,48,.55)', scale: 1.0 },
-    { kind: 'bandana', oy: -0.5, scale: 1.0 },
+    { kind: 'bandana', oy: -1, scale: 1.0 },
   ],
   samurai: [
-    { kind: 'topknot', oy: -1.5, scale: 1.06 },
-    { kind: 'bandana', oy: 0, scale: 0.94 },
+    { kind: 'topknot', oy: -1, scale: 1.04 },
+    { kind: 'bandana', oy: -1, scale: 0.94 },
   ],
   cyber: [
-    { kind: 'visor', oy: 1.5, scale: 1.04 },
-    { kind: 'bandana', oy: -2, scale: 0.92 },
+    { kind: 'visor', oy: 0, scale: 1.0 },
+    { kind: 'bandana', oy: -1, scale: 0.92 },
     { kind: 'lightning', ox: 1, oy: -1 },
   ],
   fox: [
-    { kind: 'fox', oy: -1.5, scale: 1.08 },
-    { kind: 'bandana', oy: 0.5, scale: 0.94 },
+    { kind: 'fox', oy: -1, scale: 1.04 },
+    { kind: 'bandana', oy: -1, scale: 0.94 },
   ],
   storm: [
-    { kind: 'glow', scale: 1.08 },
+    { kind: 'glow', scale: 1.06 },
     { kind: 'bandana', oy: -1, scale: 1.0 },
     { kind: 'lightning', ox: -1, oy: -1 },
   ],
   void: [
     { kind: 'coat', oy: 1, scale: 1.08, fill: 'rgba(90,16,64,.50)' },
-    { kind: 'bandana', oy: -1, scale: 1.02 },
+    { kind: 'bandana', oy: -1, scale: 1.0 },
   ],
   hunter: [
     { kind: 'vest', fill: 'rgba(61,92,50,.58)', oy: 0, scale: 1.04 },
@@ -9435,8 +9444,8 @@ const EQUIP_LOOK_BY_STYLE = {
     { kind: 'crystal', anchor: 'shoulder', ox: 12, oy: -2, scale: 1.08 },
   ],
   tome: [
-    { kind: 'tome', ox: -2, oy: 3, scale: 1.1 },
-    { kind: 'bandana', oy: -0.5, scale: 0.98 },
+    { kind: 'tome', ox: -2, oy: 3, scale: 1.08 },
+    { kind: 'bandana', oy: -1, scale: 0.98 },
   ],
 };
 
@@ -9490,7 +9499,7 @@ function mergeItemDraw(base, draw) {
   if (draw.slot) out.slot = draw.slot;
   if (draw.layer) out.layer = draw.layer;
   if (draw.anchor) out.anchor = draw.anchor;
-  ['ox', 'oy', 'scale', 'rot', 'color', 'accent', 'plate', 'fill'].forEach((k) => {
+  ['ox', 'oy', 'scale', 'rot', 'color', 'accent', 'plate', 'fill', 'coversHead'].forEach((k) => {
     if (draw[k] != null) out[k] = draw[k];
   });
   return out;
@@ -9520,7 +9529,64 @@ function hydrateEquipLook(piece, style) {
     plate: lookColor(piece.plate, lookColor(st.plate, null)),
     fill: lookColor(piece.fill, null),
     styleId: st.id || piece.styleId || null,
+    coversHead: piece.coversHead === true || (!!(EQUIP_COVERS_HEAD[piece.kind]) && piece.coversHead !== false),
   };
+}
+
+function lookCoversHead(look) {
+  if (!look || typeof look !== 'object') return false;
+  if (look.coversHead === true) return true;
+  if (look.coversHead === false) return false;
+  return !!EQUIP_COVERS_HEAD[look.kind];
+}
+
+function looksHideBaseHead(looks) {
+  if (!looks || !looks.length) return false;
+  for (let i = 0; i < looks.length; i++) {
+    const row = looks[i];
+    if (!row) continue;
+    if ((row.slot === 'head' || row.layer === 'head') && lookCoversHead(row)) return true;
+  }
+  return false;
+}
+
+/** 0–1 luma from #rgb / #rrggbb / rgb() / rgba(). Non-colors → 0.7 (assume light). */
+function lookLuma(color) {
+  if (typeof color !== 'string') return 0.7;
+  const s = color.trim();
+  let r = 200, g = 200, b = 200;
+  const hex = /^#([0-9a-f]{3}|[0-9a-f]{6})$/i.exec(s);
+  if (hex) {
+    const h = hex[1];
+    if (h.length === 3) {
+      r = parseInt(h[0] + h[0], 16);
+      g = parseInt(h[1] + h[1], 16);
+      b = parseInt(h[2] + h[2], 16);
+    } else {
+      r = parseInt(h.slice(0, 2), 16);
+      g = parseInt(h.slice(2, 4), 16);
+      b = parseInt(h.slice(4, 6), 16);
+    }
+  } else {
+    const rgb = /^rgba?\(\s*([\d.]+)\s*,\s*([\d.]+)\s*,\s*([\d.]+)/i.exec(s);
+    if (!rgb) return 0.7;
+    r = Number(rgb[1]);
+    g = Number(rgb[2]);
+    b = Number(rgb[3]);
+  }
+  return (0.2126 * r + 0.7152 * g + 0.0722 * b) / 255;
+}
+
+/** Dark body colors vanish on the Styles grid — add a light rim so the circle reads. */
+function lookHeadRim(color) {
+  return lookLuma(color) < 0.38 ? 'rgba(255,255,255,.48)' : null;
+}
+
+function lookHeadFill(color) {
+  const luma = lookLuma(color);
+  if (luma < 0.38) return 'rgba(255,255,255,.14)';
+  if (luma > 0.82) return 'rgba(255,255,255,.10)';
+  return 'rgba(255,255,255,.08)';
 }
 
 function looksForStyle(st) {
@@ -9733,13 +9799,35 @@ function looksOnLayer(looks, layer) {
   return looks.filter((l) => l.layer === layer);
 }
 
-/** Menu-card camera: leave crown room so bandana / ears / topknot do not clip. */
-function applyEquipLookPreview(cc, w, h) {
-  if (!cc || typeof cc.translate !== 'function') return;
+/** Menu-card camera: fit a scale-1 stickman so the head circle stays on-card. */
+function equipLookPreviewCamera(w, h) {
   const width = Number.isFinite(w) && w > 0 ? w : 80;
   const height = Number.isFinite(h) && h > 0 ? h : 86;
-  cc.translate(width * 0.5, height * 0.87);
-  cc.scale(0.78, 0.78);
+  const padTop = 5;
+  const padBot = Math.max(5, Math.round(height * 0.08));
+  const usable = Math.max(28, height - padTop - padBot);
+  const sc = usable / EQUIP_LOOK_STICK_TOP;
+  return {
+    width,
+    height,
+    tx: width * 0.5,
+    ty: height - padBot,
+    sc,
+    padTop,
+    padBot,
+    headLocalY: -(78 + 12 + 5 + 9),
+    headR: EQUIP_LOOK_HEAD_R,
+  };
+}
+
+function applyEquipLookPreview(cc, w, h) {
+  if (!cc || typeof cc.translate !== 'function') return null;
+  const cam = equipLookPreviewCamera(w, h);
+  const tx = typeof lookSnap === 'function' ? lookSnap(cam.tx) : Math.round(cam.tx);
+  const ty = typeof lookSnap === 'function' ? lookSnap(cam.ty) : Math.round(cam.ty);
+  cc.translate(tx, ty);
+  cc.scale(cam.sc, cam.sc);
+  return cam;
 }
 
 const EquipLookApi = {
@@ -9754,8 +9842,13 @@ const EquipLookApi = {
   register: registerEquipLook,
   snap: lookSnap,
   preview: applyEquipLookPreview,
+  previewCamera: equipLookPreviewCamera,
   canonSlot: canonEquipSlot,
   canonLayer: canonEquipLayer,
+  coversHead: lookCoversHead,
+  hidesBaseHead: looksHideBaseHead,
+  luma: lookLuma,
+  headR: EQUIP_LOOK_HEAD_R,
   max: EQUIP_LOOK_MAX,
 };
 
@@ -29346,17 +29439,18 @@ function drawEquipPiece(c, look, bones, fighter) {
 }
 
 function drawLookBandana(c, look, x, y, sc) {
-  const r = 10.5 * sc;
-  const y0 = y - r * 0.28;
-  const h = 5.6 * sc;
+  const r = (typeof EQUIP_LOOK_HEAD_R === 'number' ? EQUIP_LOOK_HEAD_R : 10.5) * sc;
+  /* Forehead wrap only — never swallow the face / chin of the stick head. */
+  const y0 = y - r * 0.92;
+  const h = 4.6 * sc;
   c.fillStyle = look.color;
   c.beginPath();
-  c.moveTo(x - r * 0.98, y0);
-  c.quadraticCurveTo(x - r * 1.08, y - r * 0.82, x - r * 0.52, y - r * 0.96);
-  c.quadraticCurveTo(x, y - r * 1.06, x + r * 0.52, y - r * 0.96);
-  c.quadraticCurveTo(x + r * 1.08, y - r * 0.82, x + r * 0.98, y0);
-  c.lineTo(x + r * 0.9, y0 + h);
-  c.quadraticCurveTo(x, y0 + h + 1.2 * sc, x - r * 0.9, y0 + h);
+  c.moveTo(x - r * 0.96, y0);
+  c.quadraticCurveTo(x - r * 1.02, y - r * 1.02, x - r * 0.48, y - r * 1.08);
+  c.quadraticCurveTo(x, y - r * 1.14, x + r * 0.48, y - r * 1.08);
+  c.quadraticCurveTo(x + r * 1.02, y - r * 1.02, x + r * 0.96, y0);
+  c.lineTo(x + r * 0.88, y0 + h);
+  c.quadraticCurveTo(x, y0 + h + 0.8 * sc, x - r * 0.88, y0 + h);
   c.closePath();
   c.fill();
   c.strokeStyle = 'rgba(0,0,0,.28)';
@@ -29364,9 +29458,9 @@ function drawLookBandana(c, look, x, y, sc) {
   c.stroke();
   if (look.plate) {
     c.fillStyle = look.plate;
-    const pw = 9.2 * sc, ph = 4.4 * sc;
+    const pw = 8.6 * sc, ph = 3.6 * sc;
     c.beginPath();
-    c.rect(x - pw / 2, y0 + 0.4, pw, ph);
+    c.rect(lookPx(x - pw / 2), lookPx(y0 + 0.6 * sc), pw, ph);
     c.fill();
     c.strokeStyle = 'rgba(0,0,0,.22)';
     c.lineWidth = 0.8;
@@ -29375,32 +29469,33 @@ function drawLookBandana(c, look, x, y, sc) {
   // Tails stream behind the head (−x) so they do not sit on the face.
   c.strokeStyle = look.color;
   c.lineCap = 'round';
-  c.lineWidth = 2.5 * sc;
+  c.lineWidth = 2.4 * sc;
   c.beginPath();
-  c.moveTo(x - r * 0.86, y0 + 1.6);
-  c.quadraticCurveTo(x - r * 1.45, y0 + 5, x - r * 1.62, y0 + 13 * sc);
+  c.moveTo(x - r * 0.86, y0 + 1.2 * sc);
+  c.quadraticCurveTo(x - r * 1.4, y0 + 4 * sc, x - r * 1.55, y0 + 11 * sc);
   c.stroke();
-  c.lineWidth = 1.8 * sc;
+  c.lineWidth = 1.7 * sc;
   c.beginPath();
-  c.moveTo(x - r * 0.8, y0 + 2.4);
-  c.quadraticCurveTo(x - r * 1.28, y0 + 7, x - r * 1.38, y0 + 15 * sc);
+  c.moveTo(x - r * 0.8, y0 + 2 * sc);
+  c.quadraticCurveTo(x - r * 1.24, y0 + 6 * sc, x - r * 1.32, y0 + 13 * sc);
   c.stroke();
 }
 
 function drawLookVisor(c, look, x, y, sc) {
-  const w = 18.5 * sc, h = 5.6 * sc;
+  const w = 17.2 * sc, h = 4.6 * sc;
+  const y0 = y - 1.2 * sc;
   c.fillStyle = look.color || look.accent || '#7cf5ff';
-  c.globalAlpha = 0.9;
+  c.globalAlpha = 0.88;
   c.beginPath();
-  c.moveTo(x - w / 2, y);
-  c.quadraticCurveTo(x, y + 2.2 * sc, x + w / 2, y);
-  c.lineTo(x + w / 2 - 0.8, y + h);
-  c.quadraticCurveTo(x, y + h + 1.4 * sc, x - w / 2 + 0.8, y + h);
+  c.moveTo(x - w / 2, y0);
+  c.quadraticCurveTo(x, y0 + 1.6 * sc, x + w / 2, y0);
+  c.lineTo(x + w / 2 - 0.8 * sc, y0 + h);
+  c.quadraticCurveTo(x, y0 + h + 1.1 * sc, x - w / 2 + 0.8 * sc, y0 + h);
   c.closePath();
   c.fill();
   c.globalAlpha = 0.45;
   c.fillStyle = '#e8ffff';
-  c.fillRect(x - w / 2 + 2, y + 1.1 * sc, w * 0.38, 1.6 * sc);
+  c.fillRect(lookPx(x - w / 2 + 2 * sc), lookPx(y0 + 1.0 * sc), w * 0.36, 1.4 * sc);
   c.globalAlpha = 1;
 }
 
@@ -29464,17 +29559,29 @@ function drawLookTopknot(c, look, x, y, sc) {
   c.fill();
 }
 
-function drawLookHelmet(c, look, x, y, sc) {
-  const r = 11.2 * sc;
+function drawLookHelmet(c, look, x, y, sc, bones, fighter) {
+  const r = 11.0 * sc;
+  /* Replacement skull — if the base hollow head is skipped, this disc is the head. */
   c.fillStyle = look.color;
   c.beginPath();
-  c.arc(x, y - 1, r, Math.PI, 0);
-  c.lineTo(x + r, y + 1.5 * sc);
-  c.quadraticCurveTo(x, y + 3.2 * sc, x - r, y + 1.5 * sc);
+  c.arc(x, y, r * 0.9, 0, TAU);
+  c.fill();
+  c.beginPath();
+  c.arc(x, y - 0.6 * sc, r, Math.PI, 0);
+  c.lineTo(x + r, y + 1.2 * sc);
+  c.quadraticCurveTo(x, y + 2.4 * sc, x - r, y + 1.2 * sc);
   c.closePath();
   c.fill();
   c.strokeStyle = look.accent || 'rgba(0,0,0,.3)';
   c.lineWidth = 1.2;
+  c.stroke();
+  /* Open face / chin so a helm never leaves a blank hole. */
+  const body = (fighter && fighter.color) || look.accent || '#f2f5ff';
+  c.strokeStyle = body;
+  c.lineWidth = (fighter && fighter.lineW) || 3.2;
+  c.lineCap = 'round';
+  c.beginPath();
+  c.arc(x, y, (typeof EQUIP_LOOK_HEAD_R === 'number' ? EQUIP_LOOK_HEAD_R : 10.5) * sc, 0.2, Math.PI - 0.2);
   c.stroke();
 }
 
@@ -29565,13 +29672,15 @@ function drawLookWrap(c, look, x, y, sc, bones) {
 
 function drawLookGreaves(c, look, x, y, sc, bones) {
   const hip = lookBoneOk(bones && bones.hip) ? bones.hip : { x, y };
+  const gx = lookPx(hip.x), gy = lookPx(hip.y + 22 * sc);
+  const w = 7 * sc, h = 12 * sc;
   c.fillStyle = look.color;
-  c.fillRect(lookPx(hip.x - 14 * sc), lookPx(hip.y + 14 * sc), 7 * sc, 11 * sc);
-  c.fillRect(lookPx(hip.x + 7 * sc), lookPx(hip.y + 14 * sc), 7 * sc, 11 * sc);
+  c.fillRect(lookPx(gx - 14 * sc), gy, w, h);
+  c.fillRect(lookPx(gx + 7 * sc), gy, w, h);
   c.strokeStyle = look.accent || 'rgba(0,0,0,.25)';
   c.lineWidth = 1;
-  c.strokeRect(lookPx(hip.x - 14 * sc), lookPx(hip.y + 14 * sc), 7 * sc, 11 * sc);
-  c.strokeRect(lookPx(hip.x + 7 * sc), lookPx(hip.y + 14 * sc), 7 * sc, 11 * sc);
+  c.strokeRect(lookPx(gx - 14 * sc), gy, w, h);
+  c.strokeRect(lookPx(gx + 7 * sc), gy, w, h);
 }
 
 function drawLookTome(c, look, x, y, sc) {
@@ -29732,6 +29841,84 @@ function drawLookCharm(c, look, x, y, sc) {
   c.fill();
 }
 
+function drawStickmanHead(c, x, y, color, opts) {
+  if (!c) return;
+  const r = (opts && Number.isFinite(opts.r)) ? opts.r
+    : (typeof EQUIP_LOOK_HEAD_R === 'number' ? EQUIP_LOOK_HEAD_R : 10.5);
+  const lineW = (opts && Number.isFinite(opts.lineW)) ? opts.lineW : 4.5;
+  const px = lookPx(x);
+  const py = lookPx(y);
+  const col = color || '#f2f5ff';
+  c.save();
+  try {
+    if (opts && opts.bald) {
+      c.fillStyle = '#ffe8c8';
+      c.beginPath(); c.arc(px, py, r, 0, TAU); c.fill();
+      c.strokeStyle = 'rgba(0,0,0,.35)';
+      c.lineWidth = 1.2;
+      c.beginPath(); c.arc(px, py, r, 0, TAU); c.stroke();
+      c.fillStyle = 'rgba(255,255,255,.4)';
+      c.beginPath(); c.arc(px - 3, py - 3, 2.8, 0, TAU); c.fill();
+    } else {
+      const fill = typeof lookHeadFill === 'function' ? lookHeadFill(col) : 'rgba(255,255,255,.10)';
+      c.fillStyle = fill;
+      c.beginPath(); c.arc(px, py, Math.max(2, r - lineW * 0.28), 0, TAU); c.fill();
+      c.strokeStyle = col;
+      c.lineWidth = lineW;
+      c.lineCap = 'round';
+      c.beginPath(); c.arc(px, py, r, 0, TAU); c.stroke();
+      const rim = typeof lookHeadRim === 'function' ? lookHeadRim(col) : null;
+      if (rim) {
+        c.strokeStyle = rim;
+        c.lineWidth = Math.max(1.15, lineW * 0.32);
+        c.beginPath(); c.arc(px, py, r + 0.7, 0, TAU); c.stroke();
+      }
+    }
+  } finally {
+    c.restore();
+  }
+}
+
+/** Lower-arc restroke so a bandana/visor cannot erase the stick-head. */
+function restrokeStickmanChin(c, x, y, color, opts) {
+  if (!c) return;
+  const r = (opts && Number.isFinite(opts.r)) ? opts.r
+    : (typeof EQUIP_LOOK_HEAD_R === 'number' ? EQUIP_LOOK_HEAD_R : 10.5);
+  const lineW = (opts && Number.isFinite(opts.lineW)) ? opts.lineW : 4.5;
+  const px = lookPx(x);
+  const py = lookPx(y);
+  const col = color || '#f2f5ff';
+  c.save();
+  try {
+    c.strokeStyle = col;
+    c.lineWidth = lineW;
+    c.lineCap = 'round';
+    c.beginPath();
+    c.arc(px, py, r, 0.18, Math.PI - 0.18);
+    c.stroke();
+    const rim = typeof lookHeadRim === 'function' ? lookHeadRim(col) : null;
+    if (rim) {
+      c.strokeStyle = rim;
+      c.lineWidth = Math.max(1.1, lineW * 0.3);
+      c.beginPath();
+      c.arc(px, py, r + 0.7, 0.18, Math.PI - 0.18);
+      c.stroke();
+    }
+  } finally {
+    c.restore();
+  }
+}
+
+function ensureEquipHeadVisible(c, looks, bones, fighter) {
+  if (!c) return;
+  const head = bones && bones.head;
+  if (!lookBoneOk(head)) return;
+  void looks;
+  restrokeStickmanChin(c, head.x, head.y, fighter && fighter.color, {
+    lineW: fighter && fighter.lineW,
+  });
+}
+
 function drawEquipLookPreview(c, styleId, gear) {
   if (!c) return null;
   try {
@@ -29753,6 +29940,9 @@ if (typeof EquipLookApi !== 'undefined') {
   EquipLookApi.drawPreview = drawEquipLookPreview;
   EquipLookApi.drawLayer = drawEquipLayer;
   EquipLookApi.safeDrawLayer = safeDrawEquipLayer;
+  EquipLookApi.drawHead = drawStickmanHead;
+  EquipLookApi.restrokeChin = restrokeStickmanChin;
+  EquipLookApi.ensureHead = ensureEquipHeadVisible;
 }
 
 const EQUIP_LOOK_DRAW = {
@@ -31697,16 +31887,22 @@ class Fighter {
     drawLimb(hipX, hipY, P.legs[1][0], P.legs[1][1], legL, legL);
     paintLook('legs');
     paintLook('chest');
-    // hoofd
-    if (this.bald) {
+    // hoofd — never leave a hole. Helmets replace the disc; styles only sit on it.
+    const headCX = (this._preview && typeof lookPx === 'function') ? lookPx(headX) : headX;
+    const headCY = (this._preview && typeof lookPx === 'function') ? lookPx(headY - 9) : (headY - 9);
+    bones.head = { x: headCX, y: headCY };
+    /* Always paint a head disc first. Helmets sit on it; they must never leave a hole. */
+    if (typeof drawStickmanHead === 'function') {
+      drawStickmanHead(c, headCX, headCY, this.color, { lineW: this.lineW, bald: !!this.bald });
+    } else if (this.bald) {
       c.fillStyle = '#ffe8c8';
-      c.beginPath(); c.arc(headX, headY - 9, 10.5, 0, TAU); c.fill();
+      c.beginPath(); c.arc(headCX, headCY, 10.5, 0, TAU); c.fill();
       c.strokeStyle = 'rgba(0,0,0,.35)'; c.lineWidth = 1.2;
-      c.beginPath(); c.arc(headX, headY - 9, 10.5, 0, TAU); c.stroke();
+      c.beginPath(); c.arc(headCX, headCY, 10.5, 0, TAU); c.stroke();
       c.fillStyle = 'rgba(255,255,255,.4)';
-      c.beginPath(); c.arc(headX - 3, headY - 12, 2.8, 0, TAU); c.fill();
+      c.beginPath(); c.arc(headCX - 3, headCY - 3, 2.8, 0, TAU); c.fill();
     } else {
-      c.beginPath(); c.arc(headX, headY - 9, 10.5, 0, TAU); c.stroke();
+      c.beginPath(); c.arc(headCX, headCY, 10.5, 0, TAU); c.stroke();
     }
     if (this.gi === 'white' || this.gi === 'red' || this.gi === 'hero') {
       const giFill = this.gi === 'red' ? 'rgba(220,48,48,.55)' : this.gi === 'hero' ? 'rgba(255,226,89,.72)' : 'rgba(255,255,255,.78)';
@@ -31722,9 +31918,17 @@ class Fighter {
     if (looks.length) {
       paintLook('head');
     } else if (this.isPlayer && this.style) {
-      try { this.drawStyleExtras(c, headX, headY - 9, shX, shY, hipX, hipY); } catch (_) {}
+      try { this.drawStyleExtras(c, headCX, headCY, shX, shY, hipX, hipY); } catch (_) {}
     }
-    if (this.isRobot) this.drawRobotHead(c, headX, headY - 9);
+    if (typeof ensureEquipHeadVisible === 'function') {
+      try { ensureEquipHeadVisible(c, looks, bones, this); } catch (_) {}
+    } else {
+      c.strokeStyle = this.color;
+      c.lineWidth = this.lineW;
+      c.beginPath(); c.arc(headCX, headCY, 10.5, 0.18, Math.PI - 0.18); c.stroke();
+    }
+    if (this.isRobot) this.drawRobotHead(c, headCX, headCY);
+    c.strokeStyle = this.color; c.lineWidth = this.lineW; c.lineCap = 'round';
 
     // voorste arm + wapen
     const [hx, hy] = drawLimb(shX, shY, P.arms[1][0], P.arms[1][1], armL, armL);
@@ -42637,7 +42841,7 @@ function drawStyleLookPreview(cc, st, w, h) {
       cc.translate((w || 80) * 0.5, (h || 86) * 0.87);
       cc.scale(0.78, 0.78);
     }
-    const preview = new Fighter({ isPlayer: true, x: 0, y: 0, color: st.body, style: st, scale: 0.9, _preview: true });
+    const preview = new Fighter({ isPlayer: true, x: 0, y: 0, color: st.body, style: st, scale: 1, _preview: true });
     preview.animT = 0.4;
     preview.draw(cc);
   } catch (_) { /* one card must not blank the style grid on Android */ }

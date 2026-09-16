@@ -235,8 +235,28 @@ for (const [id, kinds] of Object.entries(expectKind)) {
 }
 
 const leaf = api.forStyle({ id: 'leaf_band', bandana: '#2d6b36', plate: '#dfe8ff', accent: '#43b25b' })[0];
-if (!leaf || leaf.oy === undefined || leaf.scale < 1) fail('leaf_band bandana needs tuned oy/scale');
+if (!leaf || leaf.oy === undefined || leaf.scale < 0.9) fail('leaf_band bandana needs tuned oy/scale');
 if (leaf.color !== '#2d6b36') fail('leaf_band color should hydrate from style');
+
+if (typeof api.hidesBaseHead !== 'function') fail('hidesBaseHead missing');
+for (const id of Object.keys(expectKind)) {
+  const stLooks = api.forStyle({ id, bandana: '#123', accent: '#abc', plate: '#eee' });
+  if (api.hidesBaseHead(stLooks)) fail(id + ' style must not hide the stick head');
+}
+const helmLooks = api.forGear({ head: { kind: 'helmet', color: '#9aa8bc' } });
+if (!api.hidesBaseHead(helmLooks)) fail('helmet gear must mark coversHead so a replacement skull is drawn');
+if (typeof api.luma === 'function') {
+  if (api.luma('#1a1424') >= 0.38) fail('crimson/void body must count as dark (contrast rim)');
+  if (api.luma('#f2f5ff') < 0.75) fail('classic body must count as light');
+}
+if (typeof api.previewCamera !== 'function') fail('previewCamera missing');
+for (const [cw, ch] of [[80, 86], [64, 64]]) {
+  const cam = api.previewCamera(cw, ch);
+  const headY = cam.ty + cam.sc * cam.headLocalY;
+  const headR = cam.headR * cam.sc;
+  if (headY - headR < 1.5) fail('style card ' + cw + 'x' + ch + ' clips head top (y=' + (headY - headR).toFixed(2) + ')');
+  if (headY + headR > ch - 1) fail('style card ' + cw + 'x' + ch + ' clips head bottom');
+}
 
 const gear = api.forGear({
   head: { kind: 'helmet', color: '#c9d6e8', accent: '#7cf5ff' },
@@ -451,7 +471,13 @@ if (typeof api.drawPreview === 'function') {
 if (typeof api.drawPreview !== 'function') fail('drawPreview missing');
 const rec = recordingContext();
 try {
-  for (const id of Object.keys(expectKind)) api.drawPreview(rec, id);
+  for (const id of Object.keys(expectKind)) {
+    api.drawPreview(rec, id);
+    const recOne = recordingContext();
+    api.drawPreview(recOne, id);
+    const headArcs = recOne.calls.filter((c) => c[0] === 'arc' && Number(c[3]) >= 8 && Number(c[3]) <= 13.5);
+    if (!headArcs.length) fail(id + ' preview drew no head-sized arc (head vanished)');
+  }
   api.drawPreview(rec, 'leaf_band', { head: { kind: 'helmet', color: '#ccc' } });
 } catch (e) {
   fail('drawPreview threw: ' + e.message);

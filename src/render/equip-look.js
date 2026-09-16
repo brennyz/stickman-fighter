@@ -77,17 +77,18 @@ function drawEquipPiece(c, look, bones, fighter) {
 }
 
 function drawLookBandana(c, look, x, y, sc) {
-  const r = 10.5 * sc;
-  const y0 = y - r * 0.28;
-  const h = 5.6 * sc;
+  const r = (typeof EQUIP_LOOK_HEAD_R === 'number' ? EQUIP_LOOK_HEAD_R : 10.5) * sc;
+  /* Forehead wrap only — never swallow the face / chin of the stick head. */
+  const y0 = y - r * 0.92;
+  const h = 4.6 * sc;
   c.fillStyle = look.color;
   c.beginPath();
-  c.moveTo(x - r * 0.98, y0);
-  c.quadraticCurveTo(x - r * 1.08, y - r * 0.82, x - r * 0.52, y - r * 0.96);
-  c.quadraticCurveTo(x, y - r * 1.06, x + r * 0.52, y - r * 0.96);
-  c.quadraticCurveTo(x + r * 1.08, y - r * 0.82, x + r * 0.98, y0);
-  c.lineTo(x + r * 0.9, y0 + h);
-  c.quadraticCurveTo(x, y0 + h + 1.2 * sc, x - r * 0.9, y0 + h);
+  c.moveTo(x - r * 0.96, y0);
+  c.quadraticCurveTo(x - r * 1.02, y - r * 1.02, x - r * 0.48, y - r * 1.08);
+  c.quadraticCurveTo(x, y - r * 1.14, x + r * 0.48, y - r * 1.08);
+  c.quadraticCurveTo(x + r * 1.02, y - r * 1.02, x + r * 0.96, y0);
+  c.lineTo(x + r * 0.88, y0 + h);
+  c.quadraticCurveTo(x, y0 + h + 0.8 * sc, x - r * 0.88, y0 + h);
   c.closePath();
   c.fill();
   c.strokeStyle = 'rgba(0,0,0,.28)';
@@ -95,9 +96,9 @@ function drawLookBandana(c, look, x, y, sc) {
   c.stroke();
   if (look.plate) {
     c.fillStyle = look.plate;
-    const pw = 9.2 * sc, ph = 4.4 * sc;
+    const pw = 8.6 * sc, ph = 3.6 * sc;
     c.beginPath();
-    c.rect(x - pw / 2, y0 + 0.4, pw, ph);
+    c.rect(lookPx(x - pw / 2), lookPx(y0 + 0.6 * sc), pw, ph);
     c.fill();
     c.strokeStyle = 'rgba(0,0,0,.22)';
     c.lineWidth = 0.8;
@@ -106,32 +107,33 @@ function drawLookBandana(c, look, x, y, sc) {
   // Tails stream behind the head (−x) so they do not sit on the face.
   c.strokeStyle = look.color;
   c.lineCap = 'round';
-  c.lineWidth = 2.5 * sc;
+  c.lineWidth = 2.4 * sc;
   c.beginPath();
-  c.moveTo(x - r * 0.86, y0 + 1.6);
-  c.quadraticCurveTo(x - r * 1.45, y0 + 5, x - r * 1.62, y0 + 13 * sc);
+  c.moveTo(x - r * 0.86, y0 + 1.2 * sc);
+  c.quadraticCurveTo(x - r * 1.4, y0 + 4 * sc, x - r * 1.55, y0 + 11 * sc);
   c.stroke();
-  c.lineWidth = 1.8 * sc;
+  c.lineWidth = 1.7 * sc;
   c.beginPath();
-  c.moveTo(x - r * 0.8, y0 + 2.4);
-  c.quadraticCurveTo(x - r * 1.28, y0 + 7, x - r * 1.38, y0 + 15 * sc);
+  c.moveTo(x - r * 0.8, y0 + 2 * sc);
+  c.quadraticCurveTo(x - r * 1.24, y0 + 6 * sc, x - r * 1.32, y0 + 13 * sc);
   c.stroke();
 }
 
 function drawLookVisor(c, look, x, y, sc) {
-  const w = 18.5 * sc, h = 5.6 * sc;
+  const w = 17.2 * sc, h = 4.6 * sc;
+  const y0 = y - 1.2 * sc;
   c.fillStyle = look.color || look.accent || '#7cf5ff';
-  c.globalAlpha = 0.9;
+  c.globalAlpha = 0.88;
   c.beginPath();
-  c.moveTo(x - w / 2, y);
-  c.quadraticCurveTo(x, y + 2.2 * sc, x + w / 2, y);
-  c.lineTo(x + w / 2 - 0.8, y + h);
-  c.quadraticCurveTo(x, y + h + 1.4 * sc, x - w / 2 + 0.8, y + h);
+  c.moveTo(x - w / 2, y0);
+  c.quadraticCurveTo(x, y0 + 1.6 * sc, x + w / 2, y0);
+  c.lineTo(x + w / 2 - 0.8 * sc, y0 + h);
+  c.quadraticCurveTo(x, y0 + h + 1.1 * sc, x - w / 2 + 0.8 * sc, y0 + h);
   c.closePath();
   c.fill();
   c.globalAlpha = 0.45;
   c.fillStyle = '#e8ffff';
-  c.fillRect(x - w / 2 + 2, y + 1.1 * sc, w * 0.38, 1.6 * sc);
+  c.fillRect(lookPx(x - w / 2 + 2 * sc), lookPx(y0 + 1.0 * sc), w * 0.36, 1.4 * sc);
   c.globalAlpha = 1;
 }
 
@@ -195,17 +197,29 @@ function drawLookTopknot(c, look, x, y, sc) {
   c.fill();
 }
 
-function drawLookHelmet(c, look, x, y, sc) {
-  const r = 11.2 * sc;
+function drawLookHelmet(c, look, x, y, sc, bones, fighter) {
+  const r = 11.0 * sc;
+  /* Replacement skull — if the base hollow head is skipped, this disc is the head. */
   c.fillStyle = look.color;
   c.beginPath();
-  c.arc(x, y - 1, r, Math.PI, 0);
-  c.lineTo(x + r, y + 1.5 * sc);
-  c.quadraticCurveTo(x, y + 3.2 * sc, x - r, y + 1.5 * sc);
+  c.arc(x, y, r * 0.9, 0, TAU);
+  c.fill();
+  c.beginPath();
+  c.arc(x, y - 0.6 * sc, r, Math.PI, 0);
+  c.lineTo(x + r, y + 1.2 * sc);
+  c.quadraticCurveTo(x, y + 2.4 * sc, x - r, y + 1.2 * sc);
   c.closePath();
   c.fill();
   c.strokeStyle = look.accent || 'rgba(0,0,0,.3)';
   c.lineWidth = 1.2;
+  c.stroke();
+  /* Open face / chin so a helm never leaves a blank hole. */
+  const body = (fighter && fighter.color) || look.accent || '#f2f5ff';
+  c.strokeStyle = body;
+  c.lineWidth = (fighter && fighter.lineW) || 3.2;
+  c.lineCap = 'round';
+  c.beginPath();
+  c.arc(x, y, (typeof EQUIP_LOOK_HEAD_R === 'number' ? EQUIP_LOOK_HEAD_R : 10.5) * sc, 0.2, Math.PI - 0.2);
   c.stroke();
 }
 
@@ -296,13 +310,15 @@ function drawLookWrap(c, look, x, y, sc, bones) {
 
 function drawLookGreaves(c, look, x, y, sc, bones) {
   const hip = lookBoneOk(bones && bones.hip) ? bones.hip : { x, y };
+  const gx = lookPx(hip.x), gy = lookPx(hip.y + 22 * sc);
+  const w = 7 * sc, h = 12 * sc;
   c.fillStyle = look.color;
-  c.fillRect(lookPx(hip.x - 14 * sc), lookPx(hip.y + 14 * sc), 7 * sc, 11 * sc);
-  c.fillRect(lookPx(hip.x + 7 * sc), lookPx(hip.y + 14 * sc), 7 * sc, 11 * sc);
+  c.fillRect(lookPx(gx - 14 * sc), gy, w, h);
+  c.fillRect(lookPx(gx + 7 * sc), gy, w, h);
   c.strokeStyle = look.accent || 'rgba(0,0,0,.25)';
   c.lineWidth = 1;
-  c.strokeRect(lookPx(hip.x - 14 * sc), lookPx(hip.y + 14 * sc), 7 * sc, 11 * sc);
-  c.strokeRect(lookPx(hip.x + 7 * sc), lookPx(hip.y + 14 * sc), 7 * sc, 11 * sc);
+  c.strokeRect(lookPx(gx - 14 * sc), gy, w, h);
+  c.strokeRect(lookPx(gx + 7 * sc), gy, w, h);
 }
 
 function drawLookTome(c, look, x, y, sc) {
@@ -463,6 +479,84 @@ function drawLookCharm(c, look, x, y, sc) {
   c.fill();
 }
 
+function drawStickmanHead(c, x, y, color, opts) {
+  if (!c) return;
+  const r = (opts && Number.isFinite(opts.r)) ? opts.r
+    : (typeof EQUIP_LOOK_HEAD_R === 'number' ? EQUIP_LOOK_HEAD_R : 10.5);
+  const lineW = (opts && Number.isFinite(opts.lineW)) ? opts.lineW : 4.5;
+  const px = lookPx(x);
+  const py = lookPx(y);
+  const col = color || '#f2f5ff';
+  c.save();
+  try {
+    if (opts && opts.bald) {
+      c.fillStyle = '#ffe8c8';
+      c.beginPath(); c.arc(px, py, r, 0, TAU); c.fill();
+      c.strokeStyle = 'rgba(0,0,0,.35)';
+      c.lineWidth = 1.2;
+      c.beginPath(); c.arc(px, py, r, 0, TAU); c.stroke();
+      c.fillStyle = 'rgba(255,255,255,.4)';
+      c.beginPath(); c.arc(px - 3, py - 3, 2.8, 0, TAU); c.fill();
+    } else {
+      const fill = typeof lookHeadFill === 'function' ? lookHeadFill(col) : 'rgba(255,255,255,.10)';
+      c.fillStyle = fill;
+      c.beginPath(); c.arc(px, py, Math.max(2, r - lineW * 0.28), 0, TAU); c.fill();
+      c.strokeStyle = col;
+      c.lineWidth = lineW;
+      c.lineCap = 'round';
+      c.beginPath(); c.arc(px, py, r, 0, TAU); c.stroke();
+      const rim = typeof lookHeadRim === 'function' ? lookHeadRim(col) : null;
+      if (rim) {
+        c.strokeStyle = rim;
+        c.lineWidth = Math.max(1.15, lineW * 0.32);
+        c.beginPath(); c.arc(px, py, r + 0.7, 0, TAU); c.stroke();
+      }
+    }
+  } finally {
+    c.restore();
+  }
+}
+
+/** Lower-arc restroke so a bandana/visor cannot erase the stick-head. */
+function restrokeStickmanChin(c, x, y, color, opts) {
+  if (!c) return;
+  const r = (opts && Number.isFinite(opts.r)) ? opts.r
+    : (typeof EQUIP_LOOK_HEAD_R === 'number' ? EQUIP_LOOK_HEAD_R : 10.5);
+  const lineW = (opts && Number.isFinite(opts.lineW)) ? opts.lineW : 4.5;
+  const px = lookPx(x);
+  const py = lookPx(y);
+  const col = color || '#f2f5ff';
+  c.save();
+  try {
+    c.strokeStyle = col;
+    c.lineWidth = lineW;
+    c.lineCap = 'round';
+    c.beginPath();
+    c.arc(px, py, r, 0.18, Math.PI - 0.18);
+    c.stroke();
+    const rim = typeof lookHeadRim === 'function' ? lookHeadRim(col) : null;
+    if (rim) {
+      c.strokeStyle = rim;
+      c.lineWidth = Math.max(1.1, lineW * 0.3);
+      c.beginPath();
+      c.arc(px, py, r + 0.7, 0.18, Math.PI - 0.18);
+      c.stroke();
+    }
+  } finally {
+    c.restore();
+  }
+}
+
+function ensureEquipHeadVisible(c, looks, bones, fighter) {
+  if (!c) return;
+  const head = bones && bones.head;
+  if (!lookBoneOk(head)) return;
+  void looks;
+  restrokeStickmanChin(c, head.x, head.y, fighter && fighter.color, {
+    lineW: fighter && fighter.lineW,
+  });
+}
+
 function drawEquipLookPreview(c, styleId, gear) {
   if (!c) return null;
   try {
@@ -484,6 +578,9 @@ if (typeof EquipLookApi !== 'undefined') {
   EquipLookApi.drawPreview = drawEquipLookPreview;
   EquipLookApi.drawLayer = drawEquipLayer;
   EquipLookApi.safeDrawLayer = safeDrawEquipLayer;
+  EquipLookApi.drawHead = drawStickmanHead;
+  EquipLookApi.restrokeChin = restrokeStickmanChin;
+  EquipLookApi.ensureHead = ensureEquipHeadVisible;
 }
 
 const EQUIP_LOOK_DRAW = {

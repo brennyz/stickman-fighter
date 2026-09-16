@@ -40,6 +40,14 @@
   },
   "userWishlist": [
     {
+      "id": "w-20260916T110100",
+      "from": "user",
+      "text": "Improve equip look (menu+combat offsets/layers/tint/pixel-align). P0: Styles head vanishes on apply/preview — head must stay visible or be replaced by a style headpiece. Versus out of scope. PR #276 already merged; stay on visual attachment + Styles head.",
+      "status": "doing",
+      "updated": "2026-09-16",
+      "notes": "Look-only. Do not rebuild gear data model or char-slot UI."
+    },
+    {
       "id": "w-20260914T200700",
       "from": "user",
       "text": "Hij laad niet lekker, what is up",
