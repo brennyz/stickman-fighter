@@ -121,6 +121,17 @@ for (const [w2, pixel] of Object.entries(W2_ALIAS_PAINT)) {
   if (!okAlias) fail('catalog alias should paint ' + w2 + ' → ' + pixel);
 }
 
+const P1_OLD_ALIAS = {
+  wolf: 'fox', owl: 'bat', frog: 'slime', snake: 'croc', boar: 'pig',
+  skeleton: 'ghost', mummy: 'golem', beetle: 'hedgehog', wasp: 'bat', spider: 'octo',
+  drone: 'can', bot: 'can', scrapdog: 'fox', penguin: 'duck', yeti: 'bear',
+  crab: 'hedgehog', turtle: 'golem', squid: 'octo',
+};
+for (const [p1, old] of Object.entries(P1_OLD_ALIAS)) {
+  if (!art[p1] || !art[old]) fail('uniqueness compare missing map ' + p1 + '/' + old);
+  if (art[p1] === art[old]) fail('P1 map still equals old alias: ' + p1 + ' === ' + old);
+}
+
 if (!fs.existsSync(path.join(dir, 'preview.html'))) fail('preview.html missing');
 if (!fs.existsSync(path.join(root, 'MONSTER-PIXEL-MAP.md'))) fail('MONSTER-PIXEL-MAP.md missing');
 

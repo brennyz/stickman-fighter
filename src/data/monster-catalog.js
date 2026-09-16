@@ -299,7 +299,7 @@ const MONSTER_FAMILIES_W2 = [
 /** Wave 3 — 18 families × 8 rarities = 144 species. Deepen wild/crypt/scrap + frost/sea. */
 const MONSTER_FAMILIES_W3 = [
   { art: 'hawk', catalog: 'w3', unlock: 5, base: { size: 16, hp: 34, dmg: 9, speed: 116, xp: 12 },
-    names: [['havikpup','Havikpup'],['nachthavik','Nachthavik'],['stormhavik','Stormhavik'],['ashavik','Ashavik'],['maanhavek','Maanhavek'],['voidhavik','Voidhavik'],['nmhavik','Nachtmerrie-Havik'],['helhavik','Hel-Havik']],
+    names: [['havikpup','Havikpup'],['nachthavik','Nachthavik'],['stormhavik','Stormhavik'],['ashavik','Ashavik'],['maanhavik','Maanhavik'],['voidhavik','Voidhavik'],['nmhavik','Nachtmerrie-Havik'],['helhavik','Hel-Havik']],
     colors: catalogColors([['#c98850','#6b4a28'],['#2a1840','#5a3fb0'],['#7cf5ff','#2a7fc0'],['#9a917f','#4a4038'],['#c47aff','#5a2080'],['#5a1040','#ff6b9d'],['#6b5cff','#2e2266'],['#ff3040','#2a0810']]) },
   { art: 'ram', catalog: 'w3', unlock: 6, base: { size: 24, hp: 62, dmg: 12, speed: 88, xp: 14 },
     names: [['ramling','Ramling'],['bosram','Bosram'],['kopram','Kopram'],['stormram','Stormram'],['kroonram','Kroonram'],['voidram','Voidram'],['nmram','Nachtmerrie-Ram'],['helram','Hel-Ram']],

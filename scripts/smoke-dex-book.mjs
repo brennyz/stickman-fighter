@@ -63,22 +63,44 @@ async function run() {
     const allFarm = farmIds.every((id) => speciesBiomeId(SPECIES[id], id) === 'farm');
     const satanHint = dexSecretHint('satan');
 
+    const discover = ['wolfling', 'havikpup', 'rammelbeen', 'ghoulling', 'pinguinkuiken', 'manmoetpup'];
+    for (const id of discover) if (SPECIES[id]) save.dex[id] = 2;
+
     if (typeof applyI18n === 'function') applyI18n();
     UI.dexBiomeFilter = 'all';
     UI.renderDex();
     const bar = document.getElementById('dexBiomeFilterBar');
     const list = document.getElementById('dexList');
     const hasBiomeBar = !!(bar && bar.querySelector('[data-dex-biome-filter="farm"]'));
+    const hasFrostChip = !!(bar && bar.querySelector('[data-dex-biome-filter="frost"]'));
+    const hasWildChip = !!(bar && bar.querySelector('[data-dex-biome-filter="wild"]'));
     const hasBlurb = !!(list && list.querySelector('.dex-blurb'));
     const hubDex = document.querySelector('#btnDex .hub-tile-sub') || document.querySelector('#btnDex small');
     const hubCountOk = !!(hubDex && hubDex.textContent && !hubDex.textContent.includes('114') && !hubDex.textContent.includes('126') && hubDex.textContent.includes(String(n)));
 
+    const tot = dexBiomeTotals();
+    UI.dexBiomeFilter = 'wild';
+    UI.renderDex();
+    const wildNames = [...document.querySelectorAll('#dexList .cname')].map((el) => el.textContent);
+    const wildHasWolf = wildNames.some((s) => s.includes('Wolfling') || s.includes('Havikpup'));
+    const wildHasCrypt = wildNames.some((s) => s.includes('Rammelbeen') || s.includes('Ghoulling'));
+    UI.dexBiomeFilter = 'crypt';
+    UI.renderDex();
+    const cryptNames = [...document.querySelectorAll('#dexList .cname')].map((el) => el.textContent);
+    const cryptHasBone = cryptNames.some((s) => s.includes('Rammelbeen') || s.includes('Ghoulling'));
+    const cryptHasWolf = cryptNames.some((s) => s.includes('Wolfling'));
+    UI.dexBiomeFilter = 'all';
+    UI.renderDex();
+
     const achFarm = ACHIEVEMENTS.find((a) => a.id === 'dexFarm');
     const achZoo = ACHIEVEMENTS.find((a) => a.id === 'dexZoo');
     const achSea = ACHIEVEMENTS.find((a) => a.id === 'dexSea');
+    const achFrost = ACHIEVEMENTS.find((a) => a.id === 'dexFrost');
+    const w3ok = !!(SPECIES.havikpup && SPECIES.voidmanmoet && SPECIES.zeeegel && SPECIES.maanhavik);
 
     return {
       ok: missing.length === 0
+        && n >= 700
         && slymo.includes('starter')
         && cowBlurb.length > 8
         && swimOk
@@ -88,9 +110,18 @@ async function run() {
         && farmIds.length > 10
         && /Geheim/.test(satanHint)
         && hasBiomeBar
+        && hasFrostChip
+        && hasWildChip
         && hasBlurb
         && hubCountOk
-        && !!(achFarm && achZoo && achSea),
+        && (tot.wild || 0) >= 140
+        && (tot.crypt || 0) >= 100
+        && (tot.scrap || 0) >= 100
+        && (tot.frost || 0) >= 32
+        && wildHasWolf && !wildHasCrypt
+        && cryptHasBone && !cryptHasWolf
+        && w3ok
+        && !!(achFarm && achZoo && achSea && achFrost),
       n,
       slymo,
       cowArt,
@@ -101,8 +132,13 @@ async function run() {
       farmIds: farmIds.length,
       satanHint,
       hasBiomeBar,
+      hasFrostChip,
       hasBlurb,
       hubSub: hubDex ? hubDex.textContent : null,
+      biomeTotals: tot,
+      wildHasWolf,
+      cryptHasBone,
+      w3ok,
       missing,
     };
   });

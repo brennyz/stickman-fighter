@@ -20,8 +20,8 @@
     "featureBranch": "cursor/monster-wave3-6830",
     "pushBlocked": null,
     "shareUrl": "https://brennyz.github.io/stickman-fighter/speel.html",
-    "note": "Wave 3 draft: unique W2 P1 pixels + 18 W3 families (book ~714). v1.18.168 / SW 378. Not on main until merge.",
-    "updated": "2026-09-14T20:20:46Z",
+    "note": "Wave 3 draft #298: unique W2 P1 pixels + 18 W3 families (book 714). v1.18.168 / SW 378. Not on main until merge.",
+    "updated": "2026-09-16T11:12:28Z",
     "localMainHead": "c245df446cdab8494b7030e3bab2b3f92c3c7242",
     "remoteMainHead": "c245df446cdab8494b7030e3bab2b3f92c3c7242"
   },
@@ -33,17 +33,26 @@
     "ahead": 0,
     "behind": 0,
     "dirty": false,
-    "lastChecked": "2026-09-14T20:21:12Z",
+    "lastChecked": "2026-09-16T11:12:28Z",
     "lastAsked": "2026-08-17T14:01:21Z",
     "pendingUpload": [],
-    "pendingMerge": []
+    "pendingMerge": [
+      {
+        "pr": 298,
+        "url": "https://github.com/brennyz/stickman-fighter/pull/298",
+        "branch": "cursor/monster-wave3-6830",
+        "title": "Wave 3 monster catalog + unique W2 P1 pixels",
+        "draft": true,
+        "note": "Draft — wait for «merge main». Book 714. v1.18.168 / SW 378."
+      }
+    ]
   },
   "userWishlist": [
     {
       "id": "w-20260916T110111",
       "from": "user",
       "text": "GROTE monster doorontwikkeling (Wave 3): unieke W2 P1 art, catalog +120–180, biome combat feel, boek UX, draft PR",
-      "status": "open",
+      "status": "done-in-code",
       "updated": "2026-09-16"
     },
     {
@@ -914,6 +923,10 @@
   ],
   "sessionLog": [
     {
+      "at": "2026-09-16T11:12:28Z",
+      "summary": "Wave 3 verify: dex 714 + frost chip + unieke P1 pixels; hawk-id Maanhavik; draft #298"
+    },
+    {
       "at": "2026-09-16T11:01:11Z",
       "summary": "Wave 3 monster doorontwikkeling gestart"
     },
@@ -1008,10 +1021,6 @@
     {
       "at": "2026-09-14T12:41:28Z",
       "summary": "Start toast-wachtrij: één tegelijk, Android Chrome/TWA"
-    },
-    {
-      "at": "2026-09-14T12:35:18Z",
-      "summary": "SATAN-kaart dikkere duivel, groter portret, korte copy, hitte-balk zonder dubbele tekst · v1.18.155 / SW 365"
     }
   ],
   "implementedFeaturesSummary": "d18 char select deel 1+2 (v1.11.1-2); Mats coinrun + shuriken mik/vliegers + anti-spam (v1.12.0); speel.html (v1.12.2+). Zie HANDOFF-ZOEKINDEX.md en improvement-d20-bag.json userFeatureLog.",
