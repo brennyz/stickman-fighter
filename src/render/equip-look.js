@@ -484,6 +484,30 @@ function drawLookCharm(c, look, x, y, sc) {
   c.fill();
 }
 
+/** Stip-pin / catalog pin — lapel disc + short stem. Never a back-cape blob. */
+function drawLookPin(c, look, x, y, sc) {
+  const fill = look.color || '#ffd75e';
+  const rim = look.accent || '#c97a20';
+  c.fillStyle = fill;
+  c.beginPath();
+  c.arc(x, y, 3.4 * sc, 0, TAU);
+  c.fill();
+  c.strokeStyle = rim;
+  c.lineWidth = Math.max(0.9, 1.15 * sc);
+  c.stroke();
+  c.fillStyle = 'rgba(255,255,255,.45)';
+  c.beginPath();
+  c.arc(x - 0.9 * sc, y - 0.9 * sc, 1.15 * sc, 0, TAU);
+  c.fill();
+  c.strokeStyle = rim;
+  c.lineCap = 'round';
+  c.lineWidth = Math.max(1, 1.35 * sc);
+  c.beginPath();
+  c.moveTo(x, y + 3.2 * sc);
+  c.lineTo(x + 0.35 * sc, y + 7.4 * sc);
+  c.stroke();
+}
+
 function drawStickmanHead(c, x, y, color, opts) {
   if (!c) return;
   const r = (opts && Number.isFinite(opts.r)) ? opts.r
@@ -606,6 +630,7 @@ const EQUIP_LOOK_DRAW = {
   glow: drawLookGlow,
   lightning: drawLookLightning,
   charm: drawLookCharm,
+  pin: drawLookPin,
   gloves: drawLookGloves,
   horns: drawLookHorns,
   halo: drawLookHalo,

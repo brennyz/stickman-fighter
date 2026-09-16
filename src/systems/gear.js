@@ -383,6 +383,14 @@ function startGearDollLive() {
   _gearDollRaf = requestAnimationFrame(step);
 }
 
+/** Pins / hangers / auras are look-pieces — a generic cape to the feet is an orphan overlay. */
+function _gearBackOverlayKind(itemId) {
+  const id = String(itemId || '').toLowerCase();
+  if (!id) return 'cape';
+  if (/pin_|balloon|aura_|back_leaf\b|back_void\b/.test(id)) return 'none';
+  return 'cape';
+}
+
 function _paintGearOverlay(cc, slot, tint, accent) {
   if (!tint) return;
   /* Fighter preview pose (animT 0.35): hips ~-46, shoulders ~-78, head ~-96. */
@@ -467,7 +475,9 @@ function drawGearHeroDoll(cv, saveObj, animT) {
   cc.translate(cv.width / 2, cv.height - 36);
   cc.scale(scale, scale);
   const back = tintOf('back');
-  if (back) _paintGearOverlay(cc, 'back', back.tint || back.accent, back.accent);
+  if (back && _gearBackOverlayKind(back.itemId) !== 'none') {
+    _paintGearOverlay(cc, 'back', back.tint || back.accent, back.accent);
+  }
   const st = typeof styleById === 'function' ? styleById((s && s.style) || 'classic') : { body: '#f2f5ff' };
   const wpn = (s && typeof weaponById === 'function') ? weaponById(s.weapon || 'vuist') : null;
   const preview = new Fighter({

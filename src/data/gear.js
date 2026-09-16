@@ -290,7 +290,7 @@ const GEAR_ITEMS = [
   _g('legs', 'greaves_hell', 'a', 's', 'hell', 68, 45, 'Hel-scheen', 'Hell greaves', 'Lava-plaat. HP + schade.', 'Lava plate. HP + damage.', { maxHp: 6, dmgMul: 1.03 }, { adv: 61, diff: 'hell' }),
 
   /* ════════ BACK ════════ */
-  _g('back', 'pin_dot', 'c', 'v1', 'common', 1, 1, 'Stip-pin', 'Dot pin', 'Klein speldje. Alleen look.', 'Tiny pin. Look only.'),
+  _g('back', 'pin_dot', 'c', 'v1', 'common', 1, 1, 'Stip-pin', 'Dot pin', 'Klein speldje. Alleen look.', 'Tiny pin. Look only.', null, { look: _gearLook('#ffd75e', '#c97a20', 'chest') }),
   _g('back', 'pin_star', 'c', 'v', 'uncommon', 8, 4, 'Ster-pin', 'Star pin', 'Glitter-speld. Geen stats.', 'Glitter pin. No stats.'),
   _g('back', 'backpack_school', 'c', 'v', 'common', 3, 2, 'Schooltas', 'School backpack', 'Boeken, geen pantser.', 'Books, not armour.'),
   _g('back', 'scarf_long', 'c', 'v', 'common', 4, 2, 'Lange sjaal', 'Long scarf', 'Wappert. Geen stats.', 'Flutters. No stats.'),

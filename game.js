@@ -323,9 +323,9 @@ const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const VERSION_UPDATE_SAVE_KEY = 'stickfighter_version_update_save_v1';
 const VERSION_UPDATE_FLAG_KEY = 'stickfighter_version_update_flag_v1';
 const SAVE_EXPORT_SCHEMA = 3;
-const APP_VERSION = '1.18.173';
+const APP_VERSION = '1.18.174';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 383;
+const SW_CACHE_REV = 384;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', petCoins: 0, dex: {}, summons: {}, pets: {}, activePet: null,
   eggPets: {}, activeEggPet: null, eggDaily: null,
   chestDaily: null, chestWeapons: {},
@@ -8468,7 +8468,7 @@ const GEAR_ITEMS = [
   _g('legs', 'greaves_hell', 'a', 's', 'hell', 68, 45, 'Hel-scheen', 'Hell greaves', 'Lava-plaat. HP + schade.', 'Lava plate. HP + damage.', { maxHp: 6, dmgMul: 1.03 }, { adv: 61, diff: 'hell' }),
 
   /* ════════ BACK ════════ */
-  _g('back', 'pin_dot', 'c', 'v1', 'common', 1, 1, 'Stip-pin', 'Dot pin', 'Klein speldje. Alleen look.', 'Tiny pin. Look only.'),
+  _g('back', 'pin_dot', 'c', 'v1', 'common', 1, 1, 'Stip-pin', 'Dot pin', 'Klein speldje. Alleen look.', 'Tiny pin. Look only.', null, { look: _gearLook('#ffd75e', '#c97a20', 'chest') }),
   _g('back', 'pin_star', 'c', 'v', 'uncommon', 8, 4, 'Ster-pin', 'Star pin', 'Glitter-speld. Geen stats.', 'Glitter pin. No stats.'),
   _g('back', 'backpack_school', 'c', 'v', 'common', 3, 2, 'Schooltas', 'School backpack', 'Boeken, geen pantser.', 'Books, not armour.'),
   _g('back', 'scarf_long', 'c', 'v', 'common', 4, 2, 'Lange sjaal', 'Long scarf', 'Wappert. Geen stats.', 'Flutters. No stats.'),
@@ -10815,7 +10815,8 @@ const EQUIP_LOOK_DEFAULTS = {
   helmet: { slot: 'head', layer: 'head', ox: 0, oy: 0, scale: 1 },
   glow: { slot: 'head', layer: 'head', ox: 0, oy: 0, scale: 1 },
   lightning: { slot: 'head', layer: 'head', ox: 0, oy: 0, scale: 1 },
-  charm: { slot: 'head', layer: 'head', ox: 0, oy: 2, scale: 1 },
+  charm: { slot: 'back', layer: 'chest', ox: 7, oy: 8, scale: 1, anchor: 'shoulder' },
+  pin: { slot: 'back', layer: 'chest', ox: 8, oy: 10, scale: 1, anchor: 'shoulder' },
   coat: { slot: 'back', layer: 'back', ox: 0, oy: 1, scale: 1 },
   cape: { slot: 'back', layer: 'back', ox: 0, oy: 2, scale: 1 },
   tome: { slot: 'back', layer: 'back', ox: -1, oy: 3, scale: 1 },
@@ -10850,7 +10851,8 @@ const GEAR_ID_KIND_RULES = [
   [/cape|scarf|banner|kite|capelet/, 'cape'],
   [/backpack|pack_|shell|plate_back|banner_iron/, 'tome'],
   [/crystal_shard|void_spine/, 'crystal'],
-  [/pin_|balloon|back_leaf\b|back_void\b/, 'charm'],
+  [/pin_/, 'pin'],
+  [/balloon|back_leaf\b|back_void\b/, 'charm'],
   [/plate_|mail_|cuirass/, 'chestplate'],
   [/vest_|shirt_|hoodie|gi_|tunic|sash|jacket|robe|coat_|poncho/, 'vest'],
 ];
@@ -10930,7 +10932,7 @@ const EQUIP_LOOK_BY_STYLE = {
   hunter: [
     { kind: 'vest', fill: 'rgba(61,92,50,.58)', oy: 0, scale: 1.04 },
     { kind: 'bandana', oy: -1, scale: 1.0 },
-    { kind: 'charm', ox: -12, oy: -6, scale: 1.0 },
+    { kind: 'charm', slot: 'head', layer: 'head', ox: -12, oy: -6, scale: 1.0 },
   ],
   crystal: [
     { kind: 'glow', scale: 1.04 },
@@ -11226,13 +11228,17 @@ function lookPieceFromDescriptorRow(row) {
   const rawLayer = row.layer != null ? String(row.layer).toLowerCase() : '';
   const layer = (rawLayer && EQUIP_GENERIC_LAYERS.includes(rawLayer)) ? slot : (row.layer || slot);
   const kind = lookKindFromGearId(row.itemId, slot);
+  const pin = kind === 'pin';
   return hydrateEquipLook({
     id: row.itemId,
     kind,
     slot,
-    layer,
-    color: row.tint,
-    accent: row.accent,
+    layer: pin ? 'chest' : layer,
+    anchor: pin ? 'shoulder' : undefined,
+    ox: pin ? 8 : undefined,
+    oy: pin ? 10 : undefined,
+    color: pin ? (row.tint || '#ffd75e') : row.tint,
+    accent: pin ? (row.accent || '#c97a20') : row.accent,
   });
 }
 
@@ -30751,6 +30757,14 @@ function startGearDollLive() {
   _gearDollRaf = requestAnimationFrame(step);
 }
 
+/** Pins / hangers / auras are look-pieces — a generic cape to the feet is an orphan overlay. */
+function _gearBackOverlayKind(itemId) {
+  const id = String(itemId || '').toLowerCase();
+  if (!id) return 'cape';
+  if (/pin_|balloon|aura_|back_leaf\b|back_void\b/.test(id)) return 'none';
+  return 'cape';
+}
+
 function _paintGearOverlay(cc, slot, tint, accent) {
   if (!tint) return;
   /* Fighter preview pose (animT 0.35): hips ~-46, shoulders ~-78, head ~-96. */
@@ -30835,7 +30849,9 @@ function drawGearHeroDoll(cv, saveObj, animT) {
   cc.translate(cv.width / 2, cv.height - 36);
   cc.scale(scale, scale);
   const back = tintOf('back');
-  if (back) _paintGearOverlay(cc, 'back', back.tint || back.accent, back.accent);
+  if (back && _gearBackOverlayKind(back.itemId) !== 'none') {
+    _paintGearOverlay(cc, 'back', back.tint || back.accent, back.accent);
+  }
   const st = typeof styleById === 'function' ? styleById((s && s.style) || 'classic') : { body: '#f2f5ff' };
   const wpn = (s && typeof weaponById === 'function') ? weaponById(s.weapon || 'vuist') : null;
   const preview = new Fighter({
@@ -32934,6 +32950,30 @@ function drawLookCharm(c, look, x, y, sc) {
   c.fill();
 }
 
+/** Stip-pin / catalog pin — lapel disc + short stem. Never a back-cape blob. */
+function drawLookPin(c, look, x, y, sc) {
+  const fill = look.color || '#ffd75e';
+  const rim = look.accent || '#c97a20';
+  c.fillStyle = fill;
+  c.beginPath();
+  c.arc(x, y, 3.4 * sc, 0, TAU);
+  c.fill();
+  c.strokeStyle = rim;
+  c.lineWidth = Math.max(0.9, 1.15 * sc);
+  c.stroke();
+  c.fillStyle = 'rgba(255,255,255,.45)';
+  c.beginPath();
+  c.arc(x - 0.9 * sc, y - 0.9 * sc, 1.15 * sc, 0, TAU);
+  c.fill();
+  c.strokeStyle = rim;
+  c.lineCap = 'round';
+  c.lineWidth = Math.max(1, 1.35 * sc);
+  c.beginPath();
+  c.moveTo(x, y + 3.2 * sc);
+  c.lineTo(x + 0.35 * sc, y + 7.4 * sc);
+  c.stroke();
+}
+
 function drawStickmanHead(c, x, y, color, opts) {
   if (!c) return;
   const r = (opts && Number.isFinite(opts.r)) ? opts.r
@@ -33056,6 +33096,7 @@ const EQUIP_LOOK_DRAW = {
   glow: drawLookGlow,
   lightning: drawLookLightning,
   charm: drawLookCharm,
+  pin: drawLookPin,
   gloves: drawLookGloves,
   horns: drawLookHorns,
   halo: drawLookHalo,
@@ -51585,21 +51626,28 @@ if (typeof UI === 'object' && UI) {
       btn.setAttribute('data-factory-id', view.id);
       btn.dataset.buildingId = view.id;
       btn.dataset.factoryId = view.id;
+      const unbuilt = !view.locked && !(view.built || Number(view.level) >= 1);
       if (view.id === sel) {
         btn.setAttribute('data-hub-badge', view.canCollect
           ? buildingsTxt('buildings.collect', 'Oogsten')
-          : buildingsTxt('buildings.level', 'Lv {n}', { n: view.level }));
+          : (unbuilt
+            ? buildingsTxt('buildings.unbuilt', 'Nog niet gebouwd')
+            : buildingsTxt('buildings.level', 'Lv {n}', { n: view.level })));
       } else {
         btn.removeAttribute('data-hub-badge');
       }
       const lockBit = view.locked
         ? buildingsEscape(view.lockHint || buildingsTxt('buildings.locked', 'Op slot'))
-        : buildingsTxt('buildings.level', 'Lv {n}', { n: view.level });
+        : (unbuilt
+          ? buildingsTxt('buildings.unbuilt', 'Nog niet gebouwd')
+          : buildingsTxt('buildings.level', 'Lv {n}', { n: view.level }));
       const desc = buildingsDesc(view.id, view) || view;
       const does = desc.doesLine || view.sub || '';
       const stock = view.locked
         ? ''
-        : (view.pending + '/' + view.capacity + ' ' + buildingsEscape(view.resourceLabel));
+        : (unbuilt
+          ? buildingsEscape(buildingsCostText(view) || buildingsTxt('buildings.costPc', '{n} PC', { n: 20 }))
+          : (view.pending + '/' + view.capacity + ' ' + buildingsEscape(view.resourceLabel)));
       btn.innerHTML =
         '<span class="hub-tile-ico">' + buildingsArtHtml(view) + '</span>'
         + '<span class="hub-tile-title">' + buildingsEscape(view.name) + '</span>'
@@ -51722,13 +51770,15 @@ if (typeof UI === 'object' && UI) {
       + this.buildingsEffectHtml(view)
       + (locked
         ? '<div class="buildings-lock">' + buildingsEscape(view.lockHint) + '</div>'
-        : '<div class="buildings-stock">'
+        : (unbuilt
+          ? (costHint ? '<div class="buildings-stock-lbl">' + buildingsEscape(costHint) + '</div>' : '')
+          : '<div class="buildings-stock">'
           + '<div class="buildings-stock-bar" role="progressbar" aria-valuenow="' + view.pending + '" aria-valuemax="' + view.capacity + '">'
           + '<span style="width:' + pct + '%"></span></div>'
           + '<div class="buildings-stock-lbl">'
           + buildingsEscape(buildingsTxt('buildings.stored', '{n}/{cap} opgeslagen', { n: view.pending, cap: view.capacity }))
           + (eta ? ' · ' + buildingsEscape(eta) : '')
-          + '</div></div>')
+          + '</div></div>'))
       + flash
       + '</div>'
       + cta;

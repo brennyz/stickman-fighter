@@ -58,23 +58,23 @@ Hub tiles, `#upgradeScreen`, `#settingsScreen` (aim color/radius, Lite FX, langu
 
 `#gearScreen` · HOME `#btnGearHome` · 5 slots · doll/overlays · world-drop silhouettes + living motion.
 
-- [ ] Findings received
-- [ ] P0/P1 investigated on main
-- [ ] Fixes on this branch (if any)
+- [x] Findings received
+- [x] P0/P1 investigated on main
+- [x] Fixes on this branch (if any)
 - [ ] Smoke: `smoke:gear` · `smoke:gear-screen` · `smoke:equip-look` · `smoke:gear-drops`
 
-**Open P0/P1:** _(none yet)_
+**Open P0/P1:** Cycle 3 P2 — detached orange Stip-pin near feet. **Fix:** pin kind on chest/shoulder (not back-cape); skip generic doll cape for pin/aura/hanger.
 
 ## Cycle D — Buildings
 
 `#buildingsScreen` · HOME `#btnBuildings` · 5 factories (`stick_lighter` … `echo_whistle`) · collect vs upgrade · wallet chips · pixel life.
 
-- [ ] Findings received
-- [ ] P0/P1 investigated on main
-- [ ] Fixes on this branch (if any)
+- [x] Findings received
+- [x] P0/P1 investigated on main
+- [x] Fixes on this branch (if any)
 - [ ] Smoke: `smoke:buildings` · `smoke:buildings-ui` · `smoke:buildings-powers` · `smoke:building-pixels`
 
-**Open P0/P1:** _(none yet)_
+**Open P0/P1:** Cycle 4 P2 — list «0/1 Vonken» vs Build 20 PC. **Fix:** unbuilt rows show build cost (PC), not hopper 0/cap.
 
 ## Cycle E — Seasons
 
@@ -121,6 +121,10 @@ Note (main, not a new bug): `smoke:buildings-powers` still prints `systems overl
 | 2026-09-16 | B | — | Summons snappy | PASS |
 | 2026-09-16 | B | P1 | No skip/close during pull | fixed on branch |
 | 2026-09-16 | B | P2 | Nested horizontal scroll awkward | fixed on branch |
+| 2026-09-16 | C | — | Uitrusting 5/5 · ready pose · idle bob | PASS |
+| 2026-09-16 | C | P2 | Orange Stip-pin orphan near feet/right | fixed on branch |
+| 2026-09-16 | D | — | HOME Fabrieken 1/5 · list→detail · unlocks | PASS |
+| 2026-09-16 | D | P2 | List 0/1 Vonken vs Build 20 PC | fixed on branch |
 
 ## Out of scope
 
