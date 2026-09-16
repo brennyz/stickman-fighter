@@ -323,9 +323,9 @@ const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const VERSION_UPDATE_SAVE_KEY = 'stickfighter_version_update_save_v1';
 const VERSION_UPDATE_FLAG_KEY = 'stickfighter_version_update_flag_v1';
 const SAVE_EXPORT_SCHEMA = 3;
-const APP_VERSION = '1.18.170';
+const APP_VERSION = '1.18.172';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 380;
+const SW_CACHE_REV = 382;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', petCoins: 0, dex: {}, summons: {}, pets: {}, activePet: null,
   eggPets: {}, activeEggPet: null, eggDaily: null,
   chestDaily: null, chestWeapons: {},
@@ -2319,9 +2319,10 @@ const I18N = {
       continue: 'Verder spelen', adventure: 'Avontuur', adventureSub: 'Verhaal · eilanden · bazen',
       arcade: 'Arcade', arcadeSub: 'Training · Muur · Muntjes', versus: '2 spelers', versusSub: 'Lokaal',
       collect: 'Collectie', collectSub: 'Wapens · figuur · boek', music: 'Muziek', missions: 'Missies',
-      summons: 'Summons', summonsSub: 'Dagelijkse kist · wapen & pet',
+      summons: 'Oproepen', summonsSub: 'Dagelijkse kist · wapen & pet',
       buildings: 'Fabrieken', buildingsSub: 'Werken · oogst · upgrade',
       options: 'Opties', tips: 'Tips', fresh: 'Verse versie', install: 'Zet in app-lade', installSub: 'Één icoon, zoals een echte app',
+      profileAria: 'Profiel en missies',
       pressStart: 'insert coin', missionReady: 'missie klaar', dayBonus: 'Dagbonus',
       choosePath: 'KIES JE PAD', lastPlayed: 'LAATST', playHere: 'SPEEL', saveSync: 'save OK',
       startGame: 'SPELEN', startSub: 'Start het gevecht',
@@ -2334,7 +2335,7 @@ const I18N = {
       step: 'Stap 2 · Kies modus', solo: 'SOLO', collection: 'COLLECTIE',
       arcadeTitle: 'Arcade', arcadeSub: 'Snelle sessies · save blijft hier',
       collectTitle: 'Collectie', collectSub: 'Uitrusting · wapens · pets · stijl',
-      gear: 'Uitrusting', gearSub: 'Slots · look',
+      gear: 'Uitrusting', gearSub: '5 slots · look vs stats',
       training: 'Training', trainingSub: '1v1 · RabbitRobot · oefenen',
       wall: 'Muur Slopen', wallSub: '60 sec · combo = sneller',
       mats: 'Muntjes', matsSub: '45 sec · munten → pet coins',
@@ -2343,8 +2344,9 @@ const I18N = {
       style: 'Stijl', styleSub: 'Bandana & outfit unlocks',
       gear: 'Uitrusting', gearSub: '5 slots · pantser & cosmetics',
       skills: 'Skills', skillsSub: 'Energy specials · Spiral Orb · Wave Cannon',
-      upgrades: 'Upgrades', upgradesSub: 'Shards · technique uitrusten',
-      dex: 'Monsterboek', dexSub: '{n} soorten · rariteit = HP · boerderij · zoo · zee · woud',
+      upgrades: 'Upgrades', upgradesSub: 'Shards · techniek uitrusten',
+      dex: 'Monsterboek', dexSub: '{n} soorten · rariteit = HP · boerderij · zoo · zee · woud · crypte · schroot · vorst',
+      buildings: 'Fabrieken', buildingsSub: 'Werken · oogst · upgrade',
       modes3: '3 snelle modi', fightersLocal: '20 vechters · lokaal', vsRecord: '{w}/{m} gewonnen',
       statTrain: '{n}× training', statWall: 'muur {n}', statMats: '{n} munten',
       loadFail: 'Hub laden mislukt',
@@ -2384,10 +2386,29 @@ const I18N = {
       sfxSamplesOn: 'Geluidseffecten: geladen',
       sfxSamplesLoad: 'Geluidseffecten: laden…',
       sfxSamplesOff: 'Geluidseffecten: offline',
-      saveAuto: 'Save gaat automatisch mee',
-      saveAutoLine: 'Lv {lvl} · OK op dit apparaat',
+      saveAuto: 'Online save',
+      saveAutoLine: 'Lv {lvl} · laatst gesynchroniseerd {when}',
       saveAutoBad: 'Lv {lvl} · check — open Bestand / offline',
       saveAutoHint: 'Online-save blijft vanzelf bij deze speel-link. Geen extra knop.',
+      saveOnlineLine: 'Online save · laatst gesynchroniseerd {when}',
+      saveOnlineOffline: 'Offline · save blijft op dit apparaat',
+      saveOnlineSyncing: 'Online save · synchroniseren…',
+      saveSyncOk: 'Gesynchroniseerd',
+      saveSyncing: 'Bezig',
+      saveSyncOffline: 'Offline',
+      saveWhenJustNow: 'zojuist',
+      saveWhenMin: '{n} min geleden',
+      saveWhenHour: '{n} uur geleden',
+      saveWhenDay: '{n} d geleden',
+      saveWhenNever: 'wacht op eerste schrijf',
+      audioThemeHead: 'Sfeer / soundtrack',
+      audioThemeLine: 'Sfeer: {name}',
+      touchAuto: 'auto', touchOn: 'aan', touchOff: 'uit',
+      diagOn: 'Hulp-diagnostiek aan',
+      aimSwatchCyan: 'Cyaan', aimSwatchGold: 'Goud', aimSwatchGreen: 'Groen',
+      aimSwatchOrange: 'Oranje', aimSwatchPink: 'Roze', aimSwatchPurple: 'Paars',
+      aimSwatchWhite: 'Wit',
+      aimPickAria: 'Mik-kleur kiezen',
       saveOfflineFold: 'Bestand / offline',
       saveOfflineTitle: 'Los pad — alleen als je een bestand wilt',
       saveOfflineOk: 'Bestandskopie klaar',
@@ -2461,22 +2482,22 @@ const I18N = {
       achievements: 'Prestaties' },
     fomo: {
       ritualTitle: 'Vandaag',
-      ritualCtaSummon: 'Naar summons',
+      ritualCtaSummon: 'Naar oproepen',
       ritualCtaMission: 'Speel missie',
       ritualCtaAdv: 'Naar avontuur',
       ritualDismiss: 'Sluiten',
       ritualReopen: 'Dagoverzicht',
       resetIn: 'Nieuw over {reset}',
-      rowSummons: 'Summons {left}/{total}',
+      rowSummons: 'Oproepen {left}/{total}',
       rowEggReady: 'Dag-ei klaar',
       rowEggDone: 'Dag-ei al open',
-      streakReward3: '+1 summon',
-      streakReward7: '+ei of summons',
+      streakReward3: '+1 oproep',
+      streakReward7: '+ei of oproepen',
       streakReward14: '+120 XP',
     },
     pets: { title: 'Pets · Metgezels', sub: 'Dex-pets via monsterboek · Ei-pets via dagelijkse arcade-pull',
       crackEgg: 'Dag-ei openen', crackEggSub: 'Gratis arcade-pull' },
-    dex: { title: 'Monsterboek', sub: '{n} soorten · rariteit = HP · boerderij / zoo / zee / woud / crypte · 4 rariteiten = Kristallijn' },
+    dex: { title: 'Monsterboek', sub: '{n} soorten · rariteit = HP · boerderij / zoo / zee / woud / crypte / schroot / vorst · 4 rariteiten = Kristallijn' },
     help: { title: 'Tips & besturing' },
     gear: {
       title: 'Uitrusting', sub: '5 slots · pantser & cosmetics · level + tijd-gate',
@@ -2492,11 +2513,11 @@ const I18N = {
       5: { name: 'Finale-eiland', sub: 'Lv 41–50' },
       6: { name: 'Nachtmerrie', sub: 'Lv 51–60' },
       7: { name: 'Hel', sub: 'Lv 61–70' },
-      progress: 'Eiland {cur}/7 · {name} · {cleared}/{total} · unlock Lv {unlocked}/{max}',
+      progress: 'Eiland {cur}/7 · {name} · {cleared}/{total} · vrij Lv {unlocked}/{max}',
     },
     buildings: {
       title: 'Fabrieken',
-      sub: 'Vijf werken · oogst op tijd · upgrade',
+      sub: 'Tik een fabriek · oogst op tijd · upgrade',
       hubStatReady: '{n} klaar om te oogsten', hubStatIdle: '5 werken',
       hubStatLocked: '{n}/{total} open',
       level: 'Lv {n}', locked: 'Op slot',
@@ -2510,12 +2531,34 @@ const I18N = {
       stubNote: 'Systems-API nog niet gemerged — stub-productie',
       liveNote: 'Live systems-API',
       loadFail: 'Fabrieken laden mislukt',
+      overview: 'Overzicht',
+      detailSub: 'Tik Oogsten · upgrade is een aparte stap',
+      whatItDoes: 'Wat doet dit?',
+      powerNow: '{label} — {blurb}',
+      powerNext: 'Volgende @ rank {n}: {label}',
+      powerNone: 'Bouw dit werk om de power te ontgrendelen',
+      unbuilt: 'Nog niet gebouwd',
+      upgradeAsk: 'Upgrade naar Lv {next}?',
+      buildAsk: 'Bouw {name}?',
+      upgradeConfirm: 'Bevestig',
+      upgradeBack: 'Terug naar oogst',
+      upgradeOpen: 'Upgrade…',
+      buildOpen: 'Bouwen…',
+      walletPc: 'PC',
+      upgradeTitle: 'Upgrade {name}',
+      sheetClose: 'Sluiten',
       build: 'Bouwen', buildHint: 'Bouwen als eiland open is',
       lockedWorld: 'Unlock: eiland {n}',
       rateLine: '{n}/uur · {pending} wacht · cap {cap}',
       collected: '+{n} {res} · {name}',
       collectedAll: 'Oogst +{n} uit {k} gebouwen',
       waveHeal: '+{n} HP',
+      power: {
+        spark_kindle: 'Kindle', ember_pocket: 'Vonken', matchstick_storm: 'Match',
+        glue_trap: 'Lijm', splinter_edge: 'Snipper', chip_spray: 'Spray',
+        bamboo_vent: 'Vent', bamboo_burst: 'Boesa', pressure_cook: 'Stoom', boesa_overheat: 'Hitte',
+        taunt_toot: 'Toot', whistle_chorus: 'Koor',
+      },
       stick_lighter: { name: 'Stok-Aansteker Fabriek', blurb: 'Scheef schuurtje dat stokken tegen elkaar wrijft tot ze vonken geven.' },
       stick_lighterSub: 'Vonken · Oost-eiland',
       woodchip_glue: { name: 'Houtsnipper-Lijm Fabriek', blurb: 'Kookt zaagsel tot een pasta die harder plakt dan een combo. Niet likken.' },
@@ -2536,6 +2579,14 @@ const I18N = {
       ctxSuspended: 'Tik slider voor geluid',
       track: { menu: 'Menu', menu2: 'Menu 2', menu3: 'Menu 3', menuArcade: 'Arcade', menuHero: 'Hero', menuDream: 'Dream',
         battle: 'Gevecht', elite: 'Elite', boss: 'Baas', wall: 'Muur', training: 'Training', coinrun: 'Mats' },
+      theme: {
+        classic: { label: 'Klassiek', sub: 'Huidige pack' },
+        jungle: { label: 'Jungle', sub: 'Groen · drums' },
+        'fire-bamboo-boesa': { label: 'Vuur-bamboe', sub: 'Boesa · sintel' },
+        halloween: { label: 'Halloween', sub: 'Spooky · ostinato' },
+        winter: { label: 'Winter', sub: 'Seizoen-hook' },
+        summer: { label: 'Zomer', sub: 'Seizoen-hook' },
+      },
     },
   },
   en: {
@@ -2559,7 +2610,8 @@ const I18N = {
       collect: 'Collection', collectSub: 'Weapons · figure · book', music: 'Music', missions: 'Missions',
       summons: 'Summons', summonsSub: 'Daily chest · weapon & pet',
       buildings: 'Buildings', buildingsSub: 'Factories · collect · upgrade',
-      options: 'Options', tips: 'Tips', fresh: 'Fresh version', install: 'Add as app', installSub: 'One icon, like a real app',
+      options: 'Settings', tips: 'Tips', fresh: 'Fresh version', install: 'Add as app', installSub: 'One icon, like a real app',
+      profileAria: 'Profile and missions',
       pressStart: 'insert coin', missionReady: 'mission ready', dayBonus: 'Daily bonus',
       choosePath: 'CHOOSE YOUR PATH', lastPlayed: 'LAST', playHere: 'PLAY', saveSync: 'save OK',
       startGame: 'PLAY', startSub: 'Start the fight',
@@ -2572,7 +2624,7 @@ const I18N = {
       step: 'Step 2 · Pick mode', solo: 'SOLO', collection: 'COLLECTION',
       arcadeTitle: 'Arcade', arcadeSub: 'Quick sessions · save stays here',
       collectTitle: 'Collection', collectSub: 'Gear · weapons · pets · style',
-      gear: 'Gear', gearSub: 'Slots · look',
+      gear: 'Gear', gearSub: '5 slots · look vs stats',
       training: 'Training', trainingSub: '1v1 · RabbitRobot · practice',
       wall: 'Wall Smash', wallSub: '60 sec · combo = faster',
       mats: 'Coins', matsSub: '45 sec · coins → pet coins',
@@ -2582,7 +2634,8 @@ const I18N = {
       gear: 'Loadout', gearSub: '5 slots · armour & cosmetics',
       skills: 'Skills', skillsSub: 'Energy specials · Spiral Orb · Wave Cannon',
       upgrades: 'Upgrades', upgradesSub: 'Shards · equip a technique',
-      dex: 'Monster book', dexSub: '{n} species · rarity = HP · farm · zoo · sea · woods',
+      dex: 'Monster book', dexSub: '{n} species · rarity = HP · farm · zoo · sea · woods · crypt · scrap · frost',
+      buildings: 'Factories', buildingsSub: 'Works · collect · upgrade',
       modes3: '3 quick modes', fightersLocal: '20 fighters · local', vsRecord: '{w}/{m} won',
       statTrain: '{n} train', statWall: 'wall {n}', statMats: '{n} coins',
       loadFail: 'Could not load hub',
@@ -2622,10 +2675,29 @@ const I18N = {
       sfxSamplesOn: 'Sound effects: loaded',
       sfxSamplesLoad: 'Sound effects: loading…',
       sfxSamplesOff: 'Sound effects: offline',
-      saveAuto: 'Save stays with you automatically',
-      saveAutoLine: 'Lv {lvl} · OK on this device',
+      saveAuto: 'Online save',
+      saveAutoLine: 'Lv {lvl} · last synced {when}',
       saveAutoBad: 'Lv {lvl} · check — open File / offline',
       saveAutoHint: 'Online save stays with this play link automatically. No extra button.',
+      saveOnlineLine: 'Online save · last synced {when}',
+      saveOnlineOffline: 'Offline · save stays on this device',
+      saveOnlineSyncing: 'Online save · syncing…',
+      saveSyncOk: 'Synced',
+      saveSyncing: 'Syncing',
+      saveSyncOffline: 'Offline',
+      saveWhenJustNow: 'just now',
+      saveWhenMin: '{n} min ago',
+      saveWhenHour: '{n} h ago',
+      saveWhenDay: '{n} d ago',
+      saveWhenNever: 'waiting for first write',
+      audioThemeHead: 'Mood / soundtrack',
+      audioThemeLine: 'Theme: {name}',
+      touchAuto: 'auto', touchOn: 'on', touchOff: 'off',
+      diagOn: 'Help diagnostics on',
+      aimSwatchCyan: 'Cyan', aimSwatchGold: 'Gold', aimSwatchGreen: 'Green',
+      aimSwatchOrange: 'Orange', aimSwatchPink: 'Pink', aimSwatchPurple: 'Purple',
+      aimSwatchWhite: 'White',
+      aimPickAria: 'Pick aim color',
       saveOfflineFold: 'File / offline',
       saveOfflineTitle: 'Separate path — only if you want a file',
       saveOfflineOk: 'File copy ready',
@@ -2714,7 +2786,7 @@ const I18N = {
     },
     pets: { title: 'Pets · Companions', sub: 'Dex pets via monster book · Egg pets via daily arcade pull',
       crackEgg: 'Open daily egg', crackEggSub: 'Free arcade pull' },
-    dex: { title: 'Monster book', sub: '{n} species · rarity = HP · farm / zoo / sea / woods / crypt · 4 rarities = Crystalline' },
+    dex: { title: 'Monster book', sub: '{n} species · rarity = HP · farm / zoo / sea / woods / crypt / scrap / frost · 4 rarities = Crystalline' },
     help: { title: 'Tips & controls' },
     gear: {
       title: 'Loadout', sub: '5 slots · armour & cosmetics · level + time gate',
@@ -2730,11 +2802,11 @@ const I18N = {
       5: { name: 'Final island', sub: 'Lv 41–50' },
       6: { name: 'Nightmare', sub: 'Lv 51–60' },
       7: { name: 'Hell', sub: 'Lv 61–70' },
-      progress: 'Island {cur}/7 · {name} · {cleared}/{total} · unlock Lv {unlocked}/{max}',
+      progress: 'Island {cur}/7 · {name} · {cleared}/{total} · open Lv {unlocked}/{max}',
     },
     buildings: {
       title: 'Factories',
-      sub: 'Five factories · timed collect · upgrade',
+      sub: 'Tap a factory · timed collect · upgrade',
       hubStatReady: '{n} ready to collect', hubStatIdle: '5 factories',
       hubStatLocked: '{n}/{total} open',
       level: 'Lv {n}', locked: 'Locked',
@@ -2748,12 +2820,34 @@ const I18N = {
       stubNote: 'Systems API not merged yet — stub production',
       liveNote: 'Live systems API',
       loadFail: 'Could not load factories',
+      overview: 'Overview',
+      detailSub: 'Tap Collect · upgrade is a separate step',
+      whatItDoes: 'What does this do?',
+      powerNow: '{label} — {blurb}',
+      powerNext: 'Next @ rank {n}: {label}',
+      powerNone: 'Build this factory to unlock its power',
+      unbuilt: 'Not built yet',
+      upgradeAsk: 'Upgrade to Lv {next}?',
+      buildAsk: 'Build {name}?',
+      upgradeConfirm: 'Confirm',
+      upgradeBack: 'Back to harvest',
+      upgradeOpen: 'Upgrade…',
+      buildOpen: 'Build…',
+      walletPc: 'PC',
+      upgradeTitle: 'Upgrade {name}',
+      sheetClose: 'Close',
       build: 'Build', buildHint: 'Build once the island is open',
       lockedWorld: 'Unlock: island {n}',
       rateLine: '{n}/hr · {pending} waiting · cap {cap}',
       collected: '+{n} {res} · {name}',
       collectedAll: 'Harvest +{n} from {k} buildings',
       waveHeal: '+{n} HP',
+      power: {
+        spark_kindle: 'Kindle', ember_pocket: 'Spark', matchstick_storm: 'Match',
+        glue_trap: 'Glue', splinter_edge: 'Chip', chip_spray: 'Spray',
+        bamboo_vent: 'Vent', bamboo_burst: 'Boesa', pressure_cook: 'Steam', boesa_overheat: 'Heat',
+        taunt_toot: 'Toot', whistle_chorus: 'Chorus',
+      },
       stick_lighter: { name: 'Stick-Lighter Factory', blurb: 'A lopsided woodshed that rubs sticks together until they sulk into sparks.' },
       stick_lighterSub: 'Sparks · East island',
       woodchip_glue: { name: 'Woodchip-Glue Factory', blurb: 'Boils yesterday’s sawdust into a paste that sticks harder than a combo. Do not lick.' },
@@ -2774,6 +2868,14 @@ const I18N = {
       ctxSuspended: 'Tap slider to wake audio',
       track: { menu: 'Menu', menu2: 'Menu 2', menu3: 'Menu 3', menuArcade: 'Arcade', menuHero: 'Hero', menuDream: 'Dream',
         battle: 'Battle', elite: 'Elite', boss: 'Boss', wall: 'Wall', training: 'Training', coinrun: 'Mats' },
+      theme: {
+        classic: { label: 'Classic', sub: 'Current pack' },
+        jungle: { label: 'Jungle', sub: 'Green · drums' },
+        'fire-bamboo-boesa': { label: 'Fire-bamboo', sub: 'Boesa · ember' },
+        halloween: { label: 'Halloween', sub: 'Spooky · ostinato' },
+        winter: { label: 'Winter', sub: 'Season hook' },
+        summer: { label: 'Summer', sub: 'Season hook' },
+      },
     },
   },
   de: {
@@ -2797,8 +2899,9 @@ const I18N = {
       collect: 'Sammlung', collectSub: 'Waffen · Stil · Buch',
       buildings: 'Fabriken', buildingsSub: 'Werke · ernten · upgrade',
       music: 'Musik', missions: 'Missionen',
-      summons: 'Summons', summonsSub: 'Tägliche Kiste · Waffe & Pet',
-      options: 'Optionen', tips: 'Tipps', fresh: 'Neue Version', install: 'Als App speichern', installSub: 'Ein Icon, wie eine echte App',
+      summons: 'Beschwörungen', summonsSub: 'Tägliche Kiste · Waffe & Pet',
+      options: 'Einstellungen', tips: 'Tipps', fresh: 'Neue Version', install: 'Als App speichern', installSub: 'Ein Icon, wie eine echte App',
+      profileAria: 'Profil und Missionen',
       pressStart: 'Münze einwerfen', missionReady: 'Mission bereit', dayBonus: 'Tagesbonus',
       choosePath: 'WÄHLE DEINEN WEG', lastPlayed: 'ZULETZT', playHere: 'SPIEL', saveSync: 'save OK',
       startGame: 'SPIELEN', startSub: 'Starte den Kampf',
@@ -2821,14 +2924,15 @@ const I18N = {
       gear: 'Ausrüstung', gearSub: '5 Slots · Rüstung & Kosmetik',
       skills: 'Skills', skillsSub: 'Energie-Spezials · Spiral Orb · Wave Cannon',
       upgrades: 'Upgrades', upgradesSub: 'Splitter · Technik ausrüsten',
-      dex: 'Monsterbuch', dexSub: '{n} Arten · Seltenheit = HP · Farm · Zoo · Meer · Wald',
+      dex: 'Monsterbuch', dexSub: '{n} Arten · Seltenheit = HP · Farm · Zoo · Meer · Wald · Krypta · Schrott · Frost',
+      buildings: 'Fabriken', buildingsSub: 'Werke · ernten · upgrade',
       modes3: '3 schnelle Modi', fightersLocal: '20 Kämpfer · lokal', vsRecord: '{w}/{m} Siege',
       statTrain: '{n}× Training', statWall: 'Mauer {n}', statMats: '{n} Münzen',
       loadFail: 'Hub laden fehlgeschlagen',
     },
     buildings: {
       title: 'Fabriken',
-      sub: 'Fünf Werke · ernten · upgrade',
+      sub: 'Werk antippen · ernten · upgrade',
       hubStatReady: '{n} bereit zum Ernten', hubStatIdle: '5 Werke',
       hubStatLocked: '{n}/{total} offen',
       level: 'Lv {n}', locked: 'Gesperrt',
@@ -2842,12 +2946,34 @@ const I18N = {
       stubNote: 'Systems-API noch nicht gemerged — Stub-Produktion',
       liveNote: 'Live Systems-API',
       loadFail: 'Fabriken laden fehlgeschlagen',
+      overview: 'Übersicht',
+      detailSub: 'Ernten tippen · Upgrade ist ein extra Schritt',
+      whatItDoes: 'Was macht das?',
+      powerNow: '{label} — {blurb}',
+      powerNext: 'Als Nächstes @ Rang {n}: {label}',
+      powerNone: 'Baue das Werk, um die Power freizuschalten',
+      unbuilt: 'Noch nicht gebaut',
+      upgradeAsk: 'Upgrade auf Lv {next}?',
+      buildAsk: '{name} bauen?',
+      upgradeConfirm: 'Bestätigen',
+      upgradeBack: 'Zurück zur Ernte',
+      upgradeOpen: 'Upgrade…',
+      buildOpen: 'Bauen…',
+      walletPc: 'PC',
+      upgradeTitle: 'Upgrade {name}',
+      sheetClose: 'Schließen',
       build: 'Bauen', buildHint: 'Bauen, wenn die Insel offen ist',
       lockedWorld: 'Frei: Insel {n}',
       rateLine: '{n}/Std · {pending} wartet · Cap {cap}',
       collected: '+{n} {res} · {name}',
       collectedAll: 'Ernte +{n} aus {k} Gebäuden',
       waveHeal: '+{n} HP',
+      power: {
+        spark_kindle: 'Kindle', ember_pocket: 'Funke', matchstick_storm: 'Streichholz',
+        glue_trap: 'Leim', splinter_edge: 'Span', chip_spray: 'Spray',
+        bamboo_vent: 'Dampf', bamboo_burst: 'Boesa', pressure_cook: 'Druck', boesa_overheat: 'Hitze',
+        taunt_toot: 'Toot', whistle_chorus: 'Chor',
+      },
       stick_lighter: { name: 'Stock-Anzünder-Fabrik', blurb: 'Schiefer Schuppen, der Stöcke reibt, bis sie Funken geben.' },
       stick_lighterSub: 'Funken · Ostinsel',
       woodchip_glue: { name: 'Holzspan-Leim-Fabrik', blurb: 'Kocht Sägemehl zu einer Paste, die härter klebt als eine Combo. Nicht lecken.' },
@@ -2909,10 +3035,29 @@ const I18N = {
       importSaveFile: 'Datei wählen',
       savePortDesc: 'Der normale Save bleibt automatisch. Dieser Weg ist nur für ein anderes Gerät oder eine Datei.',
       savePortPlaceholder: 'Save hier einfügen oder Datei wählen',
-      saveAuto: 'Save läuft automatisch mit',
-      saveAutoLine: 'Lv {lvl} · OK auf diesem Gerät',
+      saveAuto: 'Online-Save',
+      saveAutoLine: 'Lv {lvl} · zuletzt synchronisiert {when}',
       saveAutoBad: 'Lv {lvl} · prüfen — Datei / offline öffnen',
       saveAutoHint: 'Online-Save bleibt automatisch bei diesem Spiel-Link. Kein Extra-Knopf.',
+      saveOnlineLine: 'Online-Save · zuletzt synchronisiert {when}',
+      saveOnlineOffline: 'Offline · Save bleibt auf diesem Gerät',
+      saveOnlineSyncing: 'Online-Save · synchronisiert…',
+      saveSyncOk: 'Synchron',
+      saveSyncing: 'Läuft',
+      saveSyncOffline: 'Offline',
+      saveWhenJustNow: 'gerade eben',
+      saveWhenMin: 'vor {n} Min',
+      saveWhenHour: 'vor {n} Std',
+      saveWhenDay: 'vor {n} T',
+      saveWhenNever: 'wartet auf ersten Schreib',
+      audioThemeHead: 'Stimmung / Soundtrack',
+      audioThemeLine: 'Stimmung: {name}',
+      touchAuto: 'auto', touchOn: 'an', touchOff: 'aus',
+      diagOn: 'Hilfe-Diagnose an',
+      aimSwatchCyan: 'Cyan', aimSwatchGold: 'Gold', aimSwatchGreen: 'Grün',
+      aimSwatchOrange: 'Orange', aimSwatchPink: 'Rosa', aimSwatchPurple: 'Lila',
+      aimSwatchWhite: 'Weiß',
+      aimPickAria: 'Ziel-Farbe wählen',
       saveOfflineFold: 'Datei / offline',
       saveOfflineTitle: 'Extra-Weg — nur wenn du eine Datei willst',
       saveOfflineOk: 'Datei-Kopie bereit',
@@ -2972,22 +3117,14 @@ const I18N = {
       claimAll: 'Alle abholen', claimAllSub: '+XP auf einmal', dayBonus: 'Tagesbonus', dayBonusSub: '+80 XP',
       achievements: 'Erfolge' },
     fomo: {
-      ritualTitle: 'Heute',
-      ritualCtaSummon: 'Zu Summons',
-      ritualCtaMission: 'Mission spielen',
-      ritualCtaAdv: 'Abenteuer',
-      ritualDismiss: 'Schließen',
-      ritualReopen: 'Tagesüberblick',
-      resetIn: 'Neu in {reset}',
-      rowSummons: 'Summons {left}/{total}',
-      rowEggReady: 'Tages-Ei bereit',
-      rowEggDone: 'Tages-Ei schon offen',
-      streakReward3: '+1 Summon',
-      streakReward7: '+Ei oder Summons',
-      streakReward14: '+120 XP',
+      ritualTitle: 'Heute', ritualCtaSummon: 'Zu Beschwörungen', ritualCtaMission: 'Mission spielen',
+      ritualCtaAdv: 'Ins Abenteuer', ritualDismiss: 'Schließen', ritualReopen: 'Tagesübersicht',
+      resetIn: 'Neu in {reset}', rowSummons: 'Beschwörungen {left}/{total}',
+      rowEggReady: 'Tages-Ei bereit', rowEggDone: 'Tages-Ei schon offen',
+      streakReward3: '+1 Beschwörung', streakReward7: '+Ei oder Beschwörungen', streakReward14: '+120 XP',
     },
     pets: { title: 'Pets · Begleiter', sub: 'Dex-Pets & Ei-Pets', crackEgg: 'Tages-Ei öffnen', crackEggSub: 'Kostenloser Arcade-Zug' },
-    dex: { title: 'Monsterbuch', sub: '{n} Arten · Seltenheit = HP · Farm / Zoo / Meer / Wald / Krypta' },
+    dex: { title: 'Monsterbuch', sub: '{n} Arten · Seltenheit = HP · Farm / Zoo / Meer / Wald / Krypta / Schrott / Frost' },
     help: { title: 'Tipps & Steuerung' },
     gear: {
       title: 'Ausrüstung', sub: '5 Slots · Rüstung & Kosmetik · Level + Zeit-Gate',
@@ -3013,6 +3150,14 @@ const I18N = {
       bgmDuckPause: ' · BGM gedämpft',
       track: { menu: 'Menü', menu2: 'Menü 2', menu3: 'Menü 3', menuArcade: 'Arcade', menuHero: 'Hero', menuDream: 'Dream',
         battle: 'Kampf', elite: 'Elite', boss: 'Boss', wall: 'Mauer', training: 'Training', coinrun: 'Mats' },
+      theme: {
+        classic: { label: 'Klassisch', sub: 'Aktuelles Pack' },
+        jungle: { label: 'Dschungel', sub: 'Grün · Drums' },
+        'fire-bamboo-boesa': { label: 'Feuer-Bambus', sub: 'Boesa · Glut' },
+        halloween: { label: 'Halloween', sub: 'Spooky · Ostinato' },
+        winter: { label: 'Winter', sub: 'Saison-Hook' },
+        summer: { label: 'Sommer', sub: 'Saison-Hook' },
+      },
     },
   },
   fr: {
@@ -3060,14 +3205,15 @@ const I18N = {
       gear: 'Équipement', gearSub: '5 emplacements · armure & cosmétique',
       skills: 'Skills', skillsSub: 'Spéciaux énergie · Spiral Orb · Wave Cannon',
       upgrades: 'Améliorations', upgradesSub: 'Éclats · équiper une technique',
-      dex: 'Bestiaire', dexSub: '{n} espèces · rareté = PV · ferme · zoo · mer · bois',
+      dex: 'Bestiaire', dexSub: '{n} espèces · rareté = PV · ferme · zoo · mer · bois · crypte · ferraille · gel',
+      buildings: 'Usines', buildingsSub: 'Ateliers · récolte · upgrade',
       modes3: '3 modes rapides', fightersLocal: '20 combattants · local', vsRecord: '{w}/{m} victoires',
       statTrain: '{n}× entraînement', statWall: 'mur {n}', statMats: '{n} pièces',
       loadFail: 'Hub introuvable',
     },
     buildings: {
       title: 'Usines',
-      sub: 'Cinq usines · récolte · upgrade',
+      sub: 'Touche une usine · récolte · upgrade',
       hubStatReady: '{n} prêtes à récolter', hubStatIdle: '5 usines',
       hubStatLocked: '{n}/{total} ouvertes',
       level: 'Nv {n}', locked: 'Verrouillé',
@@ -3081,12 +3227,32 @@ const I18N = {
       stubNote: 'API systems pas encore fusionnée — production stub',
       liveNote: 'API systems live',
       loadFail: 'Usines introuvables',
+      overview: 'Aperçu',
+      detailSub: 'Récolter · l’upgrade est une étape à part',
+      whatItDoes: 'Ça fait quoi ?',
+      powerNow: '{label} — {blurb}',
+      powerNext: 'Ensuite @ rang {n} : {label}',
+      powerNone: 'Construis l’usine pour débloquer le pouvoir',
+      unbuilt: 'Pas encore construit',
+      upgradeAsk: 'Passer au nv {next} ?',
+      buildAsk: 'Construire {name} ?',
+      upgradeConfirm: 'Confirmer',
+      upgradeBack: 'Retour à la récolte',
+      upgradeOpen: 'Upgrade…',
+      buildOpen: 'Construire…',
+      walletPc: 'PC',
       build: 'Construire', buildHint: 'Construire une fois l’île ouverte',
       lockedWorld: 'Déblocage : île {n}',
       rateLine: '{n}/h · {pending} en attente · cap {cap}',
       collected: '+{n} {res} · {name}',
       collectedAll: 'Récolte +{n} de {k} bâtiments',
       waveHeal: '+{n} PV',
+      power: {
+        spark_kindle: 'Kindle', ember_pocket: 'Étincelle', matchstick_storm: 'Allumette',
+        glue_trap: 'Colle', splinter_edge: 'Copeau', chip_spray: 'Spray',
+        bamboo_vent: 'Vapeur', bamboo_burst: 'Boesa', pressure_cook: 'Pression', boesa_overheat: 'Chaleur',
+        taunt_toot: 'Toot', whistle_chorus: 'Chœur',
+      },
       stick_lighter: { name: 'Usine Allume-Bâton', blurb: 'Hangar de travers qui frotte des bâtons jusqu’à ce qu’ils crachent des étincelles.' },
       stick_lighterSub: 'Étincelles · île de l’Est',
       woodchip_glue: { name: 'Usine Colle-Copeaux', blurb: 'Fait bouillir la sciure en une pâte plus collante qu’un combo. Ne pas lécher.' },
@@ -3226,7 +3392,7 @@ const I18N = {
       streakReward14: '+120 XP',
     },
     pets: { title: 'Pets · Compagnons', sub: 'Pets dex & œufs arcade', crackEgg: 'Ouvrir l\'œuf du jour', crackEggSub: 'Tir gratuit' },
-    dex: { title: 'Bestiaire', sub: '{n} espèces · rareté = PV · ferme / zoo / mer / bois / crypte' },
+    dex: { title: 'Bestiaire', sub: '{n} espèces · rareté = PV · ferme / zoo / mer / bois / crypte / ferraille / gel' },
     help: { title: 'Astuces & contrôles' },
     gear: {
       title: 'Équipement', sub: '5 emplacements · armure & cosmétique · niveau + temps',
@@ -3299,14 +3465,15 @@ const I18N = {
       gear: 'Equipo', gearSub: '5 huecos · armadura y cosméticos',
       skills: 'Skills', skillsSub: 'Especiales energía · Spiral Orb · Wave Cannon',
       upgrades: 'Mejoras', upgradesSub: 'Fragmentos · equipar técnica',
-      dex: 'Bestiario', dexSub: '{n} especies · rareza = HP · granja · zoo · mar · bosque',
+      dex: 'Bestiario', dexSub: '{n} especies · rareza = HP · granja · zoo · mar · bosque · cripta · chatarra · escarcha',
+      buildings: 'Fábricas', buildingsSub: 'Obras · cosecha · mejora',
       modes3: '3 modos rápidos', fightersLocal: '20 luchadores · local', vsRecord: '{w}/{m} ganados',
       statTrain: '{n}× entrenamiento', statWall: 'muro {n}', statMats: '{n} monedas',
       loadFail: 'No se pudo cargar el hub',
     },
     buildings: {
       title: 'Fábricas',
-      sub: 'Cinco obras · recolectar · mejorar',
+      sub: 'Toca una fábrica · recolectar · mejorar',
       hubStatReady: '{n} listas para recolectar', hubStatIdle: '5 obras',
       hubStatLocked: '{n}/{total} abiertas',
       level: 'Nv {n}', locked: 'Bloqueado',
@@ -3320,12 +3487,32 @@ const I18N = {
       stubNote: 'API de systems aún no fusionada — producción stub',
       liveNote: 'API de systems en vivo',
       loadFail: 'No se pudieron cargar las fábricas',
+      overview: 'Resumen',
+      detailSub: 'Recolectar · mejorar es un paso aparte',
+      whatItDoes: '¿Qué hace esto?',
+      powerNow: '{label} — {blurb}',
+      powerNext: 'Siguiente @ rango {n}: {label}',
+      powerNone: 'Construye la fábrica para desbloquear el poder',
+      unbuilt: 'Aún no construido',
+      upgradeAsk: '¿Mejorar a nv {next}?',
+      buildAsk: '¿Construir {name}?',
+      upgradeConfirm: 'Confirmar',
+      upgradeBack: 'Volver a la cosecha',
+      upgradeOpen: 'Mejora…',
+      buildOpen: 'Construir…',
+      walletPc: 'PC',
       build: 'Construir', buildHint: 'Construye cuando la isla esté abierta',
       lockedWorld: 'Desbloqueo: isla {n}',
       rateLine: '{n}/h · {pending} en espera · cap {cap}',
       collected: '+{n} {res} · {name}',
       collectedAll: 'Cosecha +{n} de {k} edificios',
       waveHeal: '+{n} HP',
+      power: {
+        spark_kindle: 'Kindle', ember_pocket: 'Chispa', matchstick_storm: 'Cerilla',
+        glue_trap: 'Cola', splinter_edge: 'Astilla', chip_spray: 'Spray',
+        bamboo_vent: 'Vapor', bamboo_burst: 'Boesa', pressure_cook: 'Presión', boesa_overheat: 'Calor',
+        taunt_toot: 'Toot', whistle_chorus: 'Coro',
+      },
       stick_lighter: { name: 'Fábrica Palo-Mechero', blurb: 'Cobertizo torcido que frota palos hasta que sueltan chispas.' },
       stick_lighterSub: 'Chispas · isla Este',
       woodchip_glue: { name: 'Fábrica Cola-Astillas', blurb: 'Hierve el serrín hasta una pasta más pegajosa que un combo. No lamer.' },
@@ -3465,7 +3652,7 @@ const I18N = {
       streakReward14: '+120 XP',
     },
     pets: { title: 'Pets · Compañeros', sub: 'Pets dex y huevos arcade', crackEgg: 'Abrir huevo diario', crackEggSub: 'Tirada gratis' },
-    dex: { title: 'Bestiario', sub: '{n} especies · rareza = HP · granja / zoo / mar / bosque / cripta' },
+    dex: { title: 'Bestiario', sub: '{n} especies · rareza = HP · granja / zoo / mar / bosque / cripta / chatarra / escarcha' },
     help: { title: 'Consejos y controles' },
     gear: {
       title: 'Equipo', sub: '5 huecos · armadura y cosméticos · nivel + tiempo',
@@ -3623,6 +3810,8 @@ function applyLangStaticScreens() {
     ['.hub-tile-collect .hub-tile-sub', 'menu.collectSub'],
     ['.hub-tile-buildings .hub-tile-title', 'menu.buildings'],
     ['.hub-tile-buildings .hub-tile-sub', 'menu.buildingsSub'],
+    ['#btnGearHome .hub-tile-title', 'hub.gear'],
+    ['#btnGearHome .hub-tile-sub', 'hub.gearSub'],
     ['.hub-tile-summon .hub-tile-title', 'menu.summons'],
     ['.hub-tile-summon .hub-tile-sub', 'menu.summonsSub'],
   ];
@@ -3652,6 +3841,37 @@ function applyLangStaticScreens() {
   setTitle('btnSettings', 'settings.title');
   setTitle('btnHelp', 'menu.tips');
   setTitle('btnVerseVersie', 'settings.freshHint');
+  const profileBar = document.getElementById('menuProfileBar');
+  if (profileBar) profileBar.setAttribute('aria-label', t('menu.profileAria'));
+  const upgradesHome = document.getElementById('btnUpgradesHome');
+  if (upgradesHome) upgradesHome.setAttribute('aria-label', t('hub.upgrades'));
+  const summonHome = document.getElementById('btnSummons');
+  if (summonHome && !summonHome.getAttribute('data-hub-stat')) {
+    summonHome.setAttribute('aria-label', t('menu.summons'));
+  }
+  const buildingsList = document.getElementById('buildingsList');
+  if (buildingsList) buildingsList.setAttribute('aria-label', t('buildings.title'));
+  const gearFilterBar = document.getElementById('gearFilterBar');
+  if (gearFilterBar) gearFilterBar.setAttribute('aria-label', tOr('gear.filterAria', t('gear.filterAll')));
+  const gearRarityBar = document.getElementById('gearRarityBar');
+  if (gearRarityBar) gearRarityBar.setAttribute('aria-label', tOr('gear.rarityAria', t('rarity.rare')));
+  const seasonBar = document.getElementById('seasonSwitchBar');
+  if (seasonBar) seasonBar.setAttribute('aria-label', t('season.title'));
+  const aimSwatchMap = {
+    '#7cf5ff': 'settings.aimSwatchCyan',
+    '#ffd75e': 'settings.aimSwatchGold',
+    '#7cfc8a': 'settings.aimSwatchGreen',
+    '#ffb06a': 'settings.aimSwatchOrange',
+    '#ffb0b8': 'settings.aimSwatchPink',
+    '#c792ff': 'settings.aimSwatchPurple',
+    '#e8f0ff': 'settings.aimSwatchWhite',
+  };
+  document.querySelectorAll('#setAimColorSwatches [data-aim-color]').forEach((btn) => {
+    const key = aimSwatchMap[(btn.getAttribute('data-aim-color') || '').toLowerCase()];
+    if (key) btn.setAttribute('aria-label', t(key));
+  });
+  const aimPick = document.getElementById('setAimColor');
+  if (aimPick) aimPick.setAttribute('aria-label', t('settings.aimPickAria'));
 
   const installLbl = document.getElementById('btnInstallLabel');
   if (installLbl) installLbl.innerHTML = t('menu.install') + '<small>' + t('menu.installSub') + '</small>';
@@ -3668,8 +3888,10 @@ function applyLangStaticScreens() {
     ['btnSkills', 'hub.skills', 'hub.skillsSub'],
     ['btnUpgrades', 'hub.upgrades', 'hub.upgradesSub'],
     ['btnUpgradesHome', 'hub.upgrades', 'hub.upgradesSub'],
+    ['btnBuildings', 'hub.buildings', 'hub.buildingsSub'],
     ['btnDex', 'hub.dex', 'hub.dexSub'],
     ['btnGear', 'hub.gear', 'hub.gearSub'],
+    ['btnGearHome', 'hub.gear', 'hub.gearSub'],
   ];
   for (const [id, titleKey, subKey] of modeRows) {
     const btn = document.getElementById(id);
@@ -3690,6 +3912,12 @@ function applyLangStaticScreens() {
   setText('settingsHead', 'settings.title');
   setText('settingsSub', 'settings.sub');
   setText('setLangLbl', 'settings.lang');
+  setText('setMusicVolName', 'settings.music');
+  setText('setSfxVolName', 'settings.sfx');
+  setText('pauseMusicVolName', 'pause.music');
+  setText('pauseSfxVolName', 'pause.sfx');
+  setText('setAudioThemeLbl', 'settings.audioThemeHead');
+  setText('pauseAudioThemeLbl', 'settings.audioThemeHead');
   setText('setAimHead', 'settings.aimHead');
   setText('setAimHint', 'settings.aimHint');
   setText('setAimColorLbl', 'settings.aimColor');
@@ -4239,6 +4467,8 @@ const ACHIEVEMENTS = [
     test: () => (typeof dexBiomeDiscovered === 'function' ? dexBiomeDiscovered('crypt') : 0) >= 10 },
   { id: 'dexScrap', name: 'Schroot-kenner', desc: '10 schroot-soorten in het boek',
     test: () => (typeof dexBiomeDiscovered === 'function' ? dexBiomeDiscovered('scrap') : 0) >= 10 },
+  { id: 'dexFrost', name: 'Vorst-kenner', desc: '8 vorst-soorten in het boek',
+    test: () => (typeof dexBiomeDiscovered === 'function' ? dexBiomeDiscovered('frost') : 0) >= 8 },
   { id: 'train5', name: 'Robotbreker', desc: '5× training gewonnen',
     test: s => s.trainWins >= 5 },
   { id: 'wall100', name: 'Sloper', desc: 'Muurrecord 100+',
@@ -4736,6 +4966,7 @@ function achievementProgressFrac(ach) {
     case 'dexWild': return Math.min(typeof dexBiomeDiscovered === 'function' ? dexBiomeDiscovered('wild') : 0, 10) / 10;
     case 'dexCrypt': return Math.min(typeof dexBiomeDiscovered === 'function' ? dexBiomeDiscovered('crypt') : 0, 10) / 10;
     case 'dexScrap': return Math.min(typeof dexBiomeDiscovered === 'function' ? dexBiomeDiscovered('scrap') : 0, 10) / 10;
+    case 'dexFrost': return Math.min(typeof dexBiomeDiscovered === 'function' ? dexBiomeDiscovered('frost') : 0, 8) / 8;
     case 'train5': return Math.min(s.trainWins, 5) / 5;
     case 'wall100': return Math.min(s.bestWall, 100) / 100;
     case 'combo8': return Math.min(s.stats.maxCombo || 0, 8) / 8;
@@ -4775,6 +5006,7 @@ function achievementProgressHint(ach) {
     case 'dexWild': return `${typeof dexBiomeDiscovered === 'function' ? dexBiomeDiscovered('wild') : 0}/10 woud`;
     case 'dexCrypt': return `${typeof dexBiomeDiscovered === 'function' ? dexBiomeDiscovered('crypt') : 0}/10 crypte`;
     case 'dexScrap': return `${typeof dexBiomeDiscovered === 'function' ? dexBiomeDiscovered('scrap') : 0}/10 schroot`;
+    case 'dexFrost': return `${typeof dexBiomeDiscovered === 'function' ? dexBiomeDiscovered('frost') : 0}/8 vorst`;
     case 'train5': return `${Math.min(s.trainWins, 5)}/5 training-wins`;
     case 'wall100': return `${Math.min(s.bestWall, 100)}/100 muur-score`;
     case 'combo8': return `×${Math.min(s.stats.maxCombo || 0, 8)}/8 combo`;
@@ -5467,6 +5699,36 @@ function saveAgeDays(stampAt) {
   } catch (_) {
     return null;
   }
+}
+
+function formatSaveWhen(stampAt) {
+  if (!stampAt) return (typeof t === 'function') ? t('settings.saveWhenNever') : '';
+  try {
+    const ms = new Date(stampAt).getTime();
+    if (!Number.isFinite(ms)) return (typeof t === 'function') ? t('settings.saveWhenNever') : '';
+    const sec = Math.max(0, Math.round((Date.now() - ms) / 1000));
+    if (sec < 20) return t('settings.saveWhenJustNow');
+    if (sec < 3600) return t('settings.saveWhenMin', { n: Math.max(1, Math.round(sec / 60)) });
+    if (sec < 86400) return t('settings.saveWhenHour', { n: Math.max(1, Math.round(sec / 3600)) });
+    return t('settings.saveWhenDay', { n: Math.max(1, Math.round(sec / 86400)) });
+  } catch (_) {
+    return (typeof t === 'function') ? t('settings.saveWhenNever') : '';
+  }
+}
+
+function onlineSaveStatusLine(h) {
+  const online = typeof navigator === 'undefined' || navigator.onLine !== false;
+  const lvl = h && h.lvl != null ? h.lvl : '?';
+  if (h && h.primaryCorrupt) return t('settings.saveAutoBad', { lvl });
+  if (!online) return t('settings.saveOnlineOffline');
+  return t('settings.saveAutoLine', { lvl, when: formatSaveWhen(h && h.stampAt) });
+}
+
+function onlineSavePill(h) {
+  const online = typeof navigator === 'undefined' || navigator.onLine !== false;
+  if (h && h.primaryCorrupt) return t('settings.saveOfflineBad');
+  if (!online) return t('settings.saveSyncOffline');
+  return t('settings.saveSyncOk');
 }
 
 function exportSaveJson() {
@@ -7200,7 +7462,9 @@ function weaponNextUnlockHtml() {
   return `<div class="dex-ach-next" style="margin-top:10px;padding:8px 10px;border-radius:12px;background:rgba(124,245,255,.06);border:1px solid rgba(124,245,255,.22)">` +
     `<div style="font-size:11px;font-weight:800;color:#7cf5ff;margin-bottom:4px">${t('ui.dexNextWeapon', { name: weaponLabel(next) })}</div>` +
     `<div style="font-size:12px;opacity:.85"><span class="rar-pill" style="color:${rar.color};border-color:${rar.color}">${rarityLabel(next.rarity)}</span>` +
-    ` · unlock Lv <b>${next.unlock}</b>${need ? ` · nog <b>${need}</b> level${need === 1 ? '' : 's'}` : ' · bijna!'}</div>` +
+    ` · ${t('ui.dexUnlockLv', { lv: next.unlock, lvl: next.unlock })}${need
+      ? t(need === 1 ? 'ui.dexUnlockNeed' : 'ui.dexUnlockNeedMany', { need: `<b>${need}</b>` })
+      : t('ui.dexUnlockSoon')}</div>` +
     `<div class="xpline" style="margin-top:6px;height:6px"><div style="width:${pct}%"></div></div></div>`;
 }
 function dexCosmeticProgressLines() {
@@ -7922,13 +8186,14 @@ function applyStyleToSpec(fighter, spec) {
  * MOST cosmetics are vanity. SOME cosmetics have stats. Armour has stats.
  * Every lootable item has BOTH unlockLvl (save.lvl) AND unlockDays (account age).
  *
- * World-drop lane (this PR, sibling src/data/gear-world.js):
+ * World-drop lane (sibling src/data/gear-world.js):
  *   grant is can-own-locked (gates not re-checked); rolls use lootable / allowLocked.
  *   rollGearDrop is implemented here so systems + spawners share one picker.
  *
- * Equip-flow states (gearEquipState / gearCanEquip.state):
- *   ok · vanity-ok · already-equipped · locked · not-owned · wrong-slot · unknown
- * Slot picker bind: gearSlotInventory(slot, save) → owned + locked preview + gate copy.
+ * Equip API (#295 + #307):
+ *   gearEquipState / gearCanEquip → ok | vanity-ok | already-equipped | locked | not-owned | wrong-slot | unknown
+ *   gearEquipItem(id, s, now, expectSlot) OR gearEquipItem(id, { expectSlot? })
+ *   gearSlotInventory(slot, save) → owned + locked preview + gate copy.
  */
 const GEAR_SCHEMA = 1;
 const GEAR_MS_PER_DAY = 86400000;
@@ -8527,6 +8792,37 @@ const GEAR_EQUIP_STATES = {
   NOSAVE: 'nosave',
 };
 
+function _gearIsSaveLike(obj) {
+  return !!(obj && typeof obj === 'object' && !Array.isArray(obj) && (
+    obj.gear != null || obj.lvl != null || obj.createdAt != null
+    || obj.unlocked != null || obj.advCleared != null
+    || obj.coins != null || obj.weapon != null
+  ));
+}
+
+function _gearIsEquipOpts(obj) {
+  if (!obj || typeof obj !== 'object' || Array.isArray(obj)) return false;
+  if (_gearIsSaveLike(obj)) return false;
+  const keys = Object.keys(obj);
+  if (!keys.length) return true;
+  return keys.every((k) => k === 'expectSlot' || k === 'now');
+}
+
+function _gearParseCall(sOrOpts, now, expectSlot) {
+  if (_gearIsEquipOpts(sOrOpts)) {
+    return {
+      s: (typeof save !== 'undefined' ? save : null),
+      now: sOrOpts.now != null ? sOrOpts.now : now,
+      expectSlot: sOrOpts.expectSlot != null ? sOrOpts.expectSlot : expectSlot,
+    };
+  }
+  return {
+    s: sOrOpts || (typeof save !== 'undefined' ? save : null),
+    now,
+    expectSlot,
+  };
+}
+
 function _gearEquipResult(partial) {
   const item = partial.item || null;
   const state = partial.state || GEAR_EQUIP_STATES.UNKNOWN;
@@ -8549,32 +8845,33 @@ function _gearEquipResult(partial) {
 
 /** Canonical equip-flow state. expectSlot (optional) → wrong-slot if mismatch. */
 function gearEquipState(id, s, now, expectSlot) {
+  const parsed = _gearParseCall(s, now, expectSlot);
   const item = gearItemById(id);
   if (!item) return _gearEquipResult({ ok: false, state: GEAR_EQUIP_STATES.UNKNOWN });
-  if (expectSlot != null && expectSlot !== '') {
-    const want = gearCanonSlot(expectSlot);
+  if (parsed.expectSlot != null && parsed.expectSlot !== '') {
+    const want = gearCanonSlot(parsed.expectSlot);
     if (!want || want !== item.slot) {
       return _gearEquipResult({
         ok: false,
         state: GEAR_EQUIP_STATES.WRONG_SLOT,
         item,
-        owned: gearItemOwned(item.id, s),
+        owned: gearItemOwned(item.id, parsed.s),
         label: (typeof tOr === 'function') ? tOr('gear.lockSlot', 'Verkeerd slot') : 'Verkeerd slot',
       });
     }
   }
-  const owned = gearItemOwned(item.id, s);
+  const owned = gearItemOwned(item.id, parsed.s);
   if (!owned) {
     return _gearEquipResult({
       ok: false,
       state: GEAR_EQUIP_STATES.NOT_OWNED,
       item,
-      gate: gearGateState(item, s, now),
+      gate: gearGateState(item, parsed.s, parsed.now),
       owned: false,
-      label: gearGateCopy(item, s, now),
+      label: gearGateCopy(item, parsed.s, parsed.now),
     });
   }
-  const gate = gearGateState(item, s, now);
+  const gate = gearGateState(item, parsed.s, parsed.now);
   if (!gate.ok) {
     return _gearEquipResult({
       ok: false,
@@ -8582,10 +8879,10 @@ function gearEquipState(id, s, now, expectSlot) {
       item,
       gate,
       owned: true,
-      label: gearGateCopy(item, s, now),
+      label: gearGateCopy(item, parsed.s, parsed.now),
     });
   }
-  const wearing = gearEquippedId(item.slot, s) === item.id;
+  const wearing = gearEquippedId(item.slot, parsed.s) === item.id;
   if (wearing) {
     return _gearEquipResult({
       ok: true,
@@ -8667,9 +8964,10 @@ function gearGrantItem(id, src, s, now) {
 }
 
 function gearEquipItem(id, s, now, expectSlot) {
-  const st = s || (typeof save !== 'undefined' ? save : null);
+  const parsed = _gearParseCall(s, now, expectSlot);
+  const st = parsed.s;
   if (!st) return _gearEquipResult({ ok: false, state: GEAR_EQUIP_STATES.NOSAVE });
-  const can = gearEquipState(id, st, now, expectSlot);
+  const can = gearEquipState(id, st, parsed.now, parsed.expectSlot);
   if (!can.ok) return can;
   const bag = ensureGearSave(st);
   bag.equipped[can.item.slot] = can.item.id;
@@ -8710,13 +9008,16 @@ function gearUnequipSlot(slot, s) {
 
 /** Owned items + locked/not-owned preview for one slot. Schema 1, no new save shape. */
 function gearSlotInventory(slot, s, now) {
+  const parsed = _gearIsEquipOpts(s)
+    ? { s: (typeof save !== 'undefined' ? save : null), now: s.now != null ? s.now : now }
+    : { s: s || (typeof save !== 'undefined' ? save : null), now };
   const canon = gearCanonSlot(slot);
-  const st = s || (typeof save !== 'undefined' ? save : null);
+  const st = parsed.s;
   if (!canon) return { slot: null, equippedId: null, items: [] };
   const equippedId = gearEquippedId(canon, st);
   const items = [];
   for (const item of gearItemsForSlot(canon)) {
-    const eq = gearEquipState(item.id, st, now, canon);
+    const eq = gearEquipState(item.id, st, parsed.now, canon);
     const owned = !!eq.owned;
     items.push({
       id: item.id,
@@ -9034,6 +9335,7 @@ function gearCatalogCount() {
 /**
  * Adventure spawners + 16×16 pixels on top of PR #280 catalog (`src/data/gear.js`).
  * Rolls respect unlockLvl + unlockDays (+ needAdv / needDiff). Grant is can-own-locked.
+ * Pickup art: GEAR_PIXEL_BY_ID unique silhouettes + tints; rare/elite ring via gearPickupFeel.
  */
 const GEAR_MAX_FIELD = 3;
 
@@ -9048,25 +9350,55 @@ const GEAR_PIXEL_PALETTE = {
 const GEAR_PIXEL_TEMPLATES = {
   wrap: [
     '................', '................', '................', '...kkkkkkkkkk...',
-    '..kiiiiAAiiiik.', '..kAAAABBBBAAAk.', '..kiiiiAAiiiik.', '...kkkkkkkkkk...',
+    '..kiiiiAAiiiik..', '..kAAAABBBBAAAk.', '..kiiiiAAiiiik..', '...kkkkkkkkkk...',
     '..........kk....', '.........kBBk...', '..........kk....', '................',
     '................', '................', '................', '................',
   ],
-  helm: [
-    '................', '.....kCCCCk.....', '....kCkkkCk.....', '...kkkkkkkkkk...',
-    '..kmmAAAAAAmmk..', '.kmmAAAAAAAAAmmk.', '.kmAAAAAAAAAAmk.', '.kmABkkkkkBAmk.',
-    '.kmAkk....kAmk.', '..kmk......kmk..', '...kk......kk...', '................',
+  bandana: [
+    '................', '................', '...kkkkkkkkkk...', '..kAAAAAAAAAAk..',
+    '.kAAAABBBBAAAAk.', '..kkkkkkkkkkkk..', '.........kAAkk..', '..........kAAk..',
+    '...........kAk..', '............kk..', '................', '................',
+    '................', '................', '................', '................',
+  ],
+  beanie: [
+    '................', '.....kAAAAk.....', '....kAAAAAAk....', '...kAABBBBAAk...',
+    '..kAAAAAAAAAAk..', '..kkkkkkkkkkkk..', '.kCCCCCCCCCCCCk.', '..kkkkkkkkkkkk..',
+    '................', '................', '................', '................',
     '................', '................', '................', '................',
   ],
   hat: [
     '................', '......kAAk......', '.....kAAAAk.....', '....kAAAAAAk....',
-    '...kAABBBBAAk...', '..kkAAAAAAAAAAkk.', 'kkkkkkkkkkkkkkkk', '..kBBBBBBBBBBk..',
+    '...kAABBBBAAk...', '..kkAAAAAAAAAAkk', 'kkkkkkkkkkkkkkkk', '..kBBBBBBBBBBk..',
+    '...kkkkkkkkkk...', '................', '................', '................',
+    '................', '................', '................', '................',
+  ],
+  hat_paper: [
+    '................', '.......kk.......', '......kAAk......', '.....kAAAAk.....',
+    '....kABBBAAk....', '...kAAAAAAAAk...', '..kAAAAAAAAAAk..', '.kkkkkkkkkkkkkk.',
+    '................', '................', '................', '................',
+    '................', '................', '................', '................',
+  ],
+  crown: [
+    '................', '..k.k.k.k.k.k...', '.kAkAkAkAkAkAk..', '.kAAAAAAAAAAAk..',
+    '.kABBBBBBBBBAAk.', '..kAAAAAAAAAAk..', '...kkkkkkkkkk...', '................',
+    '................', '................', '................', '................',
+    '................', '................', '................', '................',
+  ],
+  mask_fox: [
+    '................', '....k......k....', '...kAk....kAk...', '..kAAAkkkkAAAk..',
+    '.kAABAAAAABAAk..', '.kAAkk....kkAAk.', '.kAk.kBBBB.kAk..', '..kAAAAAAAAAk...',
     '...kkkkkkkkkk...', '................', '................', '................',
     '................', '................', '................', '................',
   ],
   visor: [
     '................', '...kkkkkkkkkk...', '..kAAAAAAAAAAk..', '.kACCCCCCCcccAk.',
-    '.kAC......ccAk.', '..kAAAAAAAAAAk..', '...kkkkkkkkkk...', '....k......k....',
+    '.kAC......ccAk..', '..kAAAAAAAAAAk..', '...kkkkkkkkkk...', '....k......k....',
+    '................', '................', '................', '................',
+    '................', '................', '................', '................',
+  ],
+  visor_neon: [
+    '................', '...kkkkkkkkkk...', '..kCCCCCCCCCCk..', '.kCAAAAAAAAACk..',
+    '.kCAkkkkkkkACk..', '.kCAAAAAAAAACk..', '..kCCCCCCCCCCk..', '...kkkkkkkkkk...',
     '................', '................', '................', '................',
     '................', '................', '................', '................',
   ],
@@ -9076,11 +9408,119 @@ const GEAR_PIXEL_TEMPLATES = {
     '..kAAAk.kAAAk...', '...kkk...kkk....', '................', '................',
     '................', '................', '................', '................',
   ],
+  hood_void: [
+    '................', '.....kAAAAk.....', '....kAvvvvAk....', '...kAvCCCCvAk...',
+    '..kAvk....kAvk..', '.kAvk......kAvk.', '.kAAAAk..kAAAAk.', '..kAAAk..kAAAk..',
+    '...kkk....kkk...', '................', '................', '................',
+    '................', '................', '................', '................',
+  ],
+  mask_dream: [
+    '................', '....kkkkkkkk....', '...kAAAAAAAAk...', '..kACkkkkkkCAk..',
+    '.kACk......kCAk.', '.kACk.kBBk.kCAk.', '..kACkkkkkkCAk..', '...kAAAAAAAAk...',
+    '....kkkkkkkk....', '................', '................', '................',
+    '................', '................', '................', '................',
+  ],
+  horns: [
+    '................', 'C..........C....', 'kCk........kCk..', '.kAk......kAk...',
+    '..kAAAkkAAAAk...', '...kAAAAAAAAk...', '....kABkkBAk....', '.....kAAAAk.....',
+    '......kkkkk.....', '................', '................', '................',
+    '................', '................', '................', '................',
+  ],
+  horns_hell: [
+    '................', 'C.C........C.C..', 'kCk........kCk..', '.kAk......kAk...',
+    '..kAAAkkAAAAk...', '...kAAAAAAAAk...', '....kACkkCAk....', '.....kCCCCk.....',
+    '......kkkkk.....', '................', '................', '................',
+    '................', '................', '................', '................',
+  ],
+  hat_chef: [
+    '................', '....kCCCCCCk....', '...kCCAAAACCk...', '...kCAAAAAACk...',
+    '....kAAAAAAk....', '.....kAAAAk.....', '.....kkkkkk.....', '....kBBBBBBk....',
+    '.....kkkkkk.....', '................', '................', '................',
+    '................', '................', '................', '................',
+  ],
+  halo: [
+    '................', '....kCCCCCCk....', '...kC......Ck...', '..kC........Ck..',
+    '...kC......Ck...', '....kCCCCCCk....', '.....kAAAAk.....', '......kBBk......',
+    '.......kk.......', '................', '................', '................',
+    '................', '................', '................', '................',
+  ],
+  circlet: [
+    '................', '.....kCCCCk.....', '....kC....Ck....', '...kkAAAAAAkk...',
+    '..kAABBBBBAAAk..', '...kkAAAAAAkk...', '....kkkkkkkk....', '................',
+    '................', '................', '................', '................',
+    '................', '................', '................', '................',
+  ],
+  helm: [
+    '................', '.....kCCCCk.....', '....kCkkkCk.....', '...kkkkkkkkkk...',
+    '..kmmAAAAAAmmk..', '.kmmAAAAAAAAAmmk', '.kmAAAAAAAAAAmk.', '.kmABkkkkkBAmk..',
+    '.kmAkk....kAmk..', '..kmk......kmk..', '...kk......kk...', '................',
+    '................', '................', '................', '................',
+  ],
+  helm_tin: [
+    '................', '....kkkkkkkk....', '...kAAAAAAAAAk..', '..kAAAAAAAAAAk..',
+    '.kAAwwwwwwwwAAk.', '.kAAwwkkkkwwAAk.', '.kAAAAAAAAAAAAk.', '..kkkkkkkkkkkk..',
+    '................', '................', '................', '................',
+    '................', '................', '................', '................',
+  ],
+  helm_lucky: [
+    '................', '......kC........', '.....kCCCk......', '....kCAAAk......',
+    '...kkkkkkkkkk...', '..kmmAAAAAAmmk..', '.kmmAABBBBAAmmk.', '.kmABkkkkkBAmk..',
+    '.kmAkk....kAmk..', '..kmk......kmk..', '...kk......kk...', '................',
+    '................', '................', '................', '................',
+  ],
+  helm_knight: [
+    '................', '......kCCk......', '.....kCCCCk.....', '...kkkkkkkkkk...',
+    '..kAAAAAAAAAAk..', '.kAAkkkkkkkAAk..', '.kAAk..kk..kAk..', '.kAAAwwwwwwAAk..',
+    '.kmAAAAAAAAAmk..', '..kmk......kmk..', '...kk......kk...', '................',
+    '................', '................', '................', '................',
+  ],
+  helm_crystal: [
+    '................', '.......kC.......', '......kCCk......', '.....kCAACk.....',
+    '....kCAAAACk....', '...kCAAAAAACk...', '..kCAABBBBAAk...', '.kCAAkkkkkAAk...',
+    '..kAAAAAAAAAk...', '...kkkkkkkk.....', '................', '................',
+    '................', '................', '................', '................',
+  ],
+  helm_void: [
+    '................', '.......kk.......', '......kAAk......', '.....kAAAAk.....',
+    '....kAvvvvAk....', '...kAvCCCCvAk...', '..kAvk....kAvk..', '.kAvAkkkkkkAvk..',
+    '..kAAAAAAAAAk...', '...kkkkkkkk.....', '................', '................',
+    '................', '................', '................', '................',
+  ],
+  helm_pumpkin: [
+    '................', '......kC........', '.....kCCk.......', '....kAAAAAk.....',
+    '...kAABBBBAAk...', '..kAAk.kk.kAAk..', '..kAA.BBBB.AAk..', '...kAAAAAAAAAk..',
+    '....kkkkkkkk....', '................', '................', '................',
+    '................', '................', '................', '................',
+  ],
+  helm_nightmare: [
+    '................', '.C..........C...', 'kCk........kCk..', '.kAkkkkkkkkAk...',
+    '.kAAAAAAAAAAk...', '.kABkkkkkkBAk...', '.kABk....kBAk...', '.kAAAAAAAAAAk...',
+    '..kkkkkkkkkk....', '................', '................', '................',
+    '................', '................', '................', '................',
+  ],
+  helm_hell: [
+    '................', 'C.C........C.C..', 'kCk........kCk..', '.kAAkkkkkkAAk...',
+    '.kAACCCCCCAAk...', '.kACkkkkkkCAk...', '.kACk....kCAk...', '.kAAAAAAAAAAk...',
+    '..kAAkkkkAAk....', '................', '................', '................',
+    '................', '................', '................', '................',
+  ],
   shirt: [
     '................', '....kkkkkkkk....', '...kwwwwwwwwk...', '..kwwAAAAAAwwk..',
     '..kwwwwwwwwwwk..', '.kwwAAAAAAAAwwk.', '.kwwwwkkwwwwwwk.', '.kwwwwkkwwwwwwk.',
     '.kwwwwwwwwwwwwk.', '..kwwwwwwwwwwk..', '..kwwk....kwwk..', '..kwwk....kwwk..',
     '...kk......kk...', '................', '................', '................',
+  ],
+  shirt_stripe: [
+    '................', '....kkkkkkkk....', '...kwwwwwwwwk...', '..kwwBBBBBBBwk..',
+    '..kwwwwwwwwwwk..', '.kwwBBBBBBBBwwk.', '.kwwwwwwwwwwwwk.', '.kwwBBBBBBBBwwk.',
+    '.kwwwwwwwwwwwwk.', '..kwwk....kwwk..', '..kwwk....kwwk..', '...kk......kk...',
+    '................', '................', '................', '................',
+  ],
+  hoodie: [
+    '................', '....kkkkkkkk....', '...kAAAAAAAAAk..', '..kAABBBBBBAAk..',
+    '.kAAwwwwwwwwAAk.', '.kAAwwkBBkwAAk..', '.kAAwwwwwwwwAAk.', '.kAAwwkkwwwwAAk.',
+    '.kAAAAAAAAAAAAk.', '..kAAk....kAAk..', '..kAAk....kAAk..', '...kk......kk...',
+    '................', '................', '................', '................',
   ],
   vest: [
     '................', '....kkkkkkkk....', '...kmAAAAAAmk...', '..kmAiiiiAAmk...',
@@ -9088,22 +9528,196 @@ const GEAR_PIXEL_TEMPLATES = {
     '.kmAAAAAAAAAAmk.', '..kmAiiiiAAmk...', '..kmAAAAAAAmk...', '...kmmkkmmk.....',
     '....kk..kk......', '................', '................', '................',
   ],
+  vest_padded: [
+    '................', '....kkkkkkkk....', '...kmAAkkAAmk...', '..kmAAkkAAAmk...',
+    '..kmAAAAAAAAAmk.', '.kmAAkkAAAAmmk..', '.kmAAAAAAAAAAmk.', '.kmAAkkAAAAmmk..',
+    '.kmAAAAAAAAAAmk.', '..kmAAkkAAmk....', '...kmmkkmmk.....', '....kk..kk......',
+    '................', '................', '................', '................',
+  ],
+  vest_lucky: [
+    '................', '....kkkkkkkk....', '...kmAAAAAAmk...', '..kmAiiiiCAmk...',
+    '..kmAAACCAAmk...', '.kmAiiiiiiiAAmk.', '.kmAAABBBBAAAmk.', '.kmAiiiiiiiAAmk.',
+    '.kmAAAACCAAAAmk.', '..kmAiiiiAAmk...', '...kmmkkmmk.....', '....kk..kk......',
+    '................', '................', '................', '................',
+  ],
+  vest_crystal: [
+    '................', '....kCCCCCCk....', '...kCAAAAAACk...', '..kCAAiiiiACk...',
+    '.kCAAiiiiiiACk..', '.kCAAAAAAAACk...', '..kCAAiiiiACk...', '...kCAAAAACk....',
+    '....kCCCCCk.....', '.....kkkkkk.....', '................', '................',
+    '................', '................', '................', '................',
+  ],
   coat: [
     '................', '.....kAAAAk.....', '....kABBBAAk....', '...kABBBBBAAk...',
-    '..kABBBBBBBAAk..', '.kABBBBBBBBBAAk.', '.kABBBBkBBBBAk..', 'kABBBBk.kBBBBA.',
-    'kABBBk...kBBBA.', '.kABBk....kBAk..', '..kAk......kAk..', '...k........k...',
+    '..kABBBBBBBAAk..', '.kABBBBBBBBBAAk.', '.kABBBBkBBBBAk..', 'kABBBBk.kBBBBA..',
+    'kABBBk...kBBBA..', '.kABBk....kBAk..', '..kAk......kAk..', '...k........k...',
+    '................', '................', '................', '................',
+  ],
+  coat_void: [
+    '................', '.....kAAAAk.....', '....kAvvvvAk....', '...kAvCCCCvAk...',
+    '..kAvvvvvvvvAk..', '.kAvvvvvvvvvAk..', '.kAvvvvkvvvvAk..', 'kAvvvvk.kvvvvA..',
+    'kAvvvk...kvvvA..', '.kAvvk....kvAk..', '..kAk......kAk..', '...k........k...',
+    '................', '................', '................', '................',
+  ],
+  coat_dream: [
+    '................', '.....kCCCCk.....', '....kCAAAACk....', '...kCABBBACk....',
+    '..kCABBBBBBACk..', '.kCABBBBBBBBACk.', '.kCABBBkBBBBCk..', 'kCABBBk.kBBBCk..',
+    'kCABBk...kBBCk..', '.kCABk....kCAk..', '..kCk......kCk..', '...k........k...',
+    '................', '................', '................', '................',
+  ],
+  gi: [
+    '................', '....kkkkkkkk....', '...kwwwwwwwwk...', '..kwwAAAAAAwwk..',
+    '..kwwAAkkAAwwk..', '.kwwAAAAAAAAwwk.', '.kwwkkBBBBBkkwwk', '.kwwwwkkwwwwwwk.',
+    '.kwwwwkkwwwwwwk.', '..kwwwwwwwwwwk..', '..kwwk....kwwk..', '...kk......kk...',
+    '................', '................', '................', '................',
+  ],
+  bomber: [
+    '................', '....kkkkkkkk....', '...kAAAAAAAAAk..', '..kAABBBBBBAAk..',
+    '.kAACCCCCCCAAk..', '.kAAAAAAAAAAAAk.', '.kAAkk....kkAAk.', '.kAAk......kAAk.',
+    '.kAAkkkkkkkkAAk.', '..kAAkkkkkkAAk..', '...kk......kk...', '................',
+    '................', '................', '................', '................',
+  ],
+  tunic: [
+    '................', '.....kAAAAk.....', '....kABBBAAk....', '...kABBBBBAAk...',
+    '..kABCCCCCBAk...', '.kABBBBBBBBAk...', '.kAAAAAAAAAAAk..', '..kAAk....kAAk..',
+    '...kk......kk...', '................', '................', '................',
+    '................', '................', '................', '................',
+  ],
+  poncho: [
+    '................', '......kAAk......', '....kAAAAAAk....', '...kABBBBBAAk...',
+    '..kABBBBBBBAAk..', '.kABBBBBBBBBAAk.', 'kABBBBk..kBBBBA.', 'kABBBk....kBBBA.',
+    '.kAAk......kAAk.', '................', '................', '................',
+    '................', '................', '................', '................',
+  ],
+  robe: [
+    '................', '.....kCCCCk.....', '....kCAAAACk....', '...kCABBBBACk...',
+    '..kCABBBBBBACk..', '.kCABBBBBBBBACk.', '.kCAAAAAAAAAk...', '.kCAAk....kAAk..',
+    '..kAk......kAk..', '...k........k...', '................', '................',
+    '................', '................', '................', '................',
+  ],
+  robe_ash: [
+    '................', '.....kCCCCk.....', '....kCAAAACk....', '...kCACCCCACk...',
+    '..kCACCCCCCACk..', '.kCACCCCCCCCACk.', '.kCAAAAAAAAAk...', '.kCACk....kCAk..',
+    '..kCk......kCk..', '...k........k...', '................', '................',
+    '................', '................', '................', '................',
+  ],
+  capelet: [
+    '................', '....kAAAAAAk....', '...kABBBBBAk....', '..kAB....BAk....',
+    '.kAB......BAk...', '.kA........Ak...', '..k........k....', '................',
+    '................', '................', '................', '................',
+    '................', '................', '................', '................',
+  ],
+  sash: [
+    '................', '....kkkkkkkk....', '...kwwwwCCwwk...', '..kwwwwCCwwwk...',
+    '..kwwwCCwwwwk...', '.kwwCCAAAAAAwwk.', '.kwwwwwwwwwwwwk.', '.kwwwwkkwwwwwwk.',
+    '.kwwwwwwwwwwwwk.', '..kwwk....kwwk..', '...kk......kk...', '................',
+    '................', '................', '................', '................',
+  ],
+  mail: [
+    '................', '....kkkkkkkk....', '...kA.A.A.A.Ak..', '..k.A.A.A.A.Ak..',
+    '.kA.A.A.A.A.AAk.', '.k.A.A.A.A.A.Ak.', '.kA.ABBBB.A.AAk.', '.k.A.A.A.A.A.Ak.',
+    '.kA.A.A.A.A.AAk.', '..k.A.A.A.A.Ak..', '...kAAkkAAk.....', '....kk..kk......',
     '................', '................', '................', '................',
   ],
   plate: [
-    '................', '....kkkkkkkk....', '...kAAAAAAAAAk..', '..kAACCCCCCAAk.',
-    '..kAABBBBBBAAk.', '.kAACCCCCCCCAAk.', '.kAABAAAAAABAk.', '.kAACCCCCCCCAAk.',
+    '................', '....kkkkkkkk....', '...kAAAAAAAAAk..', '..kAACCCCCCAAk..',
+    '..kAABBBBBBAAk..', '.kAACCCCCCCCAAk.', '.kAABAAAAAABAk..', '.kAACCCCCCCCAAk.',
     '.kAABBBBBBBBAAk.', '..kAACCCCCAAk...', '..kAAAAAAAAAk...', '...kAAkkAAk.....',
     '....kk..kk......', '................', '................', '................',
+  ],
+  cuirass: [
+    '................', '....kkkkkkkk....', '...kAAAAAAAAAk..', '..kAACCCCCCAAk..',
+    '.kAABBBBBBBAk...', '.kAACCCCCCCAAk..', '.kAAAAAAAAAAAk..', '..kAACCCCCAAk...',
+    '...kAAAAAAAAAk..', '...kAAkkAAk.....', '....kk..kk......', '................',
+    '................', '................', '................', '................',
+  ],
+  plate_knight: [
+    '................', '......kC........', '....kkkkkkkk....', '...kAAAAAAAAAk..',
+    '..kAACCCCCCAAk..', '..kAABBBBBBAAk..', '.kAACCCCCCCCAAk.', '.kAABAAAAAABAk..',
+    '.kAACCCCCCCCAAk.', '..kAAAAAAAAAk...', '...kAAkkAAk.....', '....kk..kk......',
+    '................', '................', '................', '................',
+  ],
+  plate_void: [
+    '................', '....kkkkkkkk....', '...kvvvvvvvvk...', '..kvvCCCCCCvvk..',
+    '..kvvAAAAAAvvk..', '.kvvACCCCCAAvvk.', '.kvvAAvvvvAAvvk.', '.kvvACCCCCAAvvk.',
+    '.kvvAAAAAAAAvvk.', '..kvvCCCCCCvvk..', '..kvvvvvvvvvk...', '...kvvkkvvvk....',
+    '....kk..kk......', '................', '................', '................',
+  ],
+  plate_nightmare: [
+    '................', '.C..........C...', 'kCk.kkkkkk.kCk..', '.kAAAAAAAAAAk...',
+    '.kAACCCCCCAAk...', '.kAABBBBBBAAk...', '.kAACCCCCCCAk...', '.kAAAAAAAAAAk...',
+    '..kAAkkkkAAk....', '...kk....kk.....', '................', '................',
+    '................', '................', '................', '................',
+  ],
+  plate_hell: [
+    '................', 'C.C........C.C..', '.kAAkkkkkkAAk...', '.kAACCCCCCAAk...',
+    '.kACkkkkkkCAk...', '.kACBBBBBBCAk...', '.kAACCCCCCAAk...', '.kAAAAAAAAAAk...',
+    '..kAAkkkkAAk....', '...kk....kk.....', '................', '................',
+    '................', '................', '................', '................',
   ],
   gloves: [
     '................', '................', '......kkkk......', '.....kAAAAk.....',
     '....kAAAAAAAk...', '...kAAwwwwAAk...', '...kAwBBBwwAk...', '...kAwBBBwwAk...',
     '...kAAwwwwAAk...', '....kAAAAAAAk...', '.....kkkkkk.....', '......k..k......',
+    '................', '................', '................', '................',
+  ],
+  wrap_hands: [
+    '................', '................', '....kk....kk....', '...kAAk..kAAk...',
+    '..kAwwk..kwwAk..', '..kAwBk..kBwAk..', '...kAAk..kAAk...', '....kk....kk....',
+    '................', '................', '................', '................',
+    '................', '................', '................', '................',
+  ],
+  wrap_monk: [
+    '................', '................', '....kk....kk....', '...kCCk..kCCk...',
+    '..kCAAAk.kAACk..', '..kAwwwk.kwwwAk.', '...kAAk..kAAk...', '....kk....kk....',
+    '................', '................', '................', '................',
+    '................', '................', '................', '................',
+  ],
+  mittens: [
+    '................', '................', '.....kkkkkk.....', '....kAAAAAAk....',
+    '...kAAwwwwAAk...', '...kAwBBBBwAk...', '...kAAwwwwAAk...', '....kAAAAAAk....',
+    '.....kkkkkk.....', '................', '................', '................',
+    '................', '................', '................', '................',
+  ],
+  mittens_chef: [
+    '................', '................', '...kkkkkkkkkk...', '..kAAAAAAAAAAk..',
+    '..kAwwwwwwwwAk..', '..kAwBBBBBBwAk..', '..kAwwwwwwwwAk..', '..kAAAAAAAAAAk..',
+    '...kkkkkkkkkk...', '................', '................', '................',
+    '................', '................', '................', '................',
+  ],
+  gloves_sparkle: [
+    '................', '......C...C.....', '....kkkkkk......', '...kAAAACAk.....',
+    '..kAAwwCwwAk....', '..kAwBBBwwAk....', '...kAAwwwwAk....', '....kAAAAAk.....',
+    '.....kkkkk......', '......C.........', '................', '................',
+    '................', '................', '................', '................',
+  ],
+  gloves_pixel: [
+    '................', '................', '....kkkk.kkkk...', '...kAAAAkAAAAk..',
+    '...kAwwAkAwwAk..', '...kABBAkABBAk..', '...kAAAAkAAAAk..', '....kkkk.kkkk...',
+    '................', '................', '................', '................',
+    '................', '................', '................', '................',
+  ],
+  gloves_opera: [
+    '................', '..kk..........kk', '.kAAk........kAk', '.kAAAk......kAAk',
+    '.kAwwAk....kAwAk', '.kABBAk....kABAk', '.kAAAAk....kAAAk', '..kkkk......kkkk',
+    '................', '................', '................', '................',
+    '................', '................', '................', '................',
+  ],
+  rings: [
+    '................', '................', '..kkk......kkk..', '.kCCCk....kCCCk.',
+    '.kC.Ck....kC.Ck.', '.kCCCk....kCCCk.', '..kkk......kkk..', '...kAAA..AAAk...',
+    '....kAAAAAAk....', '.....kkkkkk.....', '................', '................',
+    '................', '................', '................', '................',
+  ],
+  claws: [
+    '................', 'C..C........C..C', 'kC.Ck......kC.Ck', '.kCCk......kCCk.',
+    '..kAAAAkkAAAAk..', '...kAAAAAAAAk...', '....kAAAAAAk....', '.....kkkkkk.....',
+    '................', '................', '................', '................',
+    '................', '................', '................', '................',
+  ],
+  cuffs: [
+    '................', '................', '..kkkk....kkkk..', '.kAAAAk..kAAAAk.',
+    '.kABBBk..kABBBk.', '..kkkk....kkkk..', '...kCk....kCk...', '....kC....kC....',
+    '................', '................', '................', '................',
     '................', '................', '................', '................',
   ],
   bracer: [
@@ -9118,10 +9732,34 @@ const GEAR_PIXEL_TEMPLATES = {
     '....kAAAAAAk....', '.....kkkkkk.....', '......k..k......', '................',
     '................', '................', '................', '................',
   ],
+  fists_spike: [
+    '................', 'C..C........C..C', 'kC.Ck......kC.Ck', '.kCCk......kCCk.',
+    '..kAAAAkkAAAAk..', '...kABBBBBBAk...', '....kAAAAAAk....', '.....kkkkkk.....',
+    '................', '................', '................', '................',
+    '................', '................', '................', '................',
+  ],
+  gauntlet_void: [
+    '................', '................', '.....kkkkkk.....', '....kAvvvvAk....',
+    '...kAvCCCCvAk...', '...kAvvvvvvAk...', '...kAAAAAAAAk...', '....kAAAAAAk....',
+    '.....kkkkkk.....', '......k..k......', '................', '................',
+    '................', '................', '................', '................',
+  ],
+  gauntlet_nightmare: [
+    '................', '.C..........C...', 'kCk........kCk..', '.kAAkkkkkkAAk...',
+    '.kABCCCCCBAk....', '.kABBBBBBAk.....', '...kAAAAAAk.....', '....kkkkkk......',
+    '................', '................', '................', '................',
+    '................', '................', '................', '................',
+  ],
+  gauntlet_hell: [
+    '................', 'C.C........C.C..', '.kAAkkkkkkAAk...', '.kACCCCCCAAk....',
+    '.kACkkkkCAk.....', '.kAAAAAAAAAk....', '....kkkkkk......', '................',
+    '................', '................', '................', '................',
+    '................', '................', '................', '................',
+  ],
   boots: [
     '................', '................', '................', '................',
     '..kkkk....kkkk..', '.kAAAAk..kAAAAk.', '.kABBBk..kABBBk.', '.kAAAAk..kAAAAk.',
-    '..kkkk....kkkk..', '.kB..Bk..kB..Bk.', '.kBBBB....BBBB.', '................',
+    '..kkkk....kkkk..', '.kB..Bk..kB..Bk.', '.kBBBB....BBBB..', '................',
     '................', '................', '................', '................',
   ],
   socks: [
@@ -9130,16 +9768,106 @@ const GEAR_PIXEL_TEMPLATES = {
     '.kCCCCk..kCCCCk.', '.kAAAAk..kAAAAk.', '..kkkk....kkkk..', '................',
     '................', '................', '................', '................',
   ],
+  socks_stripe: [
+    '................', '................', '................', '................',
+    '..kAAk....kAAk..', '.kABBAk..kABBAk.', '.kAAAAk..kAAAAk.', '.kBBBBk..kBBBBk.',
+    '.kAAAAk..kAAAAk.', '..kkkk....kkkk..', '................', '................',
+    '................', '................', '................', '................',
+  ],
+  wraps_legs: [
+    '................', '................', '................', '..kAAk....kAAk..',
+    '..kBBk....kBBk..', '..kAAk....kAAk..', '..kkkk....kkkk..', '..kAAk....kAAk..',
+    '..kBBk....kBBk..', '..kAAk....kAAk..', '................', '................',
+    '................', '................', '................', '................',
+  ],
+  shorts: [
+    '................', '................', '....kkkkkkkk....', '...kAAAAAAAAAk..',
+    '...kABBBBBBBAk..', '...kAAkkkkAAk...', '...kAAk..kAAk...', '....kk....kk....',
+    '................', '................', '................', '................',
+    '................', '................', '................', '................',
+  ],
+  pants: [
+    '................', '................', '...kkkkkkkkkk...', '..kAAAAAAAAAAk..',
+    '..kABBBBBBBBAk..', '.kAAkk....kkAAk.', '.kAAk......kAAk.', '.kAAk......kAAk.',
+    '..kk........kk..', '................', '................', '................',
+    '................', '................', '................', '................',
+  ],
+  boots_clown: [
+    '................', '................', '................', '..kkkk....kkkk..',
+    '.kAAAAk..kAAAAk.', '.kABBBk..kABBBk.', 'kkAAAAAkkkAAAAkk', 'kBBBBBB..BBBBBBk',
+    '................', '................', '................', '................',
+    '................', '................', '................', '................',
+  ],
+  tabi: [
+    '................', '................', '................', '................',
+    '..kAAk....kAAk..', '.kAwwAk..kAwwAk.', '.kAAAAk..kAAAAk.', '.kA.AAk..kA.AAk.',
+    '..kk.kk...kk.kk.', '................', '................', '................',
+    '................', '................', '................', '................',
+  ],
+  sneakers: [
+    '................', '................', '................', '................',
+    '..kkkk....kkkk..', '.kABABk..kABABk.', '.kBABAk..kBABAk.', '.kAAAAk..kAAAAk.',
+    '.kCCCC....CCCC..', '................', '................', '................',
+    '................', '................', '................', '................',
+  ],
+  bells_ankle: [
+    '................', '................', '................', '..kAAk....kAAk..',
+    '..kAAk....kAAk..', '..kkkk....kkkk..', '...kCk....kCk...', '....kC....kC....',
+    '....kk....kk....', '................', '................', '................',
+    '................', '................', '................', '................',
+  ],
+  boots_platform: [
+    '................', '................', '................', '..kkkk....kkkk..',
+    '.kAAAAk..kAAAAk.', '.kABBBk..kABBBk.', '.kAAAAk..kAAAAk.', '.kCCCC....CCCCk.',
+    '.kCCCC....CCCCk.', '................', '................', '................',
+    '................', '................', '................', '................',
+  ],
+  boots_steel: [
+    '................', '................', '................', '..kkkk....kkkk..',
+    '.kAAAAk..kAAAAk.', '.kACCCk..kACCCk.', '.kABBBk..kABBBk.', '.kAAAAk..kAAAAk.',
+    'kkkkkk....kkkkkk', '................', '................', '................',
+    '................', '................', '................', '................',
+  ],
   greaves: [
     '................', '................', '................', '..kkkk....kkkk..',
     '.kAAAAk..kAAAAk.', '.kABBBk..kABBBk.', '.kACCCk..kACCCk.', '.kABBBk..kABBBk.',
     '.kAAAAk..kAAAAk.', '..kkkk....kkkk..', '..k..k....k..k..', '..kkkk....kkkk..',
     '................', '................', '................', '................',
   ],
+  greaves_knight: [
+    '................', '......kC........', '..kkkk....kkkk..', '.kAAAAk..kAAAAk.',
+    '.kABBBk..kABBBk.', '.kACCCk..kACCCk.', '.kAAAAk..kAAAAk.', '..kkkk....kkkk..',
+    '..k..k....k..k..', '..kkkk....kkkk..', '................', '................',
+    '................', '................', '................', '................',
+  ],
+  greaves_void: [
+    '................', '................', '..kkkk....kkkk..', '.kAvvAk..kAvvAk.',
+    '.kACCCk..kACCCk.', '.kAvvAk..kAvvAk.', '.kAAAAk..kAAAAk.', '..kkkk....kkkk..',
+    '..k..k....k..k..', '..kkkk....kkkk..', '................', '................',
+    '................', '................', '................', '................',
+  ],
+  greaves_nightmare: [
+    '................', '.C..........C...', '.kAkkk....kkkAk.', '.kAAAAk..kAAAAk.',
+    '.kABBBk..kABBBk.', '.kACCCk..kACCCk.', '.kAAAAk..kAAAAk.', '..kkkk....kkkk..',
+    '................', '................', '................', '................',
+    '................', '................', '................', '................',
+  ],
+  greaves_hell: [
+    '................', 'C.C........C.C..', '.kAAAAk..kAAAAk.', '.kACCCk..kACCCk.',
+    '.kACkk....kkCAk.', '.kABBBk..kABBBk.', '.kAAAAk..kAAAAk.', '..kkkk....kkkk..',
+    '................', '................', '................', '................',
+    '................', '................', '................', '................',
+  ],
   pin: [
     '................', '................', '.......kk.......', '......kAAk......',
     '.....kABBAk.....', '....kABCCBAk....', '.....kABBAk.....', '......kAAk......',
     '.......kk.......', '.......kk.......', '.......kk.......', '................',
+    '................', '................', '................', '................',
+  ],
+  pin_star: [
+    '................', '.......k........', '......kAk.......', '.....kAAAAk.....',
+    '..kkAAAAAAAkk...', '...kAABBBAk.....', '....kA..Ak......', '.....k..k.......',
+    '......kk........', '................', '................', '................',
     '................', '................', '................', '................',
   ],
   leaf: [
@@ -9168,19 +9896,25 @@ const GEAR_PIXEL_TEMPLATES = {
   ],
   wings: [
     '................', 'kAAk........kAAk', 'kABAk......kABAk', 'kABBAk....kABBAk',
-    '.kABBAk..kABBAk.', '..kAAAAkkAAAAk..', '...kAAAAAAAAAk...', '....kAAAAAAk....',
+    '.kABBAk..kABBAk.', '..kAAAAkkAAAAk..', '...kAAAAAAAAAk..', '....kAAAAAAk....',
     '.....kkkkkk.....', '................', '................', '................',
     '................', '................', '................', '................',
   ],
-  rings: [
-    '................', '................', '..kkk......kkk..', '.kCCCk....kCCCk.',
-    '.kC.Ck....kC.Ck.', '.kCCCk....kCCCk.', '..kkk......kkk..', '...kAAA..AAAk...',
-    '....kAAAAAAk....', '.....kkkkkk.....', '................', '................',
+  wings_cardboard: [
+    '................', 'kAAk........kAAk', 'kAAk........kAAk', 'kABAk......kABAk',
+    'kABBAk....kABBAk', '.kAAAAkkkkAAAAk.', '..kkkkkkkkkkkk..', '................',
+    '................', '................', '................', '................',
     '................', '................', '................', '................',
   ],
-  claws: [
-    '................', 'C..C........C..C', 'kC.Ck......kC.Ck', '.kCCk......kCCk.',
-    '..kAAAAkkAAAAk..', '...kAAAAAAAAk...', '....kAAAAAAk....', '.....kkkkkk.....',
+  wings_nightmare: [
+    '................', 'C..C........C..C', 'kAAk........kAAk', 'kABAk......kABAk',
+    'kAvvAk....kAvvAk', '.kAAAAkkkkAAAAk.', '...kAAAAAAAAAk..', '....kkkkkkkk....',
+    '................', '................', '................', '................',
+    '................', '................', '................', '................',
+  ],
+  wings_hell: [
+    '................', 'C.C..........C.C', 'kACk........kCAk', 'kACAk......kACAk',
+    'kACCAk....kACCAk', '.kAAAAkkkkAAAAk.', '...kCCCCCCCCAk..', '....kkkkkkkk....',
     '................', '................', '................', '................',
     '................', '................', '................', '................',
   ],
@@ -9190,19 +9924,322 @@ const GEAR_PIXEL_TEMPLATES = {
     '...kkkkkkkkkk...', '....k......k....', '................', '................',
     '................', '................', '................', '................',
   ],
-  horns: [
-    '................', 'C..........C....', 'kCk........kCk..', '.kAk......kAk...',
-    '..kAAAkkAAAAk...', '...kAAAAAAAAk...', '....kABkkBAk....', '.....kAAAAk.....',
-    '......kkkkk.....', '................', '................', '................',
-    '................', '................', '................', '................',
-  ],
   shell: [
     '................', '.....kAAAAk.....', '....kABBBBAk....', '...kABCCCCBAk...',
     '..kABCCCCCCBAk..', '.kABCCCCCCCCBAk.', '.kAABBBBBBBBAk..', '..kAAAAAAAAAk...',
     '...kkkkkkkkkk...', '................', '................', '................',
     '................', '................', '................', '................',
   ],
+  backpack: [
+    '................', '....kkkkkkkk....', '...kAAAAAAAAAk..', '..kAABBBBBBAAk..',
+    '..kAAwwwwwwAAk..', '..kAABBBBBBAAk..', '..kAAAAAAAAAAk..', '...kk......kk...',
+    '................', '................', '................', '................',
+    '................', '................', '................', '................',
+  ],
+  pack: [
+    '................', '....kkkkkkkk....', '...kAAAAAAAAAk..', '..kAABBBBBBAAk..',
+    '..kAAwwkkwwAAk..', '..kAAAAAAAAAAk..', '...kAAkkAAk.....', '....kk..kk......',
+    '................', '................', '................', '................',
+    '................', '................', '................', '................',
+  ],
+  scarf: [
+    '................', '......kAAA......', '.....kABBAk.....', '....kAAAAAAk....',
+    '...kAAAk.kAk....', '..kAAAk.........', '.kAAAk..........', '.kAAk...........',
+    '..kAk...........', '................', '................', '................',
+    '................', '................', '................', '................',
+  ],
+  tail: [
+    '................', '.........kC.....', '.......kAAAk....', '......kABBAk....',
+    '.....kABBBAk....', '....kAAAAAk.....', '...kAAAAk.......', '..kAAAk.........',
+    '...kAk..........', '................', '................', '................',
+    '................', '................', '................', '................',
+  ],
+  banner: [
+    '................', '....k...........', '....kCCCCCCk....', '....kCAAAACk....',
+    '....kCABBAck....', '....kCAAAACk....', '....kCCCCCCk....', '....k...........',
+    '....k...........', '....k...........', '................', '................',
+    '................', '................', '................', '................',
+  ],
+  kite: [
+    '................', '.......k........', '......kAk.......', '.....kABAk......',
+    '....kABBBAk.....', '.....kABAk......', '......kAk.......', '.......k........',
+    '.......k........', '................', '................', '................',
+    '................', '................', '................', '................',
+  ],
+  balloon: [
+    '................', '.....kAAAAk.....', '....kABBBBAk....', '....kABCCCAk....',
+    '.....kAAAAk.....', '......k.k.......', '.......k........', '.......k........',
+    '................', '................', '................', '................',
+    '................', '................', '................', '................',
+  ],
+  plate_back: [
+    '................', '....kkkkkkkk....', '...kAAAAAAAAAk..', '..kAACCCCCCAAk..',
+    '..kAABBBBBBAAk..', '...kAAAAAAAAAk..', '....kkkkkkkk....', '................',
+    '................', '................', '................', '................',
+    '................', '................', '................', '................',
+  ],
+  crystal: [
+    '................', '.......kC.......', '......kCCk......', '.....kCAACk.....',
+    '....kCAAAACk....', '.....kCAACk.....', '......kCCk......', '.......k........',
+    '................', '................', '................', '................',
+    '................', '................', '................', '................',
+  ],
+  spine: [
+    '................', '......kAAk......', '.....kACCAk.....', '......kAAk......',
+    '.....kACCAk.....', '......kAAk......', '.....kACCAk.....', '......kkkk......',
+    '................', '................', '................', '................',
+    '................', '................', '................', '................',
+  ],
 };
+
+/** Per-catalog-id silhouette. Tint still comes from gearTintKey. */
+const GEAR_PIXEL_BY_ID = {
+  head_wrap_cloth: 'wrap',
+  head_bandana_blue: 'bandana',
+  head_beanie_wool: 'beanie',
+  head_hat_paper: 'hat_paper',
+  head_crown_cardboard: 'crown',
+  head_mask_fox: 'mask_fox',
+  head_horns_foam: 'horns',
+  head_hat_chef: 'hat_chef',
+  head_hood_rain: 'hood',
+  head_helm_pumpkin: 'helm_pumpkin',
+  head_halo_wire: 'halo',
+  head_visor_toy: 'visor',
+  head_hood_void_paint: 'hood_void',
+  head_mask_dream: 'mask_dream',
+  head_horns_sulfur: 'horns_hell',
+  head_visor_neon: 'visor_neon',
+  head_circlet_focus: 'circlet',
+  head_helm_lucky: 'helm_lucky',
+  head_helm_tin: 'helm_tin',
+  head_helm_bronze: 'helm_tin',
+  head_helm_iron: 'helm',
+  head_helm_steel: 'helm',
+  head_helm_knight: 'helm_knight',
+  head_helm_crystal: 'helm_crystal',
+  head_helm_void: 'helm_void',
+  head_helm_nightmare: 'helm_nightmare',
+  head_helm_hell: 'helm_hell',
+  chest_shirt_plain: 'shirt',
+  chest_hoodie_gray: 'hoodie',
+  chest_vest_denim: 'vest',
+  chest_coat_red: 'coat',
+  chest_gi_white: 'gi',
+  chest_jacket_bomber: 'bomber',
+  chest_tunic_leaf: 'tunic',
+  chest_shirt_stripe: 'shirt_stripe',
+  chest_poncho_rain: 'poncho',
+  chest_robe_star: 'robe',
+  chest_capelet_gold: 'capelet',
+  chest_jacket_void_paint: 'coat_void',
+  chest_coat_dream: 'coat_dream',
+  chest_robe_ash: 'robe_ash',
+  chest_vest_lucky: 'vest_lucky',
+  chest_sash_energy: 'sash',
+  chest_coat_shadow_stat: 'coat',
+  chest_vest_padded: 'vest_padded',
+  chest_mail_copper: 'mail',
+  chest_plate_iron: 'plate',
+  chest_cuirass_steel: 'cuirass',
+  chest_plate_knight: 'plate_knight',
+  chest_vest_crystal: 'vest_crystal',
+  chest_plate_void: 'plate_void',
+  chest_plate_nightmare: 'plate_nightmare',
+  chest_plate_hell: 'plate_hell',
+  hands_wrap: 'wrap_hands',
+  hands_mittens_wool: 'mittens',
+  hands_rings_plastic: 'rings',
+  hands_gloves_sparkle: 'gloves_sparkle',
+  hands_claws_toy: 'claws',
+  hands_gloves_chef: 'mittens_chef',
+  hands_wraps_gold: 'wrap_hands',
+  hands_gloves_pixel: 'gloves_pixel',
+  hands_cuffs_bell: 'cuffs',
+  hands_gloves_opera: 'gloves_opera',
+  hands_claws_void_paint: 'claws',
+  hands_wraps_dream: 'wrap_hands',
+  hands_gaunt_ash_paint: 'gauntlet_hell',
+  hands_gloves_tape: 'gloves',
+  hands_bracer_focus: 'bracer',
+  hands_wraps_monk: 'wrap_monk',
+  hands_gloves_grip: 'gloves',
+  hands_bracer_leather: 'bracer',
+  hands_gauntlet_iron: 'gauntlet',
+  hands_gauntlet_steel: 'gauntlet',
+  hands_fists_spike: 'fists_spike',
+  hands_gauntlet_crystal: 'gauntlet',
+  hands_gauntlet_void: 'gauntlet_void',
+  hands_gauntlet_nightmare: 'gauntlet_nightmare',
+  hands_gauntlet_hell: 'gauntlet_hell',
+  legs_wrap: 'wraps_legs',
+  legs_socks_plain: 'socks',
+  legs_shorts_stripe: 'shorts',
+  legs_socks_lucky: 'socks_stripe',
+  legs_pants_baggy: 'pants',
+  legs_boots_clown: 'boots_clown',
+  legs_tabi_white: 'tabi',
+  legs_sneakers_check: 'sneakers',
+  legs_wrap_gold: 'wraps_legs',
+  legs_bells_ankle: 'bells_ankle',
+  legs_boots_platform: 'boots_platform',
+  legs_wraps_void_paint: 'wraps_legs',
+  legs_socks_dream: 'socks',
+  legs_boots_ash_paint: 'boots',
+  legs_boots_sprint: 'sneakers',
+  legs_greaves_steady: 'greaves',
+  legs_boots_dash: 'boots',
+  legs_boots_soft: 'boots',
+  legs_greaves_leather: 'greaves',
+  legs_greaves_iron: 'greaves',
+  legs_boots_steel: 'boots_steel',
+  legs_greaves_knight: 'greaves_knight',
+  legs_greaves_crystal: 'greaves',
+  legs_greaves_void: 'greaves_void',
+  legs_greaves_nightmare: 'greaves_nightmare',
+  legs_greaves_hell: 'greaves_hell',
+  back_pin_dot: 'pin',
+  back_pin_star: 'pin_star',
+  back_backpack_school: 'backpack',
+  back_scarf_long: 'scarf',
+  back_cape_red: 'cape',
+  back_tail_fox: 'tail',
+  back_banner_leaf: 'banner',
+  back_kite_paper: 'kite',
+  back_balloon_party: 'balloon',
+  back_wings_cardboard: 'wings_cardboard',
+  back_aura_glow: 'aura',
+  back_cape_shadow: 'cape',
+  back_cape_void_paint: 'cape',
+  back_wings_dream: 'wings',
+  back_wings_ash: 'wings_hell',
+  back_leaf: 'leaf',
+  back_cape_lucky: 'cape',
+  back_void: 'voidx',
+  back_pack_leather: 'pack',
+  back_plate_back: 'plate_back',
+  back_shell_turtle: 'shell',
+  back_banner_iron: 'banner',
+  back_wing_steel: 'wings',
+  back_crystal_shard: 'crystal',
+  back_void_spine: 'spine',
+  back_wings_nightmare: 'wings_nightmare',
+  back_wings_hell: 'wings_hell',
+};
+
+function gearPixelKey(item) {
+  if (!item) return 'pin';
+  const id = item.id || '';
+  if (id && GEAR_PIXEL_BY_ID[id] && GEAR_PIXEL_TEMPLATES[GEAR_PIXEL_BY_ID[id]]) {
+    return GEAR_PIXEL_BY_ID[id];
+  }
+  if (item.pixel && GEAR_PIXEL_TEMPLATES[item.pixel]) return item.pixel;
+  const slot = item.slot;
+  const s = String(id).slice((slot ? slot.length + 1 : 0));
+  const hit = (re) => re.test(s);
+  if (hit(/^wrap/) && slot === 'head') return 'wrap';
+  if (hit(/^wrap/) && slot === 'hands') return 'wrap_hands';
+  if (hit(/^wrap/) && slot === 'legs') return 'wraps_legs';
+  if (hit(/^bandana/)) return 'bandana';
+  if (hit(/^beanie/)) return 'beanie';
+  if (hit(/^hat_paper/)) return 'hat_paper';
+  if (hit(/^hat_chef/)) return 'hat_chef';
+  if (hit(/^hat_|^crown/)) return hit(/^crown/) ? 'crown' : 'hat';
+  if (hit(/^mask_fox/)) return 'mask_fox';
+  if (hit(/^mask/)) return 'mask_dream';
+  if (hit(/^horns_sulfur|^horns_hell/)) return 'horns_hell';
+  if (hit(/^horns/)) return 'horns';
+  if (hit(/^hood_void/)) return 'hood_void';
+  if (hit(/^hood/)) return 'hood';
+  if (hit(/^helm_pumpkin/)) return 'helm_pumpkin';
+  if (hit(/^helm_knight/)) return 'helm_knight';
+  if (hit(/^helm_crystal/)) return 'helm_crystal';
+  if (hit(/^helm_void/)) return 'helm_void';
+  if (hit(/^helm_nightmare/)) return 'helm_nightmare';
+  if (hit(/^helm_hell/)) return 'helm_hell';
+  if (hit(/^helm_lucky/)) return 'helm_lucky';
+  if (hit(/^helm_tin|^helm_bronze/)) return 'helm_tin';
+  if (hit(/^helm/)) return 'helm';
+  if (hit(/^halo/)) return 'halo';
+  if (hit(/^visor_neon/)) return 'visor_neon';
+  if (hit(/^visor/)) return 'visor';
+  if (hit(/^circlet/)) return 'circlet';
+  if (hit(/^shirt_stripe/)) return 'shirt_stripe';
+  if (hit(/^shirt|^gi|^tunic/)) return hit(/^gi/) ? 'gi' : (hit(/^tunic/) ? 'tunic' : 'shirt');
+  if (hit(/^hoodie/)) return 'hoodie';
+  if (hit(/^jacket_void/)) return 'coat_void';
+  if (hit(/^coat_dream/)) return 'coat_dream';
+  if (hit(/^robe_ash/)) return 'robe_ash';
+  if (hit(/^coat|^jacket/)) return 'coat';
+  if (hit(/^poncho/)) return 'poncho';
+  if (hit(/^robe/)) return 'robe';
+  if (hit(/^mail/)) return 'mail';
+  if (hit(/^cuirass/)) return 'cuirass';
+  if (hit(/^plate_nightmare/)) return 'plate_nightmare';
+  if (hit(/^plate_hell/)) return 'plate_hell';
+  if (hit(/^plate_void/)) return 'plate_void';
+  if (hit(/^plate_knight/)) return 'plate_knight';
+  if (hit(/^plate/)) return 'plate';
+  if (hit(/^vest_padded/)) return 'vest_padded';
+  if (hit(/^vest_lucky/)) return 'vest_lucky';
+  if (hit(/^vest_crystal/)) return 'vest_crystal';
+  if (hit(/^vest/)) return 'vest';
+  if (hit(/^capelet/)) return 'capelet';
+  if (hit(/^sash/)) return 'sash';
+  if (hit(/^mitten/)) return 'mittens';
+  if (hit(/^glove_sparkle|^gloves_sparkle/)) return 'gloves_sparkle';
+  if (hit(/^glove_pixel|^gloves_pixel/)) return 'gloves_pixel';
+  if (hit(/^glove_opera|^gloves_opera/)) return 'gloves_opera';
+  if (hit(/^glove/)) return 'gloves';
+  if (hit(/^ring/)) return 'rings';
+  if (hit(/^claw/)) return 'claws';
+  if (hit(/^cuff/)) return 'cuffs';
+  if (hit(/^bracer/)) return 'bracer';
+  if (hit(/^fist/)) return 'fists_spike';
+  if (hit(/^gaunt.*nightmare/)) return 'gauntlet_nightmare';
+  if (hit(/^gaunt.*hell|^gaunt_ash/)) return 'gauntlet_hell';
+  if (hit(/^gaunt.*void/)) return 'gauntlet_void';
+  if (hit(/^gaunt/)) return 'gauntlet';
+  if (hit(/^sock.*lucky/)) return 'socks_stripe';
+  if (hit(/^sock|^tabi/)) return hit(/^tabi/) ? 'tabi' : 'socks';
+  if (hit(/^short/)) return 'shorts';
+  if (hit(/^pant/)) return 'pants';
+  if (hit(/^greave.*nightmare/)) return 'greaves_nightmare';
+  if (hit(/^greave.*hell/)) return 'greaves_hell';
+  if (hit(/^greave.*void/)) return 'greaves_void';
+  if (hit(/^greave.*knight/)) return 'greaves_knight';
+  if (hit(/^greave/)) return 'greaves';
+  if (hit(/^boot_clown|^boots_clown/)) return 'boots_clown';
+  if (hit(/^boot_platform|^boots_platform/)) return 'boots_platform';
+  if (hit(/^boot_steel|^boots_steel/)) return 'boots_steel';
+  if (hit(/^boot|^sneaker/)) return hit(/^sneaker/) ? 'sneakers' : 'boots';
+  if (hit(/^bell/)) return 'bells_ankle';
+  if (hit(/^pin_star/)) return 'pin_star';
+  if (hit(/^pin|^balloon/)) return hit(/^balloon/) ? 'balloon' : 'pin';
+  if (hit(/^backpack/)) return 'backpack';
+  if (hit(/^pack_/)) return 'pack';
+  if (hit(/^tome/)) return 'tome';
+  if (hit(/^scarf/)) return 'scarf';
+  if (hit(/^cape|^banner/)) return hit(/^banner/) ? 'banner' : 'cape';
+  if (hit(/^tail/)) return 'tail';
+  if (hit(/^leaf/)) return 'leaf';
+  if (hit(/^kite/)) return 'kite';
+  if (hit(/^wing.*nightmare/)) return 'wings_nightmare';
+  if (hit(/^wing.*hell|^wings_ash/)) return 'wings_hell';
+  if (hit(/^wing.*cardboard/)) return 'wings_cardboard';
+  if (hit(/^wing/)) return 'wings';
+  if (hit(/^aura/)) return 'aura';
+  if (hit(/^void_spine/)) return 'spine';
+  if (hit(/^void/)) return 'voidx';
+  if (hit(/^shell/)) return 'shell';
+  if (hit(/^crystal/)) return 'crystal';
+  if (hit(/^plate_back/)) return 'plate_back';
+  if (slot === 'head') return 'helm';
+  if (slot === 'chest') return 'shirt';
+  if (slot === 'hands') return 'gloves';
+  if (slot === 'legs') return 'boots';
+  return 'pin';
+}
 
 const GEAR_TINTS = {
   cloth: { A: '#e8f0ff', B: '#ffd75e', C: '#c97a20' },
@@ -9226,54 +10263,6 @@ const GEAR_TINTS = {
   glow: { A: '#7cf5ff', B: '#e8f0ff', C: '#ffd75e' },
   tome: { A: '#c98850', B: '#6b5344', C: '#f5efe6' },
 };
-
-function gearPixelKey(item) {
-  if (!item) return 'pin';
-  if (item.pixel && GEAR_PIXEL_TEMPLATES[item.pixel]) return item.pixel;
-  const slot = item.slot;
-  const s = String(item.id || '').slice((slot ? slot.length + 1 : 0));
-  const hit = (re) => re.test(s);
-  if (hit(/^wrap/) && slot === 'head') return 'wrap';
-  if (hit(/^wrap/) && slot === 'hands') return 'gloves';
-  if (hit(/^wrap/) && slot === 'legs') return 'boots';
-  if (hit(/^bandana|^beanie/)) return 'wrap';
-  if (hit(/^hat_|^crown/)) return 'hat';
-  if (hit(/^mask/)) return 'visor';
-  if (hit(/^horns/)) return 'horns';
-  if (hit(/^hood/)) return 'hood';
-  if (hit(/^helm/)) return 'helm';
-  if (hit(/^halo/)) return 'aura';
-  if (hit(/^visor/)) return 'visor';
-  if (hit(/^circlet/)) return 'pin';
-  if (hit(/^shirt|^gi|^tunic/)) return 'shirt';
-  if (hit(/^hoodie|^coat|^jacket|^poncho|^robe/)) return 'coat';
-  if (hit(/^mail|^cuirass|^plate/)) return 'plate';
-  if (hit(/^vest_padded/)) return 'vest';
-  if (hit(/^vest/)) return 'vest';
-  if (hit(/^capelet|^sash/)) return 'cape';
-  if (hit(/^mitten|^glove/)) return 'gloves';
-  if (hit(/^ring/)) return 'rings';
-  if (hit(/^claw/)) return 'claws';
-  if (hit(/^cuff|^bracer/)) return 'bracer';
-  if (hit(/^gaunt|^fist/)) return 'gauntlet';
-  if (hit(/^sock|^tabi|^short/)) return 'socks';
-  if (hit(/^pant|^greave/)) return 'greaves';
-  if (hit(/^boot|^sneaker/)) return 'boots';
-  if (hit(/^bell|^pin|^balloon/)) return 'pin';
-  if (hit(/^backpack|^pack_|^tome/)) return 'tome';
-  if (hit(/^scarf|^cape|^banner/)) return 'cape';
-  if (hit(/^tail|^leaf/)) return 'leaf';
-  if (hit(/^kite|^wing/)) return 'wings';
-  if (hit(/^aura/)) return 'aura';
-  if (hit(/^void/)) return 'voidx';
-  if (hit(/^shell/)) return 'shell';
-  if (hit(/^crystal/)) return 'pin';
-  if (slot === 'head') return 'helm';
-  if (slot === 'chest') return 'shirt';
-  if (slot === 'hands') return 'gloves';
-  if (slot === 'legs') return 'boots';
-  return 'pin';
-}
 
 function gearTintKey(item) {
   if (!item) return 'cloth';
@@ -9559,9 +10548,20 @@ function gearPixelColor(ch, tint) {
   return GEAR_PIXEL_PALETTE[ch] || null;
 }
 
-function drawGearPixels(c, id, x, y, scale) {
+function gearLivingPixels(id, frame) {
+  const it = gearById(id);
+  const theme = gearPickupTheme(it);
+  if (!theme || !theme.flame) return [];
+  const f = ((frame % 3) + 3) % 3;
+  if (f === 0) return [{ i: 7, j: 2, ch: 'C' }, { i: 7, j: 0, ch: 'C' }, { i: 8, j: 1, ch: 'f' }];
+  if (f === 1) return [{ i: 7, j: 2, ch: 'f' }, { i: 6, j: 1, ch: 'C' }, { i: 7, j: 0, ch: 'f' }, { i: 8, j: 0, ch: 'C' }];
+  return [{ i: 7, j: 2, ch: 'C' }, { i: 8, j: 0, ch: 'C' }, { i: 7, j: 1, ch: 'f' }, { i: 9, j: 1, ch: 'C' }];
+}
+
+function drawGearPixels(c, id, x, y, scale, opts) {
   const rows = gearPixelRows(id);
   if (!rows || !c) return false;
+  opts = opts || {};
   const tint = rows._tint || GEAR_TINTS.cloth;
   const sc = scale > 0 ? scale : 2;
   const n = rows.length;
@@ -9569,6 +10569,11 @@ function drawGearPixels(c, id, x, y, scale) {
   c.imageSmoothingEnabled = false;
   if ('webkitImageSmoothingEnabled' in c) c.webkitImageSmoothingEnabled = false;
   if ('mozImageSmoothingEnabled' in c) c.mozImageSmoothingEnabled = false;
+  if (opts.tilt) {
+    c.translate(x, y);
+    c.rotate(opts.tilt);
+    c.translate(-x, -y);
+  }
   const ox = Math.round(x - (n * sc) / 2);
   const oy = Math.round(y - (n * sc) / 2);
   for (let j = 0; j < n; j++) {
@@ -9579,6 +10584,13 @@ function drawGearPixels(c, id, x, y, scale) {
       c.fillStyle = col;
       c.fillRect(ox + i * sc, oy + j * sc, sc, sc);
     }
+  }
+  const extras = (opts.live !== false) ? gearLivingPixels(id, opts.frame || 0) : [];
+  for (let e = 0; e < extras.length; e++) {
+    const col = gearPixelColor(extras[e].ch, tint);
+    if (!col) continue;
+    c.fillStyle = col;
+    c.fillRect(ox + extras[e].i * sc, oy + extras[e].j * sc, sc, sc);
   }
   c.restore();
   return true;
@@ -9601,6 +10613,142 @@ function gearPixelsToSvg(id) {
   return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ' + n + ' ' + n + '" shape-rendering="crispEdges" aria-hidden="true">\n' + rects.join('\n') + '\n</svg>\n';
 }
 
+
+const GEAR_PICKUP_RARITY_RANK = {
+  common: 0, uncommon: 1, rare: 2, epic: 3,
+  legendary: 4, mythic: 5, nightmare: 6, hell: 7,
+};
+
+/** Occupancy mask (tint-independent) for silhouette uniqueness checks. */
+function gearPixelOccupancy(id) {
+  const rows = gearPixelRows(id);
+  if (!rows) return '';
+  let out = '';
+  for (let j = 0; j < rows.length; j++) {
+    const row = rows[j];
+    for (let i = 0; i < row.length; i++) out += row[i] === '.' ? '0' : '1';
+  }
+  return out;
+}
+
+/**
+ * Pickup feel: rare+ slightly larger + thin rarity ring.
+ * Elite / superBoss drops bump scale without extra clutter. Caps stay small (≤3×).
+ */
+function gearPickupFeel(itemOrId, dropTier) {
+  const it = typeof itemOrId === 'string' ? gearById(itemOrId) : itemOrId;
+  const rar = (it && it.rarity) || 'common';
+  const rank = GEAR_PICKUP_RARITY_RANK[rar] != null ? GEAR_PICKUP_RARITY_RANK[rar] : 0;
+  const tier = dropTier || 'normal';
+  let scale = 2;
+  if (rank >= 2) scale = 2.25;
+  if (rank >= 3) scale = 2.5;
+  if (rank >= 5) scale = 2.75;
+  if (tier === 'giant' || tier === 'elite') scale = Math.max(scale, 2.5);
+  if (tier === 'superBoss') scale = Math.max(scale, 2.75);
+  const wantRing = rank >= 2 || tier === 'elite' || tier === 'superBoss';
+  const ring = wantRing ? (typeof gearAccent === 'function' ? gearAccent(it) : '#c792ff') : null;
+  const orbR = 14 + Math.round((scale - 2) * 6);
+  return { scale: scale, ring: ring, orbR: orbR, rank: rank };
+}
+
+/** Spawn pop + ready tilt. Snappy overshoot, then settle. */
+function gearPickupMotion(pk, feel) {
+  const age = pk && pk.age != null ? Number(pk.age) : 1;
+  let pop = 1;
+  if (age < 0.2) {
+    const u = Math.max(0, Math.min(1, age / 0.2));
+    pop = 0.28 + u * u * 1.02;
+    if (u > 0.7) pop = 1.3 - (u - 0.7) * 1;
+  }
+  const snap = pk && pk._snapT > 0 ? Math.max(0.22, pk._snapT / 0.16) : 1;
+  pop *= snap;
+  const live = typeof gearPickupFxAllowed === 'function' ? gearPickupFxAllowed() : true;
+  const tilt = live ? Math.sin((pk && pk.t) || 0) * 0.18 : 0;
+  const frame = Math.floor((((pk && pk.t) || 0) * 8)) % 3;
+  return { pop: pop, tilt: tilt, frame: frame, sway: live ? Math.sin(((pk && pk.t) || 0) * 4.3) * ((feel && feel.rank >= 2) ? 2.1 : 1.1) : 0 };
+}
+
+function gearPickupFxAllowed() {
+  try {
+    if (typeof motionReduced === 'function' && motionReduced()) return false;
+    if (typeof fxLite === 'function' && fxLite()) return false;
+    if (typeof save !== 'undefined' && save && save.liteFx) return false;
+  } catch (_) {}
+  return true;
+}
+
+function gearPickupTheme(item) {
+  const id = item && item.id ? String(item.id) : '';
+  const rar = item && item.rarity ? item.rarity : '';
+  return {
+    flame: /hell|ash|sulfur|lava|flame|torch|fakkel/.test(id) || rar === 'hell',
+    glow: /void|crystal|aura|mythic/.test(id) || rar === 'mythic' || rar === 'legendary',
+  };
+}
+
+/**
+ * Cheap on-orb motion: flame flicker, glow pulse, rarity-ring pulse, elite sparkle.
+ * Only called for on-screen gear pickups (≤ GEAR_MAX_FIELD). No particle storms.
+ */
+function gearPickupDrawFx(c, pk, y, feel) {
+  if (!c || !pk || !feel || !gearPickupFxAllowed()) return false;
+  const it = typeof gearById === 'function' ? gearById(pk.gearId) : null;
+  const theme = gearPickupTheme(it);
+  const t = Number(pk.t) || 0;
+  const tau = Math.PI * 2;
+  const frame = Math.floor(t * 8) % 3;
+  c.save();
+  if (feel.ring) {
+    const pulse = 0.5 + 0.5 * Math.sin(t * 3.1);
+    c.globalAlpha = 0.28 + pulse * 0.42;
+    c.strokeStyle = feel.ring;
+    c.lineWidth = 2;
+    c.beginPath();
+    c.arc(pk.x, y, feel.orbR + 3 + pulse * 1.8, 0, tau);
+    c.stroke();
+  }
+  if (theme.flame) {
+    const tongues = frame === 0
+      ? [[0, -4], [2, -7]]
+      : (frame === 1 ? [[-3, -5], [0, -8], [3, -4]] : [[2, -6], [-2, -3]]);
+    c.fillStyle = '#ff6a3d';
+    for (let i = 0; i < tongues.length; i++) {
+      c.globalAlpha = 0.6 + (i === 0 ? 0.28 : 0);
+      c.fillRect(Math.round(pk.x + tongues[i][0]), Math.round(y - feel.orbR + tongues[i][1]), 2, 4);
+    }
+    c.globalAlpha = 0.9;
+    c.fillStyle = '#ffd75e';
+    c.fillRect(Math.round(pk.x - 1), Math.round(y - feel.orbR - 2), 2, 3);
+  }
+  if (theme.glow) {
+    const glow = 0.5 + 0.5 * Math.sin(t * 2.2);
+    c.strokeStyle = '#7cf5ff';
+    c.lineWidth = 1.5;
+    c.globalAlpha = 0.1 + glow * 0.14;
+    c.beginPath();
+    c.arc(pk.x, y, feel.orbR + 6 + glow * 2.2, 0, tau);
+    c.stroke();
+    c.globalAlpha = 0.06 + glow * 0.08;
+    c.beginPath();
+    c.arc(pk.x, y, feel.orbR + 9 + glow * 2, 0, tau);
+    c.stroke();
+  }
+  if (pk.dropTier === 'elite' || pk.dropTier === 'superBoss') {
+    if (Math.sin(t * 9 + 1.2) > 0.2) {
+      c.globalAlpha = 0.9;
+      c.fillStyle = '#ffe259';
+      c.fillRect(Math.round(pk.x + 8), Math.round(y - 10), 2, 2);
+      c.fillRect(Math.round(pk.x - 10), Math.round(y + 6), 2, 2);
+      if (pk.dropTier === 'superBoss') {
+        c.fillRect(Math.round(pk.x + 4), Math.round(y + 9), 2, 2);
+      }
+    }
+  }
+  c.restore();
+  return true;
+}
+
 function gearAssetPath(id) {
   const it = gearById(id);
   return it ? ('assets/gear/' + it.id + '.svg') : '';
@@ -9621,6 +10769,15 @@ const EQUIP_LOOK_MAX = 5;
 const EQUIP_LOOK_OX_MAX = 48;
 const EQUIP_LOOK_SCALE_MIN = 0.35;
 const EQUIP_LOOK_SCALE_MAX = 1.75;
+/** Matches Fighter.draw head radius — keep overlays sitting on this circle. */
+const EQUIP_LOOK_HEAD_R = 10.5;
+/** Kinds that replace the hollow stick-head (must draw a skull/helm disc). */
+const EQUIP_COVERS_HEAD = { helmet: true };
+/**
+ * Scale-1 stickman: feet at origin, head centre ≈ −104, crown/ears ≈ −126.
+ * Preview camera uses this so the head never clips off a style card.
+ */
+const EQUIP_LOOK_STICK_TOP = 126;
 
 const EQUIP_LAYER_ALIAS = {
   under: 'back', behind: 'back', underbody: 'back', cape: 'back', cloak: 'back',
@@ -9645,26 +10802,26 @@ const EQUIP_SLOT_ALIAS = {
 
 const EQUIP_LOOK_DEFAULTS = {
   bandana: { slot: 'head', layer: 'head', ox: 0, oy: -1, scale: 1 },
-  visor: { slot: 'head', layer: 'head', ox: 0, oy: 1, scale: 1 },
+  visor: { slot: 'head', layer: 'head', ox: 0, oy: 0, scale: 1 },
   fox: { slot: 'head', layer: 'head', ox: 0, oy: -1, scale: 1 },
   duck: { slot: 'head', layer: 'head', ox: 1, oy: 1, scale: 1 },
   topknot: { slot: 'head', layer: 'head', ox: 0, oy: -1, scale: 1 },
-  helmet: { slot: 'head', layer: 'head', ox: 0, oy: -1, scale: 1 },
+  helmet: { slot: 'head', layer: 'head', ox: 0, oy: 0, scale: 1 },
   glow: { slot: 'head', layer: 'head', ox: 0, oy: 0, scale: 1 },
   lightning: { slot: 'head', layer: 'head', ox: 0, oy: 0, scale: 1 },
   charm: { slot: 'head', layer: 'head', ox: 0, oy: 2, scale: 1 },
   coat: { slot: 'back', layer: 'back', ox: 0, oy: 1, scale: 1 },
   cape: { slot: 'back', layer: 'back', ox: 0, oy: 2, scale: 1 },
-  tome: { slot: 'back', layer: 'back', ox: -1, oy: 2, scale: 1 },
+  tome: { slot: 'back', layer: 'back', ox: -1, oy: 3, scale: 1 },
   vest: { slot: 'chest', layer: 'chest', ox: 0, oy: 0, scale: 1 },
-  chestplate: { slot: 'chest', layer: 'chest', ox: 0, oy: 0, scale: 1 },
+  chestplate: { slot: 'chest', layer: 'chest', ox: 0, oy: 1, scale: 1 },
   crystal: { slot: 'chest', layer: 'chest', ox: 1, oy: 0, scale: 1 },
-  wrap: { slot: 'legs', layer: 'legs', ox: 0, oy: 0, scale: 1 },
-  greaves: { slot: 'legs', layer: 'legs', ox: 0, oy: 1, scale: 1 },
+  wrap: { slot: 'legs', layer: 'legs', ox: 0, oy: 1, scale: 1 },
+  greaves: { slot: 'legs', layer: 'legs', ox: 0, oy: 4, scale: 1 },
   gloves: { slot: 'hands', layer: 'hands', ox: 0, oy: 0, scale: 1 },
   horns: { slot: 'head', layer: 'head', ox: 0, oy: -2, scale: 1 },
-  halo: { slot: 'head', layer: 'head', ox: 0, oy: -4, scale: 1 },
-  wings: { slot: 'back', layer: 'back', ox: 0, oy: 0, scale: 1 },
+  halo: { slot: 'head', layer: 'head', ox: 0, oy: -3, scale: 1 },
+  wings: { slot: 'back', layer: 'back', ox: 0, oy: 1, scale: 1 },
   tail: { slot: 'back', layer: 'back', ox: 2, oy: 4, scale: 1 },
 };
 
@@ -9715,54 +10872,54 @@ const EQUIP_LOOK = Object.create(null);
 const EQUIP_LOOK_BY_STYLE = {
   classic: [],
   leaf_band: [
-    { kind: 'bandana', ox: 0, oy: -1, scale: 1.04 },
+    { kind: 'bandana', ox: 0, oy: -1, scale: 1.0 },
   ],
   energy_glow: [
-    { kind: 'glow', scale: 1.05 },
-    { kind: 'bandana', oy: -0.5, scale: 0.96 },
+    { kind: 'glow', scale: 1.04 },
+    { kind: 'bandana', oy: -1, scale: 0.96 },
   ],
   crimson_pact: [
     { kind: 'coat', oy: 1, scale: 1.06, fill: 'rgba(224,79,79,.46)' },
-    { kind: 'bandana', oy: -1, scale: 1.02 },
+    { kind: 'bandana', oy: -1, scale: 1.0 },
   ],
   shadow: [
     { kind: 'cape', oy: 2, scale: 1.02, fill: 'rgba(42,24,64,.42)' },
     { kind: 'bandana', oy: -1, scale: 1.0 },
   ],
   guvve: [
-    { kind: 'bandana', oy: -1, scale: 1.02 },
-    { kind: 'duck', ox: 1, oy: 1.5, scale: 1.08 },
+    { kind: 'bandana', oy: -1, scale: 1.0 },
+    { kind: 'duck', ox: 1, oy: 1.5, scale: 1.04 },
   ],
   gold: [
-    { kind: 'glow', scale: 1.12 },
-    { kind: 'bandana', oy: -1, scale: 1.04 },
+    { kind: 'glow', scale: 1.08 },
+    { kind: 'bandana', oy: -1, scale: 1.0 },
   ],
   sand: [
     { kind: 'vest', fill: 'rgba(201,122,32,.34)', oy: 0, scale: 1.02 },
     { kind: 'wrap', fill: 'rgba(138,96,48,.55)', scale: 1.0 },
-    { kind: 'bandana', oy: -0.5, scale: 1.0 },
+    { kind: 'bandana', oy: -1, scale: 1.0 },
   ],
   samurai: [
-    { kind: 'topknot', oy: -1.5, scale: 1.06 },
-    { kind: 'bandana', oy: 0, scale: 0.94 },
+    { kind: 'topknot', oy: -1, scale: 1.04 },
+    { kind: 'bandana', oy: -1, scale: 0.94 },
   ],
   cyber: [
-    { kind: 'visor', oy: 1.5, scale: 1.04 },
-    { kind: 'bandana', oy: -2, scale: 0.92 },
+    { kind: 'visor', oy: 0, scale: 1.0 },
+    { kind: 'bandana', oy: -1, scale: 0.92 },
     { kind: 'lightning', ox: 1, oy: -1 },
   ],
   fox: [
-    { kind: 'fox', oy: -1.5, scale: 1.08 },
-    { kind: 'bandana', oy: 0.5, scale: 0.94 },
+    { kind: 'fox', oy: -1, scale: 1.04 },
+    { kind: 'bandana', oy: -1, scale: 0.94 },
   ],
   storm: [
-    { kind: 'glow', scale: 1.08 },
+    { kind: 'glow', scale: 1.06 },
     { kind: 'bandana', oy: -1, scale: 1.0 },
     { kind: 'lightning', ox: -1, oy: -1 },
   ],
   void: [
     { kind: 'coat', oy: 1, scale: 1.08, fill: 'rgba(90,16,64,.50)' },
-    { kind: 'bandana', oy: -1, scale: 1.02 },
+    { kind: 'bandana', oy: -1, scale: 1.0 },
   ],
   hunter: [
     { kind: 'vest', fill: 'rgba(61,92,50,.58)', oy: 0, scale: 1.04 },
@@ -9775,8 +10932,8 @@ const EQUIP_LOOK_BY_STYLE = {
     { kind: 'crystal', anchor: 'shoulder', ox: 12, oy: -2, scale: 1.08 },
   ],
   tome: [
-    { kind: 'tome', ox: -2, oy: 3, scale: 1.1 },
-    { kind: 'bandana', oy: -0.5, scale: 0.98 },
+    { kind: 'tome', ox: -2, oy: 3, scale: 1.08 },
+    { kind: 'bandana', oy: -1, scale: 0.98 },
   ],
 };
 
@@ -9830,7 +10987,7 @@ function mergeItemDraw(base, draw) {
   if (draw.slot) out.slot = draw.slot;
   if (draw.layer) out.layer = draw.layer;
   if (draw.anchor) out.anchor = draw.anchor;
-  ['ox', 'oy', 'scale', 'rot', 'color', 'accent', 'plate', 'fill'].forEach((k) => {
+  ['ox', 'oy', 'scale', 'rot', 'color', 'accent', 'plate', 'fill', 'coversHead'].forEach((k) => {
     if (draw[k] != null) out[k] = draw[k];
   });
   return out;
@@ -9860,7 +11017,95 @@ function hydrateEquipLook(piece, style) {
     plate: lookColor(piece.plate, lookColor(st.plate, null)),
     fill: lookColor(piece.fill, null),
     styleId: st.id || piece.styleId || null,
+    coversHead: piece.coversHead === true || (!!(EQUIP_COVERS_HEAD[piece.kind]) && piece.coversHead !== false),
   };
+}
+
+function lookCoversHead(look) {
+  if (!look || typeof look !== 'object') return false;
+  if (look.coversHead === true) return true;
+  if (look.coversHead === false) return false;
+  return !!EQUIP_COVERS_HEAD[look.kind];
+}
+
+function looksHideBaseHead(looks) {
+  if (!looks || !looks.length) return false;
+  for (let i = 0; i < looks.length; i++) {
+    const row = looks[i];
+    if (!row) continue;
+    if ((row.slot === 'head' || row.layer === 'head') && lookCoversHead(row)) return true;
+  }
+  return false;
+}
+
+/** 0–1 luma from #rgb / #rrggbb / rgb() / rgba(). Non-colors → 0.7 (assume light). */
+function lookLuma(color) {
+  if (typeof color !== 'string') return 0.7;
+  const s = color.trim();
+  let r = 200, g = 200, b = 200;
+  const hex = /^#([0-9a-f]{3}|[0-9a-f]{6})$/i.exec(s);
+  if (hex) {
+    const h = hex[1];
+    if (h.length === 3) {
+      r = parseInt(h[0] + h[0], 16);
+      g = parseInt(h[1] + h[1], 16);
+      b = parseInt(h[2] + h[2], 16);
+    } else {
+      r = parseInt(h.slice(0, 2), 16);
+      g = parseInt(h.slice(2, 4), 16);
+      b = parseInt(h.slice(4, 6), 16);
+    }
+  } else {
+    const rgb = /^rgba?\(\s*([\d.]+)\s*,\s*([\d.]+)\s*,\s*([\d.]+)/i.exec(s);
+    if (!rgb) return 0.7;
+    r = Number(rgb[1]);
+    g = Number(rgb[2]);
+    b = Number(rgb[3]);
+  }
+  return (0.2126 * r + 0.7152 * g + 0.0722 * b) / 255;
+}
+
+function lookMixToward(color, toward, t) {
+  const parse = (s, fallback) => {
+    if (typeof s !== 'string') return fallback;
+    const hex = /^#([0-9a-f]{3}|[0-9a-f]{6})$/i.exec(s.trim());
+    if (!hex) return fallback;
+    const h = hex[1];
+    if (h.length === 3) {
+      return [parseInt(h[0] + h[0], 16), parseInt(h[1] + h[1], 16), parseInt(h[2] + h[2], 16)];
+    }
+    return [parseInt(h.slice(0, 2), 16), parseInt(h.slice(2, 4), 16), parseInt(h.slice(4, 6), 16)];
+  };
+  const a = parse(color, null);
+  const b = parse(toward, [232, 238, 248]);
+  if (!a) return null;
+  const k = Math.max(0, Math.min(1, Number(t) || 0));
+  const ch = (i) => Math.round(a[i] * (1 - k) + b[i] * k);
+  const hex = (n) => n.toString(16).padStart(2, '0');
+  return '#' + hex(ch(0)) + hex(ch(1)) + hex(ch(2));
+}
+
+/** Dark body colors vanish on the Styles grid — lighten the circle so it always reads. */
+function lookHeadStroke(color) {
+  if (lookLuma(color) >= 0.38) return color || '#f2f5ff';
+  return lookMixToward(color, '#e8eef8', 0.64) || 'rgba(232,238,248,.92)';
+}
+
+function lookHeadRim(color) {
+  return lookLuma(color) < 0.38 ? 'rgba(255,255,255,.82)' : null;
+}
+
+function lookHeadFill(color) {
+  const luma = lookLuma(color);
+  if (luma < 0.38) return 'rgba(255,255,255,.22)';
+  if (luma > 0.82) return 'rgba(255,255,255,.10)';
+  return 'rgba(255,255,255,.08)';
+}
+
+/** Preview-only: keep a dark style readable on the card without changing combat. */
+function lookPreviewBody(color) {
+  if (lookLuma(color) >= 0.28) return color || '#f2f5ff';
+  return lookMixToward(color, '#c8d2e4', 0.42) || color || '#f2f5ff';
 }
 
 function looksForStyle(st) {
@@ -10073,13 +11318,35 @@ function looksOnLayer(looks, layer) {
   return looks.filter((l) => l.layer === layer);
 }
 
-/** Menu-card camera: leave crown room so bandana / ears / topknot do not clip. */
-function applyEquipLookPreview(cc, w, h) {
-  if (!cc || typeof cc.translate !== 'function') return;
+/** Menu-card camera: fit a scale-1 stickman so the head circle stays on-card. */
+function equipLookPreviewCamera(w, h) {
   const width = Number.isFinite(w) && w > 0 ? w : 80;
   const height = Number.isFinite(h) && h > 0 ? h : 86;
-  cc.translate(width * 0.5, height * 0.87);
-  cc.scale(0.78, 0.78);
+  const padTop = 5;
+  const padBot = Math.max(5, Math.round(height * 0.08));
+  const usable = Math.max(28, height - padTop - padBot);
+  const sc = usable / EQUIP_LOOK_STICK_TOP;
+  return {
+    width,
+    height,
+    tx: width * 0.5,
+    ty: height - padBot,
+    sc,
+    padTop,
+    padBot,
+    headLocalY: -(78 + 12 + 5 + 9),
+    headR: EQUIP_LOOK_HEAD_R,
+  };
+}
+
+function applyEquipLookPreview(cc, w, h) {
+  if (!cc || typeof cc.translate !== 'function') return null;
+  const cam = equipLookPreviewCamera(w, h);
+  const tx = typeof lookSnap === 'function' ? lookSnap(cam.tx) : Math.round(cam.tx);
+  const ty = typeof lookSnap === 'function' ? lookSnap(cam.ty) : Math.round(cam.ty);
+  cc.translate(tx, ty);
+  cc.scale(cam.sc, cam.sc);
+  return cam;
 }
 
 const EquipLookApi = {
@@ -10094,8 +11361,15 @@ const EquipLookApi = {
   register: registerEquipLook,
   snap: lookSnap,
   preview: applyEquipLookPreview,
+  previewCamera: equipLookPreviewCamera,
   canonSlot: canonEquipSlot,
   canonLayer: canonEquipLayer,
+  coversHead: lookCoversHead,
+  hidesBaseHead: looksHideBaseHead,
+  luma: lookLuma,
+  headStroke: lookHeadStroke,
+  previewBody: lookPreviewBody,
+  headR: EQUIP_LOOK_HEAD_R,
   max: EQUIP_LOOK_MAX,
 };
 
@@ -11048,6 +12322,19 @@ function buildingCanUpgrade(id, st) {
   return !!(cost && buildingCanPay(cost, st));
 }
 
+function buildingStoredFloor(n) {
+  const v = Number(n);
+  if (!Number.isFinite(v) || v < 0) return 0;
+  return Math.floor(v + 1e-9);
+}
+
+function buildingQuantizeStored(n, cap) {
+  const v = Number(n);
+  if (!Number.isFinite(v) || v <= 0) return 0;
+  const hi = cap > 0 ? cap : BUILDING_STORED_CAP_ABS;
+  return clamp(Math.round(v * 1000) / 1000, 0, hi);
+}
+
 function buildingPendingAmount(id, st) {
   const def = BUILDING_BY_ID[buildingCanonId(id)];
   if (!def || !buildingBuilt(def.id, st)) return 0;
@@ -11055,7 +12342,7 @@ function buildingPendingAmount(id, st) {
   tickOneBuilding(def.id, buildingNowMs(), s);
   const site = buildingSite(def.id, s);
   const cap = buildingOutputAtLevel(def, buildingLevel(def.id, s)).cap;
-  return clamp(Math.floor(Number(site && site.stored) || 0), 0, cap || BUILDING_STORED_CAP_ABS);
+  return clamp(buildingStoredFloor(site && site.stored), 0, cap || BUILDING_STORED_CAP_ABS);
 }
 
 function buildingCanCollect(id, st) {
@@ -11114,18 +12401,22 @@ function tickOneBuilding(id, now, st) {
   const maxMs = BUILDING_OFFLINE_HOURS * BUILDING_MS_PER_HOUR;
   const elapsed = Math.min(now - last, maxMs);
   if (elapsed <= 0) return false;
-  const stored = clamp(Math.floor(Number(site.stored) || 0), 0, out.cap);
+  const stored = clamp(Number(site.stored) || 0, 0, out.cap);
   if (stored >= out.cap) {
     site.lastTickAt = now;
     site.stored = out.cap;
     return true;
   }
-  const units = Math.floor((elapsed / BUILDING_MS_PER_HOUR) * out.perHour);
-  if (units <= 0) return false;
-  const usedMs = Math.floor((units / out.perHour) * BUILDING_MS_PER_HOUR);
-  site.stored = clamp(stored + units, 0, out.cap);
-  site.lastTickAt = last + usedMs;
-  if (site.stored >= out.cap) site.lastTickAt = now;
+  const units = (elapsed / BUILDING_MS_PER_HOUR) * out.perHour;
+  if (!(units > 0)) return false;
+  const next = clamp(stored + units, 0, out.cap);
+  if (next <= stored) return false;
+  site.stored = next;
+  site.lastTickAt = now;
+  if (site.stored >= out.cap) {
+    site.stored = out.cap;
+    site.lastTickAt = now;
+  }
   return true;
 }
 
@@ -11144,16 +12435,22 @@ function buildingCollect(id, st) {
   const def = BUILDING_BY_ID[buildingCanonId(id)];
   if (!def || !buildingBuilt(def.id, st)) return { ok: false, reason: 'unbuilt', amount: 0 };
   const s = ensureBuildingSave(st);
-  tickOneBuilding(def.id, buildingNowMs(), s);
   const site = buildingSite(def.id, s);
-  const amount = clamp(Math.floor(Number(site.stored) || 0), 0, BUILDING_STORED_CAP_ABS);
   const res = def.resourceId;
-  if (amount <= 0) return { ok: true, amount: 0, resourceId: res };
-  site.stored = 0;
-  site.lastTickAt = buildingNowMs();
-  s.buildings.wallet[res] = clamp(buildingWallet(res, s) + amount, 0, BUILDING_WALLET_CAP);
-  if (typeof save !== 'undefined' && s === save) persistOrToast('building/collect/' + def.id);
-  return { ok: true, amount, resourceId: res, buildingId: def.id };
+  if (site._collectLock) return { ok: true, amount: 0, resourceId: res, reason: 'busy' };
+  site._collectLock = true;
+  try {
+    tickOneBuilding(def.id, buildingNowMs(), s);
+    const amount = clamp(buildingStoredFloor(site.stored), 0, BUILDING_STORED_CAP_ABS);
+    if (amount <= 0) return { ok: true, amount: 0, resourceId: res };
+    site.stored = 0;
+    site.lastTickAt = buildingNowMs();
+    s.buildings.wallet[res] = clamp(buildingWallet(res, s) + amount, 0, BUILDING_WALLET_CAP);
+    if (typeof save !== 'undefined' && s === save) persistOrToast('building/collect/' + def.id);
+    return { ok: true, amount, resourceId: res, buildingId: def.id };
+  } finally {
+    site._collectLock = false;
+  }
 }
 
 function buildingLabel(id, field) {
@@ -11171,6 +12468,82 @@ function buildingResourceLabel(resId) {
   const fallback = (def && def.resource && def.resource.name) || canon || '?';
   if (typeof tOr === 'function') return tOr('buildings.res.' + canon, fallback);
   return fallback;
+}
+
+function buildingTxt(key, fallback, params) {
+  if (typeof tOr === 'function') return tOr(key, fallback, params);
+  if (!fallback) return key;
+  if (!params) return fallback;
+  let out = String(fallback);
+  for (const [k, v] of Object.entries(params)) out = out.split('{' + k + '}').join(String(v));
+  return out;
+}
+
+function buildingPowerLabel(power) {
+  if (!power) return '';
+  return buildingTxt('buildings.power.' + power.id + '.label', power.label || power.id);
+}
+
+function buildingPowerBlurb(power) {
+  if (!power) return '';
+  return buildingTxt('buildings.power.' + power.id + '.blurb', power.blurb || '');
+}
+
+function buildingCostLabel(cost) {
+  if (!cost) return '';
+  const bits = [];
+  const pc = Math.max(0, Math.floor(Number(cost.petCoins) || 0));
+  if (pc) bits.push(buildingTxt('buildings.costPc', '{n} PC', { n: pc }));
+  const res = (cost.resources && typeof cost.resources === 'object') ? cost.resources : {};
+  for (const [k, v] of Object.entries(res)) {
+    const n = Math.max(0, Math.floor(Number(v) || 0));
+    if (!n) continue;
+    bits.push(buildingTxt('buildings.costRes', '{n} {res}', { n, res: buildingResourceLabel(k) }));
+  }
+  return bits.join(' · ');
+}
+
+function buildingArtSrc(id) {
+  const def = BUILDING_BY_ID[buildingCanonId(id)];
+  const canon = def ? def.id : buildingCanonId(id);
+  const stroke = (def && def.artHint && def.artHint.iconFile)
+    ? def.artHint.iconFile
+    : ('assets/buttons/modes/buildings-' + String(canon || '').replace(/_/g, '-') + '.svg');
+  return {
+    pixel: 'assets/buildings/' + canon + '.svg',
+    stroke,
+    hub: 'assets/buttons/hub/buildings.svg',
+  };
+}
+
+function buildingIslandName(world) {
+  const n = Math.max(1, Math.floor(Number(world) || 1));
+  try {
+    if (typeof islandLabel === 'function') return islandLabel(n, 'name');
+  } catch (_) {}
+  return buildingTxt('buildings.islandFallback', 'eiland {n}', { n });
+}
+
+function buildingWalletModel(st) {
+  const s = ensureBuildingSave(st);
+  if (s) buildingTickAll(s);
+  const wallet = buildingWallet(null, s);
+  const pc = Math.max(0, Math.floor(Number((buildingSaveRef(s) || {}).petCoins) || 0));
+  const resources = buildingResourceIds.map((id) => {
+    const def = BUILDINGS.find((b) => b.resourceId === id);
+    const built = !!(def && buildingBuilt(def.id, s));
+    const lv = def ? buildingLevel(def.id, s) : 0;
+    const out = built ? buildingOutputAtLevel(def, lv) : { perHour: 0, cap: 0 };
+    return {
+      id,
+      name: buildingResourceLabel(id),
+      amount: wallet[id] || 0,
+      rate: out.perHour || 0,
+      factoryId: def ? def.id : '',
+      built,
+    };
+  });
+  return { petCoins: pc, resources };
 }
 
 function buildingTooltipModel(id, st) {
@@ -11210,7 +12583,99 @@ function buildingTooltipModel(id, st) {
     powers: def.powers || [],
     powersUnlocked: powersOn,
     nextPower,
+    artSrc: buildingArtSrc(def.id),
+    nextCostLabel: buildingCostLabel(buildingNextCost(def.id, s)),
   };
+}
+
+/** UI copy model: produce line + power line, no hardcoded factory text in the screen. */
+function buildingDescModel(id, st) {
+  const tip = buildingTooltipModel(id, st);
+  if (!tip) return null;
+  const def = BUILDING_BY_ID[tip.id];
+  const islandName = buildingIslandName(tip.worldUnlock);
+  const lv0 = def && def.resource && def.resource.perHour ? (def.resource.perHour[0] || 0) : 0;
+  const unlockLine = tip.unlocked
+    ? ''
+    : buildingTxt('buildings.lockedWorldNamed', 'Nog dicht — speel {name} (eiland {n}) vrij.', {
+      name: islandName, n: tip.worldUnlock,
+    });
+  let produceLine;
+  if (!tip.unlocked) {
+    produceLine = buildingTxt('buildings.desc.produceLocked', 'Gaat {res} maken na unlock + bouwen.', {
+      res: tip.resourceName,
+    });
+  } else if (!tip.built) {
+    produceLine = buildingTxt('buildings.desc.produceUnbuilt', 'Bouwen: maakt daarna {res} ({n}/uur).', {
+      res: tip.resourceName, n: lv0,
+    });
+  } else {
+    produceLine = buildingTxt('buildings.desc.produce', 'Maakt {res}: {n}/uur · hopper max {cap}.', {
+      res: tip.resourceName, n: tip.outputRate, cap: tip.storageCap,
+    });
+  }
+  const currentPower = (def.powers || []).filter((p) => tip.powerRank >= p.rank).pop() || null;
+  const powerLine = currentPower
+    ? buildingTxt('buildings.desc.powerOn', 'Kracht rank {rank}: {label} — {blurb}', {
+      rank: tip.powerRank,
+      label: buildingPowerLabel(currentPower),
+      blurb: buildingPowerBlurb(currentPower),
+    })
+    : buildingTxt('buildings.desc.powerNone', 'Geen kracht tot de fabriek gebouwd is.');
+  const doesLine = !tip.unlocked
+    ? unlockLine
+    : !tip.built
+      ? buildingTxt('buildings.desc.doesUnbuilt', 'Maakt {res} · bouw om te starten', { res: tip.resourceName })
+      : buildingTxt('buildings.desc.does', '{res} {n}/uur · {power}', {
+        res: tip.resourceName,
+        n: tip.outputRate,
+        power: currentPower ? buildingPowerLabel(currentPower) : '—',
+      });
+  let nextLine = '';
+  if (tip.built && tip.level < tip.maxLevel) {
+    const nextLv = tip.level + 1;
+    const nextOut = buildingOutputAtLevel(def, nextLv);
+    const nextRank = buildingPowerRank(nextLv);
+    const newPower = (def.powers || []).find((p) => p.rank === nextRank && nextRank > tip.powerRank) || null;
+    const powerBit = newPower
+      ? buildingTxt('buildings.desc.nextPower', ' · nieuwe kracht: {label}', { label: buildingPowerLabel(newPower) })
+      : '';
+    nextLine = buildingTxt('buildings.desc.nextLv', 'Lv {n}: {res} {rate}/uur · cap {cap}{power}', {
+      n: nextLv, res: tip.resourceName, rate: nextOut.perHour, cap: nextOut.cap, power: powerBit,
+    });
+  } else if (tip.built && tip.level >= tip.maxLevel) {
+    nextLine = buildingTxt('buildings.upgradeMax', 'Max level');
+  } else if (!tip.built && tip.unlocked) {
+    const firstOut = buildingOutputAtLevel(def, 1);
+    const firstPower = (def.powers || []).find((p) => p.rank === 0) || null;
+    const powerBit = firstPower
+      ? buildingTxt('buildings.desc.nextPower', ' · nieuwe kracht: {label}', { label: buildingPowerLabel(firstPower) })
+      : '';
+    nextLine = buildingTxt('buildings.desc.nextLv', 'Lv {n}: {res} {rate}/uur · cap {cap}{power}', {
+      n: 1, res: tip.resourceName, rate: firstOut.perHour, cap: firstOut.cap, power: powerBit,
+    });
+  }
+  const powersDetail = (def.powers || []).map((p) => ({
+    id: p.id,
+    rank: p.rank,
+    kind: p.kind,
+    combatHook: p.combatHook,
+    label: buildingPowerLabel(p),
+    blurb: buildingPowerBlurb(p),
+    unlocked: tip.powerRank >= p.rank,
+  }));
+  return Object.assign({}, tip, {
+    produceLine,
+    powerLine,
+    doesLine,
+    unlockLine,
+    nextLine,
+    islandName,
+    currentPower: currentPower ? currentPower.id : '',
+    currentPowerLabel: currentPower ? buildingPowerLabel(currentPower) : '',
+    currentPowerBlurb: currentPower ? buildingPowerBlurb(currentPower) : '',
+    powersDetail,
+  });
 }
 
 function countBuildingLevels(st) {
@@ -11238,7 +12703,7 @@ function migrateLegacyBuildingBag(raw) {
     if (!BUILDING_BY_ID[id] || !v || typeof v !== 'object') continue;
     const prev = factories[id] || emptyBuildingSite();
     const lv = Math.max(prev.level, Math.floor(Number(v.level) || 0));
-    const stored = Math.max(prev.stored, Math.floor(Number(v.stored) || 0));
+    const stored = Math.max(prev.stored, Number.isFinite(Number(v.stored)) ? Math.max(0, Number(v.stored)) : 0);
     const last = Math.max(prev.lastTickAt, Math.floor(Number(v.lastTickAt) || 0));
     factories[id] = { level: lv, stored, lastTickAt: last };
   }
@@ -11268,7 +12733,7 @@ function sanitizeBuildingSave(s) {
     const entry = migrated.factories[id] || {};
     const lv = clamp(Math.floor(Number(entry.level) || 0), 0, def.maxLevel);
     const cap = lv >= 1 ? (buildingOutputAtLevel(def, lv).cap || BUILDING_STORED_CAP_ABS) : 0;
-    const stored = lv >= 1 ? clamp(Math.floor(Number(entry.stored) || 0), 0, cap) : 0;
+    const stored = lv >= 1 ? buildingQuantizeStored(entry.stored, cap) : 0;
     let last = Math.floor(Number(entry.lastTickAt) || 0);
     if (last < 0 || last > 4102444800000) last = 0;
     if (lv <= 0 && stored <= 0 && last <= 0) continue;
@@ -11297,6 +12762,10 @@ try {
     globalThis.BUILDINGS = BUILDINGS;
     globalThis.BUILDING_BY_ID = BUILDING_BY_ID;
     globalThis.buildingResourceIds = buildingResourceIds;
+    globalThis.buildingDescModel = buildingDescModel;
+    globalThis.buildingWalletModel = buildingWalletModel;
+    globalThis.buildingArtSrc = buildingArtSrc;
+    globalThis.buildingCostLabel = buildingCostLabel;
   }
 } catch (_) {}
 /* --- src/data/summons.js --- */
@@ -13716,6 +15185,11 @@ function applySeasonTheme(opts) {
   try {
     document.dispatchEvent(new CustomEvent('sf-season-change', { detail: snap }));
   } catch (_) {}
+  try {
+    if (typeof window !== 'undefined' && window.__sfSeason && typeof window.__sfSeason.apply === 'function') {
+      window.__sfSeason.apply();
+    }
+  } catch (_) {}
   if (opts && opts.toast && typeof UI !== 'undefined' && UI.toast && typeof t === 'function') {
     UI.toast(t('season.picked', { name: seasonLabel(snap.id) }), 2000, { tone: 'ok' });
   }
@@ -13868,13 +15342,13 @@ function toastVersusRetired() {
   } catch (_) {}
 }
 /* --- src/data/monster-catalog.js --- */
-/* ====================== MONSTER CATALOG W2 (editor) ==================== */
+/* ====================== MONSTER CATALOG W2+W3 (editor) ================= */
 /**
  * Data-driven family table — expands into SPECIES + UNLOCK_AT.
- * Pixel partner: reuse #282 maps via SPECIES[id].pixel (MONSTER_PIXEL_ALIAS).
- * Unique `art` stays for biome/waves; stubs only if pixel maps are absent.
+ * All 36 W2 arts paint dedicated 32×32 maps (`pixelStatus: 'pixel'`).
+ * W3 still reuses #282 maps via SPECIES[id].pixel aliases.
  *
- * Do not edit SPECIES by hand for wave-2 beasts — add a family row here.
+ * Do not edit SPECIES by hand for catalog beasts — add a family row here.
  */
 const MONSTER_CATALOG_RARITIES = [
   { rarity: 'common',    size: 0, hp: 1.00, dmg: 1.00, speed: 1.00, xp: 1.00, unlockAdd: 0 },
@@ -13889,53 +15363,74 @@ const MONSTER_CATALOG_RARITIES = [
 
 /** Art slot registry — one ID per silhouette. Pixel partner owns these. */
 const MONSTER_ART_SLOTS = {
-  wolf:      { biome: 'wild',  type: 'charge', shape: 'quad',    priority: 1, pixelStatus: 'stub', blurb: 'Tanden eerst, vragen later.' },
-  owl:       { biome: 'wild',  type: 'fly',    shape: 'flyer',   priority: 1, pixelStatus: 'stub', blurb: 'Draait de kop, dan jij.' },
-  frog:      { biome: 'wild',  type: 'hop',    shape: 'hopper',  priority: 1, pixelStatus: 'stub', blurb: 'Eén sprong, twee problemen.' },
-  snake:     { biome: 'wild',  type: 'charge', shape: 'swimmer', priority: 1, pixelStatus: 'stub', blurb: 'Geen benen, wél tempo.' },
-  boar:      { biome: 'wild',  type: 'charge', shape: 'quad',    priority: 1, pixelStatus: 'stub', blurb: 'Slagtanden als bumper.' },
-  raven:     { biome: 'wild',  type: 'fly',    shape: 'flyer',   priority: 2, pixelStatus: 'stub', blurb: 'Krast alsof hij gelijk heeft.' },
-  moose:     { biome: 'wild',  type: 'tank',   shape: 'tank',    priority: 2, pixelStatus: 'stub', blurb: 'Gewei breder dan je plan.' },
-  beaver:    { biome: 'wild',  type: 'tank',   shape: 'quad',    priority: 2, pixelStatus: 'stub', blurb: 'Bouwt een dam van jouw combo.' },
-  badger:    { biome: 'wild',  type: 'charge', shape: 'quad',    priority: 2, pixelStatus: 'stub', blurb: 'Graaft eerst, bijt daarna.' },
-  stag:      { biome: 'wild',  type: 'charge', shape: 'quad',    priority: 2, pixelStatus: 'stub', blurb: 'Woud-koning met piek-gewei.' },
-  lynx:      { biome: 'wild',  type: 'charge', shape: 'quad',    priority: 2, pixelStatus: 'stub', blurb: 'Pluimoor, scherpe mening.' },
-  mole:      { biome: 'wild',  type: 'hop',    shape: 'hopper',  priority: 3, pixelStatus: 'stub', blurb: 'Komt van onder. Altijd.' },
-  skeleton:  { biome: 'crypt', type: 'charge', shape: 'undead',  priority: 1, pixelStatus: 'stub', blurb: 'Rammelt, maar raakt wél.' },
-  mummy:     { biome: 'crypt', type: 'tank',   shape: 'undead',  priority: 1, pixelStatus: 'stub', blurb: 'Verband als pantser.' },
-  beetle:    { biome: 'crypt', type: 'hop',    shape: 'insect',  priority: 1, pixelStatus: 'stub', blurb: 'Schild-kever, weinig praat.' },
-  wasp:      { biome: 'crypt', type: 'fly',    shape: 'insect',  priority: 1, pixelStatus: 'stub', blurb: 'Angel eerst, excuses nooit.' },
-  spider:    { biome: 'crypt', type: 'shoot',  shape: 'insect',  priority: 1, pixelStatus: 'stub', blurb: 'Web + afstand = irritant.' },
-  wisp:      { biome: 'crypt', type: 'shoot',  shape: 'shooter', priority: 2, pixelStatus: 'stub', blurb: 'Dwaallicht met slechte bedoelingen.' },
-  gargoyle:  { biome: 'crypt', type: 'fly',    shape: 'flyer',   priority: 2, pixelStatus: 'stub', blurb: 'Steen die dacht dat hij kon vliegen.' },
-  lich:      { biome: 'crypt', type: 'shoot',  shape: 'undead',  priority: 2, pixelStatus: 'stub', blurb: 'Te veel botten, te veel magie.' },
-  drone:     { biome: 'scrap', type: 'fly',    shape: 'mech',    priority: 1, pixelStatus: 'stub', blurb: 'Zoemt, mikt, piept.' },
-  bot:       { biome: 'scrap', type: 'shoot',  shape: 'mech',    priority: 1, pixelStatus: 'stub', blurb: 'Blik met een laser-mening.' },
-  scrapdog:  { biome: 'scrap', type: 'charge', shape: 'quad',    priority: 1, pixelStatus: 'stub', blurb: 'Roest-hond. Kwispelt met ketting.' },
-  cog:       { biome: 'scrap', type: 'hop',    shape: 'mech',    priority: 2, pixelStatus: 'stub', blurb: 'Tandwiel dat terugbijt.' },
-  turret:    { biome: 'scrap', type: 'shoot',  shape: 'shooter', priority: 2, pixelStatus: 'stub', blurb: 'Blijft staan. Jij beweegt.' },
-  rivet:     { biome: 'scrap', type: 'tank',   shape: 'tank',    priority: 2, pixelStatus: 'stub', blurb: 'Klinknagels en slechte ideeën.' },
-  junkbat:   { biome: 'scrap', type: 'fly',    shape: 'flyer',   priority: 3, pixelStatus: 'stub', blurb: 'Vleermuis van sloopafval.' },
-  piston:    { biome: 'scrap', type: 'charge', shape: 'mech',    priority: 2, pixelStatus: 'stub', blurb: 'Hydrauliek met een deadline.' },
-  penguin:   { biome: 'frost', type: 'hop',    shape: 'hopper',  priority: 1, pixelStatus: 'stub', blurb: 'Waddelt. Tot hij sprint.' },
-  yeti:      { biome: 'frost', type: 'tank',   shape: 'tank',    priority: 1, pixelStatus: 'stub', blurb: 'Sneeuwman die terugslaat.' },
-  walrus:    { biome: 'frost', type: 'tank',   shape: 'tank',    priority: 2, pixelStatus: 'stub', blurb: 'Slagtand-zee. Zwaar.' },
-  seal:      { biome: 'frost', type: 'hop',    shape: 'hopper',  priority: 3, pixelStatus: 'stub', blurb: 'Glibbert uit je timing.' },
-  crab:      { biome: 'sea',   type: 'swim',   shape: 'insect',  priority: 1, pixelStatus: 'stub', blurb: 'Schaar links, schaar rechts.' },
-  turtle:    { biome: 'sea',   type: 'swim',   shape: 'tank',    priority: 1, pixelStatus: 'stub', blurb: 'Schild. Daarna nog een schild.' },
-  squid:     { biome: 'sea',   type: 'swim',   shape: 'swimmer', priority: 1, pixelStatus: 'stub', blurb: 'Armen genoeg voor iedereen.' },
-  ray:       { biome: 'sea',   type: 'swim',   shape: 'swimmer', priority: 2, pixelStatus: 'stub', blurb: 'Glijdt alsof water optioneel is.' },
+  wolf:      { biome: 'wild',  type: 'charge', shape: 'quad',    priority: 1, pixelStatus: 'pixel', blurb: 'Tanden eerst, vragen later.' },
+  owl:       { biome: 'wild',  type: 'fly',    shape: 'flyer',   priority: 1, pixelStatus: 'pixel', blurb: 'Draait de kop, dan jij.' },
+  frog:      { biome: 'wild',  type: 'hop',    shape: 'hopper',  priority: 1, pixelStatus: 'pixel', blurb: 'Eén sprong, twee problemen.' },
+  snake:     { biome: 'wild',  type: 'charge', shape: 'swimmer', priority: 1, pixelStatus: 'pixel', blurb: 'Geen benen, wél tempo.' },
+  boar:      { biome: 'wild',  type: 'charge', shape: 'quad',    priority: 1, pixelStatus: 'pixel', blurb: 'Slagtanden als bumper.' },
+  raven:     { biome: 'wild',  type: 'fly',    shape: 'flyer',   priority: 2, pixelStatus: 'pixel', blurb: 'Krast alsof hij gelijk heeft.' },
+  moose:     { biome: 'wild',  type: 'tank',   shape: 'tank',    priority: 2, pixelStatus: 'pixel', blurb: 'Gewei breder dan je plan.' },
+  beaver:    { biome: 'wild',  type: 'tank',   shape: 'quad',    priority: 2, pixelStatus: 'pixel', blurb: 'Bouwt een dam van jouw combo.' },
+  badger:    { biome: 'wild',  type: 'charge', shape: 'quad',    priority: 2, pixelStatus: 'pixel', blurb: 'Graaft eerst, bijt daarna.' },
+  stag:      { biome: 'wild',  type: 'charge', shape: 'quad',    priority: 2, pixelStatus: 'pixel', blurb: 'Woud-koning met piek-gewei.' },
+  lynx:      { biome: 'wild',  type: 'charge', shape: 'quad',    priority: 2, pixelStatus: 'pixel', blurb: 'Pluimoor, scherpe mening.' },
+  mole:      { biome: 'wild',  type: 'hop',    shape: 'hopper',  priority: 3, pixelStatus: 'pixel', blurb: 'Komt van onder. Altijd.' },
+  skeleton:  { biome: 'crypt', type: 'charge', shape: 'undead',  priority: 1, pixelStatus: 'pixel', blurb: 'Rammelt, maar raakt wél.' },
+  mummy:     { biome: 'crypt', type: 'tank',   shape: 'undead',  priority: 1, pixelStatus: 'pixel', blurb: 'Verband als pantser.' },
+  beetle:    { biome: 'crypt', type: 'hop',    shape: 'insect',  priority: 1, pixelStatus: 'pixel', blurb: 'Schild-kever, weinig praat.' },
+  wasp:      { biome: 'crypt', type: 'fly',    shape: 'insect',  priority: 1, pixelStatus: 'pixel', blurb: 'Angel eerst, excuses nooit.' },
+  spider:    { biome: 'crypt', type: 'shoot',  shape: 'insect',  priority: 1, pixelStatus: 'pixel', blurb: 'Web + afstand = irritant.' },
+  wisp:      { biome: 'crypt', type: 'shoot',  shape: 'shooter', priority: 2, pixelStatus: 'pixel', blurb: 'Dwaallicht met slechte bedoelingen.' },
+  gargoyle:  { biome: 'crypt', type: 'fly',    shape: 'flyer',   priority: 2, pixelStatus: 'pixel', blurb: 'Steen die dacht dat hij kon vliegen.' },
+  lich:      { biome: 'crypt', type: 'shoot',  shape: 'undead',  priority: 2, pixelStatus: 'pixel', blurb: 'Te veel botten, te veel magie.' },
+  drone:     { biome: 'scrap', type: 'fly',    shape: 'mech',    priority: 1, pixelStatus: 'pixel', blurb: 'Zoemt, mikt, piept.' },
+  bot:       { biome: 'scrap', type: 'shoot',  shape: 'mech',    priority: 1, pixelStatus: 'pixel', blurb: 'Blik met een laser-mening.' },
+  scrapdog:  { biome: 'scrap', type: 'charge', shape: 'quad',    priority: 1, pixelStatus: 'pixel', blurb: 'Roest-hond. Kwispelt met ketting.' },
+  cog:       { biome: 'scrap', type: 'hop',    shape: 'mech',    priority: 2, pixelStatus: 'pixel', blurb: 'Tandwiel dat terugbijt.' },
+  turret:    { biome: 'scrap', type: 'shoot',  shape: 'shooter', priority: 2, pixelStatus: 'pixel', blurb: 'Blijft staan. Jij beweegt.' },
+  rivet:     { biome: 'scrap', type: 'tank',   shape: 'tank',    priority: 2, pixelStatus: 'pixel', blurb: 'Klinknagels en slechte ideeën.' },
+  junkbat:   { biome: 'scrap', type: 'fly',    shape: 'flyer',   priority: 3, pixelStatus: 'pixel', blurb: 'Vleermuis van sloopafval.' },
+  piston:    { biome: 'scrap', type: 'charge', shape: 'mech',    priority: 2, pixelStatus: 'pixel', blurb: 'Hydrauliek met een deadline.' },
+  penguin:   { biome: 'frost', type: 'hop',    shape: 'hopper',  priority: 1, pixelStatus: 'pixel', blurb: 'Waddelt. Tot hij sprint.' },
+  yeti:      { biome: 'frost', type: 'tank',   shape: 'tank',    priority: 1, pixelStatus: 'pixel', blurb: 'Sneeuwman die terugslaat.' },
+  walrus:    { biome: 'frost', type: 'tank',   shape: 'tank',    priority: 2, pixelStatus: 'pixel', blurb: 'Slagtand-zee. Zwaar.' },
+  seal:      { biome: 'frost', type: 'hop',    shape: 'hopper',  priority: 3, pixelStatus: 'pixel', blurb: 'Glibbert uit je timing.' },
+  crab:      { biome: 'sea',   type: 'swim',   shape: 'insect',  priority: 1, pixelStatus: 'pixel', blurb: 'Schaar links, schaar rechts.' },
+  turtle:    { biome: 'sea',   type: 'swim',   shape: 'tank',    priority: 1, pixelStatus: 'pixel', blurb: 'Schild. Daarna nog een schild.' },
+  squid:     { biome: 'sea',   type: 'swim',   shape: 'swimmer', priority: 1, pixelStatus: 'pixel', blurb: 'Armen genoeg voor iedereen.' },
+  ray:       { biome: 'sea',   type: 'swim',   shape: 'swimmer', priority: 2, pixelStatus: 'pixel', blurb: 'Glijdt alsof water optioneel is.' },
+  /* Wave 3 — deepen wild / crypt / scrap (+ frost/sea). Stub + alias until unique pixels. */
+  hawk:      { biome: 'wild',  type: 'fly',    shape: 'flyer',   priority: 1, pixelStatus: 'stub', blurb: 'Duikt alsof jij de muis bent.' },
+  ram:       { biome: 'wild',  type: 'charge', shape: 'quad',    priority: 1, pixelStatus: 'stub', blurb: 'Hoorns eerst, excuses later.' },
+  cougar:    { biome: 'wild',  type: 'charge', shape: 'quad',    priority: 1, pixelStatus: 'stub', blurb: 'Zachte poot, harde landing.' },
+  weasel:    { biome: 'wild',  type: 'charge', shape: 'quad',    priority: 1, pixelStatus: 'stub', blurb: 'Te smal voor je timing.' },
+  porcupine: { biome: 'wild',  type: 'tank',   shape: 'quad',    priority: 1, pixelStatus: 'stub', blurb: 'Knuffelen is een slecht plan.' },
+  toad:      { biome: 'wild',  type: 'hop',    shape: 'hopper',  priority: 1, pixelStatus: 'stub', blurb: 'Dikker dan een kikker. Nog steeds springt.' },
+  ghoul:     { biome: 'crypt', type: 'charge', shape: 'undead',  priority: 1, pixelStatus: 'stub', blurb: 'Honger met een graf-adres.' },
+  wraith:    { biome: 'crypt', type: 'fly',    shape: 'flyer',   priority: 1, pixelStatus: 'stub', blurb: 'Half lucht, helemaal lastig.' },
+  bonehound: { biome: 'crypt', type: 'charge', shape: 'quad',    priority: 1, pixelStatus: 'stub', blurb: 'Kwispelt met een dijbeen.' },
+  revenant:  { biome: 'crypt', type: 'tank',   shape: 'undead',  priority: 1, pixelStatus: 'stub', blurb: 'Was al dood. Komt toch.' },
+  shade:     { biome: 'crypt', type: 'shoot',  shape: 'shooter', priority: 1, pixelStatus: 'stub', blurb: 'Schaduw die terugschiet.' },
+  welder:    { biome: 'scrap', type: 'shoot',  shape: 'mech',    priority: 1, pixelStatus: 'stub', blurb: 'Vonken zijn het gesprek.' },
+  sawbot:    { biome: 'scrap', type: 'charge', shape: 'mech',    priority: 1, pixelStatus: 'stub', blurb: 'Zaag als begroeting.' },
+  rustmite:  { biome: 'scrap', type: 'hop',    shape: 'insect',  priority: 1, pixelStatus: 'stub', blurb: 'Klein. Eet metaal. En tempo.' },
+  furnace:   { biome: 'scrap', type: 'tank',   shape: 'tank',    priority: 1, pixelStatus: 'stub', blurb: 'Loopende oven. Geen thermostaat.' },
+  coil:      { biome: 'scrap', type: 'shoot',  shape: 'shooter', priority: 1, pixelStatus: 'stub', blurb: 'Spoel vol slechte ideeën.' },
+  mammoth:   { biome: 'frost', type: 'tank',   shape: 'tank',    priority: 1, pixelStatus: 'stub', blurb: 'Wol + slagtand + deadline.' },
+  urchin:    { biome: 'sea',   type: 'swim',   shape: 'insect',  priority: 1, pixelStatus: 'stub', blurb: 'Een bal stekels met een mening.' },
 };
 
-const WILD_ARTS = new Set(Object.keys(MONSTER_ART_SLOTS).filter((id) => MONSTER_ART_SLOTS[id].biome === 'wild' || MONSTER_ART_SLOTS[id].biome === 'frost'));
+const WILD_ARTS = new Set(Object.keys(MONSTER_ART_SLOTS).filter((id) => MONSTER_ART_SLOTS[id].biome === 'wild'));
+const FROST_ARTS = new Set(Object.keys(MONSTER_ART_SLOTS).filter((id) => MONSTER_ART_SLOTS[id].biome === 'frost'));
 const CRYPT_ARTS = new Set(Object.keys(MONSTER_ART_SLOTS).filter((id) => MONSTER_ART_SLOTS[id].biome === 'crypt'));
 const SCRAP_ARTS = new Set(Object.keys(MONSTER_ART_SLOTS).filter((id) => MONSTER_ART_SLOTS[id].biome === 'scrap'));
 const CATALOG_SEA_ARTS = new Set(Object.keys(MONSTER_ART_SLOTS).filter((id) => MONSTER_ART_SLOTS[id].biome === 'sea'));
+const CATALOG_P1_PIXEL_ARTS = new Set(Object.keys(MONSTER_ART_SLOTS).filter((id) => MONSTER_ART_SLOTS[id].pixelStatus === 'pixel'));
 
 /**
  * #282 provisional pixel IDs (art families + flagship SPECIES keys).
- * W2 keeps unique `art` for biome/waves; `sp.pixel` aliases these so
- * `monsterPixelKey` (pixel PR) can tint existing maps — no art redo.
+ * W3 keeps unique `art` for biome/waves; `sp.pixel` aliases these so
+ * stub slots can tint existing #282 maps. Dedicated W2 slots skip aliases.
  * See MONSTER-PIXEL-MAP.md on cursor/monster-pixel-art-6c6b / PR #282.
  */
 const MONSTER_PIXEL_PROVISIONAL = {
@@ -13997,9 +15492,29 @@ const MONSTER_PIXEL_ALIAS = {
   turtle: { pixel: 'golem' },
   squid: { pixel: 'octo', high: 'voidocto' },
   ray: { pixel: 'shark', high: 'levihaai' },
+  hawk: { pixel: 'bat' },
+  ram: { pixel: 'goat', high: 'kopstootgeit' },
+  cougar: { pixel: 'tiger', high: 'razendetijger' },
+  weasel: { pixel: 'fox', high: 'voidkonijn' },
+  porcupine: { pixel: 'hedgehog' },
+  toad: { pixel: 'slime', high: 'voidsly' },
+  ghoul: { pixel: 'ghost' },
+  wraith: { pixel: 'ghost' },
+  bonehound: { pixel: 'fox', high: 'voidkonijn' },
+  revenant: { pixel: 'golem' },
+  shade: { pixel: 'ghost' },
+  welder: { pixel: 'can' },
+  sawbot: { pixel: 'can' },
+  rustmite: { pixel: 'hedgehog' },
+  furnace: { pixel: 'golem' },
+  coil: { pixel: 'can' },
+  mammoth: { pixel: 'elephant', high: 'reuzenolifant' },
+  urchin: { pixel: 'hedgehog' },
 };
 
 function catalogPixelFor(art, rarity) {
+  const slot = (typeof MONSTER_ART_SLOTS !== 'undefined' && MONSTER_ART_SLOTS[art]) || {};
+  if (slot.pixelStatus === 'pixel') return null;
   const a = MONSTER_PIXEL_ALIAS[art];
   if (!a) return null;
   const order = (typeof rarityOf === 'function')
@@ -14125,6 +15640,68 @@ const MONSTER_FAMILIES_W2 = [
     colors: catalogColors([['#6a9fc8','#2a5080'],['#e8c98a','#8a6030'],['#8fb8d8','#3a6088'],['#7cf5ff','#2a7fc0'],['#4a9fff','#1a4080'],['#5a1040','#ff6b9d'],['#2a1840','#b06ae0'],['#ff3040','#2a0810']]) },
 ];
 
+/** Wave 3 — 18 families × 8 rarities = 144 species. Deepen wild/crypt/scrap + frost/sea. */
+const MONSTER_FAMILIES_W3 = [
+  { art: 'hawk', catalog: 'w3', unlock: 5, base: { size: 16, hp: 34, dmg: 9, speed: 116, xp: 12 },
+    names: [['havikpup','Havikpup'],['nachthavik','Nachthavik'],['stormhavik','Stormhavik'],['ashavik','Ashavik'],['maanhavik','Maanhavik'],['voidhavik','Voidhavik'],['nmhavik','Nachtmerrie-Havik'],['helhavik','Hel-Havik']],
+    colors: catalogColors([['#c98850','#6b4a28'],['#2a1840','#5a3fb0'],['#7cf5ff','#2a7fc0'],['#9a917f','#4a4038'],['#c47aff','#5a2080'],['#5a1040','#ff6b9d'],['#6b5cff','#2e2266'],['#ff3040','#2a0810']]) },
+  { art: 'ram', catalog: 'w3', unlock: 6, base: { size: 24, hp: 62, dmg: 12, speed: 88, xp: 14 },
+    names: [['ramling','Ramling'],['bosram','Bosram'],['kopram','Kopram'],['stormram','Stormram'],['kroonram','Kroonram'],['voidram','Voidram'],['nmram','Nachtmerrie-Ram'],['helram','Hel-Ram']],
+    colors: catalogColors([['#d4a574','#8a6030'],['#43b25b','#1e4a28'],['#c98850','#6b4a28'],['#7cf5ff','#2a7fc0'],['#ffd75e','#8a6020'],['#5a1040','#ff6b9d'],['#2a1840','#b06ae0'],['#ff3040','#2a0810']]) },
+  { art: 'cougar', catalog: 'w3', unlock: 8, base: { size: 22, hp: 52, dmg: 13, speed: 122, xp: 15 },
+    names: [['poemaling','Poemaling'],['bospoema','Bospoema'],['klauwpoema','Klauwpoema'],['stormpoema','Stormpoema'],['schaduwpoema','Schaduwpoema'],['voidpoema','Voidpoema'],['nmpoema','Nachtmerrie-Poema'],['helpoema','Hel-Poema']],
+    colors: catalogColors([['#e8c98a','#8a6030'],['#c98850','#6b4a28'],['#ff8c42','#d05a1e'],['#7cf5ff','#2a7fc0'],['#2a1840','#5a3fb0'],['#5a1040','#ff6b9d'],['#6b5cff','#2e2266'],['#ff3040','#2a0810']]) },
+  { art: 'weasel', catalog: 'w3', unlock: 4, base: { size: 15, hp: 36, dmg: 9, speed: 128, xp: 11 },
+    names: [['wezelling','Wezelling'],['boswezel','Boswezel'],['bijtwezel','Bijtwezel'],['stormwezel','Stormwezel'],['schaduwwezel','Schaduwwezel'],['voidwezel','Voidwezel'],['nmwezel','Nachtmerrie-Wezel'],['helwezel','Hel-Wezel']],
+    colors: catalogColors([['#c98850','#6b4a28'],['#43b25b','#1e4a28'],['#ff8c42','#d05a1e'],['#7cf5ff','#2a7fc0'],['#2a1840','#5a3fb0'],['#5a1040','#ff6b9d'],['#6b5cff','#2e2266'],['#ff3040','#2a0810']]) },
+  { art: 'porcupine', catalog: 'w3', unlock: 7, base: { size: 18, hp: 58, dmg: 10, speed: 52, xp: 13 },
+    names: [['quillpup','Quillpup'],['bosquill','Bosquill'],['pantsquill','Pantsquill'],['stormquill','Stormquill'],['koningquill','Koningquill'],['voidquill','Voidquill'],['nmquill','Nachtmerrie-Quill'],['helquill','Hel-Quill']],
+    colors: catalogColors([['#c98850','#8a5a30'],['#43b25b','#1e4a28'],['#9fb2c8','#5f7189'],['#7cf5ff','#2a7fc0'],['#ffd75e','#8a6020'],['#5a1040','#ff6b9d'],['#2a1840','#b06ae0'],['#ff3040','#2a0810']]) },
+  { art: 'toad', catalog: 'w3', unlock: 2, base: { size: 18, hp: 42, dmg: 8, speed: 54, xp: 10 },
+    names: [['paddeling','Paddeling'],['moeraspadd','Moeraspadd'],['knorpadd','Knorpadd'],['stormpadd','Stormpadd'],['koningpadd','Koningpadd'],['voidpadd','Voidpadd'],['nmpadd','Nachtmerrie-Pad'],['helpadd','Hel-Pad']],
+    colors: catalogColors([['#4a8f52','#1e4a28'],['#5ad06a','#2a6030'],['#c98850','#6b4a28'],['#7cf5ff','#2a7fc0'],['#ffd75e','#8a6020'],['#5a1040','#ff6b9d'],['#b06ae0','#5a2080'],['#ff3040','#2a0810']]) },
+  { art: 'ghoul', catalog: 'w3', unlock: 10, base: { size: 21, hp: 56, dmg: 12, speed: 82, xp: 15 },
+    names: [['ghoulling','Ghoulling'],['grafghoul','Grafghoul'],['bijtghoul','Bijtghoul'],['stormghoul','Stormghoul'],['grafvreter','Grafvreter'],['voidghoul','Voidghoul'],['nmghoul','Nachtmerrie-Ghoul'],['helghoul','Hel-Ghoul']],
+    colors: catalogColors([['#8a8478','#3a3830'],['#6b5344','#3a2820'],['#9a917f','#4a4038'],['#7cf5ff','#2a7fc0'],['#c47aff','#5a2080'],['#5a1040','#ff6b9d'],['#2a1840','#b06ae0'],['#ff3040','#2a0810']]) },
+  { art: 'wraith', catalog: 'w3', unlock: 12, base: { size: 17, hp: 40, dmg: 11, speed: 108, xp: 16 },
+    names: [['wraithling','Wraithling'],['nachtwraith','Nachtwraith'],['zielwraith','Zielwraith'],['stormwraith','Stormwraith'],['etherwraith','Etherwraith'],['voidwraith','Voidwraith'],['nmwraith','Nachtmerrie-Wraith'],['helwraith','Hel-Wraith']],
+    colors: catalogColors([['#cfe6ff','#7aa8cf'],['#2a1840','#5a3fb0'],['#c47aff','#5a2080'],['#7cf5ff','#2a7fc0'],['#a8e0ff','#3a7fc0'],['#5a1040','#ff6b9d'],['#6b5cff','#2e2266'],['#ff3040','#2a0810']]) },
+  { art: 'bonehound', catalog: 'w3', unlock: 11, base: { size: 20, hp: 54, dmg: 13, speed: 112, xp: 16 },
+    names: [['bothond','Bothond'],['grafhond','Grafhond'],['knokhond','Knokhond'],['stormbothond','Stormbothond'],['grafbek','Grafbek'],['voidbothond','Voidbothond'],['nmbothond','Nachtmerrie-Bothond'],['helbothond','Hel-Bothond']],
+    colors: catalogColors([['#dfe8ff','#6a7080'],['#9fb2c8','#5f7189'],['#cfe6ff','#7aa8cf'],['#7cf5ff','#2a7fc0'],['#ffd75e','#8a6020'],['#5a1040','#ff6b9d'],['#2a1840','#b06ae0'],['#ff3040','#2a0810']]) },
+  { art: 'revenant', catalog: 'w3', unlock: 14, base: { size: 24, hp: 80, dmg: 14, speed: 38, xp: 19 },
+    names: [['revenling','Revenling'],['grafrev','Grafrev'],['terugkeer','Terugkeer'],['stormrev','Stormrev'],['doodrev','Doodrev'],['voidrev','Voidrev'],['nmrev','Nachtmerrie-Rev'],['helrev','Hel-Rev']],
+    colors: catalogColors([['#9a917f','#4a4038'],['#6b5344','#3a2820'],['#dfe8ff','#6a7080'],['#7cf5ff','#2a7fc0'],['#c47aff','#5a2080'],['#5a1040','#ff6b9d'],['#2a1840','#b06ae0'],['#ff3040','#2a0810']]) },
+  { art: 'shade', catalog: 'w3', unlock: 13, base: { size: 16, hp: 42, dmg: 11, speed: 56, xp: 16 },
+    names: [['schimling','Schimling'],['grafschim','Grafschim'],['zielschim','Zielschim'],['stormschim','Stormschim'],['nachtschim','Nachtschim'],['voidschim','Voidschim'],['nmschim','Nachtmerrie-Schim'],['helschim','Hel-Schim']],
+    colors: catalogColors([['#505868','#202830'],['#2a1840','#5a3fb0'],['#c47aff','#5a2080'],['#7cf5ff','#2a7fc0'],['#6b5cff','#2e2266'],['#5a1040','#ff6b9d'],['#2a1840','#b06ae0'],['#ff3040','#2a0810']]) },
+  { art: 'welder', catalog: 'w3', unlock: 12, base: { size: 18, hp: 48, dmg: 11, speed: 50, xp: 15 },
+    names: [['vonkling','Vonkling'],['lasbrander','Lasbrander'],['vonkbot','Vonkbot'],['stormlas','Stormlas'],['kernlas','Kernlas'],['voidlas','Voidlas'],['nmlas','Nachtmerrie-Las'],['hellas','Hel-Las']],
+    colors: catalogColors([['#ff9a42','#8a2020'],['#b86a4a','#6a3820'],['#ffd75e','#c97a20'],['#7cf5ff','#2a7fc0'],['#ff7043','#8a2020'],['#5a1040','#ff6b9d'],['#2a1840','#b06ae0'],['#ff3040','#2a0810']]) },
+  { art: 'sawbot', catalog: 'w3', unlock: 13, base: { size: 20, hp: 56, dmg: 13, speed: 102, xp: 16 },
+    names: [['zaagling','Zaagling'],['zaagbot','Zaagbot'],['knipzaag','Knipzaag'],['stormzaag','Stormzaag'],['megazaag','Megazaag'],['voidzaag','Voidzaag'],['nmzaag','Nachtmerrie-Zaag'],['helzaag','Hel-Zaag']],
+    colors: catalogColors([['#9fb2c8','#5f7189'],['#b86a4a','#6a3820'],['#dfe8ff','#6a7080'],['#7cf5ff','#2a7fc0'],['#ffd75e','#8a6020'],['#5a1040','#ff6b9d'],['#2a1840','#b06ae0'],['#ff3040','#2a0810']]) },
+  { art: 'rustmite', catalog: 'w3', unlock: 9, base: { size: 14, hp: 32, dmg: 8, speed: 78, xp: 11 },
+    names: [['roestmijt','Roestmijt'],['schrootmijt','Schrootmijt'],['knaagmijt','Knaagmijt'],['stormmijt','Stormmijt'],['megamijt','Megamijt'],['voidmijt','Voidmijt'],['nmmijt','Nachtmerrie-Mijt'],['helmijt','Hel-Mijt']],
+    colors: catalogColors([['#b86a4a','#6a3820'],['#9a917f','#4a4038'],['#c98850','#7a5030'],['#7cf5ff','#2a7fc0'],['#ffd75e','#8a6020'],['#5a1040','#ff6b9d'],['#2a1840','#b06ae0'],['#ff3040','#2a0810']]) },
+  { art: 'furnace', catalog: 'w3', unlock: 16, base: { size: 28, hp: 96, dmg: 15, speed: 28, xp: 20 },
+    names: [['ovenling','Ovenling'],['smeltoven','Smeltoven'],['stoofoven','Stoofoven'],['stormoven','Stormoven'],['kernoven','Kernoven'],['voidoven','Voidoven'],['nmoven','Nachtmerrie-Oven'],['heloven','Hel-Oven']],
+    colors: catalogColors([['#ff7043','#8a2020'],['#b86a4a','#6a3820'],['#ffd75e','#c97a20'],['#7cf5ff','#2a7fc0'],['#ff9a42','#8a2818'],['#5a1040','#ff6b9d'],['#2a1840','#b06ae0'],['#ff3040','#2a0810']]) },
+  { art: 'coil', catalog: 'w3', unlock: 14, base: { size: 16, hp: 44, dmg: 12, speed: 46, xp: 16 },
+    names: [['spoelling','Spoelling'],['vonkspoel','Vonkspoel'],['stroomspoel','Stroomspoel'],['stormspoel','Stormspoel'],['megaspoel','Megaspoel'],['voidspoel','Voidspoel'],['nmspoel','Nachtmerrie-Spoel'],['helspoel','Hel-Spoel']],
+    colors: catalogColors([['#7cf5ff','#2a7fc0'],['#9fb2c8','#5f7189'],['#ffe259','#c97a20'],['#6fd7ff','#2a5080'],['#c47aff','#5a2080'],['#5a1040','#ff6b9d'],['#2a1840','#b06ae0'],['#ff3040','#2a0810']]) },
+  { art: 'mammoth', catalog: 'w3', unlock: 15, base: { size: 32, hp: 98, dmg: 16, speed: 32, xp: 21 },
+    names: [['manmoetpup','Manmoetpup'],['sneeuwmanmoet','Sneeuwmanmoet'],['slagtandijs','Slagtandijs'],['stormmanmoet','Stormmanmoet'],['kroonmanmoet','Kroonmanmoet'],['voidmanmoet','Voidmanmoet'],['nmmanmoet','Nachtmerrie-Manmoet'],['helmanmoet','Hel-Manmoet']],
+    colors: catalogColors([['#dfe8ff','#6a7080'],['#a8e0ff','#3a7fc0'],['#9fb2c8','#5f7189'],['#7cf5ff','#2a7fc0'],['#cfe6ff','#7aa8cf'],['#5a1040','#ff6b9d'],['#2a1840','#b06ae0'],['#ff3040','#2a0810']]) },
+  { art: 'urchin', catalog: 'w3', unlock: 8, base: { size: 15, hp: 38, dmg: 9, speed: 64, xp: 12 },
+    names: [['zeeegel','Zeeegel'],['stekelegel','Stekelegel'],['rifegel','Rifegel'],['stormegel','Stormegel'],['koningsegel','Koningsegel'],['voidegel','Voidegel'],['nmegel','Nachtmerrie-Egel'],['helegel','Hel-Egel']],
+    colors: catalogColors([['#c47aff','#5a2080'],['#ff7043','#8a2020'],['#43b25b','#1e4a28'],['#7cf5ff','#2a7fc0'],['#ffd75e','#8a6020'],['#5a1040','#ff6b9d'],['#2a1840','#b06ae0'],['#ff3040','#2a0810']]) },
+];
+
+function allMonsterCatalogFamilies() {
+  return [].concat(MONSTER_FAMILIES_W2 || [], MONSTER_FAMILIES_W3 || []);
+}
+
 function catalogUnlockFor(step, familyUnlock) {
   const base = Number(familyUnlock) || 1;
   if (step.unlockAdd === 'nm') return Math.max(51, base + 36);
@@ -14136,7 +15713,7 @@ function expandMonsterCatalog(families) {
   const species = {};
   const unlockAt = {};
   const collisions = [];
-  const list = families || MONSTER_FAMILIES_W2;
+  const list = families || (typeof allMonsterCatalogFamilies === 'function' ? allMonsterCatalogFamilies() : MONSTER_FAMILIES_W2);
   for (const fam of list) {
     const slot = MONSTER_ART_SLOTS[fam.art] || {};
     const names = fam.names || [];
@@ -14159,7 +15736,7 @@ function expandMonsterCatalog(families) {
         name,
         art: fam.art,
         artSlot: fam.art,
-        catalog: 'w2',
+        catalog: fam.catalog || 'w2',
         biome: slot.biome || fam.biome || 'classic',
         pixel: pixelId || undefined,
         pixelStatus: slot.pixelStatus || 'stub',
@@ -14217,23 +15794,48 @@ function catalogSpeciesPool(levelN, maxRarityOrder, arts) {
 function wildSpeciesPool(levelN, maxRarityOrder) {
   return catalogSpeciesPool(levelN, maxRarityOrder, WILD_ARTS);
 }
+function frostSpeciesPool(levelN, maxRarityOrder) {
+  return catalogSpeciesPool(levelN, maxRarityOrder, FROST_ARTS);
+}
 function cryptSpeciesPool(levelN, maxRarityOrder) {
   return catalogSpeciesPool(levelN, maxRarityOrder, CRYPT_ARTS);
 }
 function scrapSpeciesPool(levelN, maxRarityOrder) {
   return catalogSpeciesPool(levelN, maxRarityOrder, SCRAP_ARTS);
 }
+function reefSpeciesPool(levelN, maxRarityOrder) {
+  return catalogSpeciesPool(levelN, maxRarityOrder, CATALOG_SEA_ARTS);
+}
 
-function applyCatalogWave(list, pool, n, rarityBias, giantForce) {
+function applyCatalogWave(list, pool, n, rarityBias, giantForce, eliteBias) {
   if (!pool || !pool.length || !list || !list.length) return;
+  const eliteP = Number(eliteBias) || 0;
   for (let i = 0; i < list.length; i++) {
-    if (Math.random() < 0.72) {
+    if (Math.random() < 0.76) {
       const sp = weightedPick(pool, n, rarityBias);
       list[i].sp = sp;
+      if (eliteP && Math.random() < eliteP) list[i].elite = true;
       if (giantForce) list[i].giant = true;
       else list[i].giant = list[i].giant || rollWaveGiant(n, !!list[i].elite, sp, 0);
     }
   }
+}
+
+function biomeTelegraphMul(biome) {
+  if (biome === 'crypt') return 1.16;
+  if (biome === 'scrap') return 0.88;
+  if (biome === 'frost') return 1.10;
+  if (biome === 'wild') return 0.94;
+  if (biome === 'sea') return 1.06;
+  return 1;
+}
+
+function biomeTechniqueKind(biome) {
+  if (biome === 'crypt') return 'spiral_orb';
+  if (biome === 'scrap') return 'wave_cannon';
+  if (biome === 'frost' || biome === 'wild') return 'lightning_pierce';
+  if (biome === 'sea') return 'wave_cannon';
+  return null;
 }
 /* --- src/data/monsters.js --- */
 /* ============================ MONSTERS ================================= */
@@ -14529,7 +16131,9 @@ const SPECIES = {
     tideCerber: { name: 'Driekoppige Jachthond', art: 'tideHound', size: 36, hp: 345, dmg: 29, speed: 92, type: 'charge', xp: 124, rarity: 'mythic', c1: '#505868', c2: '#202830' },
 };
 const MONSTER_CATALOG_W2_EXPANDED = (typeof expandMonsterCatalog === 'function')
-  ? expandMonsterCatalog(typeof MONSTER_FAMILIES_W2 !== 'undefined' ? MONSTER_FAMILIES_W2 : [])
+  ? expandMonsterCatalog(typeof allMonsterCatalogFamilies === 'function'
+    ? allMonsterCatalogFamilies()
+    : (typeof MONSTER_FAMILIES_W2 !== 'undefined' ? MONSTER_FAMILIES_W2 : []))
   : { species: {}, unlockAt: {}, familyCount: 0, speciesCount: 0 };
 Object.assign(SPECIES, MONSTER_CATALOG_W2_EXPANDED.species || {});
 for (const _spId of Object.keys(SPECIES)) {
@@ -14644,9 +16248,14 @@ function speciesTop10Threshold() {
   return _speciesTop10Threshold;
 }
 
-function pickEnemyTechnique(spId, levelN) {
+function pickEnemyTechnique(spId, levelN, biome) {
   if (levelN < ENEMY_TECHNIQUE_MIN_LEVEL) return null;
   if (speciesPowerScore(spId) < speciesTop10Threshold()) return null;
+  const b = biome || (SPECIES[spId] && SPECIES[spId].biome);
+  if (typeof biomeTechniqueKind === 'function') {
+    const flavored = biomeTechniqueKind(b);
+    if (flavored) return flavored;
+  }
   return ENEMY_TECHNIQUE_KINDS[Math.floor(Math.random() * ENEMY_TECHNIQUE_KINDS.length)];
 }
 
@@ -14710,13 +16319,17 @@ const COLOSSAL_HP_MUL = 1.9;
 const COLOSSAL_DMG_MUL = 1.12;
 const COLOSSAL_XP_MUL = 1.45;
 
-const SEA_ARTS = new Set(['shark', 'octo', 'crab', 'turtle', 'squid', 'ray']);
+const SEA_ARTS = new Set([
+  'shark', 'octo', 'crab', 'turtle', 'squid', 'ray',
+  ...(typeof CATALOG_SEA_ARTS !== 'undefined' ? CATALOG_SEA_ARTS : []),
+]);
 const FARM_ARTS = new Set(['cow', 'pig', 'chicken', 'sheep', 'horse', 'goat', 'duck', 'rooster', 'donkey', 'goose']);
 const ZOO_ARTS = new Set(['elephant', 'lion', 'tiger', 'giraffe', 'hippo', 'rhino', 'gorilla', 'zebra', 'bear', 'croc', 'kangaroo', 'panda', 'flamingo', 'camel']);
 const BEAST_SIZE_ARTS = new Set([
   ...FARM_ARTS,
   ...ZOO_ARTS,
   ...(typeof WILD_ARTS !== 'undefined' ? WILD_ARTS : []),
+  ...(typeof FROST_ARTS !== 'undefined' ? FROST_ARTS : []),
   ...(typeof CRYPT_ARTS !== 'undefined' ? CRYPT_ARTS : []),
   ...(typeof SCRAP_ARTS !== 'undefined' ? SCRAP_ARTS : []),
 ]);
@@ -14759,6 +16372,7 @@ function speciesBiomeId(sp, id) {
   if (typeof CATALOG_SEA_ARTS !== 'undefined' && CATALOG_SEA_ARTS.has(sp.art)) return 'sea';
   if (typeof CRYPT_ARTS !== 'undefined' && CRYPT_ARTS.has(sp.art)) return 'crypt';
   if (typeof SCRAP_ARTS !== 'undefined' && SCRAP_ARTS.has(sp.art)) return 'scrap';
+  if (typeof FROST_ARTS !== 'undefined' && FROST_ARTS.has(sp.art)) return 'frost';
   if (typeof WILD_ARTS !== 'undefined' && WILD_ARTS.has(sp.art)) {
     const slot = typeof MONSTER_ART_SLOTS !== 'undefined' ? MONSTER_ART_SLOTS[sp.art] : null;
     return (slot && slot.biome) || 'wild';
@@ -14882,6 +16496,24 @@ const ART_BLURB = {
   turtle: 'Schild. Daarna nog een schild.',
   squid: 'Armen genoeg voor iedereen.',
   ray: 'Glijdt alsof water optioneel is.',
+  hawk: 'Duikt alsof jij de muis bent.',
+  ram: 'Hoorns eerst, excuses later.',
+  cougar: 'Zachte poot, harde landing.',
+  weasel: 'Te smal voor je timing.',
+  porcupine: 'Knuffelen is een slecht plan.',
+  toad: 'Dikker dan een kikker. Nog steeds springt.',
+  ghoul: 'Honger met een graf-adres.',
+  wraith: 'Half lucht, helemaal lastig.',
+  bonehound: 'Kwispelt met een dijbeen.',
+  revenant: 'Was al dood. Komt toch.',
+  shade: 'Schaduw die terugschiet.',
+  welder: 'Vonken zijn het gesprek.',
+  sawbot: 'Zaag als begroeting.',
+  rustmite: 'Klein. Eet metaal. En tempo.',
+  furnace: 'Loopende oven. Geen thermostaat.',
+  coil: 'Spoel vol slechte ideeën.',
+  mammoth: 'Wol + slagtand + deadline.',
+  urchin: 'Een bal stekels met een mening.',
 };
 
 const TYPE_BLURB = {
@@ -14950,10 +16582,10 @@ const BOSS_AT = {
   40: [{ sp: 'voidkonijn', elite: true }, { sp: 'schaduwvorst' }],
   45: [{ sp: 'voidkonijn', elite: true }, { sp: 'guvvedrak' }],
   50: [{ sp: 'guvvedrak', elite: true }, { sp: 'voidkonijn', elite: true }, { sp: 'schaduwvorst', elite: true }],
-  55: [{ sp: 'voidkonijn', elite: true }, { sp: 'neondrake', elite: true }, { sp: 'schaduwvorst' }, { sp: 'voidyeti', elite: true }],
-  60: [{ sp: 'guvvedrak', elite: true }, { sp: 'omegadrake', elite: true }, { sp: 'voidkonijn', elite: true }, { sp: 'voidlich', elite: true }],
-  65: [{ sp: 'omegadrake', elite: true }, { sp: 'etherwyrm', elite: true }, { sp: 'neondrake' }, { sp: 'voidwolf', elite: true }],
-  70: [{ sp: 'guvvedrak', elite: true }, { sp: 'omegadrake', elite: true }, { sp: 'apexwyrm', elite: true }, { sp: 'voidkonijn', elite: true }, { sp: 'voidklink', elite: true }],
+  55: [{ sp: 'voidkonijn', elite: true }, { sp: 'neondrake', elite: true }, { sp: 'schaduwvorst' }, { sp: 'voidyeti', elite: true }, { sp: 'voidhavik', elite: true }],
+  60: [{ sp: 'guvvedrak', elite: true }, { sp: 'omegadrake', elite: true }, { sp: 'voidkonijn', elite: true }, { sp: 'voidlich', elite: true }, { sp: 'voidghoul', elite: true }],
+  65: [{ sp: 'omegadrake', elite: true }, { sp: 'etherwyrm', elite: true }, { sp: 'neondrake' }, { sp: 'voidwolf', elite: true }, { sp: 'voidzaag', elite: true }],
+  70: [{ sp: 'guvvedrak', elite: true }, { sp: 'omegadrake', elite: true }, { sp: 'apexwyrm', elite: true }, { sp: 'voidkonijn', elite: true }, { sp: 'voidklink', elite: true }, { sp: 'voidmanmoet', elite: true }],
 };
 
 function weightedPick(pool, n, rarityBias) {
@@ -15167,31 +16799,47 @@ function buildLevel(n, diffId) {
           }
         }
       }
-    } else if (n >= 4 && roll < 0.80) {
+    } else if (n >= 4 && roll < 0.78) {
       meta.trait = 'woods';
       meta.spawnMul = 0.88;
       meta.label = 'woods';
       const wildPool = typeof wildSpeciesPool === 'function' ? wildSpeciesPool(n, maxRarity) : [];
       if (wildPool.length && typeof applyCatalogWave === 'function') {
-        applyCatalogWave(list, wildPool, n, rarityBias, false);
+        applyCatalogWave(list, wildPool, n, rarityBias, false, 0.12);
       }
-    } else if (n >= 9 && roll < 0.86) {
+    } else if (n >= 6 && roll < 0.84) {
+      meta.trait = 'frost';
+      meta.spawnMul = 0.92;
+      meta.label = 'frost';
+      const frostPool = typeof frostSpeciesPool === 'function' ? frostSpeciesPool(n, maxRarity) : [];
+      if (frostPool.length && typeof applyCatalogWave === 'function') {
+        applyCatalogWave(list, frostPool, n, rarityBias, n >= 12, 0.10);
+      }
+    } else if (n >= 9 && roll < 0.89) {
       meta.trait = 'crypt';
       meta.spawnMul = 0.86;
       meta.label = 'crypt';
       const cryptPool = typeof cryptSpeciesPool === 'function' ? cryptSpeciesPool(n, maxRarity) : [];
       if (cryptPool.length && typeof applyCatalogWave === 'function') {
-        applyCatalogWave(list, cryptPool, n, rarityBias, false);
+        applyCatalogWave(list, cryptPool, n, rarityBias, false, 0.22);
       }
-    } else if (n >= 12 && roll < 0.92) {
+    } else if (n >= 12 && roll < 0.93) {
       meta.trait = 'scrap';
-      meta.spawnMul = 0.84;
+      meta.spawnMul = 0.80;
       meta.label = 'scrap';
       const scrapPool = typeof scrapSpeciesPool === 'function' ? scrapSpeciesPool(n, maxRarity) : [];
       if (scrapPool.length && typeof applyCatalogWave === 'function') {
-        applyCatalogWave(list, scrapPool, n, rarityBias, false);
+        applyCatalogWave(list, scrapPool, n, rarityBias, false, 0.16);
       }
-    } else if (n >= 7 && roll < 0.96) {
+    } else if (n >= 8 && roll < 0.96) {
+      meta.trait = 'reef';
+      meta.spawnMul = 0.86;
+      meta.label = 'reef';
+      const reefPool = typeof reefSpeciesPool === 'function' ? reefSpeciesPool(n, maxRarity) : [];
+      if (reefPool.length && typeof applyCatalogWave === 'function') {
+        applyCatalogWave(list, reefPool, n, rarityBias, false, 0.10);
+      }
+    } else if (n >= 7 && roll < 0.99) {
       const sp = weightedPick(pool, n, rarityBias);
       list.push({ sp, elite: true, giant: rollWaveGiant(n, true, sp, diff.giantBonus) });
       meta.trait = 'elite';
@@ -15258,8 +16906,10 @@ const WAVE_TRAIT_BANNER = {
   ranch: { key: 'banner.ranchWave', color: '#e8c98a', size: 40 },
   safari: { key: 'banner.safariWave', color: '#43b25b', size: 40 },
   woods: { key: 'banner.woodsWave', color: '#6ee06e', size: 40 },
+  frost: { key: 'banner.frostWave', color: '#a8e0ff', size: 40 },
   crypt: { key: 'banner.cryptWave', color: '#c47aff', size: 40 },
   scrap: { key: 'banner.scrapWave', color: '#9fb2c8', size: 40 },
+  reef: { key: 'banner.reefWave', color: '#4a9fff', size: 40 },
   ember: { key: 'banner.emberWave', color: '#ff7a4d', size: 42 },
   pain: { key: 'banner.painWave', color: '#ff3a2a', size: 44 },
 };
@@ -16297,43 +17947,57 @@ function petProgressLine(speciesId) {
     echo: 'echo'
   };
 
-  /* Rank 0–4 at Lv 1/3/5/7/9. Conservative stacked caps match pets/styles. */
+  /* Rank 0–4 at Lv 1/3/5/7/9. Identity per factory — catalog power ids + sane caps. */
   var POWER_BY_RANK = {
     stick_lighter: [
-      { critBonus: 0.01 },
-      { critBonus: 0.02 },
-      { critBonus: 0.03, dmgMul: 1.02 },
-      { critBonus: 0.04, dmgMul: 1.04 },
-      { critBonus: 0.05, dmgMul: 1.06 }
+      { id: 'spark_kindle', critBonus: 0.02 },
+      { id: 'kindle_trail', critBonus: 0.04 },
+      { id: 'ember_pocket', critBonus: 0.06 },
+      { id: 'flare_step', critBonus: 0.08 },
+      { id: 'matchstick_storm', critBonus: 0.10 }
     ],
     woodchip_glue: [
-      { shieldWave: 0.35 },
-      { shieldWave: 0.70 },
-      { shieldWave: 1.00, defMul: 0.96 },
-      { shieldWave: 1.40, defMul: 0.94 },
-      { shieldWave: 1.80, defMul: 0.92 }
+      { id: 'sticky_soles', shieldWave: 0.55, kbMul: 0.78 },
+      { id: 'tacky_block', shieldWave: 0.90, kbMul: 0.78, blockMul: 0.72 },
+      { id: 'glue_trap', shieldWave: 1.25, kbMul: 0.72, blockMul: 0.72, defMul: 0.95 },
+      { id: 'paste_armor', shieldWave: 1.80, kbMul: 0.72, blockMul: 0.68, defMul: 0.92 },
+      { id: 'chip_golem', shieldWave: 2.40, kbMul: 0.68, blockMul: 0.64, defMul: 0.88 }
     ],
     chipping_wood: [
-      { dmgMul: 1.02 },
-      { dmgMul: 1.04 },
-      { dmgMul: 1.06, speedMul: 1.02 },
-      { dmgMul: 1.09, speedMul: 1.04 },
-      { dmgMul: 1.12, speedMul: 1.06 }
+      { id: 'splinter_edge', dmgMul: 1.04 },
+      { id: 'chip_spray', dmgMul: 1.08 },
+      { id: 'sawdust_cloud', dmgMul: 1.12, speedMul: 1.04 },
+      { id: 'hopper_guard', dmgMul: 1.15, speedMul: 1.07 },
+      { id: 'chipper_fury', dmgMul: 1.18, speedMul: 1.10 }
     ],
     bamboo_boesa: [
-      { maxHp: 4 },
-      { maxHp: 8 },
-      { maxHp: 12, healBetween: 0.02 },
-      { maxHp: 16, healBetween: 0.03 },
-      { maxHp: 20, healBetween: 0.04 }
+      { id: 'boiler_hiss', maxHp: 6 },
+      { id: 'bamboo_vent', maxHp: 12 },
+      { id: 'bamboo_burst', maxHp: 18, healBetween: 0.04 },
+      { id: 'pressure_cook', maxHp: 26, healBetween: 0.06 },
+      { id: 'boesa_overheat', maxHp: 36, healBetween: 0.08 }
     ],
     echo_whistle: [
-      { energyMul: 1.04 },
-      { energyMul: 1.08 },
-      { energyMul: 1.10, techniqueMul: 1.04 },
-      { energyMul: 1.13, techniqueMul: 1.06 },
-      { energyMul: 1.16, techniqueMul: 1.08 }
+      { id: 'taunt_toot', energyMul: 1.06 },
+      { id: 'mill_heckle', energyMul: 1.10 },
+      { id: 'echo_ridge', energyMul: 1.14, techniqueMul: 1.08 },
+      { id: 'ridge_reply', energyMul: 1.18, techniqueMul: 1.12 },
+      { id: 'whistle_chorus', energyMul: 1.24, techniqueMul: 1.16 }
     ]
+  };
+
+  var POWER_CAPS = {
+    dmgMul: 1.18,
+    speedMul: 1.10,
+    energyMul: 1.24,
+    techniqueMul: 1.16,
+    critBonus: 0.10,
+    maxHp: 36,
+    shieldWave: 2.4,
+    defMul: 0.88,
+    healBetween: 0.08,
+    kbMul: 0.68,
+    blockMul: 0.64
   };
 
   function hasSystems() {
@@ -16449,7 +18113,8 @@ function petProgressLine(speciesId) {
       if (!id || !row || typeof row !== 'object') return;
       var prev = factories[id] || emptySite();
       var level = Math.max(prev.level, clampInt(row.level != null ? row.level : row.lv, 0, MAX_LEVEL));
-      var stored = Math.max(prev.stored, Math.max(0, Math.floor(Number(row.stored) || Number(row.pending) || 0)));
+      var storedIn = Number(row.stored != null ? row.stored : row.pending);
+      var stored = Math.max(prev.stored, (Number.isFinite(storedIn) && storedIn > 0) ? storedIn : 0);
       var last = Math.max(prev.lastTickAt, Math.floor(Number(row.lastTickAt) || 0));
       factories[id] = { level: level, lastTickAt: last, stored: stored };
       var stock = Math.max(0, Math.floor(Number(row.stock) || 0));
@@ -16518,7 +18183,7 @@ function petProgressLine(speciesId) {
     Object.keys(walIn).forEach(function (k) {
       var dest = canonRes(k);
       var n = Math.floor(Number(walIn[k]) || 0);
-      if (dest && n > 0) wallet[dest] = (wallet[dest] || 0) + n;
+      if (dest && n > 0) wallet[dest] = Math.max(wallet[dest] || 0, n);
     });
 
     return { factories: factories, wallet: wallet };
@@ -16532,7 +18197,11 @@ function petProgressLine(speciesId) {
       var entry = (migrated.factories && migrated.factories[id]) || {};
       var lv = clampInt(entry.level, 0, MAX_LEVEL);
       var out = rateCapAt(id, lv);
-      var stored = lv >= 1 ? clampInt(entry.stored, 0, out.cap || STORED_ABS) : 0;
+      var storedRaw = Number(entry.stored);
+      var stored = 0;
+      if (lv >= 1 && Number.isFinite(storedRaw) && storedRaw > 0) {
+        stored = clampNum(Math.round(storedRaw * 1000) / 1000, 0, out.cap || STORED_ABS);
+      }
       var last = Math.floor(Number(entry.lastTickAt) || 0);
       if (last < 0 || last > 4102444800000) last = 0;
       if (lv <= 0 && stored <= 0 && last <= 0) continue;
@@ -16602,6 +18271,9 @@ function petProgressLine(speciesId) {
       shieldWave: 0,
       defMul: 1,
       healBetween: 0,
+      kbMul: 1,
+      blockMul: 1,
+      powers: [],
       ranks: {}
     };
   }
@@ -16630,16 +18302,21 @@ function petProgressLine(speciesId) {
       if (p.shieldWave) out.shieldWave += p.shieldWave;
       if (p.defMul) out.defMul *= p.defMul;
       if (p.healBetween) out.healBetween += p.healBetween;
+      if (p.kbMul) out.kbMul *= p.kbMul;
+      if (p.blockMul) out.blockMul *= p.blockMul;
+      if (p.id) out.powers.push(p.id);
     }
-    out.dmgMul = clampNum(out.dmgMul, 1, 1.12);
-    out.speedMul = clampNum(out.speedMul, 1, 1.06);
-    out.energyMul = clampNum(out.energyMul, 1, 1.16);
-    out.techniqueMul = clampNum(out.techniqueMul, 1, 1.08);
-    out.critBonus = clampNum(out.critBonus, 0, 0.05);
-    out.maxHp = clampInt(out.maxHp, 0, 20);
-    out.shieldWave = clampNum(out.shieldWave, 0, 2.2);
-    out.defMul = clampNum(out.defMul, 0.92, 1);
-    out.healBetween = clampNum(out.healBetween, 0, 0.04);
+    out.dmgMul = clampNum(out.dmgMul, 1, POWER_CAPS.dmgMul);
+    out.speedMul = clampNum(out.speedMul, 1, POWER_CAPS.speedMul);
+    out.energyMul = clampNum(out.energyMul, 1, POWER_CAPS.energyMul);
+    out.techniqueMul = clampNum(out.techniqueMul, 1, POWER_CAPS.techniqueMul);
+    out.critBonus = clampNum(out.critBonus, 0, POWER_CAPS.critBonus);
+    out.maxHp = clampInt(out.maxHp, 0, POWER_CAPS.maxHp);
+    out.shieldWave = clampNum(out.shieldWave, 0, POWER_CAPS.shieldWave);
+    out.defMul = clampNum(out.defMul, POWER_CAPS.defMul, 1);
+    out.healBetween = clampNum(out.healBetween, 0, POWER_CAPS.healBetween);
+    out.kbMul = clampNum(out.kbMul, POWER_CAPS.kbMul, 1);
+    out.blockMul = clampNum(out.blockMul, POWER_CAPS.blockMul, 1);
     return out;
   }
 
@@ -16654,7 +18331,14 @@ function petProgressLine(speciesId) {
     game.buildingShieldWave = b.shieldWave || 0;
     game.buildingDefMul = b.defMul || 1;
     game.buildingHealBetween = b.healBetween || 0;
+    game.buildingKbMul = b.kbMul || 1;
+    game.buildingBlockMul = b.blockMul || 1;
     game.buildingPowerRanks = b.ranks;
+    game.buildingPowerIds = b.powers || [];
+    game.buildingSawdustT = 0;
+    if (typeof resetBuildingCombatWave === 'function') {
+      try { resetBuildingCombatWave(game); } catch (e0) { /* ignore */ }
+    }
     if (b.maxHp) {
       if (player.maxhp != null) {
         player.maxhp += b.maxHp;
@@ -16683,6 +18367,12 @@ function petProgressLine(speciesId) {
     return spec;
   }
 
+  function storedFloor(n) {
+    var v = Number(n);
+    if (!Number.isFinite(v) || v < 0) return 0;
+    return Math.floor(v + 1e-9);
+  }
+
   function tickOneLocal(id, row, now) {
     if (!row || row.level < 1) {
       if (row) row.lastTickAt = now;
@@ -16697,19 +18387,21 @@ function petProgressLine(speciesId) {
     }
     var elapsed = Math.min(now - last, OFFLINE_HOURS * MS_PER_HOUR);
     if (elapsed <= 0) return 0;
-    var stored = clampInt(row.stored, 0, out.cap);
+    var stored = clampNum(Number(row.stored) || 0, 0, out.cap);
     if (stored >= out.cap) {
       row.lastTickAt = now;
       row.stored = out.cap;
       return 0;
     }
-    var units = Math.floor((elapsed / MS_PER_HOUR) * out.perHour);
-    if (units <= 0) return 0;
-    var usedMs = Math.floor((units / out.perHour) * MS_PER_HOUR);
+    var units = (elapsed / MS_PER_HOUR) * out.perHour;
+    if (!(units > 0)) return 0;
     var before = stored;
-    row.stored = clampInt(stored + units, 0, out.cap);
-    row.lastTickAt = last + usedMs;
-    if (row.stored >= out.cap) row.lastTickAt = now;
+    row.stored = clampNum(stored + units, 0, out.cap);
+    row.lastTickAt = now;
+    if (row.stored >= out.cap) {
+      row.stored = out.cap;
+      row.lastTickAt = now;
+    }
     return row.stored - before;
   }
 
@@ -16761,27 +18453,34 @@ function petProgressLine(speciesId) {
         }
       } catch (e) { /* fall */ }
     }
-    tickBuildingResources(Date.now(), { skipPersist: true });
     var row = siteOf(save, canon);
-    var amount = Math.floor(Number(row.stored) || 0);
-    var res = resourceOf(canon);
-    if (amount < 1) return { ok: false, amount: 0, resource: res, resourceId: res, id: canon };
-    row.stored = 0;
-    row.lastTickAt = Date.now();
-    save.buildings.wallet[res] = clampInt((save.buildings.wallet[res] || 0) + amount, 0, WALLET_CAP);
-    if (!opts.skipPersist && typeof persist === 'function') persist();
-    if (!opts.silent && typeof userToast === 'function') {
-      var name = (typeof root.buildingLabel === 'function') ? root.buildingLabel(canon) : canon;
-      var resName = (typeof root.buildingResourceLabel === 'function') ? root.buildingResourceLabel(res) : res;
-      userToast(
-        (typeof tOr === 'function')
-          ? tOr('buildings.collected', '+{n} {res} · {name}', { n: amount, res: resName, name: name })
-          : ('+' + amount + ' ' + resName + ' · ' + name),
-        2400,
-        { tone: 'ok' }
-      );
+    if (row._collectLock) return { ok: false, amount: 0, resource: resourceOf(canon), resourceId: resourceOf(canon), id: canon };
+    row._collectLock = true;
+    try {
+      tickBuildingResources(Date.now(), { skipPersist: true });
+      row = siteOf(save, canon);
+      var amount = storedFloor(row.stored);
+      var res = resourceOf(canon);
+      if (amount < 1) return { ok: false, amount: 0, resource: res, resourceId: res, id: canon };
+      row.stored = 0;
+      row.lastTickAt = Date.now();
+      save.buildings.wallet[res] = clampInt((save.buildings.wallet[res] || 0) + amount, 0, WALLET_CAP);
+      if (!opts.skipPersist && typeof persist === 'function') persist();
+      if (!opts.silent && typeof userToast === 'function') {
+        var name = (typeof root.buildingLabel === 'function') ? root.buildingLabel(canon) : canon;
+        var resName = (typeof root.buildingResourceLabel === 'function') ? root.buildingResourceLabel(res) : res;
+        userToast(
+          (typeof tOr === 'function')
+            ? tOr('buildings.collected', '+{n} {res} · {name}', { n: amount, res: resName, name: name })
+            : ('+' + amount + ' ' + resName + ' · ' + name),
+          2400,
+          { tone: 'ok' }
+        );
+      }
+      return { ok: true, amount: amount, resource: res, resourceId: res, id: canon, buildingId: canon };
+    } finally {
+      row._collectLock = false;
     }
-    return { ok: true, amount: amount, resource: res, resourceId: res, id: canon, buildingId: canon };
   }
 
   function collectAllBuildingResources(opts) {
@@ -16895,7 +18594,7 @@ function petProgressLine(speciesId) {
       resource: resourceOf(canon),
       resourceName: resourceOf(canon),
       ratePerHour: out.perHour,
-      collectable: Math.floor(row.stored || 0) >= 1,
+      collectable: storedFloor(row.stored) >= 1,
       powerRank: powerRankOfLevel(lv)
     };
   }
@@ -16942,6 +18641,16 @@ function petProgressLine(speciesId) {
   root.BUILDING_POWER_LEVELS = POWER_LEVELS.slice();
   root.BUILDING_RESOURCE_CAP_MS = OFFLINE_HOURS * MS_PER_HOUR;
   root.BUILDING_POWER_TABLE = POWER_BY_RANK;
+  root.BUILDING_POWER_CAPS = POWER_CAPS;
+
+  function buildingPowerIdentity(id, saveObj) {
+    var canon = canonId(id);
+    if (!canon) return null;
+    var rank = powerRank(canon, saveObj);
+    var p = powerForRank(canon, rank);
+    return { id: canon, rank: rank, powerId: p.id || null, bonus: p };
+  }
+  root.buildingPowerIdentity = buildingPowerIdentity;
 
   root.sanitizeBuildingsBag = sanitizeBuildingsBag;
   root.emptyBuildingsBag = emptyBag;
@@ -16973,6 +18682,380 @@ function petProgressLine(speciesId) {
       applyBuildingPowersToPlayer: applyBuildingPowersToPlayer,
       buildingPowerBonus: buildingPowerBonus
     };
+  }
+})(typeof window !== 'undefined' ? window : globalThis);
+/* --- src/systems/buildings-combat.js --- */
+/* Stickman Fighter — building combat identities (powers depth)
+ * Applies catalog hooks from src/data/buildings.js (rank 0–4 @ Lv 1/3/5/7/9).
+ * Versus stays off. Never throw — fight must continue if a proc hiccups.
+ */
+(function (root) {
+  'use strict';
+
+  var POWER_MIN_RANK = {
+    spark_kindle: { building: 'stick_lighter', rank: 0 },
+    kindle_trail: { building: 'stick_lighter', rank: 1 },
+    ember_pocket: { building: 'stick_lighter', rank: 2 },
+    flare_step: { building: 'stick_lighter', rank: 3 },
+    matchstick_storm: { building: 'stick_lighter', rank: 4 },
+    sticky_soles: { building: 'woodchip_glue', rank: 0 },
+    tacky_block: { building: 'woodchip_glue', rank: 1 },
+    glue_trap: { building: 'woodchip_glue', rank: 2 },
+    paste_armor: { building: 'woodchip_glue', rank: 3 },
+    chip_golem: { building: 'woodchip_glue', rank: 4 },
+    splinter_edge: { building: 'chipping_wood', rank: 0 },
+    chip_spray: { building: 'chipping_wood', rank: 1 },
+    sawdust_cloud: { building: 'chipping_wood', rank: 2 },
+    hopper_guard: { building: 'chipping_wood', rank: 3 },
+    chipper_fury: { building: 'chipping_wood', rank: 4 },
+    boiler_hiss: { building: 'bamboo_boesa', rank: 0 },
+    bamboo_vent: { building: 'bamboo_boesa', rank: 1 },
+    bamboo_burst: { building: 'bamboo_boesa', rank: 2 },
+    pressure_cook: { building: 'bamboo_boesa', rank: 3 },
+    boesa_overheat: { building: 'bamboo_boesa', rank: 4 },
+    taunt_toot: { building: 'echo_whistle', rank: 0 },
+    mill_heckle: { building: 'echo_whistle', rank: 1 },
+    echo_ridge: { building: 'echo_whistle', rank: 2 },
+    ridge_reply: { building: 'echo_whistle', rank: 3 },
+    whistle_chorus: { building: 'echo_whistle', rank: 4 }
+  };
+
+  function combatOk(game) {
+    return !!(game && game.mode !== 'versus' && game.player && game.player.alive);
+  }
+
+  function saveOf(game) {
+    return (game && game.save) || (typeof save !== 'undefined' ? save : null);
+  }
+
+  function hasPower(powerId, game) {
+    if (typeof buildingHasPower === 'function') {
+      try { return !!buildingHasPower(powerId, saveOf(game)); } catch (e) { /* fall */ }
+    }
+    var meta = POWER_MIN_RANK[powerId];
+    if (!meta) return false;
+    var ranks = (game && game.buildingPowerRanks) || {};
+    var rank = ranks[meta.building];
+    if (rank == null && typeof buildingPowerRank === 'function') {
+      try { rank = buildingPowerRank(meta.building, saveOf(game)); } catch (e) { rank = -1; }
+    }
+    return (rank | 0) >= meta.rank;
+  }
+
+  function nowT(game) {
+    return (game && game.t) || 0;
+  }
+
+  function stateOf(game) {
+    if (!game.buildingCombat) {
+      game.buildingCombat = {
+        waveMelee: false,
+        waveHurt: false,
+        hopperGuard: false,
+        glueArmed: false,
+        cds: {},
+        heat: 0,
+        lastX: (game.player && game.player.x) || 0
+      };
+    }
+    return game.buildingCombat;
+  }
+
+  function resetBuildingCombatWave(game) {
+    if (!game) return;
+    var st = stateOf(game);
+    st.waveMelee = false;
+    st.waveHurt = false;
+    st.hopperGuard = false;
+    st.glueArmed = hasPower('glue_trap', game);
+    st.heat = 0;
+    if (game.player) st.lastX = game.player.x || 0;
+    if (hasPower('chip_golem', game) && game.player) {
+      game.playerShieldT = Math.max(game.playerShieldT || 0, 2.4);
+    }
+  }
+
+  function cdReady(st, key, t, cd) {
+    if ((st.cds[key] || 0) > t) return false;
+    st.cds[key] = t + cd;
+    return true;
+  }
+
+  function labelOf(key, fallback) {
+    if (typeof tOr === 'function') return tOr('buildings.power.' + key, fallback);
+    return fallback;
+  }
+
+  function nearestMonster(game, x, maxR) {
+    var best = null;
+    var bestD = maxR * maxR;
+    var list = game.monsters || [];
+    for (var i = 0; i < list.length; i++) {
+      var m = list[i];
+      if (!m || !m.alive) continue;
+      var dx = m.x - x;
+      var d = dx * dx;
+      if (d < bestD) { bestD = d; best = m; }
+    }
+    return best;
+  }
+
+  function eachNear(game, x, maxR, fn) {
+    var r2 = maxR * maxR;
+    var list = game.monsters || [];
+    for (var i = 0; i < list.length; i++) {
+      var m = list[i];
+      if (!m || !m.alive) continue;
+      var dx = m.x - x;
+      if (dx * dx <= r2) fn(m);
+    }
+  }
+
+  function dealChip(game, target, dmg, kb, text, color) {
+    if (!target || !target.alive || !game) return 0;
+    var n = Math.max(1, Math.round(dmg));
+    try {
+      if (typeof target.takeDamage === 'function') {
+        target.takeDamage(n, kb || 0, game, { quiet: n <= 2, kind: 'building', skipHitSfx: n <= 2 });
+      }
+    } catch (e) { return 0; }
+    if (text && n >= 2 && game.floater) {
+      try {
+        game.floater(target.x, (target.y || 0) - ((target.size || 40) + 8), text, color || '#ff9a4d', 11, 'fx');
+      } catch (e2) { /* ignore */ }
+    }
+    return n;
+  }
+
+  function emberOn(target, ticks, tickDmg) {
+    if (!target || !target.alive) return;
+    target.wpnBurnT = Math.max(target.wpnBurnT || 0, (ticks || 2) * 0.5);
+    target.wpnBurnDmg = Math.max(target.wpnBurnDmg || 0, tickDmg || 1);
+    target.wpnBurnTick = 0.5;
+  }
+
+  function slowTarget(target, dur, mul) {
+    if (typeof applySuperMonsterSlow === 'function') {
+      try { applySuperMonsterSlow(target, dur, mul); return; } catch (e) { /* fall */ }
+    }
+    if (!target) return;
+    target.superSlowT = Math.max(target.superSlowT || 0, dur || 1);
+    target.superSlowMul = Math.min(target.superSlowMul || 1, mul != null ? mul : 0.6);
+  }
+
+  function faceToward(target, player) {
+    if (!target || !player) return;
+    var dir = Math.sign(player.x - target.x) || 1;
+    target.face = dir;
+    target.vx = (target.vx || 0) * 0.35 + dir * 40;
+  }
+
+  function burstAt(game, x, y, color, n) {
+    if (!game || typeof game.burst !== 'function') return;
+    try {
+      if (typeof fxLite === 'function' && fxLite()) return;
+      game.burst(x, y, color, n || 6, { kind: 'spark', size: 2 });
+    } catch (e) { /* ignore */ }
+  }
+
+  function applyBuildingCombatHook(game, hook, ctx) {
+    if (!combatOk(game) || !hook) return;
+    if (game.mode === 'wall' || game.mode === 'coinrun') return;
+    ctx = ctx || {};
+    try {
+      var st = stateOf(game);
+      var t = nowT(game);
+      var player = game.player;
+      var target = ctx.target;
+
+      if (hook === 'onWaveStart') {
+        resetBuildingCombatWave(game);
+        return;
+      }
+
+      if (hook === 'onFirstMeleeHit' || hook === 'onWeaponHit' || hook === 'onComboStep') {
+        if (!target) return;
+        if (!st.waveMelee && hasPower('spark_kindle', game)) {
+          st.waveMelee = true;
+          emberOn(target, 3, 1);
+          burstAt(game, target.x, target.y - 20, '#ff9a4d', 5);
+        } else {
+          st.waveMelee = true;
+        }
+        if (hook === 'onWeaponHit' && hasPower('ember_pocket', game) && cdReady(st, 'ember', t, 0.55)) {
+          if (Math.random() < 0.22) {
+            dealChip(game, target, 2, (player.face || 1) * 40, labelOf('ember_pocket', 'Spark'), '#ff9a4d');
+            emberOn(target, 2, 1);
+          }
+        }
+        if (hook === 'onWeaponHit' && hasPower('splinter_edge', game) && cdReady(st, 'splinter', t, 0.4)) {
+          dealChip(game, target, 1, (player.face || 1) * 70, labelOf('splinter_edge', 'Chip'), '#7cfc8a');
+        }
+        var combo = game.combo || 0;
+        if (hasPower('chip_spray', game) && combo >= 3 && cdReady(st, 'spray', t, 0.7)) {
+          dealChip(game, target, 2, 0, labelOf('chip_spray', 'Spray'), '#7cfc8a');
+        }
+        if (hasPower('chipper_fury', game) && combo >= 6 && cdReady(st, 'fury', t, 0.9)) {
+          eachNear(game, target.x, 90, function (m) {
+            dealChip(game, m, 3, 0, null, '#7cfc8a');
+          });
+          burstAt(game, target.x, target.y - 16, '#7cfc8a', 8);
+        }
+        if (hasPower('pressure_cook', game)) {
+          st.heat = (st.heat || 0) + 1;
+          if (st.heat >= 5) {
+            st.heat = 0;
+            dealChip(game, target, 3, (player.face || 1) * 90, labelOf('pressure_cook', 'Steam'), '#ff7a4d');
+          }
+        }
+        if (hasPower('boesa_overheat', game) && player.hp <= player.maxhp * 0.3 && cdReady(st, 'overhit', t, 0.45)) {
+          dealChip(game, target, 2, 0, labelOf('boesa_overheat', 'Heat'), '#ff7a4d');
+        }
+        if (st.glueArmed && hasPower('glue_trap', game)) {
+          st.glueArmed = false;
+          slowTarget(target, 1.35, 0.55);
+          if (game.floater) {
+            try { game.floater(target.x, target.y - 28, labelOf('glue_trap', 'Glue'), '#c9a66b', 12, 'fx'); } catch (e3) { /* ignore */ }
+          }
+        }
+        return;
+      }
+
+      if (hook === 'onActiveCast') {
+        if (hasPower('sawdust_cloud', game)) {
+          game.buildingSawdustT = Math.max(game.buildingSawdustT || 0, 0.85);
+          burstAt(game, player.x + (player.face || 1) * 36, player.y - 40, '#c9b691', 7);
+        }
+        if (hasPower('bamboo_burst', game) && cdReady(st, 'burst', t, 3.2)) {
+          eachNear(game, player.x + (player.face || 1) * 50, 88, function (m) {
+            dealChip(game, m, 4, (player.face || 1) * 160, labelOf('bamboo_burst', 'Boesa'), '#ff7a4d');
+          });
+        }
+        if (hasPower('matchstick_storm', game) && cdReady(st, 'storm', t, 7.5)) {
+          eachNear(game, player.x + (player.face || 1) * 40, 100, function (m) {
+            emberOn(m, 4, 1);
+            dealChip(game, m, 3, (player.face || 1) * 50, labelOf('matchstick_storm', 'Match'), '#ff9a4d');
+          });
+        } else if (hasPower('flare_step', game) && cdReady(st, 'flarecast', t, 4.5)) {
+          var lined = nearestMonster(game, player.x + (player.face || 1) * 70, 110);
+          if (lined) emberOn(lined, 3, 1);
+        }
+        if (hasPower('whistle_chorus', game) && cdReady(st, 'chorus', t, 6.5)) {
+          eachNear(game, player.x, 150, function (m) {
+            faceToward(m, player);
+            slowTarget(m, 0.85, 0.62);
+          });
+          if (game.floater) {
+            try { game.floater(player.x, player.y - 100, labelOf('whistle_chorus', 'Chorus'), '#7cf5ff', 13, 'fx'); } catch (e4) { /* ignore */ }
+          }
+        } else if (hasPower('taunt_toot', game) && cdReady(st, 'toot', t, 2.8)) {
+          var foe = nearestMonster(game, player.x, 160);
+          if (foe) {
+            faceToward(foe, player);
+            if (game.floater) {
+              try { game.floater(foe.x, foe.y - 22, labelOf('taunt_toot', 'Toot'), '#7cf5ff', 12, 'fx'); } catch (e5) { /* ignore */ }
+            }
+          }
+        }
+        if (hasPower('glue_trap', game)) st.glueArmed = true;
+        return;
+      }
+
+      if (hook === 'onDash') {
+        if (hasPower('flare_step', game) && cdReady(st, 'flare', t, 1.1)) {
+          eachNear(game, player.x, 70, function (m) { emberOn(m, 2, 1); });
+          burstAt(game, player.x, player.y - 30, '#ff9a4d', 6);
+        }
+        if (hasPower('bamboo_vent', game) && cdReady(st, 'vent', t, 1.2)) {
+          var shove = nearestMonster(game, player.x + (player.face || 1) * 40, 95);
+          if (shove) {
+            shove.vx = (shove.vx || 0) + (player.face || 1) * 220;
+            dealChip(game, shove, 1, (player.face || 1) * 120, labelOf('bamboo_vent', 'Vent'), '#ff7a4d');
+          }
+        }
+        return;
+      }
+
+      if (hook === 'onHurt' || hook === 'onKnockback') {
+        if (!st.waveHurt) st.waveHurt = true;
+        if (hasPower('mill_heckle', game) && cdReady(st, 'heckle', t, 1.4)) {
+          var heck = nearestMonster(game, player.x, 140);
+          if (heck) faceToward(heck, player);
+        }
+        return;
+      }
+
+      if (hook === 'onBlock') {
+        if (hasPower('ridge_reply', game) && ctx.parry && cdReady(st, 'reply', t, 1.6)) {
+          var pip = nearestMonster(game, player.x, 120);
+          if (pip) slowTarget(pip, 0.7, 0.5);
+        }
+        return;
+      }
+
+      if (hook === 'onKill' && target) {
+        if (hasPower('echo_ridge', game) && cdReady(st, 'ridge', t, 0.35)) {
+          eachNear(game, target.x, 96, function (m) { slowTarget(m, 0.9, 0.58); });
+          burstAt(game, target.x, target.y - 18, '#7cf5ff', 7);
+        }
+      }
+    } catch (err) {
+      try { if (typeof sfReportError === 'function') sfReportError('building/combat', err, 'Fabriek-proc hiccup'); } catch (e6) { /* ignore */ }
+    }
+  }
+
+  function tickBuildingCombat(game, dt) {
+    if (!combatOk(game) || game.mode === 'wall' || game.mode === 'coinrun') return;
+    if (!(dt > 0)) return;
+    try {
+      var st = stateOf(game);
+      var player = game.player;
+      var t = nowT(game);
+      if (game.buildingSawdustT > 0) game.buildingSawdustT -= dt;
+
+      if (hasPower('kindle_trail', game) && Math.abs((player.x || 0) - (st.lastX || 0)) > 36 && cdReady(st, 'trail', t, 1.55)) {
+        var crumb = nearestMonster(game, player.x, 78);
+        if (crumb) emberOn(crumb, 2, 1);
+        burstAt(game, player.x, player.y - 8, '#ff9a4d', 4);
+        st.lastX = player.x;
+      } else if (Math.abs((player.x || 0) - (st.lastX || 0)) > 8) {
+        st.lastX = player.x;
+      }
+
+      var auraCd = hasPower('boesa_overheat', game) && player.hp <= player.maxhp * 0.3 ? 0.95 : 1.45;
+      if (hasPower('boiler_hiss', game) && cdReady(st, 'hiss', t, auraCd)) {
+        eachNear(game, player.x, 62, function (m) {
+          dealChip(game, m, 1, 0, null, '#ff7a4d');
+        });
+      }
+    } catch (err) {
+      try { if (typeof sfReportError === 'function') sfReportError('building/tick', err); } catch (e) { /* ignore */ }
+    }
+  }
+
+  function applyBuildingIncoming(game, player, dmg, opts) {
+    if (!combatOk(game) || !player || !player.isPlayer) return dmg;
+    opts = opts || {};
+    var st = stateOf(game);
+    var n = dmg;
+    if (!st.hopperGuard && hasPower('hopper_guard', game)) {
+      st.hopperGuard = true;
+      n = Math.max(1, Math.round(n * 0.55));
+    }
+    if ((game.buildingSawdustT || 0) > 0) {
+      n = Math.max(1, Math.round(n * 0.72));
+    }
+    return n;
+  }
+
+  root.applyBuildingCombatHook = applyBuildingCombatHook;
+  root.tickBuildingCombat = tickBuildingCombat;
+  root.resetBuildingCombatWave = resetBuildingCombatWave;
+  root.applyBuildingIncoming = applyBuildingIncoming;
+  root.BUILDING_POWER_MIN_RANK = POWER_MIN_RANK;
+
+  if (typeof module !== 'undefined' && module.exports) {
+    module.exports = { applyBuildingCombatHook: applyBuildingCombatHook, tickBuildingCombat: tickBuildingCombat };
   }
 })(typeof window !== 'undefined' ? window : globalThis);
 /* --- src/systems/buildings-bridge.js --- */
@@ -17088,6 +19171,17 @@ function buildingsWorldLocked(world) {
 }
 
 function buildingsArtPath(id) {
+  if (typeof buildingArtSrc === 'function') {
+    try {
+      const raw = buildingArtSrc(id);
+      if (raw && typeof raw === 'object' && (raw.pixel || raw.stroke || raw.hub)) {
+        return { pixel: raw.pixel, svg: raw.stroke || raw.pixel, hub: raw.hub || 'assets/buttons/hub/buildings.svg' };
+      }
+      if (typeof raw === 'string' && raw) {
+        return { pixel: raw, svg: raw, hub: 'assets/buttons/hub/buildings.svg' };
+      }
+    } catch (_) {}
+  }
   const pixel = 'assets/buildings/pixel/' + id + '.png';
   const svg = 'assets/buildings/' + id + '.svg';
   if (typeof document !== 'undefined' && document) {
@@ -17199,6 +19293,15 @@ function buildingsStubView(def, state, now) {
     artSvg: art.svg,
     artHub: art.hub,
     stub: true,
+    built: level >= 1,
+    canBuild: !locked && level < 1,
+    powerRank: level >= 1 ? Math.floor((level - 1) / 2) : -1,
+    powers: [],
+    powersUnlocked: [],
+    nextPower: null,
+    nextCost: { petCoins: upgradeCost, resources: {} },
+    blurb: buildingsI18nSub(def.id) || buildingsI18nName(def.id),
+    outputRate: 0,
   };
 }
 
@@ -17234,8 +19337,63 @@ function buildingsNormalizeView(raw) {
     art: raw.art || art.pixel,
     artSvg: raw.artSvg || art.svg,
     artHub: art.hub,
-    stub: false,
+    stub: !!raw.stub,
+    built: raw.built != null ? !!raw.built : Math.max(0, Math.floor(Number(raw.level ?? raw.lv) || 0)) >= 1,
+    canBuild: !!raw.canBuild,
+    powerRank: raw.powerRank != null ? Math.floor(Number(raw.powerRank)) : (Math.max(0, Math.floor(Number(raw.level ?? raw.lv) || 0)) >= 1 ? Math.floor((Math.max(0, Math.floor(Number(raw.level ?? raw.lv) || 0)) - 1) / 2) : -1),
+    powers: Array.isArray(raw.powers) ? raw.powers : [],
+    powersUnlocked: Array.isArray(raw.powersUnlocked) ? raw.powersUnlocked : [],
+    nextPower: raw.nextPower || null,
+    nextCost: raw.nextCost && typeof raw.nextCost === 'object' ? raw.nextCost : { petCoins: Math.max(0, Math.floor(Number(raw.upgradeCost) || 0)), resources: {} },
+    blurb: raw.blurb || raw.sub || buildingsI18nSub(id),
+    outputRate: Math.max(0, Math.floor(Number(raw.outputRate) || 0)),
   };
+}
+
+function buildingsAttachTooltip(view) {
+  if (!view || !view.id) return view;
+  const live = (typeof buildingDescModel === 'function')
+    ? buildingDescModel
+    : (typeof buildingTooltipModel === 'function') ? buildingTooltipModel : null;
+  if (!live) return view;
+  try {
+    const tip = live(view.id);
+    if (!tip) return view;
+    if (tip.blurb) view.blurb = tip.blurb;
+    if (tip.name) view.name = tip.name;
+    if (Array.isArray(tip.powers)) view.powers = tip.powers;
+    if (Array.isArray(tip.powersUnlocked)) view.powersUnlocked = tip.powersUnlocked;
+    if (tip.nextPower) view.nextPower = tip.nextPower;
+    if (tip.powerRank != null) view.powerRank = tip.powerRank;
+    if (tip.built != null) view.built = !!tip.built;
+    if (tip.canBuild != null) view.canBuild = !!tip.canBuild;
+    if (tip.nextCost) view.nextCost = tip.nextCost;
+    if (tip.outputRate != null) view.outputRate = tip.outputRate;
+    if (tip.pending != null) view.pending = Math.max(0, Math.floor(Number(tip.pending) || 0));
+    if (tip.storageCap != null) view.capacity = Math.max(1, Math.floor(Number(tip.storageCap) || 1));
+    if (tip.canCollect != null) view.canCollect = !!tip.canCollect;
+    if (tip.canUpgrade != null || tip.canBuild != null) view.canUpgrade = !!(tip.canUpgrade || tip.canBuild);
+    if (tip.level != null) view.level = Math.max(0, Math.floor(Number(tip.level) || 0));
+    if (tip.maxLevel != null) view.maxLevel = Math.max(1, Math.floor(Number(tip.maxLevel) || 10));
+    if (tip.resourceId) view.resourceId = tip.resourceId;
+    if (tip.resourceName) view.resourceLabel = tip.resourceName;
+    if (tip.unlocked != null) {
+      view.locked = !tip.unlocked;
+      if (view.locked && !view.lockHint && typeof t === 'function') {
+        view.lockHint = t('buildings.lockWorld', {
+          name: buildingsWorldName(tip.worldUnlock || view.world || 1),
+          n: tip.worldUnlock || view.world || 1,
+        });
+      }
+    }
+    if (tip.doesLine) view.doesLine = tip.doesLine;
+    if (tip.produceLine) view.produceLine = tip.produceLine;
+    if (tip.powerLine) view.powerLine = tip.powerLine;
+    if (tip.nextLine) view.nextLine = tip.nextLine;
+    if (tip.nextCostLabel) view.nextCostLabel = tip.nextCostLabel;
+    if (tip.artSrc) view.artSrc = tip.artSrc;
+  } catch (_) {}
+  return view;
 }
 
 const BuildingsStub = {
@@ -17383,6 +19541,15 @@ const BuildingsLiveSys = {
       artSvg: art.svg,
       artHub: art.hub,
       stub: false,
+      built: !!raw.built,
+      canBuild: !!raw.canBuild,
+      powerRank: raw.powerRank,
+      powers: raw.powers || [],
+      powersUnlocked: raw.powersUnlocked || [],
+      nextPower: raw.nextPower || null,
+      nextCost: raw.nextCost || { petCoins: costPc, resources: {} },
+      blurb: raw.blurb || buildingsI18nSub(raw.id),
+      outputRate: raw.outputRate || 0,
     };
   },
   list() {
@@ -17437,6 +19604,12 @@ const BuildingsLiveSys = {
     this._sel = id;
   },
   selectedId() { return this._sel || 'stick_lighter'; },
+  wallet() {
+    try {
+      if (typeof buildingWallet === 'function') return buildingWallet() || {};
+    } catch (_) {}
+    return {};
+  },
 };
 
 function buildingsApi() {
@@ -17451,14 +19624,17 @@ function buildingsList() {
   if (!Array.isArray(rows) || !rows.length) {
     try { rows = BuildingsStub.list(); } catch (_) { rows = []; }
   }
-  return rows.map((r) => (r && r.id && r.name != null && r.pending != null) ? r : buildingsNormalizeView(r)).filter(Boolean);
+  return rows.map((r) => {
+    const base = (r && r.id && r.name != null && r.pending != null) ? r : buildingsNormalizeView(r);
+    return buildingsAttachTooltip(base);
+  }).filter(Boolean);
 }
 
 function buildingsGet(id) {
   const api = buildingsApi();
   let row = null;
   try { row = api.get ? api.get(id) : null; } catch (_) { row = null; }
-  if (row) return buildingsNormalizeView(row) || row;
+  if (row) return buildingsAttachTooltip(buildingsNormalizeView(row) || row);
   return buildingsList().find((r) => r.id === id) || null;
 }
 
@@ -17671,9 +19847,9 @@ const CHEST_NICE_CHANCE = 0.14;
 const CHEST_GOOD_CHANCE = 0.30;
 const CHEST_PULL_LOG_MAX = 12;
 const CHEST_SKILL_MAX = 48;
-/** Reveal timeline: matches Gemini clip (~10s); card last 2s. */
-const SUMMON_REVEAL_TOTAL_MS = 10000;
-const SUMMON_CARD_LAST_MS = 2000;
+/** Reveal timeline: short Android clip (~2.4s); card last ~0.9s. */
+const SUMMON_REVEAL_TOTAL_MS = 2400;
+const SUMMON_CARD_LAST_MS = 900;
 const SUMMON_VIDEO_SRC = 'assets/summon/reveal.mp4';
 let _summonVideoOk = null;
 
@@ -17695,6 +19871,8 @@ function ensureSummonVideoPreloaded() {
     vid.setAttribute('muted', '');
     vid.setAttribute('playsinline', '');
     vid.setAttribute('webkit-playsinline', '');
+    vid.setAttribute('preload', 'metadata');
+    vid.preload = 'metadata';
     const src = summonVideoUrl();
     if (vid.getAttribute('src') !== src) {
       vid.setAttribute('src', src);
@@ -18412,8 +20590,10 @@ function seedNlGameStrings() {
     ranchWave: 'BOERDERIJ OP HOL',
     safariWave: 'DIERENTUIN-UITBRAAK',
     woodsWave: 'WOUD-GOLF',
+    frostWave: 'VORST-GOLF',
     cryptWave: 'CRYPTE-GOLF',
     scrapWave: 'SCHROOT-GOLF',
+    reefWave: 'RIF-GOLF',
     emberWave: 'EMBER-GOLF · 2.0',
     painWave: 'PIJN-GOLF · 3.0',
     waveClear: 'Golf gewist +{heal} HP',
@@ -19010,10 +21190,10 @@ function seedNlGameStrings() {
     styleHead: 'Stijl',
     styleSub: 'Outfits met bonus — level, training, monsterboek · hover voor tooltip',
     gearHead: 'Uitrusting',
-    gearSub: '5 slots · look vs stats · level- en tijdslot',
+    gearSub: 'Tik een slot · tik een item = aan of uit',
     styleActive: 'Actief',
     stylePick: 'Tik om te kiezen',
-    styleIslandGate: 'Avontuur-cap Lv {cap} · stijl unlock Lv {need}',
+    styleIslandGate: 'Avontuur-cap Lv {cap} · stijl vrij Lv {need}',
     weaponIslandPick: 'Training ✓ · avontuur ≤ Lv {cap}',
     weaponIslandCapShort: 'Eiland-cap Lv {cap}',
     skillHead: 'Skills',
@@ -19196,7 +21376,7 @@ function seedNlGameStrings() {
     firstMinuteWall: '60s · combo ×3/×5/×8 hints · record-tempo + projectie in HUD',
     firstMinuteVersus: 'Eerste minuut: P1 links · P2 rechts',
     firstMinuteCoinrun: '45s munten · joy ↑ mik · roze vlieger = +3 · max 3 shuriken snel',
-    firstMinuteAdventureKb: 'Eerste minuut: A/D lopen · W springen · J/K/L · U technique · Shift subst',
+    firstMinuteAdventureKb: 'Eerste minuut: A/D lopen · W springen · J/K/L · U speciaal · Shift wissel',
     firstMinuteTrainingKb: 'Eerste minuut: spring lasers · Shift = substitutie · energy vol → U',
     firstMinuteWallKb: '60s · combo-milestones · A/D · J/K/L · record-tempo in HUD',
     firstMinuteVersusKb: 'Eerste minuut: P1 WASD+JKL · P2 pijltjes+1-5 · best-of-3',
@@ -19221,9 +21401,9 @@ function seedNlGameStrings() {
     hubStatSkills: '{n}/{total} · {skill} · {super}',
     hubStatSkillsEmpty: '{n} specials',
     hubStatDexLine: '{n}/{total} · +max HP',
-    summonHead: 'Summons',
+    summonHead: 'Oproepen',
     summonSub: 'Dagelijkse kist · 10× random · wapen of pet',
-    summonWhere: 'Menu → Summons · buit in Collectie → Wapens / Pets (badge Kist)',
+    summonWhere: 'Menu → Oproepen · buit in Collectie → Wapens / Pets (badge Kist)',
     summonQuota: 'Vandaag: {left}/{total} random summons',
     summonPull: 'Open kist',
     summonPullLeft: '{n} over',
@@ -19265,6 +21445,14 @@ function seedNlGameStrings() {
     weaponPicked: 'gekozen',
     weaponPick: 'kies',
     weaponChestBadge: 'Kist',
+    weaponSummonBadge: 'Oproep',
+    weaponFinishers: 'finishers {n}',
+    weaponFinisherN: '{n}× finisher',
+    weaponMoveFinisher: 'finisher',
+    weaponZoneDrop: 'Valt in {zone}-zone / Nightmare·Hel',
+    weaponPickFail: 'Wapen kiezen mislukt',
+    weaponLockedAdv: 'Nog vergrendeld — verder in avontuur',
+    weaponActive: 'Actief',
     upgradeLevelsTotal: 'Totaal {n} upgrade-levels',
     upgradeShardsLine: '{skill} skill · {item} item shards',
     upgradeMaxHint: 'Standaard max Lv {std} · mythische/extreme max Lv {ext}',
@@ -19287,17 +21475,17 @@ function seedNlGameStrings() {
     dexAllTypes: 'Alle types',
     dexSortBook: 'Boek',
     dexSortRarity: 'Rariteit',
-    dexSortUnlock: 'Unlock Lv',
+    dexSortUnlock: 'Vrij Lv',
     dexSortKills: 'Kills',
     dexSummary: 'Boek {n}/{total} · kills {kills} · bonus max HP +{hp} · rariteiten {tiers}/6',
-    dexAppear: 'Verschijnt in avontuur · unlock Lv {lvl}',
-    dexUnlockLv: 'Unlock Lv {lvl}',
+    dexAppear: 'Verschijnt in avontuur · vrij Lv {lvl}',
+    dexUnlockLv: 'vrij Lv {lvl}',
     dexSecret: 'Geheim',
     dexNotBeaten: 'Nog niet verslagen',
     dexStats: '{type} · basis HP {hp} · dmg {dmg} · spd {spd} · {xp} XP · Lv {lvl}',
     dexType: { hop: 'Hups', fly: 'Vlieg', charge: 'Charge', shoot: 'Schiet', tank: 'Tank', dragon: 'Draak', swim: 'Zee' },
     dexBiome: { farm: 'Boerderij', zoo: 'Dierentuin', sea: 'Zee', wild: 'Woud', crypt: 'Crypte', scrap: 'Schroot', frost: 'Vorst', classic: 'Klassiek', secret: 'Geheim' },
-    saveHealthStats: 'Lv {lvl} · unlock {unlocked} · boek {dex} · kills {kills}',
+    saveHealthStats: 'Lv {lvl} · vrij {unlocked} · boek {dex} · kills {kills}',
     saveHealthSummon: ' · ✦ {n} summon',
     saveHealthPet: ' · pet {n}',
     saveHealthEgg: ' · ei {n}',
@@ -19329,7 +21517,11 @@ function seedNlGameStrings() {
     dexHintRarities: '{cur}/{need} rariteiten',
     dexHintKillsBook: '{cur}/{need} kills in boek',
     // Aliases for factcheck #283 — same chrome, do not fight their ui.js names.
-    dexAppears: 'Verschijnt in avontuur · unlock Lv {lv}',
+    dexAppears: 'Verschijnt in avontuur · vrij Lv {lv}',
+    dexUnlockLv: 'vrij Lv {lv}',
+    dexUnlockNeed: ' · nog {need} level',
+    dexUnlockNeedMany: ' · nog {need} levels',
+    dexUnlockSoon: ' · bijna!',
     dexBaseStats: '{type} · basis HP {hp} · dmg {dmg} · spd {spd} · {xp} XP · Lv {lv}',
     dexNotSeen: 'Nog niet verslagen',
     dexKillsLine: '{n}× verslagen',
@@ -19408,7 +21600,9 @@ function seedNlGameStrings() {
     hintDualTouch: 'P1 = linker helft · P2 = rechter helft · joystick + aanvalsknoppen',
     hintDualKb: 'P1: A/D · W · J/K/L/U · Shift  |  P2: pijltjes · 1/2/3/4/5',
     hintTouch: 'Links: joystick om te lopen · Rechts: aanvalsknoppen',
-    hintKb: 'A/D lopen · W springen · J stomp · K trap · L wapen · U speciaal',
+    hintKb: 'A/D lopen · W springen · J stamp · K schop · L wapen · U speciaal',
+    kbWalk: 'lopen', kbJump: 'spring', kbSub: 'wissel', kbPunch: 'stamp', kbKick: 'schop',
+    kbWeapon: 'wapen', kbSpecial: 'speciaal', kbParry: 'kets', kbHit: 'slag',
     partGateTouch: 'CHECKPOINT → houd joystick RECHTS (loop door)',
     partGateKb: 'CHECKPOINT → houd D of → vast (loop door)',
     partGateTouchShort: 'Joystick →',
@@ -19510,7 +21704,9 @@ function seedNlFromRuntime() {
     pillStat: 'STAT',
     pillLock: 'LOCK',
     empty: 'Leeg',
-    pickHint: 'Tik een slot, dan een item.',
+    pickHint: 'Tik een item om aan of uit te doen.',
+    invKicker: '{slot}',
+    weaponOpen: 'Wapens',
     lockedLine: 'Op slot · {why}',
     equip: 'Aandoen',
     unequip: 'Uitdoen',
@@ -19534,13 +21730,15 @@ function seedNlFromRuntime() {
     filterEmpty: 'Niets in deze filter',
     filterRarityAll: 'Alle',
     filterCount: '{shown}/{total} in {slot}',
+    filterAria: 'Filter',
+    rarityAria: 'Zeldzaamheid',
     rar: {
-      common: 'common', uncommon: 'uncommon', rare: 'rare', epic: 'epic',
-      legendary: 'legendary', mythic: 'mythic', nightmare: 'nightmare', hell: 'hell',
+      common: 'gewoon', uncommon: 'ongewoon', rare: 'zeldzaam', epic: 'episch',
+      legendary: 'legendarisch', mythic: 'mythisch', nightmare: 'nachtmerrie', hell: 'hel',
     },
     catalogN: '{n} items',
     weaponAside: 'Wapen',
-    weaponAsideHint: 'Blijft in Collectie → Wapens — geen 6e slot.',
+    weaponAsideHint: 'Collectie · geen 6e slot',
     slot: { head: 'Hoofd', chest: 'Borst', hands: 'Handen', legs: 'Benen', back: 'Rug' },
     item: {
       cap_plain: 'Linnen pet', helm_leaf: 'Leaf-helm', helm_iron: 'IJzeren helm', helm_moon: 'Maan-kap', helm_relic: 'Relikwie-helm',
@@ -19573,7 +21771,9 @@ const CATALOG_EN = {
     pillStat: 'STAT',
     pillLock: 'LOCK',
     empty: 'empty',
-    pickHint: 'Tap a slot, then an item.',
+    pickHint: 'Tap an item to equip or remove.',
+    invKicker: '{slot}',
+    weaponOpen: 'Weapons',
     lockedLine: 'Locked · {why}',
     equip: 'Equip',
     unequip: 'Unequip',
@@ -19597,13 +21797,15 @@ const CATALOG_EN = {
     filterEmpty: 'Nothing in this filter',
     filterRarityAll: 'All',
     filterCount: '{shown}/{total} in {slot}',
+    filterAria: 'Filter',
+    rarityAria: 'Rarity',
     rar: {
       common: 'common', uncommon: 'uncommon', rare: 'rare', epic: 'epic',
       legendary: 'legendary', mythic: 'mythic', nightmare: 'nightmare', hell: 'hell',
     },
     catalogN: '{n} items',
     weaponAside: 'Weapon',
-    weaponAsideHint: 'Stays in Collection → Weapons — not a 6th slot.',
+    weaponAsideHint: 'Collection · not a 6th slot',
     slot: { head: 'Head', chest: 'Chest', hands: 'Hands', legs: 'Legs', back: 'Back' },
     item: {
       cap_plain: 'Linen cap', helm_leaf: 'Leaf helm', helm_iron: 'Iron helm', helm_moon: 'Moon cap', helm_relic: 'Relic helm',
@@ -19628,6 +21830,7 @@ const CATALOG_EN = {
     dexWild: { name: 'Woods hunter', desc: '10 wild species in the book' },
     dexCrypt: { name: 'Crypt guide', desc: '10 crypt species in the book' },
     dexScrap: { name: 'Scrap knower', desc: '10 scrap species in the book' },
+    dexFrost: { name: 'Frost knower', desc: '8 frost species in the book' },
     train5: { name: 'Robot breaker', desc: 'Win training 5×' },
     wall100: { name: 'Demolisher', desc: 'Wall record 100+' },
     combo8: { name: 'Combo king', desc: 'Reach combo ×8' },
@@ -19800,7 +22003,7 @@ const CATALOG_EN = {
     eliteNamed: 'ELITE — {name}!',
     flyerWave: 'FLYER WAVE', rushWave: 'RUSH WAVE', eliteTraitWave: 'ELITE WAVE', tideWave: 'TIDE WAVE',
     ranchWave: 'FARM RAMPAGE', safariWave: 'ZOO BREAKOUT',
-    woodsWave: 'WOODS WAVE', cryptWave: 'CRYPT WAVE', scrapWave: 'SCRAP WAVE',
+    woodsWave: 'WOODS WAVE', frostWave: 'FROST WAVE', cryptWave: 'CRYPT WAVE', scrapWave: 'SCRAP WAVE', reefWave: 'REEF WAVE',
     emberWave: 'EMBER WAVE · 2.0', painWave: 'PAIN WAVE · 3.0',
     waveClear: 'Wave cleared +{heal} HP', waveN: 'WAVE {n}/{total}',
     fight: 'FIGHT!', levelClear: 'LEVEL {n} CLEAR!', won: 'VICTORY!', lost: 'YOU LOSE', spiral_orbTriple: 'TRIPLE SPIRAL ORB!', spiral_orbDual: 'DUAL SPIRAL ORB!',
@@ -20147,7 +22350,7 @@ const CATALOG_EN = {
     styleHead: 'Style',
     styleSub: 'Outfits with bonus — level, training, monster book · hover for tooltip',
     gearHead: 'Gear',
-    gearSub: '5 slots · look vs stats · level and time locks',
+    gearSub: 'Tap a slot · tap an item to equip or remove',
     styleActive: 'Active',
     stylePick: 'Tap to equip',
     styleIslandGate: 'Adventure cap Lv {cap} · style unlock Lv {need}',
@@ -20333,7 +22536,7 @@ const CATALOG_EN = {
     firstMinuteWall: '60s · combo ×3/×5/×8 hints · record pace + projection in HUD',
     firstMinuteVersus: 'First minute: P1 left · P2 right',
     firstMinuteCoinrun: '45s coins · joy ↑ aim · pink flyer = +3 · max 3 shuriken fast',
-    firstMinuteAdventureKb: 'First minute: A/D move · W jump · J/K/L · U technique · Shift subst',
+    firstMinuteAdventureKb: 'First minute: A/D move · W jump · J/K/L · U special · Shift swap',
     firstMinuteTrainingKb: 'First minute: jump lasers · Shift = subst · full energy → U',
     firstMinuteWallKb: '60s · combo milestones · A/D · J/K/L · record pace in HUD',
     firstMinuteVersusKb: 'First minute: P1 WASD+JKL · P2 arrows+1-5 · best-of-3',
@@ -20402,6 +22605,14 @@ const CATALOG_EN = {
     weaponPicked: 'chosen',
     weaponPick: 'pick',
     weaponChestBadge: 'Chest',
+    weaponSummonBadge: 'Summon',
+    weaponFinishers: 'finishers {n}',
+    weaponFinisherN: '{n}× finisher',
+    weaponMoveFinisher: 'finisher',
+    weaponZoneDrop: 'Drops in {zone} zone / Nightmare·Hell',
+    weaponPickFail: 'Could not pick weapon',
+    weaponLockedAdv: 'Still locked — play more adventure',
+    weaponActive: 'Active',
     upgradeLevelsTotal: 'Total {n} upgrade levels',
     upgradeShardsLine: '{skill} skill · {item} item shards',
     upgradeMaxHint: 'Default max Lv {std} · mythic/extreme max Lv {ext}',
@@ -20427,8 +22638,11 @@ const CATALOG_EN = {
     dexSortUnlock: 'Unlock Lv',
     dexSortKills: 'Kills',
     dexSummary: 'Book {n}/{total} · kills {kills} · bonus max HP +{hp} · rarities {tiers}/6',
-    dexAppear: 'Appears in adventure · unlock Lv {lvl}',
-    dexUnlockLv: 'Unlock Lv {lvl}',
+    dexAppear: 'Appears in adventure · open Lv {lvl}',
+    dexUnlockLv: 'open Lv {lvl}',
+    dexUnlockNeed: ' · {need} more level',
+    dexUnlockNeedMany: ' · {need} more levels',
+    dexUnlockSoon: ' · almost!',
     dexSecret: 'Secret',
     dexNotBeaten: 'Not defeated yet',
     dexStats: '{type} · base HP {hp} · dmg {dmg} · spd {spd} · {xp} XP · Lv {lvl}',
@@ -20686,6 +22900,8 @@ const CATALOG_EN = {
     hintDualKb: 'P1: A/D · W · J/K/L/U · Shift  |  P2: arrows · 1/2/3/4/5',
     hintTouch: 'Left: joystick to walk · Right: attack buttons',
     hintKb: 'A/D walk · W jump · J punch · K kick · L weapon · U special',
+    kbWalk: 'walk', kbJump: 'jump', kbSub: 'swap', kbPunch: 'punch', kbKick: 'kick',
+    kbWeapon: 'weapon', kbSpecial: 'special', kbParry: 'parry', kbHit: 'hit',
     partGateTouch: 'CHECKPOINT → hold joystick RIGHT (walk through)',
     partGateKb: 'CHECKPOINT → hold D or → (walk through)',
     partGateTouchShort: 'Stick →',
@@ -20722,6 +22938,7 @@ const CATALOG_DE = {
     dexWild: { name: 'Waldjäger', desc: '10 Wald-Arten im Buch' },
     dexCrypt: { name: 'Krypten-Guide', desc: '10 Krypten-Arten im Buch' },
     dexScrap: { name: 'Schrottkenner', desc: '10 Schrott-Arten im Buch' },
+    dexFrost: { name: 'Frostkenner', desc: '8 Frost-Arten im Buch' },
     train5: { name: 'Robotbrecher', desc: '5× Training gewonnen' },
     wall100: { name: 'Abrissprofi', desc: 'Mauer-Rekord 100+' },
     combo8: { name: 'Combo-König', desc: 'Combo ×8 erreicht' },
@@ -20790,7 +23007,7 @@ const CATALOG_DE = {
   },
   banner: {
     levelUp: 'LEVEL UP! Lv {lvl}', masterBuff: 'MEISTER-BUFF +20%', bossWave: 'BOSS-WELLE!',
-    woodsWave: 'WALD-WELLE', cryptWave: 'KRYPTEN-WELLE', scrapWave: 'SCHROTT-WELLE',
+    woodsWave: 'WALD-WELLE', frostWave: 'FROST-WELLE', cryptWave: 'KRYPTEN-WELLE', scrapWave: 'SCHROTT-WELLE', reefWave: 'RIFF-WELLE',
     fight: 'KÄMPF!', levelClear: 'LEVEL {n} FERTIG!', won: 'GEWONNEN!', lost: 'VERLOREN...', summon: '✦ SUMMON! ✦',
     matsStart: 'MÜNZEN-BONUS', wallStart: 'ZERSTÖRE DIE MAUER!', bonusDone: 'BONUS FERTIG!',
     kets: 'KABLAM…', ketsBam: 'KABLAM!',
@@ -20830,6 +23047,7 @@ const CATALOG_FR = {
     dexWild: { name: 'Chasseur des bois', desc: '10 espèces des bois au livre' },
     dexCrypt: { name: 'Guide de crypte', desc: '10 espèces de crypte au livre' },
     dexScrap: { name: 'Connaisseur de ferraille', desc: '10 espèces de ferraille au livre' },
+    dexFrost: { name: 'Connaisseur du gel', desc: '8 espèces de gel au livre' },
     train5: { name: 'Brise-robot', desc: '5× entraînement gagné' },
     wall100: { name: 'Démolisseur', desc: 'Record mur 100+' },
     combo8: { name: 'Roi du combo', desc: 'Combo ×8 atteint' },
@@ -20898,7 +23116,7 @@ const CATALOG_FR = {
   },
   banner: {
     levelUp: 'LEVEL UP ! Lv {lvl}', masterBuff: 'BUFF MAÎTRE +20 %', bossWave: 'VAGUE BOSS !',
-    woodsWave: 'VAGUE FORÊT', cryptWave: 'VAGUE CRYPTE', scrapWave: 'VAGUE FERRAILLE',
+    woodsWave: 'VAGUE FORÊT', frostWave: 'VAGUE GEL', cryptWave: 'VAGUE CRYPTE', scrapWave: 'VAGUE FERRAILLE', reefWave: 'VAGUE RÉCIF',
     fight: 'COMBAT !', levelClear: 'NIVEAU {n} TERMINÉ !', won: 'VICTOIRE !', lost: 'DÉFAITE...', summon: '✦ INVOCATION ! ✦',
     matsStart: 'BONUS PIÈCES', wallStart: 'CASSE LE MUR !', bonusDone: 'BONUS TERMINÉ !',
     kets: 'KABLAM…', ketsBam: 'KABLAM !',
@@ -20938,6 +23156,7 @@ const CATALOG_ES = {
     dexWild: { name: 'Cazador del bosque', desc: '10 especies salvajes en el libro' },
     dexCrypt: { name: 'Guía de cripta', desc: '10 especies de cripta en el libro' },
     dexScrap: { name: 'Conocedor de chatarra', desc: '10 especies de chatarra en el libro' },
+    dexFrost: { name: 'Conocedor de escarcha', desc: '8 especies de escarcha en el libro' },
     train5: { name: 'Rompe-robots', desc: '5× entrenamiento ganado' },
     wall100: { name: 'Demoledor', desc: 'Récord muro 100+' },
     combo8: { name: 'Rey del combo', desc: 'Combo ×8 alcanzado' },
@@ -21006,7 +23225,7 @@ const CATALOG_ES = {
   },
   banner: {
     levelUp: '¡SUBIDA DE NIVEL! Lv {lvl}', masterBuff: 'BUFF MAESTRO +20%', bossWave: '¡OLA JEFE!',
-    woodsWave: 'OLA BOSQUE', cryptWave: 'OLA CRIPTA', scrapWave: 'OLA CHATARRA',
+    woodsWave: 'OLA BOSQUE', frostWave: 'OLA ESCARCHA', cryptWave: 'OLA CRIPTA', scrapWave: 'OLA CHATARRA', reefWave: 'OLA ARRECIFE',
     fight: '¡LUCHA!', levelClear: '¡NIVEL {n} LISTO!', won: '¡VICTORIA!', lost: 'DERROTA...', summon: '✦ ¡INVOCACIÓN! ✦',
     matsStart: 'BONUS MONEDAS', wallStart: '¡ROMPE EL MURO!', bonusDone: '¡BONUS LISTO!',
     kets: '¡KABLAM…!', ketsBam: '¡KABLAM!',
@@ -21307,7 +23526,7 @@ const CATALOG_DE_CHROME = {
     bossNamed: 'BOSS — {name}!', eliteNamed: 'ELITE — {name}!',
     flyerWave: 'FLIEGER-WELLE', rushWave: 'RUSH-WELLE', eliteTraitWave: 'ELITE-WELLE', tideWave: 'TIDE-WELLE',
     ranchWave: 'FARM AMOK', safariWave: 'ZOO-AUSBRUCH',
-    woodsWave: 'WALD-WELLE', cryptWave: 'KRYPTEN-WELLE', scrapWave: 'SCHROTT-WELLE',
+    woodsWave: 'WALD-WELLE', frostWave: 'FROST-WELLE', cryptWave: 'KRYPTEN-WELLE', scrapWave: 'SCHROTT-WELLE', reefWave: 'RIFF-WELLE',
     emberWave: 'EMBER-WELLE · 2.0', painWave: 'SCHMERZ-WELLE · 3.0',
     waveClear: 'Welle klar +{heal} HP', waveN: 'WELLE {n}/{total}',
     fight: 'KÄMPF!', levelClear: 'LEVEL {n} FERTIG!', won: 'GEWONNEN!', lost: 'VERLOREN',
@@ -21680,7 +23899,9 @@ const CATALOG_DE_CHROME = {
     spawnFair: 'Spawn · fairer Start', nextRound: 'Nächste Runde',
     matchOver: 'Match vorbei',
     hintTouch: 'Links: Joystick laufen · Rechts: Angriffstasten',
-    hintKb: 'A/D laufen · W springen · J Schlag · K Tritt · L Waffe · U Special',
+    hintKb: 'A/D laufen · W springen · J Schlag · K Tritt · L Waffe · U Spezial',
+    kbWalk: 'laufen', kbJump: 'sprung', kbSub: 'Wechsel', kbPunch: 'Schlag', kbKick: 'Tritt',
+    kbWeapon: 'Waffe', kbSpecial: 'Spezial', kbParry: 'Konter', kbHit: 'Schlag',
     partGateTouch: 'CHECKPOINT → Joystick RECHTS halten',
     partGateKb: 'CHECKPOINT → D oder → halten',
     partGateTouchShort: 'Stick →',
@@ -21920,7 +24141,7 @@ const CATALOG_DE_CHROME = {
     firstMinuteWall: '60s · Combo ×3/×5/×8 · Rekord-Tempo + Projektion im HUD',
     firstMinuteVersus: 'Erste Minute: P1 links · P2 rechts',
     firstMinuteCoinrun: '45s Münzen · Joy ↑ zielen · rosa Flieger = +3 · max 3 Shuriken schnell',
-    firstMinuteAdventureKb: 'Erste Minute: A/D laufen · W springen · J/K/L · U Technik · Shift Subst',
+    firstMinuteAdventureKb: 'Erste Minute: A/D laufen · W springen · J/K/L · U Spezial · Shift Wechsel',
     firstMinuteTrainingKb: 'Erste Minute: Laser springen · Shift = Subst · volle Energy → U',
     firstMinuteWallKb: '60s · Combo-Meilensteine · A/D · J/K/L · Rekord-Tempo im HUD',
     firstMinuteVersusKb: 'Erste Minute: P1 WASD+JKL · P2 Pfeile+1-5 · Best-of-3',
@@ -21945,9 +24166,9 @@ const CATALOG_DE_CHROME = {
     hubStatSkills: '{n}/{total} · {skill} · {super}',
     hubStatSkillsEmpty: '{n} Specials',
     hubStatDexLine: '{n}/{total} · +max HP',
-    summonHead: 'Summons',
+    summonHead: 'Beschwörungen',
     summonSub: 'Tägliche Kiste · 10× random · Waffe oder Pet',
-    summonWhere: 'Menü → Summons · Beute in Sammlung → Waffen / Pets (Kisten-Badge)',
+    summonWhere: 'Menü → Beschwörungen · Beute in Sammlung → Waffen / Pets (Kisten-Badge)',
     summonQuota: 'Heute: {left}/{total} Random-Summons',
     summonLeft: '{n} übrig',
     summonDone: 'Leer',
@@ -21996,6 +24217,19 @@ const CATALOG_DE_CHROME = {
     weaponThrowLine: 'Wurf-Projektil — keine Melee-Combo',
     weaponPicked: 'gewählt',
     weaponPick: 'wählen',
+    weaponChestBadge: 'Kiste',
+    weaponSummonBadge: 'Beschwörung',
+    weaponFinishers: 'Finisher {n}',
+    weaponFinisherN: '{n}× Finisher',
+    weaponMoveFinisher: 'Finisher',
+    weaponZoneDrop: 'Drop in {zone}-Zone / Albtraum·Hölle',
+    weaponPickFail: 'Waffe wählen fehlgeschlagen',
+    weaponLockedAdv: 'Noch gesperrt — weiter im Abenteuer',
+    weaponActive: 'Aktiv',
+    dexUnlockLv: 'frei Lv {lv}',
+    dexUnlockNeed: ' · noch {need} Level',
+    dexUnlockNeedMany: ' · noch {need} Level',
+    dexUnlockSoon: ' · fast!',
     weaponChestBadge: 'Kiste',
     upgradeLevelsTotal: 'Gesamt {n} Upgrade-Level',
     upgradeShardsLine: '{skill} Skill · {item} Item-Splitter',
@@ -22060,7 +24294,13 @@ const CATALOG_DE_CHROME = {
     dexHintSpecies: '{cur}/{need} Arten',
     dexHintRarities: '{cur}/{need} Seltenheiten',
     dexHintKillsBook: '{cur}/{need} Kills im Buch',
-    dexAppears: 'Erscheint im Abenteuer · Unlock Lv {lv}',
+    dexAppears: 'Erscheint im Abenteuer · frei Lv {lv}',
+    dexUnlockLv: 'frei Lv {lv}',
+    dexUnlockNeed: ' · noch {need} Level',
+    dexUnlockNeedMany: ' · noch {need} Level',
+    dexUnlockSoon: ' · fast!',
+    filterAria: 'Filter',
+    rarityAria: 'Seltenheit',
     dexBaseStats: '{type} · Basis-HP {hp} · dmg {dmg} · spd {spd} · {xp} XP · Lv {lv}',
     dexNotSeen: 'Noch nicht besiegt',
     dexKillsLine: '{n}× besiegt',
@@ -22070,6 +24310,28 @@ const CATALOG_DE_CHROME = {
     errLoadSettings: 'Einstellungen laden fehlgeschlagen',
     errLoadScreen: 'Bildschirm laden fehlgeschlagen — Neue Version tippen',
     errLoadHelp: 'Tipps laden fehlgeschlagen',
+  },
+  gear: {
+    filterAll: 'Alles',
+    filterOwned: 'Deins',
+    filterAria: 'Filter',
+    rarityAria: 'Seltenheit',
+    pillVanity: 'LOOK',
+    pillStat: 'STAT',
+    pillLock: 'SPERRE',
+    empty: 'Leer',
+    pickHint: 'Tippe einen Slot, dann ein Item.',
+    lockedLine: 'Gesperrt · {why}',
+    equip: 'Anlegen',
+    unequip: 'Ablegen',
+    wearing: 'an',
+    catalogN: '{n} Items',
+    weaponAside: 'Waffe',
+    weaponAsideHint: 'Bleibt in Sammlung → Waffen — kein 6. Slot.',
+    rar: {
+      common: 'gewöhnlich', uncommon: 'ungewöhnlich', rare: 'selten', epic: 'episch',
+      legendary: 'legendär', mythic: 'mythisch', nightmare: 'Albtraum', hell: 'Hölle',
+    },
   },
 };
 /* --- src/i18n/catalog-locales.js --- */
@@ -23238,7 +25500,7 @@ overlayI18nCatalog(CATALOG_DE, {
     colossalBossName: 'KOLOSSAL {name}!', bossNamed: 'BOSS — {name}!', eliteNamed: 'ELITE — {name}!',
     flyerWave: 'FLIEGER-WELLE', rushWave: 'RUSH-WELLE', eliteTraitWave: 'ELITE-WELLE', tideWave: 'TIDE-WELLE',
     ranchWave: 'FARM AMOK', safariWave: 'ZOO-AUSBRUCH',
-    woodsWave: 'WALD-WELLE', cryptWave: 'KRYPTEN-WELLE', scrapWave: 'SCHROTT-WELLE',
+    woodsWave: 'WALD-WELLE', frostWave: 'FROST-WELLE', cryptWave: 'KRYPTEN-WELLE', scrapWave: 'SCHROTT-WELLE', reefWave: 'RIFF-WELLE',
     emberWave: 'EMBER-WELLE · 2.0', painWave: 'SCHMERZ-WELLE · 3.0',
     waveClear: 'Welle klar +{heal} HP', waveN: 'WELLE {n}/{total}',
     fight: 'KÄMPF!', levelClear: 'LEVEL {n} FERTIG!', won: 'GEWONNEN!', lost: 'VERLOREN',
@@ -24585,6 +26847,20 @@ function drawAudioThemeMenuWash(c) {
   c.restore();
 }
 
+function audioThemeLabel(id) {
+  const meta = AUDIO_THEME_META[id];
+  return (typeof tOr === 'function')
+    ? tOr('audio.theme.' + id + '.label', (meta && meta.label) || id)
+    : ((meta && meta.label) || id);
+}
+
+function audioThemeSub(id) {
+  const meta = AUDIO_THEME_META[id];
+  return (typeof tOr === 'function')
+    ? tOr('audio.theme.' + id + '.sub', (meta && meta.sub) || '')
+    : ((meta && meta.sub) || '');
+}
+
 function onAudioThemeBarPress(e) {
   const t = e && (e.target || e.srcElement);
   const btn = t && t.closest ? t.closest('[data-audio-theme]') : null;
@@ -24595,8 +26871,7 @@ function onAudioThemeBarPress(e) {
     setAudioTheme(id);
     try {
       if (typeof UI !== 'undefined' && UI.toast) {
-        const meta = AUDIO_THEME_META[id];
-        UI.toast('Sfeer: ' + ((meta && meta.label) || id), 1600, { tone: 'ok' });
+        UI.toast((typeof t === 'function' ? t('settings.audioThemeLine', { name: audioThemeLabel(id) }) : ('Theme: ' + audioThemeLabel(id))), 1600, { tone: 'ok' });
       }
     } catch (_) {}
   };
@@ -24612,13 +26887,14 @@ function renderAudioThemeBar(bar) {
     && AUDIO_THEME_IDS.every((id, i) => existing[i] && existing[i].getAttribute('data-audio-theme') === id);
   if (!same) {
     bar.innerHTML = AUDIO_THEME_IDS.map((id) => {
-      const meta = AUDIO_THEME_META[id];
       const active = id === cur ? ' active' : '';
-      return `<button type="button" class="dex-filter-btn${active}" data-audio-theme="${id}">${meta.label}</button>`;
+      return `<button type="button" class="dex-filter-btn${active}" data-audio-theme="${id}">${audioThemeLabel(id)}</button>`;
     }).join('');
   } else {
     existing.forEach((btn) => {
-      btn.classList.toggle('active', btn.getAttribute('data-audio-theme') === cur);
+      const id = btn.getAttribute('data-audio-theme');
+      btn.classList.toggle('active', id === cur);
+      if (id) btn.textContent = audioThemeLabel(id);
     });
   }
   if (!bar.dataset.audioThemeBound) {
@@ -28082,10 +30358,18 @@ function drawAimTutorial(c, g) {
  * Char-screen lane. Schema: docs/GEAR-SYSTEM.md (#280).
  * Save: createdAt + save.gear { schema, equipped, owned:{id:{at,src}} }.
  * Flat save.equipment / save.ownedGear migrate once then drop.
- * Do not redeclare GEAR_SLOT_IDS, gearItemById, sanitizeGearSave, gearEquipItem.
+ * Do not redeclare GEAR_SLOT_IDS, gearItemById, sanitizeGearSave, gearEquipItem,
+ * gearEquipState, gearCanEquip, gearSlotInventory, GEAR_EQUIP_STATES.
  */
 const GEAR_DRAW_ORDER = ['back', 'legs', 'chest', 'head', 'hands', 'weapon', 'pet'];
 const GEAR_SLOT_DRAW_ORDER = ['back', 'legs', 'chest', 'head', 'hands'];
+const GEAR_SLOT_ICONS = {
+  head: 'assets/buttons/modes/gear-head.svg',
+  chest: 'assets/buttons/modes/gear-chest.svg',
+  hands: 'assets/buttons/modes/gear-hands.svg',
+  legs: 'assets/buttons/modes/gear-legs.svg',
+  back: 'assets/buttons/modes/gear-back.svg',
+};
 const GEAR_UI_FILTERS = ['all', 'look', 'stat', 'lock', 'owned'];
 const GEAR_RARITY_ORDER = ['common', 'uncommon', 'rare', 'epic', 'legendary', 'mythic', 'nightmare', 'hell'];
 const GEAR_RARITY_RANK = {
@@ -28244,32 +30528,71 @@ function _dexN() {
   return 0;
 }
 
-function gearUnlockState(item) {
+function _gearWearableState(state) {
+  return state === 'ok' || state === 'vanity-ok' || state === 'already-equipped';
+}
+
+function gearUnlockState(item, expectSlot) {
+  if (item && item.equipState) {
+    const wearable = _gearWearableState(item.equipState);
+    return {
+      unlocked: wearable,
+      state: item.equipState,
+      canEquip: !!item.canEquip,
+      gate: item.equipState === 'not-owned' ? 'owned'
+        : (item.equipState === 'locked' ? 'locked'
+          : (item.equipState === 'wrong-slot' ? 'slot'
+            : (item.equipState === 'unknown' ? 'unknown' : null))),
+      label: item.lockLabel || '',
+      model: null,
+    };
+  }
   const raw = (item && item.id && typeof gearItemById === 'function') ? (gearItemById(item.id) || item) : item;
   const it = contractGearItem(raw) || raw;
-  if (!it) return { unlocked: true, gate: null, label: '', model: null };
+  if (!it) return { unlocked: true, gate: null, label: '', model: null, state: 'unknown' };
+  if (typeof gearEquipState === 'function') {
+    const slot = (expectSlot != null && expectSlot !== '') ? expectSlot : (it.slot || it.slotId || null);
+    const eq = gearEquipState(it.id, slot ? { expectSlot: slot } : undefined);
+    const wearable = _gearWearableState(eq.state);
+    const why = (eq.gate && eq.gate.reasons && eq.gate.reasons[0]) || null;
+    let gate = null;
+    if (eq.state === 'not-owned') gate = 'owned';
+    else if (eq.state === 'locked') gate = why || 'locked';
+    else if (eq.state === 'wrong-slot') gate = 'slot';
+    else if (eq.state === 'unknown') gate = 'unknown';
+    const tip = typeof gearTooltipModel === 'function' ? gearTooltipModel(raw) : null;
+    return {
+      unlocked: wearable,
+      state: eq.state,
+      canEquip: !!eq.canEquip,
+      gate,
+      label: eq.label || '',
+      model: tip || eq.gate,
+      need: (eq.gate && (eq.gate.needLvl || eq.gate.needDays)) || null,
+    };
+  }
   if (!gearOwned(it)) {
-    return { unlocked: false, gate: 'owned', label: _lockCopy('owned'), model: null };
+    return { unlocked: false, gate: 'owned', label: _lockCopy('owned'), model: null, state: 'not-owned' };
   }
   if (typeof gearGateState === 'function') {
     const g = gearGateState(raw && raw.unlockLvl != null ? raw : it);
     if (g && !g.ok) {
       const why = (g.reasons && g.reasons[0]) || 'locked';
-      if (why === 'level') return { unlocked: false, gate: 'level', need: g.needLvl, label: _lockCopy('level', g.needLvl), model: g };
-      if (why === 'time') return { unlocked: false, gate: 'time', need: g.needDays, label: _lockCopy('days', g.needDays), model: g };
-      if (why === 'adventure') return { unlocked: false, gate: 'adv', need: it.needAdvUnlocked || g.needLvl, label: _lockCopy('adv', it.needAdvUnlocked || g.needLvl), model: g };
-      if (why === 'diff') return { unlocked: false, gate: 'diff', label: _lockCopy('diff'), model: g };
-      return { unlocked: false, gate: why, label: _lockCopy(why, g.needLvl), model: g };
+      if (why === 'level') return { unlocked: false, gate: 'level', need: g.needLvl, label: _lockCopy('level', g.needLvl), model: g, state: 'locked' };
+      if (why === 'time') return { unlocked: false, gate: 'time', need: g.needDays, label: _lockCopy('days', g.needDays), model: g, state: 'locked' };
+      if (why === 'adventure') return { unlocked: false, gate: 'adv', need: it.needAdvUnlocked || g.needLvl, label: _lockCopy('adv', it.needAdvUnlocked || g.needLvl), model: g, state: 'locked' };
+      if (why === 'diff') return { unlocked: false, gate: 'diff', label: _lockCopy('diff'), model: g, state: 'locked' };
+      return { unlocked: false, gate: why, label: _lockCopy(why, g.needLvl), model: g, state: 'locked' };
     }
     const tip = typeof gearTooltipModel === 'function' ? gearTooltipModel(raw) : null;
-    return { unlocked: true, gate: null, label: '', model: tip || g };
+    return { unlocked: true, gate: null, label: '', model: tip || g, state: it.vanity ? 'vanity-ok' : 'ok' };
   }
   const lvl = (typeof save === 'object' && save) ? (save.lvl || 1) : 1;
   if ((it.unlockLvl || it.needLvl) && lvl < (it.unlockLvl || it.needLvl)) {
     const need = it.unlockLvl || it.needLvl;
-    return { unlocked: false, gate: 'level', need, label: _lockCopy('level', need) };
+    return { unlocked: false, gate: 'level', need, label: _lockCopy('level', need), state: 'locked' };
   }
-  return { unlocked: true, gate: null, label: '', model: null };
+  return { unlocked: true, gate: null, label: '', model: null, state: 'ok' };
 }
 
 function gearCanWear(item, expectSlot) {
@@ -28347,20 +30670,21 @@ function gearStatLine(item) {
   return typeof tOr === 'function' ? tOr('gear.vanityHint', 'Geen stats — alleen look') : 'Geen stats — alleen look';
 }
 
-function equipGear(itemId) {
+function equipGear(itemId, opts) {
   const raw = (typeof gearItemById === 'function') ? gearItemById(itemId) : null;
   const item = contractGearItem(raw) || raw;
-  if (!item) return { ok: false, reason: 'missing' };
-  const can = gearCanWear(item);
+  if (!item) return { ok: false, reason: 'missing', state: 'unknown' };
+  const expectSlot = (opts && opts.expectSlot) || item.slotId || item.slot || null;
+  const can = gearCanWear(item, expectSlot);
   if (!can.ok) return can;
   if (typeof gearEquipItem === 'function') {
-    const res = gearEquipItem(itemId);
+    const res = gearEquipItem(itemId, expectSlot ? { expectSlot } : undefined);
     if (!res || !res.ok) {
-      const unlock = gearUnlockState(item);
-      return { ok: false, reason: (res && res.reason) || unlock.gate || 'locked', label: unlock.label, item };
+      const unlock = gearUnlockState(item, expectSlot);
+      return { ok: false, reason: (res && res.state) || unlock.gate || 'locked', state: (res && res.state) || unlock.state, label: (res && res.label) || unlock.label, item };
     }
     if (typeof save === 'object' && save) _dropFlatGearKeys(save);
-    return { ok: true, item };
+    return { ok: true, item, state: res.state || can.state };
   }
   if (typeof save === 'object' && save) {
     _ensureGearBag(save);
@@ -28396,43 +30720,130 @@ function gearUiRenderDescriptor(s) {
   return { schema: 1, slots: _gearSlotIds().map((id) => ({ slot: id, itemId: null })) };
 }
 
-function drawGearHeroDoll(cv, saveObj) {
+let _gearDollRaf = 0;
+let _gearDollTick = 0;
+
+function startGearDollLive() {
+  if (_gearDollRaf) return;
+  const step = (now) => {
+    const el = typeof document !== 'undefined' ? document.getElementById('gearScreen') : null;
+    if (!el || !el.classList.contains('active')) { _gearDollRaf = 0; return; }
+    _gearDollTick++;
+    const skip = (typeof fxLite === 'function' && fxLite()) ? 3 : 2;
+    if (_gearDollTick % skip === 0) {
+      const cv = document.getElementById('gearDollCanvas');
+      if (cv) drawGearHeroDoll(cv, typeof save === 'object' ? save : null, now * 0.001);
+    }
+    _gearDollRaf = requestAnimationFrame(step);
+  };
+  _gearDollRaf = requestAnimationFrame(step);
+}
+
+function _paintGearOverlay(cc, slot, tint, accent) {
+  if (!tint) return;
+  /* Fighter preview pose (animT 0.35): hips ~-46, shoulders ~-78, head ~-96. */
+  const hipY = -46, shY = -78, headCy = -96;
+  cc.save();
+  cc.fillStyle = tint;
+  cc.strokeStyle = accent || tint;
+  cc.lineWidth = 2;
+  cc.lineCap = 'round';
+  cc.lineJoin = 'round';
+  if (slot === 'back') {
+    cc.globalAlpha = 0.32;
+    cc.beginPath();
+    cc.moveTo(-6, shY + 4);
+    cc.quadraticCurveTo(-22, hipY, -16, -8);
+    cc.lineTo(16, -8);
+    cc.quadraticCurveTo(22, hipY, 6, shY + 4);
+    cc.closePath();
+    cc.fill();
+    cc.globalAlpha = 0.7;
+    cc.stroke();
+  } else if (slot === 'legs') {
+    cc.globalAlpha = 0.8;
+    cc.beginPath();
+    cc.moveTo(-11, -10); cc.lineTo(-14, 2); cc.lineTo(-4, 2); cc.lineTo(-6, -10);
+    cc.moveTo(6, -10); cc.lineTo(4, 2); cc.lineTo(14, 2); cc.lineTo(11, -10);
+    cc.fill();
+    cc.stroke();
+  } else if (slot === 'chest') {
+    cc.globalAlpha = 0.38;
+    cc.beginPath();
+    cc.moveTo(-8, shY + 2);
+    cc.lineTo(8, shY + 2);
+    cc.lineTo(7, hipY + 2);
+    cc.lineTo(-7, hipY + 2);
+    cc.closePath();
+    cc.fill();
+    cc.globalAlpha = 0.85;
+    cc.stroke();
+  } else if (slot === 'head') {
+    cc.globalAlpha = 0.88;
+    cc.beginPath();
+    cc.arc(0, headCy, 8.6, Math.PI * 1.05, -0.05, false);
+    cc.stroke();
+    cc.beginPath();
+    cc.moveTo(-9, headCy - 1);
+    cc.lineTo(9, headCy - 1);
+    cc.stroke();
+  } else if (slot === 'hands') {
+    cc.globalAlpha = 0.88;
+    cc.beginPath();
+    cc.arc(-17, shY + 20, 3.2, 0, Math.PI * 2);
+    cc.arc(17, shY + 20, 3.2, 0, Math.PI * 2);
+    cc.fill();
+  }
+  cc.restore();
+}
+
+function drawGearHeroDoll(cv, saveObj, animT) {
   if (!cv || typeof Fighter !== 'function') return;
   const cc = cv.getContext('2d');
   if (!cc) return;
   const s = saveObj || (typeof save === 'object' ? save : null);
   cc.clearRect(0, 0, cv.width, cv.height);
   cc.save();
+  if (typeof startGearDollLive === 'function') startGearDollLive();
   const desc = (typeof gearRenderDescriptor === 'function' && s) ? gearRenderDescriptor(s) : gearUiRenderDescriptor(s);
   const layers = (desc && desc.slots) ? desc.slots : [];
-  for (const sid of GEAR_SLOT_DRAW_ORDER) {
-    const layer = layers.find((L) => L.slot === sid);
-    const tint = layer && (layer.tint || layer.accent);
-    if (!tint) continue;
-    const g = cc.createRadialGradient(cv.width / 2, cv.height * 0.55, 6, cv.width / 2, cv.height * 0.55, sid === 'back' ? 78 : 52);
-    g.addColorStop(0, String(tint) + (sid === 'back' ? '66' : '33'));
-    g.addColorStop(1, 'rgba(0,0,0,0)');
-    cc.fillStyle = g;
-    cc.fillRect(0, 0, cv.width, cv.height);
-  }
-  cc.translate(cv.width / 2, cv.height - 18);
-  cc.scale(1.15, 1.15);
+  const layerOf = (sid) => layers.find((L) => L.slot === sid) || null;
+  const tintOf = (sid) => {
+    const layer = layerOf(sid);
+    return layer && (layer.tint || layer.accent) ? layer : null;
+  };
+  const floor = cc.createRadialGradient(cv.width / 2, cv.height * 0.86, 8, cv.width / 2, cv.height * 0.86, cv.width * 0.38);
+  floor.addColorStop(0, 'rgba(255,255,255,0.08)');
+  floor.addColorStop(1, 'rgba(0,0,0,0)');
+  cc.fillStyle = floor;
+  cc.beginPath();
+  cc.ellipse(cv.width / 2, cv.height * 0.88, cv.width * 0.28, 10, 0, 0, Math.PI * 2);
+  cc.fill();
+  const scale = Math.min(cv.width / 140, cv.height / 190) * 1.28;
+  cc.translate(cv.width / 2, cv.height - 36);
+  cc.scale(scale, scale);
+  const back = tintOf('back');
+  if (back) _paintGearOverlay(cc, 'back', back.tint || back.accent, back.accent);
   const st = typeof styleById === 'function' ? styleById((s && s.style) || 'classic') : { body: '#f2f5ff' };
   const wpn = (s && typeof weaponById === 'function') ? weaponById(s.weapon || 'vuist') : null;
   const preview = new Fighter({
     isPlayer: true, x: 0, y: 0, color: (st && st.body) || '#f2f5ff', style: st, scale: 1,
     weapon: wpn || undefined,
   });
-  preview.animT = 0.35;
+  preview.animT = Number.isFinite(animT) ? animT : 0.55;
   preview.draw(cc);
+  for (const sid of ['legs', 'chest', 'head', 'hands']) {
+    const layer = tintOf(sid);
+    if (layer) _paintGearOverlay(cc, sid, layer.tint || layer.accent, layer.accent);
+  }
   if (s && s.activePet && typeof drawMonsterArt === 'function') {
     const def = (typeof activePetDef === 'function') ? activePetDef()
       : ((typeof petDef === 'function') ? petDef(s.activePet) : null);
     const sp = def && typeof SPECIES !== 'undefined' ? SPECIES[def.speciesId] : null;
     if (sp) {
       cc.save();
-      cc.translate(36, -6);
-      cc.scale(0.36, 0.36);
+      cc.translate(40, -4);
+      cc.scale(0.38, 0.38);
       drawMonsterArt(cc, sp, sp.size || 22, 1.1, false, false);
       cc.restore();
     }
@@ -28451,6 +30862,50 @@ function gearRaritiesInList(items) {
   }
   out.sort((a, b) => (GEAR_RARITY_RANK[a] || 0) - (GEAR_RARITY_RANK[b] || 0));
   return out;
+}
+
+function gearSheetRows(slot, s) {
+  if (typeof gearSlotInventory !== 'function') {
+    return (typeof listGearItems === 'function' ? listGearItems(slot) : []).map((it) => {
+      const unlock = gearUnlockState(it, slot);
+      return Object.assign({}, it, {
+        equipState: unlock.state || (unlock.unlocked ? 'ok' : 'locked'),
+        canEquip: unlock.unlocked,
+        lockLabel: unlock.label || '',
+        preview: !unlock.unlocked,
+        locked: !unlock.unlocked,
+      });
+    });
+  }
+  const inv = gearSlotInventory(slot, s);
+  return (inv.items || []).map((row) => {
+    const contracted = contractGearItem(row.item) || row.item;
+    if (!contracted) return null;
+    return Object.assign({}, contracted, {
+      equipState: row.state,
+      canEquip: !!row.canEquip,
+      lockLabel: row.label || '',
+      preview: !!row.preview,
+      locked: !!row.locked,
+    });
+  }).filter(Boolean);
+}
+
+function gearFilterInventory(rows, filter, q, rarity) {
+  const list = (rows || []).map((row) => {
+    if (row && row.item && row.state && !row.equipState) {
+      const it = contractGearItem(row.item) || row.item;
+      return Object.assign({}, it, {
+        equipState: row.state,
+        canEquip: !!row.canEquip,
+        lockLabel: row.label || '',
+        preview: !!row.preview,
+        locked: !!row.locked,
+      });
+    }
+    return row;
+  });
+  return gearFilterItems(list, filter, q, rarity);
 }
 
 function gearFilterItems(items, filter, q, rarity) {
@@ -29199,6 +31654,9 @@ function drawWeaponShape(c, id, spin, moveIdx) {
     drawWeaponLightMotes(c, light, spin, lite);
     c.restore();
   }
+  if (typeof drawWeaponLiveFx === 'function') {
+    try { drawWeaponLiveFx(c, id, spin); } catch (_) {}
+  }
   if (mi) c.restore();
 }
 
@@ -29787,6 +32245,196 @@ function drawPixelJoyKnob(c, cx, cy, r, color, alpha) {
   c.imageSmoothingEnabled = prev;
 }
 
+/* --- src/render/live-fx.js --- */
+/* ======================== LIVE FX / READY POSE ======================== */
+/**
+ * Look-only motion. Shared by menu dolls and combat draw.
+ * Cheap canvas paths — no particles array, no WebGL, no video.
+ * Skip or shrink when motionReduced / fxLite (Android).
+ */
+const LIVE_FLAME_IDS = {
+  vlamzweep: 1, nachtkaars: 1, hellevork: 1, lavalepel: 1, infernoijsje: 1,
+  pyroeend: 1, spooktoaster: 1, chiliketting: 1, brimstonebanaan: 1,
+  zwavelzeep: 1, asaccordeon: 1, helgitaar: 1, apocalypslepel: 1,
+  duiveltrommel: 1,
+};
+const LIVE_SPARK_IDS = {
+  donder: 1, laser: 1, sterkling: 1, kristal: 1, dawnblade: 1, master_sword: 1,
+};
+const LIVE_FLAME_EFFECTS = {
+  burn: 1, popburn: 1, inferno: 1, magma: 1, soapburn: 1, chainburn: 1,
+  frostfire: 1, explodepeel: 1, quakboom: 1,
+};
+/** Tip in weapon-local space (hand at 0,0, blade +x). y offsets sit on the wick, not the shaft. */
+const LIVE_TIP = {
+  vlamzweep: { x: 60, y: 0 },
+  nachtkaars: { x: 36, y: -18 },
+  laser: { x: 50, y: 0 },
+  donder: { x: 50, y: -4 },
+  sterkling: { x: 48, y: 0 },
+  kristal: { x: 50, y: 0 },
+  hellevork: { x: 52, y: -6 },
+  lavalepel: { x: 52, y: -4 },
+  pyroeend: { x: 68, y: 6 },
+  chiliketting: { x: 54, y: 0 },
+  infernoijsje: { x: 48, y: -6 },
+  brimstonebanaan: { x: 46, y: -4 },
+};
+
+function liveTip(id) {
+  return LIVE_TIP[id] || { x: 44, y: 0 };
+}
+
+function liveFxQuiet() {
+  if (typeof motionReduced === 'function' && motionReduced()) return true;
+  return false;
+}
+
+function liveFxLite() {
+  return liveFxQuiet() || (typeof fxLite === 'function' && fxLite());
+}
+
+/** Street Fighter–like guard: weight back, knees bent, hands up — readable at combat scale. */
+function applyReadyStance(P, t, opts) {
+  if (!P) return P;
+  const calm = !!(opts && opts.calm) || liveFxQuiet();
+  const breathe = calm ? 0 : Math.sin((t || 0) * 2.15);
+  const shift = calm ? 0 : Math.sin((t || 0) * 1.32);
+  P.hipY = -40.2 + breathe * 1.7;
+  P.lean = 0.18 + shift * 0.045;
+  P.headB = breathe * 0.7 + shift * 0.32;
+  P.legs = [
+    [2.32 + shift * 0.035, 1.78],
+    [0.92 - shift * 0.045, 1.28 + breathe * 0.04],
+  ];
+  P.arms = [
+    [2.48, -1.72 + breathe * 0.06],
+    [0.28 + breathe * 0.04, -1.42 + shift * 0.045],
+  ];
+  P.ready = true;
+  return P;
+}
+
+function weaponLiveKind(w) {
+  const base = typeof w === 'string'
+    ? (typeof weaponById === 'function' ? weaponById(w) : { id: w })
+    : (w || null);
+  const id = base && base.id;
+  if (!id || id === 'vuist') return null;
+  if (LIVE_FLAME_IDS[id] || (base.effect && LIVE_FLAME_EFFECTS[base.effect])) {
+    return 'flame';
+  }
+  if (LIVE_SPARK_IDS[id]) return 'spark';
+  if (typeof weaponLightFx === 'function' && weaponLightFx(base)) return 'pulse';
+  return null;
+}
+
+function weaponLiveColors(w) {
+  const base = typeof w === 'string'
+    ? (typeof weaponById === 'function' ? weaponById(w) : { id: w })
+    : (w || null);
+  if (typeof weaponLightFx === 'function') {
+    const light = weaponLightFx(base);
+    if (light) return [light.color || '#ff8c42', light.color2 || '#ffd75e'];
+  }
+  return ['#ff6b3f', '#ffd75e'];
+}
+
+function drawWeaponFlameTip(c, t, tip, lite, cols) {
+  const x = tip.x;
+  const y = tip.y;
+  const flicker = 0.70 + 0.30 * Math.sin(t * 13.5) + (lite ? 0 : 0.09 * Math.sin(t * 29));
+  const wobble = lite ? 0 : Math.sin(t * 21) * 1.4;
+  const h = (lite ? 11 : 17) * flicker;
+  c.save();
+  c.globalCompositeOperation = 'lighter';
+  const glow = c.createRadialGradient(x, y - 2, 1, x + wobble * 0.3, y - h * 0.35, h * 0.95);
+  glow.addColorStop(0, cols[1] || '#ffd75e');
+  glow.addColorStop(1, 'rgba(0,0,0,0)');
+  c.globalAlpha = lite ? 0.5 : 0.72;
+  c.fillStyle = glow;
+  c.beginPath();
+  c.arc(x + wobble * 0.25, y - h * 0.22, h * 0.72, 0, Math.PI * 2);
+  c.fill();
+  c.fillStyle = cols[0] || '#ff6b3f';
+  c.globalAlpha = lite ? 0.78 : 0.92;
+  c.beginPath();
+  c.moveTo(x - 3.2, y + 1.4);
+  c.quadraticCurveTo(x + wobble + 2.2, y - h * 0.38, x + wobble * 0.6, y - h);
+  c.quadraticCurveTo(x + 6.5, y + 0.6, x - 3.2, y + 1.4);
+  c.fill();
+  c.fillStyle = cols[1] || '#ffd75e';
+  c.globalAlpha = 0.95;
+  c.beginPath();
+  c.moveTo(x - 1.1, y + 0.4);
+  c.quadraticCurveTo(x + wobble * 0.5 + 1.2, y - h * 0.32, x + 1.6, y - h * 0.58);
+  c.quadraticCurveTo(x + 3.6, y - 0.1, x - 1.1, y + 0.4);
+  c.fill();
+  if (!lite) {
+    c.fillStyle = '#fff6c8';
+    c.globalAlpha = 0.85;
+    c.beginPath();
+    c.arc(x + wobble * 0.2, y - h * 0.22, 1.6, 0, Math.PI * 2);
+    c.fill();
+  }
+  c.restore();
+}
+
+function drawWeaponSparkTip(c, t, tip, lite, cols) {
+  if (lite && (Math.sin(t * 11) < 0.15)) return;
+  const x = tip.x;
+  const y = tip.y;
+  const pulse = 0.45 + 0.55 * Math.max(0, Math.sin(t * 16));
+  c.save();
+  c.globalCompositeOperation = 'lighter';
+  c.strokeStyle = cols[0] || '#7cf5ff';
+  c.globalAlpha = 0.4 + pulse * 0.55;
+  c.lineWidth = lite ? 1.2 : 1.8;
+  c.beginPath();
+  c.moveTo(x - 3, y - 7 * pulse);
+  c.lineTo(x + 8, y + 1);
+  c.lineTo(x - 2, y + 7 * pulse);
+  c.stroke();
+  if (!lite) {
+    c.strokeStyle = cols[1] || '#fff8d0';
+    c.lineWidth = 1.1;
+    c.beginPath();
+    c.moveTo(x, y - 4);
+    c.lineTo(x + 10, y);
+    c.stroke();
+  }
+  c.restore();
+}
+
+/** Call in weapon local space (hand at 0,0, blade +x) after the silhouette. */
+function drawWeaponLiveFx(c, id, spin) {
+  if (!c || liveFxQuiet()) return;
+  const kind = weaponLiveKind(id);
+  if (!kind || kind === 'pulse') return;
+  const lite = liveFxLite();
+  const cols = weaponLiveColors(id);
+  const tip = liveTip(id);
+  const t = Number.isFinite(spin) ? spin : 0;
+  if (kind === 'flame') drawWeaponFlameTip(c, t, tip, lite, cols);
+  else if (kind === 'spark') drawWeaponSparkTip(c, t, tip, lite, cols);
+}
+
+function lookClothSway(bones, amp) {
+  if (liveFxQuiet()) return 0;
+  const a = (amp == null ? 2.6 : amp) * (liveFxLite() ? 0.4 : 1);
+  const t = bones && Number.isFinite(bones.animT) ? bones.animT : 0;
+  return Math.sin(t * 3.05 + 0.4) * a;
+}
+
+const LiveFxApi = {
+  ready: applyReadyStance,
+  weaponKind: weaponLiveKind,
+  drawWeapon: drawWeaponLiveFx,
+  clothSway: lookClothSway,
+  quiet: liveFxQuiet,
+};
+
+if (typeof globalThis !== 'undefined') globalThis.LiveFxApi = LiveFxApi;
 /* --- src/render/equip-look.js --- */
 /* ======================== EQUIP LOOK DRAW ============================== */
 function lookPx(v) {
@@ -29866,18 +32514,20 @@ function drawEquipPiece(c, look, bones, fighter) {
   }
 }
 
-function drawLookBandana(c, look, x, y, sc) {
-  const r = 10.5 * sc;
-  const y0 = y - r * 0.28;
-  const h = 5.6 * sc;
+function drawLookBandana(c, look, x, y, sc, bones) {
+  const r = (typeof EQUIP_LOOK_HEAD_R === 'number' ? EQUIP_LOOK_HEAD_R : 10.5) * sc;
+  const sway = typeof lookClothSway === 'function' ? lookClothSway(bones, 1.8 * sc) : 0;
+  /* Forehead wrap only — never swallow the face / chin of the stick head. */
+  const y0 = y - r * 0.92;
+  const h = 4.6 * sc;
   c.fillStyle = look.color;
   c.beginPath();
-  c.moveTo(x - r * 0.98, y0);
-  c.quadraticCurveTo(x - r * 1.08, y - r * 0.82, x - r * 0.52, y - r * 0.96);
-  c.quadraticCurveTo(x, y - r * 1.06, x + r * 0.52, y - r * 0.96);
-  c.quadraticCurveTo(x + r * 1.08, y - r * 0.82, x + r * 0.98, y0);
-  c.lineTo(x + r * 0.9, y0 + h);
-  c.quadraticCurveTo(x, y0 + h + 1.2 * sc, x - r * 0.9, y0 + h);
+  c.moveTo(x - r * 0.96, y0);
+  c.quadraticCurveTo(x - r * 1.02, y - r * 1.02, x - r * 0.48, y - r * 1.08);
+  c.quadraticCurveTo(x, y - r * 1.14, x + r * 0.48, y - r * 1.08);
+  c.quadraticCurveTo(x + r * 1.02, y - r * 1.02, x + r * 0.96, y0);
+  c.lineTo(x + r * 0.88, y0 + h);
+  c.quadraticCurveTo(x, y0 + h + 0.8 * sc, x - r * 0.88, y0 + h);
   c.closePath();
   c.fill();
   c.strokeStyle = 'rgba(0,0,0,.28)';
@@ -29885,9 +32535,9 @@ function drawLookBandana(c, look, x, y, sc) {
   c.stroke();
   if (look.plate) {
     c.fillStyle = look.plate;
-    const pw = 9.2 * sc, ph = 4.4 * sc;
+    const pw = 8.6 * sc, ph = 3.6 * sc;
     c.beginPath();
-    c.rect(x - pw / 2, y0 + 0.4, pw, ph);
+    c.rect(lookPx(x - pw / 2), lookPx(y0 + 0.6 * sc), pw, ph);
     c.fill();
     c.strokeStyle = 'rgba(0,0,0,.22)';
     c.lineWidth = 0.8;
@@ -29896,32 +32546,33 @@ function drawLookBandana(c, look, x, y, sc) {
   // Tails stream behind the head (−x) so they do not sit on the face.
   c.strokeStyle = look.color;
   c.lineCap = 'round';
-  c.lineWidth = 2.5 * sc;
+  c.lineWidth = 2.4 * sc;
   c.beginPath();
-  c.moveTo(x - r * 0.86, y0 + 1.6);
-  c.quadraticCurveTo(x - r * 1.45, y0 + 5, x - r * 1.62, y0 + 13 * sc);
+  c.moveTo(x - r * 0.86, y0 + 1.2 * sc);
+  c.quadraticCurveTo(x - r * 1.4 + sway * 0.4, y0 + 4 * sc, x - r * 1.55 + sway, y0 + 11 * sc);
   c.stroke();
-  c.lineWidth = 1.8 * sc;
+  c.lineWidth = 1.7 * sc;
   c.beginPath();
-  c.moveTo(x - r * 0.8, y0 + 2.4);
-  c.quadraticCurveTo(x - r * 1.28, y0 + 7, x - r * 1.38, y0 + 15 * sc);
+  c.moveTo(x - r * 0.8, y0 + 2 * sc);
+  c.quadraticCurveTo(x - r * 1.24 + sway * 0.3, y0 + 6 * sc, x - r * 1.32 + sway * 0.85, y0 + 13 * sc);
   c.stroke();
 }
 
 function drawLookVisor(c, look, x, y, sc) {
-  const w = 18.5 * sc, h = 5.6 * sc;
+  const w = 17.2 * sc, h = 4.6 * sc;
+  const y0 = y - 1.2 * sc;
   c.fillStyle = look.color || look.accent || '#7cf5ff';
-  c.globalAlpha = 0.9;
+  c.globalAlpha = 0.88;
   c.beginPath();
-  c.moveTo(x - w / 2, y);
-  c.quadraticCurveTo(x, y + 2.2 * sc, x + w / 2, y);
-  c.lineTo(x + w / 2 - 0.8, y + h);
-  c.quadraticCurveTo(x, y + h + 1.4 * sc, x - w / 2 + 0.8, y + h);
+  c.moveTo(x - w / 2, y0);
+  c.quadraticCurveTo(x, y0 + 1.6 * sc, x + w / 2, y0);
+  c.lineTo(x + w / 2 - 0.8 * sc, y0 + h);
+  c.quadraticCurveTo(x, y0 + h + 1.1 * sc, x - w / 2 + 0.8 * sc, y0 + h);
   c.closePath();
   c.fill();
   c.globalAlpha = 0.45;
   c.fillStyle = '#e8ffff';
-  c.fillRect(x - w / 2 + 2, y + 1.1 * sc, w * 0.38, 1.6 * sc);
+  c.fillRect(lookPx(x - w / 2 + 2 * sc), lookPx(y0 + 1.0 * sc), w * 0.36, 1.4 * sc);
   c.globalAlpha = 1;
 }
 
@@ -29985,33 +32636,46 @@ function drawLookTopknot(c, look, x, y, sc) {
   c.fill();
 }
 
-function drawLookHelmet(c, look, x, y, sc) {
-  const r = 11.2 * sc;
+function drawLookHelmet(c, look, x, y, sc, bones, fighter) {
+  const r = 11.0 * sc;
+  /* Replacement skull — if the base hollow head is skipped, this disc is the head. */
   c.fillStyle = look.color;
   c.beginPath();
-  c.arc(x, y - 1, r, Math.PI, 0);
-  c.lineTo(x + r, y + 1.5 * sc);
-  c.quadraticCurveTo(x, y + 3.2 * sc, x - r, y + 1.5 * sc);
+  c.arc(x, y, r * 0.9, 0, TAU);
+  c.fill();
+  c.beginPath();
+  c.arc(x, y - 0.6 * sc, r, Math.PI, 0);
+  c.lineTo(x + r, y + 1.2 * sc);
+  c.quadraticCurveTo(x, y + 2.4 * sc, x - r, y + 1.2 * sc);
   c.closePath();
   c.fill();
   c.strokeStyle = look.accent || 'rgba(0,0,0,.3)';
   c.lineWidth = 1.2;
+  c.stroke();
+  /* Open face / chin so a helm never leaves a blank hole. */
+  const body = (fighter && fighter.color) || look.accent || '#f2f5ff';
+  c.strokeStyle = body;
+  c.lineWidth = (fighter && fighter.lineW) || 3.2;
+  c.lineCap = 'round';
+  c.beginPath();
+  c.arc(x, y, (typeof EQUIP_LOOK_HEAD_R === 'number' ? EQUIP_LOOK_HEAD_R : 10.5) * sc, 0.2, Math.PI - 0.2);
   c.stroke();
 }
 
 function drawLookCoat(c, look, x, y, sc, bones) {
   const sh = lookBoneOk(bones && bones.shoulder) ? bones.shoulder : { x, y };
   const hip = lookBoneOk(bones && bones.hip) ? bones.hip : { x, y: y + 32 };
+  const sway = typeof lookClothSway === 'function' ? lookClothSway(bones, 2.8 * sc) : 0;
   const flare = 17 * sc;
   c.fillStyle = look.fill || look.color;
   c.beginPath();
-  c.moveTo(lookPx(hip.x - 5), lookPx(hip.y + 10 * sc));
-  c.quadraticCurveTo(hip.x - flare - 2, hip.y + 3, hip.x - flare, hip.y - 6);
+  c.moveTo(lookPx(hip.x - 5 + sway * 0.3), lookPx(hip.y + 10 * sc));
+  c.quadraticCurveTo(hip.x - flare - 2 + sway, hip.y + 3, hip.x - flare + sway, hip.y - 6);
   c.lineTo(lookPx(sh.x - 16 * sc), lookPx(sh.y - 5));
   c.quadraticCurveTo(sh.x, sh.y - 12 * sc, sh.x + 16 * sc, sh.y - 5);
-  c.lineTo(lookPx(hip.x + flare), lookPx(hip.y - 6));
-  c.quadraticCurveTo(hip.x + flare + 2, hip.y + 3, hip.x + 5, hip.y + 10 * sc);
-  c.quadraticCurveTo(hip.x, hip.y + 6 * sc, hip.x - 5, hip.y + 10 * sc);
+  c.lineTo(lookPx(hip.x + flare + sway), lookPx(hip.y - 6));
+  c.quadraticCurveTo(hip.x + flare + 2 + sway, hip.y + 3, hip.x + 5 + sway * 0.3, hip.y + 10 * sc);
+  c.quadraticCurveTo(hip.x + sway * 0.2, hip.y + 6 * sc, hip.x - 5 + sway * 0.3, hip.y + 10 * sc);
   c.closePath();
   c.fill();
   c.strokeStyle = look.accent;
@@ -30026,11 +32690,12 @@ function drawLookCoat(c, look, x, y, sc, bones) {
 function drawLookCape(c, look, x, y, sc, bones) {
   const sh = lookBoneOk(bones && bones.shoulder) ? bones.shoulder : { x, y };
   const hip = lookBoneOk(bones && bones.hip) ? bones.hip : { x, y: y + 32 };
+  const sway = typeof lookClothSway === 'function' ? lookClothSway(bones, 3.2 * sc) : 0;
   c.fillStyle = look.fill || look.color;
   c.beginPath();
   c.moveTo(sh.x - 12 * sc, sh.y - 4);
-  c.quadraticCurveTo(sh.x - 22 * sc, hip.y - 4, hip.x - 14 * sc, hip.y + 12 * sc);
-  c.quadraticCurveTo(hip.x, hip.y + 8 * sc, hip.x + 6 * sc, hip.y + 10 * sc);
+  c.quadraticCurveTo(sh.x - 22 * sc + sway, hip.y - 4, hip.x - 14 * sc + sway, hip.y + 12 * sc);
+  c.quadraticCurveTo(hip.x + sway * 0.4, hip.y + 8 * sc, hip.x + 6 * sc + sway * 0.5, hip.y + 10 * sc);
   c.lineTo(sh.x + 4 * sc, sh.y - 2);
   c.quadraticCurveTo(sh.x, sh.y - 8 * sc, sh.x - 12 * sc, sh.y - 4);
   c.closePath();
@@ -30086,13 +32751,15 @@ function drawLookWrap(c, look, x, y, sc, bones) {
 
 function drawLookGreaves(c, look, x, y, sc, bones) {
   const hip = lookBoneOk(bones && bones.hip) ? bones.hip : { x, y };
+  const gx = lookPx(hip.x), gy = lookPx(hip.y + 22 * sc);
+  const w = 7 * sc, h = 12 * sc;
   c.fillStyle = look.color;
-  c.fillRect(lookPx(hip.x - 14 * sc), lookPx(hip.y + 14 * sc), 7 * sc, 11 * sc);
-  c.fillRect(lookPx(hip.x + 7 * sc), lookPx(hip.y + 14 * sc), 7 * sc, 11 * sc);
+  c.fillRect(lookPx(gx - 14 * sc), gy, w, h);
+  c.fillRect(lookPx(gx + 7 * sc), gy, w, h);
   c.strokeStyle = look.accent || 'rgba(0,0,0,.25)';
   c.lineWidth = 1;
-  c.strokeRect(lookPx(hip.x - 14 * sc), lookPx(hip.y + 14 * sc), 7 * sc, 11 * sc);
-  c.strokeRect(lookPx(hip.x + 7 * sc), lookPx(hip.y + 14 * sc), 7 * sc, 11 * sc);
+  c.strokeRect(lookPx(gx - 14 * sc), gy, w, h);
+  c.strokeRect(lookPx(gx + 7 * sc), gy, w, h);
 }
 
 function drawLookTome(c, look, x, y, sc) {
@@ -30205,27 +32872,29 @@ function drawLookTail(c, look, x, y, sc, bones) {
   c.lineCap = 'round';
   c.lineWidth = 4.4 * sc;
   c.beginPath();
+  const sway = typeof lookClothSway === 'function' ? lookClothSway(bones, 3.6 * sc) : 0;
   c.moveTo(hip.x + 3 * sc, hip.y + 2 * sc);
-  c.quadraticCurveTo(hip.x + 16 * sc, hip.y + 6 * sc, hip.x + 14 * sc, hip.y + 18 * sc);
+  c.quadraticCurveTo(hip.x + 16 * sc + sway, hip.y + 6 * sc, hip.x + 14 * sc + sway * 0.7, hip.y + 18 * sc);
   c.stroke();
   c.fillStyle = look.accent || '#fff4d6';
   c.beginPath();
-  c.arc(hip.x + 14 * sc, hip.y + 18 * sc, 3.2 * sc, 0, TAU);
+  c.arc(hip.x + 14 * sc + sway * 0.7, hip.y + 18 * sc, 3.2 * sc, 0, TAU);
   c.fill();
 }
 
 function drawLookWings(c, look, x, y, sc, bones) {
   const sh = lookBoneOk(bones && bones.shoulder) ? bones.shoulder : { x, y };
+  const flap = typeof lookClothSway === 'function' ? lookClothSway(bones, 4.2 * sc) : 0;
   c.fillStyle = look.fill || look.color || 'rgba(200,208,220,.55)';
   c.beginPath();
   c.moveTo(sh.x - 6 * sc, sh.y);
-  c.quadraticCurveTo(sh.x - 28 * sc, sh.y - 18 * sc, sh.x - 22 * sc, sh.y + 16 * sc);
+  c.quadraticCurveTo(sh.x - 28 * sc, sh.y - 18 * sc - flap, sh.x - 22 * sc, sh.y + 16 * sc);
   c.quadraticCurveTo(sh.x - 12 * sc, sh.y + 8 * sc, sh.x - 6 * sc, sh.y + 4 * sc);
   c.closePath();
   c.fill();
   c.beginPath();
   c.moveTo(sh.x + 4 * sc, sh.y);
-  c.quadraticCurveTo(sh.x + 26 * sc, sh.y - 16 * sc, sh.x + 20 * sc, sh.y + 16 * sc);
+  c.quadraticCurveTo(sh.x + 26 * sc, sh.y - 16 * sc - flap, sh.x + 20 * sc, sh.y + 16 * sc);
   c.quadraticCurveTo(sh.x + 10 * sc, sh.y + 8 * sc, sh.x + 4 * sc, sh.y + 4 * sc);
   c.closePath();
   c.fill();
@@ -30253,6 +32922,84 @@ function drawLookCharm(c, look, x, y, sc) {
   c.fill();
 }
 
+function drawStickmanHead(c, x, y, color, opts) {
+  if (!c) return;
+  const r = (opts && Number.isFinite(opts.r)) ? opts.r
+    : (typeof EQUIP_LOOK_HEAD_R === 'number' ? EQUIP_LOOK_HEAD_R : 10.5);
+  const lineW = (opts && Number.isFinite(opts.lineW)) ? opts.lineW : 4.5;
+  const px = lookPx(x);
+  const py = lookPx(y);
+  const col = (typeof lookHeadStroke === 'function') ? lookHeadStroke(color || '#f2f5ff') : (color || '#f2f5ff');
+  c.save();
+  try {
+    if (opts && opts.bald) {
+      c.fillStyle = '#ffe8c8';
+      c.beginPath(); c.arc(px, py, r, 0, TAU); c.fill();
+      c.strokeStyle = 'rgba(0,0,0,.35)';
+      c.lineWidth = 1.2;
+      c.beginPath(); c.arc(px, py, r, 0, TAU); c.stroke();
+      c.fillStyle = 'rgba(255,255,255,.4)';
+      c.beginPath(); c.arc(px - 3, py - 3, 2.8, 0, TAU); c.fill();
+    } else {
+      const fill = typeof lookHeadFill === 'function' ? lookHeadFill(col) : 'rgba(255,255,255,.10)';
+      c.fillStyle = fill;
+      c.beginPath(); c.arc(px, py, Math.max(2, r - lineW * 0.28), 0, TAU); c.fill();
+      c.strokeStyle = col;
+      c.lineWidth = lineW;
+      c.lineCap = 'round';
+      c.beginPath(); c.arc(px, py, r, 0, TAU); c.stroke();
+      const rim = typeof lookHeadRim === 'function' ? lookHeadRim(col) : null;
+      if (rim) {
+        c.strokeStyle = rim;
+        c.lineWidth = Math.max(1.15, lineW * 0.32);
+        c.beginPath(); c.arc(px, py, r + 0.7, 0, TAU); c.stroke();
+      }
+    }
+  } finally {
+    c.restore();
+  }
+}
+
+/** Lower-arc restroke so a bandana/visor cannot erase the stick-head. */
+function restrokeStickmanChin(c, x, y, color, opts) {
+  if (!c) return;
+  const r = (opts && Number.isFinite(opts.r)) ? opts.r
+    : (typeof EQUIP_LOOK_HEAD_R === 'number' ? EQUIP_LOOK_HEAD_R : 10.5);
+  const lineW = (opts && Number.isFinite(opts.lineW)) ? opts.lineW : 4.5;
+  const px = lookPx(x);
+  const py = lookPx(y);
+  const col = (typeof lookHeadStroke === 'function') ? lookHeadStroke(color || '#f2f5ff') : (color || '#f2f5ff');
+  c.save();
+  try {
+    c.strokeStyle = col;
+    c.lineWidth = lineW;
+    c.lineCap = 'round';
+    c.beginPath();
+    c.arc(px, py, r, 0.18, Math.PI - 0.18);
+    c.stroke();
+    const rim = typeof lookHeadRim === 'function' ? lookHeadRim(col) : null;
+    if (rim) {
+      c.strokeStyle = rim;
+      c.lineWidth = Math.max(1.1, lineW * 0.3);
+      c.beginPath();
+      c.arc(px, py, r + 0.7, 0.18, Math.PI - 0.18);
+      c.stroke();
+    }
+  } finally {
+    c.restore();
+  }
+}
+
+function ensureEquipHeadVisible(c, looks, bones, fighter) {
+  if (!c) return;
+  const head = bones && bones.head;
+  if (!lookBoneOk(head)) return;
+  void looks;
+  restrokeStickmanChin(c, head.x, head.y, fighter && fighter.color, {
+    lineW: fighter && fighter.lineW,
+  });
+}
+
 function drawEquipLookPreview(c, styleId, gear) {
   if (!c) return null;
   try {
@@ -30262,7 +33009,7 @@ function drawEquipLookPreview(c, styleId, gear) {
       gear: gear || null,
       _preview: true,
     });
-    f.animT = 0.4;
+    f.animT = 0.55;
     f.draw(c);
     return f;
   } catch (_) {
@@ -30274,6 +33021,9 @@ if (typeof EquipLookApi !== 'undefined') {
   EquipLookApi.drawPreview = drawEquipLookPreview;
   EquipLookApi.drawLayer = drawEquipLayer;
   EquipLookApi.safeDrawLayer = safeDrawEquipLayer;
+  EquipLookApi.drawHead = drawStickmanHead;
+  EquipLookApi.restrokeChin = restrokeStickmanChin;
+  EquipLookApi.ensureHead = ensureEquipHeadVisible;
 }
 
 const EQUIP_LOOK_DRAW = {
@@ -31123,6 +33873,42 @@ const MONSTER_PIXEL_ART = {
   panda: '..........................................................................................................................................................................................................................................................................N..........N..................NNDNN..NNN.NNDNN...............NDDDDDNNBBBNDDDDDN..............NDDDDDBBBBBBDDDDDN.............NDDDDDDDBBBBDDDDDDDN.............NDDDDDBBBBBBDDDDDN..............NDDDDDBBBBBDDDDDDN..............NBDDWDDBBDDWDDDBBBN.............NDDWKWDDDDWKWDDBBBN............NBBDDWDDBBDDWDDBBBBBN...........NBBBBDBBBDBBDBBBBBBBN...........NBBBBBBBDDDBBBBBBBBBN............NBBBBBDDDDDBBBBBBBN.............NBBBBBBDDDBBBBBBBBN..............NBBBBBBDBBBBBBBBN...............NBBBBBBBBBBBBBBBN................NBBBBBBBBBBBBBN..................NNDDDBBBBBDDDN...................NDDDBBBNNDDDN...................NDDDNNN.NDDDN....................NNN.....NNN.........................................................................................................',
   flamingo: '...........................................................................N.............................NNWNN..........................NPWKWPN......................NNNOPPWPPPN....................NOOOOPPPPPN......................NNNNONPPPN..........................N.NPPN............................NPPN............................NPPN............................NPPN...N...N....................NPPNNNNBNNNDNNN.................NPPNBBBBDDDDDDDN................NPPBBBBDDDDDDDDDN...............NPPBBBBBDDDDDDDN.................NBBBBBBBBBDBNN...................NBBBBBBBBBN.....................NBBBBBBBBBN......................NBBBBBBBN........................NNOONNN..........................NOON............................NOON............................NOON............................NOON............................NOON............................NOON...........................NOOON............................NNN.............................................................................................................',
   camel: '................................................................................................................................................................................................................................................N.............................NNBNN..........................NBBBBBN........................NBBBBBBBN.................N.NNN.NBBBBBBBN...............NNWNBBBNBBBBBBBBBNNN...........NDWKWDBBNNBBBBBBBBBBBN..........NDDWDDBBNBBBBBBBBBBBBBN........NDDDDDDDBBBBBBBBBBBBBBBBN........NDDDDDBBBBBBBBBBBBBBBBBBN.......NDDDDDBBBBBBBBBBBBBBBBBBN........NNDNBBBBBBBBBBBBBBBBBBBBN.........NNBBBBBBBBBBBBBBBBBBBN............NNBBBBBBBBBBBBBBBBBN..............NBBBBBBBBBBBBBBBN................NBBBBBBBBBBBBBN..................NDDBBBBBBBDDN...................NDDNNBBBNNDDN...................NDDN.NNN.NDDN...................NDDN.....NDDN....................NN.......NN........................................................................................................................................',
+  wolf: '....................................................................................................................................N........N.....................NDN......NDN.....................NN......NDN.....................NDN.....NDN.....................NDN.....NDN......................NDN...NDDN......................NDDN..NDDN......................NDDN..NDDNNNN...................NDDDNNDDDNBBBNNNN..............NBBBBDBBBBDBBBBBBBN.N..........NBBBWBBBBBBBBBBBBBBBNDNNNN......NBBWKWBBBBBBBBBBBBBBBDDDDDN....NBBBBWBBBBBBBBBBBBBBBBBDDDDDN..NNWBBBBBBBBBBBBBBBBBBBBBDDDDDDNNBBBBBBBBBBBBBBBBBBBBBBBBBDDDDN..NNNNBBBBBBBBBBBBBBBBBBBBDDDDN.......NNNBBBBBBBBBBBBBBBBBNNNN...........NBBBBBBBBBBBBBBBN................NBBBBBBBBBBBBBNN.................NDDBBDDBBBDDNDDN................NDDNNDDBNNDDNDDN................NDDNNDDN.NDDNDDN................NDDNNDDN.NDDNNN..................NN..NN...NN..........................................................................................................................................',
+  owl: '........................................................................................................................................N...............N..............NDN.............NDN..............NN.............NN...............NDN...........NDN...............NDDN.........NDDN................NDN...NNN...NDN.................NDDNNNBBBNNNDDN.................NDDDBBBBBBBDDDN..................NBADBBBBBDABN..................NAAWAABBBAAWAAN................NBAWWWABBBAWWWABN...............NAWKWWWABAWKWWWAN..............NDDDWWWABBBAWWDDDN..............NDDDAWAABBBAAWDDDBN.............NBBBBABBOBBBBABBBBN.............NBBBBBBBOOBBBBBBBBN..............NBBBBBOOOOBBBBBBN...............NBBBBOOOOOOOBBBBN...............NBBBBBBBBBBBBBBBN................NBBBBBBBBBBBBBN..................NBBBBBBBBBBBN....................NDDBBBBDDBN.....................NDDNBBBDDN......................NDDNNNNDDN.......................NN....NN............................................................................................................',
+  frog: '...........................................................................................................................................................................................................................................................................................................................................N.........N...................NNWNN.....NNWNN................NBWWWBN...NBWWWBN...............NWKWWWNNNNNWKWWWN..............NBBWWWBBBBBBBWWWBBN..............NBBWBBBBBBBBBWBBN...............NBBBBBBBBBBBBBBBN..............NBBBBBBBBBBBBBBBBBN............NBBBBBBBBBBBBBBBBBBBN...........NBBBBBBBBBBBBBBBBBBBN..........NBBBBBBDDDDDDDDBBBBBBBN..........NBBBBBBBBBBBBBBBBBBBN..........NNDBBBBBBBBBBBBBBBBBDNN........NDDDDDBBBBBBBBBBBBBDDDDDN......NDDDDDDDBBBBBBBBBBBDDDDDDDN......NDDDDDNBDDBBBBDDBBNDDDDDN........NNDNN.NDDNBBBDDNN.NNDNN...........N...NDDNNNNDDN....N..................NN....NN............................................................................................................',
+  snake: '........................................................................................................................................................................................................................................................................N............................NNNBNNN.....................NN.NBBWBBBBN...................NBPNNBWKWBBBNNNNNN..............NPBBBBBWBBBBBBBBBBN..............NNBBBBBBBDDBBBBBBBNNN.............NBBBBBBBBBBBBBBBBBBN.............NNNNBNNNNNNBBBBBBBNN................N....NBBBBBBBBBBN.....................NBBBDDBBBBN.....................NBBBBBBBBBBNNN...................NNNBNNBBBBBBBN.....................N.NBBBBBBBN......................NBBBBBBBBBN......................NBBBBBBBN.......................NBBBBBBBN........................NNNBNNN............................N.......................................................................................................................................................................................................',
+  boar: '..............................................................................................................................................................................N.......N......................NDN.....NDN......................NN.....NDN......................NDN....NDN.......................NDN..NDDN.......................NDDN.NDDN.....................NNNBBDNDDDN...................NNBBBBBBDBBDN................N.NBBBBBBBBBBBBDN............NNNDNBBBBBBBBBBBBBBBN..........NDDDWDDDBBBBBBBBBBBBBBN........NDADWKWDDDBBBBBBBBBBBBBN........NDPDDWDDDDBBBBBBBBBBBBBN.......NDPPPDAADDDDBBBBBBBBBBBBBN......NPPPPPAADDDBBBBBBBBBBBBBN......NAAPPPAAAADDBBBBBBBBBBBBBN.......NNNPDDDDDDBBBBBBBBBBBBBBN..........NNNDNBBBBBBBBBBBBBBBN..............N.NBBBBBBBBBBBBBN..................NDDBBBBBBBDDN...................NDDNNBBBNNDDN...................NDDN.NNN.NDDN....................NN.......NN.........................................................................................................................................',
+  skeleton: '................................................................................................................N............................NNNBNNN........................NBBBBBBBN......................NBBBBBBBBBN.....................NBBBBBBBBBN.....................NBBNBBBNBBN....................NBBBBBBBBBBBN....................NBBBBBBBBBN.....................NBBBNNBBBBN.....................NBBBBBBBBBN......................NBBBBBBBN.....................NNNDDDDDDNNN...................NBBBBBBBBBBBBN...................NNNDDDDDDNNN......................NBBBBBBN........................NDDDDDDN........................NBBBBBBN........................NDDDDDDN.........................NBBNBBN.........................NBBNBBN.........................NBBNBBN.........................NBBNBBN.........................NBBNBBN..........................NN.NN.............................................................................................................................................................................',
+  mummy: '................................................................................N............................NNNBNNN........................NBBBBBBBN......................NBBBBBBBBBN.....................NBBBBBBBBBN.....................NBBBBBBBBBN....................NBBBNBBBNBBBN....................NBBBBBBBBBN.....................NBBBBBBBBBN.....................NBBBBBBBBBN.....................NBBBBBBBBN....................NNNDDDDDDDDN...................NAAABBBBBBBBN...................NAAABBBBBBBBN....................NNNDDDDDDDDNNNN...................NBBBBBBBBAAAAN..................NBBBBBBBBNNNN...................NDDDDDDDDN......................NBBBBBBBBN......................NBBBBBBBBN......................NBBBBBBBBN.......................NDDNNDDN........................NDDNNDDN........................NDDNNDDN........................NDDNNDDN.........................NN..NN.............................................................................................................................................',
+  beetle: '................................................................................................................................................................................................................................................................................................................NNN..........................NNNDDDNNN.............N........NDDDDDDDDDN...........NDN......NDDDDDBDDDDDN...........N..N.N.NDDDBBBBBBBDDDN............NDNBNDDDBBBBBBBBBDDDN...........NBWBBBDBBBBBBBBBBBDDN...........NWKWBBDBBBBBBBBBBBDDN..........NBBWBBBBBBBBBBBBBBBBDDN..........NBBBBBDBBBBBBBBBBBDDN...........NBBBBBDBBBBBBBBBBBDDN............NNBNDDDBBBBBBBBBDDDN..............N.NDDDBBBBBBBDDDN..................NDDDDDBDDDDDN....................NDDNNDDNDNN.N...................NNNNNDDNNN..N...................N..NNNNN.N..N.......................................................................................................................................................................................................',
+  wasp: '......................................................................................................................................................................N.............N................NHN...........NHN................NHN..........NN..................NHNN.......NHN...................NHHN.....NHHN....................NHHN...NHHN.....................NHHHNNNHHHN....................NBWBBBHBNHHNNN..................NWKWBBBBBBHBBBN................NBBWBBBBBBBBBBBBN................NBBBBBBDDBBBBBBN...N............NBBBBBBDDBBBBBBBNNNON............NNNBNBBDDDDDBOOOOOON...............NNBBBBBBBBBNNOOON.................NBBBBBBBN..NNON.................NNNNNNNN.....N..................N...N...........................N...N.............................................................................................................................................................................................................................................................................................................',
+  spider: '.........................................................................................................................................................................................................................................................................................................................................................................NN...N....NNN...................NN.NNBNN.NNNDNNN................NNNBBBBBNDNNDDDDN............NNNNNBWWBWWDDNNDNNNDN...........NNN.NWKWWKWDDDDDNNNDDN.............NBBWBBWDDDDDDDDDDDN..............NBBBBDDDDDDDDDDDDDN...........NNNBBBBBDDDDNNNDDDDN............NNNNBBBBDDDDNNNDDDDN................NNBNNDDDDDDDDDN..............NN...N..NDNNDDDDN...............NN.......NNNDNNN................NN........NNN..........................................................................................................................................................................................................................................................................',
+  drone: '.......................................................................................................................................................................................................................................................................................................................................N.................N...........NNDNN.............NNDNN........NDDDDDN...........NDDDDDN......NDDDDDDDNNNNNNNNNNNDDDDDDDN......NDDDNNNBBBBBBBBBBNNNDDDDN........NNDN.NBBBBBHBBBBN..NDNN...........N..NBBDDOOODBBN...N.............N..NBBDOOOOOBBN...N...........NNDNNNBBDDOOODBBN.NNDNN........NDDDDDNBBBBBOBBBBNNDDDDDN......NDDDDDDDNNNNNNNNNNNDDDDDDDN......NDDDDDN...........NDDDDDN........NNDNN.............NNDNN...........N.................N......................................................................................................................................................................................................................................................................',
+  bot: '...............NHN............................NHHHN..........................NHHHHHN..........................NHHHN............................NHN...........................NNNNNN.........................NDDDDDDN........................NDDDDDDN........................NDOOOODN........................NDOOOODN........................NDDDDDDN........................NDDDDDDN.......................NBBBBBBBBN....................NNNBBBBBBBBNNN.................NDDDBBBBBBBBDDDN................NDDDBBBBBBBBDDDN.................NNNBBBBBBBBNNN....................NBBBBBBBBN......................NBBBBBBBBN......................NBBBBBBBBN......................NBBBBBBBBN......................NBBBBBBBBN.......................NDDNNDDN........................NDDNNDDN........................NDDNNDDN........................NDDNNDDN........................NDDNNDDN.........................NN..NN.............................................................................................................................................',
+  scrapdog: '.....................................................................................................................................................................................................................................................................N......N...............................N.........................N.....N.........................N.N..NN........................NNNDN.NN....NNN................NDNNDDNNN.NNNBBBNNN............NDDDDNDDDNNBBBBBBBBBNN..........NDDODDDDDDBBBBBBBBBBBBN..N.....NDDOOODDDDDDBBABBBABBBBBNNON.....NOOOOODDDDBBBBBBBBBBBNNNNN......NDOOODDDDDBBBBBBBBBBBNNNNN.......NDODDDDDBBBBBBBBBBBBBBN..........NNNDNNBBBBBBBBBBBBBBBN.............N..NBBBBBBBBBBBBBN.................NDDBBBDDBBDDNN..................NDDNNNDDBNDDN...................NDDN.NDDNNDDN...................NDDN.NDDNNDDN....................NN...NN..NN.........................................................................................................................................................................',
+  penguin: '................................................................................................................N.............................NNBNN..........................NBBBBBN........................NBBBBBBBN.......................NBWBBBBBN......................NBWKWBBBBBN....................NNNOWBBBBBN....................NOOOOBBBBBBBN....................NBOOBBBBBBBBN...................NBBBOBBBBBBBN...................NBBBAAAAABBBN...................NBBAAAAAAABBN..................NBBBAAAAAAABBBN.................NDDDAAAAAADDDBN.................NDDDAAAAAADDDBN.................NDDDAAAAAADDDN..................NDDDAAAAAADDDN...................NBBAAAAAAABBN...................NBBAAAAAAABBN....................NBAAAAAAABN......................NBAAAAABN........................NBBABBN........................NOOOBOOON.......................NOOONOOON........................NNN.NNN............................................................................................................................................',
+  yeti: '................................................................................N............................NNNBNNN........................NBBBBBBBN......................NBBBBBBBBBN.....................NDDDDDDDDBN.....................NDDWDDDWDBN....................NBBWKWBWKWBBN....................NBBWBBBWBBN....................NBBBBBBBBBBBN..................NBBBBABBBABBBBN................NBBBBBABBBABBBBBN...............NBBBBBBBBBBBBBBBN.............NNDBBBBBBBBBBBBBBBDNN..........NDDDDDBBBBBBBBBBBDDDDDN.........NDDDDDBBBBBABBBBBDDDDDN.........NDDDDDBBBAAAAABBBDDDDDN........NDDDDDDDBAAAAAAABDDDDDDDN........NDDDDDBBBAAAAABBBDDDDDN.........NDDDDDBBBBBABBBBBDDDDDN.........NDDDDDBBBBBBBBBBBDDDDDN..........NNDNNBBBBBBBBBBBNNDNN.............N..NBDDBBBDDBN..N...................NDDBBBDDN.......................NDDNNNDDN.......................NDDN.NDDN.......................NDDN.NDDN........................NN...NN............................................................................................................',
+  crab: '............................................................................................................................................................................................................................................................................................................................................N......N.......................NWN....NWN.................N...NWKWNNNNWKWN....N........NNNDNNN.NWNNBBBNWN..NNNDNNN....NDDDDDDDNNNBBBBBBNBNNDDDDDDDN...NDDDDDDDBBNBBBBBBNBBBDDDDDDDN..NDDDDDDDDDBBBBBBBBBBBDDDDDDDDDN..NDDDDDDDBBBBBBBBBBBBBDDDDDDDN...NDDDDDDDBBBBBBBBBBBBBDDDDDDDN....NNNDNNBBBBBBBBBBBBBBBNNDNNN........N.NBBBBBBBBBBBBBBBN.N..............NBBBBBBBBBBBBBN..................NNNBBNNBBNNNN....................NNNNNNBNNN......................NN..NNN.NN...........................................................................................................................................................................................................................................',
+  turtle: '................................................................................................................................................................................................................................................................................................................NNN..........................NNNDDDNNN.....................NNDDDDDDDDDNN..................NDDDDDDBDDDDDDN................NDDDDBBBBBBBDDDDN.............NNDDDDBBBBBBBBBDDDDN.........NNNBNDDDBBBDDBBBBBBDDDN........NBBWBBBBDBBBDDBBDDBBDDDBNN......NBWKWBBBBBBBBBBBDDBBBBBBBBN....NBOBWBBBBBBBBBBBBBBBBBBBBBBBN..NOOOBBBBBBDBBBBBBBBBBBDBBBBBN....NNBOBBBBBDDBBBBBBBBBDDDDBNN.......NNNBNNDDBDBBBBBBBDBDDNN............N.NBBBBBDDBDDBBBBBN..............NBBBBBBBDDDBBBBBBBN..............NBBBBBNDDDNBBBBBN................NNBNN.NNN.NNBNN...................N.........N.........................................................................................................................................................................',
+  squid: '................................................N..............................NDN............................NDDDN..........................NDDDDDN........................NDDDDDDDN......................NDDDDDDDDDN....................NDDDDDDDDDDDN..................NDDDWDDDDDWDDDN................NNBBWWWBBBWWWBBNN..............NBBBWKWWWBWKWWWBBBN............NBBBBBWWWBBBWWWBBBBBN............NBBBBBWBBBBBWBBBBBN..............NNBBBBBBBBBBBBBNN.................NNBBBBBBBBBNN...................NNNBBBBBBBN.NN.................NDDNDDNDDNDDNDDN................NDDNDDNDDNDDNDDN................NDDNDDNDDNDDNDDN................NDDNDDNDDNDDNDDN................NDDNDDNDDNDDNDDN................NDDNDDNDDNDDNDDN................NDDNDDNDDNDDNDDN................NDDNDDNDDNDDNDDN................NPNNDDNPNNDDNPN..................N.NPN.N.NPN.N......................N.....N............................................................................................................................................................................',
+  raven: '........................................................................................................................................................................................................................................N.................N............NDN...............NDN............N..............NNDN.................N........NNDDN........N........NDN..N...NDDDN........NDNNN....N.NDNNBNNNDDDDN.........NNDDNNNNWNBBBBBBDDDDDN......N.....NNDDDWKWBBBBDDDDDDN...NNNNBN....NNNNDDWBBBBBBDDDDBNNNNBBBBN....NBBOBBBDBBBBBBBDBDBBBBBBBBBN.....NNNNBBBBBBBBBBBBBBNNBBBBBBN.........NNNBBBBBBBBBBBN.NBBBBN.............NBBBBBBBBBN...NNBBN..............NNNNBNNNN......NBN..................N...........N...................................................................................................................................................................................................................................................................................................................................',
+  moose: '....................................................................NNNN...NNNN..................NNNAAAAN.NAAAANNN..............NAAAAAAAN.NAAAAAAAN.............NAAANNNN...NNNNAAAN.............NAAANNNN..NNNNNAAAN.............NAAAAAAANNAAAAAAAAN.............NAAAAAAANNAAAAAAAAN.............NAAAAAAANNAAAAAAAN...............NNNNNNN..NNNNNNN.....................................................N.NNNN.......................NNNDNBBBBN.....NNN.............NDDWDDDDBBN.NNNNBBBNNNN.........NDWKWDDDBBNNBBBBBBBBBBBN.......NDDDWDDDDDBNBBBBBBBBBBBBBN.......NDDDDDDDBBBBBBBBBBBBBBBBBN......NDDDDDDDBBBBBBBBBBBBBBBBBBN......NNNDDBBBBBBBBBBBBBBBBBBBBN........NDDBBBBBBBBBBBBBBBBBBBBBN.......NDDBBBBBBBBBBBBBBBBBBBBN........NDDNNNBBBBBBBBBBBBBBBBBN.........NN...NBBBBBBBBBBBBBBBN................NBBBBBBBBBBBBBN.................NDDDBBDDDBBDDDN.................NDDDNNDDDNNDDDN.................NDDDNNDDDNNDDDN.................NDDDNNDDDNNDDDN..................NNN..NNN..NNN......................................................................',
+  beaver: '...............................................................................................................................................................................................................................................................................................................................................N........................N...NNNBNNN...................NNDNNNBBBBBBBNN................NDDDDDBBBBBBBBBBN.NNNNNN.......NDDWDDDDBBBBBBBBBBNDDDDDDN......NDWKWDDDBBBBBBBBBBDDDDDDDDN....NDWDWDDDDDBBBBBBBBBDDDDDDDDN....NAAAADDDDBBBBBBBBBBDDDDDDDDN....NAAAADDDDBBBBBBBBBBDDDDDDDDN....NAAAADDDBBBBBBBBBBBDDDDDDDDN.....NNNNDBBBBBBBBBBBBBDDDDDDDDN.........NNBBBBBBBBBBBNNDDDDDDN............NDDDBBDDDNN..NNNNNN.............NDDDNBDDDN......................NDDDNNDDDN......................NDDDNNDDDN......................NDDDNNDDDN.......................NNN..NNN.............................................................................................................................................',
+  badger: '.................................................................................................................................................................................................................................................................................................................................................................................NNN...................N.....NNNNBBBNNNN............NNNDN..NNBBBBBBBBBBBNN.........NDDDDNNNBBBBBBBBBBBBBBBN.......NDAAWANNNAAABBBBBBBBBBBBBNNN....NDAWKWNNNAAABBBBBBBBBBBBDDDDN..NDDAAWANNNAAABBBBBBBBBBBBDDDDN...NDDDDDNNNDBBBBBBBBBBBBBBDDDDN...NDDDDDNNNDBBBBBBBBBBBBBBBBNN.....NDDDDNNNBBBBBBBBBBBBBBBBBN.......NNNDNNBBBBBBBBBBBBBBBBBN...........N..NBBBBBBBBBBBBBBBN................NDDDBBDDDBBDDDN.................NDDDNNDDDNNDDDN.................NDDDNNDDDNNDDDN.................NDDDNNDDDNNDDDN..................NNN..NNN..NNN.......................................................................................................................................',
+  stag: '.............................................................................................................N......................N.......NAN....................NAN.....NANN....................NNAN.....NNAN..................NANAN....NANN....................NNAN....NAN.......................NAN...NN........................NAN..NAN........................NAAN.NAN........................NAANNAAN........................NNDABBAN....NNN................NDWDDDBBN.NNNBBBNNN.............NWKWDDBBNNBBBBBBBBBNN..........NDDWDDDDBBBBBBBBBBBBBBN..........NDDDDDBBBBBBBBBBBBBBBBN.........NDDDDDBBBBBBBBBBBBBBBBN..........NNDNBBBBBBBBBBBBBBBBBBN...........NNBBBBBBBBBBBBBBBBBN..............NNBBBBBBBBBBBBBBBN................NBBBBBBBBBBBBBN..................NNDDBBBBBBDDN....................NDDNBBBNNDDN....................NDDNNNN.NDDN....................NDDN....NDDN.....................NN......NN........................................................................................................................................',
+  lynx: '.....................................................................................................................................................................N.....N........................NDN...NDN.......................NBN...NBN........................NN...NBN........................NBN..NBN........................NBN..NBN........................NBBN.NBN...NNN..................NBBBNNBNNNNBBBNNN...............NBBBBBBBBBBBBBBBBNN............NBBWBBBBBBBBBBBBBBBBN...........NBWKWBBBBBBBBBBBBBBBBN.........NBBBWABBBBBBBBBBBBBBBBN..........NBAAAAABBBBBBBBBBBBBDDN.........NAAAAAAABBBBBBBBBBBBDDN..........NAAAAABBBBBBBBBBBBBDDN...........NNANBBBBBBBBBBBBBBBN..............NNBBBBBBBBBBBBBBBN................NBBBBBBBBBBBBBN..................NNDDBBBBBBDDN....................NDDNBBBNNDDN....................NDDNNNN.NDDN....................NDDN....NDDN.....................NN......NN.........................................................................................................................................',
+  wisp: '................................................................................................................................................................................N.............................NNBNN..........................NBBBBBN........................NBBBOBBBN......................NBBHHHHHBBN.....................NBBWHHHWBBN.....................NBWKWHWKWBN....................NBBBWHHHWBBBN....................NBBHHHHHBBN.....................NBBBBHBBBBN.....................NBBBBBBBBBN......................NBBBBBBBN........................NBBBBBN..........................NNDNN...........................NNDNN..........................NBDDDBN.........................NBDDDBN........................NBBDDDBBN.......................NBBDDDBBN......................NBBBBDBBBBN.....................NBBDDDDDBBN....................NBBDDDDDDDBBN...................NBNNNNNNNNNBN..................NBN.........NBN..................N...........N.........................................................................',
+  gargoyle: '......................................................................N..........N...................NDN........NDN...................N..........N......................N...N..........................NDNNNDNNN..................N.....NDDDDDDDN.............N..NDNN..NDDDDDDDDDN..........NNDN..NNDNNNDDWDDDDDDN........NNDNN.....NDDNDWKWDDDDDN.....NNNDDN........NDDDDWDDDDDDDNN.NNDDDDN..........NDDDDDDDDDDBBBNDDDDDN........NNNNBDDDDDDDDDBBDDDDDDN........NBBBBBDDDDDDDDDDDDDDDNN..........NNNBBNDDDDDDDBDDDDDBN..............NNBNBBDDDDBDDDDBBN................NNBBBDDBBBDDBBBN................NBBBBBDBBBDBBBBBN................NBBBBBBBBBBBBBN...............NNNBBBBBBBBBBBBBNN.............NDDDDBBBBBBBBBBDDDDN............NDDDDBBBBBBBBBBDDDDN............NDDDDNBBBBBBBBBDDDDN............NDDDDNNBBBBBBBNDDDDN............NDDDDN.NNNBNNNNDDDDN............NDDDDN....N...NDDDDN.............NNNN..........NNNN.......................................................................................................................................',
+  lich: '............................................................................................................................................NNNNNNNN.......................NOOOOOOOON.......................NDDDDDDN........................NDDDDDDAN...................N...NAWAAAWAN..................NON.NAWKWAWKWAN................NOOON.NAWAAAWAN................NOOOOONNAAAAAAAN.................NOOON..NAAAAAN..................NDON..NBBBABBBN.................NDDN..NBBBBBBBN.................NDDN.NBBBBBBBBBN................NDDN.NBBBBBBBBBN................NDDNNBBBBBBBBBBBN...............NDDNNBBBBBBBBBBBN...............NDDNBBBBBBBBBBBBBN..............NDDNBBBBBBBBBBBBBN..............NDDNBBBBBBBBBBBBBN..............NDDBBBBBBBBBBBBBBBN.............NDDBBBBBBBBBBBBBBBN..............NBBBBBDDBBDDBBBBBBN..............NNNNNDDNNDDNNNNNN...................NDDNNDDN.........................NN..NN.............................................................................................................................................',
+  cog: '...............................................................................................................................................NNN............................NDDDN...........................NDDDN.....................NNN...NDDDN...NNN..............NDDDNNNNBBBNNNNDDDN.............NDDDNBBBBBBBBBNDDDN.............NDDDBBBBBBBBBBBDDDN..............NNBBBBBBBBBBBBBNN...............NBBBBBBBBBBBBBBBN...............NBBBBBBBNBBBBBBBN............NNNNBBBBBNNNNNBBBBBNNNN........NDDDBBBBBBNNONNBBBBBBDDDN.......NDDDBBBBBNNOOONNBBBBBDDDN.......NDDDBBBBBBNNONNBBBBBBDDDN........NNNNBBBBBNNNNNBBBBBNNNN............NBBBBBBBNBBBBBBBN...............NBBBBBBBBBBBBBBBN...............NNBBBBBBBBBBBBBNN..............NDDDBBBBBBBBBBBDDDN.............NDDDNBBBBBBBBBNDDDN.............NDDDNNNNBBBNNNNDDDN..............NNN...NDDDN...NNN.....................NDDDN...........................NDDDN............................NNN..............................................................................................................',
+  turret: '...................................................................................................................................................................................................................................................................................................................................................................................................................................NNN......NNNN.NNN..............NOOONNNNNNDDDDNDDDN.............NOOOBBBBBBBDDNNNDDN.............NOOOBBBBBBBDNNONNDN.............NOOOBBBBBBBDDNNNDDNN............NOOONNNNBBDDDDNDDDBBN............NNN...NBBBBBBBBBBBBN..................NBBBBBBBBBBBBN..................NBBBBBBBBBBBBN..................NBBBBBBBBBBBBN..................NBBBBBBBBBBBBN..................NBBBBBBBBBBBBN...................NDDDNNNNDDDN....................NDDDN..NDDDN.....................NNN....NNN...........................................................................................................................................',
+  rivet: '..........................................................................................................................................................................NNNNNNNNNNNN...................NDDDDDDDDDDDDN..................NDDDWDDDDWDDDN..................NDDWKWDDWKWDDN.................NNDDDWDDDDWDDDNN...............NBBDDDDDDDDDDDDBBN..............NBBBBBBBBBBBBBBBBN..............NBBABBBBBBBBBBABBN............NNNBBBBBBBBBBBBBBBBNNN.........NDDDBBBBBBBBBBBBBBBBDDDN........NDDDBBBBBBBBABBBBBBBDDDN........NDDDBBBBBBBBBBBBBBBBDDDN........NDDDBBBBBBBBBBBBBBBBDDDN........NDDDBBABBBBBBBBBBABBDDDN........NDDDBBBBBBBBBBBBBBBBDDDN.........NNNBBBBBBBBBBBBBBBBNNN............NBBBBBBBBBBBBBBBBN..............NBBBBBBBBBBBBBBBBN..............NBBBBBBBBBBBBBBBBN...............NNNDDDNNNNDDDNNN..................NDDDN..NDDDN....................NDDDN..NDDDN.....................NNN....NNN...........................................................................................................................................',
+  piston: '..............................................................................................................................................NNNN...........................NBBBBN..........................NBBBBN........................NNNBBBBNNN.....................NDDDBBBBDDDN....................NDDDDDDDDDDN....................NDDDDDDDDDDN.....................NBBBBBBBBN..............NNNN....NBBBBBBBBN.............NOOOONNNNNBBBBBBBBN.............NOOOODDDDDBBBBNBBBN.............NOOOODDDDDBBBNNNBBN.............NOOOODDDDDBBNNHNNBN.............NOOOONNNNNBBBNNNBBN..............NNNN....NBBBBNBBBN......................NBBBBBBBBN......................NBBBBBBBBN......................NBBBBBBBBN.....................NDDDDDDDDDDN....................NDDDDDDDDDDN....................NDDDDDDDDDDN.....................NNNNNNNNNN...........................................................................................................................................................................................................',
+  walrus: '................................................................................................................................................................................................................................................................................................................................................NNN.........................NNNNBBBNNNN...................NNBBBBBBBBBBBNN...............NNBBBBBBBBBBBBBBBN...........NNNDBBBBBBBBBBBBBBBBBN.........NDDDWDDDBBBBBBBBBBBBBBBN.......NDDDWKWDDDBBBBBBBBBBBBBBN.......NNDDDWDDDDBBBBBBBBBBBBBBN......NDDNDDDDDDDDBBBBBBBBBBBBBBN......NNDDDDDDDDBBBBBBBBBBBBBBN.......NDDAADAADDBBBBBBBBBBBBBBN........NDAADAADBBBBBBBBBBBBBBBN.........NAADAABDBBBBBBBBBDBBBN..........NAANADDDDDBBBBBDDDDDN...........NAANDDDDDDDBBBDDDDDDDN..........NAANNDDDDDNBBBNDDDDDN............NN..NNDNN.NNN.NNDNN...................N.........N.........................................................................................................................................',
+  ray: '......................................................................................................................................................................................................................................................N.............................NNBN..........................NNBBBN.........................NBBBBBN.......................NNBBBBBBN.....................NNBBBBBBBBN................N.NNNBBBBBBBBBBN......N........NWNBBBBBBBBBBBBBN..NNNNDN......NWKWBBBBBBDDDDBBBNNNDDDDN.......NBWBBBBBBBDDDDBBDDDDDDDDN........NBBBBBBBBBBBBBBBNDDDDDDN.........NNBBBBBBBBBBBBBNNDDDDN............NNNBBBBBBBBBBN.NNDDN...............NNBBBBBBBBN...NDN.................NNBBBBBBN....N....................NBBBBBN..........................NNBBBN............................NNBN..............................N.........................................................................................................................................................................................................',
+  mole: '................................................................................................................................................................................................................................................................................................................................................................................NNN..........................NNNBBBNNN.....................NNBBBBBBBBBNN................N.NBBBBBBBBBBBBBN............NNNDNBBBBBBBBBBBBBBBN.........NNDDDNDDDBBBBBBBBBBDDDDN.......NBBBBBDDDDDBBBBBBBBBDDDDN.......NBBBBBDDDDDDBBBBBBBBBBBBN........NDDDDDDDDDBBBBBBBBBBBBN..........NDDDDDDDBBBBBBBBBBBBBN..........NDDDDNDBBBBBBBBBBBBBBN.........NDDDDDNDDBBBBBBBBBBBBN.........NDDDNNNDDDDBDDBBBBDDNN.........NDNNN..NDDNNNDDBBBNDDN...........N....NDNN..NDDNNNNDDN...............NDN.....NN....NN.................N........................................................................................................................................................',
+  junkbat: '..................................................................................................................................................................................................................................N...........................N..NDN........N.......N........NDN..NDN......NDN.....NDN......NDN...NDDNN.....NN.....NN.....NNDDN....NDDDNNNN.NDN...NDNNNNNNDDDN....NDDDDDDDDNNDN...NDNDDDDDDDDN....NDDDADDDDNNDDNNNDDNDDDDADDDN....NDDDDDDDDNBBBDBDBBNDDDDDDDDN.....NNNNNNNNNBBWBBBWBNNNNNNNNN..............NBWKWBWKWN......................NBBWBBBWBN......................NBBBBBBBBN......................NBBBBOBBBN.......................NNNNNNNN............................................................................................................................................................................................................................................................................................................................................................................',
+  seal: '.......................................................................................................................................................................................................................................................................................................................................................................................................N.......NNN..................NNNDNNNNNNNBBBNNNNN.N..........NDDWDDDDBBBBBBBBBBBBNDNNNN......NNWKWDDDBBBBBBBBBBBDDDDDDDN....NDDDWDDDDDBBBBBBBBBDDDDDDDDN.....NNNDDDDDBBBBBBBBBBBDDDDDNN......NDDDDDDDBBBBBBBBBBBBBDBBN........NNNDBBBBBBBBBBBBBBBBBBN...........NBBBBBDBBBBBBBBBBBBBN............NBBDDDDDBBBBBBBBBBN..............NDDDDDDDBBBBBBBNN................NDDDDDBBBNNNNN...................NNDNNNNN..........................N...................................................................................................................................................................................................................',
 };
 const MONSTER_PIXEL_SPECIES = {
   holkoe: '....................................................................................................................................................................................................N.......N......................NDN.....NDN......................NN.....NN.......................NDN...NDN........................NDNN.NN....NNN..................NDNDNDNNNNNBBBNNNN.............NDDDDDDDBBBBBBBBBBBNN..........NDDDWDDDDDBBBBBBBBDBBBN.........NDDWKWDDDDBDDBBBDDDDDBBN.......NDDADWDDDDDDDDDBDDDDDBBBBN.......NAAADDDDDDDDDDDBBDBBBBBBN......NAAAAADDDDDDDDDBBBBBBBBBBN.......NAAADDDDDBBDDBBBBBBBBBBBBN.......NANNDBBBBBBBBBBBBBBBBBBN.........N.NBBBBBBBBBBBBBBPBBBBN...........NBBBBBBBBBBBBPPPPPBBN............NBBBBBBBBBBPPPPPPPN..............NBBBBBBBBBBPPPPPN................NNDDBBBBBBBBDDN..................NDDNNBBBNNNDDN..................NDDN.NNN..NDDN...................NN........NN........................................................................................................................................',
@@ -31196,6 +33982,62 @@ function monsterPixelKey(sp) {
   return null;
 }
 
+function monsterPixelPhase(sp, motion) {
+  if (motion && typeof motion.hopT === 'number') return motion.hopT * 7.9;
+  const id = (sp && (sp.id || sp.art || '')) + '';
+  let h = 2166136261;
+  for (let i = 0; i < id.length; i++) h = Math.imul(h ^ id.charCodeAt(i), 16777619);
+  return ((h >>> 0) % 6283) / 1000;
+}
+
+function monsterPixelFeel(sp) {
+  const slot = (typeof MONSTER_ART_SLOTS !== 'undefined' && sp && MONSTER_ART_SLOTS[sp.art]) || {};
+  const shape = (sp && sp.shape) || slot.shape || '';
+  const type = (sp && sp.type) || slot.type || '';
+  if (shape === 'flyer' || type === 'fly' || type === 'dragon') return { amp: 0.038, freq: 6.1 };
+  if (shape === 'hopper' || type === 'hop') return { amp: 0.036, freq: 5.8 };
+  if (shape === 'swimmer' || type === 'swim') return { amp: 0.024, freq: 4.2 };
+  if (shape === 'tank' || type === 'tank') return { amp: 0.016, freq: 3.2 };
+  if (shape === 'undead') return { amp: 0.018, freq: 3.6 };
+  if (shape === 'mech' || type === 'shoot') return { amp: 0.014, freq: 3.8 };
+  if (shape === 'insect') return { amp: 0.022, freq: 5.2 };
+  return { amp: 0.028, freq: 4.8 };
+}
+
+/** Visual-only transform. Hitboxes stay on the entity. */
+function monsterPixelMotion(sp, r, t, telegraph, motion) {
+  const out = { ox: 0, oy: 0, sx: 1, sy: 1 };
+  if (typeof motionReduced === 'function' && motionReduced()) return out;
+  const feel = monsterPixelFeel(sp);
+  const phase = monsterPixelPhase(sp, motion);
+  const amp = Math.min(0.038, feel.amp);
+  let bob = Math.sin((Number(t) || 0) * feel.freq + phase) * r * amp;
+  const telT = motion && Number(motion.telegraphT);
+  const telMax = motion && Number(motion.telegraphMax);
+  const dashT = motion && Number(motion.dashT);
+  const techT = motion && Number(motion.techniqueTelegraphT);
+  const winding = !!(telegraph || (telT > 0) || (techT > 0));
+  if (winding) {
+    const frac = (telT > 0 && telMax > 0)
+      ? Math.max(0, Math.min(1, telT / telMax))
+      : (techT > 0 ? Math.max(0, Math.min(1, techT / 0.7)) : 0.45);
+    const wind = 1 - frac;
+    out.sx = 1 + wind * 0.08;
+    out.sy = 1 - wind * 0.07;
+    out.ox = -r * (0.03 + wind * 0.055);
+    bob *= 0.28;
+  } else if (dashT > 0) {
+    const p = Math.max(0, Math.min(1, dashT / 0.5));
+    out.sx = 1 + p * 0.055;
+    out.sy = 1 - p * 0.035;
+    out.ox = -r * 0.045 * p;
+    bob *= 0.18;
+  }
+  out.ox = Math.round(out.ox);
+  out.oy = Math.round(bob);
+  return out;
+}
+
 function monsterPixelPalette(sp, flash, telegraph) {
   const body = flash ? '#ffffff' : (telegraph ? '#ffdd66' : (sp && sp.c1) || '#c98850');
   const dark = flash ? '#dddddd' : (telegraph ? '#c97a20' : (sp && sp.c2) || '#6b4a28');
@@ -31216,7 +34058,7 @@ function monsterPixelPalette(sp, flash, telegraph) {
  * Paint a 32×32 map centered on current transform (art already faces left).
  * Returns true if a map was drawn.
  */
-function drawMonsterPixelArt(c, sp, r, t, flash, telegraph) {
+function drawMonsterPixelArt(c, sp, r, t, flash, telegraph, motion) {
   if (!c || !sp) return false;
   const slot = monsterPixelKey(sp);
   if (!slot || !slot.map) return false;
@@ -31225,12 +34067,12 @@ function drawMonsterPixelArt(c, sp, r, t, flash, telegraph) {
   const map = slot.map;
   if (typeof map !== 'string' || map.length < n * n) return false;
   const pal = monsterPixelPalette(sp, flash, telegraph);
+  const feel = monsterPixelMotion(sp, r, t, telegraph, motion);
   const cell = (r * 2.15) / n;
-  const bob = (typeof motionReduced === 'function' && motionReduced())
-    ? 0
-    : Math.sin((Number(t) || 0) * 5) * r * 0.03;
-  const ox = -n * cell * 0.5;
-  const oy = -n * cell * 0.52 + bob;
+  const cellX = cell * feel.sx;
+  const cellY = cell * feel.sy;
+  const ox = -n * cellX * 0.5 + feel.ox;
+  const oy = -n * cellY * 0.52 + feel.oy;
   const prevSmooth = c.imageSmoothingEnabled;
   c.imageSmoothingEnabled = false;
   if (c.imageSmoothingQuality) c.imageSmoothingQuality = 'low';
@@ -31245,10 +34087,10 @@ function drawMonsterPixelArt(c, sp, r, t, flash, telegraph) {
       while (x + w < n && map.charAt(rowOff + x + w) === ch) w++;
       c.fillStyle = pal[ch];
       c.fillRect(
-        Math.round(ox + x * cell),
-        Math.round(oy + y * cell),
-        Math.max(1, Math.ceil(cell * w)),
-        Math.max(1, Math.ceil(cell))
+        Math.round(ox + x * cellX),
+        Math.round(oy + y * cellY),
+        Math.max(1, Math.ceil(cellX * w)),
+        Math.max(1, Math.ceil(cellY))
       );
       painted += w;
       x += w;
@@ -31293,11 +34135,14 @@ function catalogStubMark(c, art, r, dark) {
   c.globalAlpha = 1;
 }
 
-function drawCatalogShape(c, shape, r, t, body, dark, telegraph) {
-  const bob = Math.sin(t * 4.2) * r * 0.04;
+function drawCatalogShape(c, shape, r, t, body, dark, telegraph, motion) {
+  const feel = (typeof monsterPixelMotion === 'function')
+    ? monsterPixelMotion({ shape, type: shape, art: motion && motion.art }, r, t, telegraph, motion)
+    : { ox: 0, oy: (typeof motionReduced === 'function' && motionReduced()) ? 0 : Math.sin(t * 4.2) * r * 0.03, sx: 1, sy: 1 };
   const warn = telegraph ? 1.08 : 1;
   c.save();
-  c.translate(0, bob);
+  c.translate(feel.ox, feel.oy);
+  c.scale(feel.sx, feel.sy);
   c.fillStyle = body;
   switch (shape) {
     case 'flyer': {
@@ -31415,11 +34260,12 @@ function drawCatalogShape(c, shape, r, t, body, dark, telegraph) {
   c.restore();
 }
 
-function drawCatalogStubArt(c, art, r, t, body, dark, telegraph) {
+function drawCatalogStubArt(c, art, r, t, body, dark, telegraph, motion) {
   if (!c) return;
   r = clamp(Number(r) || 22, 6, 120);
   const slot = (typeof MONSTER_ART_SLOTS !== 'undefined' && MONSTER_ART_SLOTS[art]) || { shape: 'quad' };
-  drawCatalogShape(c, slot.shape || 'quad', r, t, body || '#888', dark || '#444', telegraph);
+  const bag = Object.assign({ art }, motion || {});
+  drawCatalogShape(c, slot.shape || 'quad', r, t, body || '#888', dark || '#444', telegraph, bag);
   catalogStubMark(c, art, r, dark || '#333');
   if (slot.pixelStatus === 'stub') {
     c.save();
@@ -31548,6 +34394,9 @@ class Fighter {
       if (this.isPlayer || this.playerSlot) {
         game.banner(skillBanner(sk), 0.7, skillHudColor(sk), 40);
       }
+      if (this.isPlayer && typeof applyBuildingCombatHook === 'function') {
+        try { applyBuildingCombatHook(game, 'onActiveCast', { player: this, technique: jKind }); } catch (_) {}
+      }
     } else {
       AudioSys.sfx(weaponSwingSfx(this.weapon, kind));
     }
@@ -31613,6 +34462,9 @@ class Fighter {
     this.vx = dir * 340 * (db.dashSpeedMul || 1);
     game.burst(this.x, this.y - 38, this.style?.accent || '#7cf5ff', 8);
     game.floater(this.x, this.y - 92, 'Dash!', '#7cf5ff', 12);
+    if (this.isPlayer && typeof applyBuildingCombatHook === 'function') {
+      try { applyBuildingCombatHook(game, 'onDash', { player: this, dir: dir }); } catch (_) {}
+    }
   }
 
   /** Nood-super (Kets-slot): omringd/stunlock → tik midden-symbool of druk E. */
@@ -32000,7 +34852,9 @@ class Fighter {
     }
     if (this.blocking && !opts.unblockable) {
       const blockMul = (this.isPlayer && game && game.styleBlockMul) ? game.styleBlockMul : 1;
-      dmg = Math.max(1, Math.round(dmg * 0.15 * blockMul));
+      const glueBlock = (this.isPlayer && game && game.buildingBlockMul && game.buildingBlockMul !== 1)
+        ? game.buildingBlockMul : 1;
+      dmg = Math.max(1, Math.round(dmg * 0.15 * blockMul * glueBlock));
       AudioSys.sfx('block');
       const atk = opts.attacker && opts.attacker.attack;
       const parry = atk && atk.t >= atk.windup && atk.t <= atk.windup + 0.16;
@@ -32017,6 +34871,9 @@ class Fighter {
         spawnFxRing(game, this.x, this.y - 42, parry ? '#ffd75e' : '#9fd8ff', fxLite() ? 6 : 10);
       }
       if (save.haptics !== false) haptic(parry ? 9 : 4);
+      if (this.isPlayer && game && typeof applyBuildingCombatHook === 'function') {
+        try { applyBuildingCombatHook(game, 'onBlock', { player: this, dmg: dmg, parry: parry }); } catch (_) {}
+      }
       const hpBefore = this.hp;
       this.hp -= dmg;
       if ((this.hpGhostT || 0) <= 0) this.hpGhost = hpBefore;
@@ -32035,6 +34892,9 @@ class Fighter {
     if (this.isPlayer && game && game.buildingDefMul && game.buildingDefMul !== 1) {
       dmg = Math.max(1, Math.round(dmg * game.buildingDefMul));
     }
+    if (this.isPlayer && game && typeof applyBuildingIncoming === 'function') {
+      try { dmg = applyBuildingIncoming(game, this, dmg, opts); } catch (_) {}
+    }
     const hpBefore = this.hp;
     this.hp -= dmg;
     if ((this.hpGhostT || 0) <= 0) this.hpGhost = hpBefore;
@@ -32050,7 +34910,13 @@ class Fighter {
     this.hurtT = dmg >= 18 ? 0.28 : 0.24;
     this.hitFlashT = motionReduced() ? 0.06 : (dmg >= 18 ? 0.18 : 0.14);
     this.attack = null;
-    const kbScaled = scaleKnockback(kbx, dmg, { heavy: dmg >= 18 });
+    let kbScaled = scaleKnockback(kbx, dmg, { heavy: dmg >= 18 });
+    if (this.isPlayer && game && game.buildingKbMul && game.buildingKbMul !== 1) {
+      kbScaled *= game.buildingKbMul;
+    }
+    if (this.isPlayer && game && typeof applyBuildingCombatHook === 'function') {
+      try { applyBuildingCombatHook(game, 'onHurt', { player: this, dmg: dmg }); } catch (_) {}
+    }
     this.vx = kbScaled;
     this.vy = Math.min(this.vy, -120);
     if (this.isPlayer || this.playerSlot) {
@@ -32088,8 +34954,14 @@ class Fighter {
       headB: 0,
     };
     if (s === 'idle') {
-      const b = Math.sin(t * 3);
-      P.hipY = -46 + b * 1.4; P.headB = b * 0.6;
+      if (typeof applyReadyStance === 'function') {
+        applyReadyStance(P, t, {
+          calm: (typeof motionReduced === 'function' && motionReduced()),
+        });
+      } else {
+        const b = Math.sin(t * 3);
+        P.hipY = -46 + b * 1.4; P.headB = b * 0.6;
+      }
     } else if (s === 'run') {
       const c = t * 11;
       P.lean = 0.14;
@@ -32156,9 +35028,11 @@ class Fighter {
       c.fill();
       c.globalAlpha = 1;
     }
-    // schaduw
+    // schaduw — tiny idle weight-shift so the stance reads as planted
     c.fillStyle = 'rgba(0,0,0,.3)';
-    c.beginPath(); c.ellipse(0, 2, 26 * s, 6 * s, 0, 0, TAU); c.fill();
+    const shadowX = (this.state === 'idle' && !(typeof motionReduced === 'function' && motionReduced()))
+      ? Math.sin(this.animT * 1.32) * 2.2 : 0;
+    c.beginPath(); c.ellipse(shadowX, 2, 26 * s, 6 * s, 0, 0, TAU); c.fill();
     c.scale(this.face * s, s);
 
     if (!this.alive) {
@@ -32218,16 +35092,22 @@ class Fighter {
     drawLimb(hipX, hipY, P.legs[1][0], P.legs[1][1], legL, legL);
     paintLook('legs');
     paintLook('chest');
-    // hoofd
-    if (this.bald) {
+    // hoofd — never leave a hole. Helmets replace the disc; styles only sit on it.
+    const headCX = (this._preview && typeof lookPx === 'function') ? lookPx(headX) : headX;
+    const headCY = (this._preview && typeof lookPx === 'function') ? lookPx(headY - 9) : (headY - 9);
+    bones.head = { x: headCX, y: headCY };
+    /* Always paint a head disc first. Helmets sit on it; they must never leave a hole. */
+    if (typeof drawStickmanHead === 'function') {
+      drawStickmanHead(c, headCX, headCY, this.color, { lineW: this.lineW, bald: !!this.bald });
+    } else if (this.bald) {
       c.fillStyle = '#ffe8c8';
-      c.beginPath(); c.arc(headX, headY - 9, 10.5, 0, TAU); c.fill();
+      c.beginPath(); c.arc(headCX, headCY, 10.5, 0, TAU); c.fill();
       c.strokeStyle = 'rgba(0,0,0,.35)'; c.lineWidth = 1.2;
-      c.beginPath(); c.arc(headX, headY - 9, 10.5, 0, TAU); c.stroke();
+      c.beginPath(); c.arc(headCX, headCY, 10.5, 0, TAU); c.stroke();
       c.fillStyle = 'rgba(255,255,255,.4)';
-      c.beginPath(); c.arc(headX - 3, headY - 12, 2.8, 0, TAU); c.fill();
+      c.beginPath(); c.arc(headCX - 3, headCY - 3, 2.8, 0, TAU); c.fill();
     } else {
-      c.beginPath(); c.arc(headX, headY - 9, 10.5, 0, TAU); c.stroke();
+      c.beginPath(); c.arc(headCX, headCY, 10.5, 0, TAU); c.stroke();
     }
     if (this.gi === 'white' || this.gi === 'red' || this.gi === 'hero') {
       const giFill = this.gi === 'red' ? 'rgba(220,48,48,.55)' : this.gi === 'hero' ? 'rgba(255,226,89,.72)' : 'rgba(255,255,255,.78)';
@@ -32243,9 +35123,17 @@ class Fighter {
     if (looks.length) {
       paintLook('head');
     } else if (this.isPlayer && this.style) {
-      try { this.drawStyleExtras(c, headX, headY - 9, shX, shY, hipX, hipY); } catch (_) {}
+      try { this.drawStyleExtras(c, headCX, headCY, shX, shY, hipX, hipY); } catch (_) {}
     }
-    if (this.isRobot) this.drawRobotHead(c, headX, headY - 9);
+    if (typeof ensureEquipHeadVisible === 'function') {
+      try { ensureEquipHeadVisible(c, looks, bones, this); } catch (_) {}
+    } else {
+      c.strokeStyle = this.color;
+      c.lineWidth = this.lineW;
+      c.beginPath(); c.arc(headCX, headCY, 10.5, 0.18, Math.PI - 0.18); c.stroke();
+    }
+    if (this.isRobot) this.drawRobotHead(c, headCX, headCY);
+    c.strokeStyle = this.color; c.lineWidth = this.lineW; c.lineCap = 'round';
 
     // voorste arm + wapen
     const [hx, hy] = drawLimb(shX, shY, P.arms[1][0], P.arms[1][1], armL, armL);
@@ -32459,6 +35347,19 @@ class Monster {
     this.dashT = 0; this.telegraphT = 0; this.telegraphMax = 0; this.hopT = rand(0, 0.8);
     /** Soft-feel: langere dodge-telegraphs op golf 1 / vroege levels. */
     this.softTelegraph = !!opts.softTelegraph;
+    this.biomeId = (typeof speciesBiomeId === 'function')
+      ? speciesBiomeId(sp, spId)
+      : (sp && sp.biome) || 'classic';
+    this.biomeTelegraphMul = (typeof biomeTelegraphMul === 'function')
+      ? biomeTelegraphMul(this.biomeId)
+      : 1;
+    if (opts.levelN != null && typeof pickEnemyTechnique === 'function') {
+      this.enemyTechnique = pickEnemyTechnique(spId, opts.levelN, this.biomeId);
+      if (this.enemyTechnique) {
+        this.techniqueCD = rand(3.2, 6.5);
+        this.techniqueTelegraphT = 0;
+      }
+    }
     this.face = -1;
     this.enraged = false;
     this.phase2FlashT = 0;
@@ -32516,7 +35417,7 @@ class Monster {
       } else {
         this.x += dir * this.speed * spdMul * dt * 0.6;
         if (dist < 240 && this.atkCD <= 0) {
-          const wind = this.enraged ? 0.28 : (this.softTelegraph ? 0.88 : 0.45);
+          const wind = (this.enraged ? 0.28 : (this.softTelegraph ? 0.88 : 0.45)) * (this.biomeTelegraphMul || 1);
           this.telegraphT = wind;
           this.telegraphMax = wind;
           this.atkCD = rand(1.6, 2.6) / (this.enraged ? 1.25 : 1);
@@ -32548,7 +35449,7 @@ class Monster {
       } else {
         this.x += dir * this.speed * dt;
         if (dist < this.size + 48 && this.atkCD <= 0) {
-          const wind = this.softTelegraph ? 0.98 : 0.55;
+          const wind = (this.softTelegraph ? 0.98 : 0.55) * (this.biomeTelegraphMul || 1);
           this.telegraphT = wind;
           this.telegraphMax = wind;
           this.atkCD = 2.0;
@@ -32586,7 +35487,7 @@ class Monster {
         } else {
           this.x += dir * this.speed * spdMul * dt * 0.78;
           if (dist < 230 && this.atkCD <= 0) {
-            const wind = this.enraged ? 0.2 : (this.softTelegraph ? 0.58 : 0.36);
+            const wind = (this.enraged ? 0.2 : (this.softTelegraph ? 0.58 : 0.36)) * (this.biomeTelegraphMul || 1);
             this.telegraphT = wind;
             this.telegraphMax = wind;
             this.atkCD = rand(1.35, 2.1) / (this.enraged ? 1.25 : 1);
@@ -32884,7 +35785,14 @@ class Monster {
       c.restore();
     }
     c.scale(this.face < 0 ? 1 : -1, 1); // art kijkt standaard naar links
-    drawMonsterArt(c, this.sp, this.size, this.t, this.flashT > 0, this.telegraphT > 0);
+    drawMonsterArt(c, this.sp, this.size, this.t, this.flashT > 0,
+      this.telegraphT > 0 || this.techniqueTelegraphT > 0, {
+        hopT: this.hopT,
+        telegraphT: this.telegraphT,
+        telegraphMax: this.telegraphMax,
+        dashT: this.dashT,
+        techniqueTelegraphT: this.techniqueTelegraphT,
+      });
     if (this.enraged && this.alive) {
       c.save();
       const calm = motionReduced();
@@ -32959,10 +35867,10 @@ class Monster {
   }
 }
 
-function drawMonsterArt(c, sp, r, t, flash, telegraph) {
+function drawMonsterArt(c, sp, r, t, flash, telegraph, motion) {
   if (!sp || !c) return;
   r = clamp(Number(r) || 24, 6, 120);
-  if (typeof drawMonsterPixelArt === 'function' && drawMonsterPixelArt(c, sp, r, t, flash, telegraph)) {
+  if (typeof drawMonsterPixelArt === 'function' && drawMonsterPixelArt(c, sp, r, t, flash, telegraph, motion)) {
     return;
   }
   const body = flash ? (motionReduced() ? sp.c1 : '#ffffff') : (sp.c1 || '#888');
@@ -33264,7 +36172,7 @@ function drawMonsterArt(c, sp, r, t, flash, telegraph) {
     default:
       if (typeof drawCatalogStubArt === 'function' && typeof MONSTER_ART_SLOTS !== 'undefined' && MONSTER_ART_SLOTS[sp.art]) {
         try {
-          drawCatalogStubArt(c, sp.art, r, t, body, dark, telegraph);
+          drawCatalogStubArt(c, sp.art, r, t, body, dark, telegraph, motion);
         } catch (err) {
           console.error('[CatalogArt]', sp.art, err);
           c.fillStyle = body;
@@ -37455,6 +40363,9 @@ class Game {
     if (this.buildingShieldWave > 0 && this.player) {
       this.playerShieldT = Math.max(this.playerShieldT, this.buildingShieldWave);
     }
+    if (typeof applyBuildingCombatHook === 'function') {
+      try { applyBuildingCombatHook(this, 'onWaveStart', {}); } catch (_) {}
+    }
     if (bossWave) {
       try {
         this.banner(t('banner.bossWave'), 2.2, '#ff6b6b', 58);
@@ -37727,9 +40638,31 @@ class Game {
     const p = this.player;
     for (const pk of this.pickups) {
       pk.t += dt;
-      pk.bob = Math.sin(pk.t * 5) * 6;
+      if (pk.kind === 'gear') pk.age = (Number(pk.age) || 0) + dt;
+      let bobAmp = 6;
+      if (pk.kind === 'gear' && typeof gearPickupFeel === 'function') {
+        const feelBob = gearPickupFeel(pk.gearId, pk.dropTier);
+        if (feelBob && feelBob.rank >= 2) bobAmp = 8;
+        if (pk.dropTier === 'elite' || pk.dropTier === 'superBoss') bobAmp = 9;
+        const bounce = Math.abs(Math.sin(pk.t * 6.4));
+        pk.bob = (bounce * bounce) * bobAmp;
+        const liveSway = typeof gearPickupFxAllowed !== 'function' || gearPickupFxAllowed();
+        pk.sway = liveSway ? Math.sin(pk.t * 4.3) * ((feelBob && feelBob.rank >= 2) ? 2.1 : 1.1) : 0;
+      } else {
+        pk.bob = Math.sin(pk.t * 5) * bobAmp;
+      }
+      if (pk._got && pk._snapT > 0) {
+        pk._snapT -= dt;
+        if (p && p.alive) {
+          const k = Math.min(1, dt * 16);
+          pk.x += (p.x - pk.x) * k;
+          pk.y += ((p.y - 56) - pk.y) * k;
+        }
+        if (pk._snapT <= 0) pk.life = 0;
+        continue;
+      }
       pk.life -= dt;
-      if (!p.alive) continue;
+      if (!p.alive || pk._got) continue;
       const dy = (p.y - 48) - pk.y;
       const grabR = (pk.kind === 'gear' && typeof IS_TOUCH !== 'undefined' && IS_TOUCH) ? 58 : 44;
       if ((p.x - pk.x) ** 2 + dy ** 2 < grabR * grabR) {
@@ -38057,6 +40990,9 @@ class Game {
 
   _onMonsterKilledInner(m) {
     if (!m) return;
+    if (typeof applyBuildingCombatHook === 'function') {
+      try { applyBuildingCombatHook(this, 'onKill', { target: m }); } catch (_) {}
+    }
     this.kills++;
     this.killStreak = (this.killStreak || 0) + 1;
     const ks = this.killStreak;
@@ -38400,7 +41336,7 @@ class Game {
       if (!gdef) return;
       this.pickups.push({
         x, y, kind: 'gear', gearId: gdef.id, dropTier: opts.dropTier || 'normal',
-        t: rand(0, TAU), life: SHARD_PICKUP_LIFE, bob: 0,
+        t: rand(0, TAU), life: SHARD_PICKUP_LIFE, bob: 0, age: 0, sway: 0,
       });
       if (opts.dropTier && opts.dropTier !== 'normal') {
         try { AudioSys.sfxAt('bell', x); } catch (_) {}
@@ -38521,10 +41457,15 @@ class Game {
       : (pk.kind === 'gear' && pk.gearId && typeof gearAccent === 'function') ? gearAccent(gearById(pk.gearId))
       : meta.color;
     this.banner(pickupLabel(pk.kind, pk.skillId, pk.itemCat, pk.itemId, pk.gearId), 0.9, bannerCol, 28);
-    this.burst(pk.x, pk.y, bannerCol, 14);
+    this.burst(pk.x, pk.y, bannerCol, pk.kind === 'gear' ? 20 : 14);
     bumpStat('pickups', 1);
     bumpDaily('pickups', 1);
-    pk.life = 0;
+    if (pk.kind === 'gear' && typeof gearPickupFxAllowed === 'function' && gearPickupFxAllowed()) {
+      pk._snapT = 0.16;
+      pk.life = Math.max(pk.life, 0.18);
+    } else {
+      pk.life = 0;
+    }
   }
 
   /* --------------------------- TRAINING ------------------------------- */
@@ -39716,6 +42657,14 @@ class Game {
           if (save.haptics !== false) haptic(9);
         }
         m.takeDamage(hitRoll.dmg, kbHit, this, { crit: hitRoll.crit, kind: spec.kind });
+        if (f.isPlayer && typeof applyBuildingCombatHook === 'function') {
+          try {
+            applyBuildingCombatHook(this, spec.kind === 'weapon' ? 'onWeaponHit' : 'onFirstMeleeHit', {
+              target: m, spec: spec, crit: hitRoll.crit,
+            });
+            applyBuildingCombatHook(this, 'onComboStep', { target: m, spec: spec });
+          } catch (_) {}
+        }
         applyHitStop(this, spec, { crit: hitRoll.crit, combo: this.combo, heavy: hitRoll.dmg >= 18 });
         if (spec.kind === 'weapon' && typeof applyWeaponOnHitEffect === 'function') {
           try {
@@ -39783,6 +42732,14 @@ class Game {
           unblockable: spec.unblockable, attacker: f, kind: spec.kind,
         });
         if (dmg <= 0) continue;
+        if (f.isPlayer && typeof applyBuildingCombatHook === 'function') {
+          try {
+            applyBuildingCombatHook(this, spec.kind === 'weapon' ? 'onWeaponHit' : 'onFirstMeleeHit', {
+              target: tgt, spec: spec, crit: hitRoll.crit,
+            });
+            applyBuildingCombatHook(this, 'onComboStep', { target: tgt, spec: spec });
+          } catch (_) {}
+        }
         if (this.mode === 'training' && f.isPlayer) {
           this.combo = Math.min(12, this.combo + 1);
           f._chainKind = spec.kind;
@@ -39972,6 +42929,7 @@ class Game {
       }
     }
     try { if (typeof tickWeaponStatusEffects === 'function') tickWeaponStatusEffects(this, dt); } catch (_) {}
+    try { if (typeof tickBuildingCombat === 'function') tickBuildingCombat(this, dt); } catch (_) {}
     if (this.player && this.player._wpnCritSurgeT > 0) this.player._wpnCritSurgeT -= dt;
     if (this.p2 && this.p2._wpnCritSurgeT > 0) this.p2._wpnCritSurgeT -= dt;
     this.monsters = this.monsters.filter(m => m.alive || m.deadT < 1);
@@ -40525,12 +43483,31 @@ class Game {
         const pkBlur = (save.liteFx || Perf.tier >= 1 || motionReduced()) ? 0 : 14;
         c.shadowColor = pkCol; c.shadowBlur = pkBlur;
         c.fillStyle = pkCol;
-        const orbR = pk.kind === 'gear' ? 16 : 14;
-        c.beginPath(); c.arc(pk.x, y, orbR, 0, TAU); c.fill();
+        const gearFeel = (pk.kind === 'gear' && typeof gearPickupFeel === 'function')
+          ? gearPickupFeel(pk.gearId, pk.dropTier)
+          : null;
+        const motion = (pk.kind === 'gear' && typeof gearPickupMotion === 'function')
+          ? gearPickupMotion(pk, gearFeel)
+          : null;
+        const drawX = pk.x + (motion ? motion.sway : (pk.sway || 0));
+        const orbR = (gearFeel ? gearFeel.orbR : (pk.kind === 'gear' ? 16 : 14)) * ((motion && motion.pop) || 1);
+        c.beginPath(); c.arc(drawX, y, orbR, 0, TAU); c.fill();
         c.strokeStyle = '#fff'; c.lineWidth = 2;
-        c.beginPath(); c.arc(pk.x, y, orbR, 0, TAU); c.stroke();
+        c.beginPath(); c.arc(drawX, y, orbR, 0, TAU); c.stroke();
+        if (gearFeel && gearFeel.ring) {
+          c.strokeStyle = gearFeel.ring;
+          c.lineWidth = 2;
+          c.beginPath(); c.arc(drawX, y, orbR + 3, 0, TAU); c.stroke();
+        }
         if (pk.kind === 'gear' && pk.gearId && typeof drawGearPixels === 'function') {
-          drawGearPixels(c, pk.gearId, pk.x, y, 2);
+          const sprScale = (gearFeel ? gearFeel.scale : 2) * ((motion && motion.pop) || 1);
+          drawGearPixels(c, pk.gearId, drawX, y, sprScale, {
+            tilt: motion ? motion.tilt : 0,
+            frame: motion ? motion.frame : 0,
+          });
+          if (gearFeel && typeof gearPickupDrawFx === 'function') {
+            gearPickupDrawFx(c, Object.assign({}, pk, { x: drawX }), y, Object.assign({}, gearFeel, { orbR: orbR }));
+          }
         } else {
           drawPickupIcon(c, pk.kind, pk.x, y, pkCol);
         }
@@ -42756,17 +45733,18 @@ class Game {
   drawKeyboardLegend(c) {
     if (fxLite() && typeof Perf !== 'undefined' && Perf.tier >= 2) return;
     const dual = Input.dualMode && this.mode === 'versus';
+    const lab = (key, fallback) => (typeof tOr === 'function' ? tOr('hud.' + key, fallback) : fallback);
     const rows = dual
       ? [
-          [{ k: 'A/D', lab: 'P1' }, { k: 'W', lab: '↑' }, { k: 'J K L', lab: 'slag' }, { k: 'U', lab: 'technique' }],
-          [{ k: '←→', lab: 'P2' }, { k: '↑', lab: '↑' }, { k: '1 2 3', lab: 'slag' }, { k: '4', lab: 'technique' }],
+          [{ k: 'A/D', lab: 'P1' }, { k: 'W', lab: '↑' }, { k: 'J K L', lab: lab('kbHit', 'hit') }, { k: 'U', lab: lab('kbSpecial', 'special') }],
+          [{ k: '←→', lab: 'P2' }, { k: '↑', lab: '↑' }, { k: '1 2 3', lab: lab('kbHit', 'hit') }, { k: '4', lab: lab('kbSpecial', 'special') }],
         ]
       : [
-          [{ k: 'A/D', lab: 'lopen' }, { k: 'W', lab: 'spring' }, { k: 'Shift', lab: 'subst' }],
-          [{ k: 'J', lab: 'stomp' }, { k: 'K', lab: 'trap' }, { k: 'L', lab: 'wapen' }, { k: 'U', lab: 'technique' }],
+          [{ k: 'A/D', lab: lab('kbWalk', 'walk') }, { k: 'W', lab: lab('kbJump', 'jump') }, { k: 'Shift', lab: lab('kbSub', 'swap') }],
+          [{ k: 'J', lab: lab('kbPunch', 'punch') }, { k: 'K', lab: lab('kbKick', 'kick') }, { k: 'L', lab: lab('kbWeapon', 'weapon') }, { k: 'U', lab: lab('kbSpecial', 'special') }],
         ];
     if (!dual && this.mode === 'adventure') {
-      rows[0].push({ k: 'E', lab: 'kets' });
+      rows[0].push({ k: 'E', lab: lab('kbParry', 'parry') });
     }
 
     const chipH = 22;
@@ -43182,8 +46160,9 @@ function drawStyleLookPreview(cc, st, w, h) {
       cc.translate((w || 80) * 0.5, (h || 86) * 0.87);
       cc.scale(0.78, 0.78);
     }
-    const preview = new Fighter({ isPlayer: true, x: 0, y: 0, color: st.body, style: st, scale: 0.9, _preview: true });
-    preview.animT = 0.4;
+    const body = (typeof lookPreviewBody === 'function') ? lookPreviewBody(st.body) : st.body;
+    const preview = new Fighter({ isPlayer: true, x: 0, y: 0, color: body || st.body, style: st, scale: 1, _preview: true });
+    preview.animT = 0.55;
     preview.draw(cc);
   } catch (_) { /* one card must not blank the style grid on Android */ }
 }
@@ -44016,6 +46995,10 @@ function hubTileStatLine(hub) {
         return t('ui.hubStatSummonDefault');
       }
     }
+    case 'gear': {
+      const n = typeof gearEquippedCount === 'function' ? gearEquippedCount() : 0;
+      return typeof tOr === 'function' ? tOr('gear.hubStat', '{n}/5', { n }) : (n + '/5');
+    }
     default:
       return '';
   }
@@ -44156,6 +47139,9 @@ const UI = {
   gearSlotPick: 'head',
   gearFilter: 'all',
   gearFilterQ: '',
+  gearRarity: 'all',
+  gearOpenedFrom: 'collect',
+  weaponOpenedFrom: null,
   _gearFilterBound: false,
   _gearPickerScroll: 0,
   gearItemPick: null,
@@ -44193,7 +47179,17 @@ const UI = {
     const back = el.querySelector('.back-btn[data-back], .back-btn[data-back-gamble], #installBack');
     if (!back) return;
     const label = this.BACK_LABELS[active];
-    if (label) back.textContent = label;
+    if (!label) return;
+    const shown = String(label).replace(/^←\s*/, '');
+    const text = back.querySelector('.back-btn-label');
+    if (text) {
+      text.textContent = shown;
+      return;
+    }
+    const ico = back.querySelector('.back-btn-ico');
+    back.textContent = '';
+    if (ico) back.appendChild(ico);
+    back.appendChild(document.createTextNode(shown));
   },
 
   resetInnerScrolls(screenEl) {
@@ -44480,6 +47476,11 @@ const UI = {
         return;
       }
       if (active === 'buildingsScreen') {
+        if (typeof this.buildingsGoBack === 'function' && this.buildingsGoBack()) return;
+        if (this.buildingsPane === 'detail') {
+          try { this.buildingsShowList(); } catch (_) { this.buildingsPane = 'list'; this.renderBuildings(); }
+          return;
+        }
         try { this.stopBuildingsTick(); } catch (_) {}
         this.renderMenu();
         this.show('menuScreen');
@@ -44493,6 +47494,19 @@ const UI = {
         return;
       }
       if (active === 'charSelectScreen') {
+        this.renderMenu();
+        this.show('menuScreen');
+        return;
+      }
+      if (active === 'buildingsScreen' && typeof this.buildingsGoBack === 'function' && this.buildingsGoBack()) {
+        return;
+      }
+      if (active === 'weaponScreen' && this.weaponOpenedFrom === 'gear') {
+        this.weaponOpenedFrom = null;
+        this.safeOpen('gearScreen', () => this.renderGear());
+        return;
+      }
+      if (active === 'gearScreen' && this.gearOpenedFrom === 'home') {
         this.renderMenu();
         this.show('menuScreen');
         return;
@@ -45101,6 +48115,13 @@ const UI = {
         ? t('ui.hubStatSkills', { n: skillsN, total: SKILLS.length, skill: skillLabel(activeSk), super: superLabel(activeSp) })
         : t('ui.hubStatSkillsEmpty', { n: SKILLS.length }));
       setStat('hubStatDex', t('ui.hubStatDexLine', { n: dexCount(), total: SPECIES_ORDER.length }));
+      const bLv = (typeof countBuildingLevels === 'function') ? countBuildingLevels() : 0;
+      const readyB = (typeof BUILDING_IDS !== 'undefined' && typeof buildingCanCollect === 'function')
+        ? BUILDING_IDS.filter((id) => { try { return buildingCanCollect(id); } catch (_) { return false; } }).length
+        : 0;
+      setStat('hubStatBuildings', readyB > 0
+        ? ((typeof tOr === 'function') ? tOr('buildings.hubStatReady', '{n} klaar om te oogsten', { n: readyB }) : (readyB + ' klaar'))
+        : ((typeof tOr === 'function') ? tOr('buildings.levelOf', 'Lv {n}/{max}', { n: bLv, max: 50 }) : ('Lv ' + bLv)));
     }
   },
 
@@ -45643,8 +48664,9 @@ const UI = {
         try { vid.pause(); } catch (_) {}
       }
       if (fallback) fallback.style.display = '';
-      startTimers(SUMMON_REVEAL_TOTAL_MS);
     };
+
+    startTimers(SUMMON_REVEAL_TOTAL_MS);
 
     if (_summonVideoOk === false || !vid) {
       useFallback();
@@ -45655,32 +48677,31 @@ const UI = {
       ? summonVideoUrl()
       : ((vid.getAttribute('data-src') || SUMMON_VIDEO_SRC) + '?v=' + (typeof SW_CACHE_REV !== 'undefined' ? SW_CACHE_REV : 0));
     let settled = false;
+    const videoReady = () => vid.readyState >= 3 && vid.duration && isFinite(vid.duration);
     const settleOk = () => {
       if (settled) return;
+      if (!videoReady() && vid.readyState < 2) return;
       settled = true;
       _summonVideoOk = true;
       if (fallback) fallback.style.display = 'none';
       // Must be 'block' — stylesheet sets .summon-video { display:none }
       vid.style.display = 'block';
       try { if (screen) screen.classList.add('has-video'); } catch (_) {}
-      const durMs = Math.max(
-        4000,
-        Math.round((vid.duration && isFinite(vid.duration) ? vid.duration : 10) * 1000)
-      );
-      startTimers(durMs);
+      const cap = (typeof SUMMON_REVEAL_TOTAL_MS === 'number') ? SUMMON_REVEAL_TOTAL_MS : 2400;
+      const rawSec = (vid.duration && isFinite(vid.duration)) ? vid.duration : (cap / 1000);
       try {
         vid.muted = true;
         vid.defaultMuted = true;
-        vid.currentTime = 0;
+        // Stale 10s cache: jump to the payoff so the UI stays ≤2.4s.
+        const startAt = rawSec > 3.2 ? Math.max(0, rawSec - (cap / 1000)) : 0;
+        try { vid.currentTime = startAt; } catch (_) { try { vid.currentTime = 0; } catch (__) {} }
         const p = vid.play();
-        // play() reject must NOT kill the reveal — still show frames if any
         if (p && p.catch) p.catch(() => {});
       } catch (_) {}
     };
     const settleFallback = () => {
       if (settled) return;
-      // Soft retry: if browser already has metadata, treat as ok
-      if (vid.readyState >= 1 && vid.duration && isFinite(vid.duration)) {
+      if (videoReady()) {
         settleOk();
         return;
       }
@@ -45689,30 +48710,37 @@ const UI = {
       useFallback();
     };
     vid.onerror = settleFallback;
-    vid.onloadedmetadata = settleOk;
+    vid.onloadedmetadata = () => {
+      if (videoReady()) settleOk();
+    };
     vid.oncanplay = () => {
       if (!settled && vid.readyState >= 2) settleOk();
+    };
+    vid.oncanplaythrough = () => {
+      if (!settled) settleOk();
     };
     try {
       if (fallback) fallback.style.display = '';
       vid.style.display = 'none';
       vid.muted = true;
       vid.defaultMuted = true;
+      vid.preload = 'metadata';
+      vid.setAttribute('preload', 'metadata');
       const sameSrc = vid.getAttribute('src') === src;
-      const warm = sameSrc && vid.readyState >= 1 && vid.duration && isFinite(vid.duration);
+      const warm = sameSrc && videoReady();
       if (!sameSrc) {
         vid.setAttribute('src', src);
         try { vid.load(); } catch (_) {}
-      } else if (!warm) {
+      } else if (!warm && vid.readyState < 2) {
         try { vid.load(); } catch (_) {}
       }
-      if (warm || (vid.readyState >= 1 && vid.duration && isFinite(vid.duration))) {
+      if (warm) {
         settleOk();
       } else {
-        // 1.6MB on phone — allow more than 1.1s before fallback
+        // CSS chest is ready immediately — don't stall on a cold decode.
         setTimeout(() => {
           if (!settled) settleFallback();
-        }, 4500);
+        }, 700);
       }
     } catch (_) {
       settleFallback();
@@ -46263,8 +49291,10 @@ const UI = {
         else if (trait === 'ranch') cls += ' trait-ranch';
         else if (trait === 'safari') cls += ' trait-safari';
         else if (trait === 'woods') cls += ' trait-woods';
+        else if (trait === 'frost') cls += ' trait-frost';
         else if (trait === 'crypt') cls += ' trait-crypt';
         else if (trait === 'scrap') cls += ' trait-scrap';
+        else if (trait === 'reef') cls += ' trait-reef';
         else if (trait === 'tide') cls += ' trait-tide';
         else if (trait === 'ember') cls += ' trait-ember';
         else if (trait === 'pain') cls += ' trait-pain';
@@ -46427,7 +49457,7 @@ const UI = {
           name: `<b>${weaponLabel(save.weapon)}</b>`,
           cap: `<b>${adventureWeaponCap()}</b>`,
         }) +
-        ((save.stats.weaponFinishers || 0) > 0 ? ` · finishers <b>${save.stats.weaponFinishers}</b>` : '') +
+        ((save.stats.weaponFinishers || 0) > 0 ? ' · ' + t('ui.weaponFinishers', { n: `<b>${save.stats.weaponFinishers}</b>` }) : '') +
         (tierChips ? `<div style="margin-top:6px;line-height:1.7">${tierChips}</div>` : '') +
         weaponNextUnlockHtml();
     }
@@ -46487,7 +49517,7 @@ const UI = {
       el.appendChild(cv);
       const info = document.createElement('div');
       const summonBadge = w.summoned
-        ? ` <span class="rar-pill" style="color:${rar.color};border-color:${rar.color}">✦ Summon</span>`
+        ? ` <span class="rar-pill" style="color:${rar.color};border-color:${rar.color}">✦ ${t('ui.weaponSummonBadge')}</span>`
         : '';
       const chestSk = typeof chestWeaponSkillOf === 'function' ? chestWeaponSkillOf(w.id) : null;
       const chestBadge = chestSk
@@ -46512,7 +49542,7 @@ const UI = {
       const tierBadge = tier && finCount >= 3
         ? ` <span class="rar-pill" style="color:${tier.color};border-color:${tier.color}">${tier.name}</span>`
         : '';
-      const mastLine = finCount ? ` · ${finCount}× finisher` : '';
+      const mastLine = finCount ? ' · ' + t('ui.weaponFinisherN', { n: finCount }) : '';
       const upLv = weaponUpgradeEligible(base) ? itemUpgradeLevel('weapon', w.id) : 0;
       const upMax = weaponUpgradeEligible(base) ? itemUpgradeMax('weapon', w.id) : 0;
       const upBadge = upLv > 0
@@ -46522,7 +49552,7 @@ const UI = {
         ? `<div class="cinfo" style="opacity:.82;font-size:12px;margin-top:3px">${weaponUpgradeSummary(w.id)}</div>`
         : '';
       const moveLine = labels
-        ? `① ${labels[0]} · ② ${labels[1]} · ③ ${labels[2]} finisher${mastLine}`
+        ? `① ${labels[0]} · ② ${labels[1]} · ③ ${labels[2]} ${t('ui.weaponMoveFinisher')}${mastLine}`
         : (isThrowWeapon(w.id) ? t('ui.weaponThrowLine') : '');
       const islandLine = islandLocked && !lvlLocked
         ? `<div class="cinfo" style="opacity:.82;font-size:12px;margin-top:3px;color:#ffd75e">${t('ui.weaponIslandPick', { cap: adventureWeaponCap() })}</div>`
@@ -46536,7 +49566,7 @@ const UI = {
         ? `<div class="cinfo" style="opacity:.88;font-size:12px;margin-top:3px;color:${zoneMeta ? zoneMeta.color : '#ffb0b8'}">${effectTxt}</div>`
         : '';
       const zoneLockLine = lvlLocked && zoneMeta
-        ? `<div class="cinfo" style="opacity:.82;font-size:12px;margin-top:3px;color:${zoneMeta.color}">Drop in ${zoneMeta.name}-zone / Nightmare·Hell modus</div>`
+        ? `<div class="cinfo" style="opacity:.82;font-size:12px;margin-top:3px;color:${zoneMeta.color}">${t('ui.weaponZoneDrop', { zone: zoneMeta.name })}</div>`
         : '';
       info.innerHTML = `<div class="cname">${weaponLabel(w)} <span class="rar-pill" style="color:${rar.color};border-color:${rar.color}">${rarityLabel(w.rarity)}</span>${zoneBadge}${summonBadge}${chestBadge}${tierBadge}${upBadge}</div>
         <div class="cinfo">${statLine}</div>` +
@@ -46548,7 +49578,7 @@ const UI = {
       el.appendChild(info);
       if (weaponUpgradeEligible(base)) appendItemUpgradeButton(el, 'weapon', w.id, () => this.renderWeapons());
       const right = document.createElement('div');
-      right.className = 'right';
+      right.className = 'right' + (selected && !lvlLocked && !islandLocked ? ' picked' : '');
       right.innerHTML = lvlLocked
         ? (zoneMeta ? `${SVG_LOCK_ICON} ${zoneMeta.name}` : `${SVG_LOCK_ICON} Lv ${base.unlock}`)
         : (islandLocked
@@ -46570,7 +49600,7 @@ const UI = {
           playWeaponPickFeedback(w.id);
           if (islandLocked) UI.toast(t('toast.weaponIslandCap', { cap: adventureWeaponCap() }), 2800);
           this.renderWeapons();
-        }, 'pickWeapon/' + w.id, 'Wapen kiezen mislukt');
+        }, 'pickWeapon/' + w.id, t('ui.weaponPickFail'));
       });
       list.appendChild(el);
     }
@@ -46606,7 +49636,7 @@ const UI = {
         rarEl.innerHTML =
           `<span class="rar-pill" style="color:${rar.color};border-color:${rar.color}">${rarityLabel(w.rarity)}</span>` +
           (zone ? ` <span class="rar-pill" style="color:${zone.color};border-color:${zone.color}">${zone.name}</span>` : '') +
-          (save.weapon === w.id ? ' <span class="rar-pill" style="color:#ffd75e;border-color:#ffd75e">Actief</span>' : '');
+          (save.weapon === w.id ? ' <span class="rar-pill weapon-active-pill" style="color:#f2efe6;border-color:#ffd75e">&#10004; ' + t('ui.weaponActive') + '</span>' : '');
       }
     }
     if (statsEl) {
@@ -46614,12 +49644,12 @@ const UI = {
       if (locked) {
         const zone = base.dropZone ? weaponDropZoneOf(base) : null;
         statsEl.textContent = zone
-          ? `Drop in ${zone.name}-zone of Nightmare 2.0 / Hell 3.0`
-          : 'Nog vergrendeld — level verder in avontuur';
+          ? t('ui.weaponZoneDrop', { zone: zone.name })
+          : t('ui.weaponLockedAdv');
       } else {
-        statsEl.textContent =
-          `${weaponDesc(w)} · x${w.dmg} dmg · bereik ${w.range} · spd x${w.speed}` +
-          (effectTxt ? ` · ${effectTxt}` : '');
+        statsEl.textContent = t('ui.weaponStatLine', {
+          desc: weaponDesc(w), dmg: w.dmg, range: w.range, speed: w.speed,
+        }) + (effectTxt ? ` · ${effectTxt}` : '');
       }
     }
     const c = cv.getContext('2d');
@@ -46667,104 +49697,13 @@ const UI = {
     });
   },
 
+  /** Fallback stub. Live list→detail lives in src/ui/buildings-ui.js (loaded after this file). */
   openBuildings() {
     this.safeOpen('buildingsScreen', () => this.renderBuildings(), {
       msg: (typeof tOr === 'function') ? tOr('buildings.loadFail', 'Fabrieken laden mislukt') : 'Fabrieken laden mislukt',
     });
   },
-
-  renderBuildings() {
-    const head = document.getElementById('buildingsScreenHead');
-    const sub = document.getElementById('buildingsScreenSub');
-    const list = document.getElementById('buildingsList');
-    const walletEl = document.getElementById('buildingsWallet');
-    if (head) head.textContent = (typeof tOr === 'function') ? tOr('buildings.title', 'Fabrieken') : 'Fabrieken';
-    if (sub) sub.textContent = (typeof tOr === 'function')
-      ? tOr('buildings.sub', 'Eiland-fabrieken · levels · timed resources — stub voor UI/art/powers')
-      : 'Eiland-fabrieken · levels · timed resources — stub voor UI/art/powers';
-    if (typeof buildingTickAll === 'function') buildingTickAll();
-    const ids = (typeof BUILDING_IDS !== 'undefined') ? BUILDING_IDS : [];
-    if (walletEl) {
-      const parts = [];
-      const wallet = (typeof buildingWallet === 'function') ? buildingWallet() : {};
-      const resIds = (typeof buildingResourceIds !== 'undefined') ? buildingResourceIds : Object.keys(wallet);
-      for (const id of resIds) {
-        const n = wallet[id] || 0;
-        if (!n) continue;
-        const label = (typeof buildingResourceLabel === 'function') ? buildingResourceLabel(id) : id;
-        parts.push(label + ' ' + n);
-      }
-      const pc = Math.max(0, Math.floor(Number(save && save.petCoins) || 0));
-      parts.unshift('PC ' + pc);
-      walletEl.textContent = parts.join(' · ');
-    }
-    if (!list) return;
-    const byId = {};
-    list.querySelectorAll('[data-factory-id]').forEach((el) => { byId[el.getAttribute('data-factory-id')] = el; });
-    for (const id of ids) {
-      const row = (typeof buildingTooltipModel === 'function') ? buildingTooltipModel(id) : null;
-      if (!row) continue;
-      let card = byId[id];
-      if (!card) {
-        card = document.createElement('div');
-        card.className = 'step-card building-stub-card';
-        card.setAttribute('data-factory-id', id);
-        list.appendChild(card);
-      }
-      card.innerHTML = '';
-      const title = document.createElement('b');
-      title.textContent = row.name + (row.built ? ` · Lv ${row.level}/${row.maxLevel} · rank ${row.powerRank}` : ' · —');
-      const meta = document.createElement('div');
-      meta.style.cssText = 'margin-top:4px;font-size:13px;line-height:1.4;opacity:.9';
-      const lock = row.unlocked
-        ? (row.built
-          ? ((typeof tOr === 'function')
-            ? tOr('buildings.rateLine', '{n}/uur · {pending} wacht · cap {cap}', {
-              n: row.outputRate, pending: row.pending, cap: row.storageCap,
-            })
-            : `${row.outputRate}/uur · ${row.pending} wacht · cap ${row.storageCap}`)
-          : ((typeof tOr === 'function') ? tOr('buildings.buildHint', 'Bouwen als eiland open is') : 'Bouwen als eiland open is'))
-        : ((typeof tOr === 'function')
-          ? tOr('buildings.lockedWorld', 'Unlock: eiland {n}', { n: row.worldUnlock })
-          : ('Unlock: eiland ' + row.worldUnlock));
-      meta.textContent = lock;
-      const powers = document.createElement('div');
-      powers.style.cssText = 'margin-top:4px;font-size:12px;opacity:.8';
-      powers.textContent = row.powersUnlocked.length
-        ? ('powers: ' + row.powersUnlocked.join(', '))
-        : (row.nextPower ? ('next power @ rank ' + row.nextPower.rank + ': ' + row.nextPower.id) : '');
-      card.appendChild(title);
-      card.appendChild(meta);
-      if (powers.textContent) card.appendChild(powers);
-      const actions = document.createElement('div');
-      actions.style.cssText = 'display:flex;gap:8px;flex-wrap:wrap;margin-top:8px';
-      const addBtn = (label, enabled, fn) => {
-        const btn = document.createElement('button');
-        btn.type = 'button';
-        btn.className = 'btn tog';
-        btn.textContent = label;
-        btn.disabled = !enabled;
-        if (enabled) btn.addEventListener('click', (e) => { e.preventDefault(); fn(); });
-        actions.appendChild(btn);
-      };
-      if (!row.built) {
-        addBtn((typeof tOr === 'function') ? tOr('buildings.build', 'Bouwen') : 'Bouwen', row.canBuild, () => {
-          buildingBuild(row.id);
-          this.renderBuildings();
-        });
-      } else {
-        addBtn((typeof tOr === 'function') ? tOr('buildings.collect', 'Ophalen') : 'Ophalen', row.canCollect, () => {
-          buildingCollect(row.id);
-          this.renderBuildings();
-        });
-        addBtn((typeof tOr === 'function') ? tOr('buildings.upgrade', 'Upgrade') : 'Upgrade', row.canUpgrade, () => {
-          buildingUpgrade(row.id);
-          this.renderBuildings();
-        });
-      }
-      card.appendChild(actions);
-    }
-  },
+  renderBuildings() {},
 
   renderUpgrades() {
     const tab = this.upgradeTab || 'skills';
@@ -47445,27 +50384,66 @@ const UI = {
     }
     if (!this.gearRarity) this.gearRarity = 'all';
     const pickSlot = this.gearSlotPick;
-    const items = typeof listGearItems === 'function' ? listGearItems(pickSlot) : [];
-    let shown = typeof gearFilterItems === 'function'
-      ? gearFilterItems(items, this.gearFilter, this.gearFilterQ, this.gearRarity)
-      : items;
+    const items = typeof gearSheetRows === 'function'
+      ? gearSheetRows(pickSlot, save)
+      : (typeof listGearItems === 'function' ? listGearItems(pickSlot) : []);
+    let shown = typeof gearFilterInventory === 'function'
+      ? gearFilterInventory(items, this.gearFilter, this.gearFilterQ, this.gearRarity)
+      : (typeof gearFilterItems === 'function'
+        ? gearFilterItems(items, this.gearFilter, this.gearFilterQ, this.gearRarity)
+        : items);
     if (typeof gearSortItems === 'function') shown = gearSortItems(shown, eq);
     if (this.gearItemPick && !items.some((it) => it.id === this.gearItemPick)) this.gearItemPick = null;
     if (!this.gearItemPick) {
       this.gearItemPick = eq[pickSlot] || (items.find((it) => {
-        const u = typeof gearUnlockState === 'function' ? gearUnlockState(it) : { unlocked: true };
+        const u = typeof gearUnlockState === 'function' ? gearUnlockState(it, pickSlot) : { unlocked: true };
         return u.unlocked;
       }) || items[0] || {}).id || null;
     }
 
-    const pillFor = (item, unlock) => {
+    this.BACK_LABELS.gearScreen = this.gearOpenedFrom === 'home'
+      ? tOr('back.menu', '← Menu')
+      : tOr('back.collect', '← Collectie');
+    this.syncBackLabels();
+
+    const pillFor = (item, unlock, extra) => {
+      extra = extra || {};
       if (item && unlock && !unlock.unlocked) {
-        return `<span class="gear-pill gear-pill-lock">${esc(unlock.label || tOr('gear.pillLock', 'LOCK'))}</span>`;
+        return `<span class="gear-pill gear-pill-lock">${esc(tOr('gear.pillLock', 'LOCK'))}</span>`;
       }
+      const bits = [];
+      if (extra.on) bits.push(`<span class="gear-pill gear-pill-on">${esc(tOr('gear.wearing', 'aan'))}</span>`);
       const stat = item && (typeof gearHasStats === 'function' ? gearHasStats(item) : !!(item.hasStats && item.vanity !== true));
-      if (stat) return `<span class="gear-pill gear-pill-stat">${esc(tOr('gear.pillStat', 'STAT'))}</span>`;
-      if (item) return `<span class="gear-pill gear-pill-vanity">${esc(tOr('gear.pillVanity', 'LOOK'))}</span>`;
-      return `<span class="gear-pill">${esc(tOr('gear.empty', 'Leeg'))}</span>`;
+      if (stat) bits.push(`<span class="gear-pill gear-pill-stat">${esc(tOr('gear.pillStat', 'STAT'))}</span>`);
+      else if (item) bits.push(`<span class="gear-pill gear-pill-vanity">${esc(tOr('gear.pillVanity', 'LOOK'))}</span>`);
+      else bits.push(`<span class="gear-pill gear-pill-empty">${esc(tOr('gear.empty', 'Leeg'))}</span>`);
+      return bits.join('');
+    };
+
+    const wearItem = (item) => {
+      const expectSlot = item.slot || item.slotId || pickSlot;
+      const res = (typeof gearEquipItem === 'function')
+        ? gearEquipItem(item.id, { expectSlot })
+        : equipGear(item.id, { expectSlot });
+      if (!res || !res.ok) {
+        const fail = gearUnlockState(item, expectSlot);
+        UI.toast((res && res.label) || fail.label || tOr('toast.gearLocked', 'Nog op slot'), 1800, { tone: 'warn' });
+        return false;
+      }
+      AudioSys.sfx('select');
+      UI.toast(tOr('toast.gearEquipped', '{name} aangedaan', { name: gearItemName(item) }), 1400, { tone: 'ok' });
+      return true;
+    };
+    const takeOff = (item) => {
+      const sid = item.slot || item.slotId;
+      if (typeof gearUnequipSlot === 'function') gearUnequipSlot(sid);
+      else unequipGear(sid);
+      AudioSys.sfx('select');
+      UI.toast(tOr('toast.gearUnequipped', '{name} uitgedaan', { name: gearItemName(item) }), 1200);
+    };
+    const keepPickerScroll = () => {
+      const p = document.getElementById('gearPicker');
+      this._gearPickerScroll = p ? p.scrollTop : 0;
     };
 
     const sumEl = document.getElementById('gearSummary');
@@ -47477,8 +50455,8 @@ const UI = {
       }, 0);
       const catalogN = (typeof GEAR_ITEMS !== 'undefined' && Array.isArray(GEAR_ITEMS)) ? GEAR_ITEMS.length : items.length;
       sumEl.innerHTML =
-        `${tOr('gear.summarySlots', '<b>{n}</b>/5', { n: filled })} · ` +
-        `<span class="gear-pill gear-pill-stat">${esc(tOr('gear.pillStat', 'STAT'))} ${statN}</span> ` +
+        `<span class="gear-pill gear-pill-on">${tOr('gear.summarySlots', '<b>{n}</b>/5', { n: filled })}</span>` +
+        `<span class="gear-pill gear-pill-stat">${esc(tOr('gear.pillStat', 'STAT'))} ${statN}</span>` +
         `<span class="gear-pill gear-pill-vanity">${esc(tOr('gear.pillVanity', 'LOOK'))} ${Math.max(0, filled - statN)}</span>` +
         `<span class="gear-pill">${esc(tOr('gear.catalogN', '{n} items', { n: catalogN }))}</span>`;
     }
@@ -47490,6 +50468,13 @@ const UI = {
         `<span class="gear-pill gear-pill-lock">${esc(tOr('gear.pillLock', 'LOCK'))}</span>`;
     }
 
+    const slotIco = (typeof GEAR_SLOT_ICONS !== 'undefined' && GEAR_SLOT_ICONS) ? GEAR_SLOT_ICONS : {
+      head: 'assets/buttons/modes/gear-head.svg',
+      chest: 'assets/buttons/modes/gear-chest.svg',
+      hands: 'assets/buttons/modes/gear-hands.svg',
+      legs: 'assets/buttons/modes/gear-legs.svg',
+      back: 'assets/buttons/modes/gear-back.svg',
+    };
     const slotList = document.getElementById('gearSlotList');
     if (!pickerOnly && slotList) {
       slotList.innerHTML = '';
@@ -47497,10 +50482,10 @@ const UI = {
         const sid = slot.id;
         const rawItem = typeof gearItemById === 'function' ? gearItemById(eq[sid]) : null;
         const item = (typeof contractGearItem === 'function' && rawItem) ? contractGearItem(rawItem) : rawItem;
-        const unlock = item && typeof gearUnlockState === 'function' ? gearUnlockState(item) : { unlocked: true };
+        const unlock = item && typeof gearUnlockState === 'function' ? gearUnlockState(item, sid) : { unlocked: true };
         const btn = document.createElement('button');
         btn.type = 'button';
-        btn.className = 'gear-slot-card'
+        btn.className = 'hub-tile gear-slot-card'
           + (sid === pickSlot ? ' sel' : '')
           + (item && unlock.unlocked && gearHasStats(item) ? ' kind-stat' : '')
           + (item && !unlock.unlocked ? ' locked' : '')
@@ -47515,22 +50500,31 @@ const UI = {
           ? tOr('gear.empty', 'Leeg')
           : (!unlock.unlocked
             ? (unlock.label || tOr('gear.pillLock', 'LOCK'))
-            : (gearItemName(item) + (rar ? ' · ' + rar : '')));
+            : (gearItemName(item) + (rar ? ' · ' + tOr('rarity.' + rar, tOr('gear.rar.' + rar, rar)) : '')));
+        const ico = slotIco[sid] || 'assets/buttons/modes/gear.svg';
         btn.innerHTML =
-          `<span class="gear-slot-swatch" style="background:${esc(tint)}"></span>` +
+          `<span class="hub-tile-ico gear-slot-swatch" style="background:${esc(tint)}">` +
+          `<img src="${esc(ico)}" alt="" width="22" height="22" decoding="async" draggable="false"></span>` +
           `<span class="gear-slot-copy">` +
-          `<span class="gear-slot-title">${esc(gearSlotName(sid))}</span>` +
-          `<span class="gear-slot-sub">${esc(sub)}</span>` +
+          `<span class="hub-tile-title gear-slot-title">${esc(gearSlotName(sid))}</span>` +
+          `<span class="hub-tile-sub gear-slot-sub">${esc(sub)}</span>` +
           `</span>` +
-          pillFor(item, unlock);
+          `<span class="gear-slot-pills hub-tile-stat">${pillFor(item, unlock, { on: !!item })}</span>`;
         bindPress(btn, () => {
           safeUiAction(() => {
             this.gearSlotPick = sid;
-            this.gearItemPick = null;
+            this.gearItemPick = eq[sid] || null;
             this._gearPickerScroll = 0;
             AudioSys.sfx('select');
             this.renderGear();
-          }, 'gearSlot/' + sid, 'Slot kiezen mislukt');
+            const screen = document.getElementById('gearScreen');
+            const inv = document.getElementById('gearInvSection');
+            if (screen && inv) {
+              const sr = screen.getBoundingClientRect();
+              const ir = inv.getBoundingClientRect();
+              screen.scrollTop += (ir.top - sr.top) - 10;
+            }
+          }, 'gearSlot/' + sid, tOr('gear.errSlot', 'Slot pick failed'));
         });
         slotList.appendChild(btn);
       }
@@ -47541,8 +50535,10 @@ const UI = {
       const w = typeof weaponById === 'function' ? weaponById(save.weapon) : null;
       const wName = w && typeof weaponLabel === 'function' ? weaponLabel(w) : (save.weapon || '—');
       aside.innerHTML =
-        `<b>${esc(tOr('gear.weaponAside', 'Wapen'))}</b> · ${esc(wName)}` +
-        `<div class="gear-detail-sub">${esc(tOr('gear.weaponAsideHint', 'Blijft in Collectie → Wapens — geen 6e slot.'))}</div>`;
+        `<span class="hub-tile-ico"><img src="assets/buttons/modes/weapons.svg" alt="" width="28" height="28" decoding="async" draggable="false"></span>` +
+        `<span class="hub-tile-title">${esc(tOr('gear.weaponAside', 'Wapen'))}</span>` +
+        `<span class="hub-tile-sub">${esc(wName)} · ${esc(tOr('gear.weaponAsideHint', 'Collectie · geen 6e slot'))}</span>` +
+        `<span class="hub-tile-stat">${esc(tOr('gear.weaponOpen', 'Wapens'))}</span>`;
     }
 
     const cv = document.getElementById('gearDollCanvas');
@@ -47553,69 +50549,40 @@ const UI = {
       cc.clearRect(0, 0, cv.width, cv.height);
       const st = typeof styleById === 'function' ? styleById(save.style || 'classic') : { body: '#f2f5ff' };
       cc.save();
-      cc.translate(cv.width / 2, cv.height - 18);
-      cc.scale(1.15, 1.15);
+      cc.translate(cv.width / 2, cv.height - 28);
+      cc.scale(1.7, 1.7);
       const preview = new Fighter({ isPlayer: true, x: 0, y: 0, color: st.body, style: st, scale: 1 });
-      preview.animT = 0.35;
+      preview.animT = 0.55;
       preview.draw(cc);
       cc.restore();
+    }
+
+    const kicker = document.getElementById('gearInvKicker');
+    if (kicker) {
+      kicker.textContent = tOr('gear.invKicker', '{slot}', { slot: gearSlotName(pickSlot) });
     }
 
     const detail = document.getElementById('gearDetail');
     const rawPicked = typeof gearItemById === 'function' ? gearItemById(this.gearItemPick) : null;
     const picked = (typeof contractGearItem === 'function' && rawPicked) ? contractGearItem(rawPicked) : rawPicked;
-    if (!pickerOnly && detail) {
+    if (detail) {
       if (!picked) {
-        detail.innerHTML = `<div class="gear-detail-sub">${esc(tOr('gear.pickHint', 'Tik een slot, dan een item.'))}</div>`;
+        detail.innerHTML = `<div class="gear-detail-sub">${esc(tOr('gear.pickHint', 'Tik een item om aan of uit te doen.'))}</div>`;
       } else {
-        const unlock = gearUnlockState(picked);
+        const unlock = gearUnlockState(picked, pickSlot);
         const tip = unlock.model || (typeof gearTooltipModel === 'function' ? gearTooltipModel(picked) : null);
         const equippedHere = eq[picked.slot] === picked.id || eq[picked.slotId] === picked.id;
-        const kindPill = pillFor(picked, unlock);
+        const kindPill = pillFor(picked, unlock, { on: equippedHere });
         const lockLine = unlock.unlocked
           ? ''
-          : `<div class="gear-detail-sub" style="color:#ffd75e;margin-top:6px">${esc(tOr('gear.lockedLine', 'Op slot · {why}', { why: unlock.label || '' }))}</div>`;
+          : `<div class="gear-detail-sub" style="color:#ffd75e;margin-top:4px">${esc(unlock.label || tOr('gear.pillLock', 'LOCK'))}</div>`;
         const bonus = unlock.unlocked
           ? (tip && tip.desc ? esc(tip.desc) + (tip.combatLine ? ' · ' + esc(tip.combatLine) : '') : esc(gearStatLine(picked)))
           : esc(tOr('gear.lockNoStats', 'Geen stats tot het slot open is'));
-        const actions = unlock.unlocked
-          ? (`<div class="gear-detail-actions">` +
-            (equippedHere
-              ? `<button type="button" class="btn mode-btn b-gray big-touch" id="gearUnequipBtn"><div>${esc(tOr('gear.unequip', 'Uitdoen'))}</div></button>`
-              : `<button type="button" class="btn mode-btn b-continue big-touch" id="gearEquipBtn"><div>${esc(tOr('gear.equip', 'Aandoen'))}</div></button>`) +
-            `</div>`)
-          : '';
         detail.innerHTML =
           `<div class="gear-detail-title">${esc(gearItemName(picked))} ${kindPill}</div>` +
           `<div class="gear-detail-sub">${bonus}</div>` +
-          lockLine + actions;
-        const eqBtn = document.getElementById('gearEquipBtn');
-        if (eqBtn) bindPress(eqBtn, () => {
-          safeUiAction(() => {
-            const res = (typeof gearEquipItem === 'function') ? gearEquipItem(picked.id) : equipGear(picked.id);
-            if (!res || !res.ok) {
-              const fail = gearUnlockState(picked);
-              UI.toast((res && res.label) || fail.label || tOr('toast.gearLocked', 'Nog op slot'), 1800, { tone: 'warn' });
-              return;
-            }
-            AudioSys.sfx('select');
-            UI.toast(tOr('toast.gearEquipped', '{name} aangedaan', { name: gearItemName(picked) }), 1800, { tone: 'ok' });
-            this.renderGear();
-            this.renderMenu();
-          }, 'equipGear/' + picked.id, 'Uitrusten mislukt');
-        });
-        const uqBtn = document.getElementById('gearUnequipBtn');
-        if (uqBtn) bindPress(uqBtn, () => {
-          safeUiAction(() => {
-            const sid = picked.slot || picked.slotId;
-            if (typeof gearUnequipSlot === 'function') gearUnequipSlot(sid);
-            else unequipGear(sid);
-            AudioSys.sfx('select');
-            UI.toast(tOr('toast.gearUnequipped', '{name} uitgedaan', { name: gearItemName(picked) }), 1600);
-            this.renderGear();
-            this.renderMenu();
-          }, 'unequipGear/' + (picked.slot || picked.slotId), 'Uitdoen mislukt');
-        });
+          lockLine;
       }
     }
 
@@ -47736,8 +50703,9 @@ const UI = {
         frag.appendChild(empty);
       }
       for (const it of shown) {
-        const unlock = gearUnlockState(it);
-        const equippedHere = eq[it.slot] === it.id || eq[it.slotId] === it.id;
+        const unlock = gearUnlockState(it, pickSlot);
+        const equippedHere = eq[it.slot] === it.id || eq[it.slotId] === it.id
+          || unlock.state === 'already-equipped';
         const el = document.createElement('button');
         el.type = 'button';
         el.className = 'gear-card'
@@ -47745,6 +50713,7 @@ const UI = {
           + (unlock.unlocked ? '' : ' locked')
           + (equippedHere ? ' equipped' : '');
         el.setAttribute('data-gear-id', it.id);
+        el.setAttribute('data-equip-state', unlock.state || '');
         el.setAttribute('data-rarity', it.rarity || '');
         el.setAttribute('aria-disabled', unlock.unlocked ? 'false' : 'true');
         const tint = (it.look && it.look.tint) || it.color || '#333c55';
@@ -47757,18 +50726,22 @@ const UI = {
           : (unlock.label || tOr('gear.pillLock', 'LOCK'));
         el.innerHTML =
           `<span class="gear-card-swatch" style="background:${esc(tint)}"></span>` +
-          `<span class="gear-card-body"><span class="gear-card-name">${esc(gearItemName(it))} ${pillFor(it, unlock)} ${rarPill}</span>` +
-          `<span class="gear-card-meta">${esc(meta)}${equippedHere ? ' · ' + esc(tOr('gear.wearing', 'aan')) : ''}</span></span>`;
+          `<span class="gear-card-body"><span class="gear-card-name">${esc(gearItemName(it))} ${pillFor(it, unlock, { on: equippedHere })} ${rarPill}</span>` +
+          `<span class="gear-card-meta">${esc(meta)}</span></span>`;
         bindPress(el, () => {
           safeUiAction(() => {
             this.gearItemPick = it.id;
-            AudioSys.sfx('select');
+            keepPickerScroll();
             if (!unlock.unlocked) {
+              AudioSys.sfx('select');
               UI.toast(tOr('toast.gearLocked', 'Nog op slot · {why}', { why: unlock.label || '' }), 1800, { tone: 'warn' });
+              this.renderGear({ pickerOnly: true });
+              return;
             }
-            const p = document.getElementById('gearPicker');
-            this._gearPickerScroll = p ? p.scrollTop : 0;
+            if (equippedHere) takeOff(it);
+            else wearItem(it);
             this.renderGear();
+            this.renderMenu();
           }, 'gearPick/' + it.id, 'Item kiezen mislukt');
         });
         frag.appendChild(el);
@@ -47943,9 +50916,16 @@ const UI = {
     if (healthEl) {
       const h = saveHealthSummary();
       const lvl = h.lvl != null ? h.lvl : '?';
-      healthEl.textContent = h.primaryCorrupt
-        ? t('settings.saveAutoBad', { lvl })
-        : t('settings.saveAutoLine', { lvl });
+      healthEl.textContent = (typeof onlineSaveStatusLine === 'function')
+        ? onlineSaveStatusLine(h)
+        : (h.primaryCorrupt
+          ? t('settings.saveAutoBad', { lvl })
+          : t('settings.saveAutoLine', { lvl, when: '' }));
+    }
+    const pill = document.getElementById('settingsSaveSyncPill');
+    if (pill) {
+      const h = saveHealthSummary();
+      pill.textContent = (typeof onlineSavePill === 'function') ? onlineSavePill(h) : t('settings.saveSyncOk');
     }
     const detail = document.getElementById('saveHealthDetail');
     if (detail) {
@@ -47984,7 +50964,7 @@ const UI = {
         off = save.showTouchPads !== true;
         const mode = save.showTouchPads == null ? 'auto' : (save.showTouchPads ? 'on' : 'off');
         const base = typeof t === 'function' ? t('settings.showTouchPads') : 'Touch-knoppen altijd';
-        const suffix = mode === 'auto' ? ' · auto' : (mode === 'on' ? ' · aan' : ' · uit');
+        const suffix = ' · ' + t(mode === 'auto' ? 'settings.touchAuto' : (mode === 'on' ? 'settings.touchOn' : 'settings.touchOff'));
         const ico = el.querySelector('.tog-ico');
         el.textContent = '';
         if (ico) el.appendChild(ico);
@@ -48009,7 +50989,10 @@ const UI = {
       const themeMeta = (typeof AUDIO_THEME_META !== 'undefined' && typeof getAudioTheme === 'function')
         ? AUDIO_THEME_META[getAudioTheme()]
         : null;
-      const themeLine = themeMeta ? ('Sfeer: ' + themeMeta.label) : '';
+      const themeName = (typeof audioThemeLabel === 'function' && typeof getAudioTheme === 'function')
+        ? audioThemeLabel(getAudioTheme())
+        : (themeMeta && themeMeta.label);
+      const themeLine = themeName ? t('settings.audioThemeLine', { name: themeName }) : '';
       audioEl.textContent = base + ' · ' + sampleLine + (themeLine ? ' · ' + themeLine : '');
     }
     try { if (typeof renderAudioThemeSwitch === 'function') renderAudioThemeSwitch(); } catch (_) {}
@@ -48021,7 +51004,7 @@ const UI = {
   renderPausePerfStrip() {
     const el = document.getElementById('pausePerfStrip');
     if (!el) return;
-    if (!game || state !== 'pause') {
+    if (!game || state !== 'pause' || !document.body.classList.contains('sf-player-diag')) {
       el.style.display = 'none';
       el.textContent = '';
       return;
@@ -48044,7 +51027,7 @@ const UI = {
     if (statusEl) {
       let line = audioMixStatusLine(true);
       if (typeof navigator.onLine === 'boolean' && !navigator.onLine) {
-        line += ' · Offline — save op dit apparaat';
+        line += ' · ' + t('settings.saveOnlineOffline');
       }
       statusEl.textContent = line;
     }
@@ -48256,31 +51239,149 @@ const UI = {
 
 /* --- src/ui/buildings-ui.js --- */
 /* ======================== BUILDINGS HOME UI ======================== */
-/** List/detail screen for 5 factories. Binds BuildingsSys via buildings-bridge.js. */
+/** List → detail → upgrade. Consumes systems #297 bind API when present:
+ *  buildingDescModel · buildingWalletModel · buildingArtSrc · buildingCostLabel
+ *  Do not re-declare those models here. */
 
 function buildingsEscape(s) {
   return String(s == null ? '' : s)
     .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 }
 
-function buildingsArtHtml(view) {
-  const pixel = view.art || '';
-  const svg = view.artSvg || ('assets/buildings/' + view.id + '.svg');
-  const hub = view.artHub || 'assets/buttons/hub/buildings.svg';
-  const alt = buildingsEscape(view.name);
-  return '<img class="buildings-art-img" data-buildings-art="' + buildingsEscape(view.id) + '"'
-    + ' src="' + buildingsEscape(svg) + '" alt="' + alt + '" width="64" height="64"'
+function buildingsTxt(key, fallback, params) {
+  if (typeof tOr === 'function') return tOr(key, fallback, params);
+  if (typeof t === 'function') {
+    const s = t(key, params);
+    if (s && s !== key) return s;
+  }
+  if (fallback && params && typeof params === 'object') {
+    let out = String(fallback);
+    for (const [k, v] of Object.entries(params)) out = out.split('{' + k + '}').join(String(v));
+    return out;
+  }
+  return fallback || '';
+}
+
+function buildingsDesc(id, view) {
+  if (typeof buildingDescModel === 'function') {
+    try {
+      const desc = buildingDescModel(id);
+      if (desc) return desc;
+    } catch (_) {}
+  }
+  if (view) return view;
+  if (typeof buildingTooltipModel === 'function') {
+    try { return buildingTooltipModel(id); } catch (_) {}
+  }
+  return null;
+}
+
+function buildingsWalletSnap() {
+  if (typeof buildingWalletModel === 'function') {
+    try {
+      const live = buildingWalletModel();
+      if (live && typeof live === 'object') {
+        return {
+          petCoins: Math.max(0, Math.floor(Number(live.petCoins) || 0)),
+          resources: (live.resources || []).map((row) => ({
+            id: row.id,
+            label: row.name || row.label || row.id,
+            amount: Math.max(0, Math.floor(Number(row.amount) || 0)),
+            rate: Math.max(0, Math.floor(Number(row.rate) || 0)),
+          })),
+        };
+      }
+    } catch (_) {}
+  }
+  const resIds = (typeof buildingResourceIds !== 'undefined' && buildingResourceIds && buildingResourceIds.length)
+    ? buildingResourceIds.slice()
+    : ['spark', 'glue', 'chip', 'steam', 'echo'];
+  let bag = {};
+  try {
+    if (typeof buildingWallet === 'function') {
+      const w = buildingWallet();
+      if (w && typeof w === 'object') bag = w;
+    }
+  } catch (_) {}
+  const pc = (typeof petCoinsBalance === 'function')
+    ? petCoinsBalance()
+    : Math.max(0, Math.floor(Number((typeof save !== 'undefined' && save && save.petCoins) || 0)));
+  return {
+    petCoins: Math.max(0, Math.floor(Number(pc) || 0)),
+    resources: resIds.map((id) => ({
+      id,
+      label: (typeof buildingsResourceLabel === 'function') ? buildingsResourceLabel(id) : id,
+      amount: Math.max(0, Math.floor(Number(bag[id]) || 0)),
+      rate: 0,
+    })),
+  };
+}
+
+function buildingsArtSrcSnap(view) {
+  const id = view && view.id;
+  if (typeof buildingArtSrc === 'function' && id) {
+    try {
+      const raw = buildingArtSrc(id);
+      if (raw && typeof raw === 'object' && (raw.pixel || raw.stroke || raw.hub)) return raw;
+      if (typeof raw === 'string' && raw) {
+        let stroke = raw;
+        try { stroke = buildingArtSrc(id, 'stroke') || raw; } catch (_) {}
+        return { pixel: raw, stroke, hub: 'assets/buttons/hub/buildings.svg' };
+      }
+    } catch (_) {}
+  }
+  if (view && view.artSrc && typeof view.artSrc === 'object') return view.artSrc;
+  return {
+    pixel: (view && view.art) || ('assets/buildings/pixel/' + id + '.png'),
+    stroke: (view && view.artSvg) || ('assets/buildings/' + id + '.svg'),
+    hub: (view && view.artHub) || 'assets/buttons/hub/buildings.svg',
+  };
+}
+
+function buildingsArtHtml(view, klass) {
+  const src = buildingsArtSrcSnap(view);
+  const first = src.pixel || src.stroke || src.hub;
+  const mid = src.stroke || src.hub;
+  const last = src.hub || 'assets/buttons/hub/buildings.svg';
+  const alt = buildingsEscape(view && view.name);
+  const cls = klass || 'buildings-art-img';
+  return '<img class="' + cls + '" data-buildings-art="' + buildingsEscape(view && view.id) + '"'
+    + ' src="' + buildingsEscape(first) + '" alt="' + alt + '" width="64" height="64"'
     + ' decoding="async" draggable="false"'
-    + ' onerror="this.onerror=null;this.src=\'' + buildingsEscape(hub) + '\'">';
+    + ' onerror="if(!this.dataset.fb){this.dataset.fb=\'1\';this.src=\'' + buildingsEscape(mid)
+    + '\'}else{this.onerror=null;this.src=\'' + buildingsEscape(last) + '\'}">';
+}
+
+function buildingsCostText(view) {
+  if (!view) return '';
+  if (view.nextCostLabel) return view.nextCostLabel;
+  if (typeof buildingCostLabel === 'function' && view.nextCost) {
+    try {
+      const line = buildingCostLabel(view.nextCost);
+      if (line) return line;
+    } catch (_) {}
+  }
+  return view.upgradeHint || '';
 }
 
 if (typeof UI === 'object' && UI) {
   UI.buildingsTick = 0;
+  UI.buildingsPane = 'list';
+  UI.buildingsStep = 'harvest';
+  UI.buildingsFlash = null;
+  UI._buildingsDetailKey = '';
+  UI._buildingsRowBound = {};
 
   UI.openBuildings = function openBuildings() {
+    this.buildingsPane = 'list';
+    this.buildingsView = 'list';
+    this.buildingsStep = 'harvest';
+    this.buildingsFlash = null;
+    this._buildingsDetailKey = '';
+    this._buildingsRowBound = {};
     this.stopBuildingsTick();
     this.safeOpen('buildingsScreen', () => this.renderBuildings(), {
-      msg: (typeof tOr === 'function') ? tOr('buildings.loadFail', 'Fabrieken laden mislukt') : 'Fabrieken laden mislukt',
+      msg: buildingsTxt('buildings.loadFail', 'Fabrieken laden mislukt'),
     });
     this.startBuildingsTick();
   };
@@ -48305,119 +51406,398 @@ if (typeof UI === 'object' && UI) {
     }
   };
 
-  UI.renderBuildings = function renderBuildings() {
+  UI.buildingsShowList = function buildingsShowList() {
+    this.buildingsPane = 'list';
+    this.buildingsView = 'list';
+    this.buildingsStep = 'harvest';
+    this._buildingsDetailKey = '';
+    this.renderBuildings();
+  };
+
+  UI.buildingsShowDetail = function buildingsShowDetail(id) {
+    if (typeof buildingsSelect === 'function') buildingsSelect(id);
+    this.buildingsPane = 'detail';
+    this.buildingsView = 'detail';
+    this.buildingsStep = 'harvest';
+    this.buildingsFocusId = id;
+    this._buildingsDetailKey = '';
+    this.renderBuildings();
+  };
+
+  UI.buildingsShowUpgradeStep = function buildingsShowUpgradeStep() {
+    this.buildingsStep = 'upgrade';
+    this.buildingsView = 'upgrade';
+    this._buildingsDetailKey = '';
+    this.renderBuildings();
+  };
+
+  UI.openBuildingDetail = function openBuildingDetail(id) { return this.buildingsShowDetail(id); };
+  UI.openBuildingUpgrade = function openBuildingUpgrade(id) {
+    if (id && typeof buildingsSelect === 'function') buildingsSelect(id);
+    return this.buildingsShowUpgradeStep();
+  };
+
+  UI.buildingsGoBack = function buildingsGoBack() {
+    if (this.buildingsStep === 'upgrade' || this.buildingsView === 'upgrade') {
+      this.buildingsStep = 'harvest';
+      this.buildingsView = 'detail';
+      this._buildingsDetailKey = '';
+      this.renderBuildings();
+      return true;
+    }
+    if (this.buildingsPane === 'detail' || this.buildingsView === 'detail') {
+      this.buildingsShowList();
+      return true;
+    }
+    this.stopBuildingsTick();
+    return false;
+  };
+
+  UI.paintBuildingsWallet = function paintBuildingsWallet(flashRes) {
+    const walletEl = document.getElementById('buildingsWallet');
+    if (!walletEl) return;
+    const model = buildingsWalletSnap();
+    const chips = [];
+    chips.push(
+      '<span class="buildings-wallet-chip buildings-wallet-pc" data-res="petCoins">'
+      + '<span class="buildings-wallet-lbl">' + buildingsEscape(buildingsTxt('buildings.walletPc', 'PC')) + '</span>'
+      + '<span class="buildings-wallet-amt">' + buildingsEscape(model.petCoins) + '</span></span>'
+    );
+    for (const row of (model.resources || [])) {
+      const flash = flashRes && flashRes === row.id ? ' is-flash' : '';
+      chips.push(
+        '<span class="buildings-wallet-chip' + flash + '" data-res="' + buildingsEscape(row.id)
+        + '" data-res-id="' + buildingsEscape(row.id) + '">'
+        + '<span class="buildings-wallet-lbl">' + buildingsEscape(row.label) + '</span>'
+        + '<span class="buildings-wallet-amt">' + buildingsEscape(row.amount) + '</span></span>'
+      );
+    }
+    walletEl.classList.add('buildings-wallet');
+    walletEl.innerHTML = chips.join('');
+  };
+
+  UI.renderBuildings = function renderBuildings(opts) {
+    const quiet = !!(opts && opts.quiet);
     const list = document.getElementById('buildingsList');
     const detail = document.getElementById('buildingsDetail');
     const note = document.getElementById('buildingsApiNote');
     const head = document.getElementById('buildingsScreenHead');
     const sub = document.getElementById('buildingsScreenSub');
-    if (head && typeof t === 'function') head.textContent = t('buildings.title');
-    if (sub && typeof t === 'function') sub.textContent = t('buildings.sub');
+    const scr = document.getElementById('buildingsScreen');
+    if (head) head.textContent = buildingsTxt('buildings.title', 'Fabrieken');
+    if (sub) {
+      sub.textContent = this.buildingsPane === 'detail'
+        ? buildingsTxt('buildings.detailSub', 'Tik Oogsten · upgrade is een aparte stap')
+        : buildingsTxt('buildings.sub', 'Tik een fabriek · oogst · upgrade');
+    }
     if (note) {
       const live = typeof buildingsHasSystemsApi === 'function' && buildingsHasSystemsApi();
       note.hidden = live;
       note.textContent = live
-        ? ((typeof t === 'function') ? t('buildings.liveNote') : '')
-        : ((typeof t === 'function') ? t('buildings.stubNote') : '');
+        ? buildingsTxt('buildings.liveNote', '')
+        : buildingsTxt('buildings.stubNote', '');
     }
+    let flashRes = null;
+    if (this.buildingsFlash && this.buildingsFlash.until > Date.now()) {
+      flashRes = this.buildingsFlash.resId;
+    } else if (this.buildingsFlash) {
+      this.buildingsFlash = null;
+    }
+    this.paintBuildingsWallet(flashRes);
     const rows = (typeof buildingsList === 'function') ? buildingsList() : [];
     let sel = (typeof buildingsSelectedId === 'function') ? buildingsSelectedId() : (rows[0] && rows[0].id);
     if (!rows.some((r) => r.id === sel)) sel = rows[0] && rows[0].id;
-    if (list) {
+    const pane = this.buildingsPane === 'detail' ? 'detail' : 'list';
+    const viewName = this.buildingsStep === 'upgrade' ? 'upgrade' : pane;
+    this.buildingsView = viewName;
+    if (scr) {
+      scr.setAttribute('data-buildings-pane', pane);
+      scr.setAttribute('data-buildings-view', viewName);
+      scr.classList.toggle('buildings-pane-detail', pane === 'detail');
+      scr.classList.toggle('buildings-pane-list', pane === 'list');
+    }
+    const overview = document.getElementById('buildingsOverview');
+    const sheet = document.getElementById('buildingsUpgradeSheet');
+    if (overview) overview.hidden = pane !== 'list';
+    if (sheet) {
+      sheet.hidden = viewName !== 'upgrade';
+      sheet.setAttribute('aria-hidden', viewName === 'upgrade' ? 'false' : 'true');
+    }
+    if (list) this.paintBuildingsList(list, rows, sel);
+    const view = rows.find((r) => r.id === sel) || rows[0];
+    if (detail) {
+      const key = (view && view.id || '') + ':' + (this.buildingsStep || 'harvest') + ':' + pane;
+      if (quiet && key === this._buildingsDetailKey && detail.dataset.factoryId === (view && view.id)) {
+        this.refreshBuildingsDetail(detail, view);
+      } else {
+        this.paintBuildingsDetail(detail, view);
+        this._buildingsDetailKey = key;
+      }
+    }
+  };
+
+  UI.paintBuildingsList = function paintBuildingsList(list, rows, sel) {
+    const have = [...list.querySelectorAll('.buildings-row')].map((el) => el.getAttribute('data-factory-id'));
+    const want = rows.map((r) => r.id);
+    if (have.join('|') !== want.join('|')) {
       list.innerHTML = '';
+      this._buildingsRowBound = {};
       for (const view of rows) {
         const btn = document.createElement('button');
         btn.type = 'button';
-        btn.className = 'hub-tile buildings-row'
-          + (view.id === sel ? ' hub-tile-featured buildings-row-sel' : '')
-          + (view.locked ? ' buildings-row-locked' : '')
-          + (view.canCollect ? ' buildings-row-ready' : '');
+        btn.className = 'hub-tile buildings-row';
+        btn.setAttribute('data-factory-id', view.id);
         btn.dataset.buildingId = view.id;
-        if (view.id === sel) btn.setAttribute('data-hub-badge', view.canCollect
-          ? ((typeof t === 'function') ? t('buildings.collect') : 'Oogsten')
-          : ((typeof t === 'function') ? t('buildings.level', { n: view.level }) : ('Lv ' + view.level)));
-        const lockBit = view.locked
-          ? buildingsEscape(view.lockHint || ((typeof t === 'function') ? t('buildings.locked') : ''))
-          : ((typeof t === 'function') ? t('buildings.level', { n: view.level }) : ('Lv ' + view.level));
-        const stock = view.locked
-          ? ''
-          : (view.pending + '/' + view.capacity + ' ' + buildingsEscape(view.resourceLabel));
-        btn.innerHTML =
-          '<span class="hub-tile-ico">' + buildingsArtHtml(view) + '</span>'
-          + '<span class="hub-tile-title">' + buildingsEscape(view.name) + '</span>'
-          + '<span class="hub-tile-sub">' + buildingsEscape(view.sub) + '</span>'
-          + '<span class="hub-tile-stat">' + lockBit + (stock ? ' · ' + stock : '') + '</span>';
-        if (typeof bindPress === 'function') {
-          bindPress(btn, () => {
-            if (typeof AudioSys !== 'undefined') { try { AudioSys.sfx('select'); } catch (_) {} }
-            if (typeof buildingsSelect === 'function') buildingsSelect(view.id);
-            UI.renderBuildings();
-          });
-        } else {
-          btn.addEventListener('click', () => {
-            if (typeof buildingsSelect === 'function') buildingsSelect(view.id);
-            UI.renderBuildings();
-          });
-        }
+        btn.dataset.factoryId = view.id;
         list.appendChild(btn);
       }
     }
-    const view = rows.find((r) => r.id === sel) || rows[0];
-    if (detail) this.paintBuildingsDetail(detail, view);
+    for (const view of rows) {
+      const btn = list.querySelector('[data-factory-id="' + view.id + '"]');
+      if (!btn) continue;
+      btn.className = 'hub-tile buildings-row'
+        + (view.id === sel ? ' hub-tile-featured buildings-row-sel' : '')
+        + (view.locked ? ' buildings-row-locked' : '')
+        + (view.canCollect ? ' buildings-row-ready' : '');
+      btn.setAttribute('data-factory-id', view.id);
+      btn.dataset.buildingId = view.id;
+      btn.dataset.factoryId = view.id;
+      if (view.id === sel) {
+        btn.setAttribute('data-hub-badge', view.canCollect
+          ? buildingsTxt('buildings.collect', 'Oogsten')
+          : buildingsTxt('buildings.level', 'Lv {n}', { n: view.level }));
+      } else {
+        btn.removeAttribute('data-hub-badge');
+      }
+      const lockBit = view.locked
+        ? buildingsEscape(view.lockHint || buildingsTxt('buildings.locked', 'Op slot'))
+        : buildingsTxt('buildings.level', 'Lv {n}', { n: view.level });
+      const desc = buildingsDesc(view.id, view) || view;
+      const does = desc.doesLine || view.sub || '';
+      const stock = view.locked
+        ? ''
+        : (view.pending + '/' + view.capacity + ' ' + buildingsEscape(view.resourceLabel));
+      btn.innerHTML =
+        '<span class="hub-tile-ico">' + buildingsArtHtml(view) + '</span>'
+        + '<span class="hub-tile-title">' + buildingsEscape(view.name) + '</span>'
+        + '<span class="hub-tile-sub">' + buildingsEscape(does) + '</span>'
+        + '<span class="hub-tile-stat">' + lockBit + (stock ? ' · ' + stock : '') + '</span>';
+      if (!this._buildingsRowBound[view.id]) {
+        this._buildingsRowBound[view.id] = true;
+        const id = view.id;
+        const open = () => {
+          if (typeof AudioSys !== 'undefined') { try { AudioSys.sfx('select'); } catch (_) {} }
+          UI.buildingsShowDetail(id);
+        };
+        if (typeof bindPress === 'function') bindPress(btn, open);
+        else btn.addEventListener('click', open);
+      }
+    }
+  };
+
+  UI.buildingsEffectHtml = function buildingsEffectHtml(view) {
+    const desc = buildingsDesc(view && view.id, view) || view || {};
+    const bits = [];
+    bits.push('<div class="buildings-effect" data-buildings-effect="' + buildingsEscape(view.id) + '">');
+    bits.push('<div class="buildings-effect-kicker">' + buildingsEscape(buildingsTxt('buildings.whatItDoes', 'Wat doet dit?')) + '</div>');
+    if (desc.blurb) bits.push('<p class="buildings-effect-blurb">' + buildingsEscape(desc.blurb) + '</p>');
+    if (desc.produceLine) bits.push('<p class="buildings-effect-now">' + buildingsEscape(desc.produceLine) + '</p>');
+    if (desc.powerLine) bits.push('<p class="buildings-effect-now">' + buildingsEscape(desc.powerLine) + '</p>');
+    else if (desc.doesLine) bits.push('<p class="buildings-effect-now">' + buildingsEscape(desc.doesLine) + '</p>');
+    else if (desc.currentPowerLabel) {
+      bits.push('<p class="buildings-effect-now">' + buildingsEscape(buildingsTxt(
+        'buildings.powerNow', '{label} — {blurb}',
+        { label: desc.currentPowerLabel, blurb: desc.currentPowerBlurb || '' }
+      )) + '</p>');
+    } else if (!(desc.built || view.built || view.level >= 1)) {
+      bits.push('<p class="buildings-effect-now">' + buildingsEscape(buildingsTxt('buildings.powerNone', 'Bouw dit werk om de power te ontgrendelen')) + '</p>');
+    }
+    if (desc.nextLine) bits.push('<p class="buildings-effect-next">' + buildingsEscape(desc.nextLine) + '</p>');
+    else if (desc.nextPower) {
+      bits.push('<p class="buildings-effect-next">' + buildingsEscape(buildingsTxt(
+        'buildings.powerNext', 'Volgende @ rank {n}: {label}',
+        { n: desc.nextPower.rank, label: desc.nextPower.label || desc.nextPower.id }
+      )) + '</p>');
+    }
+    bits.push('</div>');
+    return bits.join('');
   };
 
   UI.paintBuildingsDetail = function paintBuildingsDetail(host, view) {
     if (!host) return;
     if (!view) {
       host.innerHTML = '';
+      delete host.dataset.factoryId;
       return;
     }
+    host.dataset.factoryId = view.id;
+    host.setAttribute('data-factory-id', view.id);
     const locked = !!view.locked;
+    const unbuilt = !locked && !(view.built || view.level >= 1);
+    const step = this.buildingsStep === 'upgrade' ? 'upgrade' : 'harvest';
     const pct = view.capacity ? Math.min(100, Math.round((view.pending / view.capacity) * 100)) : 0;
     const eta = (!locked && view.pending < view.capacity && view.nextMs > 0)
-      ? ((typeof t === 'function') ? t('buildings.nextIn', { t: buildingsFormatEta(view.nextMs) }) : '')
+      ? buildingsTxt('buildings.nextIn', 'Volgende over {t}', { t: (typeof buildingsFormatEta === 'function') ? buildingsFormatEta(view.nextMs) : '' })
       : '';
-    const collectLbl = (typeof t === 'function') ? t('buildings.collect') : 'Oogsten';
+    const collectLbl = buildingsTxt('buildings.collect', 'Oogsten');
     const collectSub = locked
-      ? buildingsEscape(view.lockHint)
-      : (view.canCollect
-        ? ((typeof t === 'function') ? t('buildings.collectSub', { n: view.pending, res: view.resourceLabel }) : String(view.pending))
-        : ((typeof t === 'function') ? t('buildings.collectEmpty') : ''));
-    const upLbl = (typeof t === 'function') ? t('buildings.upgrade') : 'Upgrade';
-    const upSub = view.upgradeHint || '';
+      ? (view.lockHint || '')
+      : (unbuilt
+        ? buildingsTxt('buildings.unbuilt', 'Nog niet gebouwd')
+        : (view.canCollect
+          ? buildingsTxt('buildings.collectSub', '{n} {res} klaar', { n: view.pending, res: view.resourceLabel })
+          : buildingsTxt('buildings.collectEmpty', 'Nog niks klaar')));
+    const flash = (this.buildingsFlash && this.buildingsFlash.id === view.id && this.buildingsFlash.until > Date.now())
+      ? ('<div class="buildings-collect-flash" role="status">+' + buildingsEscape(this.buildingsFlash.amount)
+        + ' ' + buildingsEscape(this.buildingsFlash.resLabel || view.resourceLabel) + '</div>')
+      : '';
+    const costHint = buildingsCostText(view);
+    const upOpenLbl = unbuilt
+      ? buildingsTxt('buildings.buildOpen', 'Bouwen…')
+      : buildingsTxt('buildings.upgradeOpen', 'Upgrade…');
+    const upAsk = unbuilt
+      ? buildingsTxt('buildings.buildAsk', 'Bouw {name}?', { name: view.name })
+      : buildingsTxt('buildings.upgradeAsk', 'Upgrade naar Lv {next}?', { next: (view.level || 0) + 1 });
+    const overviewLbl = buildingsTxt('buildings.overview', 'Overzicht');
+    let cta = '';
+    if (step === 'upgrade') {
+      cta =
+        '<div class="buildings-upgrade-step">'
+        + '<p class="buildings-upgrade-ask">' + buildingsEscape(upAsk) + '</p>'
+        + (costHint ? '<p class="buildings-upgrade-cost">' + buildingsEscape(costHint) + '</p>' : '')
+        + '<button type="button" class="btn mode-btn b-continue big-touch buildings-cta buildings-cta-upgrade" id="btnBuildingUpgradeConfirm"'
+        + (view.canUpgrade ? '' : ' disabled') + '>'
+        + '<span class="ico"><img src="assets/buttons/modes/upgrades.svg" alt="" width="28" height="28" decoding="async" draggable="false"></span>'
+        + '<div>' + buildingsEscape(buildingsTxt('buildings.upgradeConfirm', 'Bevestig'))
+        + '<small>' + buildingsEscape(costHint || view.upgradeHint || '') + '</small></div></button>'
+        + '<button type="button" class="btn mode-btn b-gray big-touch buildings-cta" id="btnBuildingUpgradeBack">'
+        + '<div>' + buildingsEscape(buildingsTxt('buildings.upgradeBack', 'Terug naar oogst')) + '</div></button>'
+        + '</div>';
+    } else {
+      cta =
+        '<div class="buildings-cta-stack">'
+        + '<button type="button" class="btn mode-btn b-continue big-touch buildings-cta buildings-cta-collect" id="btnBuildingCollect"'
+        + (view.canCollect ? '' : ' disabled') + '>'
+        + '<span class="ico"><img src="assets/buttons/chrome/claim.svg" alt="" width="28" height="28" decoding="async" draggable="false"></span>'
+        + '<div>' + buildingsEscape(collectLbl) + '<small>' + buildingsEscape(collectSub) + '</small></div></button>'
+        + '<button type="button" class="btn mode-btn b-gray big-touch buildings-cta buildings-cta-upgrade" id="btnBuildingUpgrade"'
+        + ((locked || (!view.canUpgrade && !unbuilt && view.level >= view.maxLevel)) ? ' disabled' : '') + '>'
+        + '<span class="ico"><img src="assets/buttons/modes/upgrades.svg" alt="" width="28" height="28" decoding="async" draggable="false"></span>'
+        + '<div>' + buildingsEscape(upOpenLbl) + '<small>' + buildingsEscape(costHint || view.upgradeHint || '') + '</small></div></button>'
+        + '</div>';
+    }
     host.innerHTML =
-      '<div class="buildings-detail-art">' + buildingsArtHtml(view) + '</div>'
+      '<button type="button" class="buildings-overview-btn" id="btnBuildingsOverview">'
+      + buildingsEscape('← ' + overviewLbl) + '</button>'
+      + '<div class="buildings-detail-art">' + buildingsArtHtml(view, 'buildings-art-img buildings-art-lg') + '</div>'
       + '<div class="buildings-detail-meta">'
       + '<div class="buildings-detail-name">' + buildingsEscape(view.name)
-      + ' <span class="buildings-lv">' + ((typeof t === 'function') ? t('buildings.level', { n: view.level }) : ('Lv ' + view.level)) + '</span></div>'
+      + ' <span class="buildings-lv">' + buildingsEscape(unbuilt
+        ? buildingsTxt('buildings.unbuilt', 'Nog niet gebouwd')
+        : buildingsTxt('buildings.level', 'Lv {n}', { n: view.level })) + '</span></div>'
       + '<div class="buildings-detail-sub">' + buildingsEscape(view.sub) + '</div>'
+      + this.buildingsEffectHtml(view)
       + (locked
         ? '<div class="buildings-lock">' + buildingsEscape(view.lockHint) + '</div>'
         : '<div class="buildings-stock">'
           + '<div class="buildings-stock-bar" role="progressbar" aria-valuenow="' + view.pending + '" aria-valuemax="' + view.capacity + '">'
           + '<span style="width:' + pct + '%"></span></div>'
           + '<div class="buildings-stock-lbl">'
-          + ((typeof t === 'function') ? t('buildings.stored', { n: view.pending, cap: view.capacity }) : (view.pending + '/' + view.capacity))
+          + buildingsEscape(buildingsTxt('buildings.stored', '{n}/{cap} opgeslagen', { n: view.pending, cap: view.capacity }))
           + (eta ? ' · ' + buildingsEscape(eta) : '')
           + '</div></div>')
+      + flash
       + '</div>'
-      + '<div class="buildings-cta-row">'
-      + '<button type="button" class="btn mode-btn b-continue big-touch buildings-cta" id="btnBuildingCollect"'
-      + (view.canCollect ? '' : ' disabled') + '>'
-      + '<span class="ico"><img src="assets/buttons/chrome/claim.svg" alt="" width="28" height="28" decoding="async" draggable="false"></span>'
-      + '<div>' + buildingsEscape(collectLbl) + '<small>' + buildingsEscape(collectSub) + '</small></div></button>'
-      + '<button type="button" class="btn mode-btn b-gray big-touch buildings-cta" id="btnBuildingUpgrade"'
-      + (view.canUpgrade ? '' : ' disabled') + '>'
-      + '<span class="ico"><img src="assets/buttons/modes/upgrades.svg" alt="" width="28" height="28" decoding="async" draggable="false"></span>'
-      + '<div>' + buildingsEscape(upLbl) + '<small>' + buildingsEscape(upSub) + '</small></div></button>'
-      + '</div>';
+      + cta;
+    const overviewBtn = document.getElementById('btnBuildingsOverview');
     const collectBtn = document.getElementById('btnBuildingCollect');
     const upBtn = document.getElementById('btnBuildingUpgrade');
-    if (collectBtn && typeof bindPress === 'function') {
-      bindPress(collectBtn, () => UI.doBuildingCollect(view.id));
+    const upConfirm = document.getElementById('btnBuildingUpgradeConfirm');
+    const upBack = document.getElementById('btnBuildingUpgradeBack');
+    const bind = (el, fn) => {
+      if (!el) return;
+      if (typeof bindPress === 'function') bindPress(el, fn);
+      else el.addEventListener('click', fn);
+    };
+    bind(overviewBtn, () => UI.buildingsShowList());
+    bind(collectBtn, () => UI.doBuildingCollect(view.id));
+    bind(upBtn, () => UI.buildingsShowUpgradeStep());
+    bind(upConfirm, () => UI.doBuildingUpgrade(view.id));
+    bind(upBack, () => { UI.buildingsGoBack(); });
+    this.paintBuildingsUpgradeSheet(view, step === 'upgrade');
+  };
+
+  UI.paintBuildingsUpgradeSheet = function paintBuildingsUpgradeSheet(view, open) {
+    const sheet = document.getElementById('buildingsUpgradeSheet');
+    if (!sheet) return;
+    if (!open || !view) {
+      sheet.hidden = true;
+      sheet.innerHTML = '';
+      return;
     }
-    if (upBtn && typeof bindPress === 'function') {
-      bindPress(upBtn, () => UI.doBuildingUpgrade(view.id));
+    const costHint = buildingsCostText(view);
+    const unbuilt = !(view.built || view.level >= 1);
+    const ask = unbuilt
+      ? buildingsTxt('buildings.buildAsk', 'Bouw {name}?', { name: view.name })
+      : buildingsTxt('buildings.upgradeAsk', 'Upgrade naar Lv {next}?', { next: (view.level || 0) + 1 });
+    const desc = buildingsDesc(view.id, view) || {};
+    sheet.hidden = false;
+    sheet.setAttribute('aria-hidden', 'false');
+    sheet.innerHTML =
+      '<button type="button" class="buildings-sheet-backdrop" data-buildings-sheet-close></button>'
+      + '<div class="buildings-sheet-panel" role="dialog" aria-modal="true">'
+      + '<h3>' + buildingsEscape(buildingsTxt('buildings.upgradeTitle', 'Upgrade {name}', { name: view.name })) + '</h3>'
+      + (desc.nextLine ? '<p class="buildings-upgrade-ask">' + buildingsEscape(desc.nextLine) + '</p>' : '')
+      + '<p class="buildings-upgrade-ask">' + buildingsEscape(ask) + '</p>'
+      + (costHint ? '<p class="buildings-upgrade-cost">' + buildingsEscape(costHint) + '</p>' : '')
+      + '<button type="button" class="btn mode-btn b-continue big-touch buildings-cta" id="btnBuildingUpgradeDo"'
+      + (view.canUpgrade ? '' : ' disabled') + '>'
+      + buildingsEscape(buildingsTxt('buildings.upgradeConfirm', 'Bevestig')) + '</button>'
+      + '<button type="button" class="btn mode-btn b-gray big-touch buildings-cta" data-buildings-sheet-close>'
+      + buildingsEscape(buildingsTxt('buildings.sheetClose', 'Sluiten')) + '</button>'
+      + '</div>';
+    const close = () => UI.buildingsGoBack();
+    sheet.querySelectorAll('[data-buildings-sheet-close]').forEach((el) => {
+      if (typeof bindPress === 'function') bindPress(el, close);
+      else el.addEventListener('click', close);
+    });
+    const doBtn = document.getElementById('btnBuildingUpgradeDo');
+    if (doBtn) {
+      if (typeof bindPress === 'function') bindPress(doBtn, () => UI.doBuildingUpgrade(view.id));
+      else doBtn.addEventListener('click', () => UI.doBuildingUpgrade(view.id));
+    }
+  };
+
+  UI.refreshBuildingsDetail = function refreshBuildingsDetail(host, view) {
+    if (!host || !view) return;
+    const bar = host.querySelector('.buildings-stock-bar span');
+    const lbl = host.querySelector('.buildings-stock-lbl');
+    const collectBtn = document.getElementById('btnBuildingCollect');
+    const pct = view.capacity ? Math.min(100, Math.round((view.pending / view.capacity) * 100)) : 0;
+    if (bar) bar.style.width = pct + '%';
+    if (lbl) {
+      const eta = (!view.locked && view.pending < view.capacity && view.nextMs > 0)
+        ? buildingsTxt('buildings.nextIn', 'Volgende over {t}', { t: (typeof buildingsFormatEta === 'function') ? buildingsFormatEta(view.nextMs) : '' })
+        : '';
+      lbl.textContent = buildingsTxt('buildings.stored', '{n}/{cap} opgeslagen', { n: view.pending, cap: view.capacity })
+        + (eta ? ' · ' + eta : '');
+    }
+    if (collectBtn) {
+      collectBtn.disabled = !view.canCollect;
+      const small = collectBtn.querySelector('small');
+      if (small) {
+        small.textContent = view.locked
+          ? (view.lockHint || '')
+          : (view.canCollect
+            ? buildingsTxt('buildings.collectSub', '{n} {res} klaar', { n: view.pending, res: view.resourceLabel })
+            : buildingsTxt('buildings.collectEmpty', 'Nog niks klaar'));
+      }
+    }
+    const effect = host.querySelector('[data-buildings-effect]');
+    if (effect) {
+      const wrap = document.createElement('div');
+      wrap.innerHTML = this.buildingsEffectHtml(view);
+      if (wrap.firstChild) effect.replaceWith(wrap.firstChild);
     }
   };
 
@@ -48425,10 +51805,25 @@ if (typeof UI === 'object' && UI) {
     if (typeof AudioSys !== 'undefined') { try { AudioSys.init(); AudioSys.sfx('claim'); } catch (_) { try { AudioSys.sfx('select'); } catch (__) {} } }
     const res = (typeof buildingsCollect === 'function') ? buildingsCollect(id) : { ok: false };
     if (res && res.ok) {
-      try { this.toast(res.message || ((typeof t === 'function') ? t('buildings.collectDone', { n: res.amount || 0, res: '' }) : 'ok'), 2400, { tone: 'ok' }); } catch (_) {}
+      const label = (typeof buildingsResourceLabel === 'function')
+        ? buildingsResourceLabel(res.resourceId)
+        : (res.resourceId || '');
+      this.buildingsFlash = {
+        id,
+        resId: res.resourceId,
+        resLabel: label,
+        amount: res.amount || 0,
+        until: Date.now() + 1800,
+      };
+      try {
+        this.toast(res.message || buildingsTxt('buildings.collectDone', '+{n} {res}', { n: res.amount || 0, res: label }), 2400, { tone: 'ok' });
+      } catch (_) {}
     } else {
-      try { this.toast((res && res.message) || ((typeof t === 'function') ? t('buildings.collectEmpty') : ''), 2200, { tone: 'warn' }); } catch (_) {}
+      try {
+        this.toast((res && res.message) || buildingsTxt('buildings.collectEmpty', 'Nog niks klaar'), 2200, { tone: 'warn' });
+      } catch (_) {}
     }
+    this._buildingsDetailKey = '';
     this.renderBuildings();
     try { this.renderMenu(); } catch (_) {}
   };
@@ -48439,9 +51834,11 @@ if (typeof UI === 'object' && UI) {
     if (res && res.ok) {
       try { if (typeof AudioSys !== 'undefined') AudioSys.sfx('levelup'); } catch (_) {}
       try { this.toast(res.message || '', 2600, { tone: 'ok' }); } catch (_) {}
+      this.buildingsStep = 'harvest';
     } else {
       try { this.toast((res && res.message) || '', 2200, { tone: 'warn' }); } catch (_) {}
     }
+    this._buildingsDetailKey = '';
     this.renderBuildings();
     try { this.renderMenu(); } catch (_) {}
   };
@@ -48587,6 +51984,8 @@ document.querySelectorAll('[data-hub]').forEach((el) => {
       UI.openSummonHub();
     } else if (hub === 'buildings') {
       if (typeof UI.openBuildings === 'function') UI.openBuildings();
+    } else if (hub === 'gear') {
+      openGearScreen('home');
     } else {
       UI.openModeHub(hub);
     }
@@ -48635,8 +52034,13 @@ function openCollectionScreen(screenId, renderFn) {
   AudioSys.sfx('select');
   UI.safeOpen(screenId, renderFn, { msg: t('ui.errLoadScreen') });
 }
+function openGearScreen(from) {
+  UI.gearOpenedFrom = from === 'home' ? 'home' : 'collect';
+  openCollectionScreen('gearScreen', () => UI.renderGear());
+}
 
 bindPress(document.getElementById('btnWeapons'), () => {
+  UI.weaponOpenedFrom = null;
   openCollectionScreen('weaponScreen', () => UI.renderWeapons());
 });
 bindPress(document.getElementById('btnSkills'), () => {
@@ -48686,6 +52090,7 @@ bindPress(document.getElementById('btnSummonGotoPets'), () => {
   openCollectionScreen('petScreen', () => UI.renderPets());
 });
 bindPress(document.getElementById('btnBuildings'), () => {
+  AudioSys.init(); AudioSys.sfx('select');
   if (typeof UI !== 'undefined' && UI.openBuildings) UI.openBuildings();
 });
 bindPress(document.getElementById('btnDex'), () => {
@@ -48696,7 +52101,12 @@ bindPress(btnStyle, () => {
   openCollectionScreen('styleScreen', () => UI.renderStyle());
 });
 bindPress(document.getElementById('btnGear'), () => {
-  openCollectionScreen('gearScreen', () => UI.renderGear());
+  openGearScreen('collect');
+});
+const gearWeaponAside = document.getElementById('gearWeaponAside');
+if (gearWeaponAside) bindPress(gearWeaponAside, () => {
+  UI.weaponOpenedFrom = 'gear';
+  openCollectionScreen('weaponScreen', () => UI.renderWeapons());
 });
 const btnSettings = document.getElementById('btnSettings');
 bindPress(btnSettings, () => {
@@ -49006,6 +52416,38 @@ if (btnClearSave) btnClearSave.addEventListener('click', () => {
   }, 'clearSave', 'Reset mislukt — probeer opnieuw');
 });
 bindSettingsControls();
+function bindPlayerDiagUnlock() {
+  const head = document.getElementById('settingsHead');
+  if (!head || head.dataset.diagBound === '1') return;
+  head.dataset.diagBound = '1';
+  let taps = 0;
+  let last = 0;
+  let holdTimer = 0;
+  const unlock = () => {
+    document.body.classList.add('sf-player-diag');
+    const block = document.getElementById('settingsDiagBlock');
+    if (block) block.hidden = false;
+    try {
+      if (typeof UI !== 'undefined' && UI.toast) {
+        UI.toast((typeof t === 'function') ? t('settings.diagOn') : 'Diagnostics on', 1600, { tone: 'ok' });
+      }
+    } catch (_) {}
+  };
+  head.addEventListener('click', () => {
+    const now = Date.now();
+    taps = (now - last < 1400) ? taps + 1 : 1;
+    last = now;
+    if (taps >= 5) { taps = 0; unlock(); }
+  });
+  head.addEventListener('pointerdown', () => {
+    holdTimer = setTimeout(unlock, 900);
+  });
+  const clearHold = () => { if (holdTimer) { clearTimeout(holdTimer); holdTimer = 0; } };
+  head.addEventListener('pointerup', clearHold);
+  head.addEventListener('pointerleave', clearHold);
+  head.addEventListener('pointercancel', clearHold);
+}
+bindPlayerDiagUnlock();
 const btnHelp = document.getElementById('btnHelp');
 bindPress(btnHelp, () => {
   AudioSys.init(); AudioSys.sfx('select');
@@ -49794,6 +53236,7 @@ function updateNetStatus(ev) {
 window.addEventListener('online', updateNetStatus);
 window.addEventListener('offline', updateNetStatus);
 window.addEventListener('pageshow', (ev) => {
+  try { tickBuildingsNow(Date.now()); } catch (_) {}
   if (ev.persisted) {
     try { cancelGambleStart(); } catch (_) {}
     try { Input.releaseAll(); } catch (_) {}
@@ -49816,9 +53259,27 @@ function wireNetStatusTap() {
   if (!el || el.dataset.sfNetTap) return;
   el.dataset.sfNetTap = '1';
   const run = () => {
-    if (!window.__sfSwUpdateReady) return;
-    if (!netUpdateOnHub()) return;
-    safeAsync(runVersionUpdateWithSavePrompt(), 'swUpdateTap', t('versionUpdate.fail'));
+    if (document.body && document.body.classList.contains('is-playing')) return;
+    try {
+      if (typeof state !== 'undefined' && (state === 'play' || state === 'pause')) return;
+    } catch (_) {}
+    const bannerOn = !!(el.classList && el.classList.contains('sw-update'));
+    if (!window.__sfSwUpdateReady && !bannerOn) return;
+    const goFresh = () => {
+      if (typeof window.forceFreshVersion === 'function') return window.forceFreshVersion();
+      try {
+        const u = new URL(location.href);
+        u.searchParams.set('fresh', String(Date.now()));
+        location.replace(u.toString());
+      } catch (_) { location.reload(); }
+    };
+    if (typeof runVersionUpdateWithSavePrompt === 'function' && window.__sfBooted) {
+      safeAsync(Promise.resolve(runVersionUpdateWithSavePrompt()).then((ok) => {
+        if (ok === false) return goFresh();
+      }).catch(goFresh), 'swUpdateTap', (typeof t === 'function') ? t('versionUpdate.fail') : 'Update failed');
+      return;
+    }
+    goFresh();
   };
   el.addEventListener('click', (e) => {
     if (e.target && e.target.id === 'netStatusDismiss') return;
@@ -50297,3 +53758,4 @@ function bindUiLayerWatch() {
   setInterval(tick, 1200);
 }
 bindUiLayerWatch();
+try { wireNetStatusTap(); } catch (_) {}
