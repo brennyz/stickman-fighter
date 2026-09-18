@@ -29425,8 +29425,20 @@ function hudInsetTop() {
   return Math.max(readSafeInsets().top, 6) + 10;
 }
 
-/** Keep canvas HUD (stars / combo / loot) clear of the HTML #pauseBtn. */
+/** Keep canvas HUD (stars / combo / loot) clear of the HTML #pauseBtn.
+ *  Mega-merge: #321 owns hudSafeLayout / hudPhoneCompact / hudPauseGutter / --hud-pause-gutter.
+ *  Prefer those when present; this is the #318 fallback (same 48–56px + pad). */
 function hudRightReserve() {
+  try {
+    if (typeof hudSafeLayout === 'function') {
+      const lay = hudSafeLayout(typeof W === 'number' ? W : 390, typeof H === 'number' ? H : 844);
+      if (lay && Number(lay.pauseGutter) > 0) return Number(lay.pauseGutter);
+    }
+    if (typeof hudPauseGutter === 'function') {
+      const g = Number(hudPauseGutter(typeof W === 'number' ? W : 390, typeof H === 'number' ? H : 844));
+      if (g > 0) return g;
+    }
+  } catch (_) {}
   const insets = readSafeInsets();
   let pauseW = 48;
   try {

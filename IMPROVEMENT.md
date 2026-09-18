@@ -145,6 +145,7 @@ Schrijf **1–3 regels** per sessie: datum, d#, wat, versie.
 
 | Datum (UTC) | d# | Update |
 |-------------|-----|--------|
+| 2026-09-18 | — | **#318 STOP P3-only:** win **Volgend level** already in `#resCtaDock` (same lose/#323 pattern). PR documents mega-merge hooks with **#321** (hudSafeLayout / --hud-pause-gutter) + **#323** (flappy-retry). Geen Versus, geen main. **v1.18.177 / SW 387**. |
 | 2026-09-18 | — | **#318 P0 text overlap:** first-30s FOMO-only (hub hint hidden, welcome waits); island/filter/wallet chips clamp; HUD wrap + `#pauseBtn` gutter. Geen string-rewrites, geen Versus, geen main. **v1.18.177 / SW 387**. |
 | 2026-09-18 | — | **#318 stop P3-only:** win-path sticky **Volgend level** in `#resCtaDock` (is-win, same #323 hooks). PR documents shared IDs. Geen Versus, geen main. **v1.18.176 / SW 386**. |
 | 2026-09-18 | — | **UI layout polish** (WORKER): HOME/Collectie/fabrieken/gear/summons/pets — geen overlapping teksten/knoppen, safe-area, z-index, sheets, sticky wallets, overflow ~390 + desktop. Geen Versus. Draft. **v1.18.173 / SW 383**. speel.html. |
