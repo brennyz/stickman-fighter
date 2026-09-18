@@ -51,6 +51,7 @@ const EQUIP_LOOK_DEFAULTS = {
   duck: { slot: 'head', layer: 'head', ox: 1, oy: 1, scale: 1 },
   topknot: { slot: 'head', layer: 'head', ox: 0, oy: -1, scale: 1 },
   helmet: { slot: 'head', layer: 'head', ox: 0, oy: 0, scale: 1 },
+  hat: { slot: 'head', layer: 'head', ox: 0, oy: -1, scale: 1 },
   glow: { slot: 'head', layer: 'head', ox: 0, oy: 0, scale: 1 },
   lightning: { slot: 'head', layer: 'head', ox: 0, oy: 0, scale: 1 },
   charm: { slot: 'head', layer: 'head', ox: 0, oy: 2, scale: 1 },
@@ -79,7 +80,8 @@ const GEAR_ID_KIND_RULES = [
   [/halo|circlet/, 'halo'],
   [/aura_glow|hood_void/, 'glow'],
   [/mask_/, 'visor'],
-  [/helm|beanie|hat_|crown|hood|pumpkin/, 'helmet'],
+  [/beanie|hat_|crown/, 'hat'],
+  [/helm|hood|pumpkin/, 'helmet'],
   [/gaunt|bracer|mittens|cuffs|fists|claws|gloves|hands_wrap|wraps_monk|wraps_gold|wraps_dream/, 'gloves'],
   [/rings_/, 'charm'],
   [/greaves|boots_|sneakers/, 'greaves'],
@@ -422,7 +424,10 @@ function looksForGear(gear) {
     if (typeof val !== 'object' || Array.isArray(val)) return;
     const fromDraw = isPlainGear(val.draw) || isPlainGear(val.look);
     if (fromDraw || val.kind) {
-      const merged = mergeItemDraw(Object.assign({ id: val.id, kind: val.kind, slot: val.slot || slot }, val.look || {}), val.draw);
+      const merged = mergeItemDraw(Object.assign({
+        id: val.id, kind: val.kind, slot: val.slot || slot,
+        color: val.color, accent: val.accent, plate: val.plate, fill: val.fill,
+      }, val.look || {}), val.draw);
       if (!merged.kind && val.id) {
         const found = lookForItemId(val.id, slot, val);
         const one = found[0];
