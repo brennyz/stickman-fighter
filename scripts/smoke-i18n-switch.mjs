@@ -93,6 +93,10 @@ async function run() {
       const tTrainLose = typeof t === 'function' ? t('result.trainLose') : '';
       const tKeep = typeof t === 'function' ? t('result.advLoseKeep') : '';
       const tSeasonBeat = typeof t === 'function' ? t('season.beat.result.jungle') : '';
+      const tErrRetry = typeof t === 'function' ? t('toast.errRetry') : '';
+      const tOpenMode = typeof t === 'function' ? t('ui.errOpenMode') : '';
+      const tDaily = typeof t === 'function' ? t('daily.kills12.text') : '';
+      const tFightHiccup = typeof t === 'function' ? t('toast.fightHiccup') : '';
       let collectTitle = '';
       let collectGear = '';
       try {
@@ -115,6 +119,7 @@ async function run() {
         tGearLock, tPetSum, tPerk, tEgg, tKills, tKick, tImport, tStats, tQuota, tPersist,
         tPower, tProduce, tGearToast, tNameShort, collectTitle, collectGear, playState, playMode,
         tStyleLeaf, tStyleEnergy, tStyleVoid, tAdvLose, tTrainLose, tKeep, tSeasonBeat,
+        tErrRetry, tOpenMode, tDaily, tFightHiccup,
       };
     }
     const en = snap('en');
@@ -137,6 +142,8 @@ async function run() {
       && /Collection/i.test(en.collectTitle) && /Spark/.test(en.tPower) && /Still locked/.test(en.tGearToast)
       && /bandana/i.test(en.tStyleLeaf) && en.tAdvLose === 'YOU LOSE'
       && /ROBOT WINS/.test(en.tTrainLose)
+      && /Action failed/.test(en.tErrRetry) && /pick from the menu/.test(en.tOpenMode)
+      && /Defeat 12|12 monsters/i.test(en.tDaily) && /fight continues/.test(en.tFightHiccup)
       && en.playState === 'play' && /train/.test(en.playMode);
     const deOk = /Abenteuer/i.test(de.adv) && /Sammlung/i.test(de.collect)
       && /Waffen/i.test(de.weapons) && /Einstellungen/i.test(de.settings)
@@ -159,6 +166,8 @@ async function run() {
       && de.tAdvLose === 'VERLOREN' && /ROBOT GEWINNT/.test(de.tTrainLose)
       && /Lauf|Beute/.test(de.tKeep) && !/\brun\b/.test(de.tKeep)
       && /Dschungel/.test(de.tSeasonBeat)
+      && /fehlgeschlagen/.test(de.tErrRetry) && !/mislukt|Kon modus/.test(de.tErrRetry + de.tOpenMode)
+      && /Besiege 12/.test(de.tDaily) && /kämpf weiter/.test(de.tFightHiccup)
       && de.playState === 'play' && /train/.test(de.playMode);
     const nlOk = /Avontuur/.test(nl.adv) && /Collectie/.test(nl.collect)
       && /Wapens/.test(nl.weapons) && /Instellingen/.test(nl.settings)
@@ -169,6 +178,8 @@ async function run() {
       && /Blad/.test(nl.tStyleLeaf) && !/Leaf/.test(nl.tStyleLeaf)
       && nl.tAdvLose === 'VERLOREN' && /ROBOT WINT/.test(nl.tTrainLose)
       && /buit|ronde/.test(nl.tKeep) && !/\bloot\b|\brun\b/.test(nl.tKeep)
+      && /mislukt/.test(nl.tErrRetry) && /Kon modus/.test(nl.tOpenMode)
+      && /Versla 12/.test(nl.tDaily)
       && nl.playState === 'play' && /train/.test(nl.playMode);
     const frOk = /Pas encore trouvé/.test(fr.tGearLock) && !EN_LOCK.test(fr.tGearLock)
       && /Aide saut/.test(fr.tPerk) && /Galet/.test(fr.tEgg) && !DUTCH_COPY.test(fr.tPerk + fr.tEgg + fr.tGearLock + fr.tPetSum)
@@ -183,6 +194,8 @@ async function run() {
       && fr.tAdvLose === 'DÉFAITE' && /LE ROBOT GAGNE/.test(fr.tTrainLose)
       && /partie/.test(fr.tKeep) && !/\brun\b/.test(fr.tKeep)
       && /jungle/i.test(fr.tSeasonBeat)
+      && /ratée/.test(fr.tErrRetry) && !/mislukt|Kon modus/.test(fr.tErrRetry + fr.tOpenMode)
+      && /Vaincs 12/.test(fr.tDaily) && /Accroc/.test(fr.tFightHiccup)
       && fr.playState === 'play' && /train/.test(fr.playMode);
     const esOk = /Aún no hallado/.test(es.tGearLock) && !EN_LOCK.test(es.tGearLock)
       && /Ayuda salto/.test(es.tPerk) && /Guijarro/.test(es.tEgg) && !DUTCH_COPY.test(es.tPerk + es.tEgg + es.tGearLock + es.tPetSum)
@@ -197,6 +210,8 @@ async function run() {
       && es.tAdvLose === 'DERROTA' && /EL ROBOT GANA/.test(es.tTrainLose)
       && /partida/.test(es.tKeep) && !/\brun\b/.test(es.tKeep)
       && /jungla/i.test(es.tSeasonBeat)
+      && /fallida/.test(es.tErrRetry) && !/mislukt|Kon modus/.test(es.tErrRetry + es.tOpenMode)
+      && /Derrota 12/.test(es.tDaily) && /Fallo/.test(es.tFightHiccup)
       && es.playState === 'play' && /train/.test(es.playMode);
     return { ok: !!(enOk && deOk && nlOk && frOk && esOk), en, de, nl, fr, es, enOk, deOk, nlOk, frOk, esOk };
   });

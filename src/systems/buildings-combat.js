@@ -319,7 +319,7 @@
         }
       }
     } catch (err) {
-      try { if (typeof sfReportError === 'function') sfReportError('building/combat', err, 'Fabriek-proc hiccup'); } catch (e6) { /* ignore */ }
+      try { if (typeof sfReportError === 'function') sfReportError('building/combat', err, errT('toast.fightHiccup', 'Hiccup — fight continues')); } catch (e6) { /* ignore */ }
     }
   }
 

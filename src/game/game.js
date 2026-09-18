@@ -358,7 +358,7 @@ class Game {
       try { AudioSys.sting('masterSword'); AudioSys.sfx('masterSword'); } catch (_) {}
       haptic(26);
     } catch (err) {
-      try { sfReportError('masterSword/on', err, 'Master Sword hiccup — speel door'); } catch (_) {}
+      try { sfReportError('masterSword/on', err, errT('toast.fightHiccup', 'Hiccup — fight continues')); } catch (_) {}
     }
   }
 
@@ -712,7 +712,7 @@ class Game {
       const grabR = (pk.kind === 'gear' && typeof IS_TOUCH !== 'undefined' && IS_TOUCH) ? 58 : 44;
       if ((p.x - pk.x) ** 2 + dy ** 2 < grabR * grabR) {
         try { this.collectPickup(pk); } catch (pickErr) {
-          try { sfReportError('pickup', pickErr, 'Pickup hiccup — gevecht gaat door'); } catch (_) {}
+          try { sfReportError('pickup', pickErr, errT('toast.fightHiccup', 'Hiccup — fight continues')); } catch (_) {}
           pk.life = 0;
         }
       }
@@ -1029,7 +1029,7 @@ class Game {
     try {
       this._onMonsterKilledInner(m);
     } catch (err) {
-      try { sfReportError('onMonsterKilled', err, 'Kill-reward hiccup — gevecht gaat door'); } catch (_) {}
+      try { sfReportError('onMonsterKilled', err, errT('toast.fightHiccup', 'Hiccup — fight continues')); } catch (_) {}
     }
   }
 
@@ -1257,7 +1257,7 @@ class Game {
       console.error('[Satan] finish', err);
       clearSatanState(this);
       this.betweenT = 1.2;
-      sfReportError('satan/finish', err, 'Satan-gevecht afronden mislukt — avontuur veilig');
+      sfReportError('satan/finish', err, errT('ui.errProgressSafe', 'Progress is safe — keep playing'));
     }
   }
 
@@ -1356,7 +1356,7 @@ class Game {
       this.tideFromSatan = false;
       clearTideBattleState(this, { restoreMusic: true });
       if (this.waveIdx < 0) this.betweenT = 1.2;
-      sfReportError('tideBattle/finish', err, 'Tide Battle beloning mislukt — voortgang veilig');
+      sfReportError('tideBattle/finish', err, errT('ui.errProgressSafe', 'Progress is safe — keep playing'));
     }
   }
 
@@ -2324,7 +2324,7 @@ class Game {
         const newSuper = SUPERS.find(s => s.needLvl === save.lvl && superUnlocked(s));
         if (newSuper) { try { UI.toast(t('toast.superUnlock', { name: superLabel(newSuper) }), 3500, { tone: 'ok' }); } catch (_) {} }
       } catch (lvlErr) {
-        try { sfReportError('grantXP/level', lvlErr, 'Level-up hiccup — gevecht gaat door'); } catch (_) {}
+        try { sfReportError('grantXP/level', lvlErr, errT('toast.fightHiccup', 'Hiccup — fight continues')); } catch (_) {}
         break;
       }
     }
@@ -2933,44 +2933,44 @@ class Game {
 
     if (!this.player) return;
     try { this.player.update(dt, this); } catch (plErr) {
-      try { sfReportError('player/update', plErr, 'Speler hiccup — speel door'); } catch (_) {}
+      try { sfReportError('player/update', plErr, errT('toast.fightHiccup', 'Hiccup — fight continues')); } catch (_) {}
     }
     if (this.pet) {
       try { this.pet.update(dt); } catch (petErr) {
-        try { sfReportError('pet/update', petErr, 'Pet hiccup — speel door'); } catch (_) {}
+        try { sfReportError('pet/update', petErr, errT('toast.fightHiccup', 'Hiccup — fight continues')); } catch (_) {}
       }
     }
     if (this.eggPet) {
       try { this.eggPet.update(dt); } catch (eggErr) {
-        try { sfReportError('eggPet/update', eggErr, 'Ei-pet hiccup — speel door'); } catch (_) {}
+        try { sfReportError('eggPet/update', eggErr, errT('toast.fightHiccup', 'Hiccup — fight continues')); } catch (_) {}
       }
     }
 
     if (this.mode === 'adventure') {
       try { this.updateAdventure(dt); } catch (advErr) {
-        try { sfReportError('adventure/update', advErr, 'Avontuur hiccup — speel door'); } catch (_) {}
+        try { sfReportError('adventure/update', advErr, errT('toast.fightHiccup', 'Hiccup — fight continues')); } catch (_) {}
       }
     } else if (this.mode === 'training') {
       try { this.updateTraining(dt); } catch (trErr) {
-        try { sfReportError('training/update', trErr, 'Training hiccup — speel door'); } catch (_) {}
+        try { sfReportError('training/update', trErr, errT('toast.fightHiccup', 'Hiccup — fight continues')); } catch (_) {}
       }
     } else if (this.mode === 'versus') {
       try { this.updateVersus(dt); } catch (vsErr) {
-        try { sfReportError('versus/update', vsErr, 'Versus hiccup — speel door'); } catch (_) {}
+        try { sfReportError('versus/update', vsErr, errT('toast.fightHiccup', 'Hiccup — fight continues')); } catch (_) {}
       }
     } else if (this.mode === 'wall') {
       try { this.updateWall(dt); } catch (wErr) {
-        try { sfReportError('wall/update', wErr, 'Muur hiccup — speel door'); } catch (_) {}
+        try { sfReportError('wall/update', wErr, errT('toast.fightHiccup', 'Hiccup — fight continues')); } catch (_) {}
       }
     } else if (this.mode === 'coinrun') {
       try { this.updateCoinRun(dt); } catch (crErr) {
-        try { sfReportError('coinrun/update', crErr, 'Mats hiccup — speel door'); } catch (_) {}
+        try { sfReportError('coinrun/update', crErr, errT('toast.fightHiccup', 'Hiccup — fight continues')); } catch (_) {}
       }
     }
 
     for (const m of this.monsters) {
       try { m.update(dt, this); } catch (monErr) {
-        try { sfReportError('monster/update', monErr, 'Vijand hiccup — speel door'); } catch (_) {}
+        try { sfReportError('monster/update', monErr, errT('toast.fightHiccup', 'Hiccup — fight continues')); } catch (_) {}
       }
     }
     try { if (typeof tickWeaponStatusEffects === 'function') tickWeaponStatusEffects(this, dt); } catch (_) {}
@@ -3215,7 +3215,7 @@ class Game {
       }
     }
     } catch (projErr) {
-      try { sfReportError('projectile/update', projErr, 'Projectiel hiccup — speel door'); } catch (_) {}
+      try { sfReportError('projectile/update', projErr, errT('toast.fightHiccup', 'Hiccup — fight continues')); } catch (_) {}
     }
     for (const p of this.projectiles) {
       if (p.life <= 0 && p.kind === 'boemerang') {

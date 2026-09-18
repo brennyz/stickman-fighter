@@ -441,17 +441,17 @@ function gearGateCopy(item, s, now) {
     return fallback;
   };
   if (!item) return '';
-  if (!gearItemOwned(item.id, s)) return tr('gear.lockOwned', 'Nog niet gevonden');
+  if (!gearItemOwned(item.id, s)) return tr('gear.lockOwned', 'Not found yet');
   const gate = gearGateState(item, s, now);
   if (!gate || gate.ok) return '';
   const why = (gate.reasons && gate.reasons[0]) || 'locked';
   if (why === 'level') return tr('gear.lockLevel', 'Lv {n}', { n: gate.needLvl });
-  if (why === 'time') return tr('gear.lockDays', '{n} dagen', { n: gate.needDays });
+  if (why === 'time') return tr('gear.lockDays', '{n} days', { n: gate.needDays });
   if (why === 'adventure') {
     const n = item.needAdvUnlocked != null ? item.needAdvUnlocked : gate.needLvl;
-    return tr('gear.lockAdv', 'Avontuur Lv {n}', { n });
+    return tr('gear.lockAdv', 'Adventure Lv {n}', { n });
   }
-  if (why === 'diff') return tr('gear.lockDiff', 'Nog niet vrij');
+  if (why === 'diff') return tr('gear.lockDiff', 'Not free yet');
   return tr('gear.pillLock', 'LOCK');
 }
 
@@ -684,7 +684,7 @@ function gearEquipState(id, s, now, expectSlot) {
         state: GEAR_EQUIP_STATES.WRONG_SLOT,
         item,
         owned: gearItemOwned(item.id, parsed.s),
-        label: (typeof tOr === 'function') ? tOr('gear.lockSlot', 'Verkeerd slot') : 'Verkeerd slot',
+        label: (typeof tOr === 'function') ? tOr('gear.lockSlot', 'Wrong slot') : 'Wrong slot',
       });
     }
   }

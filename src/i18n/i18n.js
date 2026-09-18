@@ -1674,6 +1674,17 @@ function tOr(key, fallback, params) {
   return fallback || '';
 }
 
+/** Locale toast/error copy — last resort is EN, never Dutch. */
+function errT(key, enFallback) {
+  try {
+    if (typeof t === 'function') {
+      const s = t(key);
+      if (s && s !== key) return s;
+    }
+  } catch (_) {}
+  return enFallback || '';
+}
+
 function rarityLabel(id) {
   return t('rarity.' + id) || rarityOf(id).name;
 }

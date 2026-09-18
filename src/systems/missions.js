@@ -20,14 +20,14 @@ const DAILY_PLAY_HINTS = {
   boss1: 'Avontuur: baas aan einde van een level',
 };
 const DAILY_PLAY_TARGETS = {
-  kills12: { mode: 'adventure', label: 'Avontuur' },
-  advwin: { mode: 'adventure', label: 'Avontuur' },
-  wall35: { mode: 'wall', label: 'Muur' },
-  trainwin: { mode: 'training', label: 'Training' },
-  combo5: { mode: 'adventure', label: 'Avontuur' },
-  finisher3: { mode: 'adventure', label: 'Avontuur' },
-  pick3: { mode: 'adventure', label: 'Avontuur' },
-  boss1: { mode: 'adventure', label: 'Avontuur' },
+  kills12: { mode: 'adventure' },
+  advwin: { mode: 'adventure' },
+  wall35: { mode: 'wall' },
+  trainwin: { mode: 'training' },
+  combo5: { mode: 'adventure' },
+  finisher3: { mode: 'adventure' },
+  pick3: { mode: 'adventure' },
+  boss1: { mode: 'adventure' },
 };
 function goDailyPlayTarget(taskId) {
   try {
@@ -43,7 +43,7 @@ function goDailyPlayTarget(taskId) {
       startGame('wall');
     }
   } catch (err) {
-    sfReportError('dailyPlay', err, 'Kon modus niet openen — kies handmatig in menu');
+    sfReportError('dailyPlay', err, errT('ui.errOpenMode', 'Could not open mode — pick from the menu'));
   }
 }
 const ACHIEVEMENTS = [
@@ -553,7 +553,7 @@ function goAchievementPlayTarget(ach) {
       startGame('wall');
     }
   } catch (err) {
-    sfReportError('achPlay/' + (ach && ach.id), err, 'Kon modus niet openen — kies handmatig in menu');
+    sfReportError('achPlay/' + (ach && ach.id), err, errT('ui.errOpenMode', 'Could not open mode — pick from the menu'));
   }
 }
 
@@ -1140,7 +1140,7 @@ function bindSaveImportFile() {
       if (!text.trim()) throw new Error('Bestand is leeg');
       applySaveImportText(text, file.name || 'bestand');
       AudioSys.sfx('select');
-    })(), 'importSaveFile', 'Importbestand lezen mislukt');
+    })(), 'importSaveFile', errT('ui.errImportFile', 'Could not read import file'));
     try { input.value = ''; } catch (_) {}
   });
 }
@@ -1560,7 +1560,7 @@ function sfReportError(where, err, userMsg) {
   if (!window.__sfErrToastT || now - window.__sfErrToastT > 4500) {
     window.__sfErrToastT = now;
     // Default mag NOOIT "terug naar menu" beloven — fight blijft vaak staan
-    userToast(userMsg || 'Hiccup — spel gaat door');
+    userToast(userMsg || errT('toast.hiccupContinue', 'Hiccup — game continues'));
   }
 }
 
@@ -2029,7 +2029,7 @@ function scheduleGameResult(gameRef, delayMs, showFn) {
       if (state === 'menu') return;
       gameRef._pendingResult = false;
       showFn();
-    }, 'scheduleGameResult', 'Resultaat laden mislukt — tik Menu of Opnieuw');
+    }, 'scheduleGameResult', errT('ui.errResultLoad', 'Could not load result — tap Menu or Again'));
   }, Math.max(0, delayMs || 0));
 }
 
@@ -2103,7 +2103,7 @@ function recoverToMenu(opts) {
     ensureVisibleScreen();
   } catch (err) {
     console.error('[Stickman] recoverToMenu', err);
-    sfReportError('recoverToMenu', err, 'Herstel mislukt — herlaad de pagina als menu vastzit');
+    sfReportError('recoverToMenu', err, errT('ui.errRecoverMenu', 'Recover failed — reload if the menu is stuck'));
     state = 'menu';
     game = null;
     syncPlayLayer();
@@ -2170,7 +2170,7 @@ function resumeLastPlay() {
     }
     return true;
   } catch (err) {
-    sfReportError('resumeLastPlay', err, 'Verder spelen mislukt — kies een modus');
+    sfReportError('resumeLastPlay', err, errT('ui.errResume', 'Resume failed — pick a mode'));
     return false;
   }
 }
@@ -2186,7 +2186,7 @@ function startAdventureFromGamble(skipGamble) {
     startGame('adventure', { level, gamble, difficulty: diff });
   } catch (err) {
     cancelGambleStart();
-    sfReportError('gambleStart', err, 'Avontuur starten mislukt — kies level opnieuw');
+    sfReportError('gambleStart', err, errT('ui.errLevelStart', 'Could not start level'));
   }
 }
 
@@ -2544,7 +2544,7 @@ function copyPlayLink() {
     } catch (_) {
       UI.toast(url, 4500);
     }
-  })(), 'copyLink', 'Link kopiëren mislukt — zie Instellingen → Deel link');
+  })(), 'copyLink', errT('ui.errCopyLink', 'Could not copy link — see Settings'));
 }
 
 function sharePlayLink() {
@@ -2568,7 +2568,7 @@ function sharePlayLink() {
     } catch (_) {
       UI.toast(url, 4500);
     }
-  })(), 'shareLink', 'Delen mislukt — kopieer link via Instellingen');
+  })(), 'shareLink', errT('ui.errShare', 'Share failed — copy the link in Settings'));
 }
 
 function isTunnelHostUrl(u) {
@@ -2757,25 +2757,11 @@ function modeFirstMinuteLine(mode) {
   const key = touch ? base : base + 'Kb';
   const localized = typeof t === 'function' ? t(key) : '';
   if (localized && localized !== key) return localized;
-  // Fallback if Kb key missing: try base touch key only on touch
   if (!touch) {
-    const lines = {
-      adventure: 'Eerste minuut: A/D lopen · W springen · J/K/L · U technique · Shift subst',
-      training: 'Eerste minuut: spring lasers · Shift = substitutie · energy vol → U',
-      wall: '60s · combo-milestones · A/D · J/K/L · record-tempo in HUD',
-      versus: 'Eerste minuut: P1 WASD+JKL · P2 pijltjes+1-5 · best-of-3',
-      coinrun: 'Munten pakken · W/↑ hoger mikken · J/K shuriken · max 3 snel',
-    };
-    return lines[mode] || lines.adventure;
+    const baseLine = typeof t === 'function' ? t(base) : '';
+    if (baseLine && baseLine !== base) return baseLine;
   }
-  const lines = {
-    adventure: 'Eerste minuut: links lopen · rechts slaan · joy ↑ mik op vliegers · vol energy = SUPER',
-    training: 'Eerste minuut: spring rode laser · blokkeer dichtbij · energy vol → SUPER',
-    wall: '60s · combo ×3/×5/×8 hints · record-tempo + projectie in HUD',
-    versus: 'Eerste minuut: P1 links · P2 rechts',
-    coinrun: '45s munten · joy ↑ mik · roze vlieger = +3 · max 3 shuriken snel',
-  };
-  return lines[mode] || lines.adventure;
+  return '';
 }
 
 /** Eén keer Ketsbam-uitleg — geen toast (avontuur ontsnapping). */
@@ -2785,9 +2771,7 @@ function ketsbamOnboardHintLine() {
   const key = IS_TOUCH ? 'ui.ketsbamOnboardTouch' : 'ui.ketsbamOnboardKb';
   const line = typeof t === 'function' ? t(key) : '';
   if (line && line !== key) return line;
-  return IS_TOUCH
-    ? 'Omringd? Tik het midden-symbool — Ketsbam-ontsnapping · 9s cooldown'
-    : 'Omringd? E of midden-symbool = Ketsbam · 9s cooldown';
+  return '';
 }
 
 function markKetsbamOnboardSeen() {
@@ -2804,11 +2788,9 @@ function tideBattleOnboardPending() {
 
 function tideBattleOnboardHintLine(bossName) {
   const key = IS_TOUCH ? 'ui.tideBattleOnboardTouch' : 'ui.tideBattleOnboardKb';
-  const line = typeof t === 'function' ? t(key, { name: bossName || 'baas' }) : '';
+  const line = typeof t === 'function' ? t(key, { name: bossName || '' }) : '';
   if (line && line !== key) return line;
-  return IS_TOUCH
-    ? `Eerste Tide Battle: versla ${bossName || 'de baas'} — geen andere golven tot klaar`
-    : `First Tide Battle: defeat ${bossName || 'the boss'} — waves pause until done`;
+  return '';
 }
 
 function markTideBattleOnboardSeen() {
@@ -2853,10 +2835,7 @@ function gambleOnboardHintLine() {
   persist();
   const key = IS_TOUCH ? 'ui.gambleOnboardTouch' : 'ui.gambleOnboardKb';
   const line = typeof t === 'function' ? t(key) : '';
-  return (line && line !== key) ? line
-    : (IS_TOUCH
-      ? 'Eerste keer gok: lage som = super-baas · hoge som = bondgenoot · Overslaan = normaal level'
-      : 'Eerste keer: sum ≤5 super-baas · sum ≥9 ally buff · Skip = geen gok');
+  return (line && line !== key) ? line : '';
 }
 
 /** Welcome only on HOME hub — never chase Adventure/Settings/title. */

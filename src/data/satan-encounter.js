@@ -362,8 +362,8 @@ function reportSatanRecover(reason, err) {
   if (window.__sfSatanRecoverT && now - window.__sfSatanRecoverT < 6000) return;
   window.__sfSatanRecoverT = now;
   const msg = reason === 'spawn'
-    ? 'Satan-gevecht start mislukt — avontuur gaat verder'
-    : 'Satan-gevecht hersteld';
+    ? errT('ui.errSatanStart', 'Satan start failed — adventure continues')
+    : errT('ui.errProgressSafe', 'Progress is safe — keep playing');
   if (typeof sfReportError === 'function') sfReportError('satan/' + (reason || 'recover'), err, msg);
   else if (typeof userToast === 'function') userToast(msg, 3400);
 }

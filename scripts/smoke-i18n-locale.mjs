@@ -355,4 +355,20 @@ if (!/name: 'Blatt-Bandana'/.test(catalog)) fail('DE leaf_band must be Blatt-Ban
 if (!/name: 'Bandana feuille'/.test(catalog)) fail('FR leaf_band must be Bandana feuille');
 if (!/name: 'Pañuelo hoja'/.test(catalog)) fail('ES leaf_band must be Pañuelo hoja');
 
-console.log('SMOKE_OK i18n-locale: Tips/VERLOREN + #273 coverage + #283 overlays + 2026-09-18 style/result');
+if (/label: 'Avontuur'/.test(missions)) fail('DAILY_PLAY_TARGETS still hardcodes Dutch Avontuur labels');
+if (/function dailyText[\s\S]{0,220}return def \? def\.text/.test(catalog)) fail('dailyText still falls back to Dutch DAILY_DEFS.text');
+if (/function dailyHint[\s\S]{0,180}DAILY_PLAY_HINTS\[id\]/.test(catalog)) fail('dailyHint still falls back to Dutch DAILY_PLAY_HINTS');
+if (!/function errT\(/.test(i18n)) fail('errT helper missing — Dutch last-resort leaks');
+if (!/errRetry:/.test(catalog + locales)) fail('toast.errRetry missing');
+if (!/fightHiccup:/.test(catalog + locales)) fail('toast.fightHiccup missing');
+if (!/errOpenMode:/.test(catalog + locales)) fail('ui.errOpenMode missing');
+if (/lab\('menu\.adventure', 'Avontuur'\)/.test(fs.readFileSync(path.join(root, 'src/render/scenery.js'), 'utf8'))) {
+  fail('scenery hub markers still hardcode Dutch Avontuur');
+}
+if (/userMsg \|\| 'Actie mislukt/.test(fs.readFileSync(path.join(root, 'src/core/storage.js'), 'utf8'))) {
+  fail('safeUiAction still defaults to Dutch Actie mislukt');
+}
+if (/Hiccup — spel gaat door'\)/.test(missions)) fail('sfReportError default still Dutch');
+if (/'Speler hiccup/.test(game)) fail('player update hiccup still Dutch');
+
+console.log('SMOKE_OK i18n-locale: Tips/VERLOREN + #273 coverage + #283 overlays + 2026-09-18 errT/missions');

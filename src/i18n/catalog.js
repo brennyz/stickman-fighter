@@ -353,6 +353,9 @@ function seedNlGameStrings() {
     persistFail: 'Opslaan mislukt — export save in Instellingen',
     persistFailCtx: 'Opslaan mislukt ({context}) — export save in Instellingen',
     resultHiccup: 'Resultaat hiccup — probeer Opnieuw / Menu',
+    errRetry: 'Actie mislukt — probeer opnieuw',
+    hiccupContinue: 'Hiccup — spel gaat door',
+    fightHiccup: 'Hiccup — speel door',
     persistCtxSkill: 'skill', persistCtxSuper: 'super', persistCtxWeapon: 'wapen',
     persistCtxStyle: 'stijl', persistCtxMission: 'missie', persistCtxClaim: 'claim',
     persistCtxDaily: 'dagbonus', persistCtxXp: 'XP', persistCtxGear: 'uitrusting',
@@ -1011,6 +1014,29 @@ function seedNlGameStrings() {
     errLoadSettings: 'Instellingen laden mislukt',
     errLoadScreen: 'Scherm laden mislukt — herlaad via Verse versie',
     errLoadHelp: 'Tips laden mislukt',
+    errOpenMode: 'Kon modus niet openen — kies in het menu',
+    errClaimRetry: 'Claim mislukt — probeer opnieuw',
+    errCharPick: 'Vechter kiezen mislukt — tik opnieuw',
+    errScreenMissing: 'Scherm niet gevonden — terug naar menu',
+    errScreenSwitch: 'Schermwissel mislukt — terug naar menu',
+    errGoBack: 'Navigatie mislukt — terug naar menu',
+    errGoMenu: 'Kon menu niet openen — herlaad de pagina',
+    errMenuRefresh: 'Menu kon niet ververst worden',
+    errResume: 'Verder spelen mislukt — kies een modus',
+    errRecoverMenu: 'Herstel mislukt — herlaad als het menu vastzit',
+    errResultLoad: 'Resultaat laden mislukt — tik Menu of Opnieuw',
+    errCopyLink: 'Link kopiëren mislukt — zie Instellingen',
+    errShare: 'Delen mislukt — kopieer de link in Instellingen',
+    errExport: 'Export mislukt — kopieer JSON uit het vak',
+    errImportFile: 'Importbestand lezen mislukt',
+    errFomo: 'Kon dagoverzicht niet sluiten',
+    errDayBonus: 'Dagbonus mislukt — probeer opnieuw',
+    errProgressSafe: 'Voortgang veilig — speel door',
+    errSatanStart: 'Satan-start mislukt — avontuur gaat verder',
+    errTideStart: 'Tide Battle start mislukt — ga verder',
+    errBackupStash: 'Save veiligstellen mislukt',
+    errSaveApply: 'Save laden mislukt',
+    errBackupSync: 'Backup bijwerken mislukt',
   });
   if (!I18N.nl.egg) I18N.nl.egg = {};
   Object.assign(I18N.nl.egg, {
@@ -1555,6 +1581,9 @@ const CATALOG_EN = {
     persistFail: 'Save failed — export in Settings',
     persistFailCtx: 'Save failed ({context}) — export in Settings',
     resultHiccup: 'Result hiccup — try Again / Menu',
+    errRetry: 'Action failed — try again',
+    hiccupContinue: 'Hiccup — game continues',
+    fightHiccup: 'Hiccup — fight continues',
     persistCtxSkill: 'skill', persistCtxSuper: 'super', persistCtxWeapon: 'weapon',
     persistCtxStyle: 'style', persistCtxMission: 'mission', persistCtxClaim: 'claim',
     persistCtxDaily: 'daily', persistCtxXp: 'XP', persistCtxGear: 'gear',
@@ -2210,6 +2239,29 @@ const CATALOG_EN = {
     errLoadSettings: 'Could not load settings',
     errLoadScreen: 'Could not load screen — tap Fresh version',
     errLoadHelp: 'Could not load tips',
+    errOpenMode: 'Could not open mode — pick from the menu',
+    errClaimRetry: 'Claim failed — try again',
+    errCharPick: 'Could not pick fighter — tap again',
+    errScreenMissing: 'Screen missing — back to menu',
+    errScreenSwitch: 'Screen switch failed — back to menu',
+    errGoBack: 'Navigation failed — back to menu',
+    errGoMenu: 'Could not open menu — reload the page',
+    errMenuRefresh: 'Could not refresh menu',
+    errResume: 'Resume failed — pick a mode',
+    errRecoverMenu: 'Recover failed — reload if the menu is stuck',
+    errResultLoad: 'Could not load result — tap Menu or Again',
+    errCopyLink: 'Could not copy link — see Settings',
+    errShare: 'Share failed — copy the link in Settings',
+    errExport: 'Export failed — copy JSON from the box',
+    errImportFile: 'Could not read import file',
+    errFomo: 'Could not close day overview',
+    errDayBonus: 'Daily bonus failed — try again',
+    errProgressSafe: 'Progress is safe — keep playing',
+    errSatanStart: 'Satan start failed — adventure continues',
+    errTideStart: 'Tide Battle start failed — keep going',
+    errBackupStash: 'Could not stash save',
+    errSaveApply: 'Could not load save',
+    errBackupSync: 'Backup sync failed',
   },
   fighter: {
     energyEmpty: 'Energy not full!', subst: 'Substitution!', dash: 'Dash!',
@@ -2879,15 +2931,14 @@ function dailyText(id) {
   const k = 'daily.' + id + '.text';
   const v = t(k);
   if (v && v !== k) return v;
-  const def = typeof dailyDef === 'function' ? dailyDef(id) : null;
-  return def ? def.text : id;
+  return '';
 }
 
 function dailyHint(id) {
   const k = 'daily.' + id + '.hint';
   const v = t(k);
   if (v && v !== k) return v;
-  return (typeof DAILY_PLAY_HINTS !== 'undefined' && DAILY_PLAY_HINTS[id]) || '';
+  return '';
 }
 
 function pickupLabel(kind, skillId, itemCat, itemId, gearId) {

@@ -323,9 +323,9 @@ const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const VERSION_UPDATE_SAVE_KEY = 'stickfighter_version_update_save_v1';
 const VERSION_UPDATE_FLAG_KEY = 'stickfighter_version_update_flag_v1';
 const SAVE_EXPORT_SCHEMA = 3;
-const APP_VERSION = '1.18.177';
+const APP_VERSION = '1.18.178';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 387;
+const SW_CACHE_REV = 388;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', petCoins: 0, dex: {}, summons: {}, pets: {}, activePet: null,
   eggPets: {}, activeEggPet: null, eggDaily: null,
   chestDaily: null, chestWeapons: {},
@@ -1539,7 +1539,7 @@ function persist() {
     } catch (_) {}
     if (!backupOk && !window.__sfBackupWriteWarn) {
       window.__sfBackupWriteWarn = true;
-      userToast(toastT('toast.backupWriteFail', null, 'Backup opslaan mislukt — export save in Instellingen (hoofd-save wel OK)'), 5200, { tone: 'warn' });
+      userToast(toastT('toast.backupWriteFail', null, 'Backup save failed — export in Settings (main save is OK)'), 5200, { tone: 'warn' });
     }
     writeSaveStamp(json);
     return true;
@@ -1552,8 +1552,8 @@ function persist() {
     if (!window.__sfPersistWarn) {
       window.__sfPersistWarn = true;
       userToast(backupSaved
-        ? toastT('toast.persistPrimaryFail', null, 'Hoofd-save mislukt — backup wel bijgewerkt (export in Instellingen)')
-        : toastT('toast.persistFail', null, 'Opslaan mislukt — export save in Instellingen'), 5200, { tone: 'danger' });
+        ? toastT('toast.persistPrimaryFail', null, 'Main save failed — backup updated (export in Settings)')
+        : toastT('toast.persistFail', null, 'Save failed — export in Settings'), 5200, { tone: 'danger' });
     }
     return false;
   }
@@ -1569,13 +1569,13 @@ function safeCall(fn, label, toastOnFail) {
 
 function safeAsync(promise, label, userMsg) {
   return Promise.resolve(promise).catch((err) => {
-    sfReportError(label || 'async', err, userMsg || 'Actie mislukt — probeer opnieuw');
+    sfReportError(label || 'async', err, userMsg || errT('toast.errRetry', 'Action failed — try again'));
   });
 }
 
 function safeUiAction(fn, label, userMsg) {
   try { return fn(); } catch (err) {
-    sfReportError(label || 'ui', err, userMsg || 'Actie mislukt — probeer opnieuw');
+    sfReportError(label || 'ui', err, userMsg || errT('toast.errRetry', 'Action failed — try again'));
   }
 }
 
@@ -1612,8 +1612,8 @@ function persistOrToast(context) {
   if (!window.__sfPersistCtxWarn[key]) {
     window.__sfPersistCtxWarn[key] = true;
     userToast(context
-      ? toastT('toast.persistFailCtx', { context: ctxLabel }, `Opslaan mislukt (${ctxLabel}) — export save in Instellingen`)
-      : toastT('toast.persistFail', null, 'Opslaan mislukt — export save in Instellingen'), 4200, { tone: 'warn' });
+      ? toastT('toast.persistFailCtx', { context: ctxLabel }, `Save failed (${ctxLabel}) — export in Settings`)
+      : toastT('toast.persistFail', null, 'Save failed — export in Settings'), 4200, { tone: 'warn' });
   }
   return false;
 }
@@ -1632,7 +1632,7 @@ function applySaveFromBackupRaw() {
 function restoreSaveFromBackup() {
   try {
     if (!applySaveFromBackupRaw()) {
-      userToast(toastT('toast.backupFailed', null, 'Backup herstellen mislukt — export save als je die hebt'), 4200, { tone: 'danger' });
+      userToast(toastT('toast.backupFailed', null, 'Backup restore failed — export save if you have one'), 4200, { tone: 'danger' });
       return false;
     }
     try { checkAchievements(); } catch (_) {}
@@ -1640,7 +1640,7 @@ function restoreSaveFromBackup() {
     try { if (UI.renderMissions) UI.renderMissions(); } catch (_) {}
     return true;
   } catch (err) {
-    sfReportError('restoreBackup', err, 'Backup herstellen mislukt');
+    sfReportError('restoreBackup', err, errT('toast.backupFailed', 'Backup restore failed'));
     return false;
   }
 }
@@ -1684,7 +1684,7 @@ function stashSaveForVersionUpdate() {
     localStorage.setItem(VERSION_UPDATE_FLAG_KEY, '1');
     return true;
   } catch (err) {
-    sfReportError('versionStash', err, 'Save veiligstellen mislukt');
+    sfReportError('versionStash', err, errT('ui.errBackupStash', 'Could not stash save'));
     return false;
   }
 }
@@ -1714,7 +1714,7 @@ function applyVersionUpdateSave() {
   try {
     save = sanitizeSave(stash.save);
     if (!persist()) {
-      userToast(toastT('toast.persistFail', null, 'Save geladen maar opslaan mislukt — export in Instellingen'), 4200, { tone: 'danger' });
+      userToast(toastT('toast.persistFail', null, 'Save loaded but write failed — export in Settings'), 4200, { tone: 'danger' });
       return false;
     }
     clearVersionUpdateSave();
@@ -1726,7 +1726,7 @@ function applyVersionUpdateSave() {
     }
     return true;
   } catch (err) {
-    sfReportError('versionApply', err, 'Save laden mislukt');
+    sfReportError('versionApply', err, errT('ui.errSaveApply', 'Could not load save'));
     return false;
   }
 }
@@ -1752,7 +1752,7 @@ function syncBackupFromPrimary() {
     writeSaveStamp(json);
     return true;
   } catch (err) {
-    sfReportError('syncBackup', err, 'Backup sync mislukt');
+    sfReportError('syncBackup', err, errT('ui.errBackupSync', 'Backup sync failed'));
     return false;
   }
 }
@@ -3997,6 +3997,17 @@ function tOr(key, fallback, params) {
   return fallback || '';
 }
 
+/** Locale toast/error copy — last resort is EN, never Dutch. */
+function errT(key, enFallback) {
+  try {
+    if (typeof t === 'function') {
+      const s = t(key);
+      if (s && s !== key) return s;
+    }
+  } catch (_) {}
+  return enFallback || '';
+}
+
 function rarityLabel(id) {
   return t('rarity.' + id) || rarityOf(id).name;
 }
@@ -4656,14 +4667,14 @@ const DAILY_PLAY_HINTS = {
   boss1: 'Avontuur: baas aan einde van een level',
 };
 const DAILY_PLAY_TARGETS = {
-  kills12: { mode: 'adventure', label: 'Avontuur' },
-  advwin: { mode: 'adventure', label: 'Avontuur' },
-  wall35: { mode: 'wall', label: 'Muur' },
-  trainwin: { mode: 'training', label: 'Training' },
-  combo5: { mode: 'adventure', label: 'Avontuur' },
-  finisher3: { mode: 'adventure', label: 'Avontuur' },
-  pick3: { mode: 'adventure', label: 'Avontuur' },
-  boss1: { mode: 'adventure', label: 'Avontuur' },
+  kills12: { mode: 'adventure' },
+  advwin: { mode: 'adventure' },
+  wall35: { mode: 'wall' },
+  trainwin: { mode: 'training' },
+  combo5: { mode: 'adventure' },
+  finisher3: { mode: 'adventure' },
+  pick3: { mode: 'adventure' },
+  boss1: { mode: 'adventure' },
 };
 function goDailyPlayTarget(taskId) {
   try {
@@ -4679,7 +4690,7 @@ function goDailyPlayTarget(taskId) {
       startGame('wall');
     }
   } catch (err) {
-    sfReportError('dailyPlay', err, 'Kon modus niet openen — kies handmatig in menu');
+    sfReportError('dailyPlay', err, errT('ui.errOpenMode', 'Could not open mode — pick from the menu'));
   }
 }
 const ACHIEVEMENTS = [
@@ -5189,7 +5200,7 @@ function goAchievementPlayTarget(ach) {
       startGame('wall');
     }
   } catch (err) {
-    sfReportError('achPlay/' + (ach && ach.id), err, 'Kon modus niet openen — kies handmatig in menu');
+    sfReportError('achPlay/' + (ach && ach.id), err, errT('ui.errOpenMode', 'Could not open mode — pick from the menu'));
   }
 }
 
@@ -5776,7 +5787,7 @@ function bindSaveImportFile() {
       if (!text.trim()) throw new Error('Bestand is leeg');
       applySaveImportText(text, file.name || 'bestand');
       AudioSys.sfx('select');
-    })(), 'importSaveFile', 'Importbestand lezen mislukt');
+    })(), 'importSaveFile', errT('ui.errImportFile', 'Could not read import file'));
     try { input.value = ''; } catch (_) {}
   });
 }
@@ -6196,7 +6207,7 @@ function sfReportError(where, err, userMsg) {
   if (!window.__sfErrToastT || now - window.__sfErrToastT > 4500) {
     window.__sfErrToastT = now;
     // Default mag NOOIT "terug naar menu" beloven — fight blijft vaak staan
-    userToast(userMsg || 'Hiccup — spel gaat door');
+    userToast(userMsg || errT('toast.hiccupContinue', 'Hiccup — game continues'));
   }
 }
 
@@ -6665,7 +6676,7 @@ function scheduleGameResult(gameRef, delayMs, showFn) {
       if (state === 'menu') return;
       gameRef._pendingResult = false;
       showFn();
-    }, 'scheduleGameResult', 'Resultaat laden mislukt — tik Menu of Opnieuw');
+    }, 'scheduleGameResult', errT('ui.errResultLoad', 'Could not load result — tap Menu or Again'));
   }, Math.max(0, delayMs || 0));
 }
 
@@ -6739,7 +6750,7 @@ function recoverToMenu(opts) {
     ensureVisibleScreen();
   } catch (err) {
     console.error('[Stickman] recoverToMenu', err);
-    sfReportError('recoverToMenu', err, 'Herstel mislukt — herlaad de pagina als menu vastzit');
+    sfReportError('recoverToMenu', err, errT('ui.errRecoverMenu', 'Recover failed — reload if the menu is stuck'));
     state = 'menu';
     game = null;
     syncPlayLayer();
@@ -6806,7 +6817,7 @@ function resumeLastPlay() {
     }
     return true;
   } catch (err) {
-    sfReportError('resumeLastPlay', err, 'Verder spelen mislukt — kies een modus');
+    sfReportError('resumeLastPlay', err, errT('ui.errResume', 'Resume failed — pick a mode'));
     return false;
   }
 }
@@ -6822,7 +6833,7 @@ function startAdventureFromGamble(skipGamble) {
     startGame('adventure', { level, gamble, difficulty: diff });
   } catch (err) {
     cancelGambleStart();
-    sfReportError('gambleStart', err, 'Avontuur starten mislukt — kies level opnieuw');
+    sfReportError('gambleStart', err, errT('ui.errLevelStart', 'Could not start level'));
   }
 }
 
@@ -7180,7 +7191,7 @@ function copyPlayLink() {
     } catch (_) {
       UI.toast(url, 4500);
     }
-  })(), 'copyLink', 'Link kopiëren mislukt — zie Instellingen → Deel link');
+  })(), 'copyLink', errT('ui.errCopyLink', 'Could not copy link — see Settings'));
 }
 
 function sharePlayLink() {
@@ -7204,7 +7215,7 @@ function sharePlayLink() {
     } catch (_) {
       UI.toast(url, 4500);
     }
-  })(), 'shareLink', 'Delen mislukt — kopieer link via Instellingen');
+  })(), 'shareLink', errT('ui.errShare', 'Share failed — copy the link in Settings'));
 }
 
 function isTunnelHostUrl(u) {
@@ -7393,25 +7404,11 @@ function modeFirstMinuteLine(mode) {
   const key = touch ? base : base + 'Kb';
   const localized = typeof t === 'function' ? t(key) : '';
   if (localized && localized !== key) return localized;
-  // Fallback if Kb key missing: try base touch key only on touch
   if (!touch) {
-    const lines = {
-      adventure: 'Eerste minuut: A/D lopen · W springen · J/K/L · U technique · Shift subst',
-      training: 'Eerste minuut: spring lasers · Shift = substitutie · energy vol → U',
-      wall: '60s · combo-milestones · A/D · J/K/L · record-tempo in HUD',
-      versus: 'Eerste minuut: P1 WASD+JKL · P2 pijltjes+1-5 · best-of-3',
-      coinrun: 'Munten pakken · W/↑ hoger mikken · J/K shuriken · max 3 snel',
-    };
-    return lines[mode] || lines.adventure;
+    const baseLine = typeof t === 'function' ? t(base) : '';
+    if (baseLine && baseLine !== base) return baseLine;
   }
-  const lines = {
-    adventure: 'Eerste minuut: links lopen · rechts slaan · joy ↑ mik op vliegers · vol energy = SUPER',
-    training: 'Eerste minuut: spring rode laser · blokkeer dichtbij · energy vol → SUPER',
-    wall: '60s · combo ×3/×5/×8 hints · record-tempo + projectie in HUD',
-    versus: 'Eerste minuut: P1 links · P2 rechts',
-    coinrun: '45s munten · joy ↑ mik · roze vlieger = +3 · max 3 shuriken snel',
-  };
-  return lines[mode] || lines.adventure;
+  return '';
 }
 
 /** Eén keer Ketsbam-uitleg — geen toast (avontuur ontsnapping). */
@@ -7421,9 +7418,7 @@ function ketsbamOnboardHintLine() {
   const key = IS_TOUCH ? 'ui.ketsbamOnboardTouch' : 'ui.ketsbamOnboardKb';
   const line = typeof t === 'function' ? t(key) : '';
   if (line && line !== key) return line;
-  return IS_TOUCH
-    ? 'Omringd? Tik het midden-symbool — Ketsbam-ontsnapping · 9s cooldown'
-    : 'Omringd? E of midden-symbool = Ketsbam · 9s cooldown';
+  return '';
 }
 
 function markKetsbamOnboardSeen() {
@@ -7440,11 +7435,9 @@ function tideBattleOnboardPending() {
 
 function tideBattleOnboardHintLine(bossName) {
   const key = IS_TOUCH ? 'ui.tideBattleOnboardTouch' : 'ui.tideBattleOnboardKb';
-  const line = typeof t === 'function' ? t(key, { name: bossName || 'baas' }) : '';
+  const line = typeof t === 'function' ? t(key, { name: bossName || '' }) : '';
   if (line && line !== key) return line;
-  return IS_TOUCH
-    ? `Eerste Tide Battle: versla ${bossName || 'de baas'} — geen andere golven tot klaar`
-    : `First Tide Battle: defeat ${bossName || 'the boss'} — waves pause until done`;
+  return '';
 }
 
 function markTideBattleOnboardSeen() {
@@ -7489,10 +7482,7 @@ function gambleOnboardHintLine() {
   persist();
   const key = IS_TOUCH ? 'ui.gambleOnboardTouch' : 'ui.gambleOnboardKb';
   const line = typeof t === 'function' ? t(key) : '';
-  return (line && line !== key) ? line
-    : (IS_TOUCH
-      ? 'Eerste keer gok: lage som = super-baas · hoge som = bondgenoot · Overslaan = normaal level'
-      : 'Eerste keer: sum ≤5 super-baas · sum ≥9 ally buff · Skip = geen gok');
+  return (line && line !== key) ? line : '';
 }
 
 /** Welcome only on HOME hub — never chase Adventure/Settings/title. */
@@ -8867,17 +8857,17 @@ function gearGateCopy(item, s, now) {
     return fallback;
   };
   if (!item) return '';
-  if (!gearItemOwned(item.id, s)) return tr('gear.lockOwned', 'Nog niet gevonden');
+  if (!gearItemOwned(item.id, s)) return tr('gear.lockOwned', 'Not found yet');
   const gate = gearGateState(item, s, now);
   if (!gate || gate.ok) return '';
   const why = (gate.reasons && gate.reasons[0]) || 'locked';
   if (why === 'level') return tr('gear.lockLevel', 'Lv {n}', { n: gate.needLvl });
-  if (why === 'time') return tr('gear.lockDays', '{n} dagen', { n: gate.needDays });
+  if (why === 'time') return tr('gear.lockDays', '{n} days', { n: gate.needDays });
   if (why === 'adventure') {
     const n = item.needAdvUnlocked != null ? item.needAdvUnlocked : gate.needLvl;
-    return tr('gear.lockAdv', 'Avontuur Lv {n}', { n });
+    return tr('gear.lockAdv', 'Adventure Lv {n}', { n });
   }
-  if (why === 'diff') return tr('gear.lockDiff', 'Nog niet vrij');
+  if (why === 'diff') return tr('gear.lockDiff', 'Not free yet');
   return tr('gear.pillLock', 'LOCK');
 }
 
@@ -9110,7 +9100,7 @@ function gearEquipState(id, s, now, expectSlot) {
         state: GEAR_EQUIP_STATES.WRONG_SLOT,
         item,
         owned: gearItemOwned(item.id, parsed.s),
-        label: (typeof tOr === 'function') ? tOr('gear.lockSlot', 'Verkeerd slot') : 'Verkeerd slot',
+        label: (typeof tOr === 'function') ? tOr('gear.lockSlot', 'Wrong slot') : 'Wrong slot',
       });
     }
   }
@@ -17464,8 +17454,8 @@ function reportTideBattleRecover(reason, err) {
   if (window.__sfTideRecoverT && now - window.__sfTideRecoverT < 6000) return;
   window.__sfTideRecoverT = now;
   const msg = reason === 'spawn'
-    ? 'Tide Battle start mislukt — ga verder met avontuur'
-    : 'Tide Battle hersteld — muziek/HUD gesynchroniseerd';
+    ? errT('ui.errTideStart', 'Tide Battle start failed — keep going')
+    : errT('ui.errProgressSafe', 'Progress is safe — keep playing');
   if (typeof sfReportError === 'function') sfReportError('tideBattle/' + (reason || 'recover'), err, msg);
   else if (typeof userToast === 'function') userToast(msg, 3400);
 }
@@ -17929,8 +17919,8 @@ function reportSatanRecover(reason, err) {
   if (window.__sfSatanRecoverT && now - window.__sfSatanRecoverT < 6000) return;
   window.__sfSatanRecoverT = now;
   const msg = reason === 'spawn'
-    ? 'Satan-gevecht start mislukt — avontuur gaat verder'
-    : 'Satan-gevecht hersteld';
+    ? errT('ui.errSatanStart', 'Satan start failed — adventure continues')
+    : errT('ui.errProgressSafe', 'Progress is safe — keep playing');
   if (typeof sfReportError === 'function') sfReportError('satan/' + (reason || 'recover'), err, msg);
   else if (typeof userToast === 'function') userToast(msg, 3400);
 }
@@ -19284,7 +19274,7 @@ function petProgressLine(speciesId) {
         }
       }
     } catch (err) {
-      try { if (typeof sfReportError === 'function') sfReportError('building/combat', err, 'Fabriek-proc hiccup'); } catch (e6) { /* ignore */ }
+      try { if (typeof sfReportError === 'function') sfReportError('building/combat', err, errT('toast.fightHiccup', 'Hiccup — fight continues')); } catch (e6) { /* ignore */ }
     }
   }
 
@@ -20599,8 +20589,8 @@ function chestResultToast(res) {
         : 'Geen summons meer vandaag';
     }
     return (typeof tOr === 'function')
-      ? tOr('ui.summonFail', 'Summon mislukt — probeer opnieuw')
-      : 'Summon mislukt — probeer opnieuw';
+      ? errT('ui.summonFail', 'Summon failed — try again')
+      : errT('ui.summonFail', 'Summon failed — try again');
   }
   if (res.type === 'weapon_unlock') {
     return `✦ ${res.name} ontgrendeld! · ${rarityLabel(res.rarity)}${res.skill ? ' · ' + res.skill : ''}`;
@@ -21203,6 +21193,9 @@ function seedNlGameStrings() {
     persistFail: 'Opslaan mislukt — export save in Instellingen',
     persistFailCtx: 'Opslaan mislukt ({context}) — export save in Instellingen',
     resultHiccup: 'Resultaat hiccup — probeer Opnieuw / Menu',
+    errRetry: 'Actie mislukt — probeer opnieuw',
+    hiccupContinue: 'Hiccup — spel gaat door',
+    fightHiccup: 'Hiccup — speel door',
     persistCtxSkill: 'skill', persistCtxSuper: 'super', persistCtxWeapon: 'wapen',
     persistCtxStyle: 'stijl', persistCtxMission: 'missie', persistCtxClaim: 'claim',
     persistCtxDaily: 'dagbonus', persistCtxXp: 'XP', persistCtxGear: 'uitrusting',
@@ -21861,6 +21854,29 @@ function seedNlGameStrings() {
     errLoadSettings: 'Instellingen laden mislukt',
     errLoadScreen: 'Scherm laden mislukt — herlaad via Verse versie',
     errLoadHelp: 'Tips laden mislukt',
+    errOpenMode: 'Kon modus niet openen — kies in het menu',
+    errClaimRetry: 'Claim mislukt — probeer opnieuw',
+    errCharPick: 'Vechter kiezen mislukt — tik opnieuw',
+    errScreenMissing: 'Scherm niet gevonden — terug naar menu',
+    errScreenSwitch: 'Schermwissel mislukt — terug naar menu',
+    errGoBack: 'Navigatie mislukt — terug naar menu',
+    errGoMenu: 'Kon menu niet openen — herlaad de pagina',
+    errMenuRefresh: 'Menu kon niet ververst worden',
+    errResume: 'Verder spelen mislukt — kies een modus',
+    errRecoverMenu: 'Herstel mislukt — herlaad als het menu vastzit',
+    errResultLoad: 'Resultaat laden mislukt — tik Menu of Opnieuw',
+    errCopyLink: 'Link kopiëren mislukt — zie Instellingen',
+    errShare: 'Delen mislukt — kopieer de link in Instellingen',
+    errExport: 'Export mislukt — kopieer JSON uit het vak',
+    errImportFile: 'Importbestand lezen mislukt',
+    errFomo: 'Kon dagoverzicht niet sluiten',
+    errDayBonus: 'Dagbonus mislukt — probeer opnieuw',
+    errProgressSafe: 'Voortgang veilig — speel door',
+    errSatanStart: 'Satan-start mislukt — avontuur gaat verder',
+    errTideStart: 'Tide Battle start mislukt — ga verder',
+    errBackupStash: 'Save veiligstellen mislukt',
+    errSaveApply: 'Save laden mislukt',
+    errBackupSync: 'Backup bijwerken mislukt',
   });
   if (!I18N.nl.egg) I18N.nl.egg = {};
   Object.assign(I18N.nl.egg, {
@@ -22405,6 +22421,9 @@ const CATALOG_EN = {
     persistFail: 'Save failed — export in Settings',
     persistFailCtx: 'Save failed ({context}) — export in Settings',
     resultHiccup: 'Result hiccup — try Again / Menu',
+    errRetry: 'Action failed — try again',
+    hiccupContinue: 'Hiccup — game continues',
+    fightHiccup: 'Hiccup — fight continues',
     persistCtxSkill: 'skill', persistCtxSuper: 'super', persistCtxWeapon: 'weapon',
     persistCtxStyle: 'style', persistCtxMission: 'mission', persistCtxClaim: 'claim',
     persistCtxDaily: 'daily', persistCtxXp: 'XP', persistCtxGear: 'gear',
@@ -23060,6 +23079,29 @@ const CATALOG_EN = {
     errLoadSettings: 'Could not load settings',
     errLoadScreen: 'Could not load screen — tap Fresh version',
     errLoadHelp: 'Could not load tips',
+    errOpenMode: 'Could not open mode — pick from the menu',
+    errClaimRetry: 'Claim failed — try again',
+    errCharPick: 'Could not pick fighter — tap again',
+    errScreenMissing: 'Screen missing — back to menu',
+    errScreenSwitch: 'Screen switch failed — back to menu',
+    errGoBack: 'Navigation failed — back to menu',
+    errGoMenu: 'Could not open menu — reload the page',
+    errMenuRefresh: 'Could not refresh menu',
+    errResume: 'Resume failed — pick a mode',
+    errRecoverMenu: 'Recover failed — reload if the menu is stuck',
+    errResultLoad: 'Could not load result — tap Menu or Again',
+    errCopyLink: 'Could not copy link — see Settings',
+    errShare: 'Share failed — copy the link in Settings',
+    errExport: 'Export failed — copy JSON from the box',
+    errImportFile: 'Could not read import file',
+    errFomo: 'Could not close day overview',
+    errDayBonus: 'Daily bonus failed — try again',
+    errProgressSafe: 'Progress is safe — keep playing',
+    errSatanStart: 'Satan start failed — adventure continues',
+    errTideStart: 'Tide Battle start failed — keep going',
+    errBackupStash: 'Could not stash save',
+    errSaveApply: 'Could not load save',
+    errBackupSync: 'Backup sync failed',
   },
   fighter: {
     energyEmpty: 'Energy not full!', subst: 'Substitution!', dash: 'Dash!',
@@ -23729,15 +23771,14 @@ function dailyText(id) {
   const k = 'daily.' + id + '.text';
   const v = t(k);
   if (v && v !== k) return v;
-  const def = typeof dailyDef === 'function' ? dailyDef(id) : null;
-  return def ? def.text : id;
+  return '';
 }
 
 function dailyHint(id) {
   const k = 'daily.' + id + '.hint';
   const v = t(k);
   if (v && v !== k) return v;
-  return (typeof DAILY_PLAY_HINTS !== 'undefined' && DAILY_PLAY_HINTS[id]) || '';
+  return '';
 }
 
 function pickupLabel(kind, skillId, itemCat, itemId, gearId) {
@@ -24047,6 +24088,9 @@ const CATALOG_DE_CHROME = {
     persistFail: 'Speichern fehlgeschlagen — Export in Einstellungen',
     persistFailCtx: 'Speichern fehlgeschlagen ({context}) — Export in Einstellungen',
     resultHiccup: 'Ergebnis-Hiccup — Nochmal / Menü',
+    errRetry: 'Aktion fehlgeschlagen — nochmal',
+    hiccupContinue: 'Hiccup — Spiel läuft weiter',
+    fightHiccup: 'Hiccup — kämpf weiter',
     persistCtxSkill: 'Skill', persistCtxSuper: 'Super', persistCtxWeapon: 'Waffe',
     persistCtxStyle: 'Stil', persistCtxMission: 'Mission', persistCtxClaim: 'Claim',
     persistCtxDaily: 'Tagesbonus', persistCtxXp: 'XP', persistCtxGear: 'Ausrüstung',
@@ -24775,6 +24819,29 @@ const CATALOG_DE_CHROME = {
     errLoadSettings: 'Einstellungen laden fehlgeschlagen',
     errLoadScreen: 'Bildschirm laden fehlgeschlagen — Neue Version tippen',
     errLoadHelp: 'Tipps laden fehlgeschlagen',
+    errOpenMode: 'Modus nicht zu öffnen — im Menü wählen',
+    errClaimRetry: 'Abholen fehlgeschlagen — nochmal',
+    errCharPick: 'Kämpfer wählen fehlgeschlagen — nochmal tippen',
+    errScreenMissing: 'Bildschirm fehlt — zurück zum Menü',
+    errScreenSwitch: 'Bildschirmwechsel fehlgeschlagen — Menü',
+    errGoBack: 'Navigation fehlgeschlagen — zurück zum Menü',
+    errGoMenu: 'Menü nicht zu öffnen — Seite neu laden',
+    errMenuRefresh: 'Menü nicht zu aktualisieren',
+    errResume: 'Weiter spielen fehlgeschlagen — Modus wählen',
+    errRecoverMenu: 'Wiederherstellung fehlgeschlagen — neu laden wenn Menü hängt',
+    errResultLoad: 'Ergebnis laden fehlgeschlagen — Menü oder Nochmal',
+    errCopyLink: 'Link kopieren fehlgeschlagen — Einstellungen',
+    errShare: 'Teilen fehlgeschlagen — Link in Einstellungen',
+    errExport: 'Export fehlgeschlagen — JSON aus dem Feld',
+    errImportFile: 'Importdatei nicht lesbar',
+    errFomo: 'Tagesübersicht nicht zu schließen',
+    errDayBonus: 'Tagesbonus fehlgeschlagen — nochmal',
+    errProgressSafe: 'Fortschritt sicher — spiel weiter',
+    errSatanStart: 'Satan-Start fehlgeschlagen — Abenteuer geht weiter',
+    errTideStart: 'Tide-Battle-Start fehlgeschlagen — weiter',
+    errBackupStash: 'Save sichern fehlgeschlagen',
+    errSaveApply: 'Save laden fehlgeschlagen',
+    errBackupSync: 'Backup-Abgleich fehlgeschlagen',
   },
   gear: {
     filterAll: 'Alles',
@@ -24989,6 +25056,9 @@ overlayI18nCatalog(CATALOG_FR, {
     persistFail: 'Sauvegarde ratée — exporte dans Options',
     persistFailCtx: 'Sauvegarde ratée ({context}) — exporte dans Options',
     resultHiccup: 'Accroc résultat — Réessayer / Menu',
+    errRetry: 'Action ratée — réessaie',
+    hiccupContinue: 'Accroc — le jeu continue',
+    fightHiccup: 'Accroc — continue',
     gearLocked: 'Encore verrouillé · {why}',
     gearEquipped: '{name} équipé',
     gearUnequipped: '{name} retiré',
@@ -25176,6 +25246,29 @@ overlayI18nCatalog(CATALOG_FR, {
     errLoadSettings: 'Options impossibles à charger',
     errLoadScreen: 'Écran impossible à charger — tape Nouvelle version',
     errLoadHelp: 'Astuces impossibles à charger',
+    errOpenMode: 'Mode impossible à ouvrir — choisis dans le menu',
+    errClaimRetry: 'Réclame ratée — réessaie',
+    errCharPick: 'Choix combattant raté — retape',
+    errScreenMissing: 'Écran introuvable — retour menu',
+    errScreenSwitch: 'Changement d’écran raté — retour menu',
+    errGoBack: 'Navigation ratée — retour menu',
+    errGoMenu: 'Menu impossible à ouvrir — recharge',
+    errMenuRefresh: 'Menu impossible à rafraîchir',
+    errResume: 'Reprise ratée — choisis un mode',
+    errRecoverMenu: 'Restauration ratée — recharge si le menu bloque',
+    errResultLoad: 'Résultat impossible — Menu ou Rejouer',
+    errCopyLink: 'Copie du lien ratée — vois Options',
+    errShare: 'Partage raté — copie le lien dans Options',
+    errExport: 'Export raté — copie le JSON',
+    errImportFile: 'Fichier d’import illisible',
+    errFomo: 'Aperçu du jour impossible à fermer',
+    errDayBonus: 'Bonus du jour raté — réessaie',
+    errProgressSafe: 'Progression saine — continue',
+    errSatanStart: 'Départ Satan raté — l’aventure continue',
+    errTideStart: 'Départ Tide Battle raté — continue',
+    errBackupStash: 'Sauvegarde impossible à mettre de côté',
+    errSaveApply: 'Sauvegarde impossible à charger',
+    errBackupSync: 'Copie impossible à synchroniser',
     charLocked: 'Verrouillé', charHead: 'CHOISIS UN COMBATTANT',
     charBig5Hint: 'Tes combattants · choix rapide',
     saveHealthGear: ' · équipement {n}',
@@ -25600,6 +25693,9 @@ overlayI18nCatalog(CATALOG_ES, {
     persistFail: 'No se pudo guardar — exporta en Opciones',
     persistFailCtx: 'No se pudo guardar ({context}) — exporta en Opciones',
     resultHiccup: 'Fallo de resultado — Otra vez / Menú',
+    errRetry: 'Acción fallida — inténtalo',
+    hiccupContinue: 'Fallo — el juego sigue',
+    fightHiccup: 'Fallo — sigue luchando',
     gearLocked: 'Aún bloqueado · {why}',
     gearEquipped: '{name} puesto',
     gearUnequipped: '{name} quitado',
@@ -25787,6 +25883,29 @@ overlayI18nCatalog(CATALOG_ES, {
     errLoadSettings: 'No se pudieron cargar las opciones',
     errLoadScreen: 'No se pudo cargar la pantalla — toca Versión nueva',
     errLoadHelp: 'No se pudieron cargar los consejos',
+    errOpenMode: 'No se pudo abrir el modo — elige en el menú',
+    errClaimRetry: 'Reclamo fallido — inténtalo',
+    errCharPick: 'No se pudo elegir luchador — toca otra vez',
+    errScreenMissing: 'Pantalla no encontrada — vuelve al menú',
+    errScreenSwitch: 'Cambio de pantalla fallido — menú',
+    errGoBack: 'Navegación fallida — vuelve al menú',
+    errGoMenu: 'No se pudo abrir el menú — recarga',
+    errMenuRefresh: 'No se pudo actualizar el menú',
+    errResume: 'Reanudar falló — elige un modo',
+    errRecoverMenu: 'Recuperación fallida — recarga si el menú se atasca',
+    errResultLoad: 'Resultado fallido — Menú u Otra vez',
+    errCopyLink: 'No se pudo copiar el enlace — Opciones',
+    errShare: 'Compartir falló — copia el enlace en Opciones',
+    errExport: 'Exportación fallida — copia el JSON',
+    errImportFile: 'No se pudo leer el archivo',
+    errFomo: 'No se pudo cerrar el resumen del día',
+    errDayBonus: 'Bonus diario fallido — inténtalo',
+    errProgressSafe: 'Progreso a salvo — sigue',
+    errSatanStart: 'Inicio de Satan fallido — la aventura sigue',
+    errTideStart: 'Inicio Tide Battle fallido — sigue',
+    errBackupStash: 'No se pudo guardar la partida',
+    errSaveApply: 'No se pudo cargar la partida',
+    errBackupSync: 'No se pudo sincronizar la copia',
     charLocked: 'Bloqueado', charHead: 'ELIGE LUCHADOR',
     charBig5Hint: 'Tus luchadores · elección rápida',
     saveHealthGear: ' · equipo {n}',
@@ -26225,6 +26344,9 @@ overlayI18nCatalog(CATALOG_DE, {
     persistFail: 'Speichern fehlgeschlagen — Export in Einstellungen',
     persistFailCtx: 'Speichern fehlgeschlagen ({context}) — Export in Einstellungen',
     resultHiccup: 'Ergebnis-Hiccup — Nochmal / Menü',
+    errRetry: 'Aktion fehlgeschlagen — nochmal',
+    hiccupContinue: 'Hiccup — Spiel läuft weiter',
+    fightHiccup: 'Hiccup — kämpf weiter',
     gearLocked: 'Noch gesperrt · {why}',
     gearEquipped: '{name} ausgerüstet',
     gearUnequipped: '{name} abgelegt',
@@ -26412,6 +26534,29 @@ overlayI18nCatalog(CATALOG_DE, {
     errLoadSettings: 'Einstellungen laden fehlgeschlagen',
     errLoadScreen: 'Bildschirm laden fehlgeschlagen — Neue Version tippen',
     errLoadHelp: 'Tipps laden fehlgeschlagen',
+    errOpenMode: 'Modus nicht zu öffnen — im Menü wählen',
+    errClaimRetry: 'Abholen fehlgeschlagen — nochmal',
+    errCharPick: 'Kämpfer wählen fehlgeschlagen — nochmal tippen',
+    errScreenMissing: 'Bildschirm fehlt — zurück zum Menü',
+    errScreenSwitch: 'Bildschirmwechsel fehlgeschlagen — Menü',
+    errGoBack: 'Navigation fehlgeschlagen — zurück zum Menü',
+    errGoMenu: 'Menü nicht zu öffnen — Seite neu laden',
+    errMenuRefresh: 'Menü nicht zu aktualisieren',
+    errResume: 'Weiter spielen fehlgeschlagen — Modus wählen',
+    errRecoverMenu: 'Wiederherstellung fehlgeschlagen — neu laden wenn Menü hängt',
+    errResultLoad: 'Ergebnis laden fehlgeschlagen — Menü oder Nochmal',
+    errCopyLink: 'Link kopieren fehlgeschlagen — Einstellungen',
+    errShare: 'Teilen fehlgeschlagen — Link in Einstellungen',
+    errExport: 'Export fehlgeschlagen — JSON aus dem Feld',
+    errImportFile: 'Importdatei nicht lesbar',
+    errFomo: 'Tagesübersicht nicht zu schließen',
+    errDayBonus: 'Tagesbonus fehlgeschlagen — nochmal',
+    errProgressSafe: 'Fortschritt sicher — spiel weiter',
+    errSatanStart: 'Satan-Start fehlgeschlagen — Abenteuer geht weiter',
+    errTideStart: 'Tide-Battle-Start fehlgeschlagen — weiter',
+    errBackupStash: 'Save sichern fehlgeschlagen',
+    errSaveApply: 'Save laden fehlgeschlagen',
+    errBackupSync: 'Backup-Abgleich fehlgeschlagen',
     charLocked: 'Gesperrt', charHead: 'KÄMPFER WÄHLEN',
     charBig5Hint: 'Deine Kämpfer · schnell wählen',
     continueLastMode: 'Letzter Modus',
@@ -31253,7 +31398,7 @@ function _lockCopy(gate, need, when) {
     return typeof tOr === 'function' ? tOr('gear.lockTime', 'Vanaf {when}', { when: when || 'datum' }) : ('Vanaf ' + (when || 'datum'));
   }
   if (gate === 'adventure' || gate === 'adv') {
-    return typeof tOr === 'function' ? tOr('gear.lockAdv', 'Avontuur Lv {n}', { n: need }) : ('Avontuur Lv ' + need);
+    return typeof tOr === 'function' ? tOr('gear.lockAdv', 'Adventure Lv {n}', { n: need }) : ('Adventure Lv ' + need);
   }
   if (gate === 'diff') {
     return typeof tOr === 'function' ? tOr('gear.lockDiff', 'Nog niet vrij') : 'Nog niet vrij';
@@ -38787,17 +38932,19 @@ function drawMenuCrossroadsVista(c, w, h, t, opts) {
   c.fill();
 
   // —— Four-path choice markers (hub colors) ——
-  const lab = (key, fallback) => {
-    try { return (typeof t === 'function' && t(key)) || fallback; } catch (_) { return fallback; }
+  const lab = (key) => {
+    try {
+      const s = (typeof t === 'function') ? t(key) : '';
+      return (s && s !== key) ? s : '';
+    } catch (_) { return ''; }
   };
   const markers = [
-    { x: w * 0.18, y: h * 0.64, label: lab('menu.adventure', 'Avontuur'), col: '#7cf5aa', dir: '←' },
-    { x: w * 0.50, y: forkY - 6, label: lab('menu.arcade', 'Arcade'), col: '#9db8ff', dir: '↑' },
-    { x: w * 0.78, y: h * 0.62, label: lab('menu.summons', 'Summons'), col: '#ffd75e', dir: '→' },
-    { x: w * 0.50, y: h * 0.88, label: lab('menu.collect', 'Collectie'), col: '#d8a8ff', dir: '●' },
+    { x: w * 0.18, y: h * 0.64, label: lab('menu.adventure'), col: '#7cf5aa', dir: '←' },
+    { x: w * 0.50, y: forkY - 6, label: lab('menu.arcade'), col: '#9db8ff', dir: '↑' },
+    { x: w * 0.78, y: h * 0.62, label: lab('menu.summons'), col: '#ffd75e', dir: '→' },
+    { x: w * 0.50, y: h * 0.88, label: lab('menu.collect'), col: '#d8a8ff', dir: '●' },
   ];
-  // Shorten long translated labels for pixel chip
-  if (markers[2].label && markers[2].label.length > 10) markers[2].label = 'Summon';
+  if (markers[2].label && markers[2].label.length > 10) markers[2].label = markers[2].label.slice(0, 8);
   c.font = '700 8px -apple-system, sans-serif';
   c.textAlign = 'center';
   for (const m of markers) {
@@ -41056,7 +41203,7 @@ class Game {
       try { AudioSys.sting('masterSword'); AudioSys.sfx('masterSword'); } catch (_) {}
       haptic(26);
     } catch (err) {
-      try { sfReportError('masterSword/on', err, 'Master Sword hiccup — speel door'); } catch (_) {}
+      try { sfReportError('masterSword/on', err, errT('toast.fightHiccup', 'Hiccup — fight continues')); } catch (_) {}
     }
   }
 
@@ -41410,7 +41557,7 @@ class Game {
       const grabR = (pk.kind === 'gear' && typeof IS_TOUCH !== 'undefined' && IS_TOUCH) ? 58 : 44;
       if ((p.x - pk.x) ** 2 + dy ** 2 < grabR * grabR) {
         try { this.collectPickup(pk); } catch (pickErr) {
-          try { sfReportError('pickup', pickErr, 'Pickup hiccup — gevecht gaat door'); } catch (_) {}
+          try { sfReportError('pickup', pickErr, errT('toast.fightHiccup', 'Hiccup — fight continues')); } catch (_) {}
           pk.life = 0;
         }
       }
@@ -41727,7 +41874,7 @@ class Game {
     try {
       this._onMonsterKilledInner(m);
     } catch (err) {
-      try { sfReportError('onMonsterKilled', err, 'Kill-reward hiccup — gevecht gaat door'); } catch (_) {}
+      try { sfReportError('onMonsterKilled', err, errT('toast.fightHiccup', 'Hiccup — fight continues')); } catch (_) {}
     }
   }
 
@@ -41955,7 +42102,7 @@ class Game {
       console.error('[Satan] finish', err);
       clearSatanState(this);
       this.betweenT = 1.2;
-      sfReportError('satan/finish', err, 'Satan-gevecht afronden mislukt — avontuur veilig');
+      sfReportError('satan/finish', err, errT('ui.errProgressSafe', 'Progress is safe — keep playing'));
     }
   }
 
@@ -42054,7 +42201,7 @@ class Game {
       this.tideFromSatan = false;
       clearTideBattleState(this, { restoreMusic: true });
       if (this.waveIdx < 0) this.betweenT = 1.2;
-      sfReportError('tideBattle/finish', err, 'Tide Battle beloning mislukt — voortgang veilig');
+      sfReportError('tideBattle/finish', err, errT('ui.errProgressSafe', 'Progress is safe — keep playing'));
     }
   }
 
@@ -43022,7 +43169,7 @@ class Game {
         const newSuper = SUPERS.find(s => s.needLvl === save.lvl && superUnlocked(s));
         if (newSuper) { try { UI.toast(t('toast.superUnlock', { name: superLabel(newSuper) }), 3500, { tone: 'ok' }); } catch (_) {} }
       } catch (lvlErr) {
-        try { sfReportError('grantXP/level', lvlErr, 'Level-up hiccup — gevecht gaat door'); } catch (_) {}
+        try { sfReportError('grantXP/level', lvlErr, errT('toast.fightHiccup', 'Hiccup — fight continues')); } catch (_) {}
         break;
       }
     }
@@ -43631,44 +43778,44 @@ class Game {
 
     if (!this.player) return;
     try { this.player.update(dt, this); } catch (plErr) {
-      try { sfReportError('player/update', plErr, 'Speler hiccup — speel door'); } catch (_) {}
+      try { sfReportError('player/update', plErr, errT('toast.fightHiccup', 'Hiccup — fight continues')); } catch (_) {}
     }
     if (this.pet) {
       try { this.pet.update(dt); } catch (petErr) {
-        try { sfReportError('pet/update', petErr, 'Pet hiccup — speel door'); } catch (_) {}
+        try { sfReportError('pet/update', petErr, errT('toast.fightHiccup', 'Hiccup — fight continues')); } catch (_) {}
       }
     }
     if (this.eggPet) {
       try { this.eggPet.update(dt); } catch (eggErr) {
-        try { sfReportError('eggPet/update', eggErr, 'Ei-pet hiccup — speel door'); } catch (_) {}
+        try { sfReportError('eggPet/update', eggErr, errT('toast.fightHiccup', 'Hiccup — fight continues')); } catch (_) {}
       }
     }
 
     if (this.mode === 'adventure') {
       try { this.updateAdventure(dt); } catch (advErr) {
-        try { sfReportError('adventure/update', advErr, 'Avontuur hiccup — speel door'); } catch (_) {}
+        try { sfReportError('adventure/update', advErr, errT('toast.fightHiccup', 'Hiccup — fight continues')); } catch (_) {}
       }
     } else if (this.mode === 'training') {
       try { this.updateTraining(dt); } catch (trErr) {
-        try { sfReportError('training/update', trErr, 'Training hiccup — speel door'); } catch (_) {}
+        try { sfReportError('training/update', trErr, errT('toast.fightHiccup', 'Hiccup — fight continues')); } catch (_) {}
       }
     } else if (this.mode === 'versus') {
       try { this.updateVersus(dt); } catch (vsErr) {
-        try { sfReportError('versus/update', vsErr, 'Versus hiccup — speel door'); } catch (_) {}
+        try { sfReportError('versus/update', vsErr, errT('toast.fightHiccup', 'Hiccup — fight continues')); } catch (_) {}
       }
     } else if (this.mode === 'wall') {
       try { this.updateWall(dt); } catch (wErr) {
-        try { sfReportError('wall/update', wErr, 'Muur hiccup — speel door'); } catch (_) {}
+        try { sfReportError('wall/update', wErr, errT('toast.fightHiccup', 'Hiccup — fight continues')); } catch (_) {}
       }
     } else if (this.mode === 'coinrun') {
       try { this.updateCoinRun(dt); } catch (crErr) {
-        try { sfReportError('coinrun/update', crErr, 'Mats hiccup — speel door'); } catch (_) {}
+        try { sfReportError('coinrun/update', crErr, errT('toast.fightHiccup', 'Hiccup — fight continues')); } catch (_) {}
       }
     }
 
     for (const m of this.monsters) {
       try { m.update(dt, this); } catch (monErr) {
-        try { sfReportError('monster/update', monErr, 'Vijand hiccup — speel door'); } catch (_) {}
+        try { sfReportError('monster/update', monErr, errT('toast.fightHiccup', 'Hiccup — fight continues')); } catch (_) {}
       }
     }
     try { if (typeof tickWeaponStatusEffects === 'function') tickWeaponStatusEffects(this, dt); } catch (_) {}
@@ -43913,7 +44060,7 @@ class Game {
       }
     }
     } catch (projErr) {
-      try { sfReportError('projectile/update', projErr, 'Projectiel hiccup — speel door'); } catch (_) {}
+      try { sfReportError('projectile/update', projErr, errT('toast.fightHiccup', 'Hiccup — fight continues')); } catch (_) {}
     }
     for (const p of this.projectiles) {
       if (p.life <= 0 && p.kind === 'boemerang') {
@@ -46868,7 +47015,7 @@ function appendItemUpgradeButton(el, cat, id, rerender) {
       const lv = itemUpgradeLevel(cat, id);
       UI.toast(t('toast.itemUpgraded', { name, lv, detail: itemUpgradeSummary(cat, id) }), 3200);
       rerender();
-    }, 'itemUp/' + cat + '/' + id, 'Upgrade mislukt');
+    }, 'itemUp/' + cat + '/' + id, errT('toast.errRetry', 'Action failed — try again'));
   });
   el.appendChild(btn);
 }
@@ -47014,7 +47161,7 @@ function pickVsRosterId(id) {
     UI.renderCharSelect();
     if (UI.charPickStep === 2) scrollCharFightIntoView();
   } catch (err) {
-    sfReportError('charPick', err, 'Vechter kiezen mislukt — tik opnieuw');
+    sfReportError('charPick', err, errT('ui.errCharPick', 'Could not pick fighter — tap again'));
   }
 }
 
@@ -47191,7 +47338,7 @@ function equipSkill(id) {
       UI.renderModeHub();
       UI.toast(t('toast.skillEquipped', { name: skillLabel(sk) }), 2200);
       UI._skillArmId = null;
-    }, 'pickSkill/' + id, 'Skill kiezen mislukt');
+    }, 'pickSkill/' + id, errT('toast.errRetry', 'Action failed — try again'));
   } finally {
     UI._skillEquipBusy = false;
   }
@@ -47223,7 +47370,7 @@ function equipSuper(id) {
       UI.renderModeHub();
       UI.toast(t('toast.superEquipped', { name: superLabel(sp) }), 2200);
       UI._superArmId = null;
-    }, 'pickSuper/' + id, 'Super kiezen mislukt');
+    }, 'pickSuper/' + id, errT('toast.errRetry', 'Action failed — try again'));
   } finally {
     UI._superEquipBusy = false;
   }
@@ -48046,14 +48193,14 @@ const UI = {
     }
     const el = document.getElementById(screenId);
     if (!el) {
-      sfReportError('safeOpen/' + screenId, new Error('missing screen DOM'), 'Scherm niet gevonden — terug naar menu');
+      sfReportError('safeOpen/' + screenId, new Error('missing screen DOM'), errT('ui.errScreenMissing', 'Screen missing — back to menu'));
       try { this.goMenu(); } catch (_) { ensureVisibleScreen(); }
       return;
     }
     this.show(screenId);
     if (renderFn) {
       try { renderFn(); } catch (err) {
-        sfReportError(renderFn.name || screenId, err, opts.msg || 'Scherm laden mislukt — herlaad via Verse versie');
+        sfReportError(renderFn.name || screenId, err, opts.msg || errT('ui.errLoadScreen', 'Could not load screen — tap Fresh version'));
       }
     }
   },
@@ -48062,7 +48209,7 @@ const UI = {
     try {
       if (!id) {
         if (state === 'play' && !game) {
-          sfReportError('UI.show/play', new Error('no game ref'), 'Gevecht niet geladen — terug naar menu');
+          sfReportError('UI.show/play', new Error('no game ref'), errT('ui.errScreenMissing', 'Screen missing — back to menu'));
           try { this.goMenu(); } catch (_) { ensureVisibleScreen(); }
           syncPlayLayer();
           return;
@@ -48072,7 +48219,7 @@ const UI = {
       } else {
         const target = document.getElementById(id);
         if (!target) {
-          sfReportError('UI.show/' + id, new Error('missing screen DOM'), 'Scherm niet gevonden — terug naar menu');
+          sfReportError('UI.show/' + id, new Error('missing screen DOM'), errT('ui.errScreenMissing', 'Screen missing — back to menu'));
           try { this.goMenu(); } catch (_) { ensureVisibleScreen(); }
           syncPlayLayer();
           return;
@@ -48119,7 +48266,7 @@ const UI = {
       const pauseBtn = document.getElementById('pauseBtn');
       if (pauseBtn) pauseBtn.classList.toggle('show', !id && !!game && !game.over && state !== 'result');
     } catch (err) {
-      sfReportError('UI.show/' + (id || 'play'), err, 'Schermwissel mislukt — terug naar menu');
+      sfReportError('UI.show/' + (id || 'play'), err, errT('ui.errScreenSwitch', 'Screen switch failed — back to menu'));
       try { this.goMenu(); } catch (_) { ensureVisibleScreen(); }
     }
     syncPlayLayer();
@@ -48274,7 +48421,7 @@ const UI = {
       }
       this.goMenu();
     } catch (err) {
-      sfReportError('goBack', err, 'Menu-navigatie mislukt — terug naar hoofdmenu');
+      sfReportError('goBack', err, errT('ui.errGoBack', 'Navigation failed — back to menu'));
       this.goMenu();
     }
   },
@@ -48489,7 +48636,7 @@ const UI = {
       scheduleResize();
       if (window.StickInstall) window.StickInstall.refreshMenuButton();
     } catch (err) {
-      sfReportError('goMenu', err, 'Kon menu niet openen — herlaad de pagina');
+      sfReportError('goMenu', err, errT('ui.errGoMenu', 'Could not open menu — reload the page'));
       try { Input.releaseAll(); } catch (_) {}
       if (game) {
         try {
@@ -48786,7 +48933,7 @@ const UI = {
     if (!MODE_HUB_META[id]) return;
     this.modeHubId = id;
     this.safeOpen('modeHubScreen', () => this.renderModeHub(), {
-      msg: (typeof tOr === 'function') ? tOr('hub.loadFail', 'Hub laden mislukt') : 'Hub laden mislukt',
+      msg: errT('hub.loadFail', 'Could not load hub'),
     });
   },
 
@@ -49006,7 +49153,7 @@ const UI = {
       }
     } catch (_) {}
     } catch (err) {
-      sfReportError('renderMenu', err, 'Menu kon niet ververst worden');
+      sfReportError('renderMenu', err, errT('ui.errMenuRefresh', 'Could not refresh menu'));
     }
   },
 
@@ -49539,7 +49686,7 @@ const UI = {
       this._chestPullBusy = false;
       this._summonPendingMsg = null;
       this.clearSummonRevealTimers();
-      sfReportError('doChestPull', err, 'Summon mislukt');
+      sfReportError('doChestPull', err, errT('ui.summonFail', 'Summon failed — try again'));
       try { ensureVisibleScreen(); } catch (_) {}
     }
   },
@@ -49655,14 +49802,14 @@ const UI = {
         bindPress(btn, () => safeUiAction(() => {
           AudioSys.sfx('select');
           claimDailyTask(task.id);
-        }, 'claimDaily/' + task.id, 'Claim mislukt — probeer opnieuw'));
+        }, 'claimDaily/' + task.id, errT('ui.errClaimRetry', 'Claim failed — try again')));
         el.appendChild(btn);
       } else if (!task.done && playTarget) {
         const btn = document.createElement('button');
         btn.type = 'button';
         btn.className = 'btn mission-play-btn';
         btn.textContent = t('missionsUi.dailyPlayBtn', { mode: dailyModeLabel(playTarget.mode) });
-        bindPress(btn, () => safeUiAction(() => goDailyPlayTarget(task.id), 'dailyPlay/' + task.id, 'Kon modus niet openen'));
+        bindPress(btn, () => safeUiAction(() => goDailyPlayTarget(task.id), 'dailyPlay/' + task.id, errT('ui.errOpenMode', 'Could not open mode — pick from the menu')));
         el.appendChild(btn);
       }
       dailyHost.appendChild(el);
@@ -49735,7 +49882,7 @@ const UI = {
           btn.type = 'button';
           btn.className = 'btn mission-spot-btn';
           btn.textContent = t('missionsUi.spotlightPlayBtn', { mode: dailyModeLabel(playTarget.mode) });
-          bindPress(btn, () => safeUiAction(() => goAchievementPlayTarget(near.ach), 'achSpotPlay/' + near.ach.id, 'Kon modus niet openen'));
+          bindPress(btn, () => safeUiAction(() => goAchievementPlayTarget(near.ach), 'achSpotPlay/' + near.ach.id, errT('ui.errOpenMode', 'Could not open mode — pick from the menu')));
           achSpot.appendChild(btn);
         }
       } else {
@@ -50090,13 +50237,13 @@ const UI = {
         el.addEventListener('click', (e) => {
           if (holdSkip) { holdSkip = false; return; }
           if (!uiTapAllowed(e)) return;
-          safeUiAction(() => gokGooiStartLevel(n), 'gokStart/' + n, 'Level starten mislukt');
+          safeUiAction(() => gokGooiStartLevel(n), 'gokStart/' + n, errT('ui.errLevelStart', 'Could not start level'));
         });
       }
       grid.appendChild(el);
     }
     } catch (err) {
-      sfReportError('renderLevels', err, 'Level-overzicht laden mislukt — herlaad via Verse versie');
+      sfReportError('renderLevels', err, errT('ui.errLoadScreen', 'Could not load screen — tap Fresh version'));
     }
   },
 
@@ -50436,14 +50583,14 @@ const UI = {
   openUpgrades(tab) {
     this.upgradeTab = tab || 'skills';
     this.safeOpen('upgradeScreen', () => this.renderUpgrades(), {
-      msg: 'Upgrades laden mislukt — herlaad via Verse versie',
+      msg: errT('ui.errLoadScreen', 'Could not load screen — tap Fresh version'),
     });
   },
 
   /** Fallback stub. Live list→detail lives in src/ui/buildings-ui.js (loaded after this file). */
   openBuildings() {
     this.safeOpen('buildingsScreen', () => this.renderBuildings(), {
-      msg: (typeof tOr === 'function') ? tOr('buildings.loadFail', 'Fabrieken laden mislukt') : 'Fabrieken laden mislukt',
+      msg: errT('buildings.loadFail', 'Could not load factories'),
     });
   },
   renderBuildings() {},
@@ -50576,7 +50723,7 @@ const UI = {
               if (!setActiveTechnique(id)) return;
               AudioSys.sfx('select');
               this.renderUpgrades();
-            }, 'equipTechnique/' + id, 'Technique kiezen mislukt');
+            }, 'equipTechnique/' + id, errT('toast.errRetry', 'Action failed — try again'));
           });
           el.appendChild(eqBtn);
         }
@@ -50593,7 +50740,7 @@ const UI = {
               const nlv = skillLevel(id);
               UI.toast(t('toast.skillUpgraded', { name, lv: nlv, detail: skillUpgradeSummary(id) }), 3200);
               this.renderUpgrades();
-            }, 'skillUp/' + id, 'Upgrade mislukt');
+            }, 'skillUp/' + id, errT('toast.errRetry', 'Action failed — try again'));
           });
           el.appendChild(btn);
         }
@@ -51176,7 +51323,7 @@ const UI = {
         : equipGear(item.id, { expectSlot });
       if (!res || !res.ok) {
         const fail = gearUnlockState(item, expectSlot);
-        UI.toast((res && res.label) || fail.label || tOr('toast.gearLocked', 'Nog op slot'), 1800, { tone: 'warn' });
+        UI.toast((res && res.label) || fail.label || errT('toast.gearLocked', 'Still locked'), 1800, { tone: 'warn' });
         return false;
       }
       AudioSys.sfx('select');
@@ -51360,7 +51507,7 @@ const UI = {
               this._gearPickerScroll = 0;
               AudioSys.sfx('select');
               this.renderGear({ pickerOnly: true });
-            }, 'gearFilter/' + key, 'Filter mislukt');
+            }, 'gearFilter/' + key, errT('toast.errRetry', 'Action failed — try again'));
           });
           filterBar.appendChild(chip);
         }
@@ -51398,7 +51545,7 @@ const UI = {
               this._gearPickerScroll = 0;
               AudioSys.sfx('select');
               this.renderGear({ pickerOnly: true });
-            }, 'gearRarity/' + key, 'Rarity filter mislukt');
+            }, 'gearRarity/' + key, errT('toast.errRetry', 'Action failed — try again'));
           });
           rarBar.appendChild(chip);
         }
@@ -51483,7 +51630,7 @@ const UI = {
             keepPickerScroll();
             if (!unlock.unlocked) {
               AudioSys.sfx('select');
-              UI.toast(tOr('toast.gearLocked', 'Nog op slot · {why}', { why: unlock.label || '' }), 1800, { tone: 'warn' });
+              UI.toast(tOr('toast.gearLocked', 'Still locked · {why}', { why: unlock.label || '' }), 1800, { tone: 'warn' });
               this.renderGear({ pickerOnly: true });
               return;
             }
@@ -51491,7 +51638,7 @@ const UI = {
             else wearItem(it);
             this.renderGear();
             this.renderMenu();
-          }, 'gearPick/' + it.id, 'Item kiezen mislukt');
+          }, 'gearPick/' + it.id, errT('toast.errRetry', 'Action failed — try again'));
         });
         frag.appendChild(el);
       }
@@ -51964,7 +52111,7 @@ const UI = {
     playMenuBgm(true);
     AudioSys.applyVolumes();
     } catch (err) {
-      sfReportError('showResult', err, (typeof tOr === 'function') ? tOr('toast.resultHiccup', 'Resultaat hiccup — probeer Opnieuw / Menu') : 'Resultaat hiccup — probeer Opnieuw / Menu');
+      sfReportError('showResult', err, errT('toast.resultHiccup', 'Result hiccup — try Again / Menu'));
       // NOOIT stil naar startscherm: forceer result-screen best-effort
       try {
         state = 'result';
@@ -52128,7 +52275,7 @@ if (typeof UI === 'object' && UI) {
     this._buildingsRowBound = {};
     this.stopBuildingsTick();
     this.safeOpen('buildingsScreen', () => this.renderBuildings(), {
-      msg: buildingsTxt('buildings.loadFail', 'Fabrieken laden mislukt'),
+      msg: buildingsTxt('buildings.loadFail', 'Could not load factories'),
     });
     this.startBuildingsTick();
   };
@@ -52681,7 +52828,7 @@ function bindPress(el, handler) {
     if (now - last < 320) return;
     last = now;
     try { handler(e); } catch (err) {
-      sfReportError('ui/' + (el.id || 'press'), err, 'Actie mislukt — probeer opnieuw');
+      sfReportError('ui/' + (el.id || 'press'), err, errT('toast.errRetry', 'Action failed — try again'));
     }
   };
   const hitOk = (e) => {
@@ -52763,7 +52910,7 @@ bindPress(btnContinue, () => {
   try {
     if (!resumeLastPlay()) userToast(t('toast.noSession'), 2400, { tone: 'warn' });
   } catch (err) {
-    sfReportError('resume', err, 'Verder spelen mislukt — kies een modus');
+    sfReportError('resume', err, errT('ui.errResume', 'Resume failed — pick a mode'));
   }
 });
 bindPress(document.getElementById('btnTraining'), () => {
@@ -52875,7 +53022,7 @@ if (dailyClaimAllBtn) bindPress(dailyClaimAllBtn, () => {
   try {
     AudioSys.init(); AudioSys.sfx('select'); claimAllDailyReady();
   } catch (err) {
-    sfReportError('claimAll', err, 'Claim mislukt — probeer opnieuw');
+    sfReportError('claimAll', err, errT('ui.errClaimRetry', 'Claim failed — try again'));
   }
 });
 const dailyBonusBtn = document.getElementById('dailyBonusBtn');
@@ -52883,17 +53030,17 @@ if (dailyBonusBtn) bindPress(dailyBonusBtn, () => {
   try {
     AudioSys.sfx('select'); claimDailyDayBonus();
   } catch (err) {
-    sfReportError('dayBonus', err, 'Dagbonus mislukt — probeer opnieuw');
+    sfReportError('dayBonus', err, errT('ui.errDayBonus', 'Daily bonus failed — try again'));
   }
 });
 bindPress(document.getElementById('fomoRitualDismiss'), () => {
   try { AudioSys.sfx('select'); dismissFomoRitual(); } catch (err) {
-    sfReportError('fomoDismiss', err, 'Kon overzicht sluiten');
+    sfReportError('fomoDismiss', err, errT('ui.errFomo', 'Could not close day overview'));
   }
 });
 bindPress(document.getElementById('fomoRitualBackdrop'), () => {
   try { dismissFomoRitual(); } catch (err) {
-    sfReportError('fomoDismiss', err, 'Kon overzicht sluiten');
+    sfReportError('fomoDismiss', err, errT('ui.errFomo', 'Could not close day overview'));
   }
 });
 bindPress(document.getElementById('fomoRitualCta'), () => {
@@ -52901,7 +53048,7 @@ bindPress(document.getElementById('fomoRitualCta'), () => {
     AudioSys.init(); AudioSys.sfx('select');
     UI.runFomoRitualCta();
   } catch (err) {
-    sfReportError('fomoCta', err, 'Kon actie niet openen');
+    sfReportError('fomoCta', err, errT('ui.errFomo', 'Could not close day overview'));
   }
 });
 bindPress(document.getElementById('fomoRitualReopen'), () => {
@@ -52909,7 +53056,7 @@ bindPress(document.getElementById('fomoRitualReopen'), () => {
     AudioSys.init(); AudioSys.sfx('select');
     reopenFomoRitual();
   } catch (err) {
-    sfReportError('fomoReopen', err, 'Kon dagoverzicht niet openen');
+    sfReportError('fomoReopen', err, errT('ui.errFomo', 'Could not close day overview'));
   }
 });
 const btnCopyLink = document.getElementById('btnCopyLink');
@@ -52921,7 +53068,7 @@ if (btnOpenPlayLink) btnOpenPlayLink.addEventListener('click', () => {
     const url = await resolveSharePlayUrl();
     if (url) window.open(url, '_blank', 'noopener');
     else userToast(t('toast.noPlayLink'), 2800, { tone: 'warn' });
-  })(), 'openPlayLink', 'Link openen mislukt');
+  })(), 'openPlayLink', errT('ui.errCopyLink', 'Could not copy link — see Settings'));
 });
 const btnExportSave = document.getElementById('btnExportSave');
 if (btnExportSave) btnExportSave.addEventListener('click', () => {
@@ -52951,7 +53098,7 @@ if (btnExportSave) btnExportSave.addEventListener('click', () => {
       size: formatSaveBytes(json.length),
     }), 3600, { tone: 'ok' });
     UI.renderSettings();
-  })(), 'exportSave', 'Export mislukt — kopieer JSON handmatig uit het vak');
+  })(), 'exportSave', errT('ui.errExport', 'Export failed — copy JSON from the box'));
 });
 const btnImportSave = document.getElementById('btnImportSave');
 bindSaveImportFile();
@@ -53121,7 +53268,7 @@ if (btnRestoreBackup) btnRestoreBackup.addEventListener('click', () => {
       UI.toast(t('toast.backupRestored'), 3000, { tone: 'ok' });
       UI.renderSettings();
     } else UI.toast(t('toast.backupFailed'), 3200, { tone: 'danger' });
-  }, 'restoreBackup', 'Backup herstellen mislukt');
+  }, 'restoreBackup', errT('toast.backupFailed', 'Backup restore failed'));
 });
 const btnSyncBackup = document.getElementById('btnSyncBackup');
 if (btnSyncBackup) btnSyncBackup.addEventListener('click', () => {
@@ -53138,7 +53285,7 @@ if (btnSyncBackup) btnSyncBackup.addEventListener('click', () => {
       UI.toast(t('toast.syncOk'), 2800, { tone: 'ok' });
       UI.renderSettings();
     } else UI.toast(t('toast.syncFailed'), 3200, { tone: 'danger' });
-  }, 'syncBackup', 'Backup sync mislukt');
+  }, 'syncBackup', errT('ui.errBackupSync', 'Backup sync failed'));
 });
 const btnClearSave = document.getElementById('btnClearSave');
 if (btnClearSave) btnClearSave.addEventListener('click', () => {
@@ -53160,7 +53307,7 @@ if (btnClearSave) btnClearSave.addEventListener('click', () => {
     AudioSys.sfx('lose');
     UI.renderMenu();
     UI.toast(t('toast.newStart'), 4000, { tone: 'ok' });
-  }, 'clearSave', 'Reset mislukt — probeer opnieuw');
+  }, 'clearSave', errT('toast.errRetry', 'Action failed — try again'));
 });
 bindSettingsControls();
 function bindPlayerDiagUnlock() {
@@ -53690,7 +53837,7 @@ function loop(now) {
         game.update(dt);
       } catch (updateErr) {
         // NOOIT recoverToMenu tijdens live fight (Kets/charge crashte → startscherm)
-        try { sfReportError('update', updateErr, 'Hiccup in gevecht — speel door'); } catch (_) {}
+        try { sfReportError('update', updateErr, errT('toast.fightHiccup', 'Hiccup — fight continues')); } catch (_) {}
         try {
           if (typeof recoverFightHiccup === 'function') recoverFightHiccup(game);
           else if (game) {
@@ -53731,7 +53878,7 @@ function loop(now) {
         try {
           game.draw(ctx);
         } catch (drawErr) {
-          try { sfReportError('draw', drawErr, 'Tekenen hiccup — speel door'); } catch (_) {}
+          try { sfReportError('draw', drawErr, errT('toast.fightHiccup', 'Hiccup — fight continues')); } catch (_) {}
           // On error: still paint sky+ground so adventure doesn't go black
           try {
             if (game && typeof drawBackground === 'function') {
@@ -54331,7 +54478,7 @@ function bootGame() {
       if (window.__sfLoopErr) return;
       const r = ev.reason;
       const err = r instanceof Error ? r : new Error(String(r != null ? r : 'async reject'));
-      sfReportError('async', err, 'Actie mislukt — probeer opnieuw');
+      sfReportError('async', err, errT('toast.errRetry', 'Action failed — try again'));
       if (state === 'play' || state === 'pause') return;
       if (state === 'result' && !game) {
         try { recoverToMenu(); } catch (_) {}

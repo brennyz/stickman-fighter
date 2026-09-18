@@ -101,4 +101,16 @@ Grep `src/` zonder i18n: result-zichtbare fallbacks zijn weg. Residual (niet dez
 
 Versus ongemoeid. Arcade skill-namen blijven merk-EN.
 
-Versie: **v1.18.177 / SW 387**. Draft PR, geen main-merge. Deel-URL `speel.html`.
+## Examiner P0 — mission labels + errT + hiccups (zelfde draft)
+
+| locale | key / locatie | probleem | fix |
+|--------|---------------|----------|-----|
+| * | `DAILY_PLAY_TARGETS.label` | Dead Dutch *Avontuur/Muur* | Alleen `mode`; UI via `dailyModeLabel` → `modes.*` |
+| * | `dailyText` / `dailyHint` | Fallback naar NL `DAILY_DEFS` / `DAILY_PLAY_HINTS` | Leeg als catalog-key ontbreekt (`t()` doet EN→NL) |
+| * | `modeFirstMinuteLine` + scenery `lab()` | Dutch hardcoded fallback | Geen NL last-resort |
+| * | `tOr(..., '… mislukt')` / `safeUiAction` | Dutch last-resort in elke taal | `errT` + `toast.errRetry` / `ui.err*` (EN last-resort) |
+| * | `sfReportError` hiccups | User-toast *Speler hiccup — speel door* | `toast.fightHiccup` / `toast.hiccupContinue` |
+
+Technische `sfReportError(where, err)` zonder userMsg blijft console + gelokaliseerde default-toast.
+
+Versie: **v1.18.178 / SW 388**. Draft PR, geen main-merge. Deel-URL `speel.html`.

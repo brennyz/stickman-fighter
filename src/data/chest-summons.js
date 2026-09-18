@@ -471,8 +471,8 @@ function chestResultToast(res) {
         : 'Geen summons meer vandaag';
     }
     return (typeof tOr === 'function')
-      ? tOr('ui.summonFail', 'Summon mislukt — probeer opnieuw')
-      : 'Summon mislukt — probeer opnieuw';
+      ? errT('ui.summonFail', 'Summon failed — try again')
+      : errT('ui.summonFail', 'Summon failed — try again');
   }
   if (res.type === 'weapon_unlock') {
     return `✦ ${res.name} ontgrendeld! · ${rarityLabel(res.rarity)}${res.skill ? ' · ' + res.skill : ''}`;

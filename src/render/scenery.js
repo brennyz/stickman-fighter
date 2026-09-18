@@ -1515,17 +1515,19 @@ function drawMenuCrossroadsVista(c, w, h, t, opts) {
   c.fill();
 
   // —— Four-path choice markers (hub colors) ——
-  const lab = (key, fallback) => {
-    try { return (typeof t === 'function' && t(key)) || fallback; } catch (_) { return fallback; }
+  const lab = (key) => {
+    try {
+      const s = (typeof t === 'function') ? t(key) : '';
+      return (s && s !== key) ? s : '';
+    } catch (_) { return ''; }
   };
   const markers = [
-    { x: w * 0.18, y: h * 0.64, label: lab('menu.adventure', 'Avontuur'), col: '#7cf5aa', dir: '←' },
-    { x: w * 0.50, y: forkY - 6, label: lab('menu.arcade', 'Arcade'), col: '#9db8ff', dir: '↑' },
-    { x: w * 0.78, y: h * 0.62, label: lab('menu.summons', 'Summons'), col: '#ffd75e', dir: '→' },
-    { x: w * 0.50, y: h * 0.88, label: lab('menu.collect', 'Collectie'), col: '#d8a8ff', dir: '●' },
+    { x: w * 0.18, y: h * 0.64, label: lab('menu.adventure'), col: '#7cf5aa', dir: '←' },
+    { x: w * 0.50, y: forkY - 6, label: lab('menu.arcade'), col: '#9db8ff', dir: '↑' },
+    { x: w * 0.78, y: h * 0.62, label: lab('menu.summons'), col: '#ffd75e', dir: '→' },
+    { x: w * 0.50, y: h * 0.88, label: lab('menu.collect'), col: '#d8a8ff', dir: '●' },
   ];
-  // Shorten long translated labels for pixel chip
-  if (markers[2].label && markers[2].label.length > 10) markers[2].label = 'Summon';
+  if (markers[2].label && markers[2].label.length > 10) markers[2].label = markers[2].label.slice(0, 8);
   c.font = '700 8px -apple-system, sans-serif';
   c.textAlign = 'center';
   for (const m of markers) {

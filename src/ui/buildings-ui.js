@@ -141,7 +141,7 @@ if (typeof UI === 'object' && UI) {
     this._buildingsRowBound = {};
     this.stopBuildingsTick();
     this.safeOpen('buildingsScreen', () => this.renderBuildings(), {
-      msg: buildingsTxt('buildings.loadFail', 'Fabrieken laden mislukt'),
+      msg: buildingsTxt('buildings.loadFail', 'Could not load factories'),
     });
     this.startBuildingsTick();
   };
