@@ -4692,12 +4692,17 @@
   .gear-filter-empty .gear-empty-cta {
     width: 100%; justify-content: center; margin: 0;
   }
-  .gear-doll-canvas.juice-flash { animation: gearDollFlash .34s ease; }
+  .gear-doll-canvas.juice-flash { animation: gearDollFlash .28s cubic-bezier(.2, 1.4, .3, 1); transform-origin: 50% 70%; }
   @keyframes gearDollFlash {
-    0% { filter: brightness(1.4); }
-    100% { filter: none; }
+    0% { filter: brightness(1.55); transform: scale(1.07); }
+    55% { filter: brightness(1.12); transform: scale(0.98); }
+    100% { filter: none; transform: none; }
   }
-  body.reduced-motion .gear-doll-canvas.juice-flash { animation: none; }
+  body.reduced-motion .gear-doll-canvas.juice-flash {
+    animation: none;
+    filter: brightness(1.18);
+    outline: 2px solid rgba(255, 215, 94, .7);
+  }
   .gear-picker {
     width: 100%; margin: 0 0 12px;
     display: flex; flex-direction: column; gap: 8px;

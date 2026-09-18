@@ -862,7 +862,7 @@ function applyHitStop(game, spec, opts) {
     return;
   }
   const kind = spec && spec.kind ? spec.kind : 'punch';
-  let base = kind === 'special' ? 0.052 : kind === 'kick' ? 0.038 : 0.026;
+  let base = kind === 'special' ? 0.052 : kind === 'kick' ? 0.044 : 0.034;
   if (opts.heavy || (spec && spec.dmg >= 18)) base += 0.008;
   if (opts.crit) base += 0.014;
   if (opts.combo >= 6) base += 0.006;
