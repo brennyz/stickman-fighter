@@ -1055,6 +1055,7 @@ function bootGame() {
     fx: {
       lite: () => (typeof fxLite === 'function' ? fxLite() : false),
       spawnLite: () => (typeof fxSpawnLite === 'function' ? fxSpawnLite() : false),
+      skipFreeze: () => (typeof fxSkipFreeze === 'function' ? fxSkipFreeze() : false),
       touch: () => (typeof fxTouchDevice === 'function' ? fxTouchDevice() : false),
       caps: () => (typeof fxCaps === 'function' ? fxCaps() : null),
       prewarm: (n) => (typeof prewarmFxPool === 'function' ? prewarmFxPool(n) : 0),

@@ -840,8 +840,17 @@ function scaleKnockback(kb, dmg, opts) {
 function applyHitStop(game, spec, opts) {
   if (!game || motionReduced()) return;
   opts = opts || {};
+  const skipFreeze = (typeof fxSkipFreeze === 'function')
+    ? fxSkipFreeze()
+    : ((typeof fxLite === 'function' && fxLite())
+      || (typeof fxSpawnLite === 'function' && fxSpawnLite())
+      || (typeof fxTouchDevice === 'function' && fxTouchDevice()));
+  const addFreeze = (ms) => {
+    if (skipFreeze) return;
+    game.freezeT = Math.max(game.freezeT || 0, ms);
+  };
   if (opts.chip) {
-    game.freezeT = Math.max(game.freezeT, 0.018);
+    addFreeze(0.018);
     return;
   }
   if (opts.playerHurt) {
@@ -852,7 +861,7 @@ function applyHitStop(game, spec, opts) {
     let base = dmg >= 18 ? 0.018 : 0.01;
     if (opts.heavy) base += 0.004;
     if (game.mode === 'versus') base += 0.004;
-    game.freezeT = Math.max(game.freezeT, Math.min(base, 0.028));
+    addFreeze(Math.min(base, 0.028));
     if (opts.heavy || dmg >= 18) {
       try {
         const x = game.player ? game.player.x : (typeof W !== 'undefined' ? W * 0.5 : 0);
@@ -869,7 +878,7 @@ function applyHitStop(game, spec, opts) {
   if (opts.combo >= 10) base += 0.006;
   if (game.mode === 'versus') base += 0.006;
   base = Math.min(base, 0.072);
-  game.freezeT = Math.max(game.freezeT, base);
+  addFreeze(base);
   if (opts.crit || opts.heavy || (spec && spec.dmg >= 18)) {
     try {
       const x = game.player ? game.player.x : (typeof W !== 'undefined' ? W * 0.5 : 0);

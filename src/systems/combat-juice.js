@@ -43,13 +43,21 @@ function juiceDrawSquash(c, target) {
 }
 
 /**
- * Kill snap: one freeze + rate-limited shake/haptic so a horde does not camera-spam.
+ * Kill snap: one freeze (desktop) + rate-limited shake/haptic so a horde does not camera-spam.
+ * Lite FX / touch skip freeze hitch — haptic + KO text stay.
  * Caller still paints the single KO floater.
  */
 function juiceKillSnap(game, m) {
   if (!game) return;
   const elite = !!(m && (m.elite || m.bossCore || m.superBoss || m.satanBoss || m.colossal));
-  game.freezeT = Math.max(game.freezeT || 0, elite ? 0.075 : 0.058);
+  const skipFreeze = (typeof fxSkipFreeze === 'function')
+    ? fxSkipFreeze()
+    : ((typeof fxLite === 'function' && fxLite())
+      || (typeof fxSpawnLite === 'function' && fxSpawnLite())
+      || (typeof fxTouchDevice === 'function' && fxTouchDevice()));
+  if (!skipFreeze) {
+    game.freezeT = Math.max(game.freezeT || 0, elite ? 0.075 : 0.058);
+  }
   if (!juiceGapOk(game, '_juiceKillSnapAt', elite ? 60 : 90)) return;
   try { game.shake(elite ? 7 : 5, elite ? 0.22 : 0.16); } catch (_) {}
   try { if (typeof haptic === 'function') haptic(elite ? 16 : 12); } catch (_) {}

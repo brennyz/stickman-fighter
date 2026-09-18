@@ -13,15 +13,15 @@
     "tunnelBookmark": "https://stickfighter-ipad-b75e.loca.lt/ipad.html"
   },
   "codeTruth": {
-    "appVersion": "1.18.190",
-    "swCache": "stickfighter-app-v400",
-    "gameJsQuery": "game.js?v=400",
-    "cssQuery": "styles/main.css?v=400",
-    "featureBranch": "main",
+    "appVersion": "1.18.191",
+    "swCache": "stickfighter-app-v401",
+    "gameJsQuery": "game.js?v=401",
+    "cssQuery": "styles/main.css?v=401",
+    "featureBranch": "cursor/fx-lite-touch-hold-4679",
     "pushBlocked": null,
     "shareUrl": "https://brennyz.github.io/stickman-fighter/speel.html",
-    "note": "20m MEGA-MERGE LIVE. #333 #325 #334 #329 #332 #331 #328 #330 #326 #327. SKIP #324. Leave #311. v1.18.190 / SW 400. speel.html. Pages ~1–3 min then Verse versie. Playtest swarm.",
-    "updated": "2026-09-18T16:06:11Z",
+    "note": "DONE #347: touch spawnLite whole fight + freeze gate. Minute-1 elite still lite. Draft, STOP, no main. v1.18.191 / SW 401.",
+    "updated": "2026-09-18T16:43:13Z",
     "localMainHead": "aa80d25c5f708549af287716914c2016228a2a46",
     "remoteMainHead": "aa80d25c5f708549af287716914c2016228a2a46"
   },
@@ -49,6 +49,22 @@
     ]
   },
   "userWishlist": [
+    {
+      "id": "w-20260918T164500",
+      "from": "user",
+      "text": "Good #347. Until ~19:10 Amsterdam: if solid mark DONE and STOP. Optional: one mid-phone elite intro after minute 1 still spawnLite. Draft only, no main.",
+      "status": "done-in-code",
+      "updated": "2026-09-18",
+      "notes": "DONE. Minute-1 mid-phone elite intro: spawnLite, 4 sparks, 0 freeze. smoke:fx-lite. Draft #347, STOP, no main."
+    },
+    {
+      "id": "w-20260918T164000",
+      "from": "user",
+      "text": "FIX BOT 30m — Stickman. Off main. Draft only. Until ~19:10 Amsterdam. From #339 PERF: After ~90 frames fxSpawnLite turns off on mid-phone; juiceKillSnap/hitStop still freeze with Lite FX. Keep fxSpawnLite on for touch devices whole fight; gate kill/hit freeze when Lite FX / touch. Prove smoke:fx-lite. No Versus. No main.",
+      "status": "done-in-code",
+      "updated": "2026-09-18",
+      "notes": "Draft branch cursor/fx-lite-touch-hold-4679. v1.18.191 / SW 401. No main."
+    },
     {
       "id": "w-20260918T155700",
       "from": "user",
@@ -1231,6 +1247,14 @@
   ],
   "sessionLog": [
     {
+      "at": "2026-09-18T16:46:05Z",
+      "summary": "DONE #347: touch spawnLite whole fight + freeze gate; minute-1 mid-phone elite intro still 4 sparks/0 freeze. smoke:fx-lite OK. Draft, STOP, no main."
+    },
+    {
+      "at": "2026-09-18T16:44:02Z",
+      "summary": "FIX #339 PERF: touch keeps fxSpawnLite whole fight; skip juiceKillSnap/hitStop freeze on Lite FX/touch. smoke:fx-lite OK. Draft #347, no main."
+    },
+    {
       "at": "2026-09-18T16:06:11Z",
       "summary": "MEGA-MERGE 20m drafts #333–#327 onto main. v1.18.190 / SW 400. Playtest swarm. SKIP #324. Leave #311."
     },
@@ -1321,14 +1345,6 @@
     {
       "at": "2026-09-18T12:36:17Z",
       "summary": "examiner P0: pets/gear locale + 390px overflow (start)"
-    },
-    {
-      "at": "2026-09-18T12:31:56Z",
-      "summary": "LANGUAGE: factory desc + nameShort, FOMO/HUD locale, export gear/fabriek i18n. Draft #317, geen main."
-    },
-    {
-      "at": "2026-09-18T12:30:17Z",
-      "summary": "LANGUAGE worker: layout-safe NL/EN/DE/FR/ES copy (factory desc, FOMO, HUD telegraphs). Draft, geen main."
     }
   ],
   "implementedFeaturesSummary": "d18 char select deel 1+2 (v1.11.1-2); Mats coinrun + shuriken mik/vliegers + anti-spam (v1.12.0); speel.html (v1.12.2+). Zie HANDOFF-ZOEKINDEX.md en improvement-d20-bag.json userFeatureLog.",
