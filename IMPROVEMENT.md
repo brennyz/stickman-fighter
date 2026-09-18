@@ -145,6 +145,7 @@ Schrijf **1–3 regels** per sessie: datum, d#, wat, versie.
 
 | Datum (UTC) | d# | Update |
 |-------------|-----|--------|
+| 2026-09-18 | — | **Gear i18n final #315:** hunt CTA + Alles uitdoen + unequip toast in EN/DE/FR/ES (geen NL-leak). **v1.18.175 / SW 385**. Draft, niet main. Versus out. |
 | 2026-09-18 | — | **Gear P0 on #315:** starter-only Avontuur-CTA; 390px look-vs-stats zonder clutter; slot-swap mistap weg + twee-tik Alles uitdoen. Schema 1. **v1.18.174 / SW 384**. Draft, niet main. |
 | 2026-09-18 | — | **Gear screens UX:** slot sheet + Aandoen/Uitdoen + filter counts/Wis + lock reason chips; desktop 2-kolom. Schema/equip-API ongewijzigd. Versus out. **v1.18.173 / SW 383**. Draft, niet main. speel.html. |
 | 2026-09-16 | — | **MEGA-MERGE → main** Grok wave #295–#309 (i18n → systems → UI → pixels → polish). Feature-base PRs (#297/#300/#307/#309) cherry-picked. **v1.18.172 / SW 382**. speel.html na Pages. |

@@ -4398,9 +4398,9 @@ const UI = {
     const starterOnly = typeof gearIsStarterOnly === 'function' ? gearIsStarterOnly(save) : true;
     if (!pickerOnly && hunt) {
       hunt.hidden = !starterOnly;
-      if (huntCopy) huntCopy.textContent = tOr('gear.huntCopy', 'Alleen start-look. Vind meer stukken in Avontuur.');
+      if (huntCopy) huntCopy.textContent = tOr('gear.huntCopy', 'Starter look only. Find more pieces in Adventure.');
       if (huntBtn) {
-        huntBtn.textContent = tOr('gear.huntBtn', 'Naar Avontuur');
+        huntBtn.textContent = tOr('gear.huntBtn', 'Go to Adventure');
         if (!huntBtn.dataset.sfGearHunt) {
           huntBtn.dataset.sfGearHunt = '1';
           bindPress(huntBtn, () => {
@@ -4483,7 +4483,7 @@ const UI = {
     if (!pickerOnly && allOff) {
       allOff.hidden = filled < 1;
       allOff.classList.remove('is-armed');
-      allOff.textContent = tOr('gear.unequipAll', 'Alles uitdoen');
+      allOff.textContent = tOr('gear.unequipAll', 'Unequip all');
       if (!allOff.dataset.sfGearAllOff) {
         allOff.dataset.sfGearAllOff = '1';
         let lastRun = 0;
@@ -4499,7 +4499,7 @@ const UI = {
                 return n;
               }, 0) };
             AudioSys.sfx('select');
-            UI.toast(tOr('toast.gearUnequipAll', 'Alles uitgedaan', { n: (res && res.n) || 0 }), 1400);
+            UI.toast(tOr('toast.gearUnequipAll', 'Unequipped all', { n: (res && res.n) || 0 }), 1400);
             this.renderGear();
             this.renderMenu();
           }, 'gearUnequipAll', tOr('gear.errSlot', 'Slot pick failed'));

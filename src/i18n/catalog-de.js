@@ -224,6 +224,7 @@ const CATALOG_DE_CHROME = {
     styleUnlock: 'Neuer Stil: {name}!',
     gearEquipped: '{name} ausgerüstet',
     gearUnequipped: '{name} abgelegt',
+    gearUnequipAll: 'Alles abgelegt',
     gearLocked: 'Noch gesperrt · {why}',
     gearDrop: '{slot}: {name}!',
     summon: '✦ Summon! {name} ist jetzt {rar} — Schaden ×{dmg}',

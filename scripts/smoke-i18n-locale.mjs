@@ -212,4 +212,23 @@ if (!/wild: 'Bosque'/.test(locales)) fail('ES dexBiome.wild must be Bosque');
 if (!/scrap: 'Scrap'/.test(catalog)) fail('EN dexBiome.scrap missing');
 if (!/scrap: 'Schrott'/.test(deChrome + locales)) fail('DE dexBiome.scrap must not stay Dutch Schroot');
 
+if (!/huntBtn: 'Go to Adventure'/.test(catalogEn)) fail('EN gear.huntBtn missing');
+if (!/unequipAll: 'Unequip all'/.test(catalogEn)) fail('EN gear.unequipAll missing');
+if (!/gearUnequipAll: 'Unequipped all'/.test(catalogEn)) fail('EN toast.gearUnequipAll missing');
+if (/huntBtn: 'Naar Avontuur'/.test(catalogEn)) fail('EN gear.huntBtn still Dutch');
+if (/unequipAll: 'Alles uitdoen'/.test(catalogEn)) fail('EN gear.unequipAll still Dutch');
+if (!/huntBtn: 'Zum Abenteuer'/.test(deChrome)) fail('DE gear.huntBtn missing');
+if (!/unequipAll: 'Alles ablegen'/.test(deChrome)) fail('DE gear.unequipAll missing');
+if (!/gearUnequipAll: 'Alles abgelegt'/.test(deChrome + locales)) fail('DE toast.gearUnequipAll missing');
+if (!/huntBtn: 'Aller en Aventure'/.test(locales)) fail('FR gear.huntBtn missing');
+if (!/unequipAll: 'Tout enlever'/.test(locales)) fail('FR gear.unequipAll missing');
+if (!/gearUnequipAll: 'Tout enlevé'/.test(locales)) fail('FR toast.gearUnequipAll missing');
+if (!/huntBtn: 'Ir a Aventura'/.test(locales)) fail('ES gear.huntBtn missing');
+if (!/unequipAll: 'Quitar todo'/.test(locales)) fail('ES gear.unequipAll missing');
+if (!/gearUnequipAll: 'Todo quitado'/.test(locales)) fail('ES toast.gearUnequipAll missing');
+if (!/tOr\('gear\.huntBtn'/.test(ui) || !/tOr\('gear\.unequipAll'/.test(ui)) fail('gear hunt/unequip-all must use tOr');
+if (!/tOr\('toast\.gearUnequipAll'/.test(ui)) fail('unequip-all toast must use tOr');
+if (/tOr\('gear\.huntBtn', 'Naar Avontuur'/.test(ui)) fail('gear.huntBtn fallback must not be Dutch');
+if (/tOr\('gear\.unequipAll', 'Alles uitdoen'/.test(ui)) fail('gear.unequipAll fallback must not be Dutch');
+
 console.log('SMOKE_OK i18n-locale: Tips/VERLOREN + #273 coverage + #283 overlays + 2026-09-16 FR/ES/DE polish');

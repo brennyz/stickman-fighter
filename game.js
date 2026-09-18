@@ -323,9 +323,9 @@ const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const VERSION_UPDATE_SAVE_KEY = 'stickfighter_version_update_save_v1';
 const VERSION_UPDATE_FLAG_KEY = 'stickfighter_version_update_flag_v1';
 const SAVE_EXPORT_SCHEMA = 3;
-const APP_VERSION = '1.18.174';
+const APP_VERSION = '1.18.175';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 384;
+const SW_CACHE_REV = 385;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', petCoins: 0, dex: {}, summons: {}, pets: {}, activePet: null,
   eggPets: {}, activeEggPet: null, eggDaily: null,
   chestDaily: null, chestWeapons: {},
@@ -2504,6 +2504,9 @@ const I18N = {
       flagVanity: 'Alleen look — geen stats', flagStats: '+ stats', flagArmour: 'Pantser',
       needLvl: 'Vrij vanaf Lv {n}', needDays: 'Vrij vanaf dag {n}',
       equip: 'Uitrusten', equipped: 'Aan', empty: 'Leeg',
+      huntCopy: 'Alleen start-look. Vind meer stukken in Avontuur.',
+      huntBtn: 'Naar Avontuur',
+      unequipAll: 'Alles uitdoen',
       slot: { head: 'Hoofd', chest: 'Borst', hands: 'Handen', legs: 'Benen', back: 'Rug' },
     },
     install: { title: 'Zet in app-lade', sub: 'Één icoon, zoals een echte app' },
@@ -2793,6 +2796,9 @@ const I18N = {
       flagVanity: 'Look only — no stats', flagStats: '+ stats', flagArmour: 'Armour',
       needLvl: 'Unlocks at Lv {n}', needDays: 'Unlocks on day {n}',
       equip: 'Equip', equipped: 'On', empty: 'Empty',
+      huntCopy: 'Starter look only. Find more pieces in Adventure.',
+      huntBtn: 'Go to Adventure',
+      unequipAll: 'Unequip all',
       slot: { head: 'Head', chest: 'Chest', hands: 'Hands', legs: 'Legs', back: 'Back' },
     },
     install: { title: 'Add as app', sub: 'One icon, like a real app' },
@@ -3131,6 +3137,9 @@ const I18N = {
       flagVanity: 'Nur Look — keine Stats', flagStats: '+ Stats', flagArmour: 'Rüstung',
       needLvl: 'Frei ab Lv {n}', needDays: 'Frei ab Tag {n}',
       equip: 'Anlegen', equipped: 'An', empty: 'Leer',
+      huntCopy: 'Nur Start-Look. Mehr Stücke im Abenteuer finden.',
+      huntBtn: 'Zum Abenteuer',
+      unequipAll: 'Alles ablegen',
       slot: { head: 'Kopf', chest: 'Brust', hands: 'Hände', legs: 'Beine', back: 'Rücken' },
     },
     install: { title: 'Als App speichern', sub: 'Ein Icon, wie eine echte App' },
@@ -3399,6 +3408,9 @@ const I18N = {
       flagVanity: 'Look seulement — pas de stats', flagStats: '+ stats', flagArmour: 'Armure',
       needLvl: 'Libre dès Lv {n}', needDays: 'Libre dès le jour {n}',
       equip: 'Équiper', equipped: 'Sur toi', empty: 'Vide',
+      huntCopy: 'Look de départ seulement. Trouve plus de pièces en Aventure.',
+      huntBtn: 'Aller en Aventure',
+      unequipAll: 'Tout enlever',
       slot: { head: 'Tête', chest: 'Torse', hands: 'Mains', legs: 'Jambes', back: 'Dos' },
     },
     install: { title: 'Ajouter comme app', sub: 'Une icône, comme une vraie app' },
@@ -3659,6 +3671,9 @@ const I18N = {
       flagVanity: 'Solo look — sin stats', flagStats: '+ stats', flagArmour: 'Armadura',
       needLvl: 'Libre desde Lv {n}', needDays: 'Libre desde el día {n}',
       equip: 'Equipar', equipped: 'Puesto', empty: 'Vacío',
+      huntCopy: 'Solo look inicial. Encuentra más piezas en Aventura.',
+      huntBtn: 'Ir a Aventura',
+      unequipAll: 'Quitar todo',
       slot: { head: 'Cabeza', chest: 'Pecho', hands: 'Manos', legs: 'Piernas', back: 'Espalda' },
     },
     install: { title: 'Añadir como app', sub: 'Un icono, como una app real' },
@@ -4016,6 +4031,9 @@ function applyLangStaticScreens() {
   setText('styleScreenSub', 'ui.styleSub');
   setText('gearScreenHead', 'ui.gearHead');
   setText('gearScreenSub', 'ui.gearSub');
+  setText('gearHuntCopy', 'gear.huntCopy');
+  setText('btnGearHuntAdv', 'gear.huntBtn');
+  setText('gearUnequipAll', 'gear.unequipAll');
   setText('skillScreenHead', 'ui.skillSummaryHead');
   setText('skillScreenSub', 'ui.skillSub');
   setText('upgradeScreenHead', 'ui.skillHead');
@@ -20812,6 +20830,7 @@ function seedNlGameStrings() {
     styleUnlock: 'Nieuwe stijl: {name}!',
     gearEquipped: '{name} uitgerust',
     gearUnequipped: '{slot} leeg',
+    gearUnequipAll: 'Alles uitgedaan',
     summon: '✦ Summon! {name} is nu {rar} — schade ×{dmg}',
     tideBattle: 'Tide Battle! {name} verschijnt — versla de baas!',
     tideBattleWin: 'Tide Battle gewonnen! +{xp} XP · +{coins} pet coins',
@@ -20874,6 +20893,7 @@ function seedNlGameStrings() {
     styleEquipped: '{name} uitgerust',
     gearEquipped: '{name} aangedaan',
     gearUnequipped: '{name} uitgedaan',
+    gearUnequipAll: 'Alles uitgedaan',
     gearLocked: 'Nog op slot · {why}',
     skillUnlock: 'Nieuwe skill: {name}!',
     skillEquipped: '{name} uitgerust als special',
@@ -22147,6 +22167,7 @@ const CATALOG_EN = {
     styleUnlock: 'New style: {name}!',
     gearEquipped: '{name} equipped',
     gearUnequipped: '{slot} empty',
+    gearUnequipAll: 'Unequipped all',
     summon: '✦ Summon! {name} is now {rar} — damage ×{dmg}',
     tideBattle: 'Tide Battle! {name} appears — defeat the boss!',
     tideBattleWin: 'Tide Battle won! +{xp} XP · +{coins} pet coins',
@@ -22210,6 +22231,7 @@ const CATALOG_EN = {
     styleEquipped: '{name} equipped',
     gearEquipped: '{name} equipped',
     gearUnequipped: '{name} removed',
+    gearUnequipAll: 'Unequipped all',
     gearLocked: 'Still locked · {why}',
     skillUnlock: 'New skill: {name}!',
     skillEquipped: '{name} equipped as special',
@@ -23694,6 +23716,7 @@ const CATALOG_DE_CHROME = {
     styleUnlock: 'Neuer Stil: {name}!',
     gearEquipped: '{name} ausgerüstet',
     gearUnequipped: '{name} abgelegt',
+    gearUnequipAll: 'Alles abgelegt',
     gearLocked: 'Noch gesperrt · {why}',
     gearDrop: '{slot}: {name}!',
     summon: '✦ Summon! {name} ist jetzt {rar} — Schaden ×{dmg}',
@@ -24664,6 +24687,7 @@ overlayI18nCatalog(CATALOG_FR, {
     eggNone: 'Pas d’œuf-pet actif',
     eggFloat: '{name} flotte avec toi !',
     styleEquipped: '{name} équipé',
+    gearUnequipAll: 'Tout enlevé',
     skillUnlock: 'Nouvelle skill : {name} !',
     skillEquipped: '{name} équipé comme spécial',
     superEquipped: '{name} équipé comme super d’urgence',
@@ -25212,6 +25236,7 @@ overlayI18nCatalog(CATALOG_ES, {
     eggNone: 'Sin huevo-pet activo',
     eggFloat: '¡{name} flota contigo!',
     styleEquipped: '{name} equipado',
+    gearUnequipAll: 'Todo quitado',
     skillUnlock: '¡Nueva skill: {name}!',
     skillEquipped: '{name} equipado como especial',
     superEquipped: '{name} equipado como super de urgencia',
@@ -25774,6 +25799,7 @@ overlayI18nCatalog(CATALOG_DE, {
     eggNone: 'Kein aktives Ei-Pet',
     eggFloat: '{name} schwebt jetzt mit!',
     styleEquipped: '{name} ausgerüstet',
+    gearUnequipAll: 'Alles abgelegt',
     skillUnlock: 'Neuer Skill: {name}!',
     skillEquipped: '{name} als Special ausgerüstet',
     superEquipped: '{name} als Notfall-Super ausgerüstet',
@@ -50658,9 +50684,9 @@ const UI = {
     const starterOnly = typeof gearIsStarterOnly === 'function' ? gearIsStarterOnly(save) : true;
     if (!pickerOnly && hunt) {
       hunt.hidden = !starterOnly;
-      if (huntCopy) huntCopy.textContent = tOr('gear.huntCopy', 'Alleen start-look. Vind meer stukken in Avontuur.');
+      if (huntCopy) huntCopy.textContent = tOr('gear.huntCopy', 'Starter look only. Find more pieces in Adventure.');
       if (huntBtn) {
-        huntBtn.textContent = tOr('gear.huntBtn', 'Naar Avontuur');
+        huntBtn.textContent = tOr('gear.huntBtn', 'Go to Adventure');
         if (!huntBtn.dataset.sfGearHunt) {
           huntBtn.dataset.sfGearHunt = '1';
           bindPress(huntBtn, () => {
@@ -50743,7 +50769,7 @@ const UI = {
     if (!pickerOnly && allOff) {
       allOff.hidden = filled < 1;
       allOff.classList.remove('is-armed');
-      allOff.textContent = tOr('gear.unequipAll', 'Alles uitdoen');
+      allOff.textContent = tOr('gear.unequipAll', 'Unequip all');
       if (!allOff.dataset.sfGearAllOff) {
         allOff.dataset.sfGearAllOff = '1';
         let lastRun = 0;
@@ -50759,7 +50785,7 @@ const UI = {
                 return n;
               }, 0) };
             AudioSys.sfx('select');
-            UI.toast(tOr('toast.gearUnequipAll', 'Alles uitgedaan', { n: (res && res.n) || 0 }), 1400);
+            UI.toast(tOr('toast.gearUnequipAll', 'Unequipped all', { n: (res && res.n) || 0 }), 1400);
             this.renderGear();
             this.renderMenu();
           }, 'gearUnequipAll', tOr('gear.errSlot', 'Slot pick failed'));

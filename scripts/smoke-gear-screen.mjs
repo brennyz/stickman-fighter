@@ -59,6 +59,24 @@ must(/gearEquipItem/.test(ui) && /gearTooltipModel/.test(ui) && /drawGearHeroDol
 must(/expectSlot/.test(ui) && /gearSheetRows|gearSlotInventory/.test(ui), 'renderGear must pass expectSlot and use slot inventory');
 must(/btnGear',\s*'hub\.gear'/.test(i18n), 'Character tile must be i18n-wired');
 must(/btnGearHome',\s*'hub\.gear'/.test(i18n), 'HOME gear tile must be i18n-wired');
+const catalog = fs.readFileSync(path.join(root, 'src/i18n/catalog.js'), 'utf8');
+const deChrome = fs.readFileSync(path.join(root, 'src/i18n/catalog-de.js'), 'utf8');
+const locales = fs.readFileSync(path.join(root, 'src/i18n/catalog-locales.js'), 'utf8');
+const catalogEn = catalog.split('const CATALOG_EN')[1] || '';
+must(/huntBtn: 'Go to Adventure'/.test(catalogEn), 'EN hunt CTA missing');
+must(/unequipAll: 'Unequip all'/.test(catalogEn), 'EN unequip-all missing');
+must(/gearUnequipAll: 'Unequipped all'/.test(catalogEn), 'EN unequip-all toast missing');
+must(/huntBtn: 'Zum Abenteuer'/.test(deChrome), 'DE hunt CTA missing');
+must(/unequipAll: 'Alles ablegen'/.test(deChrome), 'DE unequip-all missing');
+must(/gearUnequipAll: 'Alles abgelegt'/.test(deChrome + locales), 'DE unequip-all toast missing');
+must(/huntBtn: 'Aller en Aventure'/.test(locales), 'FR hunt CTA missing');
+must(/unequipAll: 'Tout enlever'/.test(locales), 'FR unequip-all missing');
+must(/gearUnequipAll: 'Tout enlevé'/.test(locales), 'FR unequip-all toast missing');
+must(/huntBtn: 'Ir a Aventura'/.test(locales), 'ES hunt CTA missing');
+must(/unequipAll: 'Quitar todo'/.test(locales), 'ES unequip-all missing');
+must(/gearUnequipAll: 'Todo quitado'/.test(locales), 'ES unequip-all toast missing');
+must(!/tOr\('gear\.huntBtn', 'Naar Avontuur'/.test(ui), 'huntBtn fallback must not leak Dutch');
+must(!/tOr\('gear\.unequipAll', 'Alles uitdoen'/.test(ui), 'unequipAll fallback must not leak Dutch');
 must(/--menu-tile-solid/.test(css.match(/\.gear-slot-card \{[\s\S]*?\}/)?.[0] || ''), 'slot cards must use HOME tiles');
 must(/min-height:\s*max\(56px,\s*var\(--touch-min\)\)/.test(css), 'Android touch floor missing on slot cards');
 must(!/\.gear-picker \{[\s\S]{0,160}max-height/.test(css), 'picker must not nest-scroll (one page scroll)');
@@ -163,6 +181,38 @@ async function run() {
       }
       if (!/Avontuur|Adventure|Abenteuer|Aventure|Aventura/i.test((hunt.textContent || '') + (huntBtn.textContent || ''))) {
         return { ok: false, why: 'hunt CTA must name Adventure', text: hunt.textContent };
+      }
+      const prevLang = (typeof save !== 'undefined' && save.lang) || 'nl';
+      const chromeWant = {
+        en: { hunt: 'Go to Adventure', all: 'Unequip all', toast: 'Unequipped all' },
+        de: { hunt: 'Zum Abenteuer', all: 'Alles ablegen', toast: 'Alles abgelegt' },
+        fr: { hunt: 'Aller en Aventure', all: 'Tout enlever', toast: 'Tout enlevé' },
+        es: { hunt: 'Ir a Aventura', all: 'Quitar todo', toast: 'Todo quitado' },
+      };
+      if (typeof t === 'function') {
+        for (const lang of Object.keys(chromeWant)) {
+          save.lang = lang;
+          if (typeof applyLang === 'function') applyLang();
+          else UI.renderGear();
+          const want = chromeWant[lang];
+          const hb = document.getElementById('btnGearHuntAdv');
+          const ao = document.getElementById('gearUnequipAll');
+          if (!hb || hb.textContent !== want.hunt) {
+            return { ok: false, why: 'hunt CTA i18n ' + lang, text: hb && hb.textContent };
+          }
+          if (!ao || ao.textContent !== want.all) {
+            return { ok: false, why: 'unequip-all i18n ' + lang, text: ao && ao.textContent };
+          }
+          if (t('toast.gearUnequipAll') !== want.toast) {
+            return { ok: false, why: 'toast.gearUnequipAll i18n ' + lang, text: t('toast.gearUnequipAll') };
+          }
+          if (/Naar Avontuur|Alles uitdoen|Alles uitgedaan/.test((hb.textContent || '') + (ao.textContent || '') + t('toast.gearUnequipAll'))) {
+            return { ok: false, why: 'Dutch leak on ' + lang };
+          }
+        }
+        save.lang = prevLang;
+        if (typeof applyLang === 'function') applyLang();
+        else UI.renderGear();
       }
       if (typeof gearIsStarterOnly === 'function' && !gearIsStarterOnly(save)) {
         return { ok: false, why: 'fresh save must be starter-only' };

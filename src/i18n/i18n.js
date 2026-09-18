@@ -207,6 +207,9 @@ const I18N = {
       flagVanity: 'Alleen look — geen stats', flagStats: '+ stats', flagArmour: 'Pantser',
       needLvl: 'Vrij vanaf Lv {n}', needDays: 'Vrij vanaf dag {n}',
       equip: 'Uitrusten', equipped: 'Aan', empty: 'Leeg',
+      huntCopy: 'Alleen start-look. Vind meer stukken in Avontuur.',
+      huntBtn: 'Naar Avontuur',
+      unequipAll: 'Alles uitdoen',
       slot: { head: 'Hoofd', chest: 'Borst', hands: 'Handen', legs: 'Benen', back: 'Rug' },
     },
     install: { title: 'Zet in app-lade', sub: 'Één icoon, zoals een echte app' },
@@ -496,6 +499,9 @@ const I18N = {
       flagVanity: 'Look only — no stats', flagStats: '+ stats', flagArmour: 'Armour',
       needLvl: 'Unlocks at Lv {n}', needDays: 'Unlocks on day {n}',
       equip: 'Equip', equipped: 'On', empty: 'Empty',
+      huntCopy: 'Starter look only. Find more pieces in Adventure.',
+      huntBtn: 'Go to Adventure',
+      unequipAll: 'Unequip all',
       slot: { head: 'Head', chest: 'Chest', hands: 'Hands', legs: 'Legs', back: 'Back' },
     },
     install: { title: 'Add as app', sub: 'One icon, like a real app' },
@@ -834,6 +840,9 @@ const I18N = {
       flagVanity: 'Nur Look — keine Stats', flagStats: '+ Stats', flagArmour: 'Rüstung',
       needLvl: 'Frei ab Lv {n}', needDays: 'Frei ab Tag {n}',
       equip: 'Anlegen', equipped: 'An', empty: 'Leer',
+      huntCopy: 'Nur Start-Look. Mehr Stücke im Abenteuer finden.',
+      huntBtn: 'Zum Abenteuer',
+      unequipAll: 'Alles ablegen',
       slot: { head: 'Kopf', chest: 'Brust', hands: 'Hände', legs: 'Beine', back: 'Rücken' },
     },
     install: { title: 'Als App speichern', sub: 'Ein Icon, wie eine echte App' },
@@ -1102,6 +1111,9 @@ const I18N = {
       flagVanity: 'Look seulement — pas de stats', flagStats: '+ stats', flagArmour: 'Armure',
       needLvl: 'Libre dès Lv {n}', needDays: 'Libre dès le jour {n}',
       equip: 'Équiper', equipped: 'Sur toi', empty: 'Vide',
+      huntCopy: 'Look de départ seulement. Trouve plus de pièces en Aventure.',
+      huntBtn: 'Aller en Aventure',
+      unequipAll: 'Tout enlever',
       slot: { head: 'Tête', chest: 'Torse', hands: 'Mains', legs: 'Jambes', back: 'Dos' },
     },
     install: { title: 'Ajouter comme app', sub: 'Une icône, comme une vraie app' },
@@ -1362,6 +1374,9 @@ const I18N = {
       flagVanity: 'Solo look — sin stats', flagStats: '+ stats', flagArmour: 'Armadura',
       needLvl: 'Libre desde Lv {n}', needDays: 'Libre desde el día {n}',
       equip: 'Equipar', equipped: 'Puesto', empty: 'Vacío',
+      huntCopy: 'Solo look inicial. Encuentra más piezas en Aventura.',
+      huntBtn: 'Ir a Aventura',
+      unequipAll: 'Quitar todo',
       slot: { head: 'Cabeza', chest: 'Pecho', hands: 'Manos', legs: 'Piernas', back: 'Espalda' },
     },
     install: { title: 'Añadir como app', sub: 'Un icono, como una app real' },
@@ -1719,6 +1734,9 @@ function applyLangStaticScreens() {
   setText('styleScreenSub', 'ui.styleSub');
   setText('gearScreenHead', 'ui.gearHead');
   setText('gearScreenSub', 'ui.gearSub');
+  setText('gearHuntCopy', 'gear.huntCopy');
+  setText('btnGearHuntAdv', 'gear.huntBtn');
+  setText('gearUnequipAll', 'gear.unequipAll');
   setText('skillScreenHead', 'ui.skillSummaryHead');
   setText('skillScreenSub', 'ui.skillSub');
   setText('upgradeScreenHead', 'ui.skillHead');
