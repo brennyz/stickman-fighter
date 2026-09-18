@@ -1061,7 +1061,10 @@ class Game {
         const failsNow = advFailCount(lv, diff);
         const retry = tOr('result.againRetry', 'Nog één keer');
         const tele = (typeof combatFailRetryTip === 'function') ? combatFailRetryTip(this, '') : '';
-        const lead = tele || retry;
+        const prog = this.waveIdx >= 0
+          ? t('result.wavesProg', { cur: this.waveIdx + 1, total: this.level.waves.length })
+          : tOr('result.wavesStart', 'begin');
+        const lead = (tele || retry) + ' · ' + prog;
         if (failsNow >= SATAN_FAIL_THRESHOLD && typeof shouldTriggerSatan === 'function' && shouldTriggerSatan(lv, diff)) {
           return lead + ' · ' + t('result.heatSatanNext');
         }

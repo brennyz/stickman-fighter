@@ -30388,7 +30388,7 @@ function combatFailTeleKind(src) {
   if (!src) return '';
   if (typeof src === 'string') return src;
   const kind = src.kind || src.failKind || '';
-  if (kind === 'fire') return 'fire';
+  if (kind === 'slam' || kind === 'charge' || kind === 'flyer' || kind === 'fire') return kind;
   if (kind === 'laser' || kind === 'orb' || kind === 'ink' || kind === 'shoot') return 'shoot';
   const attacker = src.attacker || src;
   const sp = attacker.sp || {};
@@ -41709,7 +41709,10 @@ class Game {
         const failsNow = advFailCount(lv, diff);
         const retry = tOr('result.againRetry', 'Nog één keer');
         const tele = (typeof combatFailRetryTip === 'function') ? combatFailRetryTip(this, '') : '';
-        const lead = tele || retry;
+        const prog = this.waveIdx >= 0
+          ? t('result.wavesProg', { cur: this.waveIdx + 1, total: this.level.waves.length })
+          : tOr('result.wavesStart', 'begin');
+        const lead = (tele || retry) + ' · ' + prog;
         if (failsNow >= SATAN_FAIL_THRESHOLD && typeof shouldTriggerSatan === 'function' && shouldTriggerSatan(lv, diff)) {
           return lead + ' · ' + t('result.heatSatanNext');
         }
