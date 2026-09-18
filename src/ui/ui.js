@@ -1370,6 +1370,7 @@ const UI = {
       if (active === 'summonScreen') {
         this.clearSummonRevealTimers();
         this._chestPullBusy = false;
+        this._summonSkipReady = false;
         this.renderMenu();
         this.show('menuScreen');
         return;
@@ -1626,6 +1627,7 @@ const UI = {
       try { this.clearSummonRevealTimers(); } catch (_) {}
       try { this.stopBuildingsTick(); } catch (_) {}
       this._chestPullBusy = false;
+      this._summonSkipReady = false;
       try { Input.releaseAll(); } catch (_) {}
       Input.dualMode = false;
       Input.layout(W, H);
@@ -2268,52 +2270,82 @@ const UI = {
       const left = typeof chestSummonsLeft === 'function' ? chestSummonsLeft() : 0;
       const quota = document.getElementById('summonQuota');
       if (quota) {
-        quota.textContent = t('ui.summonQuota', { left, total: CHEST_DAILY_TOTAL });
+        quota.textContent = tOr('ui.summonQuotaShort', '{left}/{total}', { left, total: CHEST_DAILY_TOTAL });
+        quota.classList.toggle('is-empty', left <= 0);
       }
+      const skipReady = !!this._summonSkipReady && !!this._chestPullBusy;
       const pullBtn = document.getElementById('btnChestPull');
       const pullLbl = document.getElementById('chestPullLbl');
-      if (pullLbl) pullLbl.textContent = left > 0 ? t('ui.summonPullLeft', { n: left }) : t('ui.summonPullEmpty');
+      if (pullLbl) {
+        pullLbl.textContent = skipReady
+          ? (left > 0 ? tOr('ui.summonSkip', 'Tik om verder') : t('ui.summonPullEmpty'))
+          : (left > 0 ? t('ui.summonPullLeft', { n: left }) : t('ui.summonPullEmpty'));
+      }
       if (pullBtn) {
-        pullBtn.disabled = left <= 0 || !!this._chestPullBusy;
+        pullBtn.disabled = skipReady ? false : (left <= 0 || !!this._chestPullBusy);
         const titleEl = pullBtn.querySelector('div');
         if (titleEl) {
           const small = titleEl.querySelector('small');
           titleEl.textContent = '';
-          titleEl.appendChild(document.createTextNode(tOr('ui.summonOpen', 'Open kist')));
+          titleEl.appendChild(document.createTextNode(
+            skipReady
+              ? (left > 0 ? tOr('ui.summonNext', 'Volgende') : tOr('ui.summonOpen', 'Open kist'))
+              : tOr('ui.summonOpen', 'Open kist')
+          ));
           if (small) titleEl.appendChild(small);
         }
-        pullBtn.setAttribute('aria-label', left > 0
-          ? t('ui.summonAriaPull', { n: left })
-          : t('ui.summonAriaEmpty'));
+        pullBtn.setAttribute('aria-label', skipReady
+          ? (left > 0 ? tOr('ui.summonNext', 'Volgende') : t('ui.summonAriaEmpty'))
+          : (left > 0 ? t('ui.summonAriaPull', { n: left }) : t('ui.summonAriaEmpty')));
       }
       const stage = document.getElementById('summonStage');
       if (stage) {
         const canPull = left > 0 && !this._chestPullBusy;
-        stage.classList.toggle('is-pullable', canPull);
-        stage.setAttribute('aria-disabled', canPull ? 'false' : 'true');
-        stage.setAttribute('aria-label', canPull
-          ? t('ui.summonAriaPull', { n: left })
-          : (left <= 0 ? t('ui.summonAriaEmpty') : t('ui.summonAriaBusy')));
-        stage.tabIndex = canPull ? 0 : -1;
+        stage.classList.toggle('is-pullable', canPull || skipReady);
+        stage.setAttribute('aria-disabled', (canPull || skipReady) ? 'false' : 'true');
+        stage.setAttribute('aria-label', skipReady
+          ? tOr('ui.summonSkip', 'Tik om verder')
+          : (canPull
+            ? t('ui.summonAriaPull', { n: left })
+            : (left <= 0 ? t('ui.summonAriaEmpty') : t('ui.summonAriaBusy'))));
+        stage.tabIndex = (canPull || skipReady) ? 0 : -1;
       }
       const hint = document.getElementById('summonStageHint');
       if (hint) {
         hint.textContent = tOr('ui.summonHint', 'Tik kist om te openen');
         hint.style.display = (left > 0 && !this._chestPullBusy) ? '' : 'none';
       }
+      const skipHint = document.getElementById('summonSkipHint');
+      if (skipHint) {
+        skipHint.hidden = !skipReady;
+        skipHint.textContent = tOr('ui.summonSkip', 'Tik om verder');
+      }
+      const revealText = document.getElementById('summonRevealText');
+      if (revealText && !this._chestPullBusy) {
+        revealText.textContent = left > 0
+          ? tOr('ui.summonReveal', 'Tik de kist — wapen of pet')
+          : tOr('ui.summonNoMore', 'Geen summons meer vandaag');
+      }
 
       const logEl = document.getElementById('summonLog');
       if (logEl) {
         const pulls = (save.chestDaily && Array.isArray(save.chestDaily.pulls))
           ? save.chestDaily.pulls.slice().reverse() : [];
+        logEl.textContent = '';
         if (!pulls.length) {
-          logEl.textContent = t('ui.summonLogEmpty');
+          const empty = document.createElement('div');
+          empty.className = 'summon-log-empty';
+          empty.textContent = t('ui.summonLogEmpty');
+          logEl.appendChild(empty);
         } else {
-          logEl.innerHTML = pulls.slice(0, 8).map((p) => {
-            const tag = p.nice ? '✦' : '·';
-            const rar = p.rarity ? ` ${p.rarity}` : '';
-            return `<div>${tag} ${p.kind} ${p.type || ''}${rar}</div>`;
-          }).join('');
+          pulls.slice(0, 6).forEach((p) => {
+            const chip = document.createElement('div');
+            chip.className = 'summon-log-chip' + (p.nice ? ' is-nice' : '');
+            chip.textContent = (typeof chestPullLogLine === 'function')
+              ? chestPullLogLine(p)
+              : ((p.nice ? '✦ ' : '') + (p.kind || ''));
+            logEl.appendChild(chip);
+          });
         }
       }
       try { syncPlayLayer(); } catch (_) {}
@@ -2338,6 +2370,7 @@ const UI = {
       if (screen) {
         screen.classList.remove('is-pulling');
         screen.classList.remove('has-video');
+        screen.classList.remove('is-skip-ready');
       }
     } catch (_) {}
     try {
@@ -2367,6 +2400,7 @@ const UI = {
       if (state === 'pause' || state === 'result') state = 'menu';
       this.clearSummonRevealTimers();
       this._chestPullBusy = false;
+      this._summonSkipReady = false;
       this._chestPullLeftSnap = null;
       try { if (typeof _summonVideoOk !== 'undefined') _summonVideoOk = null; } catch (_) {}
       this.safeOpen('summonScreen', () => {
@@ -2485,7 +2519,7 @@ const UI = {
     } catch (_) {
       title = (res && res.name) || 'Summon';
     }
-    nameEl.textContent = title;
+    nameEl.textContent = (typeof chestResultTitle === 'function') ? chestResultTitle(res) : title;
     if (rarEl) {
       rarEl.textContent = typeof rarityLabel === 'function' ? rarityLabel(rarId) : rarId;
       rarEl.style.color = rar.color || '#9db1e3';
@@ -2502,12 +2536,39 @@ const UI = {
     const card = document.getElementById('summonCenterCard');
     if (reveal) reveal.classList.add('is-card-show');
     if (card) card.setAttribute('aria-hidden', 'false');
+    this._summonSkipReady = true;
+    try {
+      const sc = document.getElementById('summonScreen');
+      if (sc) sc.classList.add('is-skip-ready');
+    } catch (_) {}
+    try {
+      const skip = document.getElementById('summonSkipHint');
+      if (skip) {
+        skip.hidden = false;
+        skip.textContent = tOr('ui.summonSkip', 'Tik om verder');
+      }
+    } catch (_) {}
     // Spoil only when the card lands — never via toast earlier
     try {
       const text = document.getElementById('summonRevealText');
       const msg = this._summonPendingMsg;
       if (text && msg) text.textContent = msg;
     } catch (_) {}
+    try { this.renderSummon(); } catch (_) {}
+  },
+
+  finishSummonReveal() {
+    this.clearSummonRevealTimers();
+    this._chestPullBusy = false;
+    this._chestPullLeftSnap = null;
+    this._summonSkipReady = false;
+    this._summonPendingMsg = null;
+    try {
+      const skip = document.getElementById('summonSkipHint');
+      if (skip) skip.hidden = true;
+    } catch (_) {}
+    try { if (typeof endSummonBgm === 'function') endSummonBgm(); } catch (_) {}
+    try { this.renderSummon(); } catch (_) {}
   },
 
   /**
@@ -2516,6 +2577,11 @@ const UI = {
    */
   runSummonRevealTimeline(res) {
     this.clearSummonRevealTimers();
+    this._summonSkipReady = false;
+    try {
+      const skip = document.getElementById('summonSkipHint');
+      if (skip) skip.hidden = true;
+    } catch (_) {}
     const screen = document.getElementById('summonScreen');
     const reveal = document.getElementById('summonReveal');
     const fallback = document.getElementById('summonStageFallback');
@@ -2540,17 +2606,7 @@ const UI = {
         try { this.showSummonCenterCard(); } catch (_) {}
       }, cardAt);
       this._summonDoneTimer = setTimeout(() => {
-        this._chestPullBusy = false;
-        this._chestPullLeftSnap = null;
-        try {
-          const sc = document.getElementById('summonScreen');
-          if (sc) {
-            sc.classList.remove('is-pulling');
-            sc.classList.remove('has-video');
-          }
-        } catch (_) {}
-        try { if (typeof endSummonBgm === 'function') endSummonBgm(); } catch (_) {}
-        try { this.renderSummon(); } catch (_) {}
+        try { this.finishSummonReveal(); } catch (_) {}
       }, totalMs || SUMMON_REVEAL_TOTAL_MS);
     };
 
@@ -2648,7 +2704,11 @@ const UI = {
 
   doChestPull(kind) {
     try {
-      if (this._chestPullBusy) return;
+      if (this._chestPullBusy && this._summonSkipReady) {
+        const leftNow = typeof chestSummonsLeft === 'function' ? chestSummonsLeft() : 0;
+        this.finishSummonReveal();
+        if (leftNow <= 0) return;
+      } else if (this._chestPullBusy) return;
       if (state === 'play' && game) {
         UI.toast(t('toast.notDuringCombat'), 2000, { tone: 'warn' });
         return;

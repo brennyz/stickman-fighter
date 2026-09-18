@@ -15,10 +15,10 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Bangers&family=Black+Ops+One&family=Nunito:wght@600;800;900&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="styles/main.css?v=382">
-<link rel="stylesheet" href="styles/seasons.css?v=382">
-<link rel="stylesheet" href="styles/season-overlays.css?v=382">
-<link rel="stylesheet" href="styles/season-motion.css?v=382">
+<link rel="stylesheet" href="styles/main.css?v=383">
+<link rel="stylesheet" href="styles/seasons.css?v=383">
+<link rel="stylesheet" href="styles/season-overlays.css?v=383">
+<link rel="stylesheet" href="styles/season-motion.css?v=383">
 
 
 
@@ -111,7 +111,7 @@
       <div class="arcade-pre" id="menuArcadePre" hidden>KIES JE PAD</div>
       <h1 class="title arcade-logo">STICKMAN<span>FIGHTER</span></h1>
       <p class="press-start" id="pressStartLine" hidden>insert coin</p>
-      <div class="subtitle menu-ver-line" id="menuVerLine">v1.18.172</div>
+      <div class="subtitle menu-ver-line" id="menuVerLine">v1.18.173</div>
       <p class="season-menu-blurb" id="seasonMenuBlurb" hidden></p>
     </header>
     <div class="arcade-menu-body menu-landing-body">
@@ -384,20 +384,24 @@
 
 <div id="summonScreen" class="screen summon-screen">
   <button class="btn back-btn" data-back type="button"><img class="back-btn-ico" src="assets/buttons/chrome/back.svg" alt="" width="18" height="18" decoding="async" draggable="false"> Menu</button>
-  <h2 class="head" id="summonScreenHead">Summons</h2>
-  <div class="subtitle" id="summonScreenSub">Dagelijkse kist · 10× random · wapen of pet</div>
+  <div class="summon-head-row">
+    <h2 class="head" id="summonScreenHead">Summons</h2>
+    <div id="summonQuota" class="summon-quota" aria-live="polite">10/10</div>
+  </div>
+  <div class="subtitle" id="summonScreenSub">10× per dag · wapen of pet</div>
   <div class="summon-rail">
-    <div id="summonWhereStrip" class="summon-where" role="note">
-      Menu → Summons · buit in Collectie → Wapens / Pets (badge Kist)
-    </div>
-    <div id="summonQuota" class="statbar summon-quota"></div>
+    <div id="summonWhereStrip" class="summon-where" role="note">Buit landt in Collectie</div>
     <div id="summonReveal" class="summon-reveal" data-rarity="common" aria-live="polite">
       <div class="summon-stage" id="summonStage" role="button" tabindex="0" aria-label="Open kist">
         <video id="summonVideo" class="summon-video" playsinline webkit-playsinline muted
           preload="metadata" data-src="assets/summon/reveal.mp4" aria-hidden="true"></video>
         <div class="summon-stage-fallback" id="summonStageFallback" aria-hidden="true">
           <div class="summon-arena" aria-hidden="true"></div>
-          <div class="summon-chest-visual" id="summonChestVisual"></div>
+          <div class="summon-chest-visual" id="summonChestVisual">
+            <span class="summon-chest-lid" aria-hidden="true"></span>
+            <span class="summon-chest-body" aria-hidden="true"></span>
+            <span class="summon-chest-lock" aria-hidden="true"></span>
+          </div>
         </div>
         <div class="summon-rarity-rays" id="summonRarityRays" aria-hidden="true"></div>
         <div class="summon-rarity-fx" id="summonRarityFx" aria-hidden="true"></div>
@@ -409,8 +413,9 @@
           <div id="summonCardSkill" class="summon-card-skill"></div>
         </div>
         <div class="summon-stage-hint" id="summonStageHint" aria-hidden="true">Tik kist om te openen</div>
+        <div class="summon-skip-hint" id="summonSkipHint" hidden>Tik om verder</div>
       </div>
-      <div id="summonRevealText" class="summon-reveal-text">Tik de kist of Open — buit verschijnt in de kist</div>
+      <div id="summonRevealText" class="summon-reveal-text">Tik de kist — wapen of pet</div>
     </div>
     <div class="summon-actions">
       <button type="button" class="btn mode-btn big-touch summon-pull-btn" id="btnChestPull">
@@ -419,14 +424,8 @@
       </button>
     </div>
     <div class="summon-goto-row">
-      <button type="button" class="btn mode-btn b-gray big-touch" id="btnSummonGotoWeapons">
-        <span class="ico"><img src="assets/buttons/modes/weapons.svg" alt="" width="28" height="28" decoding="async" draggable="false"></span>
-        <div>Naar wapens<small>Collectie</small></div>
-      </button>
-      <button type="button" class="btn mode-btn b-gray big-touch" id="btnSummonGotoPets">
-        <span class="ico"><img src="assets/buttons/modes/pets.svg" alt="" width="28" height="28" decoding="async" draggable="false"></span>
-        <div>Naar pets<small>Collectie</small></div>
-      </button>
+      <button type="button" class="summon-goto-link" id="btnSummonGotoWeapons">Wapens</button>
+      <button type="button" class="summon-goto-link" id="btnSummonGotoPets">Pets</button>
     </div>
     <div id="summonLog" class="summon-log"></div>
   </div>
@@ -654,7 +653,7 @@
       <a class="btn tog" id="btnPrivacy" href="privacy.html" target="_blank" rel="noopener" style="margin-top:8px;text-decoration:none"><span class="tog-ico"><img src="assets/buttons/chrome/external.svg" alt="" width="24" height="24" decoding="async" draggable="false"></span>Privacy</a>
       <div id="settingsDiagBlock" class="settings-diag-block" hidden>
         <div id="settingsHelpTitle" style="font-weight:900;color:#ffd75e;margin:12px 0 6px">Vast op een oude versie?</div>
-        <div id="setAppVersion" style="font-size:12px;opacity:.7;margin-bottom:8px">v1.18.172</div>
+        <div id="setAppVersion" style="font-size:12px;opacity:.7;margin-bottom:8px">v1.18.173</div>
         <div id="settingsHelpDesc" style="font-size:12px;opacity:.85;margin-bottom:8px;line-height:1.4">Leegt de cache en laadt opnieuw. Alleen nodig als het spel niet meekomt.</div>
         <button type="button" class="btn tog" id="btnForceFresh"><span class="tog-ico"><img src="assets/buttons/chrome/refresh.svg" alt="" width="24" height="24" decoding="async" draggable="false"></span>Verse versie</button>
         <div id="settingsFreshHint" style="font-size:11px;opacity:.72;margin:6px 0 10px;line-height:1.4">Menu reageert niet? Tik hier voor de nieuwste versie.</div>
@@ -841,12 +840,12 @@
 
 <script>
 /* HTML↔JS handshake: als oude SW nog oude game.js serveert terwijl menu-HTML nieuw is. */
-window.__SF_EXPECT_REV = 382;
-window.__SF_EXPECT_APP = '1.18.172';
+window.__SF_EXPECT_REV = 383;
+window.__SF_EXPECT_APP = '1.18.173';
 </script>
-<script src="tunnel-check.js?v=382"></script>
-<script src="game.js?v=382"></script>
-<script src="install.js?v=382"></script>
+<script src="tunnel-check.js?v=383"></script>
+<script src="game.js?v=383"></script>
+<script src="install.js?v=383"></script>
 <script>
 (function () {
   function nukeStale(reason) {

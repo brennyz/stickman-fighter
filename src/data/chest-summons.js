@@ -15,9 +15,9 @@ const CHEST_NICE_CHANCE = 0.14;
 const CHEST_GOOD_CHANCE = 0.30;
 const CHEST_PULL_LOG_MAX = 12;
 const CHEST_SKILL_MAX = 48;
-/** Reveal timeline: short Android clip (~2.4s); card last ~0.9s. */
-const SUMMON_REVEAL_TOTAL_MS = 2400;
-const SUMMON_CARD_LAST_MS = 900;
+/** Reveal timeline: snappy Android clip (~2.0s); card last ~0.8s. Tap skips after card. */
+const SUMMON_REVEAL_TOTAL_MS = 2000;
+const SUMMON_CARD_LAST_MS = 800;
 const SUMMON_VIDEO_SRC = 'assets/summon/reveal.mp4';
 let _summonVideoOk = null;
 
@@ -391,7 +391,7 @@ function openChestSummon(kind) {
       kind: rollKind,
       type: result.type,
       nice: result.nice,
-      id: result.weaponId || result.petId || result.eggId || null,
+      id: result.weaponId || result.petId || result.eggId || result.gearId || null,
       rarity: result.rarity || null,
     });
     save.stats = save.stats || {};
@@ -461,6 +461,98 @@ function sanitizeChestWeapons(raw) {
     if (!clean[k].at) delete clean[k].at;
   }
   return clean;
+}
+
+function chestResultName(res) {
+  if (!res) return '';
+  if (res.name) return String(res.name);
+  if (res.weaponId && typeof weaponById === 'function') {
+    const w = weaponById(res.weaponId);
+    if (w) return (typeof weaponLabel === 'function') ? weaponLabel(w.id) : w.name;
+  }
+  if (res.petId && typeof petDef === 'function') {
+    const def = petDef(res.petId);
+    const sp = def && typeof SPECIES !== 'undefined' ? SPECIES[def.speciesId] : null;
+    if (sp && sp.name) return sp.name;
+  }
+  return res.gearId || res.eggId || res.weaponId || res.petId || '';
+}
+
+function chestResultTitle(res) {
+  if (!res || !res.ok) {
+    return (typeof tOr === 'function')
+      ? tOr('ui.summonFail', 'Summon mislukt — probeer opnieuw')
+      : 'Summon mislukt — probeer opnieuw';
+  }
+  const name = chestResultName(res);
+  if (res.type === 'weapon_unlock' || res.type === 'weapon_ascend' || res.type === 'pet_unlock') {
+    return name || (res.type === 'pet_unlock' ? 'Pet' : 'Wapen');
+  }
+  if (res.type === 'egg') {
+    if (name && typeof tOr === 'function') return tOr('ui.summonEggNamed', 'Ei · {name}', { name });
+    if (name) return 'Ei · ' + name;
+    return (typeof tOr === 'function') ? tOr('ui.summonEgg', 'Ei') : 'Ei';
+  }
+  if (res.type === 'coins') {
+    return (typeof tOr === 'function')
+      ? tOr('ui.summonCoins', '+{n} pet coins', { n: res.amount || 0 })
+      : ('+' + (res.amount || 0) + ' pet coins');
+  }
+  if (res.type === 'xp') {
+    return (typeof tOr === 'function')
+      ? tOr('ui.summonXp', '+{n} XP', { n: res.amount || 0 })
+      : ('+' + (res.amount || 0) + ' XP');
+  }
+  if (res.type === 'gear') return name || ((typeof tOr === 'function') ? tOr('ui.summonGear', 'Gear') : 'Gear');
+  return res.label || ((typeof tOr === 'function') ? tOr('ui.summonJunk', 'Niks bijzonders…') : 'Niks bijzonders…');
+}
+
+function chestPullKindName(p) {
+  if (!p) return '';
+  if (p.id && p.kind === 'weapon' && typeof weaponById === 'function') {
+    const w = weaponById(p.id);
+    if (w) return (typeof weaponLabel === 'function') ? weaponLabel(w.id) : w.name;
+  }
+  if (p.id && p.kind === 'pet' && typeof petDef === 'function') {
+    const def = petDef(p.id);
+    const sp = def && typeof SPECIES !== 'undefined' ? SPECIES[def.speciesId] : null;
+    if (sp && sp.name) return sp.name;
+  }
+  if (p.id && p.type === 'gear' && typeof gearLabel === 'function') {
+    try { return gearLabel({ id: p.id, name: p.id }) || p.id; } catch (_) { return p.id; }
+  }
+  if (p.id && (p.type === 'egg' || p.kind === 'pet')) return p.id;
+  return p.id || '';
+}
+
+/** One readable line for today's pull log — never raw type ids. */
+function chestPullLogLine(p) {
+  if (!p || typeof p !== 'object') {
+    return (typeof tOr === 'function') ? tOr('ui.summonLogJunk', 'Schroot') : 'Schroot';
+  }
+  const rar = p.rarity && typeof rarityLabel === 'function' ? rarityLabel(p.rarity) : (p.rarity || '');
+  const name = chestPullKindName(p);
+  const type = typeof p.type === 'string' ? p.type : '';
+  const mark = p.nice ? '✦ ' : '';
+  if (type === 'weapon_unlock' || type === 'weapon_ascend') {
+    return mark + (name || ((typeof tOr === 'function') ? tOr('ui.summonKindWeapon', 'Wapen') : 'Wapen'))
+      + (rar ? ' · ' + rar : '');
+  }
+  if (type === 'pet_unlock') {
+    return mark + (name || ((typeof tOr === 'function') ? tOr('ui.summonKindPet', 'Pet') : 'Pet'))
+      + (rar ? ' · ' + rar : '');
+  }
+  if (type === 'egg') {
+    const egg = (typeof tOr === 'function') ? tOr('ui.summonEgg', 'Ei') : 'Ei';
+    return mark + (name ? egg + ' · ' + name : egg) + (rar ? ' · ' + rar : '');
+  }
+  if (type === 'coins') return (typeof tOr === 'function') ? tOr('ui.summonLogCoins', 'Pet coins') : 'Pet coins';
+  if (type === 'xp') return (typeof tOr === 'function') ? tOr('ui.summonLogXp', 'XP') : 'XP';
+  if (type === 'gear') {
+    return mark + (name || ((typeof tOr === 'function') ? tOr('ui.summonGear', 'Gear') : 'Gear'))
+      + (rar ? ' · ' + rar : '');
+  }
+  return (typeof tOr === 'function') ? tOr('ui.summonLogJunk', 'Schroot') : 'Schroot';
 }
 
 function chestResultToast(res) {

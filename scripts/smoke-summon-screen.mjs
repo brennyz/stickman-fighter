@@ -74,6 +74,11 @@ async function run() {
         fullW: rect ? Math.round(rect.width) : 0,
         fullH: rect ? Math.round(rect.height) : 0,
         hasPull: !!document.getElementById('btnChestPull'),
+        hasSkip: !!document.getElementById('summonSkipHint'),
+        logHelper: typeof chestPullLogLine === 'function',
+        logJunk: (typeof chestPullLogLine === 'function')
+          ? chestPullLogLine({ kind: 'weapon', type: 'junk', nice: false })
+          : '',
       };
     });
     must(openSnap.summonActive, 'summonScreen not active: ' + JSON.stringify(openSnap.active));
@@ -85,6 +90,10 @@ async function run() {
     must(openSnap.left === 10, 'expected 10 summons, got ' + openSnap.left);
     
     must(openSnap.hasPull, 'missing btnChestPull');
+    must(openSnap.hasSkip, 'missing summonSkipHint');
+    must(openSnap.logHelper, 'missing chestPullLogLine');
+    must(openSnap.logJunk && !/weapon_unlock|junk/i.test(openSnap.logJunk),
+      'log line still raw: ' + openSnap.logJunk);
     const btnTxt = await page.evaluate(() => (document.getElementById('btnChestPull') || {}).textContent || '');
     must(/open kist/i.test(btnTxt), 'expected Open kist CTA, got: ' + btnTxt);
     const polish = await page.evaluate(() => {
@@ -190,6 +199,8 @@ async function run() {
         playEarly,
         cropEarly,
         endText: (document.getElementById('summonRevealText') || {}).textContent || '',
+        skipReady: !!(screen && screen.classList.contains('is-skip-ready')),
+        logRaw: ((document.getElementById('summonLog') || {}).textContent || ''),
       };
     }, pullStart.before);
     must(pullSnap.after === pullStart.afterPull,
@@ -198,6 +209,9 @@ async function run() {
     must(!pullSnap.isPlaying, 'is-playing flipped during pull');
     must(pullSnap.cardShow, 'center card not shown after reveal window');
     must(pullSnap.cardName.length > 0, 'empty center card name');
+    must(pullSnap.skipReady, 'expected is-skip-ready after card lands');
+    must(!/weapon_unlock|pet_unlock|weapon_ascend/.test(pullSnap.logRaw),
+      'pull log still raw type ids: ' + pullSnap.logRaw);
     if (pullSnap.cardCenter) {
       must(pullSnap.cardCenter.dx <= 12, 'reward card not horizontally centered: ' + JSON.stringify(pullSnap.cardCenter));
       must(pullSnap.cardCenter.dy <= 18, 'reward card not vertically centered: ' + JSON.stringify(pullSnap.cardCenter));

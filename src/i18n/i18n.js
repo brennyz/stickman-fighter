@@ -22,7 +22,7 @@ const I18N = {
       continue: 'Verder spelen', adventure: 'Avontuur', adventureSub: 'Verhaal · eilanden · bazen',
       arcade: 'Arcade', arcadeSub: 'Training · Muur · Muntjes', versus: '2 spelers', versusSub: 'Lokaal',
       collect: 'Collectie', collectSub: 'Wapens · figuur · boek', music: 'Muziek', missions: 'Missies',
-      summons: 'Oproepen', summonsSub: 'Dagelijkse kist · wapen & pet',
+      summons: 'Oproepen', summonsSub: '10× per dag · wapen of pet',
       buildings: 'Fabrieken', buildingsSub: 'Werken · oogst · upgrade',
       options: 'Opties', tips: 'Tips', fresh: 'Verse versie', install: 'Zet in app-lade', installSub: 'Één icoon, zoals een echte app',
       profileAria: 'Profiel en missies',
@@ -311,7 +311,7 @@ const I18N = {
       continue: 'Continue', adventure: 'Adventure', adventureSub: 'Story · islands · bosses',
       arcade: 'Arcade', arcadeSub: 'Training · Wall · Coins', versus: '2 players', versusSub: 'Local',
       collect: 'Collection', collectSub: 'Weapons · figure · book', music: 'Music', missions: 'Missions',
-      summons: 'Summons', summonsSub: 'Daily chest · weapon & pet',
+      summons: 'Summons', summonsSub: '10× a day · weapon or pet',
       buildings: 'Buildings', buildingsSub: 'Factories · collect · upgrade',
       options: 'Settings', tips: 'Tips', fresh: 'Fresh version', install: 'Add as app', installSub: 'One icon, like a real app',
       profileAria: 'Profile and missions',
@@ -602,7 +602,7 @@ const I18N = {
       collect: 'Sammlung', collectSub: 'Waffen · Stil · Buch',
       buildings: 'Fabriken', buildingsSub: 'Werke · ernten · upgrade',
       music: 'Musik', missions: 'Missionen',
-      summons: 'Beschwörungen', summonsSub: 'Tägliche Kiste · Waffe & Pet',
+      summons: 'Beschwörungen', summonsSub: '10× am Tag · Waffe oder Pet',
       options: 'Einstellungen', tips: 'Tipps', fresh: 'Neue Version', install: 'Als App speichern', installSub: 'Ein Icon, wie eine echte App',
       profileAria: 'Profil und Missionen',
       pressStart: 'Münze einwerfen', missionReady: 'Mission bereit', dayBonus: 'Tagesbonus',
@@ -884,7 +884,7 @@ const I18N = {
       collect: 'Collection', collectSub: 'Armes · style · bestiaire',
       buildings: 'Usines', buildingsSub: 'Usines · récolte · upgrade',
       music: 'Musique', missions: 'Missions',
-      summons: 'Summons', summonsSub: 'Coffre du jour · arme et pet',
+      summons: 'Summons', summonsSub: '10× par jour · arme ou pet',
       options: 'Options', tips: 'Astuces', fresh: 'Nouvelle version', install: 'Ajouter comme app', installSub: 'Une icône, comme une vraie app',
       pressStart: 'insert coin', missionReady: 'mission prête', dayBonus: 'Bonus du jour',
       choosePath: 'CHOISIS TON CHEMIN', lastPlayed: 'DERNIER', playHere: 'JOUER', saveSync: 'save OK',
@@ -1144,7 +1144,7 @@ const I18N = {
       collect: 'Colección', collectSub: 'Armas · estilo · bestiario',
       buildings: 'Fábricas', buildingsSub: 'Obras · recolectar · mejorar',
       music: 'Música', missions: 'Misiones',
-      summons: 'Summons', summonsSub: 'Cofre diario · arma y pet',
+      summons: 'Summons', summonsSub: '10× al día · arma o pet',
       options: 'Opciones', tips: 'Consejos', fresh: 'Versión nueva', install: 'Añadir como app', installSub: 'Un icono, como una app real',
       pressStart: 'insert coin', missionReady: 'misión lista', dayBonus: 'Bonus diario',
       choosePath: 'ELIGE TU CAMINO', lastPlayed: 'ÚLTIMO', playHere: 'JUEGA', saveSync: 'save OK',
@@ -1735,6 +1735,7 @@ function applyLangStaticScreens() {
   setText('summonWhereStrip', 'ui.summonWhere');
   setText('summonStageHint', 'ui.summonHint');
   setText('summonRevealText', 'ui.summonReveal');
+  setText('summonSkipHint', 'ui.summonSkip');
   const chestPullLbl = document.getElementById('btnChestPull');
   if (chestPullLbl) {
     const d = chestPullLbl.querySelector('div');
@@ -1744,16 +1745,8 @@ function applyLangStaticScreens() {
       d.innerHTML = t('ui.summonPull') + '<small id="chestPullLbl">' + leftTxt + '</small>';
     }
   }
-  const gotoW = document.getElementById('btnSummonGotoWeapons');
-  if (gotoW) {
-    const d = gotoW.querySelector('div');
-    if (d) d.innerHTML = t('ui.summonGotoWeapons') + '<small>' + t('ui.summonGotoSub') + '</small>';
-  }
-  const gotoP = document.getElementById('btnSummonGotoPets');
-  if (gotoP) {
-    const d = gotoP.querySelector('div');
-    if (d) d.innerHTML = t('ui.summonGotoPets') + '<small>' + t('ui.summonGotoSub') + '</small>';
-  }
+  setText('btnSummonGotoWeapons', 'ui.summonGotoWeapons');
+  setText('btnSummonGotoPets', 'ui.summonGotoPets');
 
   const gambleStartLbl = document.getElementById('gambleStartLbl');
   if (gambleStartLbl) gambleStartLbl.innerHTML = t('ui.gambleStart') + '<small>' + t('ui.gambleStartSub') + '</small>';

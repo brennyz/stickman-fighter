@@ -323,9 +323,9 @@ const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const VERSION_UPDATE_SAVE_KEY = 'stickfighter_version_update_save_v1';
 const VERSION_UPDATE_FLAG_KEY = 'stickfighter_version_update_flag_v1';
 const SAVE_EXPORT_SCHEMA = 3;
-const APP_VERSION = '1.18.172';
+const APP_VERSION = '1.18.173';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 382;
+const SW_CACHE_REV = 383;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', petCoins: 0, dex: {}, summons: {}, pets: {}, activePet: null,
   eggPets: {}, activeEggPet: null, eggDaily: null,
   chestDaily: null, chestWeapons: {},
@@ -2319,7 +2319,7 @@ const I18N = {
       continue: 'Verder spelen', adventure: 'Avontuur', adventureSub: 'Verhaal · eilanden · bazen',
       arcade: 'Arcade', arcadeSub: 'Training · Muur · Muntjes', versus: '2 spelers', versusSub: 'Lokaal',
       collect: 'Collectie', collectSub: 'Wapens · figuur · boek', music: 'Muziek', missions: 'Missies',
-      summons: 'Oproepen', summonsSub: 'Dagelijkse kist · wapen & pet',
+      summons: 'Oproepen', summonsSub: '10× per dag · wapen of pet',
       buildings: 'Fabrieken', buildingsSub: 'Werken · oogst · upgrade',
       options: 'Opties', tips: 'Tips', fresh: 'Verse versie', install: 'Zet in app-lade', installSub: 'Één icoon, zoals een echte app',
       profileAria: 'Profiel en missies',
@@ -2608,7 +2608,7 @@ const I18N = {
       continue: 'Continue', adventure: 'Adventure', adventureSub: 'Story · islands · bosses',
       arcade: 'Arcade', arcadeSub: 'Training · Wall · Coins', versus: '2 players', versusSub: 'Local',
       collect: 'Collection', collectSub: 'Weapons · figure · book', music: 'Music', missions: 'Missions',
-      summons: 'Summons', summonsSub: 'Daily chest · weapon & pet',
+      summons: 'Summons', summonsSub: '10× a day · weapon or pet',
       buildings: 'Buildings', buildingsSub: 'Factories · collect · upgrade',
       options: 'Settings', tips: 'Tips', fresh: 'Fresh version', install: 'Add as app', installSub: 'One icon, like a real app',
       profileAria: 'Profile and missions',
@@ -2899,7 +2899,7 @@ const I18N = {
       collect: 'Sammlung', collectSub: 'Waffen · Stil · Buch',
       buildings: 'Fabriken', buildingsSub: 'Werke · ernten · upgrade',
       music: 'Musik', missions: 'Missionen',
-      summons: 'Beschwörungen', summonsSub: 'Tägliche Kiste · Waffe & Pet',
+      summons: 'Beschwörungen', summonsSub: '10× am Tag · Waffe oder Pet',
       options: 'Einstellungen', tips: 'Tipps', fresh: 'Neue Version', install: 'Als App speichern', installSub: 'Ein Icon, wie eine echte App',
       profileAria: 'Profil und Missionen',
       pressStart: 'Münze einwerfen', missionReady: 'Mission bereit', dayBonus: 'Tagesbonus',
@@ -3181,7 +3181,7 @@ const I18N = {
       collect: 'Collection', collectSub: 'Armes · style · bestiaire',
       buildings: 'Usines', buildingsSub: 'Usines · récolte · upgrade',
       music: 'Musique', missions: 'Missions',
-      summons: 'Summons', summonsSub: 'Coffre du jour · arme et pet',
+      summons: 'Summons', summonsSub: '10× par jour · arme ou pet',
       options: 'Options', tips: 'Astuces', fresh: 'Nouvelle version', install: 'Ajouter comme app', installSub: 'Une icône, comme une vraie app',
       pressStart: 'insert coin', missionReady: 'mission prête', dayBonus: 'Bonus du jour',
       choosePath: 'CHOISIS TON CHEMIN', lastPlayed: 'DERNIER', playHere: 'JOUER', saveSync: 'save OK',
@@ -3441,7 +3441,7 @@ const I18N = {
       collect: 'Colección', collectSub: 'Armas · estilo · bestiario',
       buildings: 'Fábricas', buildingsSub: 'Obras · recolectar · mejorar',
       music: 'Música', missions: 'Misiones',
-      summons: 'Summons', summonsSub: 'Cofre diario · arma y pet',
+      summons: 'Summons', summonsSub: '10× al día · arma o pet',
       options: 'Opciones', tips: 'Consejos', fresh: 'Versión nueva', install: 'Añadir como app', installSub: 'Un icono, como una app real',
       pressStart: 'insert coin', missionReady: 'misión lista', dayBonus: 'Bonus diario',
       choosePath: 'ELIGE TU CAMINO', lastPlayed: 'ÚLTIMO', playHere: 'JUEGA', saveSync: 'save OK',
@@ -4032,6 +4032,7 @@ function applyLangStaticScreens() {
   setText('summonWhereStrip', 'ui.summonWhere');
   setText('summonStageHint', 'ui.summonHint');
   setText('summonRevealText', 'ui.summonReveal');
+  setText('summonSkipHint', 'ui.summonSkip');
   const chestPullLbl = document.getElementById('btnChestPull');
   if (chestPullLbl) {
     const d = chestPullLbl.querySelector('div');
@@ -4041,16 +4042,8 @@ function applyLangStaticScreens() {
       d.innerHTML = t('ui.summonPull') + '<small id="chestPullLbl">' + leftTxt + '</small>';
     }
   }
-  const gotoW = document.getElementById('btnSummonGotoWeapons');
-  if (gotoW) {
-    const d = gotoW.querySelector('div');
-    if (d) d.innerHTML = t('ui.summonGotoWeapons') + '<small>' + t('ui.summonGotoSub') + '</small>';
-  }
-  const gotoP = document.getElementById('btnSummonGotoPets');
-  if (gotoP) {
-    const d = gotoP.querySelector('div');
-    if (d) d.innerHTML = t('ui.summonGotoPets') + '<small>' + t('ui.summonGotoSub') + '</small>';
-  }
+  setText('btnSummonGotoWeapons', 'ui.summonGotoWeapons');
+  setText('btnSummonGotoPets', 'ui.summonGotoPets');
 
   const gambleStartLbl = document.getElementById('gambleStartLbl');
   if (gambleStartLbl) gambleStartLbl.innerHTML = t('ui.gambleStart') + '<small>' + t('ui.gambleStartSub') + '</small>';
@@ -19847,9 +19840,9 @@ const CHEST_NICE_CHANCE = 0.14;
 const CHEST_GOOD_CHANCE = 0.30;
 const CHEST_PULL_LOG_MAX = 12;
 const CHEST_SKILL_MAX = 48;
-/** Reveal timeline: short Android clip (~2.4s); card last ~0.9s. */
-const SUMMON_REVEAL_TOTAL_MS = 2400;
-const SUMMON_CARD_LAST_MS = 900;
+/** Reveal timeline: snappy Android clip (~2.0s); card last ~0.8s. Tap skips after card. */
+const SUMMON_REVEAL_TOTAL_MS = 2000;
+const SUMMON_CARD_LAST_MS = 800;
 const SUMMON_VIDEO_SRC = 'assets/summon/reveal.mp4';
 let _summonVideoOk = null;
 
@@ -20223,7 +20216,7 @@ function openChestSummon(kind) {
       kind: rollKind,
       type: result.type,
       nice: result.nice,
-      id: result.weaponId || result.petId || result.eggId || null,
+      id: result.weaponId || result.petId || result.eggId || result.gearId || null,
       rarity: result.rarity || null,
     });
     save.stats = save.stats || {};
@@ -20293,6 +20286,98 @@ function sanitizeChestWeapons(raw) {
     if (!clean[k].at) delete clean[k].at;
   }
   return clean;
+}
+
+function chestResultName(res) {
+  if (!res) return '';
+  if (res.name) return String(res.name);
+  if (res.weaponId && typeof weaponById === 'function') {
+    const w = weaponById(res.weaponId);
+    if (w) return (typeof weaponLabel === 'function') ? weaponLabel(w.id) : w.name;
+  }
+  if (res.petId && typeof petDef === 'function') {
+    const def = petDef(res.petId);
+    const sp = def && typeof SPECIES !== 'undefined' ? SPECIES[def.speciesId] : null;
+    if (sp && sp.name) return sp.name;
+  }
+  return res.gearId || res.eggId || res.weaponId || res.petId || '';
+}
+
+function chestResultTitle(res) {
+  if (!res || !res.ok) {
+    return (typeof tOr === 'function')
+      ? tOr('ui.summonFail', 'Summon mislukt — probeer opnieuw')
+      : 'Summon mislukt — probeer opnieuw';
+  }
+  const name = chestResultName(res);
+  if (res.type === 'weapon_unlock' || res.type === 'weapon_ascend' || res.type === 'pet_unlock') {
+    return name || (res.type === 'pet_unlock' ? 'Pet' : 'Wapen');
+  }
+  if (res.type === 'egg') {
+    if (name && typeof tOr === 'function') return tOr('ui.summonEggNamed', 'Ei · {name}', { name });
+    if (name) return 'Ei · ' + name;
+    return (typeof tOr === 'function') ? tOr('ui.summonEgg', 'Ei') : 'Ei';
+  }
+  if (res.type === 'coins') {
+    return (typeof tOr === 'function')
+      ? tOr('ui.summonCoins', '+{n} pet coins', { n: res.amount || 0 })
+      : ('+' + (res.amount || 0) + ' pet coins');
+  }
+  if (res.type === 'xp') {
+    return (typeof tOr === 'function')
+      ? tOr('ui.summonXp', '+{n} XP', { n: res.amount || 0 })
+      : ('+' + (res.amount || 0) + ' XP');
+  }
+  if (res.type === 'gear') return name || ((typeof tOr === 'function') ? tOr('ui.summonGear', 'Gear') : 'Gear');
+  return res.label || ((typeof tOr === 'function') ? tOr('ui.summonJunk', 'Niks bijzonders…') : 'Niks bijzonders…');
+}
+
+function chestPullKindName(p) {
+  if (!p) return '';
+  if (p.id && p.kind === 'weapon' && typeof weaponById === 'function') {
+    const w = weaponById(p.id);
+    if (w) return (typeof weaponLabel === 'function') ? weaponLabel(w.id) : w.name;
+  }
+  if (p.id && p.kind === 'pet' && typeof petDef === 'function') {
+    const def = petDef(p.id);
+    const sp = def && typeof SPECIES !== 'undefined' ? SPECIES[def.speciesId] : null;
+    if (sp && sp.name) return sp.name;
+  }
+  if (p.id && p.type === 'gear' && typeof gearLabel === 'function') {
+    try { return gearLabel({ id: p.id, name: p.id }) || p.id; } catch (_) { return p.id; }
+  }
+  if (p.id && (p.type === 'egg' || p.kind === 'pet')) return p.id;
+  return p.id || '';
+}
+
+/** One readable line for today's pull log — never raw type ids. */
+function chestPullLogLine(p) {
+  if (!p || typeof p !== 'object') {
+    return (typeof tOr === 'function') ? tOr('ui.summonLogJunk', 'Schroot') : 'Schroot';
+  }
+  const rar = p.rarity && typeof rarityLabel === 'function' ? rarityLabel(p.rarity) : (p.rarity || '');
+  const name = chestPullKindName(p);
+  const type = typeof p.type === 'string' ? p.type : '';
+  const mark = p.nice ? '✦ ' : '';
+  if (type === 'weapon_unlock' || type === 'weapon_ascend') {
+    return mark + (name || ((typeof tOr === 'function') ? tOr('ui.summonKindWeapon', 'Wapen') : 'Wapen'))
+      + (rar ? ' · ' + rar : '');
+  }
+  if (type === 'pet_unlock') {
+    return mark + (name || ((typeof tOr === 'function') ? tOr('ui.summonKindPet', 'Pet') : 'Pet'))
+      + (rar ? ' · ' + rar : '');
+  }
+  if (type === 'egg') {
+    const egg = (typeof tOr === 'function') ? tOr('ui.summonEgg', 'Ei') : 'Ei';
+    return mark + (name ? egg + ' · ' + name : egg) + (rar ? ' · ' + rar : '');
+  }
+  if (type === 'coins') return (typeof tOr === 'function') ? tOr('ui.summonLogCoins', 'Pet coins') : 'Pet coins';
+  if (type === 'xp') return (typeof tOr === 'function') ? tOr('ui.summonLogXp', 'XP') : 'XP';
+  if (type === 'gear') {
+    return mark + (name || ((typeof tOr === 'function') ? tOr('ui.summonGear', 'Gear') : 'Gear'))
+      + (rar ? ' · ' + rar : '');
+  }
+  return (typeof tOr === 'function') ? tOr('ui.summonLogJunk', 'Schroot') : 'Schroot';
 }
 
 function chestResultToast(res) {
@@ -21355,7 +21440,7 @@ function seedNlGameStrings() {
     petSummaryTamed: 'Getemd <b>{tamed}/{total}</b> · actief <b>{active}</b> · <b>{wallet} pet coins</b>',
     petNone: 'geen',
     installSub: 'Lade · beginscherm',
-    summonQuota: 'Vandaag: {left}/{total} random summons',
+    summonQuota: 'Vandaag: {left}/{total}',
     summonLeft: '{n} over',
     summonDone: 'Op',
     summonOpen: 'Open kist',
@@ -21402,9 +21487,10 @@ function seedNlGameStrings() {
     hubStatSkillsEmpty: '{n} specials',
     hubStatDexLine: '{n}/{total} · +max HP',
     summonHead: 'Oproepen',
-    summonSub: 'Dagelijkse kist · 10× random · wapen of pet',
-    summonWhere: 'Menu → Oproepen · buit in Collectie → Wapens / Pets (badge Kist)',
-    summonQuota: 'Vandaag: {left}/{total} random summons',
+    summonSub: '10× per dag · wapen of pet',
+    summonWhere: 'Buit landt in Collectie',
+    summonQuota: 'Vandaag: {left}/{total}',
+    summonQuotaShort: '{left}/{total}',
     summonPull: 'Open kist',
     summonPullLeft: '{n} over',
     summonPullEmpty: 'Op',
@@ -21412,11 +21498,24 @@ function seedNlGameStrings() {
     summonAriaEmpty: 'Geen summons meer vandaag',
     summonAriaBusy: 'Kist opent…',
     summonHint: 'Tik kist om te openen',
-    summonReveal: 'Tik de kist of Open — buit verschijnt in de kist',
-    summonGotoWeapons: 'Naar wapens',
-    summonGotoPets: 'Naar pets',
+    summonReveal: 'Tik de kist — wapen of pet',
+    summonSkip: 'Tik om verder',
+    summonNext: 'Volgende',
+    summonGotoWeapons: 'Wapens',
+    summonGotoPets: 'Pets',
     summonGotoSub: 'Collectie',
     summonLogEmpty: 'Nog geen pulls vandaag.',
+    summonLogCoins: 'Pet coins',
+    summonLogXp: 'XP',
+    summonLogJunk: 'Schroot',
+    summonEgg: 'Ei',
+    summonEggNamed: 'Ei · {name}',
+    summonCoins: '+{n} pet coins',
+    summonXp: '+{n} XP',
+    summonJunk: 'Niks bijzonders…',
+    summonGear: 'Gear',
+    summonKindWeapon: 'Wapen',
+    summonKindPet: 'Pet',
     summonLeftToday: '{n} over vandaag',
     summonDoneToday: 'op voor vandaag',
     sharePlayLinkOk: '✓ Speel-link — deel met vrienden (Android)',
@@ -22515,7 +22614,7 @@ const CATALOG_EN = {
     petSummaryTamed: 'Tamed <b>{tamed}/{total}</b> · active <b>{active}</b> · <b>{wallet} pet coins</b>',
     petNone: 'none',
     installSub: 'Home screen',
-    summonQuota: 'Today: {left}/{total} random summons',
+    summonQuota: 'Today: {left}/{total}',
     summonLeft: '{n} left',
     summonDone: 'Done',
     summonOpen: 'Open chest',
@@ -22562,9 +22661,10 @@ const CATALOG_EN = {
     hubStatSkillsEmpty: '{n} specials',
     hubStatDexLine: '{n}/{total} · +max HP',
     summonHead: 'Summons',
-    summonSub: 'Daily chest · 10× random · weapon or pet',
-    summonWhere: 'Menu → Summons · loot in Collection → Weapons / Pets (Chest badge)',
-    summonQuota: 'Today: {left}/{total} random summons',
+    summonSub: '10× a day · weapon or pet',
+    summonWhere: 'Loot lands in Collection',
+    summonQuota: 'Today: {left}/{total}',
+    summonQuotaShort: '{left}/{total}',
     summonPull: 'Open chest',
     summonPullLeft: '{n} left',
     summonPullEmpty: 'Done',
@@ -22572,11 +22672,24 @@ const CATALOG_EN = {
     summonAriaEmpty: 'No summons left today',
     summonAriaBusy: 'Chest opening…',
     summonHint: 'Tap chest to open',
-    summonReveal: 'Tap the chest or Open — loot appears in the chest',
-    summonGotoWeapons: 'To weapons',
-    summonGotoPets: 'To pets',
+    summonReveal: 'Tap the chest — weapon or pet',
+    summonSkip: 'Tap to continue',
+    summonNext: 'Next',
+    summonGotoWeapons: 'Weapons',
+    summonGotoPets: 'Pets',
     summonGotoSub: 'Collection',
     summonLogEmpty: 'No pulls today yet.',
+    summonLogCoins: 'Pet coins',
+    summonLogXp: 'XP',
+    summonLogJunk: 'Scrap',
+    summonEgg: 'Egg',
+    summonEggNamed: 'Egg · {name}',
+    summonCoins: '+{n} pet coins',
+    summonXp: '+{n} XP',
+    summonJunk: 'Nothing special…',
+    summonGear: 'Gear',
+    summonKindWeapon: 'Weapon',
+    summonKindPet: 'Pet',
     summonLeftToday: '{n} left today',
     summonDoneToday: 'done for today',
     sharePlayLinkOk: '✓ Play link — share with friends (Android)',
@@ -24167,9 +24280,10 @@ const CATALOG_DE_CHROME = {
     hubStatSkillsEmpty: '{n} Specials',
     hubStatDexLine: '{n}/{total} · +max HP',
     summonHead: 'Beschwörungen',
-    summonSub: 'Tägliche Kiste · 10× random · Waffe oder Pet',
-    summonWhere: 'Menü → Beschwörungen · Beute in Sammlung → Waffen / Pets (Kisten-Badge)',
-    summonQuota: 'Heute: {left}/{total} Random-Summons',
+    summonSub: '10× am Tag · Waffe oder Pet',
+    summonWhere: 'Beute landet in der Sammlung',
+    summonQuota: 'Heute: {left}/{total}',
+    summonQuotaShort: '{left}/{total}',
     summonLeft: '{n} übrig',
     summonDone: 'Leer',
     summonOpen: 'Kiste öffnen',
@@ -24185,11 +24299,24 @@ const CATALOG_DE_CHROME = {
     summonAriaEmpty: 'Keine Summons mehr heute',
     summonAriaBusy: 'Kiste öffnet…',
     summonHint: 'Kiste tippen zum Öffnen',
-    summonReveal: 'Kiste oder Öffnen tippen — Beute erscheint in der Kiste',
-    summonGotoWeapons: 'Zu Waffen',
-    summonGotoPets: 'Zu Pets',
+    summonReveal: 'Kiste tippen — Waffe oder Pet',
+    summonSkip: 'Tippen zum Weiter',
+    summonNext: 'Weiter',
+    summonGotoWeapons: 'Waffen',
+    summonGotoPets: 'Pets',
     summonGotoSub: 'Sammlung',
     summonLogEmpty: 'Heute noch keine Pulls.',
+    summonLogCoins: 'Pet-Münzen',
+    summonLogXp: 'XP',
+    summonLogJunk: 'Schrott',
+    summonEgg: 'Ei',
+    summonEggNamed: 'Ei · {name}',
+    summonCoins: '+{n} Pet-Münzen',
+    summonXp: '+{n} XP',
+    summonJunk: 'Nichts Besonderes…',
+    summonGear: 'Gear',
+    summonKindWeapon: 'Waffe',
+    summonKindPet: 'Pet',
     summonLeftToday: '{n} übrig heute',
     summonDoneToday: 'für heute leer',
     sharePlayLinkOk: '✓ Spiel-Link — mit Freunden teilen (Android)',
@@ -24692,6 +24819,40 @@ overlayI18nCatalog(CATALOG_FR, {
     gearSub: '5 emplacements · look vs stats · niveau et temps',
     dexAllBiomes: 'Tous les biomes',
     dexBiome: { farm: 'Ferme', zoo: 'Zoo', sea: 'Mer', wild: 'Bois', crypt: 'Crypte', scrap: 'Ferraille', frost: 'Givre', classic: 'Classique', secret: 'Secret' },
+    summonHead: 'Summons',
+    summonSub: '10× par jour · arme ou pet',
+    summonWhere: 'Le butin va dans la Collection',
+    summonQuota: 'Aujourd’hui : {left}/{total}',
+    summonQuotaShort: '{left}/{total}',
+    summonPull: 'Ouvrir le coffre',
+    summonPullLeft: '{n} restants',
+    summonPullEmpty: 'Vide',
+    summonAriaPull: 'Ouvrir le coffre, {n} restants',
+    summonAriaEmpty: 'Plus de summons aujourd’hui',
+    summonAriaBusy: 'Coffre qui s’ouvre…',
+    summonHint: 'Touche le coffre',
+    summonReveal: 'Touche le coffre — arme ou pet',
+    summonSkip: 'Touche pour continuer',
+    summonNext: 'Suivant',
+    summonGotoWeapons: 'Armes',
+    summonGotoPets: 'Pets',
+    summonGotoSub: 'Collection',
+    summonLogEmpty: 'Pas encore de pulls aujourd’hui.',
+    summonLogCoins: 'Pet coins',
+    summonLogXp: 'XP',
+    summonLogJunk: 'Ferraille',
+    summonEgg: 'Œuf',
+    summonEggNamed: 'Œuf · {name}',
+    summonCoins: '+{n} pet coins',
+    summonXp: '+{n} XP',
+    summonJunk: 'Rien de spécial…',
+    summonGear: 'Gear',
+    summonKindWeapon: 'Arme',
+    summonKindPet: 'Pet',
+    summonOpening: 'Coffre s’ouvre…',
+    summonNoMore: 'Plus de summons aujourd’hui',
+    summonFail: 'Summon raté — réessaie',
+    summonOpen: 'Ouvrir le coffre',
   },
   fomo: {
     ritualTitle: 'Aujourd’hui',
@@ -25209,6 +25370,40 @@ overlayI18nCatalog(CATALOG_ES, {
     gearSub: '5 huecos · look vs stats · nivel y tiempo',
     dexAllBiomes: 'Todos los biomas',
     dexBiome: { farm: 'Granja', zoo: 'Zoo', sea: 'Mar', wild: 'Bosque', crypt: 'Cripta', scrap: 'Chatarra', frost: 'Escarcha', classic: 'Clásico', secret: 'Secreto' },
+    summonHead: 'Summons',
+    summonSub: '10× al día · arma o pet',
+    summonWhere: 'El botín va a Colección',
+    summonQuota: 'Hoy: {left}/{total}',
+    summonQuotaShort: '{left}/{total}',
+    summonPull: 'Abrir cofre',
+    summonPullLeft: '{n} restantes',
+    summonPullEmpty: 'Hecho',
+    summonAriaPull: 'Abrir cofre, {n} restantes',
+    summonAriaEmpty: 'No quedan summons hoy',
+    summonAriaBusy: 'El cofre se abre…',
+    summonHint: 'Toca el cofre',
+    summonReveal: 'Toca el cofre — arma o pet',
+    summonSkip: 'Toca para seguir',
+    summonNext: 'Siguiente',
+    summonGotoWeapons: 'Armas',
+    summonGotoPets: 'Pets',
+    summonGotoSub: 'Colección',
+    summonLogEmpty: 'Aún no hay pulls hoy.',
+    summonLogCoins: 'Pet coins',
+    summonLogXp: 'XP',
+    summonLogJunk: 'Chatarra',
+    summonEgg: 'Huevo',
+    summonEggNamed: 'Huevo · {name}',
+    summonCoins: '+{n} pet coins',
+    summonXp: '+{n} XP',
+    summonJunk: 'Nada especial…',
+    summonGear: 'Gear',
+    summonKindWeapon: 'Arma',
+    summonKindPet: 'Pet',
+    summonOpening: 'El cofre se abre…',
+    summonNoMore: 'No quedan summons hoy',
+    summonFail: 'Summon fallido — inténtalo otra vez',
+    summonOpen: 'Abrir cofre',
   },
   fomo: {
     ritualTitle: 'Hoy',
@@ -47471,6 +47666,7 @@ const UI = {
       if (active === 'summonScreen') {
         this.clearSummonRevealTimers();
         this._chestPullBusy = false;
+        this._summonSkipReady = false;
         this.renderMenu();
         this.show('menuScreen');
         return;
@@ -47727,6 +47923,7 @@ const UI = {
       try { this.clearSummonRevealTimers(); } catch (_) {}
       try { this.stopBuildingsTick(); } catch (_) {}
       this._chestPullBusy = false;
+      this._summonSkipReady = false;
       try { Input.releaseAll(); } catch (_) {}
       Input.dualMode = false;
       Input.layout(W, H);
@@ -48369,52 +48566,82 @@ const UI = {
       const left = typeof chestSummonsLeft === 'function' ? chestSummonsLeft() : 0;
       const quota = document.getElementById('summonQuota');
       if (quota) {
-        quota.textContent = t('ui.summonQuota', { left, total: CHEST_DAILY_TOTAL });
+        quota.textContent = tOr('ui.summonQuotaShort', '{left}/{total}', { left, total: CHEST_DAILY_TOTAL });
+        quota.classList.toggle('is-empty', left <= 0);
       }
+      const skipReady = !!this._summonSkipReady && !!this._chestPullBusy;
       const pullBtn = document.getElementById('btnChestPull');
       const pullLbl = document.getElementById('chestPullLbl');
-      if (pullLbl) pullLbl.textContent = left > 0 ? t('ui.summonPullLeft', { n: left }) : t('ui.summonPullEmpty');
+      if (pullLbl) {
+        pullLbl.textContent = skipReady
+          ? (left > 0 ? tOr('ui.summonSkip', 'Tik om verder') : t('ui.summonPullEmpty'))
+          : (left > 0 ? t('ui.summonPullLeft', { n: left }) : t('ui.summonPullEmpty'));
+      }
       if (pullBtn) {
-        pullBtn.disabled = left <= 0 || !!this._chestPullBusy;
+        pullBtn.disabled = skipReady ? false : (left <= 0 || !!this._chestPullBusy);
         const titleEl = pullBtn.querySelector('div');
         if (titleEl) {
           const small = titleEl.querySelector('small');
           titleEl.textContent = '';
-          titleEl.appendChild(document.createTextNode(tOr('ui.summonOpen', 'Open kist')));
+          titleEl.appendChild(document.createTextNode(
+            skipReady
+              ? (left > 0 ? tOr('ui.summonNext', 'Volgende') : tOr('ui.summonOpen', 'Open kist'))
+              : tOr('ui.summonOpen', 'Open kist')
+          ));
           if (small) titleEl.appendChild(small);
         }
-        pullBtn.setAttribute('aria-label', left > 0
-          ? t('ui.summonAriaPull', { n: left })
-          : t('ui.summonAriaEmpty'));
+        pullBtn.setAttribute('aria-label', skipReady
+          ? (left > 0 ? tOr('ui.summonNext', 'Volgende') : t('ui.summonAriaEmpty'))
+          : (left > 0 ? t('ui.summonAriaPull', { n: left }) : t('ui.summonAriaEmpty')));
       }
       const stage = document.getElementById('summonStage');
       if (stage) {
         const canPull = left > 0 && !this._chestPullBusy;
-        stage.classList.toggle('is-pullable', canPull);
-        stage.setAttribute('aria-disabled', canPull ? 'false' : 'true');
-        stage.setAttribute('aria-label', canPull
-          ? t('ui.summonAriaPull', { n: left })
-          : (left <= 0 ? t('ui.summonAriaEmpty') : t('ui.summonAriaBusy')));
-        stage.tabIndex = canPull ? 0 : -1;
+        stage.classList.toggle('is-pullable', canPull || skipReady);
+        stage.setAttribute('aria-disabled', (canPull || skipReady) ? 'false' : 'true');
+        stage.setAttribute('aria-label', skipReady
+          ? tOr('ui.summonSkip', 'Tik om verder')
+          : (canPull
+            ? t('ui.summonAriaPull', { n: left })
+            : (left <= 0 ? t('ui.summonAriaEmpty') : t('ui.summonAriaBusy'))));
+        stage.tabIndex = (canPull || skipReady) ? 0 : -1;
       }
       const hint = document.getElementById('summonStageHint');
       if (hint) {
         hint.textContent = tOr('ui.summonHint', 'Tik kist om te openen');
         hint.style.display = (left > 0 && !this._chestPullBusy) ? '' : 'none';
       }
+      const skipHint = document.getElementById('summonSkipHint');
+      if (skipHint) {
+        skipHint.hidden = !skipReady;
+        skipHint.textContent = tOr('ui.summonSkip', 'Tik om verder');
+      }
+      const revealText = document.getElementById('summonRevealText');
+      if (revealText && !this._chestPullBusy) {
+        revealText.textContent = left > 0
+          ? tOr('ui.summonReveal', 'Tik de kist — wapen of pet')
+          : tOr('ui.summonNoMore', 'Geen summons meer vandaag');
+      }
 
       const logEl = document.getElementById('summonLog');
       if (logEl) {
         const pulls = (save.chestDaily && Array.isArray(save.chestDaily.pulls))
           ? save.chestDaily.pulls.slice().reverse() : [];
+        logEl.textContent = '';
         if (!pulls.length) {
-          logEl.textContent = t('ui.summonLogEmpty');
+          const empty = document.createElement('div');
+          empty.className = 'summon-log-empty';
+          empty.textContent = t('ui.summonLogEmpty');
+          logEl.appendChild(empty);
         } else {
-          logEl.innerHTML = pulls.slice(0, 8).map((p) => {
-            const tag = p.nice ? '✦' : '·';
-            const rar = p.rarity ? ` ${p.rarity}` : '';
-            return `<div>${tag} ${p.kind} ${p.type || ''}${rar}</div>`;
-          }).join('');
+          pulls.slice(0, 6).forEach((p) => {
+            const chip = document.createElement('div');
+            chip.className = 'summon-log-chip' + (p.nice ? ' is-nice' : '');
+            chip.textContent = (typeof chestPullLogLine === 'function')
+              ? chestPullLogLine(p)
+              : ((p.nice ? '✦ ' : '') + (p.kind || ''));
+            logEl.appendChild(chip);
+          });
         }
       }
       try { syncPlayLayer(); } catch (_) {}
@@ -48439,6 +48666,7 @@ const UI = {
       if (screen) {
         screen.classList.remove('is-pulling');
         screen.classList.remove('has-video');
+        screen.classList.remove('is-skip-ready');
       }
     } catch (_) {}
     try {
@@ -48468,6 +48696,7 @@ const UI = {
       if (state === 'pause' || state === 'result') state = 'menu';
       this.clearSummonRevealTimers();
       this._chestPullBusy = false;
+      this._summonSkipReady = false;
       this._chestPullLeftSnap = null;
       try { if (typeof _summonVideoOk !== 'undefined') _summonVideoOk = null; } catch (_) {}
       this.safeOpen('summonScreen', () => {
@@ -48586,7 +48815,7 @@ const UI = {
     } catch (_) {
       title = (res && res.name) || 'Summon';
     }
-    nameEl.textContent = title;
+    nameEl.textContent = (typeof chestResultTitle === 'function') ? chestResultTitle(res) : title;
     if (rarEl) {
       rarEl.textContent = typeof rarityLabel === 'function' ? rarityLabel(rarId) : rarId;
       rarEl.style.color = rar.color || '#9db1e3';
@@ -48603,12 +48832,39 @@ const UI = {
     const card = document.getElementById('summonCenterCard');
     if (reveal) reveal.classList.add('is-card-show');
     if (card) card.setAttribute('aria-hidden', 'false');
+    this._summonSkipReady = true;
+    try {
+      const sc = document.getElementById('summonScreen');
+      if (sc) sc.classList.add('is-skip-ready');
+    } catch (_) {}
+    try {
+      const skip = document.getElementById('summonSkipHint');
+      if (skip) {
+        skip.hidden = false;
+        skip.textContent = tOr('ui.summonSkip', 'Tik om verder');
+      }
+    } catch (_) {}
     // Spoil only when the card lands — never via toast earlier
     try {
       const text = document.getElementById('summonRevealText');
       const msg = this._summonPendingMsg;
       if (text && msg) text.textContent = msg;
     } catch (_) {}
+    try { this.renderSummon(); } catch (_) {}
+  },
+
+  finishSummonReveal() {
+    this.clearSummonRevealTimers();
+    this._chestPullBusy = false;
+    this._chestPullLeftSnap = null;
+    this._summonSkipReady = false;
+    this._summonPendingMsg = null;
+    try {
+      const skip = document.getElementById('summonSkipHint');
+      if (skip) skip.hidden = true;
+    } catch (_) {}
+    try { if (typeof endSummonBgm === 'function') endSummonBgm(); } catch (_) {}
+    try { this.renderSummon(); } catch (_) {}
   },
 
   /**
@@ -48617,6 +48873,11 @@ const UI = {
    */
   runSummonRevealTimeline(res) {
     this.clearSummonRevealTimers();
+    this._summonSkipReady = false;
+    try {
+      const skip = document.getElementById('summonSkipHint');
+      if (skip) skip.hidden = true;
+    } catch (_) {}
     const screen = document.getElementById('summonScreen');
     const reveal = document.getElementById('summonReveal');
     const fallback = document.getElementById('summonStageFallback');
@@ -48641,17 +48902,7 @@ const UI = {
         try { this.showSummonCenterCard(); } catch (_) {}
       }, cardAt);
       this._summonDoneTimer = setTimeout(() => {
-        this._chestPullBusy = false;
-        this._chestPullLeftSnap = null;
-        try {
-          const sc = document.getElementById('summonScreen');
-          if (sc) {
-            sc.classList.remove('is-pulling');
-            sc.classList.remove('has-video');
-          }
-        } catch (_) {}
-        try { if (typeof endSummonBgm === 'function') endSummonBgm(); } catch (_) {}
-        try { this.renderSummon(); } catch (_) {}
+        try { this.finishSummonReveal(); } catch (_) {}
       }, totalMs || SUMMON_REVEAL_TOTAL_MS);
     };
 
@@ -48749,7 +49000,11 @@ const UI = {
 
   doChestPull(kind) {
     try {
-      if (this._chestPullBusy) return;
+      if (this._chestPullBusy && this._summonSkipReady) {
+        const leftNow = typeof chestSummonsLeft === 'function' ? chestSummonsLeft() : 0;
+        this.finishSummonReveal();
+        if (leftNow <= 0) return;
+      } else if (this._chestPullBusy) return;
       if (state === 'play' && game) {
         UI.toast(t('toast.notDuringCombat'), 2000, { tone: 'warn' });
         return;
@@ -52061,6 +52316,11 @@ bindPress(document.getElementById('btnChestPull'), () => {
   UI.doChestPull('random');
 });
 bindPress(document.getElementById('summonStage'), () => {
+  if (UI._chestPullBusy && UI._summonSkipReady) {
+    AudioSys.init();
+    UI.finishSummonReveal();
+    return;
+  }
   const stage = document.getElementById('summonStage');
   if (!stage || !stage.classList.contains('is-pullable')) return;
   if (UI._chestPullBusy) return;
@@ -52069,6 +52329,12 @@ bindPress(document.getElementById('summonStage'), () => {
 });
 document.getElementById('summonStage')?.addEventListener('keydown', (ev) => {
   if (ev.key !== 'Enter' && ev.key !== ' ') return;
+  if (UI._chestPullBusy && UI._summonSkipReady) {
+    ev.preventDefault();
+    AudioSys.init();
+    UI.finishSummonReveal();
+    return;
+  }
   const stage = document.getElementById('summonStage');
   if (!stage || !stage.classList.contains('is-pullable')) return;
   ev.preventDefault();

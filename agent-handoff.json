@@ -40,6 +40,14 @@
   },
   "userWishlist": [
     {
+      "id": "w-20260918T122400",
+      "from": "user",
+      "text": "WORKER lane SUMMON systems: summons confusing + ugly. Clarify flow, clean visuals, readable UI, snappy feedback, less clutter on mobile. Keep share URL speel.html. No Versus. Draft PR only.",
+      "status": "in-progress",
+      "updated": "2026-09-18",
+      "notes": "Lane: chest-summons flow + summon screen chrome. Drop odds unchanged. Versus untouched."
+    },
+    {
       "id": "w-20260916T121500",
       "from": "user",
       "text": "Stickman Fighter MEGA-MERGE to main — Brendon said everything is klaar, merge NOW. Merge ALL open Stickman feature PRs into origin/main (resolve conflicts). Known batch #295–#309 plus any other open stickman-fighter PRs in this Grok wave. Skip it-academy. Order: languages/i18n → systems → UI → pixels/motion → polish. Feature-base PRs (e.g. #300) still land on main. No new features.",
