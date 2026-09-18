@@ -164,6 +164,7 @@ Schrijf **1–3 regels** per sessie: datum, d#, wat, versie.
 
 | Datum (UTC) | d# | Update |
 |-------------|-----|--------|
+| 2026-09-18 | **MEGA-MERGE #312** | Factories overview→detail→upgrade onto main. Keep factory ids + #317 nameShort. |
 | 2026-09-18 | — | **MEGA-MERGE #314:** phone 0.50 + tablet 834 mid-band onto main. Desktop 1.0 kept. Retry stays #323. |
 | 2026-09-18 | — | **MEGA-MERGE:** #317 i18n + #323 Flappy retry onto main (keep #317 copy + #323 onceMore/`restartAdventureInstant`/`#resRetrySafe`). |
 | 2026-09-18 | — | LANGUAGE examiner **#317 DONE**: pets/summons/gear empty states (DE overlay wipe → EN pulls/Done; FR/ES summonNoPulls; NL trekkingen). Copy only, geen layout. Draft, geen main. **v1.18.186 / SW 396**. |
@@ -189,6 +190,14 @@ Schrijf **1–3 regels** per sessie: datum, d#, wat, versie.
 | 2026-09-18 | — | **#314 EX-1 colossal:** phone size ×1.38 + 0.24-strip cap (fair lane ≥80px); desktop ×2.0 uncapped; HP/dmg same; wind 0.46s. **v1.18.175 / SW 385**. Draft. |
 | 2026-09-18 | — | **#314 examinator:** 390px elite/boss telegraph readable (wind floor 0.38, on-screen trigger, intro hold, banner cap); compact jump slop + left-bottom swipe pad. Desktop winds unchanged. **v1.18.174 / SW 384**. Draft. |
 | 2026-09-18 | — | **Mobile combat density:** Adventure spawn counts / gap / max-alive scale by viewport. Phone portrait 0.60 / ~17 alive / single-file; desktop 1.0 / 78 unchanged. Versus out. **v1.18.173 / SW 383**. Draft, niet main. Docs: `docs/COMBAT-DENSITY.md`. |
+| 2026-09-18 | — | **#312 DONE:** P0–P3 factories UX frozen. FOMO/HOME dock stays on #322 (ritual is inside `#menuScreen`). Draft, no main. **v1.18.179 / SW 389**. |
+| 2026-09-18 | — | **#312 near-DONE P3:** collect-all one centered label; first-build sheet `buildTitle` + Bouw confirm; h3 ellipsis. Freeze features until 16:30. No main. **v1.18.179 / SW 389**. |
+| 2026-09-18 | — | **#312 fewer taps:** empty-start + Bouw/Upgrade pill open the sheet (skip detail); short card names + 1-line does; pill tip clamped; welcome cleared on open. **v1.18.178 / SW 388**. |
+| 2026-09-18 | — | **#312 final polish:** collect-all EN/DE/FR/ES + aria; smoke locale check; DONE checklist on draft. No new features. **v1.18.177 / SW 387**. |
+| 2026-09-18 | — | **#312 collect-all + pill tip:** optional Oogst-alles when 2+ ready; one-line 8u offline tip on pill long-press; 390px walkthrough build→collect→sheet. Draft. **v1.18.176 / SW 386**. |
+| 2026-09-18 | — | **#312 sheet/empty/i18n:** upgrade cost chips red/green + short `Lv` toast on 390px; one-line first-time stick_lighter Build hint; EN/DE cost/island/empty keys (no Dutch leak). Draft. **v1.18.175 / SW 385**. |
+| 2026-09-18 | — | **#312 P0:** hopper VOL + wallet `+N` on huge offline collect; 390px power/next shortened; collect lock so empty/double tap cannot open detail. Draft. **v1.18.174 / SW 384**. |
+| 2026-09-18 | — | **Factories UX unclunk:** overview cards + does-line, sticky wallet, one-tap collect pill, upgrade sheet, no dead ends (Avontuur / cost / max). Ids `stick_lighter`…`echo_whistle`. No Versus. Draft. **v1.18.173 / SW 383**. |
 | 2026-09-16 | — | **MEGA-MERGE → main** Grok wave #295–#309 (i18n → systems → UI → pixels → polish). Feature-base PRs (#297/#300/#307/#309) cherry-picked. **v1.18.172 / SW 382**. speel.html na Pages. |
 | 2026-09-16 | — | Gear UI ↔ #295 equip-API: sheets via gearSlotInventory, tap via gearEquipItem(id,{expectSlot}), states ok/vanity-ok/already-equipped/locked/not-owned/wrong-slot/unknown. DOM/schema 1 ongewijzigd. v1.18.171 / SW 381. Draft, niet main. |
 | 2026-09-16 | — | Gear UX pass: HOME-sibling (1-tap Uitrusting, grotere hero + overlays, slot/wapen HOME-cards, tap=aan/uit, safe Back, één page-scroll). Schema ongewijzigd. v1.18.170 / SW 380. Draft, niet main. |

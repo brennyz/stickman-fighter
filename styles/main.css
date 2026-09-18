@@ -3171,7 +3171,7 @@
   .mission-flow-arrow { color:#5a6a8a; font-weight:800; font-size:12px; }
   .mission-mode-pill { display:inline-block; font-size:10px; font-weight:800; padding:2px 8px; border-radius:999px;
     color:#7cf5ff; border:1px solid rgba(124,245,255,.35); margin-right:4px; vertical-align:middle; }
-  #buildingsScreen.buildings-screen { align-items: stretch; }
+  #buildingsScreen.buildings-screen { align-items: stretch; position: relative; }
   #buildingsScreen .head { margin-bottom: 4px; }
   #buildingsWallet.buildings-wallet {
     position: sticky; top: 0; z-index: 4;
@@ -3179,8 +3179,9 @@
     background: #151b33; border: 1px solid rgba(255,255,255,.12);
     box-shadow: 0 4px 0 rgba(0,0,0,.28);
   }
+  #buildingsWallet .buildings-wallet-pc-line { display: flex; justify-content: center; margin-bottom: 6px; }
   #buildingsWallet .buildings-wallet-pc {
-    font-size: 12px; font-weight: 800; color: #ffd75e; text-align: center; margin-bottom: 6px;
+    font-size: 12px; font-weight: 800; color: #ffd75e; text-align: center; margin-bottom: 0;
   }
   #buildingsWallet .buildings-wallet-row {
     display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 5px;
@@ -3197,6 +3198,13 @@
   }
   #buildingsWallet .buildings-wallet-amt { font-size: 15px; color: #e8f0ff; line-height: 1.1; }
   #buildingsWallet .buildings-wallet-hint { font-size: 9px; color: #7cfc8a; font-weight: 700; opacity: .9; }
+  #buildingsWallet .buildings-wallet-hint.is-full,
+  #buildingsWallet .buildings-wallet-chip.is-full .buildings-wallet-hint { color: #ffd75e; }
+  #buildingsWallet .buildings-wallet-hint.is-plus { color: #7cfc8a; font-size: 11px; }
+  #buildingsWallet .buildings-wallet-chip.is-full {
+    border-color: rgba(255, 215, 94, .55);
+  }
+  #buildingsScreen .buildings-stock-lbl.is-full { color: #ffd75e; }
   #buildingsOverview { width: min(92vw, 520px); margin: 0 auto; }
   #buildingsList.buildings-list { display: flex; flex-direction: column; gap: 10px; width: 100%; }
   #buildingsScreen .buildings-card {
@@ -3222,6 +3230,10 @@
   }
   #buildingsScreen .buildings-art-img { width: 100%; height: 100%; object-fit: contain; image-rendering: pixelated; }
   #buildingsScreen .buildings-card-body { min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+  #buildingsScreen .buildings-card-kicker {
+    font-size: 10px; font-weight: 800; letter-spacing: .04em; text-transform: uppercase;
+    color: #ffd75e; line-height: 1.1;
+  }
   #buildingsScreen .buildings-card-name,
   #buildingsScreen .hub-tile-title {
     font-size: 14px; font-weight: 800; color: #f2efe6; line-height: 1.2;
@@ -3229,25 +3241,53 @@
     overflow: hidden; word-break: break-word; max-width: 100%;
   }
   #buildingsScreen .buildings-card-lv { font-size: 11px; font-weight: 800; color: #ffd75e; }
-  #buildingsScreen .buildings-card-does { font-size: 12px; font-weight: 600; color: #c8d0dc; line-height: 1.3;
+  #buildingsScreen .buildings-card-does,
+  #buildingsScreen .buildings-effect-does { font-size: 12px; font-weight: 600; color: #c8d0dc; line-height: 1.3;
     display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
     overflow: hidden; word-break: break-word; max-width: 100%; }
+  #buildingsDetail .buildings-effect-does {
+    -webkit-line-clamp: 3; font-size: 15px; text-align: center; color: #f2efe6;
+  }
   #buildingsScreen .buildings-res-pill {
-    display: inline-flex; align-items: center; justify-content: center;
-    min-width: 64px; max-width: 88px; min-height: 44px; padding: 6px 8px;
-    border-radius: 999px; font-size: 11px; font-weight: 800; line-height: 1.2; text-align: center;
+    display: inline-flex; flex-direction: column; align-items: center; justify-content: center;
+    min-width: 76px; max-width: 104px; min-height: 48px; padding: 7px 8px;
+    border-radius: 999px; font-size: 11px; font-weight: 800; line-height: 1.15; text-align: center;
     color: #e8f0ff; background: rgba(0,0,0,.4); border: 1px solid rgba(255,255,255,.16);
-    font-family: inherit;
+    font-family: inherit; cursor: pointer;
+  }
+  #buildingsScreen .buildings-res-pill small {
+    display: block; font-size: 9px; font-weight: 700; opacity: .85; text-transform: uppercase;
   }
   #buildingsScreen .buildings-res-pill.is-collect {
-    color: #0a1218; background: #7cfc8a; border-color: #4ecf6a; cursor: pointer;
+    color: #0a1218; background: #7cfc8a; border-color: #4ecf6a;
   }
-  #buildingsScreen .buildings-res-pill.is-empty { opacity: .7; }
+  #buildingsScreen .buildings-res-pill.is-collect.is-full {
+    background: #ffd75e; border-color: #c97a20; color: #0a1218;
+  }
+  #buildingsScreen .buildings-res-pill.is-empty { opacity: .78; }
+  #buildingsScreen .buildings-res-pill.is-locked { opacity: .62; cursor: pointer; }
+  #buildingsScreen .buildings-res-pill.is-build { border-color: #ffd75e; color: #ffd75e; }
+  #buildingsScreen .buildings-res-pill.is-upgrade {
+    color: #0a1218; background: #7cf5ff; border-color: #3ec8d4;
+  }
+  #buildingsScreen .buildings-res-pill.is-flash {
+    animation: buildingsPillPop .28s ease;
+  }
+  @keyframes buildingsPillPop {
+    0% { transform: scale(1); }
+    40% { transform: scale(1.08); }
+    100% { transform: scale(1); }
+  }
+  body.reduced-motion #buildingsScreen .buildings-res-pill.is-flash { animation: none; }
   #buildingsDetail.buildings-detail {
     width: min(92vw, 520px); margin: 0 auto 12px; padding: 14px 14px 16px;
     border-radius: 16px; background: #162033; border: 1px solid rgba(255,255,255,.14);
     box-shadow: 0 4px 0 rgba(0,0,0,.32);
+    display: flex; flex-direction: column; gap: 8px;
   }
+  #buildingsScreen[data-buildings-pane="list"] #buildingsDetail,
+  #buildingsScreen[data-buildings-pane="list"] .buildings-detail { display: none; }
+  #buildingsScreen[data-buildings-pane="detail"] #buildingsOverview { display: none; }
   #buildingsScreen .buildings-detail-art {
     width: 72px; height: 72px; margin: 0 auto 8px; border-radius: 14px; background: #0c1422;
     display: flex; align-items: center; justify-content: center; overflow: hidden;
@@ -3292,9 +3332,62 @@
     border: 1px solid rgba(255,255,255,.16); border-bottom: 0;
     box-shadow: 0 -8px 28px rgba(0,0,0,.4);
   }
-  #buildingsScreen .buildings-sheet-panel h3 { margin: 0 0 8px; font-size: 18px; color: #f2efe6; }
+  #buildingsScreen .buildings-sheet-panel h3 {
+    margin: 0 0 8px; font-size: 18px; color: #f2efe6;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
   #buildingsScreen .buildings-sheet-now, #buildingsScreen .buildings-sheet-cost, #buildingsScreen .buildings-sheet-why {
     margin: 6px 0; font-size: 13px; font-weight: 600; color: #c8d0dc; line-height: 1.4;
+  }
+  #buildingsScreen .buildings-cost-chips {
+    display: flex; flex-wrap: wrap; gap: 6px; margin: 4px 0 2px;
+  }
+  #buildingsScreen .buildings-cost-chip {
+    display: inline-flex; align-items: center;
+    min-height: 28px; padding: 4px 10px; border-radius: 999px;
+    font-size: 12px; font-weight: 800; line-height: 1;
+  }
+  #buildingsScreen .buildings-cost-chip.is-ok {
+    color: #7cfc8a;
+    background: rgba(124,252,138,.14);
+    border: 1px solid rgba(124,252,138,.5);
+  }
+  #buildingsScreen .buildings-cost-chip.is-short {
+    color: #ff9a9a;
+    background: rgba(255,70,70,.14);
+    border: 1px solid rgba(255,90,90,.55);
+  }
+  #buildingsScreen #btnBuildingUpgradeConfirm.is-broke {
+    opacity: .88; color: #ffb0b0;
+    border-color: rgba(255,90,90,.5);
+  }
+  #buildingsScreen .buildings-empty-start-wrap { width: 100%; }
+  #buildingsScreen .buildings-collect-all-wrap { width: 100%; margin: 0 0 8px; }
+  #buildingsScreen .buildings-collect-all {
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+    width: 100%; min-height: 40px; padding: 8px 12px;
+    border-radius: 12px; border: 1px solid rgba(124,252,138,.45);
+    background: rgba(20, 48, 28, .55); color: #e8f0ff;
+    font-size: 14px; font-weight: 800; text-align: center;
+  }
+  #buildingsScreen .buildings-collect-all small { display: none; }
+  #buildingsScreen .buildings-pill-tip {
+    position: absolute; z-index: 12; max-width: min(72vw, 240px);
+    padding: 6px 10px; border-radius: 10px;
+    background: #12182a; border: 1px solid rgba(255,215,94,.45);
+    color: #ffd75e; font-size: 12px; font-weight: 800; line-height: 1.25;
+    pointer-events: none; box-shadow: 0 6px 16px rgba(0,0,0,.35);
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  #buildingsScreen .buildings-pill-tip[hidden] { display: none; }
+  #buildingsScreen .buildings-empty-start {
+    display: block; width: 100%; margin: 0 0 8px; padding: 8px 10px;
+    border-radius: 12px; border: 1px solid rgba(124,245,255,.38);
+    background: rgba(10,24,40,.55); color: #e8f0ff;
+    font-size: 13px; font-weight: 800; text-align: left; line-height: 1.3;
+  }
+  #buildingsScreen .buildings-card.is-start {
+    box-shadow: 0 0 0 2px rgba(124,245,255,.42);
   }
   #buildingsScreen .buildings-sheet-actions { display: flex; gap: 8px; margin-top: 12px; }
   #buildingsScreen .buildings-sheet-actions .btn { flex: 1; margin: 0; }
@@ -3308,6 +3401,13 @@
     #buildingsScreen .buildings-card { min-height: 80px; }
     #buildingsScreen .buildings-card-hit { grid-template-columns: 48px 1fr; }
     #buildingsScreen .buildings-card-art { width: 48px; height: 48px; }
+    #buildingsScreen .buildings-res-pill { min-width: 68px; max-width: 88px; }
+  }
+  @media (min-width: 720px) {
+    #buildingsScreen .buildings-card { min-height: 96px; padding: 10px 12px; }
+    #buildingsScreen .buildings-card-name { font-size: 16px; }
+    #buildingsList.buildings-list { gap: 12px; }
+    #buildingsScreen .buildings-res-pill { min-width: 88px; min-height: 52px; }
   }
   .ach-card.new { border-color:#7cf5ff !important; background:rgba(124,245,255,.1); }
   .ach-card.ach-near { border-color:rgba(255,215,94,.5) !important; background:rgba(255,215,94,.06); }
@@ -3605,7 +3705,7 @@
   }
 
   /* Buildings HOME screen — Android-first list → detail */
-  #buildingsScreen.buildings-screen { align-items: stretch; }
+  #buildingsScreen.buildings-screen { align-items: stretch; position: relative; }
   #buildingsScreen .buildings-body {
     width: min(94vw, 480px);
     margin: 0 auto;
@@ -3627,28 +3727,18 @@
   #buildingsScreen .buildings-wallet {
     position: sticky;
     top: 0;
-    z-index: 3;
-    width: min(94vw, 480px);
-    margin: 0 auto 10px;
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: center;
-    gap: 6px 8px;
-    padding: 8px 6px;
-    background: var(--menu-bg, #151b33);
-    border: 0;
-    box-shadow: none;
+    z-index: 4;
   }
   #buildingsScreen .buildings-wallet-chip {
-    display: inline-flex;
-    align-items: baseline;
-    gap: 6px;
-    min-width: 4.6em;
-    padding: 6px 10px;
-    border-radius: 999px;
-    border: 1px solid var(--menu-edge);
-    background: var(--menu-tile-solid);
-    box-shadow: 0 2px 0 rgba(0,0,0,.22);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1px;
+    min-width: 0;
+    padding: 6px 2px 5px;
+    border-radius: 10px;
+    border: 1px solid rgba(255,255,255,.1);
+    background: rgba(0,0,0,.35);
     font-weight: 800;
     line-height: 1.1;
   }
@@ -3675,14 +3765,12 @@
   }
   #buildingsScreen .buildings-row {
     width: 100%;
-    min-height: 64px;
-    padding: 10px 28px 9px 12px;
-    background: var(--menu-tile-solid);
-    color: var(--menu-ink);
   }
-  #buildingsScreen .buildings-row .hub-tile-ico img {
-    width: 28px;
-    height: 28px;
+  #buildingsScreen .buildings-row .hub-tile-ico img,
+  #buildingsScreen .buildings-card-art .buildings-art-img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
   }
   #buildingsScreen .buildings-row-locked { opacity: .62; }
   #buildingsScreen .buildings-row-ready {
@@ -3699,7 +3787,9 @@
     flex-direction: column;
     gap: 8px;
   }
+  #buildingsScreen[data-buildings-pane="list"] #buildingsDetail,
   #buildingsScreen[data-buildings-pane="list"] .buildings-detail { display: none; }
+  #buildingsScreen[data-buildings-pane="detail"] #buildingsOverview,
   #buildingsScreen[data-buildings-pane="detail"] .buildings-list { display: none; }
   #buildingsScreen .buildings-overview-btn {
     align-self: flex-start;
@@ -3723,9 +3813,22 @@
     object-fit: contain;
   }
   #buildingsScreen .buildings-art-img {
-    width: 28px;
-    height: 28px;
+    width: 100%;
+    height: 100%;
     object-fit: contain;
+    image-rendering: pixelated;
+  }
+  #buildingsScreen .buildings-max-hint {
+    margin: 0;
+    text-align: center;
+    font-size: 13px;
+    font-weight: 700;
+    color: #7cfc8a;
+  }
+  #buildingsScreen .buildings-cta-stack {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
   }
   #buildingsScreen .buildings-detail-name {
     font-weight: 900;

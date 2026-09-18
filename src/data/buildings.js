@@ -698,36 +698,36 @@ function buildingDescModel(id, st) {
   const lv0 = def && def.resource && def.resource.perHour ? (def.resource.perHour[0] || 0) : 0;
   const unlockLine = tip.unlocked
     ? ''
-    : buildingTxt('buildings.lockedWorldNamed', 'Nog dicht — speel {name} (eiland {n}) vrij.', {
+    : buildingTxt('buildings.lockedWorldNamed', '{name} (eiland {n})', {
       name: islandName, n: tip.worldUnlock,
     });
   let produceLine;
   if (!tip.unlocked) {
-    produceLine = buildingTxt('buildings.desc.produceLocked', 'Gaat {res} maken na unlock + bouwen.', {
+    produceLine = buildingTxt('buildings.desc.produceLocked', '{res} na eiland', {
       res: tip.resourceName,
     });
   } else if (!tip.built) {
-    produceLine = buildingTxt('buildings.desc.produceUnbuilt', 'Bouwen: maakt daarna {res} ({n}/uur).', {
+    produceLine = buildingTxt('buildings.desc.produceUnbuilt', 'Bouw: {res} {n}/u', {
       res: tip.resourceName, n: lv0,
     });
   } else {
-    produceLine = buildingTxt('buildings.desc.produce', 'Maakt {res}: {n}/uur · hopper max {cap}.', {
+    produceLine = buildingTxt('buildings.desc.produce', '{n}/u · hopper {cap}', {
       res: tip.resourceName, n: tip.outputRate, cap: tip.storageCap,
     });
   }
   const currentPower = (def.powers || []).filter((p) => tip.powerRank >= p.rank).pop() || null;
   const powerLine = currentPower
-    ? buildingTxt('buildings.desc.powerOn', 'Kracht rank {rank}: {label} — {blurb}', {
+    ? buildingTxt('buildings.desc.powerOn', 'R{rank} {label}', {
       rank: tip.powerRank,
       label: buildingPowerLabel(currentPower),
       blurb: buildingPowerBlurb(currentPower),
     })
-    : buildingTxt('buildings.desc.powerNone', 'Geen kracht tot de fabriek gebouwd is.');
+    : buildingTxt('buildings.desc.powerNone', 'Bouw voor kracht');
   const doesLine = !tip.unlocked
     ? unlockLine
     : !tip.built
-      ? buildingTxt('buildings.desc.doesUnbuilt', 'Maakt {res} · bouw om te starten', { res: tip.resourceName })
-      : buildingTxt('buildings.desc.does', '{res} {n}/uur · {power}', {
+      ? buildingTxt('buildings.desc.doesUnbuilt', '{res} · bouw', { res: tip.resourceName })
+      : buildingTxt('buildings.desc.does', '{res} {n}/u · {power}', {
         res: tip.resourceName,
         n: tip.outputRate,
         power: currentPower ? buildingPowerLabel(currentPower) : '—',
@@ -739,9 +739,9 @@ function buildingDescModel(id, st) {
     const nextRank = buildingPowerRank(nextLv);
     const newPower = (def.powers || []).find((p) => p.rank === nextRank && nextRank > tip.powerRank) || null;
     const powerBit = newPower
-      ? buildingTxt('buildings.desc.nextPower', ' · nieuwe kracht: {label}', { label: buildingPowerLabel(newPower) })
+      ? buildingTxt('buildings.desc.nextPower', ' · {label}', { label: buildingPowerLabel(newPower) })
       : '';
-    nextLine = buildingTxt('buildings.desc.nextLv', 'Lv {n}: {res} {rate}/uur · cap {cap}{power}', {
+    nextLine = buildingTxt('buildings.desc.nextLv', 'Lv{n} {rate}/u · {cap}{power}', {
       n: nextLv, res: tip.resourceName, rate: nextOut.perHour, cap: nextOut.cap, power: powerBit,
     });
   } else if (tip.built && tip.level >= tip.maxLevel) {
@@ -750,9 +750,9 @@ function buildingDescModel(id, st) {
     const firstOut = buildingOutputAtLevel(def, 1);
     const firstPower = (def.powers || []).find((p) => p.rank === 0) || null;
     const powerBit = firstPower
-      ? buildingTxt('buildings.desc.nextPower', ' · nieuwe kracht: {label}', { label: buildingPowerLabel(firstPower) })
+      ? buildingTxt('buildings.desc.nextPower', ' · {label}', { label: buildingPowerLabel(firstPower) })
       : '';
-    nextLine = buildingTxt('buildings.desc.nextLv', 'Lv {n}: {res} {rate}/uur · cap {cap}{power}', {
+    nextLine = buildingTxt('buildings.desc.nextLv', 'Lv{n} {rate}/u · {cap}{power}', {
       n: 1, res: tip.resourceName, rate: firstOut.perHour, cap: firstOut.cap, power: powerBit,
     });
   }
