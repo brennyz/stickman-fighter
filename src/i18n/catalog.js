@@ -86,7 +86,12 @@ function seedNlGameStrings() {
   });
   if (!I18N.nl.result) I18N.nl.result = {};
   Object.assign(I18N.nl.result, {
-    advWin: 'GEWONNEN!', advLose: 'VERLOREN', onceMore: 'Nog één keer', trainWin: 'KAMPIOEN!', trainLose: 'ROBOT WINT...',
+    advWin: 'GEWONNEN!', advLose: 'VERLOREN', onceMore: 'Nog één keer', advLoseBy: 'VERLOREN · {name}',
+    trainWin: 'KAMPIOEN!', trainLose: 'ROBOT WINT...',
+    killedBy: '{name} tikte je uit · {prog}',
+    killedByFlyer: '{name} (vlieger) — mik omhoog · {prog}',
+    killedBySlam: '{name} sloeg plat — spring de slam · {prog}',
+    killedByBoss: '{name} was de baas · {prog}',
     advLoseKeep: 'XP en buit van deze ronde blijven',
     trainAgainSub: 'vs RabbitRobot',
     wavesStart: 'begin',
@@ -383,6 +388,13 @@ function seedNlGameStrings() {
     superAlly: 'Jackpot! Super-bondgenoot: {name} (sterk buff)',
     ally: 'Geluk! Bondgenoot: {name} (buff dit level)',
     neutral: 'Neutraal — gewoon level (geen extra gok-effect)',
+  });
+  if (!I18N.nl.species) I18N.nl.species = {};
+  Object.assign(I18N.nl.species, {
+    piepvleugel: 'Piepvleugel', stekelra: 'Stekelra', ijzerstek: 'Ijzerstek',
+    nachtwolk: 'Nachtwolk', blikkert: 'Blikkert', laserblik: 'Laserblik',
+    vlamvos: 'Vlamvos', stormvos: 'Stormvos', rotsbonk: 'Rotsbonk',
+    vlamdraak: 'Vlamdraak', schaduwvorst: 'Schaduwvorst', voidkonijn: 'Voidkonijn',
   });
   if (!I18N.nl.versionUpdate) I18N.nl.versionUpdate = {};
   Object.assign(I18N.nl.versionUpdate, {
@@ -871,6 +883,12 @@ function seedNlGameStrings() {
     summonGotoPets: 'Naar pets',
     summonGotoSub: 'Collectie',
     summonLogEmpty: 'Nog geen trekkingen vandaag.',
+    summonLoadFail: 'Oproepen laden mislukt',
+    summonEgg: 'Ei · {name}',
+    summonEggPlain: 'Ei',
+    summonCoins: '+{n} pet coins',
+    summonXp: '+{n} XP',
+    summonNothing: 'Niks bijzonders',
     summonLeftToday: '{n} over vandaag',
     summonDoneToday: 'op voor vandaag',
     sharePlayLinkOk: '✓ Speel-link — deel met vrienden (Android)',
@@ -1217,9 +1235,9 @@ function seedNlFromRuntime() {
   Object.assign(I18N.nl.gear, {
     hubStat: '{n}/5',
     summarySlots: '<b>{n}</b>/5',
-    pillVanity: 'LOOK',
+    pillVanity: 'SIER',
     pillStat: 'STAT',
-    pillLock: 'LOCK',
+    pillLock: 'VAST',
     empty: 'Leeg',
     pickHint: 'Tik een item om aan of uit te doen.',
     invKicker: '{slot}',
@@ -1288,6 +1306,7 @@ const CATALOG_EN = {
     pillStat: 'STAT',
     pillLock: 'LOCK',
     empty: 'empty',
+    wearing: 'on',
     pickHint: 'Tap an item to equip or remove.',
     invKicker: '{slot}',
     weaponOpen: 'Weapons',
@@ -1424,7 +1443,12 @@ const CATALOG_EN = {
   },
   pickup: { heal: '+HP', rage: 'RAGE', energy: 'ENERGY', shield: 'SHIELD' },
   result: {
-    advWin: 'VICTORY!', advLose: 'YOU LOSE', onceMore: 'One more go', trainWin: 'CHAMPION!', trainLose: 'ROBOT WINS...',
+    advWin: 'VICTORY!', advLose: 'YOU LOSE', onceMore: 'One more go', advLoseBy: 'YOU LOSE · {name}',
+    trainWin: 'CHAMPION!', trainLose: 'ROBOT WINS...',
+    killedBy: '{name} took you out · {prog}',
+    killedByFlyer: '{name} (flyer) — aim up · {prog}',
+    killedBySlam: '{name} slammed you — jump the slam · {prog}',
+    killedByBoss: '{name} was the boss · {prog}',
     advLoseKeep: 'XP and loot from this run stay',
     trainAgainSub: 'vs RabbitRobot',
     wavesStart: 'start',
@@ -2100,6 +2124,12 @@ const CATALOG_EN = {
     summonGotoPets: 'To pets',
     summonGotoSub: 'Collection',
     summonLogEmpty: 'No pulls today yet.',
+    summonLoadFail: 'Could not load summons',
+    summonEgg: 'Egg · {name}',
+    summonEggPlain: 'Egg',
+    summonCoins: '+{n} pet coins',
+    summonXp: '+{n} XP',
+    summonNothing: 'Nothing special',
     summonLeftToday: '{n} left today',
     summonDoneToday: 'done for today',
     sharePlayLinkOk: '✓ Play link — share with friends (Android)',
@@ -2508,6 +2538,21 @@ const CATALOG_EN = {
     ally: 'Lucky! Ally: {name} (buff this level)',
     neutral: 'Neutral — normal level (no extra gamble effect)',
   },
+  /* EX-013: Dutch compound proper nouns → short EN labels. Slymo/Flapper stay as-is. */
+  species: {
+    piepvleugel: 'Peepwing',
+    stekelra: 'Spikehog',
+    ijzerstek: 'Ironspike',
+    nachtwolk: 'Nightcloud',
+    blikkert: 'Tinblink',
+    laserblik: 'Lasercan',
+    vlamvos: 'Flamefox',
+    stormvos: 'Stormfox',
+    rotsbonk: 'Rockbonk',
+    vlamdraak: 'Flamedrake',
+    schaduwvorst: 'Shadowlord',
+    voidkonijn: 'Voidbunny',
+  },
 };
 
 const CATALOG_DE = {
@@ -2588,7 +2633,12 @@ const CATALOG_DE = {
     tome: { name: 'Buchmeister', hint: 'Hälfte des Buches', tooltip: 'Monsterbuch auf dem Rücken.', bonus: '+4 max HP · Buchweisheit' },
   },
   result: {
-    advWin: 'GEWONNEN!', advLose: 'VERLOREN', onceMore: 'Noch einmal', trainWin: 'MEISTER!', trainLose: 'ROBOT GEWINNT…',
+    advWin: 'GEWONNEN!', advLose: 'VERLOREN', onceMore: 'Noch einmal', advLoseBy: 'VERLOREN · {name}',
+    trainWin: 'MEISTER!', trainLose: 'ROBOT GEWINNT…',
+    killedBy: '{name} hat dich erwischt · {prog}',
+    killedByFlyer: '{name} (Flieger) — nach oben zielen · {prog}',
+    killedBySlam: '{name} hat dich plattgemacht — Slam springen · {prog}',
+    killedByBoss: '{name} war der Boss · {prog}',
     advLoseKeep: 'XP und Beute von diesem Lauf bleiben',
     trainAgainSub: 'vs RabbitRobot',
     wavesStart: 'Start',
@@ -2699,7 +2749,12 @@ const CATALOG_FR = {
     tome: { name: 'Maître du livre', hint: 'Moitié du bestiaire', tooltip: 'Bestiaire sur le dos.', bonus: '+4 PV max · sagesse' },
   },
   result: {
-    advWin: 'VICTOIRE !', advLose: 'DÉFAITE', trainWin: 'CHAMPION !', trainLose: 'LE ROBOT GAGNE…',
+    advWin: 'VICTOIRE !', advLose: 'DÉFAITE', onceMore: 'Encore une fois', advLoseBy: 'DÉFAITE · {name}',
+    trainWin: 'CHAMPION !', trainLose: 'LE ROBOT GAGNE…',
+    killedBy: '{name} t’a mis KO · {prog}',
+    killedByFlyer: '{name} (volant) — vise en haut · {prog}',
+    killedBySlam: '{name} t’a écrasé — saute le slam · {prog}',
+    killedByBoss: '{name} était le boss · {prog}',
     advLoseKeep: 'XP et butin de cette partie restent',
     trainAgainSub: 'vs RabbitRobot',
     wavesStart: 'début',
@@ -2827,7 +2882,12 @@ const CATALOG_ES = {
     tome: { name: 'Maestro del libro', hint: 'Mitad del bestiario', tooltip: 'Libro en la espalda.', bonus: '+4 PV máx · sabiduría' },
   },
   result: {
-    advWin: '¡VICTORIA!', advLose: 'DERROTA', trainWin: '¡CAMPEÓN!', trainLose: 'EL ROBOT GANA…',
+    advWin: '¡VICTORIA!', advLose: 'DERROTA', onceMore: 'Una más', advLoseBy: 'DERROTA · {name}',
+    trainWin: '¡CAMPEÓN!', trainLose: 'EL ROBOT GANA…',
+    killedBy: '{name} te dejó fuera · {prog}',
+    killedByFlyer: '{name} (volador) — apunta arriba · {prog}',
+    killedBySlam: '{name} te aplastó — salta el slam · {prog}',
+    killedByBoss: '{name} era el jefe · {prog}',
     advLoseKeep: 'XP y botín de esta partida se quedan',
     trainAgainSub: 'vs RabbitRobot',
     wavesStart: 'inicio',
@@ -2990,6 +3050,32 @@ function gambleOutcomeLabelFromKey(g) {
   const k = 'gamble.' + out;
   const v = t(k);
   return (v && v !== k) ? v : (typeof gambleOutcomeLabel === 'function' ? gambleOutcomeLabel(g) : out);
+}
+
+/** EX-013: locale species name. NL keeps SPECIES.name (Dutch proper nouns). */
+function speciesLabel(spOrId) {
+  let id = '';
+  let fallback = '';
+  if (typeof spOrId === 'string') {
+    id = spOrId;
+    fallback = (typeof SPECIES !== 'undefined' && SPECIES[id] && SPECIES[id].name) || id;
+  } else if (spOrId && typeof spOrId === 'object') {
+    id = spOrId.id || spOrId.spId || '';
+    if (!id && typeof SPECIES !== 'undefined') {
+      for (const k of Object.keys(SPECIES)) {
+        if (SPECIES[k] === spOrId) { id = k; break; }
+      }
+    }
+    fallback = spOrId.name
+      || (id && typeof SPECIES !== 'undefined' && SPECIES[id] && SPECIES[id].name)
+      || id
+      || '';
+  }
+  if (!fallback && !id) return '';
+  const lang = (typeof getLang === 'function') ? getLang() : 'nl';
+  if (lang === 'nl' || !id) return fallback;
+  if (typeof tOr === 'function') return tOr('species.' + id, fallback);
+  return fallback;
 }
 
 function i18nList(key) {

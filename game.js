@@ -358,6 +358,8 @@ const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', petCoins: 0,
   /** auto | classic | jungle | halloween | winter | summer — CSS overlay pref */
   seasonPref: 'auto',
   playerTag: '', lastPlay: null, tipsSeen: {},
+  /** EX-023: first punch landed — until then skip island/gamble/FOMO. */
+  feltFirstPunch: false,
   /** Epoch ms — set once in sanitizeSave. Time gates use account age from this. */
   createdAt: 0,
   /** 5-slot loadout — see src/data/gear.js + docs/GEAR-SYSTEM.md */
@@ -1914,6 +1916,7 @@ function sanitizeSave(s) {
       ? (String(out.seasonPref).toLowerCase() === 'default' ? 'classic' : String(out.seasonPref).toLowerCase())
       : 'auto');
   out.tipsSeen = sanitizeTipsSeen(out.tipsSeen);
+  out.feltFirstPunch = !!out.feltFirstPunch;
   out.missionsIntroSeen = !!out.missionsIntroSeen;
   if (out.lastPlay && typeof out.lastPlay === 'object') {
     const lp = out.lastPlay;
@@ -2349,7 +2352,7 @@ const I18N = {
       buildings: 'Fabrieken', buildingsSub: 'Werken · oogst · upgrade',
       options: 'Opties', tips: 'Tips', fresh: 'Verse versie', install: 'Zet in app-lade', installSub: 'Één icoon, zoals een echte app',
       profileAria: 'Profiel en missies',
-      pressStart: 'insert coin', missionReady: 'missie klaar', dayBonus: 'Dagbonus',
+      pressStart: 'gooi een munt', missionReady: 'missie klaar', dayBonus: 'Dagbonus',
       choosePath: 'KIES JE PAD', lastPlayed: 'LAATST', playHere: 'SPEEL', saveSync: 'save OK',
       startGame: 'SPELEN', startSub: 'Start het gevecht',
       titleName: 'Naam — hoeft niet', titleNamePh: 'Bijnaam (optioneel)',
@@ -2538,6 +2541,8 @@ const I18N = {
       flagVanity: 'Alleen look — geen stats', flagStats: '+ stats', flagArmour: 'Pantser',
       needLvl: 'Vrij vanaf Lv {n}', needDays: 'Vrij vanaf dag {n}',
       equip: 'Uitrusten', equipped: 'Aan', empty: 'Leeg',
+      wearing: 'aan',
+      pillVanity: 'SIER', pillStat: 'STAT', pillLock: 'VAST',
       slot: { head: 'Hoofd', chest: 'Borst', hands: 'Handen', legs: 'Benen', back: 'Rug' },
     },
     install: { title: 'Zet in app-lade', sub: 'Één icoon, zoals een echte app' },
@@ -2871,6 +2876,8 @@ const I18N = {
       flagVanity: 'Look only — no stats', flagStats: '+ stats', flagArmour: 'Armour',
       needLvl: 'Unlocks at Lv {n}', needDays: 'Unlocks on day {n}',
       equip: 'Equip', equipped: 'On', empty: 'Empty',
+      wearing: 'on',
+      pillVanity: 'LOOK', pillStat: 'STAT', pillLock: 'LOCK',
       slot: { head: 'Head', chest: 'Chest', hands: 'Hands', legs: 'Legs', back: 'Back' },
     },
     install: { title: 'Add as app', sub: 'One icon, like a real app' },
@@ -3289,6 +3296,8 @@ const I18N = {
       flagVanity: 'Nur Look — keine Stats', flagStats: '+ Stats', flagArmour: 'Rüstung',
       needLvl: 'Frei ab Lv {n}', needDays: 'Frei ab Tag {n}',
       equip: 'Anlegen', equipped: 'An', empty: 'Leer',
+      wearing: 'an',
+      pillVanity: 'OPTIK', pillStat: 'STAT', pillLock: 'SPERRE',
       slot: { head: 'Kopf', chest: 'Brust', hands: 'Hände', legs: 'Beine', back: 'Rücken' },
     },
     install: { title: 'Als App speichern', sub: 'Ein Icon, wie eine echte App' },
@@ -3624,6 +3633,8 @@ const I18N = {
       unequip: 'Retirer', pickHint: 'Tape un objet pour équiper.',
       lockOwned: 'Pas encore trouvé', filterAll: 'Tout', filterOwned: 'À toi',
       vanityHint: 'Pas de stats — look seul',
+      wearing: 'sur toi',
+      pillVanity: 'LOOK', pillStat: 'STAT', pillLock: 'VERROU',
       slot: { head: 'Tête', chest: 'Torse', hands: 'Mains', legs: 'Jambes', back: 'Dos' },
     },
     install: { title: 'Ajouter comme app', sub: 'Une icône, comme une vraie app' },
@@ -3951,6 +3962,8 @@ const I18N = {
       lockOwned: 'Aún no encontrado', filterAll: 'Todo', filterOwned: 'Tuyo',
       vanityHint: 'Sin stats — solo look',
       equip: 'Equipar', equipped: 'Puesto', empty: 'Vacío',
+      wearing: 'puesto',
+      pillVanity: 'LOOK', pillStat: 'STAT', pillLock: 'BLOQ',
       slot: { head: 'Cabeza', chest: 'Pecho', hands: 'Manos', legs: 'Piernas', back: 'Espalda' },
     },
     install: { title: 'Añadir como app', sub: 'Un icono, como una app real' },
@@ -4881,6 +4894,7 @@ function fomoRitualHubReady() {
 
 function fomoRitualPending() {
   if (typeof save === 'undefined' || !save) return false;
+  if (typeof firstPunchPending === 'function' && firstPunchPending()) return false;
   ensureFomo();
   const today = todayKey();
   if (save.fomo.ritualSeenDate === today) return false;
@@ -6984,6 +6998,12 @@ function playGambleRollSfx(g) {
  * Alleen cancelGambleStart() (token bump) mag de start killen.
  */
 function gokGooiStartLevel(n) {
+  if (typeof firstPunchPending === 'function' && firstPunchPending()) {
+    const lv = Math.max(1, Math.min(MAX_LEVEL, Number(n) || 1));
+    const diff = typeof currentAdvDiff === 'function' ? currentAdvDiff() : 'normal';
+    startGame('adventure', { level: lv, gamble: null, difficulty: diff });
+    return;
+  }
   if (gokStartBusy) return;
   cancelGambleStart();
   gokStartBusy = true;
@@ -7020,6 +7040,10 @@ function gokGooiStartLevel(n) {
 }
 
 function gokGooiStartFromScreen() {
+  if (typeof firstPunchPending === 'function' && firstPunchPending()) {
+    if (typeof startFirstPunchAdventure === 'function') startFirstPunchAdventure();
+    return;
+  }
   if (gokStartBusy) return;
   cancelGambleStart();
   gokStartBusy = true;
@@ -16635,7 +16659,8 @@ function spawnTop20ForTest(game, spId) {
   if (game.monsters) game.monsters.push(mon);
   try {
     if (typeof game.floater === 'function' && mon.sp && mon.sp.name) {
-      game.floater(mon.x, mon.y - mon.size - 18, mon.sp.name, '#ffd75e', 14);
+      const nm = (typeof speciesLabel === 'function') ? speciesLabel(mon.sp) : mon.sp.name;
+      game.floater(mon.x, mon.y - mon.size - 18, nm, '#ffd75e', 14);
     }
   } catch (_) {}
   return mon;
@@ -16700,10 +16725,61 @@ const UNLOCK_AT = {
 
 };
 Object.assign(UNLOCK_AT, (MONSTER_CATALOG_W2_EXPANDED && MONSTER_CATALOG_W2_EXPANDED.unlockAt) || {});
-/** Avontuur horde: 6× meer spawns + reuzen + volledig monsterboek (W2 catalog ≈ 2× roster). */
+/** Avontuur horde: 6× meer spawns + reuzen + volledig monsterboek (W2 catalog ≈ 2× roster).
+ *  Desktop keeps the big-horde feel. Phone (~390px) must not use the same live count. */
 const ADVENTURE_HORDE_MUL = 6;
 const ADVENTURE_HORDE_MAX_PER_WAVE = 36;
-const ADVENTURE_MAX_ALIVE = IS_TOUCH ? 54 : 78;
+const ADVENTURE_MAX_ALIVE_DESK = 78;
+const ADVENTURE_MAX_ALIVE_TOUCH_WIDE = 54;
+
+function adventureViewportW() {
+  if (typeof W === 'number' && W > 0) return W;
+  try {
+    if (typeof innerWidth === 'number' && innerWidth > 0) return innerWidth;
+  } catch (_) {}
+  return 800;
+}
+
+/** Viewport band for spawn density. Phone must feel playable; desk keeps the horde. */
+function adventureHordeProfile() {
+  const w = adventureViewportW();
+  const touch = typeof IS_TOUCH !== 'undefined' && IS_TOUCH;
+  if (w <= 440) {
+    return {
+      band: 'phone',
+      mul: 2.15,
+      maxPerWave: 12,
+      maxAlive: 8,
+      spawnIntervalMul: 1.28,
+      openerCapMul: 0.85,
+    };
+  }
+  if (w <= 780) {
+    return {
+      band: 'tablet',
+      mul: 3.6,
+      maxPerWave: 20,
+      maxAlive: 16,
+      spawnIntervalMul: 1.12,
+      openerCapMul: 0.92,
+    };
+  }
+  return {
+    band: 'desk',
+    mul: ADVENTURE_HORDE_MUL,
+    maxPerWave: ADVENTURE_HORDE_MAX_PER_WAVE,
+    maxAlive: touch ? ADVENTURE_MAX_ALIVE_TOUCH_WIDE : ADVENTURE_MAX_ALIVE_DESK,
+    spawnIntervalMul: 1,
+    openerCapMul: 1,
+  };
+}
+
+function adventureMaxAlive() {
+  return adventureHordeProfile().maxAlive;
+}
+
+/** Legacy alias — prefer adventureMaxAlive() so phone/tablet scale. */
+const ADVENTURE_MAX_ALIVE = (typeof IS_TOUCH !== 'undefined' && IS_TOUCH) ? 54 : 78;
 const GIANT_SPAWN_CHANCE = 0.15;
 const GIANT_SIZE_MUL = 1.52;
 const GIANT_HP_MUL = 1.34;
@@ -17116,9 +17192,12 @@ function buildLevel(n, diffId) {
   const waveCount = Math.min(2 + Math.floor(n / 5) + (diff.order >= 2 ? 1 : 0), 6);
   const basePerWave = 2 + Math.floor(n / 4);
   const hordeScale = (diff.hordeMul || 1);
+  const horde = (typeof adventureHordeProfile === 'function')
+    ? adventureHordeProfile()
+    : { mul: ADVENTURE_HORDE_MUL, maxPerWave: ADVENTURE_HORDE_MAX_PER_WAVE, openerCapMul: 1 };
   const perWave = Math.min(
-    Math.max(2, Math.ceil(basePerWave * ADVENTURE_HORDE_MUL * hordeScale)),
-    ADVENTURE_HORDE_MAX_PER_WAVE
+    Math.max(2, Math.ceil(basePerWave * (horde.mul || ADVENTURE_HORDE_MUL) * hordeScale)),
+    horde.maxPerWave || ADVENTURE_HORDE_MAX_PER_WAVE
   );
   for (let w = 0; w < waveCount; w++) {
     const list = [];
@@ -17251,15 +17330,17 @@ function buildLevel(n, diffId) {
   }
   // Soft live A3 + playtest P1: golf 1 milder — opener niet omsingelen.
   if (waves[0] && waves[0].length) {
+    const openerMul = horde.openerCapMul || 1;
     const softCap = n <= 2
       ? (n === 1 ? 2 : 3)
       : n <= 3
-        ? Math.max(3, Math.ceil(perWave * 0.38))
+        ? Math.max(2, Math.ceil(perWave * 0.38 * openerMul))
         : n <= 8
-          ? Math.max(5, Math.ceil(perWave * 0.55))
-          : Math.max(6, Math.ceil(perWave * 0.72));
+          ? Math.max(4, Math.ceil(perWave * 0.55 * openerMul))
+          : Math.max(5, Math.ceil(perWave * 0.72 * openerMul));
     if (waves[0].length > softCap) waves[0] = waves[0].slice(0, softCap);
     if (n === 1 && waves[1] && waves[1].length > 4) waves[1] = waves[1].slice(0, 4);
+    if (horde.band === 'phone' && n === 1 && waves[1] && waves[1].length > 3) waves[1] = waves[1].slice(0, 3);
     if (n <= 5) {
       for (let i = 0; i < waves[0].length; i++) {
         waves[0][i].elite = false;
@@ -17277,7 +17358,7 @@ function buildLevel(n, diffId) {
   }
   if (BOSS_AT[n]) {
     const bossWave = BOSS_AT[n].map(x => Object.assign({}, x, { bossCore: !!x.elite }));
-    const hordePad = Math.min(3 + Math.floor(n / 8) + (diff.order || 0) * 2, 12);
+    const hordePad = Math.min(3 + Math.floor(n / 8) + (diff.order || 0) * 2, horde.band === 'phone' ? 4 : 12);
     for (let i = 0; i < hordePad; i++) {
       const elite = Math.random() < (0.1 + (diff.eliteBonus || 0) * 0.5);
       const bsp = weightedPick(pool, n, rarityBias);
@@ -17370,16 +17451,18 @@ function gambleRollToastLine(g) {
 
 function gambleOutcomeLabel(g) {
   if (!g) return '';
-  if (g.outcome === 'superBoss') return 'Pech! Super-baas in een willekeurige golf';
-  if (g.outcome === 'miniBoss') return 'Risico: extra elite-super in een golf';
-  if (g.outcome === 'superAlly') {
-    const a = GAMBLE_ALLIES[g.allyId];
-    return `Jackpot! Super-bondgenoot: ${a ? a.name : 'Sage'} (sterk buff)`;
+  const out = g.outcome || 'neutral';
+  const a = (typeof GAMBLE_ALLIES !== 'undefined') ? GAMBLE_ALLIES[g.allyId] : null;
+  const name = a ? a.name : 'Sage';
+  /* EX-014: locale via gamble.* — do not call gambleOutcomeLabelFromKey (it falls back here). */
+  if (typeof t === 'function') {
+    const v = t('gamble.' + out, { name });
+    if (v && v !== ('gamble.' + out)) return v;
   }
-  if (g.outcome === 'ally') {
-    const a = GAMBLE_ALLIES[g.allyId];
-    return `Geluk! Bondgenoot: ${a ? a.name : 'Sage'} (buff dit level)`;
-  }
+  if (out === 'superBoss') return 'Pech! Super-baas in een willekeurige golf';
+  if (out === 'miniBoss') return 'Risico: extra elite-super in een golf';
+  if (out === 'superAlly') return `Jackpot! Super-bondgenoot: ${name} (sterk buff)`;
+  if (out === 'ally') return `Geluk! Bondgenoot: ${name} (buff dit level)`;
   return 'Neutraal — gewoon level (geen extra gok-effect)';
 }
 
@@ -17387,7 +17470,9 @@ function gambleOutcomeLabel(g) {
 function triggerSpecialEnemyIntro(game, monster, kind) {
   if (!game || !monster) return;
   const tier = kind || (monster.superBoss ? 'superBoss' : (monster.bossCore ? 'boss' : (monster.elite ? 'elite' : 'boss')));
-  const name = (monster.sp && monster.sp.name) || 'Baas';
+  const name = (typeof speciesLabel === 'function' && monster.sp)
+    ? speciesLabel(monster.sp)
+    : ((monster.sp && monster.sp.name) || 'Baas');
   const rar = rarityOf(monster.sp?.rarity || 'rare');
   const bigBoss = !!(monster.bossCore || monster.superBoss || tier === 'superBoss');
   const colossal = !!monster.colossal;
@@ -21066,7 +21151,12 @@ function seedNlGameStrings() {
   });
   if (!I18N.nl.result) I18N.nl.result = {};
   Object.assign(I18N.nl.result, {
-    advWin: 'GEWONNEN!', advLose: 'VERLOREN', onceMore: 'Nog één keer', trainWin: 'KAMPIOEN!', trainLose: 'ROBOT WINT...',
+    advWin: 'GEWONNEN!', advLose: 'VERLOREN', onceMore: 'Nog één keer', advLoseBy: 'VERLOREN · {name}',
+    trainWin: 'KAMPIOEN!', trainLose: 'ROBOT WINT...',
+    killedBy: '{name} tikte je uit · {prog}',
+    killedByFlyer: '{name} (vlieger) — mik omhoog · {prog}',
+    killedBySlam: '{name} sloeg plat — spring de slam · {prog}',
+    killedByBoss: '{name} was de baas · {prog}',
     advLoseKeep: 'XP en buit van deze ronde blijven',
     trainAgainSub: 'vs RabbitRobot',
     wavesStart: 'begin',
@@ -21363,6 +21453,13 @@ function seedNlGameStrings() {
     superAlly: 'Jackpot! Super-bondgenoot: {name} (sterk buff)',
     ally: 'Geluk! Bondgenoot: {name} (buff dit level)',
     neutral: 'Neutraal — gewoon level (geen extra gok-effect)',
+  });
+  if (!I18N.nl.species) I18N.nl.species = {};
+  Object.assign(I18N.nl.species, {
+    piepvleugel: 'Piepvleugel', stekelra: 'Stekelra', ijzerstek: 'Ijzerstek',
+    nachtwolk: 'Nachtwolk', blikkert: 'Blikkert', laserblik: 'Laserblik',
+    vlamvos: 'Vlamvos', stormvos: 'Stormvos', rotsbonk: 'Rotsbonk',
+    vlamdraak: 'Vlamdraak', schaduwvorst: 'Schaduwvorst', voidkonijn: 'Voidkonijn',
   });
   if (!I18N.nl.versionUpdate) I18N.nl.versionUpdate = {};
   Object.assign(I18N.nl.versionUpdate, {
@@ -21851,6 +21948,12 @@ function seedNlGameStrings() {
     summonGotoPets: 'Naar pets',
     summonGotoSub: 'Collectie',
     summonLogEmpty: 'Nog geen trekkingen vandaag.',
+    summonLoadFail: 'Oproepen laden mislukt',
+    summonEgg: 'Ei · {name}',
+    summonEggPlain: 'Ei',
+    summonCoins: '+{n} pet coins',
+    summonXp: '+{n} XP',
+    summonNothing: 'Niks bijzonders',
     summonLeftToday: '{n} over vandaag',
     summonDoneToday: 'op voor vandaag',
     sharePlayLinkOk: '✓ Speel-link — deel met vrienden (Android)',
@@ -22197,9 +22300,9 @@ function seedNlFromRuntime() {
   Object.assign(I18N.nl.gear, {
     hubStat: '{n}/5',
     summarySlots: '<b>{n}</b>/5',
-    pillVanity: 'LOOK',
+    pillVanity: 'SIER',
     pillStat: 'STAT',
-    pillLock: 'LOCK',
+    pillLock: 'VAST',
     empty: 'Leeg',
     pickHint: 'Tik een item om aan of uit te doen.',
     invKicker: '{slot}',
@@ -22268,6 +22371,7 @@ const CATALOG_EN = {
     pillStat: 'STAT',
     pillLock: 'LOCK',
     empty: 'empty',
+    wearing: 'on',
     pickHint: 'Tap an item to equip or remove.',
     invKicker: '{slot}',
     weaponOpen: 'Weapons',
@@ -22404,7 +22508,12 @@ const CATALOG_EN = {
   },
   pickup: { heal: '+HP', rage: 'RAGE', energy: 'ENERGY', shield: 'SHIELD' },
   result: {
-    advWin: 'VICTORY!', advLose: 'YOU LOSE', onceMore: 'One more go', trainWin: 'CHAMPION!', trainLose: 'ROBOT WINS...',
+    advWin: 'VICTORY!', advLose: 'YOU LOSE', onceMore: 'One more go', advLoseBy: 'YOU LOSE · {name}',
+    trainWin: 'CHAMPION!', trainLose: 'ROBOT WINS...',
+    killedBy: '{name} took you out · {prog}',
+    killedByFlyer: '{name} (flyer) — aim up · {prog}',
+    killedBySlam: '{name} slammed you — jump the slam · {prog}',
+    killedByBoss: '{name} was the boss · {prog}',
     advLoseKeep: 'XP and loot from this run stay',
     trainAgainSub: 'vs RabbitRobot',
     wavesStart: 'start',
@@ -23080,6 +23189,12 @@ const CATALOG_EN = {
     summonGotoPets: 'To pets',
     summonGotoSub: 'Collection',
     summonLogEmpty: 'No pulls today yet.',
+    summonLoadFail: 'Could not load summons',
+    summonEgg: 'Egg · {name}',
+    summonEggPlain: 'Egg',
+    summonCoins: '+{n} pet coins',
+    summonXp: '+{n} XP',
+    summonNothing: 'Nothing special',
     summonLeftToday: '{n} left today',
     summonDoneToday: 'done for today',
     sharePlayLinkOk: '✓ Play link — share with friends (Android)',
@@ -23488,6 +23603,21 @@ const CATALOG_EN = {
     ally: 'Lucky! Ally: {name} (buff this level)',
     neutral: 'Neutral — normal level (no extra gamble effect)',
   },
+  /* EX-013: Dutch compound proper nouns → short EN labels. Slymo/Flapper stay as-is. */
+  species: {
+    piepvleugel: 'Peepwing',
+    stekelra: 'Spikehog',
+    ijzerstek: 'Ironspike',
+    nachtwolk: 'Nightcloud',
+    blikkert: 'Tinblink',
+    laserblik: 'Lasercan',
+    vlamvos: 'Flamefox',
+    stormvos: 'Stormfox',
+    rotsbonk: 'Rockbonk',
+    vlamdraak: 'Flamedrake',
+    schaduwvorst: 'Shadowlord',
+    voidkonijn: 'Voidbunny',
+  },
 };
 
 const CATALOG_DE = {
@@ -23568,7 +23698,12 @@ const CATALOG_DE = {
     tome: { name: 'Buchmeister', hint: 'Hälfte des Buches', tooltip: 'Monsterbuch auf dem Rücken.', bonus: '+4 max HP · Buchweisheit' },
   },
   result: {
-    advWin: 'GEWONNEN!', advLose: 'VERLOREN', onceMore: 'Noch einmal', trainWin: 'MEISTER!', trainLose: 'ROBOT GEWINNT…',
+    advWin: 'GEWONNEN!', advLose: 'VERLOREN', onceMore: 'Noch einmal', advLoseBy: 'VERLOREN · {name}',
+    trainWin: 'MEISTER!', trainLose: 'ROBOT GEWINNT…',
+    killedBy: '{name} hat dich erwischt · {prog}',
+    killedByFlyer: '{name} (Flieger) — nach oben zielen · {prog}',
+    killedBySlam: '{name} hat dich plattgemacht — Slam springen · {prog}',
+    killedByBoss: '{name} war der Boss · {prog}',
     advLoseKeep: 'XP und Beute von diesem Lauf bleiben',
     trainAgainSub: 'vs RabbitRobot',
     wavesStart: 'Start',
@@ -23679,7 +23814,12 @@ const CATALOG_FR = {
     tome: { name: 'Maître du livre', hint: 'Moitié du bestiaire', tooltip: 'Bestiaire sur le dos.', bonus: '+4 PV max · sagesse' },
   },
   result: {
-    advWin: 'VICTOIRE !', advLose: 'DÉFAITE', trainWin: 'CHAMPION !', trainLose: 'LE ROBOT GAGNE…',
+    advWin: 'VICTOIRE !', advLose: 'DÉFAITE', onceMore: 'Encore une fois', advLoseBy: 'DÉFAITE · {name}',
+    trainWin: 'CHAMPION !', trainLose: 'LE ROBOT GAGNE…',
+    killedBy: '{name} t’a mis KO · {prog}',
+    killedByFlyer: '{name} (volant) — vise en haut · {prog}',
+    killedBySlam: '{name} t’a écrasé — saute le slam · {prog}',
+    killedByBoss: '{name} était le boss · {prog}',
     advLoseKeep: 'XP et butin de cette partie restent',
     trainAgainSub: 'vs RabbitRobot',
     wavesStart: 'début',
@@ -23807,7 +23947,12 @@ const CATALOG_ES = {
     tome: { name: 'Maestro del libro', hint: 'Mitad del bestiario', tooltip: 'Libro en la espalda.', bonus: '+4 PV máx · sabiduría' },
   },
   result: {
-    advWin: '¡VICTORIA!', advLose: 'DERROTA', trainWin: '¡CAMPEÓN!', trainLose: 'EL ROBOT GANA…',
+    advWin: '¡VICTORIA!', advLose: 'DERROTA', onceMore: 'Una más', advLoseBy: 'DERROTA · {name}',
+    trainWin: '¡CAMPEÓN!', trainLose: 'EL ROBOT GANA…',
+    killedBy: '{name} te dejó fuera · {prog}',
+    killedByFlyer: '{name} (volador) — apunta arriba · {prog}',
+    killedBySlam: '{name} te aplastó — salta el slam · {prog}',
+    killedByBoss: '{name} era el jefe · {prog}',
     advLoseKeep: 'XP y botín de esta partida se quedan',
     trainAgainSub: 'vs RabbitRobot',
     wavesStart: 'inicio',
@@ -23972,6 +24117,32 @@ function gambleOutcomeLabelFromKey(g) {
   return (v && v !== k) ? v : (typeof gambleOutcomeLabel === 'function' ? gambleOutcomeLabel(g) : out);
 }
 
+/** EX-013: locale species name. NL keeps SPECIES.name (Dutch proper nouns). */
+function speciesLabel(spOrId) {
+  let id = '';
+  let fallback = '';
+  if (typeof spOrId === 'string') {
+    id = spOrId;
+    fallback = (typeof SPECIES !== 'undefined' && SPECIES[id] && SPECIES[id].name) || id;
+  } else if (spOrId && typeof spOrId === 'object') {
+    id = spOrId.id || spOrId.spId || '';
+    if (!id && typeof SPECIES !== 'undefined') {
+      for (const k of Object.keys(SPECIES)) {
+        if (SPECIES[k] === spOrId) { id = k; break; }
+      }
+    }
+    fallback = spOrId.name
+      || (id && typeof SPECIES !== 'undefined' && SPECIES[id] && SPECIES[id].name)
+      || id
+      || '';
+  }
+  if (!fallback && !id) return '';
+  const lang = (typeof getLang === 'function') ? getLang() : 'nl';
+  if (lang === 'nl' || !id) return fallback;
+  if (typeof tOr === 'function') return tOr('species.' + id, fallback);
+  return fallback;
+}
+
 function i18nList(key) {
   const parts = key.split('.');
   const lang = getLang();
@@ -24072,7 +24243,12 @@ const CATALOG_DE_CHROME = {
     petCoinsLine: '+{n} Pet-Coins',
   },
   result: {
-    advWin: 'GEWONNEN!', advLose: 'VERLOREN', onceMore: 'Noch einmal', trainWin: 'MEISTER!', trainLose: 'ROBOT GEWINNT…',
+    advWin: 'GEWONNEN!', advLose: 'VERLOREN', onceMore: 'Noch einmal', advLoseBy: 'VERLOREN · {name}',
+    trainWin: 'MEISTER!', trainLose: 'ROBOT GEWINNT…',
+    killedBy: '{name} hat dich erwischt · {prog}',
+    killedByFlyer: '{name} (Flieger) — nach oben zielen · {prog}',
+    killedBySlam: '{name} hat dich plattgemacht — Slam springen · {prog}',
+    killedByBoss: '{name} war der Boss · {prog}',
     trainDetailWin: 'RabbitRobot besiegt ({p}-{r}) · max Combo ×{combo} · {wins}× gewonnen',
     trainDetailLose: 'RabbitRobot war zu stark ({p}-{r}) · max Combo ×{combo}',
     vsP1Win: 'SPIELER 1 GEWINNT!', vsP2Win: 'SPIELER 2 GEWINNT!', wallRecord: 'NEUER REKORD!', wallTime: 'ZEIT UM!',
@@ -24151,6 +24327,20 @@ const CATALOG_DE_CHROME = {
     superAlly: 'Jackpot! Super-Verbündeter: {name} (starker Buff)',
     ally: 'Glück! Verbündeter: {name} (Buff dieses Level)',
     neutral: 'Neutral — normales Level (kein Extra-Effekt)',
+  },
+  species: {
+    piepvleugel: 'Piepflügel',
+    stekelra: 'Stachelra',
+    ijzerstek: 'Eisenstachel',
+    nachtwolk: 'Nachtwolke',
+    blikkert: 'Blechblink',
+    laserblik: 'Laserblech',
+    vlamvos: 'Flammenfuchs',
+    stormvos: 'Sturmfuchs',
+    rotsbonk: 'Felsbonk',
+    vlamdraak: 'Flammendrache',
+    schaduwvorst: 'Schattenfürst',
+    voidkonijn: 'Leerenhase',
   },
   fighter: {
     energyEmpty: 'Energy nicht voll!', subst: 'Substitution!', dash: 'Dash!',
@@ -24818,6 +25008,12 @@ const CATALOG_DE_CHROME = {
     summonGotoPets: 'Zu Pets',
     summonGotoSub: 'Sammlung',
     summonLogEmpty: 'Heute noch keine Züge.',
+    summonLoadFail: 'Beschwörungen laden fehlgeschlagen',
+    summonEgg: 'Ei · {name}',
+    summonEggPlain: 'Ei',
+    summonCoins: '+{n} Pet-Coins',
+    summonXp: '+{n} XP',
+    summonNothing: 'Nichts Besonderes',
     summonLeftToday: '{n} übrig heute',
     summonDoneToday: 'für heute leer',
     sharePlayLinkOk: '✓ Spiel-Link — mit Freunden teilen (Android)',
@@ -24996,7 +25192,7 @@ const CATALOG_DE_CHROME = {
     filterOwned: 'Deins',
     filterAria: 'Filter',
     rarityAria: 'Seltenheit',
-    pillVanity: 'LOOK',
+    pillVanity: 'OPTIK',
     pillStat: 'STAT',
     pillLock: 'SPERRE',
     empty: 'Leer',
@@ -25066,7 +25262,12 @@ overlayI18nCatalog(CATALOG_FR, {
   },
   pickup: { heal: '+PV', rage: 'RAGE', energy: 'ÉNERGIE', shield: 'BOUCLIER' },
   result: {
-    advWin: 'VICTOIRE !', advLose: 'DÉFAITE', onceMore: 'Encore une fois', trainWin: 'CHAMPION !', trainLose: 'LE ROBOT GAGNE…',
+    advWin: 'VICTOIRE !', advLose: 'DÉFAITE', onceMore: 'Encore une fois', advLoseBy: 'DÉFAITE · {name}',
+    trainWin: 'CHAMPION !', trainLose: 'LE ROBOT GAGNE…',
+    killedBy: '{name} t’a mis KO · {prog}',
+    killedByFlyer: '{name} (volant) — vise en haut · {prog}',
+    killedBySlam: '{name} t’a écrasé — saute le slam · {prog}',
+    killedByBoss: '{name} était le boss · {prog}',
     advLoseKeep: 'XP et butin de cette partie restent',
     trainDetailWin: 'RabbitRobot à terre ({p}-{r}) · combo max ×{combo} · {wins}× gagné',
     trainDetailLose: 'RabbitRobot trop fort ({p}-{r}) · combo max ×{combo}',
@@ -25689,6 +25890,20 @@ overlayI18nCatalog(CATALOG_FR, {
     ally: 'Chance ! Allié : {name} (buff ce niveau)',
     neutral: 'Neutre — niveau normal (pas d’effet extra)',
   },
+  species: {
+    piepvleugel: 'Ailepiou',
+    stekelra: 'Piquant',
+    ijzerstek: 'Pic-fer',
+    nachtwolk: 'Nuage-nuit',
+    blikkert: 'Canclic',
+    laserblik: 'Laserboîte',
+    vlamvos: 'Renard-feu',
+    stormvos: 'Renard-orage',
+    rotsbonk: 'Roc-bonk',
+    vlamdraak: 'Drake-feu',
+    schaduwvorst: 'Seigneur-ombre',
+    voidkonijn: 'Lapin-vide',
+  },
 });
 
 overlayI18nCatalog(CATALOG_ES, {
@@ -25719,7 +25934,12 @@ overlayI18nCatalog(CATALOG_ES, {
   },
   pickup: { heal: '+PV', rage: 'RAGE', energy: 'ENERGÍA', shield: 'ESCUDO' },
   result: {
-    advWin: '¡VICTORIA!', advLose: 'DERROTA', onceMore: 'Una más', trainWin: '¡CAMPEÓN!', trainLose: 'EL ROBOT GANA…',
+    advWin: '¡VICTORIA!', advLose: 'DERROTA', onceMore: 'Una más', advLoseBy: 'DERROTA · {name}',
+    trainWin: '¡CAMPEÓN!', trainLose: 'EL ROBOT GANA…',
+    killedBy: '{name} te dejó fuera · {prog}',
+    killedByFlyer: '{name} (volador) — apunta arriba · {prog}',
+    killedBySlam: '{name} te aplastó — salta el slam · {prog}',
+    killedByBoss: '{name} era el jefe · {prog}',
     advLoseKeep: 'XP y botín de esta partida se quedan',
     trainDetailWin: 'RabbitRobot caído ({p}-{r}) · combo máx ×{combo} · {wins}× ganado',
     trainDetailLose: 'RabbitRobot demasiado fuerte ({p}-{r}) · combo máx ×{combo}',
@@ -26342,6 +26562,20 @@ overlayI18nCatalog(CATALOG_ES, {
     ally: '¡Suerte! Aliado: {name} (buff este nivel)',
     neutral: 'Neutral — nivel normal (sin efecto extra)',
   },
+  species: {
+    piepvleugel: 'Alippiío',
+    stekelra: 'Púasra',
+    ijzerstek: 'Púahierro',
+    nachtwolk: 'Nubenoche',
+    blikkert: 'Lataclic',
+    laserblik: 'Láserlata',
+    vlamvos: 'Zorrallama',
+    stormvos: 'Zorratormenta',
+    rotsbonk: 'Rocabonk',
+    vlamdraak: 'Dragónllama',
+    schaduwvorst: 'Señorsombra',
+    voidkonijn: 'Conejovacio',
+  },
 });
 
 overlayI18nCatalog(CATALOG_DE, {
@@ -26391,7 +26625,12 @@ overlayI18nCatalog(CATALOG_DE, {
   },
   pickup: { heal: '+HP', rage: 'RAGE', energy: 'ENERGY', shield: 'SCHILD' },
   result: {
-    advWin: 'GEWONNEN!', advLose: 'VERLOREN', onceMore: 'Noch einmal', trainWin: 'MEISTER!', trainLose: 'ROBOT GEWINNT…',
+    advWin: 'GEWONNEN!', advLose: 'VERLOREN', onceMore: 'Noch einmal', advLoseBy: 'VERLOREN · {name}',
+    trainWin: 'MEISTER!', trainLose: 'ROBOT GEWINNT…',
+    killedBy: '{name} hat dich erwischt · {prog}',
+    killedByFlyer: '{name} (Flieger) — nach oben zielen · {prog}',
+    killedBySlam: '{name} hat dich plattgemacht — Slam springen · {prog}',
+    killedByBoss: '{name} war der Boss · {prog}',
     advLoseKeep: 'XP und Beute von diesem Lauf bleiben',
     trainDetailWin: 'RabbitRobot besiegt ({p}-{r}) · max Combo ×{combo} · {wins}× gewonnen',
     trainDetailLose: 'RabbitRobot war zu stark ({p}-{r}) · max Combo ×{combo}',
@@ -27005,6 +27244,44 @@ function applyLocaleOverlays() {
   if (typeof CATALOG_FR === 'object') deepMergeI18n(I18N.fr, CATALOG_FR);
   if (typeof CATALOG_ES === 'object') deepMergeI18n(I18N.es, CATALOG_ES);
   if (typeof CATALOG_DE === 'object') deepMergeI18n(I18N.de, CATALOG_DE);
+  deepMergeI18n(I18N.de, {
+    species: {
+      piepvleugel: 'Piepflügel', stekelra: 'Stachelra', ijzerstek: 'Eisenstachel',
+      nachtwolk: 'Nachtwolke', blikkert: 'Blechblink', laserblik: 'Laserblech',
+      vlamvos: 'Flammenfuchs', stormvos: 'Sturmfuchs', rotsbonk: 'Felsbonk',
+      vlamdraak: 'Flammendrache', schaduwvorst: 'Schattenfürst', voidkonijn: 'Leerenhase',
+    },
+  });
+  deepMergeI18n(I18N.fr, {
+    ui: {
+      summonLoadFail: 'Invocations introuvables',
+      summonEgg: 'Œuf · {name}', summonEggPlain: 'Œuf',
+      summonCoins: '+{n} pet coins', summonXp: '+{n} XP',
+      summonNothing: 'Rien de spécial',
+    },
+    gear: { pillVanity: 'LOOK', pillStat: 'STAT', pillLock: 'VERROU', wearing: 'sur toi' },
+    species: {
+      piepvleugel: 'Ailepiou', stekelra: 'Piquant', ijzerstek: 'Pic-fer',
+      nachtwolk: 'Nuage-nuit', blikkert: 'Canclic', laserblik: 'Laserboîte',
+      vlamvos: 'Renard-feu', stormvos: 'Renard-orage', rotsbonk: 'Roc-bonk',
+      vlamdraak: 'Drake-feu', schaduwvorst: 'Seigneur-ombre', voidkonijn: 'Lapin-vide',
+    },
+  });
+  deepMergeI18n(I18N.es, {
+    ui: {
+      summonLoadFail: 'No se pudieron cargar las invocaciones',
+      summonEgg: 'Huevo · {name}', summonEggPlain: 'Huevo',
+      summonCoins: '+{n} pet coins', summonXp: '+{n} XP',
+      summonNothing: 'Nada especial',
+    },
+    gear: { pillVanity: 'LOOK', pillStat: 'STAT', pillLock: 'BLOQ', wearing: 'puesto' },
+    species: {
+      piepvleugel: 'Alippiío', stekelra: 'Púasra', ijzerstek: 'Púahierro',
+      nachtwolk: 'Nubenoche', blikkert: 'Lataclic', laserblik: 'Láserlata',
+      vlamvos: 'Zorrallama', stormvos: 'Zorratormenta', rotsbonk: 'Rocabonk',
+      vlamdraak: 'Dragónllama', schaduwvorst: 'Señorsombra', voidkonijn: 'Conejovacio',
+    },
+  });
 }
 /* --- src/systems/audio-samples.js --- */
 /* ========================= ONLINE SFX SAMPLES (CC0) ======================
@@ -35972,6 +36249,9 @@ class Fighter {
       if ((this.hpGhostT || 0) <= 0) this.hpGhost = hpBefore;
       this.hpGhost = Math.max(this.hpGhost || hpBefore, hpBefore);
       this.hpGhostT = 0.45;
+      if (this.isPlayer && game) {
+        try { notePlayerHurtSource(game, opts.attacker || opts.srcMon); } catch (_) {}
+      }
       return dmg;
     }
     if (this.isPlayer && game && game.playerShieldT > 0) {
@@ -35993,6 +36273,9 @@ class Fighter {
     if ((this.hpGhostT || 0) <= 0) this.hpGhost = hpBefore;
     this.hpGhost = Math.max(this.hpGhost || hpBefore, hpBefore);
     this.hpGhostT = 0.55;
+    if (this.isPlayer && game) {
+      try { notePlayerHurtSource(game, opts.attacker || opts.srcMon); } catch (_) {}
+    }
     if (this.isPlayer && game) {
       if (game.mode === 'training' || game.mode === 'adventure') {
         game.combo = 0;
@@ -36526,7 +36809,7 @@ class Monster {
         this.shootCD = rand(2.2, 3.2);
         game.spawnProjectile({
           x: this.x + dir * this.size, y: this.y - 4,
-          vx: dir * 300, vy: 0, r: 8, dmg: this.dmg, from: 'enemy',
+          vx: dir * 300, vy: 0, r: 8, dmg: this.dmg, from: 'enemy', srcMon: this,
           kind: this.sp.art === 'ghost' ? 'orb' : 'laser',
         });
         AudioSys.sfx(this.sp.art === 'ghost' ? 'shoot' : 'laser');
@@ -36537,7 +36820,7 @@ class Monster {
         if (this.telegraphT <= 0) {
           AudioSys.sfx('hit2'); game.shake(8, 0.25);
           if (Math.abs(p.x - this.x) < this.size + 62 && p.y > game.ground - 90)
-            p.takeDamage(this.dmg, Math.sign(p.x - this.x) * 320, game);
+            p.takeDamage(this.dmg, Math.sign(p.x - this.x) * 320, game, { attacker: this });
         }
       } else {
         this.x += dir * this.speed * dt;
@@ -36560,7 +36843,7 @@ class Monster {
         this.shootCD = (this.elite ? rand(1.4, 2.0) : rand(1.9, 2.6)) / (this.enraged ? 1.35 : 1);
         const a = Math.atan2((p.y - 40) - this.y, p.x - this.x);
         game.spawnProjectile({ x: this.x + Math.cos(a) * this.size, y: this.y + Math.sin(a) * this.size,
-          vx: Math.cos(a) * 260, vy: Math.sin(a) * 260, r: 10, dmg: this.dmg, from: 'enemy', kind: 'fire', grav: 60 });
+          vx: Math.cos(a) * 260, vy: Math.sin(a) * 260, r: 10, dmg: this.dmg, from: 'enemy', srcMon: this, kind: 'fire', grav: 60 });
         AudioSys.sfx('roar');
       }
     } else if (type === 'swim') {
@@ -36593,7 +36876,7 @@ class Monster {
           this.shootCD = rand(1.9, 2.8);
           game.spawnProjectile({
             x: this.x + dir * this.size, y: this.y - 8,
-            vx: dir * 250, vy: rand(-50, 50), r: 9, dmg: this.dmg, from: 'enemy', kind: 'ink',
+            vx: dir * 250, vy: rand(-50, 50), r: 9, dmg: this.dmg, from: 'enemy', srcMon: this, kind: 'ink',
           });
           try { AudioSys.sfx('shoot'); } catch (_) {}
         }
@@ -36610,7 +36893,7 @@ class Monster {
       const rr = (this.size + p.bodyR) * 0.82;
       if ((p.x - this.x) ** 2 + (p.bodyY - this.y) ** 2 < rr * rr) {
         const d = this.dashT > 0 ? this.dmg * 1.3 : this.dmg;
-        if (p.takeDamage(d, dir * 180, game) > 0) {
+        if (p.takeDamage(d, dir * 180, game, { attacker: this }) > 0) {
           game.shake(4, 0.15);
           applyHitStop(game, { kind: 'punch', dmg: d }, { playerHurt: true, heavy: d >= 18 });
         }
@@ -36689,7 +36972,7 @@ class Monster {
       if (this.satanBoss && this.reflectRatio > 0 && dmg > 0 && game && game.player && game.player.alive) {
         const rd = Math.max(1, Math.round(dmg * this.reflectRatio));
         try {
-          game.player.takeDamage(rd, Math.sign(game.player.x - this.x) * 220, game, { reflect: true, skipHitSfx: true });
+          game.player.takeDamage(rd, Math.sign(game.player.x - this.x) * 220, game, { reflect: true, skipHitSfx: true, attacker: this });
           game.floater(game.player.x, game.player.y - 70, t('combat.satanReflect', { n: rd }), '#ff3040', 13);
           game.burst(game.player.x, game.player.y - 40, '#ff3040', fxLite() ? 4 : 8);
           AudioSys.sfxAt('hit', game.player.x);
@@ -37310,9 +37593,11 @@ class Pet {
     const bob = Math.sin(this.t * 6) * 2;
     const tx = p.x - p.face * (IS_TOUCH ? 34 : 38);
     const ty = p.y - 6 + bob * 0.25;
-    const follow = g.traveling ? 11 : 8;
-    this.x += (tx - this.x) * Math.min(1, dt * follow);
-    this.y += (ty - this.y) * Math.min(1, dt * 10);
+    const follow = g.traveling ? 20 : 16;
+    const dx = tx - this.x;
+    if (Math.abs(dx) > 150) this.x = tx - Math.sign(dx || 1) * 40;
+    else this.x += dx * Math.min(1, dt * follow);
+    this.y += (ty - this.y) * Math.min(1, dt * 14);
     this.face = p.face || 1;
 
     const inAdv = g.mode === 'adventure';
@@ -37580,9 +37865,11 @@ class EggPet {
     const bob = Math.sin(this.t * 4.5) * 3;
     const tx = p.x + p.face * (IS_TOUCH ? 26 : 30);
     const ty = p.y - 46 + bob;
-    const follow = g.traveling ? 10 : 7;
-    this.x += (tx - this.x) * Math.min(1, dt * follow);
-    this.y += (ty - this.y) * Math.min(1, dt * 9);
+    const follow = g.traveling ? 18 : 15;
+    const dx = tx - this.x;
+    if (Math.abs(dx) > 150) this.x = tx - Math.sign(dx || 1) * 28;
+    else this.x += dx * Math.min(1, dt * follow);
+    this.y += (ty - this.y) * Math.min(1, dt * 13);
   }
 
   draw(c) {
@@ -41055,6 +41342,72 @@ let game = null;
 const SHARD_PICKUP_LIFE = 36;
 const GENERIC_PICKUP_LIFE = 22;
 
+/** EX-024: last thing that hurt the player — fair-fail name on VERLOREN. */
+function inferClosestThreat(game, player) {
+  if (!game) return null;
+  if (game.mode === 'training' && game.robot && game.robot.alive) return game.robot;
+  let best = null;
+  let bestD = Infinity;
+  const px = player && player.x;
+  const py = player && player.y;
+  for (const m of game.monsters || []) {
+    if (!m || !m.alive) continue;
+    const dx = (m.x || 0) - (px || 0);
+    const dy = (m.y || 0) - (py || 0);
+    const d = dx * dx + dy * dy;
+    if (d < bestD) { bestD = d; best = m; }
+  }
+  return best;
+}
+
+function hurtSourceName(src) {
+  if (!src) return '';
+  if (src.isRobot) return 'RabbitRobot';
+  const id = src.spId || '';
+  if (typeof speciesLabel === 'function') {
+    const n = speciesLabel(src.sp || src.spId || id);
+    if (n) return n;
+  }
+  return (src.sp && src.sp.name) || id || '';
+}
+
+function notePlayerHurtSource(game, src) {
+  if (!game) return;
+  const mon = src || inferClosestThreat(game, game.player);
+  const name = hurtSourceName(mon);
+  if (!name) return;
+  game.lastHurtBy = {
+    name,
+    fly: !!(mon.flying || (mon.sp && (mon.sp.type === 'fly' || mon.sp.type === 'dragon'))),
+    slam: !!(mon.sp && mon.sp.type === 'tank'),
+    boss: !!(mon.bossCore || mon.superBoss || mon.satanBoss),
+    robot: !!mon.isRobot,
+    type: mon.sp && mon.sp.type,
+  };
+}
+
+function adventureLoseCopy(game) {
+  const h = game && game.lastHurtBy;
+  const name = h && h.name;
+  if (!name) return { titleKey: 'result.advLose', title: t('result.advLose') };
+  const params = { name };
+  return {
+    titleKey: 'result.advLoseBy',
+    title: t('result.advLoseBy', params),
+    titleParams: params,
+  };
+}
+
+function adventureKillTip(game, prog) {
+  const h = game && game.lastHurtBy;
+  if (!h || !h.name) return '';
+  const p = { name: h.name, prog };
+  if (h.fly) return t('result.killedByFlyer', p);
+  if (h.slam) return t('result.killedBySlam', p);
+  if (h.boss) return t('result.killedByBoss', p);
+  return t('result.killedBy', p);
+}
+
 /** Deferred UI (toast/banner) — negeer na menu-exit of nieuw gevecht. */
 function gameUiTimerOk(ref, opts) {
   opts = opts || {};
@@ -41185,6 +41538,7 @@ class Game {
     this.comboT = 0;
     this.runFinishers = 0;
     this.runLoot = createRunLoot();
+    this.lastHurtBy = null;
 
     const st = playerStats();
     if (mode === 'adventure') {
@@ -41783,16 +42137,21 @@ class Game {
     } else if (this.spawnQueue.length) {
       const alive = this.monsters.filter((m) => m.alive).length;
       this.spawnTimer -= dt;
-      if (this.spawnTimer <= 0 && alive < ADVENTURE_MAX_ALIVE) {
+      const aliveCap = (typeof adventureMaxAlive === 'function') ? adventureMaxAlive() : ADVENTURE_MAX_ALIVE;
+      if (this.spawnTimer <= 0 && alive < aliveCap) {
         const bossWave = isBossWave(this.level, this.waveIdx);
         const meta = this.level.waveMeta && this.level.waveMeta[this.waveIdx];
         const spawnMul = (meta && meta.spawnMul) || 1;
         const queueLeft = this.spawnQueue.length;
         const opener = this.level && this.level.n <= 2 && this.waveIdx === 0;
-        const batch = opener ? 1 : (queueLeft > 28 ? 3 : queueLeft > 14 ? 2 : 1);
+        const band = (typeof adventureHordeProfile === 'function') ? adventureHordeProfile().band : 'desk';
+        const batch = opener ? 1 : (band === 'phone' ? 1 : (queueLeft > 28 ? 3 : queueLeft > 14 ? 2 : 1));
         const intervalMul = opener ? 1.55 : (queueLeft > 20 ? 0.72 : queueLeft > 10 ? 0.86 : 1);
-        this.spawnTimer = (bossWave ? 0.92 : (opener ? 0.78 : 0.38)) * spawnMul * intervalMul;
-        for (let b = 0; b < batch && this.spawnQueue.length && this.monsters.filter((m) => m.alive).length < ADVENTURE_MAX_ALIVE; b++) {
+        const viewMul = (typeof adventureHordeProfile === 'function')
+          ? (adventureHordeProfile().spawnIntervalMul || 1)
+          : 1;
+        this.spawnTimer = (bossWave ? 0.92 : (opener ? 0.78 : 0.38)) * spawnMul * intervalMul * viewMul;
+        for (let b = 0; b < batch && this.spawnQueue.length && this.monsters.filter((m) => m.alive).length < aliveCap; b++) {
           const def = this.spawnQueue.shift();
           if (!def || !def.sp || !SPECIES[def.sp]) continue;
           const side = Math.random() < 0.75 ? 1 : -1;
@@ -41822,7 +42181,7 @@ class Game {
             this.floater(mon.x, mon.y - mon.size - 28, t('combat.giant'), '#ffd75e', 13);
           }
         }
-      } else if (alive >= ADVENTURE_MAX_ALIVE) {
+      } else if (alive >= aliveCap) {
         this.spawnTimer = Math.min(this.spawnTimer, 0.12);
       }
     } else if (this.waveIdx >= 0 && this.monsters.every(m => !m.alive) && this.player?.alive) {
@@ -42013,12 +42372,14 @@ class Game {
       this.banner(t('banner.lost'), 2, '#ff6b6b', 50);
     }
     // Resultaat-scherm altijd tonen (Volgende / Nog één keer) — niet stil naar menu
+    const loseCopy = !win && typeof adventureLoseCopy === 'function' ? adventureLoseCopy(this) : null;
     const resultDelay = (typeof resultShowDelayMs === 'function')
       ? resultShowDelayMs(win, 'adventure')
       : (win ? 1400 : 700);
     scheduleGameResult(this, resultDelay, () => UI.showResult(win, {
       titleKey: win ? 'result.advWin' : 'result.advLose',
-      title: win ? t('result.advWin') : t('result.advLose'),
+      title: win ? t('result.advWin') : ((loseCopy && loseCopy.title) || t('result.advLose')),
+      titleParams: loseCopy && loseCopy.titleParams,
       detailKey: win ? 'result.advDetailWin' : 'result.advDetailLose',
       finishersN: this.runFinishers || 0,
       streakN: this.sessionBestKillStreak || 0,
@@ -42069,12 +42430,16 @@ class Game {
         } else if (failsNow >= 7) {
           heatTip = t('result.heatRising', { n: failsNow, max: SATAN_FAIL_THRESHOLD });
         }
-        const base = this.player.hp <= 0
+        const named = typeof adventureKillTip === 'function' ? adventureKillTip(this, prog) : '';
+        const base = named || (this.player.hp <= 0
           ? t('result.lossBlockTip', { prog })
-          : t('result.lossOrbTip', { prog });
-        const once = onceResultTip('adventure', 'loss',
-          t('result.lossGambleTip'));
-        const core = once ? `${once} · ${base}` : base;
+          : t('result.lossOrbTip', { prog }));
+        // EX-027: killer first. Skip gamble lecture until first punch (don't burn the once-flag).
+        let once = '';
+        if (!(typeof firstPunchPending === 'function' && firstPunchPending())) {
+          once = onceResultTip('adventure', 'loss', t('result.lossGambleTip'));
+        }
+        const core = once ? `${base} · ${once}` : base;
         return heatTip ? `${heatTip} · ${core}` : core;
       })(),
     }));
@@ -42191,13 +42556,13 @@ class Game {
       const hpB = rarityHpBonus(sp.rarity);
       try { noteRunLootDex(this.runLoot, sp, hpB); } catch (_) {}
       try {
-        this.banner(t('banner.newDex', { rar: rarityLabel(sp.rarity), name: sp.name || m.spId, hp: hpB }), 2.0, rar.color, 28);
+        this.banner(t('banner.newDex', { rar: rarityLabel(sp.rarity), name: (typeof speciesLabel === 'function' ? speciesLabel(sp) : (sp.name || m.spId)), hp: hpB }), 2.0, rar.color, 28);
       } catch (_) {}
       if (this.player) {
         this.player.maxhp += hpB;
         this.player.hp += hpB;
       }
-      try { UI.toast(t('toast.dexDiscover', { rar: rarityLabel(sp.rarity), name: sp.name || m.spId, hp: hpB }), 3200, { tone: 'ok' }); } catch (_) {}
+      try { UI.toast(t('toast.dexDiscover', { rar: rarityLabel(sp.rarity), name: (typeof speciesLabel === 'function' ? speciesLabel(sp) : (sp.name || m.spId)), hp: hpB }), 3200, { tone: 'ok' }); } catch (_) {}
     }
     if (m.spId && save.dex) {
       save.dex[m.spId] = (save.dex[m.spId] || 0) + 1;
@@ -42680,7 +43045,7 @@ class Game {
     this.spawnProjectile({
       x: r.x + dir * 30, y,
       vx: dir * 480, vy: 0, r: 13, dmg,
-      from: 'enemy', kind: 'robolaser', life: 0.6, grav: 0,
+      from: 'enemy', srcMon: r, kind: 'robolaser', life: 0.6, grav: 0,
     });
     AudioSys.sfx('laser');
     this.shake(3, 0.1);
@@ -43635,13 +44000,13 @@ class Game {
     if (j === 'spiral_orb') {
       this.spawnProjectile({
         x: m.x + dir * m.size, y: y0, vx: dir * 360, vy: 0, r: 22, dmg,
-        from: 'enemy', kind: 'spiral_orb', life: 1.15, spin: 0, hitSet: new Set(),
+        from: 'enemy', srcMon: m, kind: 'spiral_orb', life: 1.15, spin: 0, hitSet: new Set(),
       });
       try { AudioSys.sfx('spiral_orb'); } catch (_) {}
     } else if (j === 'lightning_pierce') {
       this.spawnProjectile({
         x: m.x + dir * m.size, y: y0, vx: dir * 500, vy: 0, r: 17, dmg,
-        from: 'enemy', kind: 'lightning_pierce', life: 0.34, hitSet: new Set(),
+        from: 'enemy', srcMon: m, kind: 'lightning_pierce', life: 0.34, hitSet: new Set(),
       });
       try { AudioSys.sfx('lightning_pierce'); } catch (_) {}
     } else {
@@ -43649,7 +44014,7 @@ class Game {
       this.spawnProjectile({
         x: m.x + Math.cos(a) * m.size, y: y0 + Math.sin(a) * m.size,
         vx: Math.cos(a) * 400, vy: Math.sin(a) * 400, r: 28, dmg,
-        from: 'enemy', kind: 'wave_cannon', life: 1.05, spin: 0, hitSet: new Set(),
+        from: 'enemy', srcMon: m, kind: 'wave_cannon', life: 1.05, spin: 0, hitSet: new Set(),
       });
       try { this.shake(7, 0.22); AudioSys.sfx('spiral_orb'); } catch (_) {}
     }
@@ -43767,6 +44132,7 @@ class Game {
           if (save.haptics !== false) haptic(9);
         }
         m.takeDamage(hitRoll.dmg, kbHit, this, { crit: hitRoll.crit, kind: spec.kind });
+        if (f.isPlayer && typeof markFeltFirstPunch === 'function') markFeltFirstPunch();
         if (f.isPlayer && typeof applyBuildingCombatHook === 'function') {
           try {
             applyBuildingCombatHook(this, spec.kind === 'weapon' ? 'onWeaponHit' : 'onFirstMeleeHit', {
@@ -43842,6 +44208,7 @@ class Game {
           unblockable: spec.unblockable, attacker: f, kind: spec.kind,
         });
         if (dmg <= 0) continue;
+        if (f.isPlayer && typeof markFeltFirstPunch === 'function') markFeltFirstPunch();
         if (f.isPlayer && typeof applyBuildingCombatHook === 'function') {
           try {
             applyBuildingCombatHook(this, spec.kind === 'weapon' ? 'onWeaponHit' : 'onFirstMeleeHit', {
@@ -44171,7 +44538,7 @@ class Game {
         if (pl && pl.alive && this.playerHurtCd <= 0
             && projHitsTarget(p, pl.bodyX, pl.bodyY, pl.bodyR * 0.8)) {
           const hit = resolveProjHit(p);
-          pl.takeDamage(hit.dmg, projKnockDir(p, pl.x) * 260, this);
+          pl.takeDamage(hit.dmg, projKnockDir(p, pl.x) * 260, this, { attacker: p.srcMon || p.owner });
           applyHitStop(this, { kind: skProj && (skProj.behavior === 'dash' || skProj.behavior === 'slash') ? 'special' : 'punch', dmg: hit.dmg },
             { crit: hit.crit, heavy: hit.dmg >= 18, playerHurt: true });
           this.floater(pl.x, pl.y - 115, '-' + hit.dmg, '#ff8080', 16);
@@ -44200,6 +44567,7 @@ class Game {
             const dir = projKnockDir(p, m.x);
             try { AudioSys.sfxAt(weaponHitSfx(p.throwId || 'shuriken', hit.dmg), m.x); } catch (_) {}
             m.takeDamage(hit.dmg, dir * 300 * (p.kbMul || 1), this, { skipHitSfx: true, crit: hit.crit });
+            if (p.from !== 'enemy' && typeof markFeltFirstPunch === 'function') markFeltFirstPunch();
             if (hit.crit) applyCritFx(this, m.x, m.y);
             if (p.throwId && typeof applyWeaponOnHitEffect === 'function') {
               const owner = this.player;
@@ -44227,6 +44595,7 @@ class Game {
           if (projHit) {
             const hit = resolveProjHit(p);
             const d = rb.takeDamage(hit.dmg, projKnockDir(p, rb.x) * 300 * (p.kbMul || 1), this);
+            if (p.from !== 'enemy' && typeof markFeltFirstPunch === 'function') markFeltFirstPunch();
             this.floater(rb.x, rb.y - 115, '-' + d, '#ffe680', 16);
             if (hit.crit) applyCritFx(this, rb.x, rb.y);
             if (skProj) spawnTechniqueImpactFx(this, rb.bodyX, rb.bodyY, p.kind, 'full');
@@ -46152,7 +46521,7 @@ class Game {
         c.fillStyle = '#e04f5f'; this.rr(c, W / 2 - bwid / 2, hy, bwid * boss.hp / boss.maxhp, 10, 5); c.fill();
         hy += 18;
         c.font = '700 12px sans-serif';
-        fillHudText(c, String((boss.sp && boss.sp.name) || 'BOSS').toUpperCase(), W / 2, hy, { fill: '#ffc8d0' });
+        fillHudText(c, String((typeof speciesLabel === 'function' && boss.sp) ? speciesLabel(boss.sp) : ((boss.sp && boss.sp.name) || 'BOSS')).toUpperCase(), W / 2, hy, { fill: '#ffc8d0' });
         hy += 16;
       }
 
@@ -49677,7 +50046,9 @@ const UI = {
         cc.strokeStyle = 'rgba(0,0,0,.35)';
         cc.lineWidth = 3;
         cc.stroke();
-        title = res.name ? ('Ei · ' + res.name) : 'Ei';
+        title = res.name
+          ? tOr('ui.summonEgg', 'Ei · {name}', { name: res.name })
+          : tOr('ui.summonEggPlain', 'Ei');
       } else if (res && res.type === 'coins') {
         cc.fillStyle = '#ffd75e';
         cc.beginPath(); cc.arc(cx, cy, 34, 0, Math.PI * 2); cc.fill();
@@ -49689,19 +50060,19 @@ const UI = {
         cc.textAlign = 'center';
         cc.textBaseline = 'middle';
         cc.fillText('PC', cx, cy + 1);
-        title = '+' + (res.amount || 0) + ' pet coins';
+        title = tOr('ui.summonCoins', '+{n} pet coins', { n: res.amount || 0 });
       } else if (res && res.type === 'xp') {
         cc.fillStyle = '#7cf5ff';
         cc.font = 'bold 34px Nunito, sans-serif';
         cc.textAlign = 'center';
         cc.textBaseline = 'middle';
         cc.fillText('XP', cx, cy);
-        title = '+' + (res.amount || 0) + ' XP';
+        title = tOr('ui.summonXp', '+{n} XP', { n: res.amount || 0 });
       } else {
         cc.strokeStyle = '#9db1e3';
         cc.lineWidth = 3;
         cc.strokeRect(cx - 36, cy - 36, 72, 72);
-        title = (res && res.label) || 'Niks bijzonders';
+        title = (res && res.label) || tOr('ui.summonNothing', 'Niks bijzonders');
       }
     } catch (_) {
       title = (res && res.name) || 'Summon';
@@ -51169,7 +51540,8 @@ const UI = {
       const biomeLbl = biome ? tOr('ui.dexBiome.' + biome, (typeof DEX_BIOME_LABEL !== 'undefined' && DEX_BIOME_LABEL[biome]) || '') : '';
       const blurb = kills && typeof speciesBlurb === 'function' ? speciesBlurb(id) : '';
       const blurbLine = blurb ? `<div class="dex-blurb">${blurb}</div>` : '';
-      info.innerHTML = `<div class="cname">${kills ? sp.name : '???'} ${kills ? `<span class="rar-pill" style="color:${rar.color};border-color:${rar.color}">${rarityLabel(sp.rarity)}</span>` : ''}${id === topKillId ? ` <span class="rar-pill" style="color:#ffd75e;border-color:#ffd75e">${t('ui.topHunter')}</span>` : ''}${kills && biomeLbl ? ` <span class="rar-pill" style="color:#9fd4ff;border-color:#4a7aa0">${biomeLbl}</span>` : ''}</div>
+      const spName = (typeof speciesLabel === 'function') ? speciesLabel(sp) : (sp.name || id);
+      info.innerHTML = `<div class="cname">${kills ? spName : '???'} ${kills ? `<span class="rar-pill" style="color:${rar.color};border-color:${rar.color}">${rarityLabel(sp.rarity)}</span>` : ''}${id === topKillId ? ` <span class="rar-pill" style="color:#ffd75e;border-color:#ffd75e">${t('ui.topHunter')}</span>` : ''}${kills && biomeLbl ? ` <span class="rar-pill" style="color:#9fd4ff;border-color:#4a7aa0">${biomeLbl}</span>` : ''}</div>
         <div class="cinfo">${kills ? t('ui.dexStats', { type: typeLbl, hp: sp.hp, dmg: sp.dmg, spd: sp.speed, xp: sp.xp, lvl: unlockLv || '?' }) : t('ui.dexNotBeaten')}</div>${blurbLine}${lockHint}${petLine}${statRow}`;
       el.appendChild(info);
       const right = document.createElement('div');
@@ -51271,7 +51643,8 @@ const UI = {
       const chestPetBadge = chestPetSk
         ? ` <span class="rar-pill" style="color:#ffd75e;border-color:#ffd75e">${t('ui.weaponChestBadge')}</span>`
         : '';
-      info.innerHTML = `<div class="cname">${sp.name} <span class="rar-pill" style="color:${rar.color};border-color:${rar.color}">${rarityLabel(sp.rarity)}</span>${badge}${chestPetBadge}${upBadge}</div>` +
+      const petName = (typeof speciesLabel === 'function') ? speciesLabel(sp) : sp.name;
+      info.innerHTML = `<div class="cname">${petName} <span class="rar-pill" style="color:${rar.color};border-color:${rar.color}">${rarityLabel(sp.rarity)}</span>${badge}${chestPetBadge}${upBadge}</div>` +
         `<div class="cinfo">${petPerkLabel(def)}</div>` +
         (chestPetSk ? `<div class="cinfo" style="opacity:.9;font-size:12px;margin-top:3px;color:#ffd75e">✦ ${chestPetSk}</div>` : '') +
         `<div class="cinfo" style="opacity:.78;font-size:12px;margin-top:3px">${tamed
@@ -51303,7 +51676,7 @@ const UI = {
             } else {
               equipPet(def.id);
               AudioSys.sfx('select');
-              UI.toast(t('toast.petFollow', { name: sp.name }), 2200);
+              UI.toast(t('toast.petFollow', { name: petName }), 2200);
             }
             this.renderPets();
           }, 'equipPet/' + def.id, t('ui.errPetPick'));
@@ -51317,7 +51690,7 @@ const UI = {
               return;
             }
             AudioSys.sfx('summon');
-            UI.toast(t('toast.petBought', { name: sp.name }), 2600);
+            UI.toast(t('toast.petBought', { name: petName }), 2600);
             this.renderPets();
           }, 'buyPet/' + def.id, t('ui.errPetBuy'));
         });
@@ -52250,16 +52623,33 @@ const UI = {
     try { if (typeof dismissSplashOverlay === 'function') dismissSplashOverlay(); } catch (_) {}
     const title = document.getElementById('resTitle');
     if (!title) throw new Error('result DOM missing');
-    const titleKey = data.titleKey || (data.mode === 'training'
+    let titleKey = data.titleKey || (data.mode === 'training'
       ? (win ? 'result.trainWin' : 'result.trainLose')
       : (win ? 'result.advWin' : 'result.advLose'));
+    const killerName = data.titleParams && data.titleParams.name;
     const titleFallback = (typeof t === 'function') ? t(titleKey) : titleKey;
     // Never reuse a stale English title (ROBOT WINS / YOU LOST) when the UI is NL.
-    const painted = (typeof tOr === 'function') ? tOr(titleKey, titleFallback) : titleFallback;
+    // EX-028: keep the Bangers word short; name the killer on #resKiller (390 wrap).
+    if (!win && killerName && (titleKey === 'result.advLose' || titleKey === 'result.advLoseBy')) {
+      titleKey = 'result.advLose';
+    }
+    const painted = (typeof tOr === 'function')
+      ? tOr(titleKey, titleFallback, data.titleParams || {})
+      : titleFallback;
     title.textContent = painted;
     data.titleKey = titleKey;
     data.title = painted;
     title.className = 'bigres ' + (win ? 'win' : 'lose');
+    const killerEl = document.getElementById('resKiller');
+    if (killerEl) {
+      if (!win && killerName && data.mode !== 'training') {
+        killerEl.hidden = false;
+        killerEl.textContent = killerName;
+      } else {
+        killerEl.hidden = true;
+        killerEl.textContent = '';
+      }
+    }
     const detailEl = document.getElementById('resDetail');
     if (detailEl) {
       let detail = data.detail || '';
@@ -52359,6 +52749,8 @@ const UI = {
     state = 'result';
     scheduleResize();
     document.getElementById('pauseBtn')?.classList.remove('show');
+    const rs = document.getElementById('resultScreen');
+    if (rs) rs.classList.toggle('is-lose', !win);
     this.show('resultScreen');
     AudioSys.setPaused(false);
     playMenuBgm(true);
@@ -53124,7 +53516,11 @@ document.querySelectorAll('[data-hub]').forEach((el) => {
     AudioSys.init(); AudioSys.sfx('select');
     const hub = el.dataset.hub;
     if (hub === 'adventure') {
-      UI.safeOpen('levelScreen', () => UI.renderLevels(), { msg: t('ui.errLoadAdventure') });
+      if (typeof firstPunchPending === 'function' && firstPunchPending()) {
+        startFirstPunchAdventure();
+      } else {
+        UI.safeOpen('levelScreen', () => UI.renderLevels(), { msg: t('ui.errLoadAdventure') });
+      }
     } else if (hub === 'versus') {
       try { toastVersusRetired(); } catch (_) {}
     } else if (hub === 'summon') {
@@ -53773,6 +54169,29 @@ if (pauseVsSwap) {
     }), 2800);
   });
 }
+/** EX-023: first Avontuur is a punch, not island + gamble + FOMO. */
+function firstPunchPending() {
+  try {
+    return !(typeof save !== 'undefined' && save && save.feltFirstPunch);
+  } catch (_) {
+    return true;
+  }
+}
+
+function markFeltFirstPunch() {
+  try {
+    if (typeof save === 'undefined' || !save || save.feltFirstPunch) return;
+    save.feltFirstPunch = true;
+    if (typeof persist === 'function') persist();
+  } catch (_) {}
+}
+
+function startFirstPunchAdventure() {
+  const lv = 1;
+  const diff = (typeof currentAdvDiff === 'function') ? currentAdvDiff() : 'normal';
+  startGame('adventure', { level: lv, gamble: null, difficulty: diff });
+}
+
 function runResultRetry() {
   const d = UI.lastResult;
   if (!d || !d.mode) return;
@@ -54800,6 +55219,8 @@ function bootGame() {
     top20Ids: () => (typeof speciesTop20Ranked === 'function' ? speciesTop20Ranked().slice() : []),
     isTop20: (id) => (typeof isTop20StrongestSpecies === 'function' ? isTop20StrongestSpecies(id) : false),
     spawnTop20: (id) => (typeof spawnTop20ForTest === 'function' ? spawnTop20ForTest(game, id) : null),
+    hordeProfile: () => (typeof adventureHordeProfile === 'function' ? adventureHordeProfile() : null),
+    maxAlive: () => (typeof adventureMaxAlive === 'function' ? adventureMaxAlive() : null),
     previewTop20Spawn: () => {
       try { AudioSys.init(); AudioSys.sfx('top20Spawn'); } catch (_) {}
       try { if (game && typeof game.shake === 'function') game.shake(4, 0.16); } catch (_) {}

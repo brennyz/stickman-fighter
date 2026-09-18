@@ -997,6 +997,8 @@ function bootGame() {
     top20Ids: () => (typeof speciesTop20Ranked === 'function' ? speciesTop20Ranked().slice() : []),
     isTop20: (id) => (typeof isTop20StrongestSpecies === 'function' ? isTop20StrongestSpecies(id) : false),
     spawnTop20: (id) => (typeof spawnTop20ForTest === 'function' ? spawnTop20ForTest(game, id) : null),
+    hordeProfile: () => (typeof adventureHordeProfile === 'function' ? adventureHordeProfile() : null),
+    maxAlive: () => (typeof adventureMaxAlive === 'function' ? adventureMaxAlive() : null),
     previewTop20Spawn: () => {
       try { AudioSys.init(); AudioSys.sfx('top20Spawn'); } catch (_) {}
       try { if (game && typeof game.shake === 'function') game.shake(4, 0.16); } catch (_) {}

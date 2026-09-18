@@ -5,6 +5,72 @@ let game = null;
 const SHARD_PICKUP_LIFE = 36;
 const GENERIC_PICKUP_LIFE = 22;
 
+/** EX-024: last thing that hurt the player — fair-fail name on VERLOREN. */
+function inferClosestThreat(game, player) {
+  if (!game) return null;
+  if (game.mode === 'training' && game.robot && game.robot.alive) return game.robot;
+  let best = null;
+  let bestD = Infinity;
+  const px = player && player.x;
+  const py = player && player.y;
+  for (const m of game.monsters || []) {
+    if (!m || !m.alive) continue;
+    const dx = (m.x || 0) - (px || 0);
+    const dy = (m.y || 0) - (py || 0);
+    const d = dx * dx + dy * dy;
+    if (d < bestD) { bestD = d; best = m; }
+  }
+  return best;
+}
+
+function hurtSourceName(src) {
+  if (!src) return '';
+  if (src.isRobot) return 'RabbitRobot';
+  const id = src.spId || '';
+  if (typeof speciesLabel === 'function') {
+    const n = speciesLabel(src.sp || src.spId || id);
+    if (n) return n;
+  }
+  return (src.sp && src.sp.name) || id || '';
+}
+
+function notePlayerHurtSource(game, src) {
+  if (!game) return;
+  const mon = src || inferClosestThreat(game, game.player);
+  const name = hurtSourceName(mon);
+  if (!name) return;
+  game.lastHurtBy = {
+    name,
+    fly: !!(mon.flying || (mon.sp && (mon.sp.type === 'fly' || mon.sp.type === 'dragon'))),
+    slam: !!(mon.sp && mon.sp.type === 'tank'),
+    boss: !!(mon.bossCore || mon.superBoss || mon.satanBoss),
+    robot: !!mon.isRobot,
+    type: mon.sp && mon.sp.type,
+  };
+}
+
+function adventureLoseCopy(game) {
+  const h = game && game.lastHurtBy;
+  const name = h && h.name;
+  if (!name) return { titleKey: 'result.advLose', title: t('result.advLose') };
+  const params = { name };
+  return {
+    titleKey: 'result.advLoseBy',
+    title: t('result.advLoseBy', params),
+    titleParams: params,
+  };
+}
+
+function adventureKillTip(game, prog) {
+  const h = game && game.lastHurtBy;
+  if (!h || !h.name) return '';
+  const p = { name: h.name, prog };
+  if (h.fly) return t('result.killedByFlyer', p);
+  if (h.slam) return t('result.killedBySlam', p);
+  if (h.boss) return t('result.killedByBoss', p);
+  return t('result.killedBy', p);
+}
+
 /** Deferred UI (toast/banner) — negeer na menu-exit of nieuw gevecht. */
 function gameUiTimerOk(ref, opts) {
   opts = opts || {};
@@ -135,6 +201,7 @@ class Game {
     this.comboT = 0;
     this.runFinishers = 0;
     this.runLoot = createRunLoot();
+    this.lastHurtBy = null;
 
     const st = playerStats();
     if (mode === 'adventure') {
@@ -733,16 +800,21 @@ class Game {
     } else if (this.spawnQueue.length) {
       const alive = this.monsters.filter((m) => m.alive).length;
       this.spawnTimer -= dt;
-      if (this.spawnTimer <= 0 && alive < ADVENTURE_MAX_ALIVE) {
+      const aliveCap = (typeof adventureMaxAlive === 'function') ? adventureMaxAlive() : ADVENTURE_MAX_ALIVE;
+      if (this.spawnTimer <= 0 && alive < aliveCap) {
         const bossWave = isBossWave(this.level, this.waveIdx);
         const meta = this.level.waveMeta && this.level.waveMeta[this.waveIdx];
         const spawnMul = (meta && meta.spawnMul) || 1;
         const queueLeft = this.spawnQueue.length;
         const opener = this.level && this.level.n <= 2 && this.waveIdx === 0;
-        const batch = opener ? 1 : (queueLeft > 28 ? 3 : queueLeft > 14 ? 2 : 1);
+        const band = (typeof adventureHordeProfile === 'function') ? adventureHordeProfile().band : 'desk';
+        const batch = opener ? 1 : (band === 'phone' ? 1 : (queueLeft > 28 ? 3 : queueLeft > 14 ? 2 : 1));
         const intervalMul = opener ? 1.55 : (queueLeft > 20 ? 0.72 : queueLeft > 10 ? 0.86 : 1);
-        this.spawnTimer = (bossWave ? 0.92 : (opener ? 0.78 : 0.38)) * spawnMul * intervalMul;
-        for (let b = 0; b < batch && this.spawnQueue.length && this.monsters.filter((m) => m.alive).length < ADVENTURE_MAX_ALIVE; b++) {
+        const viewMul = (typeof adventureHordeProfile === 'function')
+          ? (adventureHordeProfile().spawnIntervalMul || 1)
+          : 1;
+        this.spawnTimer = (bossWave ? 0.92 : (opener ? 0.78 : 0.38)) * spawnMul * intervalMul * viewMul;
+        for (let b = 0; b < batch && this.spawnQueue.length && this.monsters.filter((m) => m.alive).length < aliveCap; b++) {
           const def = this.spawnQueue.shift();
           if (!def || !def.sp || !SPECIES[def.sp]) continue;
           const side = Math.random() < 0.75 ? 1 : -1;
@@ -772,7 +844,7 @@ class Game {
             this.floater(mon.x, mon.y - mon.size - 28, t('combat.giant'), '#ffd75e', 13);
           }
         }
-      } else if (alive >= ADVENTURE_MAX_ALIVE) {
+      } else if (alive >= aliveCap) {
         this.spawnTimer = Math.min(this.spawnTimer, 0.12);
       }
     } else if (this.waveIdx >= 0 && this.monsters.every(m => !m.alive) && this.player?.alive) {
@@ -963,12 +1035,14 @@ class Game {
       this.banner(t('banner.lost'), 2, '#ff6b6b', 50);
     }
     // Resultaat-scherm altijd tonen (Volgende / Nog één keer) — niet stil naar menu
+    const loseCopy = !win && typeof adventureLoseCopy === 'function' ? adventureLoseCopy(this) : null;
     const resultDelay = (typeof resultShowDelayMs === 'function')
       ? resultShowDelayMs(win, 'adventure')
       : (win ? 1400 : 700);
     scheduleGameResult(this, resultDelay, () => UI.showResult(win, {
       titleKey: win ? 'result.advWin' : 'result.advLose',
-      title: win ? t('result.advWin') : t('result.advLose'),
+      title: win ? t('result.advWin') : ((loseCopy && loseCopy.title) || t('result.advLose')),
+      titleParams: loseCopy && loseCopy.titleParams,
       detailKey: win ? 'result.advDetailWin' : 'result.advDetailLose',
       finishersN: this.runFinishers || 0,
       streakN: this.sessionBestKillStreak || 0,
@@ -1019,12 +1093,16 @@ class Game {
         } else if (failsNow >= 7) {
           heatTip = t('result.heatRising', { n: failsNow, max: SATAN_FAIL_THRESHOLD });
         }
-        const base = this.player.hp <= 0
+        const named = typeof adventureKillTip === 'function' ? adventureKillTip(this, prog) : '';
+        const base = named || (this.player.hp <= 0
           ? t('result.lossBlockTip', { prog })
-          : t('result.lossOrbTip', { prog });
-        const once = onceResultTip('adventure', 'loss',
-          t('result.lossGambleTip'));
-        const core = once ? `${once} · ${base}` : base;
+          : t('result.lossOrbTip', { prog }));
+        // EX-027: killer first. Skip gamble lecture until first punch (don't burn the once-flag).
+        let once = '';
+        if (!(typeof firstPunchPending === 'function' && firstPunchPending())) {
+          once = onceResultTip('adventure', 'loss', t('result.lossGambleTip'));
+        }
+        const core = once ? `${base} · ${once}` : base;
         return heatTip ? `${heatTip} · ${core}` : core;
       })(),
     }));
@@ -1141,13 +1219,13 @@ class Game {
       const hpB = rarityHpBonus(sp.rarity);
       try { noteRunLootDex(this.runLoot, sp, hpB); } catch (_) {}
       try {
-        this.banner(t('banner.newDex', { rar: rarityLabel(sp.rarity), name: sp.name || m.spId, hp: hpB }), 2.0, rar.color, 28);
+        this.banner(t('banner.newDex', { rar: rarityLabel(sp.rarity), name: (typeof speciesLabel === 'function' ? speciesLabel(sp) : (sp.name || m.spId)), hp: hpB }), 2.0, rar.color, 28);
       } catch (_) {}
       if (this.player) {
         this.player.maxhp += hpB;
         this.player.hp += hpB;
       }
-      try { UI.toast(t('toast.dexDiscover', { rar: rarityLabel(sp.rarity), name: sp.name || m.spId, hp: hpB }), 3200, { tone: 'ok' }); } catch (_) {}
+      try { UI.toast(t('toast.dexDiscover', { rar: rarityLabel(sp.rarity), name: (typeof speciesLabel === 'function' ? speciesLabel(sp) : (sp.name || m.spId)), hp: hpB }), 3200, { tone: 'ok' }); } catch (_) {}
     }
     if (m.spId && save.dex) {
       save.dex[m.spId] = (save.dex[m.spId] || 0) + 1;
@@ -1630,7 +1708,7 @@ class Game {
     this.spawnProjectile({
       x: r.x + dir * 30, y,
       vx: dir * 480, vy: 0, r: 13, dmg,
-      from: 'enemy', kind: 'robolaser', life: 0.6, grav: 0,
+      from: 'enemy', srcMon: r, kind: 'robolaser', life: 0.6, grav: 0,
     });
     AudioSys.sfx('laser');
     this.shake(3, 0.1);
@@ -2585,13 +2663,13 @@ class Game {
     if (j === 'spiral_orb') {
       this.spawnProjectile({
         x: m.x + dir * m.size, y: y0, vx: dir * 360, vy: 0, r: 22, dmg,
-        from: 'enemy', kind: 'spiral_orb', life: 1.15, spin: 0, hitSet: new Set(),
+        from: 'enemy', srcMon: m, kind: 'spiral_orb', life: 1.15, spin: 0, hitSet: new Set(),
       });
       try { AudioSys.sfx('spiral_orb'); } catch (_) {}
     } else if (j === 'lightning_pierce') {
       this.spawnProjectile({
         x: m.x + dir * m.size, y: y0, vx: dir * 500, vy: 0, r: 17, dmg,
-        from: 'enemy', kind: 'lightning_pierce', life: 0.34, hitSet: new Set(),
+        from: 'enemy', srcMon: m, kind: 'lightning_pierce', life: 0.34, hitSet: new Set(),
       });
       try { AudioSys.sfx('lightning_pierce'); } catch (_) {}
     } else {
@@ -2599,7 +2677,7 @@ class Game {
       this.spawnProjectile({
         x: m.x + Math.cos(a) * m.size, y: y0 + Math.sin(a) * m.size,
         vx: Math.cos(a) * 400, vy: Math.sin(a) * 400, r: 28, dmg,
-        from: 'enemy', kind: 'wave_cannon', life: 1.05, spin: 0, hitSet: new Set(),
+        from: 'enemy', srcMon: m, kind: 'wave_cannon', life: 1.05, spin: 0, hitSet: new Set(),
       });
       try { this.shake(7, 0.22); AudioSys.sfx('spiral_orb'); } catch (_) {}
     }
@@ -2717,6 +2795,7 @@ class Game {
           if (save.haptics !== false) haptic(9);
         }
         m.takeDamage(hitRoll.dmg, kbHit, this, { crit: hitRoll.crit, kind: spec.kind });
+        if (f.isPlayer && typeof markFeltFirstPunch === 'function') markFeltFirstPunch();
         if (f.isPlayer && typeof applyBuildingCombatHook === 'function') {
           try {
             applyBuildingCombatHook(this, spec.kind === 'weapon' ? 'onWeaponHit' : 'onFirstMeleeHit', {
@@ -2792,6 +2871,7 @@ class Game {
           unblockable: spec.unblockable, attacker: f, kind: spec.kind,
         });
         if (dmg <= 0) continue;
+        if (f.isPlayer && typeof markFeltFirstPunch === 'function') markFeltFirstPunch();
         if (f.isPlayer && typeof applyBuildingCombatHook === 'function') {
           try {
             applyBuildingCombatHook(this, spec.kind === 'weapon' ? 'onWeaponHit' : 'onFirstMeleeHit', {
@@ -3121,7 +3201,7 @@ class Game {
         if (pl && pl.alive && this.playerHurtCd <= 0
             && projHitsTarget(p, pl.bodyX, pl.bodyY, pl.bodyR * 0.8)) {
           const hit = resolveProjHit(p);
-          pl.takeDamage(hit.dmg, projKnockDir(p, pl.x) * 260, this);
+          pl.takeDamage(hit.dmg, projKnockDir(p, pl.x) * 260, this, { attacker: p.srcMon || p.owner });
           applyHitStop(this, { kind: skProj && (skProj.behavior === 'dash' || skProj.behavior === 'slash') ? 'special' : 'punch', dmg: hit.dmg },
             { crit: hit.crit, heavy: hit.dmg >= 18, playerHurt: true });
           this.floater(pl.x, pl.y - 115, '-' + hit.dmg, '#ff8080', 16);
@@ -3150,6 +3230,7 @@ class Game {
             const dir = projKnockDir(p, m.x);
             try { AudioSys.sfxAt(weaponHitSfx(p.throwId || 'shuriken', hit.dmg), m.x); } catch (_) {}
             m.takeDamage(hit.dmg, dir * 300 * (p.kbMul || 1), this, { skipHitSfx: true, crit: hit.crit });
+            if (p.from !== 'enemy' && typeof markFeltFirstPunch === 'function') markFeltFirstPunch();
             if (hit.crit) applyCritFx(this, m.x, m.y);
             if (p.throwId && typeof applyWeaponOnHitEffect === 'function') {
               const owner = this.player;
@@ -3177,6 +3258,7 @@ class Game {
           if (projHit) {
             const hit = resolveProjHit(p);
             const d = rb.takeDamage(hit.dmg, projKnockDir(p, rb.x) * 300 * (p.kbMul || 1), this);
+            if (p.from !== 'enemy' && typeof markFeltFirstPunch === 'function') markFeltFirstPunch();
             this.floater(rb.x, rb.y - 115, '-' + d, '#ffe680', 16);
             if (hit.crit) applyCritFx(this, rb.x, rb.y);
             if (skProj) spawnTechniqueImpactFx(this, rb.bodyX, rb.bodyY, p.kind, 'full');
@@ -5102,7 +5184,7 @@ class Game {
         c.fillStyle = '#e04f5f'; this.rr(c, W / 2 - bwid / 2, hy, bwid * boss.hp / boss.maxhp, 10, 5); c.fill();
         hy += 18;
         c.font = '700 12px sans-serif';
-        fillHudText(c, String((boss.sp && boss.sp.name) || 'BOSS').toUpperCase(), W / 2, hy, { fill: '#ffc8d0' });
+        fillHudText(c, String((typeof speciesLabel === 'function' && boss.sp) ? speciesLabel(boss.sp) : ((boss.sp && boss.sp.name) || 'BOSS')).toUpperCase(), W / 2, hy, { fill: '#ffc8d0' });
         hy += 16;
       }
 

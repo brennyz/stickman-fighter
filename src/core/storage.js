@@ -40,6 +40,8 @@ const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', petCoins: 0,
   /** auto | classic | jungle | halloween | winter | summer — CSS overlay pref */
   seasonPref: 'auto',
   playerTag: '', lastPlay: null, tipsSeen: {},
+  /** EX-023: first punch landed — until then skip island/gamble/FOMO. */
+  feltFirstPunch: false,
   /** Epoch ms — set once in sanitizeSave. Time gates use account age from this. */
   createdAt: 0,
   /** 5-slot loadout — see src/data/gear.js + docs/GEAR-SYSTEM.md */
@@ -1596,6 +1598,7 @@ function sanitizeSave(s) {
       ? (String(out.seasonPref).toLowerCase() === 'default' ? 'classic' : String(out.seasonPref).toLowerCase())
       : 'auto');
   out.tipsSeen = sanitizeTipsSeen(out.tipsSeen);
+  out.feltFirstPunch = !!out.feltFirstPunch;
   out.missionsIntroSeen = !!out.missionsIntroSeen;
   if (out.lastPlay && typeof out.lastPlay === 'object') {
     const lp = out.lastPlay;

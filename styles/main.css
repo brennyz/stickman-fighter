@@ -2140,6 +2140,12 @@
       letter-spacing:2px; margin:28px 0 6px; }
   #resultScreen .win  { color:#7CFC8a; text-shadow:0 4px 0 #1f7a35, 0 0 24px rgba(90,255,120,.4); }
   #resultScreen .lose { color:#ff6b6b; text-shadow:0 4px 0 #8a2020, 0 0 24px rgba(255,80,80,.4); }
+  /* EX-028: killer sits under VERLOREN so 390 Bangers does not wrap the name. */
+  #resultScreen .res-killer {
+    font-weight: 900; font-size: clamp(16px, 4.8vw, 22px); line-height: 1.2;
+    color: #ffb4b4; letter-spacing: .03em; text-align: center;
+    margin: -2px 0 8px; max-width: min(92vw, 440px);
+  }
   #resultScreen .detail { font-size:16px; color:#bcd; margin:4px 0; text-align:center; max-width:520px; }
   .run-loot-panel { width:min(92vw,480px); margin:10px auto 6px; padding:10px 12px 8px;
     background:rgba(8,12,28,.72); border:1px solid rgba(124,245,255,.22); border-radius:14px;
@@ -3825,18 +3831,65 @@
   body.big-touch #buildingsScreen .buildings-wallet-chip {
     min-height: 36px;
   }
+  /* EX-004: list XOR detail on every viewport. Dual-pane duplicated copy and
+     cramped harvest pills (desktop landscape + phone-landscape). */
   @media (min-width: 720px) and (orientation: landscape) {
     #buildingsScreen .buildings-body {
-      width: min(94vw, 860px);
-      display: grid;
-      grid-template-columns: minmax(280px, 1fr) minmax(0, 1.1fr);
-      align-items: start;
+      width: min(94vw, 520px);
+      display: flex;
+      flex-direction: column;
     }
-    #buildingsScreen .buildings-wallet { width: min(94vw, 860px); }
-    #buildingsScreen .buildings-detail { order: 0; display: flex; }
-    #buildingsScreen .buildings-list { order: 1; display: flex; }
-    #buildingsScreen[data-buildings-pane="list"] .buildings-detail { display: flex; }
-    #buildingsScreen[data-buildings-pane="detail"] .buildings-list { display: flex; }
+    #buildingsScreen .buildings-wallet { width: min(94vw, 520px); }
+  }
+  @media (max-width: 430px) {
+    #buildingsScreen .buildings-wallet-chip {
+      min-width: 0;
+      flex: 1 1 calc(33.33% - 8px);
+      justify-content: center;
+      padding: 6px 6px;
+    }
+    #buildingsScreen .buildings-wallet-lbl { font-size: 10px; }
+    #buildingsScreen .buildings-wallet-amt { font-size: 14px; }
+    #buildingsScreen .hub-tile-title,
+    #buildingsScreen .buildings-card-name,
+    #buildingsScreen .buildings-detail-name {
+      overflow-wrap: anywhere;
+      line-height: 1.2;
+    }
+    .gear-summary { gap: 5px; }
+    .gear-pill { font-size: 9px; padding: 3px 6px; letter-spacing: .04em; }
+    .summon-stage { max-height: min(34vh, 220px); aspect-ratio: 16 / 10; }
+    .summon-where { display: none; }
+    .summon-pull-btn { min-height: 52px; }
+    .summon-log { max-height: 72px; overflow: auto; }
+    /* EX-021: compact FOMO so HOME tiles stay tappable. #313 owns HOME-only / fomo-open. */
+    #menuScreen #fomoRitual {
+      align-items: flex-end;
+      padding: 8px 10px calc(10px + env(safe-area-inset-bottom, 0px));
+      pointer-events: none;
+    }
+    #menuScreen #fomoRitual .fomo-ritual-backdrop {
+      top: auto;
+      height: 52%;
+      background: linear-gradient(to top, rgba(6, 10, 22, .55), rgba(6, 10, 22, .08));
+      pointer-events: auto;
+    }
+    #menuScreen #fomoRitual .fomo-ritual-sheet {
+      pointer-events: auto;
+      max-height: min(44vh, 340px);
+      padding: 10px 12px 10px;
+      width: min(96vw, 390px);
+    }
+    #menuScreen #fomoRitual .fomo-ritual-title { font-size: 16px; margin: 0 36px 6px 0; }
+    #menuScreen #fomoRitual .fomo-ritual-rows { gap: 5px; margin-bottom: 6px; }
+    #menuScreen #fomoRitual .fomo-ritual-row { padding: 6px 8px; font-size: 12px; }
+    #menuScreen #fomoRitual .fomo-ritual-reset { margin: 0 0 8px; font-size: 11px; }
+    #menuScreen #fomoRitual .fomo-ritual-x {
+      width: 40px; height: 40px;
+      background: rgba(255,255,255,.08);
+      border-radius: 10px;
+      font-size: 22px;
+    }
   }
 
   /* Collection + HUD copy: one primary line, no 390px overlap */

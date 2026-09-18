@@ -2456,7 +2456,9 @@ const UI = {
         cc.strokeStyle = 'rgba(0,0,0,.35)';
         cc.lineWidth = 3;
         cc.stroke();
-        title = res.name ? ('Ei · ' + res.name) : 'Ei';
+        title = res.name
+          ? tOr('ui.summonEgg', 'Ei · {name}', { name: res.name })
+          : tOr('ui.summonEggPlain', 'Ei');
       } else if (res && res.type === 'coins') {
         cc.fillStyle = '#ffd75e';
         cc.beginPath(); cc.arc(cx, cy, 34, 0, Math.PI * 2); cc.fill();
@@ -2468,19 +2470,19 @@ const UI = {
         cc.textAlign = 'center';
         cc.textBaseline = 'middle';
         cc.fillText('PC', cx, cy + 1);
-        title = '+' + (res.amount || 0) + ' pet coins';
+        title = tOr('ui.summonCoins', '+{n} pet coins', { n: res.amount || 0 });
       } else if (res && res.type === 'xp') {
         cc.fillStyle = '#7cf5ff';
         cc.font = 'bold 34px Nunito, sans-serif';
         cc.textAlign = 'center';
         cc.textBaseline = 'middle';
         cc.fillText('XP', cx, cy);
-        title = '+' + (res.amount || 0) + ' XP';
+        title = tOr('ui.summonXp', '+{n} XP', { n: res.amount || 0 });
       } else {
         cc.strokeStyle = '#9db1e3';
         cc.lineWidth = 3;
         cc.strokeRect(cx - 36, cy - 36, 72, 72);
-        title = (res && res.label) || 'Niks bijzonders';
+        title = (res && res.label) || tOr('ui.summonNothing', 'Niks bijzonders');
       }
     } catch (_) {
       title = (res && res.name) || 'Summon';
@@ -3948,7 +3950,8 @@ const UI = {
       const biomeLbl = biome ? tOr('ui.dexBiome.' + biome, (typeof DEX_BIOME_LABEL !== 'undefined' && DEX_BIOME_LABEL[biome]) || '') : '';
       const blurb = kills && typeof speciesBlurb === 'function' ? speciesBlurb(id) : '';
       const blurbLine = blurb ? `<div class="dex-blurb">${blurb}</div>` : '';
-      info.innerHTML = `<div class="cname">${kills ? sp.name : '???'} ${kills ? `<span class="rar-pill" style="color:${rar.color};border-color:${rar.color}">${rarityLabel(sp.rarity)}</span>` : ''}${id === topKillId ? ` <span class="rar-pill" style="color:#ffd75e;border-color:#ffd75e">${t('ui.topHunter')}</span>` : ''}${kills && biomeLbl ? ` <span class="rar-pill" style="color:#9fd4ff;border-color:#4a7aa0">${biomeLbl}</span>` : ''}</div>
+      const spName = (typeof speciesLabel === 'function') ? speciesLabel(sp) : (sp.name || id);
+      info.innerHTML = `<div class="cname">${kills ? spName : '???'} ${kills ? `<span class="rar-pill" style="color:${rar.color};border-color:${rar.color}">${rarityLabel(sp.rarity)}</span>` : ''}${id === topKillId ? ` <span class="rar-pill" style="color:#ffd75e;border-color:#ffd75e">${t('ui.topHunter')}</span>` : ''}${kills && biomeLbl ? ` <span class="rar-pill" style="color:#9fd4ff;border-color:#4a7aa0">${biomeLbl}</span>` : ''}</div>
         <div class="cinfo">${kills ? t('ui.dexStats', { type: typeLbl, hp: sp.hp, dmg: sp.dmg, spd: sp.speed, xp: sp.xp, lvl: unlockLv || '?' }) : t('ui.dexNotBeaten')}</div>${blurbLine}${lockHint}${petLine}${statRow}`;
       el.appendChild(info);
       const right = document.createElement('div');
@@ -4050,7 +4053,8 @@ const UI = {
       const chestPetBadge = chestPetSk
         ? ` <span class="rar-pill" style="color:#ffd75e;border-color:#ffd75e">${t('ui.weaponChestBadge')}</span>`
         : '';
-      info.innerHTML = `<div class="cname">${sp.name} <span class="rar-pill" style="color:${rar.color};border-color:${rar.color}">${rarityLabel(sp.rarity)}</span>${badge}${chestPetBadge}${upBadge}</div>` +
+      const petName = (typeof speciesLabel === 'function') ? speciesLabel(sp) : sp.name;
+      info.innerHTML = `<div class="cname">${petName} <span class="rar-pill" style="color:${rar.color};border-color:${rar.color}">${rarityLabel(sp.rarity)}</span>${badge}${chestPetBadge}${upBadge}</div>` +
         `<div class="cinfo">${petPerkLabel(def)}</div>` +
         (chestPetSk ? `<div class="cinfo" style="opacity:.9;font-size:12px;margin-top:3px;color:#ffd75e">✦ ${chestPetSk}</div>` : '') +
         `<div class="cinfo" style="opacity:.78;font-size:12px;margin-top:3px">${tamed
@@ -4082,7 +4086,7 @@ const UI = {
             } else {
               equipPet(def.id);
               AudioSys.sfx('select');
-              UI.toast(t('toast.petFollow', { name: sp.name }), 2200);
+              UI.toast(t('toast.petFollow', { name: petName }), 2200);
             }
             this.renderPets();
           }, 'equipPet/' + def.id, t('ui.errPetPick'));
@@ -4096,7 +4100,7 @@ const UI = {
               return;
             }
             AudioSys.sfx('summon');
-            UI.toast(t('toast.petBought', { name: sp.name }), 2600);
+            UI.toast(t('toast.petBought', { name: petName }), 2600);
             this.renderPets();
           }, 'buyPet/' + def.id, t('ui.errPetBuy'));
         });
@@ -5029,16 +5033,33 @@ const UI = {
     try { if (typeof dismissSplashOverlay === 'function') dismissSplashOverlay(); } catch (_) {}
     const title = document.getElementById('resTitle');
     if (!title) throw new Error('result DOM missing');
-    const titleKey = data.titleKey || (data.mode === 'training'
+    let titleKey = data.titleKey || (data.mode === 'training'
       ? (win ? 'result.trainWin' : 'result.trainLose')
       : (win ? 'result.advWin' : 'result.advLose'));
+    const killerName = data.titleParams && data.titleParams.name;
     const titleFallback = (typeof t === 'function') ? t(titleKey) : titleKey;
     // Never reuse a stale English title (ROBOT WINS / YOU LOST) when the UI is NL.
-    const painted = (typeof tOr === 'function') ? tOr(titleKey, titleFallback) : titleFallback;
+    // EX-028: keep the Bangers word short; name the killer on #resKiller (390 wrap).
+    if (!win && killerName && (titleKey === 'result.advLose' || titleKey === 'result.advLoseBy')) {
+      titleKey = 'result.advLose';
+    }
+    const painted = (typeof tOr === 'function')
+      ? tOr(titleKey, titleFallback, data.titleParams || {})
+      : titleFallback;
     title.textContent = painted;
     data.titleKey = titleKey;
     data.title = painted;
     title.className = 'bigres ' + (win ? 'win' : 'lose');
+    const killerEl = document.getElementById('resKiller');
+    if (killerEl) {
+      if (!win && killerName && data.mode !== 'training') {
+        killerEl.hidden = false;
+        killerEl.textContent = killerName;
+      } else {
+        killerEl.hidden = true;
+        killerEl.textContent = '';
+      }
+    }
     const detailEl = document.getElementById('resDetail');
     if (detailEl) {
       let detail = data.detail || '';
@@ -5138,6 +5159,8 @@ const UI = {
     state = 'result';
     scheduleResize();
     document.getElementById('pauseBtn')?.classList.remove('show');
+    const rs = document.getElementById('resultScreen');
+    if (rs) rs.classList.toggle('is-lose', !win);
     this.show('resultScreen');
     AudioSys.setPaused(false);
     playMenuBgm(true);

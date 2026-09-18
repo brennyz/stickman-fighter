@@ -1,3 +1,4 @@
+| 2026-09-18 | **MEGA-MERGE #320** | Examinator unique P0 (first-punch, killer tip, speciesLabel) onto main after #317+#323. Retry stays #323. |
 | 2026-09-18 | **i18n tips Power-ups** | Examiner #317 sprint DONE (P3): DE/FR/ES Tips `Power-ups:` → Funde/Orbes. Versus ongemoeid. **v1.18.182 / SW v392**. Draft. |
 | 2026-09-18 | **i18n mission loanwords** | Examiner #317: DE remainder Pickups→Funde; DE/FR/ES kills/run/power-ups in mission UI. Versus ongemoeid. **v1.18.181 / SW v391**. Draft. |
 | 2026-09-18 | **i18n ach/err leftovers** | Examiner #317: `achLabel` geen NL fallback; `lv70`/`zoneWeapons10` in EN/DE/FR/ES; laatste `Mislukt` → `errT`; import Error EN-technisch; flow-bar empty-sub geen raw key. Versus ongemoeid. **v1.18.180 / SW v390**. Draft. |
@@ -7,6 +8,13 @@
 | 2026-09-18 | **i18n HUD/settings** | Examiner #317: HUD/FOMO DE/FR/ES (geen Summons/Unlock/BLOCK leak); settings import+persistCtx; style/season clamp 390px. Versus ongemoeid. **v1.18.175 / SW v385**. Draft. |
 | 2026-09-18 | **i18n pets/gear** | Examiner #317: DE/FR/ES pets+gear chrome (geen EN lock/perk leak); egg names; petKillsLeft; 390px clamp/toast wrap. Versus ongemoeid. **v1.18.174 / SW v384**. Draft. |
 | 2026-09-18 | **i18n layout-safe** | Worker LANGUAGE: factory desc keys (geen NL-leak op EN/DE/FR/ES-kaarten); nameShort + 2-line clamp; FOMO summons→kist/coffre/cofre; HUD KICK/PUNCH gelokaliseerd; DE Ton; Versus ongemoeid. **v1.18.173 / SW v383**. Draft. |
+| 2026-09-18 | **EXAMINATOR FROZEN** | Unique-P0 390 pass clean. Mega-merge table frozen 15:58 CEST. #320 ready-for-merge after «merge main». STOP. Sibling lanes untouched. **v1.18.178 / SW 388**. |
+| 2026-09-18 | **EXAMINATOR sib** | 390 after #314/#316/#318/#321: welcome-on-Avontuur = #316/#318 (not ours). Unique P1 EX-028 `#resKiller` under VERLOREN. Mega-merge order refreshed. **v1.18.178 / SW 388**. |
+| 2026-09-18 | **EXAMINATOR board** | 390 retest after 023/024: no P0 regress. Unique FEEL P1 EX-027 = killer tip first, skip gamble lecture until first punch. Board refreshed for 16:30 mega-merge hold. **v1.18.177 / SW 387**. |
+| 2026-09-18 | **EXAMINATOR FEEL** | #323 owns retry (EX-022 DELEGATED). #320 unique: EX-023 first-30s skip island/gamble/FOMO until first punch; EX-024 VERLOREN · killer. No IAP/Versus/main. **v1.18.176 / SW 386**. |
+| 2026-09-18 | **EXAMINATOR FEEL** | Flappy bar on board. Unique P0 EX-022: lose retry 380ms + one Opnieuw CTA, skip gamble. Juice=#316 HUD=#314. IAP note only. **v1.18.175 / SW 385**. |
+| 2026-09-18 | **EXAMINATOR leftover** | #320 unique: EX-013 speciesLabel + locale names, EX-014 gamble t(), EX-015 FR/ES pressStart, EX-021 compact 390 FOMO (tiles tappable). Sibling EX DELEGATED. **v1.18.174 / SW 384**. |
+| 2026-09-18 | **EXAMINATOR P0** | Playtest desk+390: phone horde scale, i18n pills/wearing/summon tOr, pet follow snap, factories list XOR detail, HUD hint wrap. Living `EXAMINATOR.md`. Draft only. **v1.18.173 / SW 383**. |
 | 2026-09-16 | **i18n spotcheck** | Main-spotcheck: EN YOU LOSE (niet VERLOREN); DE Hallo/Ton/Münze; FR/ES install-titel; fomo+buildings al in #299. **v1.18.169 / SW v379**. |
 | 2026-09-16 | **i18n alle talen** | Post-#283 factcheck Z→A (nl→fr→es→en→de): FOMO/fabrieken/wapens FR/ES/DE; speel.html i18n + #stepsIos; Versus ongemoeid. **v1.18.168 / SW v378**. |
 | 2026-09-14 | **i18n Z→A rebase** | #283 rebased on #273: coverage keys + FR/ES/DE overlays; polish wording wins. **v1.18.165 / SW v375**. |

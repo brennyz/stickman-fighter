@@ -32,7 +32,12 @@ overlayI18nCatalog(CATALOG_FR, {
   },
   pickup: { heal: '+PV', rage: 'RAGE', energy: 'ÉNERGIE', shield: 'BOUCLIER' },
   result: {
-    advWin: 'VICTOIRE !', advLose: 'DÉFAITE', onceMore: 'Encore une fois', trainWin: 'CHAMPION !', trainLose: 'LE ROBOT GAGNE…',
+    advWin: 'VICTOIRE !', advLose: 'DÉFAITE', onceMore: 'Encore une fois', advLoseBy: 'DÉFAITE · {name}',
+    trainWin: 'CHAMPION !', trainLose: 'LE ROBOT GAGNE…',
+    killedBy: '{name} t’a mis KO · {prog}',
+    killedByFlyer: '{name} (volant) — vise en haut · {prog}',
+    killedBySlam: '{name} t’a écrasé — saute le slam · {prog}',
+    killedByBoss: '{name} était le boss · {prog}',
     advLoseKeep: 'XP et butin de cette partie restent',
     trainDetailWin: 'RabbitRobot à terre ({p}-{r}) · combo max ×{combo} · {wins}× gagné',
     trainDetailLose: 'RabbitRobot trop fort ({p}-{r}) · combo max ×{combo}',
@@ -655,6 +660,20 @@ overlayI18nCatalog(CATALOG_FR, {
     ally: 'Chance ! Allié : {name} (buff ce niveau)',
     neutral: 'Neutre — niveau normal (pas d’effet extra)',
   },
+  species: {
+    piepvleugel: 'Ailepiou',
+    stekelra: 'Piquant',
+    ijzerstek: 'Pic-fer',
+    nachtwolk: 'Nuage-nuit',
+    blikkert: 'Canclic',
+    laserblik: 'Laserboîte',
+    vlamvos: 'Renard-feu',
+    stormvos: 'Renard-orage',
+    rotsbonk: 'Roc-bonk',
+    vlamdraak: 'Drake-feu',
+    schaduwvorst: 'Seigneur-ombre',
+    voidkonijn: 'Lapin-vide',
+  },
 });
 
 overlayI18nCatalog(CATALOG_ES, {
@@ -685,7 +704,12 @@ overlayI18nCatalog(CATALOG_ES, {
   },
   pickup: { heal: '+PV', rage: 'RAGE', energy: 'ENERGÍA', shield: 'ESCUDO' },
   result: {
-    advWin: '¡VICTORIA!', advLose: 'DERROTA', onceMore: 'Una más', trainWin: '¡CAMPEÓN!', trainLose: 'EL ROBOT GANA…',
+    advWin: '¡VICTORIA!', advLose: 'DERROTA', onceMore: 'Una más', advLoseBy: 'DERROTA · {name}',
+    trainWin: '¡CAMPEÓN!', trainLose: 'EL ROBOT GANA…',
+    killedBy: '{name} te dejó fuera · {prog}',
+    killedByFlyer: '{name} (volador) — apunta arriba · {prog}',
+    killedBySlam: '{name} te aplastó — salta el slam · {prog}',
+    killedByBoss: '{name} era el jefe · {prog}',
     advLoseKeep: 'XP y botín de esta partida se quedan',
     trainDetailWin: 'RabbitRobot caído ({p}-{r}) · combo máx ×{combo} · {wins}× ganado',
     trainDetailLose: 'RabbitRobot demasiado fuerte ({p}-{r}) · combo máx ×{combo}',
@@ -1308,6 +1332,20 @@ overlayI18nCatalog(CATALOG_ES, {
     ally: '¡Suerte! Aliado: {name} (buff este nivel)',
     neutral: 'Neutral — nivel normal (sin efecto extra)',
   },
+  species: {
+    piepvleugel: 'Alippiío',
+    stekelra: 'Púasra',
+    ijzerstek: 'Púahierro',
+    nachtwolk: 'Nubenoche',
+    blikkert: 'Lataclic',
+    laserblik: 'Láserlata',
+    vlamvos: 'Zorrallama',
+    stormvos: 'Zorratormenta',
+    rotsbonk: 'Rocabonk',
+    vlamdraak: 'Dragónllama',
+    schaduwvorst: 'Señorsombra',
+    voidkonijn: 'Conejovacio',
+  },
 });
 
 overlayI18nCatalog(CATALOG_DE, {
@@ -1357,7 +1395,12 @@ overlayI18nCatalog(CATALOG_DE, {
   },
   pickup: { heal: '+HP', rage: 'RAGE', energy: 'ENERGY', shield: 'SCHILD' },
   result: {
-    advWin: 'GEWONNEN!', advLose: 'VERLOREN', onceMore: 'Noch einmal', trainWin: 'MEISTER!', trainLose: 'ROBOT GEWINNT…',
+    advWin: 'GEWONNEN!', advLose: 'VERLOREN', onceMore: 'Noch einmal', advLoseBy: 'VERLOREN · {name}',
+    trainWin: 'MEISTER!', trainLose: 'ROBOT GEWINNT…',
+    killedBy: '{name} hat dich erwischt · {prog}',
+    killedByFlyer: '{name} (Flieger) — nach oben zielen · {prog}',
+    killedBySlam: '{name} hat dich plattgemacht — Slam springen · {prog}',
+    killedByBoss: '{name} war der Boss · {prog}',
     advLoseKeep: 'XP und Beute von diesem Lauf bleiben',
     trainDetailWin: 'RabbitRobot besiegt ({p}-{r}) · max Combo ×{combo} · {wins}× gewonnen',
     trainDetailLose: 'RabbitRobot war zu stark ({p}-{r}) · max Combo ×{combo}',
@@ -1971,4 +2014,42 @@ function applyLocaleOverlays() {
   if (typeof CATALOG_FR === 'object') deepMergeI18n(I18N.fr, CATALOG_FR);
   if (typeof CATALOG_ES === 'object') deepMergeI18n(I18N.es, CATALOG_ES);
   if (typeof CATALOG_DE === 'object') deepMergeI18n(I18N.de, CATALOG_DE);
+  deepMergeI18n(I18N.de, {
+    species: {
+      piepvleugel: 'Piepflügel', stekelra: 'Stachelra', ijzerstek: 'Eisenstachel',
+      nachtwolk: 'Nachtwolke', blikkert: 'Blechblink', laserblik: 'Laserblech',
+      vlamvos: 'Flammenfuchs', stormvos: 'Sturmfuchs', rotsbonk: 'Felsbonk',
+      vlamdraak: 'Flammendrache', schaduwvorst: 'Schattenfürst', voidkonijn: 'Leerenhase',
+    },
+  });
+  deepMergeI18n(I18N.fr, {
+    ui: {
+      summonLoadFail: 'Invocations introuvables',
+      summonEgg: 'Œuf · {name}', summonEggPlain: 'Œuf',
+      summonCoins: '+{n} pet coins', summonXp: '+{n} XP',
+      summonNothing: 'Rien de spécial',
+    },
+    gear: { pillVanity: 'LOOK', pillStat: 'STAT', pillLock: 'VERROU', wearing: 'sur toi' },
+    species: {
+      piepvleugel: 'Ailepiou', stekelra: 'Piquant', ijzerstek: 'Pic-fer',
+      nachtwolk: 'Nuage-nuit', blikkert: 'Canclic', laserblik: 'Laserboîte',
+      vlamvos: 'Renard-feu', stormvos: 'Renard-orage', rotsbonk: 'Roc-bonk',
+      vlamdraak: 'Drake-feu', schaduwvorst: 'Seigneur-ombre', voidkonijn: 'Lapin-vide',
+    },
+  });
+  deepMergeI18n(I18N.es, {
+    ui: {
+      summonLoadFail: 'No se pudieron cargar las invocaciones',
+      summonEgg: 'Huevo · {name}', summonEggPlain: 'Huevo',
+      summonCoins: '+{n} pet coins', summonXp: '+{n} XP',
+      summonNothing: 'Nada especial',
+    },
+    gear: { pillVanity: 'LOOK', pillStat: 'STAT', pillLock: 'BLOQ', wearing: 'puesto' },
+    species: {
+      piepvleugel: 'Alippiío', stekelra: 'Púasra', ijzerstek: 'Púahierro',
+      nachtwolk: 'Nubenoche', blikkert: 'Lataclic', laserblik: 'Láserlata',
+      vlamvos: 'Zorrallama', stormvos: 'Zorratormenta', rotsbonk: 'Rocabonk',
+      vlamdraak: 'Dragónllama', schaduwvorst: 'Señorsombra', voidkonijn: 'Conejovacio',
+    },
+  });
 }

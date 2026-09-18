@@ -25,9 +25,11 @@ class Pet {
     const bob = Math.sin(this.t * 6) * 2;
     const tx = p.x - p.face * (IS_TOUCH ? 34 : 38);
     const ty = p.y - 6 + bob * 0.25;
-    const follow = g.traveling ? 11 : 8;
-    this.x += (tx - this.x) * Math.min(1, dt * follow);
-    this.y += (ty - this.y) * Math.min(1, dt * 10);
+    const follow = g.traveling ? 20 : 16;
+    const dx = tx - this.x;
+    if (Math.abs(dx) > 150) this.x = tx - Math.sign(dx || 1) * 40;
+    else this.x += dx * Math.min(1, dt * follow);
+    this.y += (ty - this.y) * Math.min(1, dt * 14);
     this.face = p.face || 1;
 
     const inAdv = g.mode === 'adventure';

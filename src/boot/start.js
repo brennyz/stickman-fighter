@@ -131,7 +131,11 @@ document.querySelectorAll('[data-hub]').forEach((el) => {
     AudioSys.init(); AudioSys.sfx('select');
     const hub = el.dataset.hub;
     if (hub === 'adventure') {
-      UI.safeOpen('levelScreen', () => UI.renderLevels(), { msg: t('ui.errLoadAdventure') });
+      if (typeof firstPunchPending === 'function' && firstPunchPending()) {
+        startFirstPunchAdventure();
+      } else {
+        UI.safeOpen('levelScreen', () => UI.renderLevels(), { msg: t('ui.errLoadAdventure') });
+      }
     } else if (hub === 'versus') {
       try { toastVersusRetired(); } catch (_) {}
     } else if (hub === 'summon') {
@@ -780,6 +784,29 @@ if (pauseVsSwap) {
     }), 2800);
   });
 }
+/** EX-023: first Avontuur is a punch, not island + gamble + FOMO. */
+function firstPunchPending() {
+  try {
+    return !(typeof save !== 'undefined' && save && save.feltFirstPunch);
+  } catch (_) {
+    return true;
+  }
+}
+
+function markFeltFirstPunch() {
+  try {
+    if (typeof save === 'undefined' || !save || save.feltFirstPunch) return;
+    save.feltFirstPunch = true;
+    if (typeof persist === 'function') persist();
+  } catch (_) {}
+}
+
+function startFirstPunchAdventure() {
+  const lv = 1;
+  const diff = (typeof currentAdvDiff === 'function') ? currentAdvDiff() : 'normal';
+  startGame('adventure', { level: lv, gamble: null, difficulty: diff });
+}
+
 function runResultRetry() {
   const d = UI.lastResult;
   if (!d || !d.mode) return;
