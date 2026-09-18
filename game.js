@@ -323,9 +323,9 @@ const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const VERSION_UPDATE_SAVE_KEY = 'stickfighter_version_update_save_v1';
 const VERSION_UPDATE_FLAG_KEY = 'stickfighter_version_update_flag_v1';
 const SAVE_EXPORT_SCHEMA = 3;
-const APP_VERSION = '1.18.189';
+const APP_VERSION = '1.18.190';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 399;
+const SW_CACHE_REV = 400;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', petCoins: 0, dex: {}, summons: {}, pets: {}, activePet: null,
   eggPets: {}, activeEggPet: null, eggDaily: null,
   chestDaily: null, chestWeapons: {},
@@ -8202,6 +8202,12 @@ function markTideBattleOnboardSeen() {
 /** Eén eerste-minuut regel per modus in pauze — geen toast. */
 function pauseOnboardHintLine(mode) {
   if (!mode) return '';
+  // First Avontuur: punch first — no pause text wall.
+  try {
+    if (mode === 'adventure' && typeof firstPunchPending === 'function' && firstPunchPending()) {
+      return '';
+    }
+  } catch (_) {}
   ensureTipsSeen();
   const key = 'pauseHint_' + mode;
   if (save.tipsSeen[key]) return '';
@@ -8214,6 +8220,10 @@ function pauseOnboardHintLine(mode) {
 function applyModeOnboarding(mode, g) {
   if (!g || !mode) return;
   ensureTipsSeen();
+  const firstPunch = mode === 'adventure'
+    && typeof firstPunchPending === 'function'
+    && firstPunchPending();
+  if (firstPunch) g._juiceTeach = true;
   const key = 'onboard_' + mode;
   if (save.tipsSeen[key]) return;
   save.tipsSeen[key] = 1;
@@ -33608,7 +33618,14 @@ function resetAimTutorialFlag() {
 }
 
 function aimTutorialShouldOffer(mode) {
-  return !!(AIM_TUTORIAL_MODES[mode] && !aimTutorialSeen());
+  if (!AIM_TUTORIAL_MODES[mode] || aimTutorialSeen()) return false;
+  // MASTERGAME first-30s: punch first — no aim text wall on first Avontuur.
+  try {
+    if (mode === 'adventure' && typeof firstPunchPending === 'function' && firstPunchPending()) {
+      return false;
+    }
+  } catch (_) {}
+  return true;
 }
 
 function aimTutorialActive(g) {
@@ -33998,6 +34015,79 @@ function drawAimTutorial(c, g) {
   c.textBaseline = 'middle';
   c.fillText(got, gotX + gotW / 2, gotY + gotH / 2);
   c.restore();
+}
+/* --- src/systems/first-punch-teach.js --- */
+/* ======================== FIRST-30s PUNCH TEACH ======================== */
+/** MASTERGAME: first Avontuur teaches by punching — short nudge, no text wall. */
+
+const FIRST_PUNCH_NUDGE_SEC = 2.6;
+const FIRST_PUNCH_NUDGE_WINDOW = 30;
+const FIRST_PUNCH_NUDGE_DELAY_FIRST = 0.85;
+const FIRST_PUNCH_NUDGE_DELAY_LATER = 3;
+
+function firstPunchTeachPending(g) {
+  return !!(g && g._juiceTeach && !g._juiceTaught && !g.over);
+}
+
+function firstPunchTeachNudgeDelay(g) {
+  try {
+    if (g && g.mode === 'adventure' && typeof firstPunchPending === 'function' && firstPunchPending()) {
+      return FIRST_PUNCH_NUDGE_DELAY_FIRST;
+    }
+  } catch (_) {}
+  return FIRST_PUNCH_NUDGE_DELAY_LATER;
+}
+
+function firstPunchTeachNudgeLine() {
+  const touch = typeof useTouchFightPads === 'function'
+    ? useTouchFightPads()
+    : (typeof IS_TOUCH !== 'undefined' && IS_TOUCH);
+  if (typeof tOr === 'function') {
+    return tOr(touch ? 'juice.strikeNudge' : 'juice.strikeNudgeKb', touch ? 'Tik slaan' : 'Druk J');
+  }
+  return touch ? 'Tik slaan' : 'Druk J';
+}
+
+function firstPunchTeachLanded(g) {
+  if (!g) return false;
+  return (g.combo || 0) > 0 || (g.maxCombo || 0) > 0 || (g.kills || 0) > 0;
+}
+
+function updateFirstPunchTeach(g) {
+  if (!firstPunchTeachPending(g)) return;
+  if (firstPunchTeachLanded(g)) {
+    g._juiceTaught = true;
+    return;
+  }
+  if (g._juiceNudged) return;
+  if (g.t < firstPunchTeachNudgeDelay(g) || g.t >= FIRST_PUNCH_NUDGE_WINDOW) return;
+  if ((g.hint || 0) > 0) return;
+  g._juiceNudged = true;
+  g.modeHintLine = firstPunchTeachNudgeLine();
+  g.hint = FIRST_PUNCH_NUDGE_SEC;
+}
+
+function firstPunchTeachShouldPulsePunch(g) {
+  try {
+    if (!firstPunchTeachPending(g)) return false;
+    if (g.mode !== 'adventure') return false;
+    if (typeof firstPunchPending === 'function' && !firstPunchPending()) return false;
+    return true;
+  } catch (_) {
+    return false;
+  }
+}
+
+/** Retest: wipe the first-punch flag. Console: __sf.resetFirstPunchTeach() */
+function resetFirstPunchTeachFlag() {
+  try {
+    if (typeof save === 'undefined' || !save) return false;
+    save.feltFirstPunch = false;
+    if (typeof persist === 'function') persist();
+    return true;
+  } catch (_) {
+    return false;
+  }
 }
 /* --- src/systems/gear.js --- */
 /* ============================== GEAR UI ADAPTER ========================
@@ -46955,7 +47045,9 @@ class Game {
     if (this.mode === 'adventure') this.updateKetsbam(dt);
     if (!ketsJustFinished) this.t += dt;
     if (this.hint > 0) this.hint -= dt;
-    if (this._juiceTeach && !this._juiceTaught && !this.over) {
+    if (typeof updateFirstPunchTeach === 'function') {
+      try { updateFirstPunchTeach(this); } catch (_) {}
+    } else if (this._juiceTeach && !this._juiceTaught && !this.over) {
       const landed = (this.combo || 0) > 0 || (this.maxCombo || 0) > 0 || (this.kills || 0) > 0;
       if (landed) {
         this._juiceTaught = true;
@@ -47839,7 +47931,8 @@ class Game {
     if (this.hint > 0 && !(typeof aimTutorialActive === 'function' && aimTutorialActive(this))) {
       c.globalAlpha = clamp(this.hint, 0, 1);
       let hintTxt = this.modeHintLine;
-      if (!hintTxt) {
+      const punchTeach = typeof firstPunchTeachPending === 'function' && firstPunchTeachPending(this);
+      if (!hintTxt && !punchTeach) {
         const dualOk = Input.dualMode && this.mode === 'versus';
         const touchPads = typeof useTouchFightPads === 'function' ? useTouchFightPads() : IS_TOUCH;
         if (dualOk && touchPads) {
@@ -47852,6 +47945,9 @@ class Game {
           hintTxt = t('hud.hintKb');
         }
       }
+      if (!hintTxt) {
+        c.globalAlpha = 1;
+      } else {
       c.font = '600 15px -apple-system, sans-serif';
       c.textAlign = 'center';
       const maxW = Math.min(W * 0.72, 500);
@@ -47880,6 +47976,7 @@ class Game {
         });
       }
       c.globalAlpha = 1;
+      }
     }
     try { if (typeof drawAimTutorial === 'function') drawAimTutorial(c, this); } catch (_) {}
   }
@@ -49967,6 +50064,18 @@ class Game {
       c.strokeStyle = accent || '#fff';
       c.lineWidth = opts.dual ? 2 : 2.6;
       c.beginPath(); c.arc(0, 0, b.r + 3, 0, TAU); c.stroke();
+    }
+    if (!opts.dual && b.id === 'punch' && typeof firstPunchTeachShouldPulsePunch === 'function'
+        && firstPunchTeachShouldPulsePunch(this)) {
+      const calm = typeof motionReduced === 'function' && motionReduced();
+      const pulse = calm ? 0.55 : (0.42 + Math.sin((this.t || 0) * 6) * 0.38);
+      c.globalAlpha = pulse;
+      c.strokeStyle = '#ffd75e';
+      c.lineWidth = 3.2;
+      const extra = calm ? 5 : (5 + Math.sin((this.t || 0) * 6) * 2);
+      c.beginPath();
+      c.arc(0, 0, b.r + extra, 0, TAU);
+      c.stroke();
     }
     c.globalAlpha = 1;
     const jk = b.id === 'special'
@@ -57954,6 +58063,7 @@ function startGame(mode, opts) {
   try { AudioSys.setPaused(false); } catch (_) {}
   try { recordLastPlay(mode, opts); } catch (_) {}
   try { applyModeOnboarding(mode, game); } catch (_) {}
+  // First Avontuur: maybeStartAimTutorial no-ops while firstPunchPending (punch first).
   try { if (typeof maybeStartAimTutorial === 'function') maybeStartAimTutorial(game); } catch (_) {}
   try { UI.hideGambleRollFlash(); } catch (_) {}
   try { UI.show(null); } catch (_) { try { syncPlayLayer(); } catch (__) {} }
@@ -58753,7 +58863,7 @@ if (pauseVsSwap) {
     }), 2800);
   });
 }
-/** EX-023: first Avontuur is a punch, not island + gamble + FOMO. */
+/** EX-023 + MASTERGAME: first Avontuur is a punch, not island + gamble + FOMO + aim wall. */
 function firstPunchPending() {
   try {
     return !(typeof save !== 'undefined' && save && save.feltFirstPunch);
@@ -59790,6 +59900,8 @@ function bootGame() {
     startGame, save, Game, UI, recoverToMenu, syncPlayLayer,
     resetAimTutorial: typeof resetAimTutorialFlag === 'function' ? resetAimTutorialFlag : null,
     aimTutorialSeen: typeof aimTutorialSeen === 'function' ? aimTutorialSeen : null,
+    firstPunchPending: typeof firstPunchPending === 'function' ? firstPunchPending : null,
+    resetFirstPunchTeach: typeof resetFirstPunchTeachFlag === 'function' ? resetFirstPunchTeachFlag : null,
     season: (typeof seasonSnapshot === 'function') ? {
       get id() { return currentSeasonId(); },
       get pref() { return currentSeasonPref(); },

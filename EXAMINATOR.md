@@ -77,7 +77,7 @@ Stickman is judged against a one-tap arcade loop — not a store sim. Payments /
 | **&lt;3s retry** | Death → next flap in under three seconds. | **DELEGATED #323**. #320 does **not** ship Opnieuw-primary / 380ms / lose-gamble-skip. |
 | **One primary CTA** | One tap does the core verb (flap / retry). | HOME hub = many tiles (OK). Lose retry CTA = **#323**. |
 | **Juice on core action** | Punch / kick / jump has snap, hit-stop, audio. | **DELEGATED #316**. Do not restage. |
-| **First-30s teach-by-doing** | Learn by playing, not by reading. | **#320 EX-023:** first Avontuur skips island + gamble + FOMO until `feltFirstPunch`. Aim tutorial stays. HUD = **#314/#321**. |
+| **First-30s teach-by-doing** | Learn by playing, not by reading. | **#320 EX-023 + first-punch-teach:** first Avontuur skips island + gamble + FOMO until `feltFirstPunch`. Aim text wall deferred until after first punch. Short `juice.strikeNudge` + punch-button pulse only. HUD = **#314/#321**. Do not restage FOMO/HOME landscape. |
 
 No unique FEEL P1 left on #320 after EX-028. Next feel work is sibling-owned (#323 retry, #316 juice/welcome, #314/#321 HUD).
 
@@ -126,7 +126,7 @@ No unique FEEL P1 left on #320 after EX-028. Next feel work is sibling-owned (#3
 | EX-014 | P2 | **done** | `gambleOutcomeLabel()` uses `t('gamble.*')` — EN no longer sees “Pech! Super-baas…”. |
 | EX-015 | P2 | **done** | FR `insère une pièce` · ES `inserta una moneda` (`menu.pressStart`). DE already `Münze einwerfen`. |
 | EX-021 | P2 | **done** (+ #322 also) | 390px FOMO sheet compact + HOME tiles stay tappable. **Do not restage** #322/#313 chrome. |
-| EX-023 | P1 | **done** | First-30s: `firstPunchPending()` until `save.feltFirstPunch`. First Avontuur → lv1, no island, `gamble: null`. FOMO off until first punch. |
+| EX-023 | P1 | **done** | First-30s: `firstPunchPending()` until `save.feltFirstPunch`. First Avontuur → lv1, no island, `gamble: null`. FOMO off until first punch. Aim wall deferred; short punch nudge + pulse. |
 | EX-024 | P1 | **done** | Fair fail: `lastHurtBy` → `result.advLoseBy` = `VERLOREN · {name}` + killed-by tip (NL/EN/DE/FR/ES). |
 | EX-027 | P1 | **done** | First-loss tip no longer leads with gamble lecture. Killer first; `lossGambleTip` waits until after first punch (once-flag not burned). |
 | EX-028 | P1 | **done** | 390 named-lose: Bangers stays `VERLOREN` / `YOU LOSE`; killer name on `#resKiller` so long species don’t wrap the title. |

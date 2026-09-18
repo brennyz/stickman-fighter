@@ -79,7 +79,8 @@ must(/#resultScreen \.mode-btn\.juice-cta-primary/.test(css), 'primary CTA must 
 must(/body\.reduced-motion #resultScreen \.mode-btn\.juice-cta-primary/.test(css), 'primary CTA must skip motion under RM');
 must(/function juiceResultDelayMs/.test(missions) && /resultShowDelayMs/.test(game), '#323 resultShowDelayMs stays; juice helper exists');
 must(/result\.lossSelfHp/.test(game) || /adventureLoseCopy/.test(game), 'lose tip helper missing');
-must(/_juiceTeach/.test(game) && /juice\.strikeNudge/.test(game), 'first-30s strike nudge missing');
+must(/_juiceTeach/.test(game) && /updateFirstPunchTeach/.test(game), 'first-30s teach hook missing');
+must(/juice\.strikeNudge/.test(fs.readFileSync(path.join(root, 'src/systems/first-punch-teach.js'), 'utf8')), 'first-punch teach must use short strike nudge');
 must(/strikeNudge:/.test(i18n) && /againSub:/.test(i18n), 'juice CTA/nudge copy missing');
 
 const built = fs.existsSync(path.join(root, 'game.js'))
