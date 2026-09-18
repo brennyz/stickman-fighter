@@ -50,6 +50,13 @@
   },
   "userWishlist": [
     {
+      "id": "w-20260918T161657",
+      "from": "user",
+      "text": "Good #338. Until ~18:36: if time, one more check of landscape FOMO dismiss → Avontuur tap path; else STOP. Draft only, no main.",
+      "status": "open",
+      "updated": "2026-09-18"
+    },
+    {
       "id": "w-20260918T161004",
       "from": "user",
       "text": "PLAYTEST BOT 2/9 — Stickman Fighter. LIVE main c9a29fc v1.18.190 SW400. Until ~18:36 Amsterdam. Focus: LANDSCAPE HOME/BEGIN — SPELEN/Avontuur fully visible & tappable at 844×390; FOMO must not hide play. Screenshot. Draft findings PR. No Versus. No main.",
@@ -1238,6 +1245,10 @@
   ],
   "sessionLog": [
     {
+      "at": "2026-09-18T16:16:57Z",
+      "summary": "PLAYTEST BOT 2/9 extra: FOMO dismiss → Avontuur pointer path at 844×390"
+    },
+    {
       "at": "2026-09-18T16:15:06Z",
       "summary": "PLAYTEST BOT 2/9: landscape HOME/BEGIN 844×390 on LIVE c9a29fc — SPELEN+Avontuur visible; FOMO does not cover; P1 inert blocks Avontuur tap. Draft #338, no main."
     },
@@ -1332,10 +1343,6 @@
     {
       "at": "2026-09-18T12:40:47Z",
       "summary": "LANGUAGE examiner #317: pets/gear DE/FR/ES keys, egg names, 390px clamp, EN gear wipe fix. Draft, geen main. v1.18.174 / SW 384"
-    },
-    {
-      "at": "2026-09-18T12:36:17Z",
-      "summary": "examiner P0: pets/gear locale + 390px overflow (start)"
     }
   ],
   "implementedFeaturesSummary": "d18 char select deel 1+2 (v1.11.1-2); Mats coinrun + shuriken mik/vliegers + anti-spam (v1.12.0); speel.html (v1.12.2+). Zie HANDOFF-ZOEKINDEX.md en improvement-d20-bag.json userFeatureLog.",
