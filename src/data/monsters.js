@@ -1186,28 +1186,31 @@ function triggerSpecialEnemyIntro(game, monster, kind) {
         if (typeof playFightBgm === 'function') playFightBgm('boss');
         else AudioSys.play('boss');
         const title = typeof t === 'function' ? t('banner.superBossTitle') : 'SUPER BAAS';
-        game.banner(title, 2.8, col, bigBoss ? 68 : 44);
+        const ban = (n) => (typeof combatBannerSize === 'function') ? combatBannerSize(n) : n;
+        game.banner(title, 2.8, col, ban(bigBoss ? 68 : 44));
         game.banner(colossal
           ? (typeof t === 'function' ? t('banner.colossalBossName', { name }) : `COLOSSALE ${name}!`)
-          : (typeof t === 'function' ? t('banner.bossName', { name }) : name), 2.5, '#fff', bigBoss ? 52 : 40);
+          : (typeof t === 'function' ? t('banner.bossName', { name }) : name), 2.5, '#fff', ban(bigBoss ? 52 : 40));
       } else if (tier === 'boss') {
         AudioSys.sting('bossIntro');
         if (typeof playFightBgm === 'function') playFightBgm('boss');
         else AudioSys.play('boss');
+        const ban = (n) => (typeof combatBannerSize === 'function') ? combatBannerSize(n) : n;
         if (bigBoss) {
           const title = typeof t === 'function' ? t('banner.bossTitle') : 'BAAS';
-          game.banner(title, 2.6, col, 64);
+          game.banner(title, 2.6, col, ban(64));
           game.banner(colossal
             ? (typeof t === 'function' ? t('banner.colossalBossName', { name }) : `COLOSSALE ${name}!`)
-            : (typeof t === 'function' ? t('banner.bossName', { name }) : `${name}!`), 2.35, '#fff', 50);
+            : (typeof t === 'function' ? t('banner.bossName', { name }) : `${name}!`), 2.35, '#fff', ban(50));
         } else {
-          game.banner(typeof t === 'function' ? t('banner.bossNamed', { name }) : `BAAS — ${name}!`, 1.8, col, 42);
+          game.banner(typeof t === 'function' ? t('banner.bossNamed', { name }) : `BAAS — ${name}!`, 1.8, col, ban(42));
         }
       } else {
         AudioSys.sting('eliteIntro');
         if (typeof playFightBgm === 'function') playFightBgm('elite');
         else AudioSys.play('elite');
-        game.banner(typeof t === 'function' ? t('banner.eliteNamed', { name }) : `ELITE — ${name}!`, 1.5, col, 38);
+        const ban = (n) => (typeof combatBannerSize === 'function') ? combatBannerSize(n) : n;
+        game.banner(typeof t === 'function' ? t('banner.eliteNamed', { name }) : `ELITE — ${name}!`, 1.5, col, ban(38));
       }
     } catch (_) {}
     try { AudioSys.sfx('roar'); } catch (_) {}

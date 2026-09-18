@@ -31,6 +31,7 @@ const REGRESSION_MUST_DEFINE = [
   'tickBuildingResources', 'collectBuildingResource', 'applyBuildingPowersToPlayer', 'buildingPowerBonus',
   'applyBuildingCombatHook', 'tickBuildingCombat',
   'combatDensityProfile', 'combatDensityScale', 'adventureMaxAliveNow', 'adventureSpawnCadence',
+  'applyCombatTelegraphWind', 'combatChargeTeleDist', 'combatIntroHolds',
 ];
 
 /** Consts / values that must appear in the bundle (not only functions). */

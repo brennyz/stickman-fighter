@@ -60,3 +60,28 @@ Measured `buildLevel` budgets (same wave **count**, fewer bodies on phone):
 | 20 Hell 3.0 | 219 | 136 | still a horde |
 
 `npm run smoke:adventure` on a 390×844 Chrome window still clears level 1 (spawnQ 2 then 4). `smoke:wave12` still advances 1→2. Training / touch buttons unchanged.
+
+## Examinator pass (390px, after density)
+
+| Cue | Desktop (unchanged) | Phone 390×844 |
+|-----|---------------------|---------------|
+| Charge wind | 0.45s (enrage 0.28) | ×1.28, floor **0.38s** (enrage shark 0.20 → 0.38) |
+| Charge trigger | 240px | ≤ 42% of W (~164px) so the ring is **on-screen** |
+| Elite/boss intro | AI still fights | Aggression **held** until introT ends; banners cap 40px |
+| Jump hit | legacy slop | **+10px** slop (dodge is the telegraph answer) |
+| Swipe dead-zone | joy circle only | 1P left-bottom **42% × below 55%** is a move pad |
+
+Versus / dual pads are not used.
+
+## Remaining mobile overwhelm (EX)
+
+Not fixed in this PR — still true after density + telegraph/touch:
+
+1. **Colossal bosses** can still eat most of a 390px strip (size ×2). Readable telegraph, but little sidestep room — jump/i-frames remain the answer.
+2. **HUD shows one telegraph** (`adventureTelegraphHud` breaks on the first). Two elites winding at once = one bar. Density lowered the odds; it did not add a second lane.
+3. **Flyers / aim-up** on short landscape (844×390): vertical fight space is still tight. Aim tutorial + joy↑ unchanged.
+4. **Hell enrage walk speed** is not scaled — only the wind floor. Late Hell on a phone is still the hard lane.
+5. **Part-gate “hold right”** on portrait still asks for a long right-walk with the left stick; unrelated to horde size.
+6. **Pickup clutter** after a thinner wave is better, but gear + shards can still stack on the 390px floor.
+
+Re-check after play: `npm run smoke:combat-density && npm run smoke:adventure`.

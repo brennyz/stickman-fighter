@@ -138,3 +138,79 @@ function adventureSpawnCadence(queueLeft, opener, bossWave, spawnMul, profile) {
     gapPx: profile.spawnGapPx || 32,
   };
 }
+
+const COMBAT_TELEGRAPH_FLOOR = 0.38;
+
+function asCombatProfile(profileOrSize) {
+  if (!profileOrSize) return combatDensityProfile();
+  if (typeof profileOrSize.compact === 'boolean' && typeof profileOrSize.scale === 'number') {
+    return profileOrSize;
+  }
+  return combatDensityProfile(profileOrSize);
+}
+
+/** Compact phones: slightly longer dodge window. Desktop winds stay 1.0. */
+function combatTelegraphMul(profile) {
+  profile = asCombatProfile(profile);
+  if (profile.compact) return 1.28;
+  if (profile.tablet) return 1.10;
+  return 1;
+}
+
+/** Apply viewport mul + phone floor. Enraged 0.20s shark winds become readable on 390px. */
+function applyCombatTelegraphWind(baseWind, profile) {
+  profile = asCombatProfile(profile);
+  let w = Number(baseWind) * combatTelegraphMul(profile);
+  if (profile.compact) w = Math.max(w, COMBAT_TELEGRAPH_FLOOR);
+  return w;
+}
+
+/**
+ * Charge/shark telegraph trigger distance. On a 390px strip the legacy 240px
+ * cue starts off-screen (ring invisible). Keep the cue on the playfield.
+ */
+function combatChargeTeleDist(base, profile) {
+  profile = asCombatProfile(profile);
+  const b = Number(base);
+  const raw = b > 0 ? b : 240;
+  if (!profile.compact) return raw;
+  return Math.min(raw, Math.max(140, Math.round(profile.w * 0.42)));
+}
+
+function combatTankTeleReach(size, profile) {
+  profile = asCombatProfile(profile);
+  const extra = profile.compact ? 72 : 48;
+  return (Number(size) || 40) + extra;
+}
+
+/** Elite/boss title card: freeze aggression on compact so the cue is readable. */
+function combatIntroHolds(profile) {
+  profile = asCombatProfile(profile);
+  return !!profile.compact;
+}
+
+function combatBannerSize(base, profile) {
+  profile = asCombatProfile(profile);
+  const b = Number(base) || 40;
+  if (!profile.compact) return b;
+  return Math.min(b, 40);
+}
+
+/** Extra jump slop on compact — dodge is the telegraph answer. */
+function combatJumpSlopExtra(profile) {
+  profile = asCombatProfile(profile);
+  return profile.compact ? 10 : 0;
+}
+
+/**
+ * 1P compact: left-bottom playfield is a swipe/move pad so empty space after
+ * a thinner horde is not a dead zone. Dual/Versus stays out.
+ */
+function combatJoySwipeAccepts(x, y, w, h, profile) {
+  profile = asCombatProfile(profile || { w: w, h: h });
+  if (!profile.compact) return false;
+  if (typeof Input !== 'undefined' && Input && Input.dualMode) return false;
+  const W0 = w > 0 ? w : profile.w;
+  const H0 = h > 0 ? h : profile.h;
+  return x < W0 * 0.42 && y > H0 * 0.55;
+}

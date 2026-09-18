@@ -116,6 +116,11 @@ class Monster {
     if (this.flashT > 0) this.flashT -= dt;
     if (this.phase2FlashT > 0) this.phase2FlashT -= dt;
     if (!this.alive) { this.deadT += dt; return; }
+    if (this.introT > 0 && typeof combatIntroHolds === 'function' && combatIntroHolds()) {
+      if (!this.flying && !this.swimming) this.y = game.ground - this.size;
+      this.x = clamp(this.x, game.minX - 20, game.maxX + 20);
+      return;
+    }
     const p = game.player;
     const dx = p.x - this.x, dir = Math.sign(dx) || 1, dist = Math.abs(dx);
     this.face = dir;
@@ -148,8 +153,10 @@ class Monster {
         if (this.telegraphT <= 0) { this.dashT = 0.5; this.vx = dir * this.speed * spdMul * 3.4; AudioSys.sfx('swing'); }
       } else {
         this.x += dir * this.speed * spdMul * dt * 0.6;
-        if (dist < 240 && this.atkCD <= 0) {
-          const wind = (this.enraged ? 0.28 : (this.softTelegraph ? 0.88 : 0.45)) * (this.biomeTelegraphMul || 1);
+        const chargeDist = (typeof combatChargeTeleDist === 'function') ? combatChargeTeleDist(240) : 240;
+        if (dist < chargeDist && this.atkCD <= 0) {
+          let wind = (this.enraged ? 0.28 : (this.softTelegraph ? 0.88 : 0.45)) * (this.biomeTelegraphMul || 1);
+          if (typeof applyCombatTelegraphWind === 'function') wind = applyCombatTelegraphWind(wind);
           this.telegraphT = wind;
           this.telegraphMax = wind;
           this.atkCD = rand(1.6, 2.6) / (this.enraged ? 1.25 : 1);
@@ -180,8 +187,12 @@ class Monster {
         }
       } else {
         this.x += dir * this.speed * dt;
-        if (dist < this.size + 48 && this.atkCD <= 0) {
-          const wind = (this.softTelegraph ? 0.98 : 0.55) * (this.biomeTelegraphMul || 1);
+        const tankReach = (typeof combatTankTeleReach === 'function')
+          ? combatTankTeleReach(this.size)
+          : (this.size + 48);
+        if (dist < tankReach && this.atkCD <= 0) {
+          let wind = (this.softTelegraph ? 0.98 : 0.55) * (this.biomeTelegraphMul || 1);
+          if (typeof applyCombatTelegraphWind === 'function') wind = applyCombatTelegraphWind(wind);
           this.telegraphT = wind;
           this.telegraphMax = wind;
           this.atkCD = 2.0;
@@ -218,8 +229,10 @@ class Monster {
           }
         } else {
           this.x += dir * this.speed * spdMul * dt * 0.78;
-          if (dist < 230 && this.atkCD <= 0) {
-            const wind = (this.enraged ? 0.2 : (this.softTelegraph ? 0.58 : 0.36)) * (this.biomeTelegraphMul || 1);
+          const sharkDist = (typeof combatChargeTeleDist === 'function') ? combatChargeTeleDist(230) : 230;
+          if (dist < sharkDist && this.atkCD <= 0) {
+            let wind = (this.enraged ? 0.2 : (this.softTelegraph ? 0.58 : 0.36)) * (this.biomeTelegraphMul || 1);
+            if (typeof applyCombatTelegraphWind === 'function') wind = applyCombatTelegraphWind(wind);
             this.telegraphT = wind;
             this.telegraphMax = wind;
             this.atkCD = rand(1.35, 2.1) / (this.enraged ? 1.25 : 1);
@@ -269,7 +282,9 @@ class Monster {
     }
     if (this.techniqueCD > 0 || dist < 130 || dist > 520) return;
     if (this.dashT > 0 || this.telegraphT > 0) return;
-    this.techniqueTelegraphT = this.enemyTechnique === 'wave_cannon' ? 0.9 : 0.5;
+    let techWind = this.enemyTechnique === 'wave_cannon' ? 0.9 : 0.5;
+    if (typeof applyCombatTelegraphWind === 'function') techWind = applyCombatTelegraphWind(techWind);
+    this.techniqueTelegraphT = techWind;
     this.techniqueCD = rand(5, 8.5) / (this.enraged ? 1.2 : 1);
     try {
       AudioSys.sfx(this.enemyTechnique === 'wave_cannon' ? 'ketsbamCharge' : 'roar');

@@ -311,11 +311,13 @@ function touchBtnPressXform(b) {
 /** Dichtstbijzijnde knop binnen slop — voorkomt verkeerde match bij overlap/slop (d9). */
 function hitTouchButton(buttons, x, y) {
   const slop = btnHitSlop();
+  const jumpExtra = (typeof combatJumpSlopExtra === 'function') ? combatJumpSlopExtra() : 0;
   let best = null;
   let bestD = Infinity;
   for (const b of buttons) {
+    const extra = (b.id === 'jump') ? jumpExtra : 0;
     const d = Math.hypot(x - b.x, y - b.y);
-    if (d <= b.r + slop && d < bestD) {
+    if (d <= b.r + slop + extra && d < bestD) {
       bestD = d;
       best = b;
     }
@@ -330,7 +332,12 @@ function joyGuardRadius(pad) {
 
 function pointInJoyZone(pad, x, y) {
   const home = (pad && pad.joyHome) || { x: 110, y: (H || 600) - 110 };
-  return Math.hypot(x - home.x, y - home.y) <= joyGuardRadius(pad) + btnHitSlop() * 0.5;
+  if (Math.hypot(x - home.x, y - home.y) <= joyGuardRadius(pad) + btnHitSlop() * 0.5) return true;
+  if (typeof combatJoySwipeAccepts === 'function' && combatJoySwipeAccepts(x, y, W, H)) {
+    if (nearAnyTouchButton((pad && pad.buttons) || [], x, y, 4)) return false;
+    return true;
+  }
+  return false;
 }
 
 function nearAnyTouchButton(buttons, x, y, extra) {

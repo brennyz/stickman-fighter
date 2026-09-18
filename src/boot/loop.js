@@ -1003,6 +1003,11 @@ function bootGame() {
       maxAlive: adventureMaxAliveNow,
       cadence: adventureSpawnCadence,
       perWave: scaleAdventurePerWave,
+      telegraphWind: applyCombatTelegraphWind,
+      chargeDist: combatChargeTeleDist,
+      introHolds: combatIntroHolds,
+      jumpSlop: combatJumpSlopExtra,
+      joySwipe: combatJoySwipeAccepts,
     } : null,
     previewTop20Spawn: () => {
       try { AudioSys.init(); AudioSys.sfx('top20Spawn'); } catch (_) {}

@@ -323,9 +323,9 @@ const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const VERSION_UPDATE_SAVE_KEY = 'stickfighter_version_update_save_v1';
 const VERSION_UPDATE_FLAG_KEY = 'stickfighter_version_update_flag_v1';
 const SAVE_EXPORT_SCHEMA = 3;
-const APP_VERSION = '1.18.173';
+const APP_VERSION = '1.18.174';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 383;
+const SW_CACHE_REV = 384;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', petCoins: 0, dex: {}, summons: {}, pets: {}, activePet: null,
   eggPets: {}, activeEggPet: null, eggDaily: null,
   chestDaily: null, chestWeapons: {},
@@ -17026,28 +17026,31 @@ function triggerSpecialEnemyIntro(game, monster, kind) {
         if (typeof playFightBgm === 'function') playFightBgm('boss');
         else AudioSys.play('boss');
         const title = typeof t === 'function' ? t('banner.superBossTitle') : 'SUPER BAAS';
-        game.banner(title, 2.8, col, bigBoss ? 68 : 44);
+        const ban = (n) => (typeof combatBannerSize === 'function') ? combatBannerSize(n) : n;
+        game.banner(title, 2.8, col, ban(bigBoss ? 68 : 44));
         game.banner(colossal
           ? (typeof t === 'function' ? t('banner.colossalBossName', { name }) : `COLOSSALE ${name}!`)
-          : (typeof t === 'function' ? t('banner.bossName', { name }) : name), 2.5, '#fff', bigBoss ? 52 : 40);
+          : (typeof t === 'function' ? t('banner.bossName', { name }) : name), 2.5, '#fff', ban(bigBoss ? 52 : 40));
       } else if (tier === 'boss') {
         AudioSys.sting('bossIntro');
         if (typeof playFightBgm === 'function') playFightBgm('boss');
         else AudioSys.play('boss');
+        const ban = (n) => (typeof combatBannerSize === 'function') ? combatBannerSize(n) : n;
         if (bigBoss) {
           const title = typeof t === 'function' ? t('banner.bossTitle') : 'BAAS';
-          game.banner(title, 2.6, col, 64);
+          game.banner(title, 2.6, col, ban(64));
           game.banner(colossal
             ? (typeof t === 'function' ? t('banner.colossalBossName', { name }) : `COLOSSALE ${name}!`)
-            : (typeof t === 'function' ? t('banner.bossName', { name }) : `${name}!`), 2.35, '#fff', 50);
+            : (typeof t === 'function' ? t('banner.bossName', { name }) : `${name}!`), 2.35, '#fff', ban(50));
         } else {
-          game.banner(typeof t === 'function' ? t('banner.bossNamed', { name }) : `BAAS — ${name}!`, 1.8, col, 42);
+          game.banner(typeof t === 'function' ? t('banner.bossNamed', { name }) : `BAAS — ${name}!`, 1.8, col, ban(42));
         }
       } else {
         AudioSys.sting('eliteIntro');
         if (typeof playFightBgm === 'function') playFightBgm('elite');
         else AudioSys.play('elite');
-        game.banner(typeof t === 'function' ? t('banner.eliteNamed', { name }) : `ELITE — ${name}!`, 1.5, col, 38);
+        const ban = (n) => (typeof combatBannerSize === 'function') ? combatBannerSize(n) : n;
+        game.banner(typeof t === 'function' ? t('banner.eliteNamed', { name }) : `ELITE — ${name}!`, 1.5, col, ban(38));
       }
     } catch (_) {}
     try { AudioSys.sfx('roar'); } catch (_) {}
@@ -28900,11 +28903,13 @@ function touchBtnPressXform(b) {
 /** Dichtstbijzijnde knop binnen slop — voorkomt verkeerde match bij overlap/slop (d9). */
 function hitTouchButton(buttons, x, y) {
   const slop = btnHitSlop();
+  const jumpExtra = (typeof combatJumpSlopExtra === 'function') ? combatJumpSlopExtra() : 0;
   let best = null;
   let bestD = Infinity;
   for (const b of buttons) {
+    const extra = (b.id === 'jump') ? jumpExtra : 0;
     const d = Math.hypot(x - b.x, y - b.y);
-    if (d <= b.r + slop && d < bestD) {
+    if (d <= b.r + slop + extra && d < bestD) {
       bestD = d;
       best = b;
     }
@@ -28919,7 +28924,12 @@ function joyGuardRadius(pad) {
 
 function pointInJoyZone(pad, x, y) {
   const home = (pad && pad.joyHome) || { x: 110, y: (H || 600) - 110 };
-  return Math.hypot(x - home.x, y - home.y) <= joyGuardRadius(pad) + btnHitSlop() * 0.5;
+  if (Math.hypot(x - home.x, y - home.y) <= joyGuardRadius(pad) + btnHitSlop() * 0.5) return true;
+  if (typeof combatJoySwipeAccepts === 'function' && combatJoySwipeAccepts(x, y, W, H)) {
+    if (nearAnyTouchButton((pad && pad.buttons) || [], x, y, 4)) return false;
+    return true;
+  }
+  return false;
 }
 
 function nearAnyTouchButton(buttons, x, y, extra) {
@@ -29973,6 +29983,82 @@ function adventureSpawnCadence(queueLeft, opener, bossWave, spawnMul, profile) {
     interval,
     gapPx: profile.spawnGapPx || 32,
   };
+}
+
+const COMBAT_TELEGRAPH_FLOOR = 0.38;
+
+function asCombatProfile(profileOrSize) {
+  if (!profileOrSize) return combatDensityProfile();
+  if (typeof profileOrSize.compact === 'boolean' && typeof profileOrSize.scale === 'number') {
+    return profileOrSize;
+  }
+  return combatDensityProfile(profileOrSize);
+}
+
+/** Compact phones: slightly longer dodge window. Desktop winds stay 1.0. */
+function combatTelegraphMul(profile) {
+  profile = asCombatProfile(profile);
+  if (profile.compact) return 1.28;
+  if (profile.tablet) return 1.10;
+  return 1;
+}
+
+/** Apply viewport mul + phone floor. Enraged 0.20s shark winds become readable on 390px. */
+function applyCombatTelegraphWind(baseWind, profile) {
+  profile = asCombatProfile(profile);
+  let w = Number(baseWind) * combatTelegraphMul(profile);
+  if (profile.compact) w = Math.max(w, COMBAT_TELEGRAPH_FLOOR);
+  return w;
+}
+
+/**
+ * Charge/shark telegraph trigger distance. On a 390px strip the legacy 240px
+ * cue starts off-screen (ring invisible). Keep the cue on the playfield.
+ */
+function combatChargeTeleDist(base, profile) {
+  profile = asCombatProfile(profile);
+  const b = Number(base);
+  const raw = b > 0 ? b : 240;
+  if (!profile.compact) return raw;
+  return Math.min(raw, Math.max(140, Math.round(profile.w * 0.42)));
+}
+
+function combatTankTeleReach(size, profile) {
+  profile = asCombatProfile(profile);
+  const extra = profile.compact ? 72 : 48;
+  return (Number(size) || 40) + extra;
+}
+
+/** Elite/boss title card: freeze aggression on compact so the cue is readable. */
+function combatIntroHolds(profile) {
+  profile = asCombatProfile(profile);
+  return !!profile.compact;
+}
+
+function combatBannerSize(base, profile) {
+  profile = asCombatProfile(profile);
+  const b = Number(base) || 40;
+  if (!profile.compact) return b;
+  return Math.min(b, 40);
+}
+
+/** Extra jump slop on compact — dodge is the telegraph answer. */
+function combatJumpSlopExtra(profile) {
+  profile = asCombatProfile(profile);
+  return profile.compact ? 10 : 0;
+}
+
+/**
+ * 1P compact: left-bottom playfield is a swipe/move pad so empty space after
+ * a thinner horde is not a dead zone. Dual/Versus stays out.
+ */
+function combatJoySwipeAccepts(x, y, w, h, profile) {
+  profile = asCombatProfile(profile || { w: w, h: h });
+  if (!profile.compact) return false;
+  if (typeof Input !== 'undefined' && Input && Input.dualMode) return false;
+  const W0 = w > 0 ? w : profile.w;
+  const H0 = h > 0 ? h : profile.h;
+  return x < W0 * 0.42 && y > H0 * 0.55;
 }
 /* --- src/systems/fighter-move.js --- */
 /* ========================== FIGHTER MOVE ========================== */
@@ -35541,6 +35627,11 @@ class Monster {
     if (this.flashT > 0) this.flashT -= dt;
     if (this.phase2FlashT > 0) this.phase2FlashT -= dt;
     if (!this.alive) { this.deadT += dt; return; }
+    if (this.introT > 0 && typeof combatIntroHolds === 'function' && combatIntroHolds()) {
+      if (!this.flying && !this.swimming) this.y = game.ground - this.size;
+      this.x = clamp(this.x, game.minX - 20, game.maxX + 20);
+      return;
+    }
     const p = game.player;
     const dx = p.x - this.x, dir = Math.sign(dx) || 1, dist = Math.abs(dx);
     this.face = dir;
@@ -35573,8 +35664,10 @@ class Monster {
         if (this.telegraphT <= 0) { this.dashT = 0.5; this.vx = dir * this.speed * spdMul * 3.4; AudioSys.sfx('swing'); }
       } else {
         this.x += dir * this.speed * spdMul * dt * 0.6;
-        if (dist < 240 && this.atkCD <= 0) {
-          const wind = (this.enraged ? 0.28 : (this.softTelegraph ? 0.88 : 0.45)) * (this.biomeTelegraphMul || 1);
+        const chargeDist = (typeof combatChargeTeleDist === 'function') ? combatChargeTeleDist(240) : 240;
+        if (dist < chargeDist && this.atkCD <= 0) {
+          let wind = (this.enraged ? 0.28 : (this.softTelegraph ? 0.88 : 0.45)) * (this.biomeTelegraphMul || 1);
+          if (typeof applyCombatTelegraphWind === 'function') wind = applyCombatTelegraphWind(wind);
           this.telegraphT = wind;
           this.telegraphMax = wind;
           this.atkCD = rand(1.6, 2.6) / (this.enraged ? 1.25 : 1);
@@ -35605,8 +35698,12 @@ class Monster {
         }
       } else {
         this.x += dir * this.speed * dt;
-        if (dist < this.size + 48 && this.atkCD <= 0) {
-          const wind = (this.softTelegraph ? 0.98 : 0.55) * (this.biomeTelegraphMul || 1);
+        const tankReach = (typeof combatTankTeleReach === 'function')
+          ? combatTankTeleReach(this.size)
+          : (this.size + 48);
+        if (dist < tankReach && this.atkCD <= 0) {
+          let wind = (this.softTelegraph ? 0.98 : 0.55) * (this.biomeTelegraphMul || 1);
+          if (typeof applyCombatTelegraphWind === 'function') wind = applyCombatTelegraphWind(wind);
           this.telegraphT = wind;
           this.telegraphMax = wind;
           this.atkCD = 2.0;
@@ -35643,8 +35740,10 @@ class Monster {
           }
         } else {
           this.x += dir * this.speed * spdMul * dt * 0.78;
-          if (dist < 230 && this.atkCD <= 0) {
-            const wind = (this.enraged ? 0.2 : (this.softTelegraph ? 0.58 : 0.36)) * (this.biomeTelegraphMul || 1);
+          const sharkDist = (typeof combatChargeTeleDist === 'function') ? combatChargeTeleDist(230) : 230;
+          if (dist < sharkDist && this.atkCD <= 0) {
+            let wind = (this.enraged ? 0.2 : (this.softTelegraph ? 0.58 : 0.36)) * (this.biomeTelegraphMul || 1);
+            if (typeof applyCombatTelegraphWind === 'function') wind = applyCombatTelegraphWind(wind);
             this.telegraphT = wind;
             this.telegraphMax = wind;
             this.atkCD = rand(1.35, 2.1) / (this.enraged ? 1.25 : 1);
@@ -35694,7 +35793,9 @@ class Monster {
     }
     if (this.techniqueCD > 0 || dist < 130 || dist > 520) return;
     if (this.dashT > 0 || this.telegraphT > 0) return;
-    this.techniqueTelegraphT = this.enemyTechnique === 'wave_cannon' ? 0.9 : 0.5;
+    let techWind = this.enemyTechnique === 'wave_cannon' ? 0.9 : 0.5;
+    if (typeof applyCombatTelegraphWind === 'function') techWind = applyCombatTelegraphWind(techWind);
+    this.techniqueTelegraphT = techWind;
     this.techniqueCD = rand(5, 8.5) / (this.enraged ? 1.2 : 1);
     try {
       AudioSys.sfx(this.enemyTechnique === 'wave_cannon' ? 'ketsbamCharge' : 'roar');
@@ -40159,15 +40260,19 @@ function adventureTelegraphHud(m) {
 }
 
 function drawTelegraphBar(c, game, tele, y) {
-  const barW = Math.min(320, W - 32);
+  const dens = (typeof combatDensityProfile === 'function') ? combatDensityProfile() : null;
+  const compact = !!(dens && dens.compact);
+  const short = (typeof H === 'number' && H < 500);
+  const barW = Math.min(compact ? 268 : 320, W - (compact ? 24 : 32));
   const bx = (W - barW) / 2;
+  if (compact || short) y = Math.min(y, H * (short ? 0.50 : 0.58));
   c.fillStyle = 'rgba(0,0,0,.62)';
   game.rr(c, bx - 8, y - 20, barW + 16, 34, 10);
   c.fill();
   if (tele.icon && typeof drawStrikeHudChip === 'function') {
-    drawStrikeHudChip(c, tele.icon, bx + 10, y - 2, 11);
+    drawStrikeHudChip(c, tele.icon, bx + 10, y - 2, compact ? 12 : 11);
   }
-  c.font = '900 15px sans-serif';
+  c.font = compact ? '900 16px sans-serif' : '900 15px sans-serif';
   c.textAlign = 'center';
   if (typeof fillHudText === 'function') {
     fillHudText(c, tele.label, W / 2, y, { fill: tele.color, strokeW: 3 });
@@ -53826,6 +53931,11 @@ function bootGame() {
       maxAlive: adventureMaxAliveNow,
       cadence: adventureSpawnCadence,
       perWave: scaleAdventurePerWave,
+      telegraphWind: applyCombatTelegraphWind,
+      chargeDist: combatChargeTeleDist,
+      introHolds: combatIntroHolds,
+      jumpSlop: combatJumpSlopExtra,
+      joySwipe: combatJoySwipeAccepts,
     } : null,
     previewTop20Spawn: () => {
       try { AudioSys.init(); AudioSys.sfx('top20Spawn'); } catch (_) {}

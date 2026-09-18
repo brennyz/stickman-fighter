@@ -47,15 +47,19 @@ function adventureTelegraphHud(m) {
 }
 
 function drawTelegraphBar(c, game, tele, y) {
-  const barW = Math.min(320, W - 32);
+  const dens = (typeof combatDensityProfile === 'function') ? combatDensityProfile() : null;
+  const compact = !!(dens && dens.compact);
+  const short = (typeof H === 'number' && H < 500);
+  const barW = Math.min(compact ? 268 : 320, W - (compact ? 24 : 32));
   const bx = (W - barW) / 2;
+  if (compact || short) y = Math.min(y, H * (short ? 0.50 : 0.58));
   c.fillStyle = 'rgba(0,0,0,.62)';
   game.rr(c, bx - 8, y - 20, barW + 16, 34, 10);
   c.fill();
   if (tele.icon && typeof drawStrikeHudChip === 'function') {
-    drawStrikeHudChip(c, tele.icon, bx + 10, y - 2, 11);
+    drawStrikeHudChip(c, tele.icon, bx + 10, y - 2, compact ? 12 : 11);
   }
-  c.font = '900 15px sans-serif';
+  c.font = compact ? '900 16px sans-serif' : '900 15px sans-serif';
   c.textAlign = 'center';
   if (typeof fillHudText === 'function') {
     fillHudText(c, tele.label, W / 2, y, { fill: tele.color, strokeW: 3 });

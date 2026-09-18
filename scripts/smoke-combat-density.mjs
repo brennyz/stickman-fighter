@@ -43,6 +43,16 @@ must(/scaleAdventureHordePad\(/.test(monstersSrc), 'buildLevel must scale boss h
 must(/n === 1 \? 2 : 3/.test(monstersSrc), 'level 1 wave 1 soft-cap (2) must stay');
 must(/waves\[1\]\.slice\(0, 4\)/.test(monstersSrc), 'level 1 wave 2 soft-cap (4) must stay');
 
+must(/applyCombatTelegraphWind\(/.test(fs.readFileSync(path.join(root, 'src/entities/monster.js'), 'utf8')),
+  'monster winds must use applyCombatTelegraphWind');
+must(/combatIntroHolds\(/.test(fs.readFileSync(path.join(root, 'src/entities/monster.js'), 'utf8')),
+  'compact intro must hold aggression');
+must(/combatJoySwipeAccepts\(/.test(fs.readFileSync(path.join(root, 'src/systems/input.js'), 'utf8')),
+  'compact joy swipe pad missing');
+must(/combatJumpSlopExtra\(/.test(fs.readFileSync(path.join(root, 'src/systems/input.js'), 'utf8')),
+  'compact jump slop missing');
+must(!/applyCombatTelegraphWind/.test(versusSrc), 'versus.js must not use telegraph density');
+
 must(/opener \? 1 :/.test(gameSrc), 'opener must stay single-file');
 must(/adventureMaxAliveNow\(/.test(gameSrc), 'spawn loop must use live alive cap');
 must(/adventureSpawnCadence\(/.test(gameSrc), 'spawn loop must use density cadence');
@@ -139,6 +149,27 @@ must(iso.scaleAdventurePerWave(36, phone) === 22, 'phone cap-36 → 22');
 must(iso.scaleAdventureHordePad(4, desk) === 4, 'desktop boss pad unchanged');
 must(iso.scaleAdventureHordePad(4, phone) === 2, 'phone boss pad 4 → 2');
 
+must(iso.applyCombatTelegraphWind(0.45, desk) === 0.45, 'desktop charge wind stays 0.45');
+must(iso.applyCombatTelegraphWind(0.28, desk) === 0.28, 'desktop enrage wind stays 0.28');
+must(iso.applyCombatTelegraphWind(0.20, desk) === 0.20, 'desktop shark-enrage wind stays 0.20');
+const phoneCharge = iso.applyCombatTelegraphWind(0.45, phone);
+must(phoneCharge > 0.45 && phoneCharge >= 0.38, 'phone charge wind longer than desktop', phoneCharge);
+must(iso.applyCombatTelegraphWind(0.20, phone) === 0.38, 'phone enrage floor 0.38s (readable jump)');
+must(iso.combatChargeTeleDist(240, desk) === 240, 'desktop charge trigger 240');
+const phoneDist = iso.combatChargeTeleDist(240, phone);
+must(phoneDist < 240 && phoneDist >= 140, 'phone charge trigger on-screen', phoneDist);
+must(phoneDist <= Math.round(390 * 0.42), 'phone charge trigger ≤ 42% of W', phoneDist);
+must(iso.combatIntroHolds(desk) === false, 'desktop intro does not freeze AI');
+must(iso.combatIntroHolds(phone) === true, 'phone intro holds elite/boss aggression');
+must(iso.combatBannerSize(68, desk) === 68, 'desktop super-boss banner 68');
+must(iso.combatBannerSize(68, phone) === 40, 'phone banners cap at 40');
+must(iso.combatJumpSlopExtra(desk) === 0, 'desktop jump slop unchanged');
+must(iso.combatJumpSlopExtra(phone) === 10, 'phone jump dodge slop +10');
+must(iso.combatJoySwipeAccepts(80, 700, 390, 844, phone) === true, 'phone left-bottom swipe is live');
+must(iso.combatJoySwipeAccepts(300, 700, 390, 844, phone) === false, 'phone right cluster stays buttons');
+must(iso.combatJoySwipeAccepts(80, 100, 390, 844, phone) === false, 'phone upper playfield is not a pad');
+must(iso.combatJoySwipeAccepts(80, 400, 1280, 800, desk) === false, 'desktop has no extra swipe pad');
+
 /* ---- buildLevel with explicit viewports (full bundle) ---- */
 if (!built) fail('game.js missing — run npm run build first');
 
@@ -165,7 +196,9 @@ const byId = new Map();
 const get = (id) => { if (!byId.has(id)) byId.set(id, makeEl(id)); return byId.get(id); };
 [
   'menuScreen', 'levelScreen', 'gambleScreen', 'game', 'toastHost', 'pauseBtn',
-  'resultScreen', 'pauseScreen', 'settingsScreen',
+  'resultScreen', 'pauseScreen', 'settingsScreen', 'buildingsScreen',
+  'btnAdventure', 'btnContinue', 'btnTraining', 'pauseResume', 'pauseQuit',
+  'resAgain', 'resNext', 'resMenu',
 ].forEach(get);
 get('menuScreen').classList.add('active');
 
@@ -251,6 +284,25 @@ console.log('BUILDLEVEL', {
   lv12: { deskBudget, phoneBudget, waves: deskLv.waves.length, deskW0: deskLv.waves[0].length, phoneW0: phoneLv.waves[0].length },
   hell20: { hellDeskN, hellPhoneN },
   lv1: { desk: lv1desk.waves.map((w) => w.length), phone: lv1phone.waves.map((w) => w.length) },
+});
+
+must(typeof ctx.applyCombatTelegraphWind === 'function', 'applyCombatTelegraphWind not in vm');
+must(typeof ctx.combatIntroHolds === 'function', 'combatIntroHolds not in vm');
+must(ctx.applyCombatTelegraphWind(0.45, { w: 1280, h: 800 }) === 0.45, 'vm desktop wind 0.45');
+must(ctx.applyCombatTelegraphWind(0.20, { w: 390, h: 844 }) === 0.38, 'vm phone enrage floor 0.38');
+must(ctx.combatChargeTeleDist(240, { w: 390, h: 844 }) <= Math.round(390 * 0.42), 'vm phone charge on-screen');
+must(ctx.combatIntroHolds({ w: 390, h: 844 }) === true, 'vm phone intro holds');
+must(ctx.combatIntroHolds({ w: 1280, h: 800 }) === false, 'vm desktop intro does not hold');
+must(ctx.combatBannerSize(68, { w: 390, h: 844 }) === 40, 'vm phone banner cap 40');
+must(ctx.combatJumpSlopExtra({ w: 390, h: 844 }) === 10, 'vm phone jump slop');
+must(ctx.combatJoySwipeAccepts(80, 700, 390, 844, { w: 390, h: 844 }) === true, 'vm swipe pad');
+
+console.log('TELEGRAPH_390', {
+  phoneWind: ctx.applyCombatTelegraphWind(0.45, { w: 390, h: 844 }),
+  enrageFloor: ctx.applyCombatTelegraphWind(0.20, { w: 390, h: 844 }),
+  chargeDist: ctx.combatChargeTeleDist(240, { w: 390, h: 844 }),
+  introHolds: ctx.combatIntroHolds({ w: 390, h: 844 }),
+  banner: ctx.combatBannerSize(68, { w: 390, h: 844 }),
 });
 
 console.log('SMOKE_OK combat-density');
