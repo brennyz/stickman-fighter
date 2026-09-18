@@ -624,6 +624,20 @@ function buildingIslandName(world) {
   return buildingTxt('buildings.islandFallback', 'eiland {n}', { n });
 }
 
+/** Card does-line must stay ≤42 and skip rank/hopper lecture (smoke:buildings-ui doesShort). */
+function buildingClampDoesLine(line) {
+  let s = String(line == null ? '' : line).replace(/\s+/g, ' ').trim();
+  if (!s) return '';
+  s = s.replace(/Kracht rank|Power rank|hopper max/gi, '').replace(/\s+/g, ' ').trim();
+  if (s.length <= 42) return s;
+  const sep = s.lastIndexOf(' · ');
+  if (sep >= 8 && sep <= 42) return s.slice(0, sep).trim();
+  let cut = s.slice(0, 42);
+  const sp = cut.lastIndexOf(' ');
+  if (sp >= 10) cut = cut.slice(0, sp);
+  return cut.replace(/[·,\-–:]+$/g, '').trim();
+}
+
 function buildingWalletModel(st) {
   const s = ensureBuildingSave(st);
   if (s) buildingTickAll(s);
@@ -723,7 +737,7 @@ function buildingDescModel(id, st) {
       blurb: buildingPowerBlurb(currentPower),
     })
     : buildingTxt('buildings.desc.powerNone', 'Bouw voor kracht');
-  const doesLine = !tip.unlocked
+  const doesLineRaw = !tip.unlocked
     ? unlockLine
     : !tip.built
       ? buildingTxt('buildings.desc.doesUnbuilt', '{res} · bouw', { res: tip.resourceName })
@@ -732,6 +746,8 @@ function buildingDescModel(id, st) {
         n: tip.outputRate,
         power: currentPower ? buildingPowerLabel(currentPower) : '—',
       });
+  const doesLine = buildingClampDoesLine(doesLineRaw);
+  const doesShort = doesLine;
   let nextLine = '';
   if (tip.built && tip.level < tip.maxLevel) {
     const nextLv = tip.level + 1;
@@ -769,6 +785,7 @@ function buildingDescModel(id, st) {
     produceLine,
     powerLine,
     doesLine,
+    doesShort,
     unlockLine,
     nextLine,
     islandName,
@@ -864,6 +881,7 @@ try {
     globalThis.BUILDING_BY_ID = BUILDING_BY_ID;
     globalThis.buildingResourceIds = buildingResourceIds;
     globalThis.buildingDescModel = buildingDescModel;
+    globalThis.buildingClampDoesLine = buildingClampDoesLine;
     globalThis.buildingWalletModel = buildingWalletModel;
     globalThis.buildingArtSrc = buildingArtSrc;
     globalThis.buildingCostLabel = buildingCostLabel;

@@ -36,9 +36,32 @@ function buildingsDesc(id, view) {
   return null;
 }
 
+function buildingsClampDoes(line) {
+  if (typeof buildingClampDoesLine === 'function') return buildingClampDoesLine(line);
+  let s = String(line == null ? '' : line).replace(/\s+/g, ' ').trim();
+  if (s.length <= 42 && !/Kracht rank|Power rank|hopper max/i.test(s)) return s;
+  s = s.replace(/Kracht rank|Power rank|hopper max/gi, '').replace(/\s+/g, ' ').trim();
+  if (s.length <= 42) return s;
+  const sep = s.lastIndexOf(' · ');
+  if (sep >= 8 && sep <= 42) return s.slice(0, sep).trim();
+  let cut = s.slice(0, 42);
+  const sp = cut.lastIndexOf(' ');
+  if (sp >= 10) cut = cut.slice(0, sp);
+  return cut.replace(/[·,\-–:]+$/g, '').trim();
+}
+
 function buildingsDoesLine(view) {
   const desc = buildingsDesc(view && view.id, view) || view || {};
-  return desc.doesLine || view.doesLine || view.sub || view.blurb || '';
+  return buildingsClampDoes(desc.doesShort || desc.doesLine || view.doesLine || view.sub || view.blurb || '');
+}
+
+function buildingsWalletChipLabel(row) {
+  const id = row && row.id;
+  if (id) {
+    const short = buildingsTxt('buildings.resShort.' + id, '');
+    if (short && short !== 'buildings.resShort.' + id) return short;
+  }
+  return (row && (row.label || row.name)) || id || '';
 }
 
 function buildingsWalletSnap() {
@@ -650,14 +673,13 @@ if (typeof UI === 'object' && UI) {
       const hintHtml = hint ? '<span class="' + hintCls + '">' + buildingsEscape(hint) + '</span>' : '';
       return '<span class="buildings-wallet-chip buildings-wallet-pill' + flash + (full ? ' is-full' : '') + '" data-res="' + buildingsEscape(row.id)
         + '" data-res-id="' + buildingsEscape(row.id) + '">'
-        + '<span class="buildings-wallet-lbl buildings-wallet-name">' + buildingsEscape(row.label) + '</span>'
+        + '<span class="buildings-wallet-lbl buildings-wallet-name">' + buildingsEscape(buildingsWalletChipLabel(row)) + '</span>'
         + '<span class="buildings-wallet-amt">' + buildingsEscape(buildingsFmtAmt(row.amount)) + '</span>'
         + hintHtml + '</span>';
     });
     walletEl.classList.add('buildings-wallet');
-    walletEl.innerHTML =
-      '<div class="buildings-wallet-pc-line">' + chips[0] + '</div>'
-      + '<div class="buildings-wallet-row">' + pills.join('') + '</div>';
+    walletEl.setAttribute('data-wallet-labeled', '1');
+    walletEl.innerHTML = chips[0] + pills.join('');
   };
 
   UI.renderBuildings = function renderBuildings(opts) {
@@ -794,7 +816,7 @@ if (typeof UI === 'object' && UI) {
 
   UI.buildingsEffectHtml = function buildingsEffectHtml(view) {
     const desc = buildingsDesc(view && view.id, view) || view || {};
-    const does = desc.doesLine || view.doesLine || '';
+    const does = buildingsClampDoes(desc.doesShort || desc.doesLine || view.doesLine || '');
     const bits = [];
     bits.push('<div class="buildings-effect" data-buildings-effect="' + buildingsEscape(view && view.id) + '">');
     bits.push('<div class="buildings-effect-kicker">' + buildingsEscape(buildingsTxt('buildings.whatItDoes', 'Wat doet dit?')) + '</div>');
@@ -914,7 +936,7 @@ if (typeof UI === 'object' && UI) {
       + '<div class="buildings-sheet-panel" role="dialog" aria-modal="true">'
       + '<h3>' + buildingsEscape(title) + '</h3>'
       + (desc.nextLine ? '<p class="buildings-sheet-now buildings-next">' + buildingsEscape(desc.nextLine) + '</p>'
-        : (desc.doesLine ? '<p class="buildings-sheet-now">' + buildingsEscape(desc.doesLine) + '</p>' : ''))
+        : (desc.doesLine ? '<p class="buildings-sheet-now">' + buildingsEscape(buildingsClampDoes(desc.doesLine)) + '</p>' : ''))
       + '<p class="buildings-upgrade-ask buildings-sheet-why">' + buildingsEscape(atMax
         ? buildingsTxt('buildings.upgradeMax', 'Max level')
         : ask) + '</p>'
@@ -1068,6 +1090,7 @@ if (typeof UI === 'object' && UI) {
       const lv = Math.max(1, Math.floor(Number((res && res.level) != null ? res.level : (after && after.level)) || 1));
       const short = buildingsShortName(id, after);
       const msg = buildingsTxt('buildings.upgradeOkShort', '{short} · Lv {lv}', { short, lv });
+      try { this.clearToasts(); } catch (_) {}
       try { this.toast(msg, 2000, { tone: 'ok' }); } catch (_) {}
       this.buildingsStep = 'harvest';
       if (this._buildingsSheetFrom === 'list') {

@@ -74,6 +74,9 @@ must(ui.includes('doBuildingCollect') && ui.includes('doBuildingUpgrade'), 'miss
 must(ui.includes('buildingsShowDetail') && ui.includes('buildingsShowList'), 'list→detail flow missing');
 must(ui.includes('buildingsShowUpgradeStep'), 'upgrade must be a separate step');
 must(ui.includes('paintBuildingsWallet'), 'wallet painter missing');
+must(ui.includes('buildingsWalletChipLabel') || ui.includes('resShort'), 'wallet chips must stay labeled');
+must(/resShort/.test(i18n), 'i18n missing buildings.resShort wallet labels');
+must(ui.includes('buildingsClampDoes') || ui.includes('buildingClampDoesLine'), 'does-line clamp missing');
 must(ui.includes('whatItDoes') || ui.includes('buildingsEffectHtml'), 'power/effect copy missing');
 must(ui.includes('data-factory-id'), 'rows must bind data-factory-id');
 must(ui.includes('data-buildings-collect'), 'one-tap collect pill missing');
@@ -188,6 +191,10 @@ async function runBrowser() {
       const factoryIds = list ? [...list.querySelectorAll('[data-factory-id]')].map((r) => r.getAttribute('data-factory-id')) : [];
       const wallet = document.getElementById('buildingsWallet');
       const chips = wallet ? [...wallet.querySelectorAll('[data-res]')].map((c) => c.getAttribute('data-res')) : [];
+      const walletLbls = wallet ? [...wallet.querySelectorAll('.buildings-wallet-lbl, .buildings-wallet-name')]
+        .map((el) => (el.textContent || '').trim()) : [];
+      const walletLabeled = walletLbls.length >= 6
+        && walletLbls.every((s) => s.length >= 2 && !/^[·•.\s]+$/.test(s));
       const doesLines = list ? [...list.querySelectorAll('.buildings-card-does')].map((el) => (el.textContent || '').trim()) : [];
       const emptyStart = document.querySelector('[data-buildings-empty]');
       const emptyStartOn = !!(emptyStart && (emptyStart.textContent || '').trim());
@@ -384,7 +391,7 @@ async function runBrowser() {
           && collected && flash && upgradeConfirm && collectStaysOnSheet && backToList
           && sheet && sheetOpen && sheetClose && usesArt && usesDesc && usesWallet
           && overviewPills.length === 5 && hasDoes && detailDoes && detailPill
-          && hopperFull && walletFull && capToast && noCollectRace && doesShort
+          && hopperFull && walletFull && capToast && noCollectRace && doesShort && walletLabeled
           && echoPlayLocked && echoOpen
           && versusGone
           && apiLive
@@ -396,6 +403,9 @@ async function runBrowser() {
         ids,
         factoryIds,
         chips,
+        walletLabeled,
+        walletLbls,
+        doesLines,
         lighterLocked,
         echoLocked,
         echoOpen,

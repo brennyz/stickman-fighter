@@ -91,7 +91,7 @@ When `BUILDING_IDS` + `buildingCollect` are present, the HOME screen binds that 
 1. Open `speel.html` → SPELEN → HOME (`index.html`).
 2. After Avontuur / Arcade / Collectie, tap **Fabrieken / Buildings**.
 3. Portrait starts on the **list** (5 factories: Stick-Lighter … Echo-Whistle Mill). Stick-Lighter is unlocked; others lock until that island is open.
-4. Wallet chips under the title always show **PC + Vonken / Lijm / Snippers / Stoom / Echo** (readable amounts, including 0).
+4. Wallet chips under the title always show **labeled** PC + Vonk / Lijm / Chip / Stoom / Echo (readable amounts, including 0). At 390px the six chips sit in a 3×2 grid — never unlabeled dots.
 5. Tap a factory → **detail**: does-line + produce/power, hopper, **collect pill**. Upgrade… opens the sheet — not a twin collect button.
 6. One-tap pill credits spark / glue / chip / steam / echo; toast `+N` and the matching wallet pill flashes `+N`. Hopper at cap: gold **VOL** on pill + wallet (rate paused) and toast `+N · hopper vol (cap)`. Empty collect never opens detail (no double-tap race).
 7. First open (nothing built): one-line **empty start** — `Stok-Aansteker is open — tik Bouw (20 PC)` / EN `Lighter is open — tap Build (20 PC)`. Tap opens stick_lighter. No wall of text.
@@ -117,6 +117,7 @@ FOMO Vandaag vs HOME toast dock at 390 is **#322** (`cursor/fomo-vandaag-home-d4
 | done | openBuildings clears toasts (welcome vs title) |
 | done | Collect-all single centered label (no “all ready” subtitle) |
 | done | First-build sheet `buildTitle` + `pillBuild` (not Upgrade/Bevestig) |
+| done | MM-003: 390 wallet labeled (`resShort`); does-lines ≤42; upgrade toast `upgradeOkShort` (clears queue) |
 | other lane | FOMO sheet / HOME dock → #322 |
 
 Share / playtest stays **`speel.html`**. No Versus. No `origin/main` until user says «merge main».
