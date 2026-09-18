@@ -32,6 +32,8 @@ const built = fs.existsSync(path.join(root, 'game.js'))
 must(manifest.includes('src/systems/combat-density.js'), 'manifest missing combat-density.js');
 must(/function combatDensityProfile\(/.test(densSrc), 'combatDensityProfile missing');
 must(/function adventureSpawnCadence\(/.test(densSrc), 'adventureSpawnCadence missing');
+must(/function combatSmoothOpenInterval\(/.test(densSrc), 'combatSmoothOpenInterval missing');
+must(/function combatPreferStrike\(/.test(densSrc), 'combatPreferStrike missing');
 must(/function scaleAdventurePerWave\(/.test(densSrc), 'scaleAdventurePerWave missing');
 must(/COMBAT_DENSITY_MIN = 0\.60/.test(densSrc), 'phone floor must stay 0.60 (still a horde)');
 must(/COMBAT_DENSITY_WIDE_W = 960/.test(densSrc), 'wide-screen lock missing');
@@ -71,6 +73,13 @@ must(/combatMeleeAimLift\(/.test(fs.readFileSync(path.join(root, 'src/systems/in
   'melee aim-up must use combatMeleeAimLift');
 must(/combatPartGateWalkSec\(/.test(fs.readFileSync(path.join(root, 'src/game/game.js'), 'utf8')),
   'part-gate hold must use combatPartGateWalkSec');
+must(/combatSmoothOpenInterval\(/.test(gameSrc), 'nextWave / spawn must clamp compact opener');
+must(/combatOpenerHold\(/.test(gameSrc), 'initAdventure must use compact opener hold');
+must(/combatSpawnEdgeX\(/.test(gameSrc), 'spawn must use combatSpawnEdgeX');
+must(/combatPreferStrike\(/.test(fs.readFileSync(path.join(root, 'src/systems/input.js'), 'utf8')),
+  'onDown must prefer punch/kick near the joy pad');
+must(/claimTouchStrike\(/.test(fs.readFileSync(path.join(root, 'src/systems/input.js'), 'utf8')),
+  'claimTouchStrike helper missing');
 must(!/if \(advTele\) break/.test(fs.readFileSync(path.join(root, 'src/game/game.js'), 'utf8')),
   'HUD must not break on the first telegraph');
 must(!/applyCombatTelegraphWind/.test(versusSrc), 'versus.js must not use telegraph density');
@@ -191,6 +200,39 @@ must(iso.combatJoySwipeAccepts(80, 700, 390, 844, phone) === true, 'phone left-b
 must(iso.combatJoySwipeAccepts(300, 700, 390, 844, phone) === false, 'phone right cluster stays buttons');
 must(iso.combatJoySwipeAccepts(80, 100, 390, 844, phone) === false, 'phone upper playfield is not a pad');
 must(iso.combatJoySwipeAccepts(80, 400, 1280, 800, desk) === false, 'desktop has no extra swipe pad');
+must(iso.combatJoySwipeAccepts(150, 700, 390, 844, phone) === false, 'old 42% swipe band no longer steals mid-strip');
+must(iso.combatJoySwipeAccepts(80, 500, 390, 844, phone) === false, 'swipe starts lower (y>62%) so kick near-misses stay strikes');
+
+const phoneOpenRaw = iso.adventureSpawnCadence(2, true, false, 1.55, phone);
+const phoneOpenSmooth = iso.adventureSpawnCadence(2, true, false, 1.55, phone, 0);
+const deskOpen = iso.adventureSpawnCadence(2, true, false, 1.55, desk, 0);
+must(phoneOpenRaw.interval > 2.0, 'raw compact opener is the empty-then-spike (~2.58s)', phoneOpenRaw);
+must(phoneOpenSmooth.interval >= 0.70 && phoneOpenSmooth.interval <= 1.12,
+  'first 30s compact opener clamp 0.70–1.12', phoneOpenSmooth);
+must(Math.abs(deskOpen.interval - (0.78 * 1.55 * 1.55)) < 1e-9, 'desktop opener interval stays raw', deskOpen);
+const phoneSpike = iso.adventureSpawnCadence(4, false, false, 1, phone, 5);
+must(phoneSpike.interval >= 0.70 && phoneSpike.interval <= 1.12, 'first 30s wave-2 dump clamped', phoneSpike);
+const phoneLate = iso.adventureSpawnCadence(4, false, false, 1, phone, 31);
+must(Math.abs(phoneLate.interval - (0.38 * 1.38)) < 1e-9, 'after 30s compact cadence is raw ×1.38', phoneLate);
+must(iso.combatOpenerHold(0, desk) === 1.2, 'desktop start hold 1.2');
+must(iso.combatOpenerHold(0, phone) === 0.55, 'phone first-30s hold 0.55');
+must(iso.combatOpenerHold(31, phone) === 1.2, 'phone after 30s hold back to 1.2');
+must(iso.combatSpawnEdgeX(1, desk) === 1280 + 40, 'desktop spawn edge W+40');
+must(iso.combatSpawnEdgeX(1, phone) === 390 + 18, 'phone spawn edge W+18');
+must(iso.combatSpawnEdgeX(-1, phone) === -18, 'phone left spawn -18');
+must(iso.combatSmoothOpenInterval(2.58, 0, desk) === 2.58, 'desktop smooth is a no-op');
+
+const kickBtn = { id: 'kick', x: 268, y: 800, r: 24 };
+const punchBtn = { id: 'punch', x: 322, y: 800, r: 24 };
+const joyHome = { x: 64, y: 800 };
+const nearKick = iso.combatPreferStrike(230, 800, [kickBtn, punchBtn], joyHome, phone);
+must(nearKick && nearKick.id === 'kick', 'near-miss left of kick is a strike', nearKick);
+must(iso.combatPreferStrike(80, 800, [kickBtn, punchBtn], joyHome, phone) === null,
+  'tap on the joy home is not a strike');
+must(iso.combatPreferStrike(230, 800, [kickBtn, punchBtn], joyHome, desk) === null,
+  'desktop has no prefer-strike');
+must(!/combatPreferStrike/.test(versusSrc), 'versus.js must not use prefer-strike');
+must(!/combatSmoothOpenInterval/.test(versusSrc), 'versus.js must not use opener clamp');
 
 must(iso.combatColossalSizeMul(desk) === 2, 'desktop colossal mul stays 2.0');
 must(iso.combatColossalSizeMul(phone) === 1.38, 'phone colossal mul 1.38 (still huge)');
@@ -411,6 +453,13 @@ must(ctx.combatFlyerHover(110, { w: 844, h: 390 }) < 110, 'vm short flyer lower'
 must(ctx.combatMeleeAimLift({ w: 844, h: 390 }) === 104, 'vm short melee lift');
 must(ctx.combatPartGateWalkSec({ w: 390, h: 844 }) === 2.2, 'vm phone gate 2.2');
 must(ctx.combatPartGateWalkSec({ w: 1280, h: 800 }) === 3.35, 'vm desktop gate 3.35');
+must(typeof ctx.combatSmoothOpenInterval === 'function', 'combatSmoothOpenInterval not in vm');
+must(ctx.combatSmoothOpenInterval(2.58, 0, { w: 390, h: 844 }) <= 1.12, 'vm phone opener clamp');
+must(ctx.combatSmoothOpenInterval(2.58, 0, { w: 1280, h: 800 }) === 2.58, 'vm desktop opener raw');
+must(ctx.combatOpenerHold(0, { w: 390, h: 844 }) === 0.55, 'vm phone hold 0.55');
+must(ctx.combatSpawnEdgeX(1, { w: 390, h: 844 }) === 408, 'vm phone edge 408');
+must(ctx.combatPreferStrike(230, 800, [{ id: 'kick', x: 268, y: 800, r: 24 }], { x: 64, y: 800 }, { w: 390, h: 844 }),
+  'vm prefer-strike claims near-miss kick');
 
 console.log('TELEGRAPH_390', {
   phoneWind: ctx.applyCombatTelegraphWind(0.45, { w: 390, h: 844 }),
@@ -455,6 +504,15 @@ console.log('COLOSSAL_390', {
   phoneLane: ctx.combatColossalFairLane(phoneFit, { w: 390, h: 844 }),
   deskFit: ctx.combatFitBossSize(168, { w: 1280, h: 800 }),
   colossalWind: ctx.applyCombatTelegraphWind(0.45, { w: 390, h: 844 }, { colossal: true }),
+});
+
+console.log('OPENER_STRIKE_390', {
+  phoneOpenSmooth: ctx.adventureSpawnCadence(2, true, false, 1.55, { w: 390, h: 844 }, 0).interval,
+  deskOpen: ctx.adventureSpawnCadence(2, true, false, 1.55, { w: 1280, h: 800 }, 0).interval,
+  phoneHold: ctx.combatOpenerHold(0, { w: 390, h: 844 }),
+  phoneEdge: ctx.combatSpawnEdgeX(1, { w: 390, h: 844 }),
+  swipe34: ctx.combatJoySwipeAccepts(80, 700, 390, 844, { w: 390, h: 844 }),
+  swipeOld42: ctx.combatJoySwipeAccepts(150, 700, 390, 844, { w: 390, h: 844 }),
 });
 
 console.log('SMOKE_OK combat-density');

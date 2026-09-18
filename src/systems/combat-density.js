@@ -124,18 +124,63 @@ function adventureMaxAliveNow(profile) {
   return profile.maxAlive || combatDensityTouchCeil();
 }
 
+const COMBAT_OPEN_SEC = 30;
+const COMBAT_OPEN_MIN = 0.70;
+const COMBAT_OPEN_MAX = 1.12;
+const COMBAT_OPEN_HOLD_COMPACT = 0.55;
+const COMBAT_OPEN_HOLD_DESK = 1.2;
+const COMBAT_SPAWN_EDGE_COMPACT = 18;
+const COMBAT_SPAWN_EDGE_DESK = 40;
+
+/**
+ * First 30s on compact: clamp stacked muls so wave 1 is not 2.6s empty
+ * and wave 2 is not a 0.52s dump. Desktop intervals stay raw.
+ */
+function combatSmoothOpenInterval(raw, elapsedSec, profile) {
+  const n = Number(raw);
+  if (!(n > 0)) return n;
+  profile = asCombatProfile(profile);
+  if (!profile.compact) return n;
+  const t = Number(elapsedSec);
+  if (!(t < COMBAT_OPEN_SEC)) return n;
+  return combatDensityClamp(n, COMBAT_OPEN_MIN, COMBAT_OPEN_MAX);
+}
+
+/** Compact first-30s wave hold. Desktop / after 30s stay 1.2s. */
+function combatOpenerHold(elapsedSec, profile) {
+  profile = asCombatProfile(profile);
+  if (!profile.compact) return COMBAT_OPEN_HOLD_DESK;
+  const t = Number(elapsedSec);
+  if (!(t < COMBAT_OPEN_SEC)) return COMBAT_OPEN_HOLD_DESK;
+  return COMBAT_OPEN_HOLD_COMPACT;
+}
+
+function combatSpawnEdgeOff(profile) {
+  profile = asCombatProfile(profile);
+  return profile.compact ? COMBAT_SPAWN_EDGE_COMPACT : COMBAT_SPAWN_EDGE_DESK;
+}
+
+/** Compact: spawn closer to the strip so the first walker is on-screen sooner. */
+function combatSpawnEdgeX(side, profile) {
+  profile = asCombatProfile(profile);
+  const off = combatSpawnEdgeOff(profile);
+  return side > 0 ? (profile.w + off) : -off;
+}
+
 /** Cadence used by Adventure spawn loop. Desktop profile == legacy 0.38 / batch 3 / gap 32. */
-function adventureSpawnCadence(queueLeft, opener, bossWave, spawnMul, profile) {
-  profile = profile || combatDensityProfile();
+function adventureSpawnCadence(queueLeft, opener, bossWave, spawnMul, profile, elapsedSec) {
+  profile = asCombatProfile(profile);
   const batchWish = opener ? 1 : (queueLeft > 28 ? 3 : queueLeft > 14 ? 2 : 1);
   const batch = Math.max(1, Math.min(batchWish, profile.spawnBatchMax || 3));
   const pace = opener ? 1.55 : (queueLeft > 20 ? 0.72 : queueLeft > 10 ? 0.86 : 1);
   const base = bossWave ? 0.92 : (opener ? 0.78 : 0.38);
-  const interval = base * (spawnMul || 1) * pace * (profile.spawnIntervalMul || 1);
+  let interval = base * (spawnMul || 1) * pace * (profile.spawnIntervalMul || 1);
+  interval = combatSmoothOpenInterval(interval, elapsedSec, profile);
   return {
     batch: opener ? 1 : batch,
     interval,
     gapPx: profile.spawnGapPx || 32,
+    edgePx: combatSpawnEdgeOff(profile),
   };
 }
 
@@ -197,6 +242,7 @@ function combatJumpSlopExtra(profile) {
 /**
  * 1P compact: left-bottom playfield is a swipe/move pad so empty space after
  * a thinner horde is not a dead zone. Dual/Versus stays out.
+ * Tightened to 34% × below 62% so the band does not steal punch/kick near-misses.
  */
 function combatJoySwipeAccepts(x, y, w, h, profile) {
   profile = asCombatProfile(profile || { w: w, h: h });
@@ -204,7 +250,36 @@ function combatJoySwipeAccepts(x, y, w, h, profile) {
   if (typeof Input !== 'undefined' && Input && Input.dualMode) return false;
   const W0 = w > 0 ? w : profile.w;
   const H0 = h > 0 ? h : profile.h;
-  return x < W0 * 0.42 && y > H0 * 0.55;
+  return x < W0 * 0.34 && y > H0 * 0.62;
+}
+
+/**
+ * Punch/kick win the ambiguous band between the joy pad and the right cluster.
+ * Desktop / dual: no extra claim (legacy hit slop only).
+ */
+function combatPreferStrike(x, y, buttons, joyHome, profile) {
+  profile = asCombatProfile(profile);
+  if (!profile.compact) return null;
+  if (typeof Input !== 'undefined' && Input && Input.dualMode) return null;
+  const extra = 32;
+  const list = buttons || [];
+  let best = null;
+  let bestD = Infinity;
+  for (let i = 0; i < list.length; i++) {
+    const b = list[i];
+    if (!b || (b.id !== 'punch' && b.id !== 'kick')) continue;
+    const d = Math.hypot(x - b.x, y - b.y);
+    if (d <= (Number(b.r) || 24) + extra && d < bestD) {
+      bestD = d;
+      best = b;
+    }
+  }
+  if (!best) return null;
+  const jx = joyHome && Number.isFinite(Number(joyHome.x)) ? Number(joyHome.x) : 64;
+  const jy = joyHome && Number.isFinite(Number(joyHome.y)) ? Number(joyHome.y) : profile.h - 80;
+  const joyD = Math.hypot(x - jx, y - jy);
+  if (bestD + 8 <= joyD) return best;
+  return null;
 }
 
 const COMBAT_ENRAGE_WALK_BASE = 1.32;

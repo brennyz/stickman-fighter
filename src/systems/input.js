@@ -352,6 +352,24 @@ function nearAnyTouchButton(buttons, x, y, extra) {
   return false;
 }
 
+/** Compact 1P: near-miss punch/kick beats the joy pad. Dual/desktop: no-op. */
+function claimTouchStrike(pad, x, y) {
+  if (typeof combatPreferStrike !== 'function') return null;
+  return combatPreferStrike(x, y, (pad && pad.buttons) || [], (pad && pad.joyHome) || null);
+}
+
+function pressTouchButton(pad, b, id) {
+  if (!pad || !b) return false;
+  if (b.held) return true;
+  pad.btnPointers[id] = b.id;
+  b.held = true;
+  b.pressVis = 1;
+  b._pressSyncAt = (typeof performance !== 'undefined' && performance.now) ? performance.now() : Date.now();
+  pad.press(b.id);
+  try { if (typeof haptic === 'function') haptic(6); } catch (_) {}
+  return true;
+}
+
 const TOUCH_BTN_META = {
   punch: { label: '\u{1F44A}', color: '#e24a36' },
   kick: { label: '\u{1F9B6}', color: '#2d8ae6' },
@@ -982,16 +1000,9 @@ function makePad(side) {
       if (this.activePointers.size >= MAX_PAD_POINTERS && !this.activePointers.has(id)) return false;
       this.activePointers.add(id);
       if (dual) this.pointerPads[id] = this.side;
-      const b = this.hitButton(x, y);
+      const b = this.hitButton(x, y) || claimTouchStrike(this, x, y);
       if (b) {
-        if (b.held) return true;
-        this.btnPointers[id] = b.id;
-        b.held = true;
-        b.pressVis = 1;
-        b._pressSyncAt = (typeof performance !== 'undefined' && performance.now) ? performance.now() : Date.now();
-        this.press(b.id);
-        try { if (typeof haptic === 'function') haptic(6); } catch (_) {}
-        return true;
+        return pressTouchButton(this, b, id);
       }
       if (this.joy.active && this.joy.id !== id && !this.activePointers.has(this.joy.id)) {
         this.releaseJoy();
@@ -1082,15 +1093,9 @@ Object.assign(Input, {
       }
       if (this.activePointers.size >= MAX_PAD_POINTERS && !this.activePointers.has(id)) return;
       this.activePointers.add(id);
-      const b = hitTouchButton(this.buttons, x, y);
+      const b = hitTouchButton(this.buttons, x, y) || claimTouchStrike(this, x, y);
       if (b) {
-        if (b.held) return;
-        this.btnPointers[id] = b.id;
-        b.held = true;
-        b.pressVis = 1;
-        b._pressSyncAt = (typeof performance !== 'undefined' && performance.now) ? performance.now() : Date.now();
-        this.press(b.id);
-        try { if (typeof haptic === 'function') haptic(6); } catch (_) {}
+        pressTouchButton(this, b, id);
         return;
       }
       if (!pointInJoyZone(this, x, y)) {

@@ -323,9 +323,9 @@ const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const VERSION_UPDATE_SAVE_KEY = 'stickfighter_version_update_save_v1';
 const VERSION_UPDATE_FLAG_KEY = 'stickfighter_version_update_flag_v1';
 const SAVE_EXPORT_SCHEMA = 3;
-const APP_VERSION = '1.18.178';
+const APP_VERSION = '1.18.179';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 388;
+const SW_CACHE_REV = 389;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', petCoins: 0, dex: {}, summons: {}, pets: {}, activePet: null,
   eggPets: {}, activeEggPet: null, eggDaily: null,
   chestDaily: null, chestWeapons: {},
@@ -28944,6 +28944,24 @@ function nearAnyTouchButton(buttons, x, y, extra) {
   return false;
 }
 
+/** Compact 1P: near-miss punch/kick beats the joy pad. Dual/desktop: no-op. */
+function claimTouchStrike(pad, x, y) {
+  if (typeof combatPreferStrike !== 'function') return null;
+  return combatPreferStrike(x, y, (pad && pad.buttons) || [], (pad && pad.joyHome) || null);
+}
+
+function pressTouchButton(pad, b, id) {
+  if (!pad || !b) return false;
+  if (b.held) return true;
+  pad.btnPointers[id] = b.id;
+  b.held = true;
+  b.pressVis = 1;
+  b._pressSyncAt = (typeof performance !== 'undefined' && performance.now) ? performance.now() : Date.now();
+  pad.press(b.id);
+  try { if (typeof haptic === 'function') haptic(6); } catch (_) {}
+  return true;
+}
+
 const TOUCH_BTN_META = {
   punch: { label: '\u{1F44A}', color: '#e24a36' },
   kick: { label: '\u{1F9B6}', color: '#2d8ae6' },
@@ -29574,16 +29592,9 @@ function makePad(side) {
       if (this.activePointers.size >= MAX_PAD_POINTERS && !this.activePointers.has(id)) return false;
       this.activePointers.add(id);
       if (dual) this.pointerPads[id] = this.side;
-      const b = this.hitButton(x, y);
+      const b = this.hitButton(x, y) || claimTouchStrike(this, x, y);
       if (b) {
-        if (b.held) return true;
-        this.btnPointers[id] = b.id;
-        b.held = true;
-        b.pressVis = 1;
-        b._pressSyncAt = (typeof performance !== 'undefined' && performance.now) ? performance.now() : Date.now();
-        this.press(b.id);
-        try { if (typeof haptic === 'function') haptic(6); } catch (_) {}
-        return true;
+        return pressTouchButton(this, b, id);
       }
       if (this.joy.active && this.joy.id !== id && !this.activePointers.has(this.joy.id)) {
         this.releaseJoy();
@@ -29674,15 +29685,9 @@ Object.assign(Input, {
       }
       if (this.activePointers.size >= MAX_PAD_POINTERS && !this.activePointers.has(id)) return;
       this.activePointers.add(id);
-      const b = hitTouchButton(this.buttons, x, y);
+      const b = hitTouchButton(this.buttons, x, y) || claimTouchStrike(this, x, y);
       if (b) {
-        if (b.held) return;
-        this.btnPointers[id] = b.id;
-        b.held = true;
-        b.pressVis = 1;
-        b._pressSyncAt = (typeof performance !== 'undefined' && performance.now) ? performance.now() : Date.now();
-        this.press(b.id);
-        try { if (typeof haptic === 'function') haptic(6); } catch (_) {}
+        pressTouchButton(this, b, id);
         return;
       }
       if (!pointInJoyZone(this, x, y)) {
@@ -29973,18 +29978,63 @@ function adventureMaxAliveNow(profile) {
   return profile.maxAlive || combatDensityTouchCeil();
 }
 
+const COMBAT_OPEN_SEC = 30;
+const COMBAT_OPEN_MIN = 0.70;
+const COMBAT_OPEN_MAX = 1.12;
+const COMBAT_OPEN_HOLD_COMPACT = 0.55;
+const COMBAT_OPEN_HOLD_DESK = 1.2;
+const COMBAT_SPAWN_EDGE_COMPACT = 18;
+const COMBAT_SPAWN_EDGE_DESK = 40;
+
+/**
+ * First 30s on compact: clamp stacked muls so wave 1 is not 2.6s empty
+ * and wave 2 is not a 0.52s dump. Desktop intervals stay raw.
+ */
+function combatSmoothOpenInterval(raw, elapsedSec, profile) {
+  const n = Number(raw);
+  if (!(n > 0)) return n;
+  profile = asCombatProfile(profile);
+  if (!profile.compact) return n;
+  const t = Number(elapsedSec);
+  if (!(t < COMBAT_OPEN_SEC)) return n;
+  return combatDensityClamp(n, COMBAT_OPEN_MIN, COMBAT_OPEN_MAX);
+}
+
+/** Compact first-30s wave hold. Desktop / after 30s stay 1.2s. */
+function combatOpenerHold(elapsedSec, profile) {
+  profile = asCombatProfile(profile);
+  if (!profile.compact) return COMBAT_OPEN_HOLD_DESK;
+  const t = Number(elapsedSec);
+  if (!(t < COMBAT_OPEN_SEC)) return COMBAT_OPEN_HOLD_DESK;
+  return COMBAT_OPEN_HOLD_COMPACT;
+}
+
+function combatSpawnEdgeOff(profile) {
+  profile = asCombatProfile(profile);
+  return profile.compact ? COMBAT_SPAWN_EDGE_COMPACT : COMBAT_SPAWN_EDGE_DESK;
+}
+
+/** Compact: spawn closer to the strip so the first walker is on-screen sooner. */
+function combatSpawnEdgeX(side, profile) {
+  profile = asCombatProfile(profile);
+  const off = combatSpawnEdgeOff(profile);
+  return side > 0 ? (profile.w + off) : -off;
+}
+
 /** Cadence used by Adventure spawn loop. Desktop profile == legacy 0.38 / batch 3 / gap 32. */
-function adventureSpawnCadence(queueLeft, opener, bossWave, spawnMul, profile) {
-  profile = profile || combatDensityProfile();
+function adventureSpawnCadence(queueLeft, opener, bossWave, spawnMul, profile, elapsedSec) {
+  profile = asCombatProfile(profile);
   const batchWish = opener ? 1 : (queueLeft > 28 ? 3 : queueLeft > 14 ? 2 : 1);
   const batch = Math.max(1, Math.min(batchWish, profile.spawnBatchMax || 3));
   const pace = opener ? 1.55 : (queueLeft > 20 ? 0.72 : queueLeft > 10 ? 0.86 : 1);
   const base = bossWave ? 0.92 : (opener ? 0.78 : 0.38);
-  const interval = base * (spawnMul || 1) * pace * (profile.spawnIntervalMul || 1);
+  let interval = base * (spawnMul || 1) * pace * (profile.spawnIntervalMul || 1);
+  interval = combatSmoothOpenInterval(interval, elapsedSec, profile);
   return {
     batch: opener ? 1 : batch,
     interval,
     gapPx: profile.spawnGapPx || 32,
+    edgePx: combatSpawnEdgeOff(profile),
   };
 }
 
@@ -30046,6 +30096,7 @@ function combatJumpSlopExtra(profile) {
 /**
  * 1P compact: left-bottom playfield is a swipe/move pad so empty space after
  * a thinner horde is not a dead zone. Dual/Versus stays out.
+ * Tightened to 34% × below 62% so the band does not steal punch/kick near-misses.
  */
 function combatJoySwipeAccepts(x, y, w, h, profile) {
   profile = asCombatProfile(profile || { w: w, h: h });
@@ -30053,7 +30104,36 @@ function combatJoySwipeAccepts(x, y, w, h, profile) {
   if (typeof Input !== 'undefined' && Input && Input.dualMode) return false;
   const W0 = w > 0 ? w : profile.w;
   const H0 = h > 0 ? h : profile.h;
-  return x < W0 * 0.42 && y > H0 * 0.55;
+  return x < W0 * 0.34 && y > H0 * 0.62;
+}
+
+/**
+ * Punch/kick win the ambiguous band between the joy pad and the right cluster.
+ * Desktop / dual: no extra claim (legacy hit slop only).
+ */
+function combatPreferStrike(x, y, buttons, joyHome, profile) {
+  profile = asCombatProfile(profile);
+  if (!profile.compact) return null;
+  if (typeof Input !== 'undefined' && Input && Input.dualMode) return null;
+  const extra = 32;
+  const list = buttons || [];
+  let best = null;
+  let bestD = Infinity;
+  for (let i = 0; i < list.length; i++) {
+    const b = list[i];
+    if (!b || (b.id !== 'punch' && b.id !== 'kick')) continue;
+    const d = Math.hypot(x - b.x, y - b.y);
+    if (d <= (Number(b.r) || 24) + extra && d < bestD) {
+      bestD = d;
+      best = b;
+    }
+  }
+  if (!best) return null;
+  const jx = joyHome && Number.isFinite(Number(joyHome.x)) ? Number(joyHome.x) : 64;
+  const jy = joyHome && Number.isFinite(Number(joyHome.y)) ? Number(joyHome.y) : profile.h - 80;
+  const joyD = Math.hypot(x - jx, y - jy);
+  if (bestD + 8 <= joyD) return best;
+  return null;
 }
 
 const COMBAT_ENRAGE_WALK_BASE = 1.32;
@@ -40663,7 +40743,7 @@ class Game {
     this.spawnQueue = [];
     this.spawnTimer = 0;
     this.kills = 0;
-    this.betweenT = 1.2;
+    this.betweenT = (typeof combatOpenerHold === 'function') ? combatOpenerHold(0) : 1.2;
     this.pickups = this.pickups || [];
     this.worldX = 0;
     this.traveling = false;
@@ -40835,7 +40915,9 @@ class Game {
     this.spawnQueue = wave.slice();
     this.waveTotal = wave.length;
     const densStart = (typeof combatDensityProfile === 'function') ? combatDensityProfile() : null;
-    this.spawnTimer = (bossWave ? 1.0 : 0.45) * ((densStart && densStart.spawnIntervalMul) || 1);
+    let startT = (bossWave ? 1.0 : 0.45) * ((densStart && densStart.spawnIntervalMul) || 1);
+    if (typeof combatSmoothOpenInterval === 'function') startT = combatSmoothOpenInterval(startT, this.t);
+    this.spawnTimer = startT;
     this.wavePause = 0;
     if (this.stageShieldPerWave > 0 && this.player) {
       this.playerShieldT = Math.max(this.playerShieldT, this.stageShieldPerWave);
@@ -41185,19 +41267,25 @@ class Game {
         const queueLeft = this.spawnQueue.length;
         const opener = this.level && this.level.n <= 2 && this.waveIdx === 0;
         const dens = (typeof adventureSpawnCadence === 'function')
-          ? adventureSpawnCadence(queueLeft, opener, bossWave, spawnMul)
+          ? adventureSpawnCadence(queueLeft, opener, bossWave, spawnMul, null, this.t)
           : null;
         const batch = opener ? 1 : (dens ? dens.batch : (queueLeft > 28 ? 3 : queueLeft > 14 ? 2 : 1));
         const intervalMul = opener ? 1.55 : (queueLeft > 20 ? 0.72 : queueLeft > 10 ? 0.86 : 1);
-        this.spawnTimer = dens
+        let nextT = dens
           ? dens.interval
           : (bossWave ? 0.92 : (opener ? 0.78 : 0.38)) * spawnMul * intervalMul;
+        if (!dens && typeof combatSmoothOpenInterval === 'function') {
+          nextT = combatSmoothOpenInterval(nextT, this.t);
+        }
+        this.spawnTimer = nextT;
         const gapPx = (dens && dens.gapPx) || 32;
         for (let b = 0; b < batch && this.spawnQueue.length && this.monsters.filter((m) => m.alive).length < aliveCap; b++) {
           const def = this.spawnQueue.shift();
           if (!def || !def.sp || !SPECIES[def.sp]) continue;
           const side = Math.random() < 0.75 ? 1 : -1;
-          const x = (side > 0 ? W + 40 : -40) + b * side * gapPx;
+          const x = ((typeof combatSpawnEdgeX === 'function')
+            ? combatSpawnEdgeX(side)
+            : (side > 0 ? W + 40 : -40)) + b * side * gapPx;
           const mon = new Monster(def.sp, x, this, {
             elite: !!(def.elite || def.superBoss),
             superBoss: !!def.superBoss,
@@ -54167,6 +54255,10 @@ function bootGame() {
       profile: combatDensityProfile,
       maxAlive: adventureMaxAliveNow,
       cadence: adventureSpawnCadence,
+      smoothOpen: combatSmoothOpenInterval,
+      openerHold: combatOpenerHold,
+      spawnEdgeX: combatSpawnEdgeX,
+      preferStrike: combatPreferStrike,
       perWave: scaleAdventurePerWave,
       telegraphWind: applyCombatTelegraphWind,
       chargeDist: combatChargeTeleDist,

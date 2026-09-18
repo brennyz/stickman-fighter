@@ -251,7 +251,7 @@ class Game {
     this.spawnQueue = [];
     this.spawnTimer = 0;
     this.kills = 0;
-    this.betweenT = 1.2;
+    this.betweenT = (typeof combatOpenerHold === 'function') ? combatOpenerHold(0) : 1.2;
     this.pickups = this.pickups || [];
     this.worldX = 0;
     this.traveling = false;
@@ -423,7 +423,9 @@ class Game {
     this.spawnQueue = wave.slice();
     this.waveTotal = wave.length;
     const densStart = (typeof combatDensityProfile === 'function') ? combatDensityProfile() : null;
-    this.spawnTimer = (bossWave ? 1.0 : 0.45) * ((densStart && densStart.spawnIntervalMul) || 1);
+    let startT = (bossWave ? 1.0 : 0.45) * ((densStart && densStart.spawnIntervalMul) || 1);
+    if (typeof combatSmoothOpenInterval === 'function') startT = combatSmoothOpenInterval(startT, this.t);
+    this.spawnTimer = startT;
     this.wavePause = 0;
     if (this.stageShieldPerWave > 0 && this.player) {
       this.playerShieldT = Math.max(this.playerShieldT, this.stageShieldPerWave);
@@ -773,19 +775,25 @@ class Game {
         const queueLeft = this.spawnQueue.length;
         const opener = this.level && this.level.n <= 2 && this.waveIdx === 0;
         const dens = (typeof adventureSpawnCadence === 'function')
-          ? adventureSpawnCadence(queueLeft, opener, bossWave, spawnMul)
+          ? adventureSpawnCadence(queueLeft, opener, bossWave, spawnMul, null, this.t)
           : null;
         const batch = opener ? 1 : (dens ? dens.batch : (queueLeft > 28 ? 3 : queueLeft > 14 ? 2 : 1));
         const intervalMul = opener ? 1.55 : (queueLeft > 20 ? 0.72 : queueLeft > 10 ? 0.86 : 1);
-        this.spawnTimer = dens
+        let nextT = dens
           ? dens.interval
           : (bossWave ? 0.92 : (opener ? 0.78 : 0.38)) * spawnMul * intervalMul;
+        if (!dens && typeof combatSmoothOpenInterval === 'function') {
+          nextT = combatSmoothOpenInterval(nextT, this.t);
+        }
+        this.spawnTimer = nextT;
         const gapPx = (dens && dens.gapPx) || 32;
         for (let b = 0; b < batch && this.spawnQueue.length && this.monsters.filter((m) => m.alive).length < aliveCap; b++) {
           const def = this.spawnQueue.shift();
           if (!def || !def.sp || !SPECIES[def.sp]) continue;
           const side = Math.random() < 0.75 ? 1 : -1;
-          const x = (side > 0 ? W + 40 : -40) + b * side * gapPx;
+          const x = ((typeof combatSpawnEdgeX === 'function')
+            ? combatSpawnEdgeX(side)
+            : (side > 0 ? W + 40 : -40)) + b * side * gapPx;
           const mon = new Monster(def.sp, x, this, {
             elite: !!(def.elite || def.superBoss),
             superBoss: !!def.superBoss,

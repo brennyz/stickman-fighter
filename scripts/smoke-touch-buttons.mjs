@@ -140,6 +140,34 @@ async function run() {
     const kick = fire('kick');
     const weapon = fire('weapon');
 
+    // Near-miss left of kick (toward the joy) must still start a kick on 390.
+    let nearKick = { kind: null, threw: false, claimed: false };
+    try {
+      g.player.attack = null;
+      g.player.state = 'idle';
+      g.player.invulnT = 0;
+      Input.suppressUntil = 0;
+      Input.pressed = {};
+      Input.joy.active = false;
+      const kickBtn = (Input.buttons || []).find((b) => b.id === 'kick');
+      if (kickBtn) {
+        const nx = kickBtn.x - kickBtn.r - 26;
+        const ny = kickBtn.y;
+        Input.onDown(nx, ny, 760);
+        Input.onUp(760);
+        g.update(1 / 30);
+        nearKick = {
+          kind: g.player.attack && g.player.attack.kind,
+          threw: false,
+          claimed: !!(Input.pressed && Input.pressed.kick) || (g.player.attack && g.player.attack.kind === 'kick'),
+          x: Math.round(nx),
+        };
+      }
+    } catch (e) {
+      note('nearKick', e);
+      nearKick = { kind: null, threw: true, claimed: false };
+    }
+
     // Canvas-coord path: punch button mapped through pointerGameCoords identity
     let canvasPunch = { kind: null, threw: false };
     try {
@@ -252,11 +280,12 @@ async function run() {
 
     const punchOk = punch.kind === 'punch' && !punch.threw;
     const kickOk = kick.kind === 'kick' && !kick.threw;
+    const nearKickOk = nearKick.claimed && !nearKick.threw;
     // vuist weapon maps to punch; any started attack counts
     const weaponOk = !!weapon.kind && !weapon.threw;
     const canvasOk = !canvasPunch.threw && (canvasPunch.kind === 'punch' || canvasPunch.kind == null);
 
-    const ok = punchOk && kickOk && weaponOk && !canvasPunch.threw
+    const ok = punchOk && kickOk && nearKickOk && weaponOk && !canvasPunch.threw
       && missingBtns.length === 0
       && tooSmall.length === 0
       && tooLow.length === 0
@@ -276,6 +305,8 @@ async function run() {
       canvasOk,
       punchOk,
       kickOk,
+      nearKick,
+      nearKickOk,
       weaponOk,
       iconAudit,
       iconFail,

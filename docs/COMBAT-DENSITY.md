@@ -1,21 +1,50 @@
-# Adventure combat density (mobile fairness)
+# Adventure combat contract — phone vs desktop
 
 **Lane:** mobile combat balance · **Modes:** Adventure only · **Not:** Versus, Training, Wall, Coinrun  
-**Share URL:** `speel.html`
+**Share URL:** `speel.html`  
+**Android-first.** Draft #314. Desktop (`W ≥ 960`) stays legacy 1.0.
 
-## Problem
+This is the **final viewport contract** for this lane. Phone gets a fair strip. Desktop does not get easier.
 
-Adventure used the same horde math on every screen:
+## Contract (what must stay true)
 
-- `perWave = min(ceil((2 + floor(n/4)) × 6 × hordeMul), 36)`
-- simultaneous alive cap `54` (touch) / `78` (mouse)
-- spawn cadence `0.38s` with batches of 2–3 and `32px` gaps
+| Rule | Desktop 1280×800 | Phone 390×844 (and compact) |
+|------|------------------|-----------------------------|
+| Scale / horde | **1.00** — do not gut PC | Floor **0.60** — still a horde, not a pile-on |
+| Max alive | **78** mouse / **54** touch | **~17** portrait (slots × layers, live cap) |
+| Spawn batch / gap | Batch **3** · gap **32** | Batch **1** · gap **56** |
+| Interval mul | **1.00** | **1.38** (after first 30s) |
+| Wave **count** | Unchanged | **Same count** (stage length / XP) |
+| HP / damage | Unchanged | Unchanged |
+| Versus / Training / Wall / Coinrun | Untouched | Untouched |
 
-A 390×844 phone has ~⅓ the fight-strip width of a 1280×800 desktop. The same 24–36 mobs arrive as a pile-on. Desktop was fine; the phone was not.
+Wide screens (`W ≥ 960`) always get scale `1.00`. Phone floor `0.60` means level 12 ≈ 15/wave vs 24 on desktop — still a horde, not 36 bodies in 390px. Early openers stay soft-capped (level 1 = 2 then 4).
 
-## Rule
+## First 30s opener (P0)
 
-Scale **spawn counts**, **spacing**, and **simultaneous threats** by playfield size. Do **not** shorten wave count (stage length / XP pacing). Do **not** change HP/damage. Do **not** touch Versus.
+Density muls stacked into **empty then spike** on 390px: wave 1 interval ≈ 2.58s (two walkers), wave 2 ≈ 0.52s (four dump).
+
+| Piece | Desktop | Phone first 30s | Phone after 30s |
+|-------|---------|-----------------|-----------------|
+| Spawn interval | Raw (opener 0.78×1.55×spawnMul) | Clamp **0.70–1.12s** | Raw × 1.38 |
+| Start hold `betweenT` | **1.2s** | **0.55s** | 1.2s |
+| First `spawnTimer` | 0.45 × intervalMul | Same clamp 0.70–1.12 | Raw |
+| Spawn edge | `W+40` / `-40` | `W+18` / `-18` | Same compact edge |
+| Batch | Opener single-file | Opener single-file | Single-file |
+
+Helpers: `combatSmoothOpenInterval`, `combatOpenerHold`, `combatSpawnEdgeX`. Desktop never enters the clamp.
+
+## Touch punch / kick vs joy (P0)
+
+| Piece | Desktop | Phone 390×844 |
+|-------|---------|---------------|
+| Swipe / move pad | Joy circle only | 1P left-bottom **34% × below 62%** (was 42% × 55%) |
+| Punch / kick claim | Hit slop only | **Prefer-strike:** punch/kick win the band toward the joy (`r+32`, closer than joy + 8px) |
+| Dual / Versus | No extra pad | No extra pad |
+
+Kick sits on the inner column of the right cluster (closest strike to the joy). A near-miss used to die in `nearAnyTouchButton` or become a swipe. `claimTouchStrike` fires punch/kick first.
+
+## Density table
 
 | Viewport | Scale | Max alive | Interval × | Batch max | Gap |
 |----------|------:|----------:|-----------:|----------:|----:|
@@ -27,17 +56,30 @@ Scale **spawn counts**, **spacing**, and **simultaneous threats** by playfield s
 | Phone portrait 390×844 | **0.60** | **17** | 1.38 | 1 | 56 |
 | Android small 360×800 | **0.60** | 15 | 1.38 | 1 | 56 |
 
-Wide screens (`W ≥ 960`) always get scale `1.00` — desktop difficulty is unchanged.
+## Fairness extras (examinator EX-1…6)
 
-Phone floor is **0.60**: still a horde (level 12 ≈ 15/wave vs 24 on desktop), just not 36 bodies in 390px. Early openers stay soft-capped (level 1 wave 1 = 2, wave 2 = 4).
+| Cue | Desktop (unchanged) | Phone / compact |
+|-----|---------------------|-----------------|
+| Charge wind | 0.45s (enrage 0.28) | ×1.28, floor **0.38s** |
+| Charge trigger | 240px | ≤ 42% of W (~164px) — ring on-screen |
+| Elite/boss intro | AI still fights | Aggression **held** until introT; banners cap 40px |
+| Jump hit | legacy slop | **+10px** slop |
+| Colossal size | ×**2.0** uncapped | ×**1.38** then 0.24-strip cap (~94px, lane ≥80px). HP/dmg same |
+| Colossal wind | raw | Floor **0.46s** |
+| Hell enrage walk | 1.32 × enrageMul (**1.7424**) | Extra ×0.52 → Hell **~1.386** |
+| Floor loot | x unchanged | **40px** fan |
+| Telegraph HUD | 2 bars | 2 bars portrait; short land **1 +N** |
+| Flyer hover / melee | 110 / 130 · lift 88 | Short 844×390 hover ~84, lift **104**; tall phone hover 110, lift 96 |
+| Part-gate hold-right | **3.35s** | **2.2s** |
 
 ## Code
 
 | Piece | Where |
 |-------|--------|
-| Profile / cadence | `src/systems/combat-density.js` |
+| Profile / cadence / opener / strike | `src/systems/combat-density.js` |
 | Wave size + boss pad | `buildLevel` in `src/data/monsters.js` |
-| Live alive-cap + spacing | `updateAdventure` in `src/game/game.js` |
+| Live alive-cap + spacing + opener hold | `updateAdventure` / `nextWave` / `initAdventure` in `src/game/game.js` |
+| Punch/kick prefer-strike | `claimTouchStrike` in `src/systems/input.js` |
 | Test hook | `window.__sf.combatDensity` |
 | Proof smoke | `npm run smoke:combat-density` |
 
@@ -47,9 +89,10 @@ Live cap (`adventureMaxAliveNow`) follows the current viewport so rotate-to-land
 
 ```bash
 npm run smoke:combat-density
+npm run smoke:adventure
 ```
 
-The smoke prints the table above, asserts desktop scale/cadence == legacy, asserts phone < desktop on mid-level spawn budget, and greps Versus off the density path.
+The density smoke prints the table, asserts desktop scale/cadence == legacy, asserts phone < desktop on mid-level spawn budget, asserts first-30s clamp + prefer-strike, and greps Versus off the density path.
 
 Measured `buildLevel` budgets (same wave **count**, fewer bodies on phone):
 
@@ -59,44 +102,8 @@ Measured `buildLevel` budgets (same wave **count**, fewer bodies on phone):
 | 12 Normal | 112 | 67 | 4 |
 | 20 Hell 3.0 | 219 | 136 | still a horde |
 
-`npm run smoke:adventure` on a 390×844 Chrome window still clears level 1 (spawnQ 2 then 4). `smoke:wave12` still advances 1→2. Training / touch buttons unchanged.
+`npm run smoke:adventure` on a 390×844 Chrome window still clears level 1 (spawnQ 2 then 4). `smoke:wave12` still advances 1→2. Training / Versus unchanged.
 
-## Examinator pass (390px, after density)
+## Remaining
 
-| Cue | Desktop (unchanged) | Phone 390×844 |
-|-----|---------------------|---------------|
-| Charge wind | 0.45s (enrage 0.28) | ×1.28, floor **0.38s** (enrage shark 0.20 → 0.38) |
-| Charge trigger | 240px | ≤ 42% of W (~164px) so the ring is **on-screen** |
-| Elite/boss intro | AI still fights | Aggression **held** until introT ends; banners cap 40px |
-| Jump hit | legacy slop | **+10px** slop (dodge is the telegraph answer) |
-| Swipe dead-zone | joy circle only | 1P left-bottom **42% × below 55%** is a move pad |
-
-Versus / dual pads are not used.
-
-## Colossal bosses on 390px (EX-1)
-
-Desktop colossal stays **size ×2.0**, uncapped. Phone uses **×1.38** then a playfield cap (`0.24 × strip`, min 64) so a Guvvedrak-scale body (~168 radius) fits ~94px and leaves **≥80px** of ground if centered. HP/damage muls are unchanged. Compact colossal winds floor at **0.46s**. Resize refits via `refreshAdventureBossScale` (Satan keeps its own scaler).
-
-## Hell enrage walk (EX-2)
-
-Desktop Hell stays `1.32 × enrageMul` (Hell **1.7424** on top of `speedMul` 1.16). Compact damps only the **enrage extra** (`×0.52`): Hell phone **~1.386** — still faster than Normal desktop 1.32, but the 390px close is dodgeable after the wind floor. Nightmare/Normal compact get the same extra-damp so 2.0 is not a leftover.
-
-## Floor loot on 390px (EX-3)
-
-`spawnPickup` fans compact drops to a **40px** x-gap so gear + shards do not pile on one corpse. Desktop x is unchanged.
-
-## Multi telegraph HUD (EX-4)
-
-`adventureTelegraphHuds` collects every winding cue (not the first only). Portrait/desktop show **2** bars, soonest first. Short landscape (H<430) stays **1** bar plus a `+N` chip so the fight strip is not covered. Versus / training unchanged.
-
-## Flyers / aim-up on short landscape (EX-5)
-
-Desktop hover stays **110 / 130** with bob 42/36 and melee lift **88**. Short 844×390 lowers hover (cap ~84) and damps bob ×0.55 so flyers stay in the aim-up band, not the HUD. Compact melee lift **96**, short **104**. Joy aim-up gain **×1.10** compact / **×1.22** short (deadzone 5px). Tall phone portrait keeps desktop hover.
-
-## Part-gate hold-right (EX-6)
-
-Desktop checkpoint stay **3.35s**. Compact/phone **2.2s**. Edge arrow uses the same short-strip lift so it does not clip the HUD.
-
-## Remaining mobile overwhelm (EX)
-
-None of the listed 390-overwhelm items from this lane. Re-check after play: `npm run smoke:combat-density && npm run smoke:adventure`.
+Lane EX list is closed. This P0 is opener pacing + strike-vs-joy + this contract. Re-check after play: `npm run smoke:combat-density && npm run smoke:adventure`.
