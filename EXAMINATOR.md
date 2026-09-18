@@ -118,7 +118,7 @@ Stickman is judged against a one-tap arcade loop — not a store sim. Payments /
 | **&lt;3s retry** | Death → next flap in under three seconds. | **DELEGATED #323**. This PR does **not** restage Opnieuw / `#resRetrySafe`. |
 | **One primary CTA** | One tap does the core verb (flap / retry). | HOME hub = many tiles (OK). Lose retry CTA = **#323**. |
 | **Juice on core action** | Punch / kick / jump has snap, hit-stop, audio. | **DELEGATED #316**. Do not restage. |
-| **First-30s teach-by-doing** | Learn by playing, not by reading. | **EX-023** first Avontuur skip. **EX-030** grace chip. Teach copy = sibling. |
+| **First-30s teach-by-doing** | Learn by playing, not by reading. | **#328 + #320 EX-023:** first Avontuur skips island + gamble + FOMO until `feltFirstPunch`. Aim text wall deferred. Punch-button pulse + `juice.strikeNudge`. **EX-030** grace chip. HUD = **#314/#321**. |
 
 ---
 
@@ -166,7 +166,7 @@ Stickman is judged against a one-tap arcade loop — not a store sim. Payments /
 | EX-014 | P2 | **done** | `gambleOutcomeLabel()` uses `t('gamble.*')` — EN no longer sees “Pech! Super-baas…”. |
 | EX-015 | P2 | **done** | FR `insère une pièce` · ES `inserta una moneda` (`menu.pressStart`). DE already `Münze einwerfen`. |
 | EX-021 | P2 | **done** (+ #322 also) | 390px FOMO sheet compact + HOME tiles stay tappable. **Do not restage** #322/#313 chrome. |
-| EX-023 | P1 | **done** | First-30s: `firstPunchPending()` until `save.feltFirstPunch`. First Avontuur → lv1, no island, `gamble: null`. FOMO off until first punch. |
+| EX-023 | P1 | **done** | First-30s: `firstPunchPending()` until `save.feltFirstPunch`. First Avontuur → lv1, no island, `gamble: null`. FOMO off until first punch. Aim wall deferred; short punch nudge + pulse. |
 | EX-024 | P1 | **done** | Fair fail: `lastHurtBy` → `result.advLoseBy` = `VERLOREN · {name}` + killed-by tip (NL/EN/DE/FR/ES). |
 | EX-027 | P1 | **done** | First-loss tip no longer leads with gamble lecture. Killer first; `lossGambleTip` waits until after first punch (once-flag not burned). |
 | EX-028 | P1 | **done** | 390 named-lose: Bangers stays `VERLOREN` / `YOU LOSE`; killer name on `#resKiller` so long species don’t wrap the title. |

@@ -48,7 +48,14 @@ function resetAimTutorialFlag() {
 }
 
 function aimTutorialShouldOffer(mode) {
-  return !!(AIM_TUTORIAL_MODES[mode] && !aimTutorialSeen());
+  if (!AIM_TUTORIAL_MODES[mode] || aimTutorialSeen()) return false;
+  // MASTERGAME first-30s: punch first — no aim text wall on first Avontuur.
+  try {
+    if (mode === 'adventure' && typeof firstPunchPending === 'function' && firstPunchPending()) {
+      return false;
+    }
+  } catch (_) {}
+  return true;
 }
 
 function aimTutorialActive(g) {

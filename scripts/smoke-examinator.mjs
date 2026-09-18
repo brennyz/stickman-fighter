@@ -89,6 +89,12 @@ if (!/FEEL bar/.test(exam)) fail('EXAMINATOR.md must keep FEEL bar');
 if (!/EX-022/.test(exam)) fail('EXAMINATOR.md must rank EX-022 retry');
 if (!/DELEGATED #323/.test(exam)) fail('EX-022 must be DELEGATED #323');
 if (!/EX-023/.test(exam) || !/feltFirstPunch/.test(exam)) fail('EXAMINATOR.md must keep EX-023 first punch');
+if (!/first-punch-teach\.js/.test(fs.readFileSync(path.join(root, 'src/manifest.json'), 'utf8'))) {
+  fail('manifest must keep first-punch-teach.js');
+}
+if (!/firstPunchPending\(\)/.test(fs.readFileSync(path.join(root, 'src/systems/aim-tutorial.js'), 'utf8'))) {
+  fail('aim tutorial must defer while firstPunchPending');
+}
 if (!/EX-024/.test(exam) || !/advLoseBy/.test(exam)) fail('EXAMINATOR.md must keep EX-024 killer name');
 if (!/EX-026/.test(exam) || !/IAP out of scope/.test(exam)) fail('EXAMINATOR.md must note IAP out of scope');
 if (/win \? 1600 : 380/.test(game) || /win \? 1400 : 380/.test(game)) {
@@ -242,6 +248,15 @@ if (!(feelOpen.grace > 1)) fail('first Avontuur must start with openerGraceT > 1
 if (!feelOpen.hasPaint) fail('paintIncomingHurtRead must be on window/bundle');
 if (!feelOpen.hasShort) fail('shortHurtName must be on window/bundle');
 await feelPage.waitForFunction(() => game && game.monsters && game.monsters.some((m) => m && m.alive), { timeout: 8000 });
+const first30 = await feelPage.evaluate(() => ({
+  aim: typeof aimTutorialActive === 'function' && aimTutorialActive(game),
+  teach: !!(game && game._juiceTeach),
+  taught: !!(game && game._juiceTaught),
+  pending: typeof firstPunchPending === 'function' && firstPunchPending(),
+}));
+if (first30.aim) fail('first Avontuur must not open aim text wall');
+if (!first30.teach) fail('first Avontuur must start punch teach');
+if (!first30.pending) fail('first Avontuur must stay firstPunchPending until a punch');
 const feelHit = await feelPage.evaluate(() => {
   const m = game.monsters.find((x) => x && x.alive);
   game.player.invulnT = 0;

@@ -986,6 +986,8 @@ function bootGame() {
     startGame, save, Game, UI, recoverToMenu, syncPlayLayer,
     resetAimTutorial: typeof resetAimTutorialFlag === 'function' ? resetAimTutorialFlag : null,
     aimTutorialSeen: typeof aimTutorialSeen === 'function' ? aimTutorialSeen : null,
+    firstPunchPending: typeof firstPunchPending === 'function' ? firstPunchPending : null,
+    resetFirstPunchTeach: typeof resetFirstPunchTeachFlag === 'function' ? resetFirstPunchTeachFlag : null,
     season: (typeof seasonSnapshot === 'function') ? {
       get id() { return currentSeasonId(); },
       get pref() { return currentSeasonPref(); },

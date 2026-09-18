@@ -54,6 +54,7 @@ function startGame(mode, opts) {
   try { AudioSys.setPaused(false); } catch (_) {}
   try { recordLastPlay(mode, opts); } catch (_) {}
   try { applyModeOnboarding(mode, game); } catch (_) {}
+  // First Avontuur: maybeStartAimTutorial no-ops while firstPunchPending (punch first).
   try { if (typeof maybeStartAimTutorial === 'function') maybeStartAimTutorial(game); } catch (_) {}
   try { UI.hideGambleRollFlash(); } catch (_) {}
   try { UI.show(null); } catch (_) { try { syncPlayLayer(); } catch (__) {} }
@@ -853,7 +854,7 @@ if (pauseVsSwap) {
     }), 2800);
   });
 }
-/** EX-023: first Avontuur is a punch, not island + gamble + FOMO. */
+/** EX-023 + MASTERGAME: first Avontuur is a punch, not island + gamble + FOMO + aim wall. */
 function firstPunchPending() {
   try {
     return !(typeof save !== 'undefined' && save && save.feltFirstPunch);

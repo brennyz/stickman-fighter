@@ -45,6 +45,7 @@ rg -l "handoff|coinrun|projAimVelocity|charSelectScreen|ASSET-STYLE" .
 | **Mats** muntjes bonus | 1.12.0 | `f6c86bf` | `coinrun`, `#btnMatsCoins`, `initCoinRun` |
 | **Mikken** shuriken (hoog/vliegers) | 1.12.0 | `f6c86bf` | `projAimVelocity`, `drawTouchControls` aim-lijn |
 | **Move-bar aim tutorial** | 1.18.164 | this PR | `src/systems/aim-tutorial.js`, `tipsSeen.moveBarAim`, `__sf.resetAimTutorial()` |
+| **First-30s punch teach** | 1.18.190 | this PR | `src/systems/first-punch-teach.js` · skip aim wall while `firstPunchPending` · `__sf.resetFirstPunchTeach()` |
 | Shuriken anti-spam | 1.12.0 | `f6c86bf` | `canThrowShuriken`, `SHURIKEN_BURST_*` |
 | speel.html delen | 1.12.2+ | `0a63376`+ | `speel.html`, `resolveSharePlayUrl` |
 | Top-20 spawn FX | 1.18.164 | this PR | `speciesTop20Ranked`, `triggerTop20SpawnFx`, `AudioSys` `top20Spawn` |

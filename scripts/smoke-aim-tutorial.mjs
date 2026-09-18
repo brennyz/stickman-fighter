@@ -84,8 +84,11 @@ async function run() {
     if (aimTutorialShouldOffer('wall') || aimTutorialShouldOffer('coinrun')) {
       return { ok: false, why: 'wall/coinrun must not offer tutorial' };
     }
-    if (!aimTutorialShouldOffer('adventure') || !aimTutorialShouldOffer('training')) {
-      return { ok: false, why: 'adventure/training should offer on first run' };
+    if (aimTutorialShouldOffer('adventure')) {
+      return { ok: false, why: 'first Avontuur must skip aim wall until first punch' };
+    }
+    if (!aimTutorialShouldOffer('training')) {
+      return { ok: false, why: 'training should still offer aim tutorial' };
     }
 
     startGame('training');
@@ -108,6 +111,12 @@ async function run() {
     if (aimTutorialActive(game)) return { ok: false, why: 'tutorial shown again after skip' };
 
     if (!resetAimTutorialFlag() || aimTutorialSeen()) return { ok: false, why: 'resetAimTutorialFlag failed' };
+    try { save.feltFirstPunch = true; persist(); } catch (e) {
+      return { ok: false, why: 'feltFirstPunch:' + e };
+    }
+    if (!aimTutorialShouldOffer('adventure')) {
+      return { ok: false, why: 'after first punch adventure should offer aim tutorial' };
+    }
     startGame('adventure', { level: 1, gamble: null });
     if (!aimTutorialActive(game)) return { ok: false, why: 'reset did not re-show tutorial' };
 

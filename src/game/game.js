@@ -3146,7 +3146,9 @@ class Game {
     if (this.mode === 'adventure') this.updateKetsbam(dt);
     if (!ketsJustFinished) this.t += dt;
     if (this.hint > 0) this.hint -= dt;
-    if (this._juiceTeach && !this._juiceTaught && !this.over) {
+    if (typeof updateFirstPunchTeach === 'function') {
+      try { updateFirstPunchTeach(this); } catch (_) {}
+    } else if (this._juiceTeach && !this._juiceTaught && !this.over) {
       const landed = (this.combo || 0) > 0 || (this.maxCombo || 0) > 0 || (this.kills || 0) > 0;
       if (landed) {
         this._juiceTaught = true;
@@ -4067,7 +4069,8 @@ class Game {
     if (this.hint > 0 && !(typeof aimTutorialActive === 'function' && aimTutorialActive(this))) {
       c.globalAlpha = clamp(this.hint, 0, 1);
       let hintTxt = this.modeHintLine;
-      if (!hintTxt) {
+      const punchTeach = typeof firstPunchTeachPending === 'function' && firstPunchTeachPending(this);
+      if (!hintTxt && !punchTeach) {
         const dualOk = Input.dualMode && this.mode === 'versus';
         const touchPads = typeof useTouchFightPads === 'function' ? useTouchFightPads() : IS_TOUCH;
         if (dualOk && touchPads) {
@@ -4080,6 +4083,9 @@ class Game {
           hintTxt = t('hud.hintKb');
         }
       }
+      if (!hintTxt) {
+        c.globalAlpha = 1;
+      } else {
       c.font = '600 15px -apple-system, sans-serif';
       c.textAlign = 'center';
       const maxW = Math.min(W * 0.72, 500);
@@ -4108,6 +4114,7 @@ class Game {
         });
       }
       c.globalAlpha = 1;
+      }
     }
     try { if (typeof drawAimTutorial === 'function') drawAimTutorial(c, this); } catch (_) {}
   }
@@ -6213,6 +6220,18 @@ class Game {
       c.strokeStyle = accent || '#fff';
       c.lineWidth = opts.dual ? 2 : 2.6;
       c.beginPath(); c.arc(0, 0, b.r + 3, 0, TAU); c.stroke();
+    }
+    if (!opts.dual && b.id === 'punch' && typeof firstPunchTeachShouldPulsePunch === 'function'
+        && firstPunchTeachShouldPulsePunch(this)) {
+      const calm = typeof motionReduced === 'function' && motionReduced();
+      const pulse = calm ? 0.55 : (0.42 + Math.sin((this.t || 0) * 6) * 0.38);
+      c.globalAlpha = pulse;
+      c.strokeStyle = '#ffd75e';
+      c.lineWidth = 3.2;
+      const extra = calm ? 5 : (5 + Math.sin((this.t || 0) * 6) * 2);
+      c.beginPath();
+      c.arc(0, 0, b.r + extra, 0, TAU);
+      c.stroke();
     }
     c.globalAlpha = 1;
     const jk = b.id === 'special'

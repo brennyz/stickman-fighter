@@ -2920,6 +2920,12 @@ function markTideBattleOnboardSeen() {
 /** Eén eerste-minuut regel per modus in pauze — geen toast. */
 function pauseOnboardHintLine(mode) {
   if (!mode) return '';
+  // First Avontuur: punch first — no pause text wall.
+  try {
+    if (mode === 'adventure' && typeof firstPunchPending === 'function' && firstPunchPending()) {
+      return '';
+    }
+  } catch (_) {}
   ensureTipsSeen();
   const key = 'pauseHint_' + mode;
   if (save.tipsSeen[key]) return '';
@@ -2932,6 +2938,10 @@ function pauseOnboardHintLine(mode) {
 function applyModeOnboarding(mode, g) {
   if (!g || !mode) return;
   ensureTipsSeen();
+  const firstPunch = mode === 'adventure'
+    && typeof firstPunchPending === 'function'
+    && firstPunchPending();
+  if (firstPunch) g._juiceTeach = true;
   const key = 'onboard_' + mode;
   if (save.tipsSeen[key]) return;
   save.tipsSeen[key] = 1;
