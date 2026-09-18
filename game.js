@@ -12251,7 +12251,10 @@ function looksForGear(gear) {
     if (typeof val !== 'object' || Array.isArray(val)) return;
     const fromDraw = isPlainGear(val.draw) || isPlainGear(val.look);
     if (fromDraw || val.kind) {
-      const merged = mergeItemDraw(Object.assign({ id: val.id, kind: val.kind, slot: val.slot || slot }, val.look || {}), val.draw);
+      const merged = mergeItemDraw(Object.assign({
+        id: val.id, kind: val.kind, slot: val.slot || slot,
+        color: val.color, accent: val.accent, plate: val.plate, fill: val.fill,
+      }, val.look || {}), val.draw);
       if (!merged.kind && val.id) {
         const found = lookForItemId(val.id, slot, val);
         const one = found[0];

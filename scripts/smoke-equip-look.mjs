@@ -251,6 +251,7 @@ const helmLooks = api.forGear({ head: { kind: 'helmet', color: '#9aa8bc' } });
 if (!api.hidesBaseHead(helmLooks)) fail('helmet gear must mark coversHead so a replacement skull is drawn');
 const hatLooks = api.forGear({ head: { kind: 'hat', color: '#ffd75e' } });
 if (!hatLooks.some((l) => l.kind === 'hat' && l.layer === 'head')) fail('hat kind must sit on the head layer');
+if (hatLooks[0].color !== '#ffd75e') fail('hat look-map must keep tint');
 if (api.hidesBaseHead(hatLooks)) fail('hat must not hide the stick head — it sits on the circle');
 if (api.kindFromId('head_hat_paper', 'head') !== 'hat') fail('paper hat → hat (not helmet disc)');
 if (api.kindFromId('head_beanie_wool', 'head') !== 'hat') fail('beanie → hat');
