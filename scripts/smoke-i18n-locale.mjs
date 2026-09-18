@@ -410,6 +410,10 @@ if (/Koop of tem via het monsterboek/.test(catalog)) fail('NL petCoinTip still a
 if (/Buy here or tame via the monster book/.test(catalog)) fail('EN petCoinTip still a wall');
 if (/Kaufen oder im Monsterbuch zähmen/.test(deChrome + locales)) fail('DE petCoinTip still a wall');
 if (/Dex-pets via monsterboek · Ei-pets via dagelijkse/.test(html)) fail('petScreenSub HTML still a wall');
+if (!/summonOpen: 'Ouvrir'/.test(locales)) fail('FR ui.summonOpen missing — EN Open chest leak');
+if (!/summonOpen: 'Abrir'/.test(locales)) fail('ES ui.summonOpen missing — EN Open chest leak');
+if (/tOr\('ui\.summonOpen'/.test(ui)) fail('summon CTA still Dutch/EN tOr fallback');
+if (!/t\('ui\.summonPull'\)/.test(ui)) fail('summon CTA must use ui.summonPull');
 if (!/max-width: 430px/.test(css)) fail('430px overlap media missing');
 if (!/\.buildings-card-does/.test(css) || !/-webkit-line-clamp: 2/.test(css)) {
   fail('buildings-card-does clamp missing');

@@ -2279,7 +2279,7 @@ const UI = {
         if (titleEl) {
           const small = titleEl.querySelector('small');
           titleEl.textContent = '';
-          titleEl.appendChild(document.createTextNode(tOr('ui.summonOpen', 'Open kist')));
+          titleEl.appendChild(document.createTextNode(t('ui.summonPull')));
           if (small) titleEl.appendChild(small);
         }
         pullBtn.setAttribute('aria-label', left > 0
@@ -2298,7 +2298,7 @@ const UI = {
       }
       const hint = document.getElementById('summonStageHint');
       if (hint) {
-        hint.textContent = tOr('ui.summonHint', 'Tik kist om te openen');
+        hint.textContent = t('ui.summonHint');
         hint.style.display = (left > 0 && !this._chestPullBusy) ? '' : 'none';
       }
 
@@ -2672,7 +2672,7 @@ const UI = {
       const msg = typeof chestResultToast === 'function' ? chestResultToast(res) : (res && res.ok ? 'Summon!' : errT('ui.summonFail', 'Summon failed — try again'));
       // Never spoil via toast/text during the open — only after card
       this._summonPendingMsg = (res && res.ok) ? msg : null;
-      if (text) text.textContent = (res && res.ok) ? tOr('ui.summonOpening', 'Kist opent…') : msg;
+      if (text) text.textContent = (res && res.ok) ? t('ui.summonOpening') : msg;
 
       if (!res || !res.ok) {
         this._chestPullBusy = false;

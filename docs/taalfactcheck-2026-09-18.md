@@ -162,7 +162,8 @@ Versie: **v1.18.182 / SW 392**. Deel-URL `speel.html`.
 | pets `petCoinTip` + HTML `#petScreenSub` | Tekstmuur boven de lijst | 1 regel + 2-line clamp |
 | gear/factories/summons | Unclamped does/detail/filter/quota | 2–3 line clamp + 430px card/canvas/right-col |
 | ketsbam onboard | Lange HUD-hint | Tik midden — Ketsbam |
+| FR/ES summons CTA | `ui.summonOpen` ontbrak → EN *Open chest* op de primaire knop | Overlay `summonOpen`/`Opening`; knop via `ui.summonPull` |
 
 Eerste 30s = learn-by-doing, één primaire actie. Versus ongemoeid. Draft, geen main.
 
-Versie: **v1.18.183 / SW 393**. Deel-URL `speel.html`.
+Versie: **v1.18.184 / SW 394**. Deel-URL `speel.html`.

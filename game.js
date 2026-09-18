@@ -323,9 +323,9 @@ const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const VERSION_UPDATE_SAVE_KEY = 'stickfighter_version_update_save_v1';
 const VERSION_UPDATE_FLAG_KEY = 'stickfighter_version_update_flag_v1';
 const SAVE_EXPORT_SCHEMA = 3;
-const APP_VERSION = '1.18.183';
+const APP_VERSION = '1.18.184';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 393;
+const SW_CACHE_REV = 394;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', petCoins: 0, dex: {}, summons: {}, pets: {}, activePet: null,
   eggPets: {}, activeEggPet: null, eggDaily: null,
   chestDaily: null, chestWeapons: {},
@@ -25347,6 +25347,9 @@ overlayI18nCatalog(CATALOG_FR, {
     summonLeftToday: '{n} restants aujourd’hui',
     summonDoneToday: 'fini pour aujourd’hui',
     summonPull: 'Ouvrir',
+    summonOpen: 'Ouvrir',
+    summonOpenAria: 'Ouvrir le coffre, {n} restants',
+    summonOpening: 'Coffre…',
     summonPullLeft: '{n} restants',
     summonPullEmpty: 'Vide',
     summonGotoWeapons: 'Armes',
@@ -25996,6 +25999,9 @@ overlayI18nCatalog(CATALOG_ES, {
     summonLeftToday: '{n} restantes hoy',
     summonDoneToday: 'listo por hoy',
     summonPull: 'Abrir',
+    summonOpen: 'Abrir',
+    summonOpenAria: 'Abrir cofre, {n} restantes',
+    summonOpening: 'Cofre…',
     summonPullLeft: '{n} restantes',
     summonPullEmpty: 'Vacío',
     summonGotoWeapons: 'Armas',
@@ -26691,6 +26697,10 @@ overlayI18nCatalog(CATALOG_DE, {
     errSummonLoad: 'Kisten laden fehlgeschlagen',
     errSummonOpen: 'Kisten öffnen fehlgeschlagen',
     summonQuota: 'Heute: {left}/{total} Kisten',
+    summonOpen: 'Öffnen',
+    summonOpenAria: 'Kiste öffnen, {n} übrig',
+    summonOpening: 'Kiste…',
+    summonPull: 'Öffnen',
     summonNoMore: 'Keine Kisten mehr heute',
     summonAriaEmpty: 'Keine Kisten mehr heute',
     summonLeftToday: '{n} übrig heute',
@@ -49382,7 +49392,7 @@ const UI = {
         if (titleEl) {
           const small = titleEl.querySelector('small');
           titleEl.textContent = '';
-          titleEl.appendChild(document.createTextNode(tOr('ui.summonOpen', 'Open kist')));
+          titleEl.appendChild(document.createTextNode(t('ui.summonPull')));
           if (small) titleEl.appendChild(small);
         }
         pullBtn.setAttribute('aria-label', left > 0
@@ -49401,7 +49411,7 @@ const UI = {
       }
       const hint = document.getElementById('summonStageHint');
       if (hint) {
-        hint.textContent = tOr('ui.summonHint', 'Tik kist om te openen');
+        hint.textContent = t('ui.summonHint');
         hint.style.display = (left > 0 && !this._chestPullBusy) ? '' : 'none';
       }
 
@@ -49775,7 +49785,7 @@ const UI = {
       const msg = typeof chestResultToast === 'function' ? chestResultToast(res) : (res && res.ok ? 'Summon!' : errT('ui.summonFail', 'Summon failed — try again'));
       // Never spoil via toast/text during the open — only after card
       this._summonPendingMsg = (res && res.ok) ? msg : null;
-      if (text) text.textContent = (res && res.ok) ? tOr('ui.summonOpening', 'Kist opent…') : msg;
+      if (text) text.textContent = (res && res.ok) ? t('ui.summonOpening') : msg;
 
       if (!res || !res.ok) {
         this._chestPullBusy = false;
