@@ -1279,6 +1279,10 @@
   ],
   "sessionLog": [
     {
+      "at": "2026-09-18T16:50:30Z",
+      "summary": "Ingested #337: death-retry PASS. P2 heat/dice low — no bot."
+    },
+    {
       "at": "2026-09-18T16:49:45Z",
       "summary": "Ingested #342: TF-001 merge-first; TF-002/003 P1 bots; density unchanged."
     },
@@ -1373,10 +1377,6 @@
     {
       "at": "2026-09-18T12:54:59Z",
       "summary": "Examiner #317 factory powers/detail + gear lock toasts + DE nameShort. v1.18.176 / SW 386. Draft, geen main."
-    },
-    {
-      "at": "2026-09-18T12:50:36Z",
-      "summary": "examiner P0 factories/gear-lock + DE button overflow start"
     }
   ],
   "implementedFeaturesSummary": "d18 char select deel 1+2 (v1.11.1-2); Mats coinrun + shuriken mik/vliegers + anti-spam (v1.12.0); speel.html (v1.12.2+). Zie HANDOFF-ZOEKINDEX.md en improvement-d20-bag.json userFeatureLog.",

@@ -304,7 +304,7 @@ Horde wave-clear = stacked 58ms hitches. Punch + kill on the same beat stacks PE
 |------|-----|
 | TF-001 | Already on #342 — land, don't clone |
 | LC-001/002 | **#341 PASS.** P2 hop-rotate asymmetry only. Low priority. **No bot.** Alive rotate is fine (not EX-034). |
-| EX-033 / DR-* | Retry **PASS**; delay contract / heat pile are P2 |
+| EX-033 / DR-heat / DR-dice | **#337 PASS.** ~720ms fat gold · rematch &lt;70ms. P2 heat pile + dice lecture — **low, no bot.** |
 | F30-* | First-30s **PASS**; lang/Continue/FOMO flake are P2 |
 | MM-006…009 | P2 from #340 (toast park, `Alles27`, egg 74×36, pity copy) |
 | Tablet-834 owner | SKIP — confirms MM-001 1-col; clears MM-002/003 first-paint |

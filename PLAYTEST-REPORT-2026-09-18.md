@@ -22,7 +22,7 @@ Fix bots launch from **`IMPROVEMENT-PLAN.md`** (10 lanes). This file is the boar
 | Landscape HOME | SPELEN/Avontuur on screen | #338 visible PASS | **P1 EX-036** FOMO `inert` |
 | Landscape fight | Floor + pads + bodies | **#341 PASS** (no P0/P1) | P2 LC-001/002 only — **do not launch** |
 | First 30s | `Tik slaan` on rematch | #343 PASS | P2 Continue / FOMO flake |
-| Death-retry | Fat gold &lt;3s, rematch paints | #337 PASS ~730ms | P2 heat pile / unused 650ms |
+| Death-retry | Fat gold &lt;3s, rematch paints | **#337 PASS** ~720ms · rematch &lt;70ms | P2 heat/dice — **no bot** |
 | Fair telegraph | CHARGE HUD readable | #342 CHARGE PASS | **P1 TF-002/003** · TF-001 fixed on #342 |
 | Feel | Punch snap + named floater | #344 soft PASS | **P1** first-kill toast+banner |
 | Perf | (lead: no hitch on L1) | #339 P1 after ~90 frames | **PERF-01…03** |
@@ -77,10 +77,10 @@ Status: `open` · `pass` · `fixed-on-draft` · `DELEGATED` · `out`
 
 | ID | Status | Lane | Symptom |
 |----|--------|------|---------|
-| EX-033 | open | death-retry | `combatLoseResultMs` 650/850 unused; live lose delay **700ms**. CTA still &lt;3s. |
+| EX-033 | open · **low P3** | death-retry | `combatLoseResultMs` 650/850 unused; live `resultShowDelayMs` = **700ms** (~720 measured). Still ≪3s. Doc or wire later. **No bot.** |
 | EX-018 | open | #318 UI | Landscape HOME: `Verder spelen` takes the featured slot; Avontuur is a thin row. |
-| DR-heat | open | death-retry | After ~5 fails, cyan tip stacks heat (`5/10 · Meester · Satan`). Cue still leads. |
-| DR-dice | open | death-retry | First-loss dice lecture on a CTA that skips dice. |
+| DR-heat | open · **low** | death-retry | After ~5 fails: `SLAM → … · Lv 1: 5/10 · 5 Meester · 9 gevaar · 10 Satan`. Cue still leads (EX-032). Prefer heat on the island card. **No bot this wave.** |
+| DR-dice | open · **low** | death-retry | With `feltFirstPunch`, tip says dobbelen before each level. CTA is `restartAdventureInstant` — **no dice**. Gate that once-tip on instant retry. **No bot this wave.** |
 | F30-lang | open | first-30s / i18n | `speel.html` follows `navigator.language`; in-game `initLang()` forces NL. |
 | F30-cont | open | first-30s / #318 | After first punch, Continue → `gokGooiStartLevel` (skips island). |
 | F30-fomo | open | FOMO | `fomoRitualPending` true after punch; auto-sheet flaky unless `#menuScreen.active`. |
@@ -104,6 +104,23 @@ Status: `open` · `pass` · `fixed-on-draft` · `DELEGATED` · `out`
 | LH-dock | P3 · #338 | Landscape HOME meta-dock under 390 fold — play tile above fold |
 | LH-copy | P3 · #338 | “Naar / oproepen” wrap · NL “power-ups” on mission row |
 | LC-pads | P3 · #341 | Phone-land pads sit on the 44px floor (no slack). iPad 3×2 jump-left is documented out of #331. |
+
+### #337 death-retry (canonical) — PASS · no bot
+
+Source: `docs/playtest-5-death-retry.md`. `smoke:lose-retry` + 844 harness.
+
+| Check | 390 | 844 | Desk |
+|-------|----:|----:|-----:|
+| Death → CTA | **725ms** | **730ms** | 711ms |
+| Button height | **113** | **113** | 121 |
+| Rematch | 65ms L1 | 18ms L1 | 10ms |
+| Dice / FOMO | off / hidden | off / hidden | same |
+| Tip lead | `SLAM → Nog één keer` | SLAM / CHARGE | SLAM |
+
+**P0 / P1: none.** Fat gold + tap-safe + `restartAdventureInstant` hold.
+
+**P2 low (no bot):** heat pile after ~5 fails · first-loss dice lecture on a no-dice CTA.  
+**P3:** unused 650/850 helper (EX-033). Official smoke now includes 844 on that draft.
 
 ### #342 telegraph (canonical)
 
@@ -211,7 +228,7 @@ Older EX-001…032 stay on `EXAMINATOR.md`. Do not re-file.
 | PR | Lane | Freeze take |
 |----|------|-------------|
 | **#336** | invisible / draw | **EX-034 P1** dead+rotate. Alive PASS. |
-| **#337** | death-retry | **PASS.** P2 heat / dice lecture / unused 650ms. |
+| **#337** | death-retry | **PASS — no P0/P1.** 390 CTA **725ms** / btn **113px** · rematch **65ms** L1 · no dice · FOMO hidden · `SLAM →` + killer. 844 **730ms**. P2 heat pile + dice lecture — **low, no bot.** |
 | **#338** | landscape HOME | **Visibility PASS** (SPELEN/Avontuur ≥44 px, left dock, no overlap). **EX-036 P1** `#318` `inert` + `pointer-events:none` while sheet open. × recover PASS. Keep portrait hub lock. |
 | **#339** | mid-phone perf | **#327 opener PASS** (4 sparks / 0 freeze). **PERF-01/02 P1** 90-frame cliff. **PERF-03/04** freeze ignores Lite. Plan: spawnLite on touch **whole fight**; gate `juiceKillSnap` + `applyHitStop`. PERF-05 P2 · PERF-06 P3. |
 | **#340** | meta menus | **MM-001–005 P1 ingested** (gear scroll, pets fold, factories smoke, 2.2s blank, FOMO cover). Landscape 010–012 P1. Skip tablet-834 as new owner. Open times 14–37 ms — clunk is chrome/scroll, not JS. |
@@ -237,6 +254,7 @@ Older EX-001…032 stay on `EXAMINATOR.md`. Do not re-file.
 | 18:47 | — | **#339 PERF-01–06** | 90-frame spawnLite cliff · juice/hitStop ignore Lite. Bots 3–4: keep spawnLite on touch; gate freezes. |
 | 18:48 | — | **#341 PASS** | Landscape combat camera/floor/pads. LC-001/002 hop asymmetry P2 — no bot. |
 | 18:49 | — | **#342 TF** | TF-001 merge-first. TF-002/003 P1 bots 6/5. Density report-only. |
+| 18:50 | — | **#337 PASS** | Death-retry ~720ms fat gold. P2 heat/dice — no bot. |
 
 Lead evidence: `/opt/cursor/artifacts/playtest_adventure_390_and_844_first_pass.mp4`
 
