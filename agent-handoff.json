@@ -50,7 +50,7 @@
       "id": "w-20260918T132300",
       "from": "user",
       "text": "KEEP #318 draft: win-path sticky primary CTA (Volgend level) same dock; document shared #323 hooks for mega-merge; stop at P3-only. No Versus, no main.",
-      "status": "doing",
+      "status": "done-in-code",
       "updated": "2026-09-18",
       "notes": "Last layout pass on #318. Then P3-only."
     },
@@ -1097,6 +1097,10 @@
   ],
   "sessionLog": [
     {
+      "at": "2026-09-18T13:25:20Z",
+      "summary": "Win-path Volgend level dock + #323 hooks documented on #318. v1.18.176 / SW 386. Stop P3-only. No main."
+    },
+    {
       "at": "2026-09-18T13:23:03Z",
       "summary": "Flappy result bar, toast-under-title, landscape 844×390 hub on #318. v1.18.175 / SW 385. Draft, no main."
     },
@@ -1191,10 +1195,6 @@
     {
       "at": "2026-09-14T13:00:52Z",
       "summary": "Training hit-reg: capsule + face-naar-robot; W-aim J/K chippen RabbitRobot. Floaters niet links clippen. Resultaat VERLOREN/YOU LOST. v1.18.158 / SW 368."
-    },
-    {
-      "at": "2026-09-14T12:46:48Z",
-      "summary": "P1 entry: Android-first landing — één install-blok, geen iPad op Android · v1.18.157 / SW 367"
     }
   ],
   "implementedFeaturesSummary": "d18 char select deel 1+2 (v1.11.1-2); Mats coinrun + shuriken mik/vliegers + anti-spam (v1.12.0); speel.html (v1.12.2+). Zie HANDOFF-ZOEKINDEX.md en improvement-d20-bag.json userFeatureLog.",
