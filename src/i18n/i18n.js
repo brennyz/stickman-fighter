@@ -58,11 +58,11 @@ const I18N = {
     },
     modes: { adventure: 'Avontuur', training: 'Training', wall: 'Muur', versus: '2 spelers', coinrun: 'Muntjes' },
     pause: {
-      title: 'Pauze', sub: 'Spiral Orb klaar — moto! · voortgang blijft op dit apparaat',
+      title: 'Gepauzeerd', sub: 'Spiral Orb klaar — gaan! · voortgang blijft op dit apparaat',
       wallTime: '{n}s resterend', wallStones: '{n} stenen', wallCombo: 'combo ×{n}',
       wallPaceAhead: '+{n} vs record-tempo', wallPaceBehind: '−{n} vs record-tempo',
       wallGap: 'nog {gap} tot record',
-      resume: 'Verder spelen', music: 'Muziek', sfx: 'Geluid', quit: 'Stop & hoofdmenu',
+      resume: 'Hervatten', music: 'Muziek', sfx: 'Geluid', quit: 'Stop & hoofdmenu',
       quitArcade: 'Stop & Arcade',
       vsRestart: 'Herstart match', vsRestartSub: '0-0 · zelfde vechters',
       vsSwap: 'Wissel kant', vsSwapSub: 'P1 ↔ P2 · zelfde score',
@@ -2321,6 +2321,62 @@ function setTitle(id, key, params) {
   if (el) el.title = t(key, params);
 }
 
+/** Pause chrome from current locale — call on applyLang and every pause open. */
+function applyPauseChrome(opts) {
+  if (!canApplyDomI18n()) return;
+  opts = opts || {};
+  const pauseBtn = document.getElementById('pauseBtn');
+  if (pauseBtn) pauseBtn.setAttribute('aria-label', t('pause.title'));
+  setText('pauseHead', 'pause.title');
+  if (!opts.skipSub) setText('pauseSub', 'pause.sub');
+  setText('pauseMusicVolName', 'pause.music');
+  setText('pauseSfxVolName', 'pause.sfx');
+  setText('pauseAudioThemeLbl', 'settings.audioThemeHead');
+  const pauseResume = document.getElementById('pauseResume');
+  if (pauseResume) {
+    const d = pauseResume.querySelector('div');
+    if (d) d.textContent = t('pause.resume');
+  }
+  const pauseQuit = document.getElementById('pauseQuit');
+  if (pauseQuit) {
+    const d = pauseQuit.querySelector('div');
+    if (d) {
+      const arcade = typeof hubForPlayMode === 'function'
+        && hubForPlayMode(typeof game !== 'undefined' && game && game.mode) === 'arcade';
+      d.textContent = t(arcade ? 'pause.quitArcade' : 'pause.quit');
+    }
+  }
+  const pauseVs = document.getElementById('pauseVsRestart');
+  if (pauseVs) {
+    const d = pauseVs.querySelector('div');
+    if (d) d.innerHTML = t('pause.vsRestart') + '<small>' + t('pause.vsRestartSub') + '</small>';
+  }
+  const pauseVsSwapEl = document.getElementById('pauseVsSwap');
+  if (pauseVsSwapEl) {
+    const d = pauseVsSwapEl.querySelector('div');
+    if (d) d.innerHTML = t('pause.vsSwap') + '<small>' + t('pause.vsSwapSub') + '</small>';
+  }
+  ['pauseTogMusic', 'pauseTogSfx'].forEach((id, i) => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    const ico = el.querySelector('.tog-ico');
+    const label = t(i ? 'pause.sfx' : 'pause.music');
+    el.textContent = '';
+    if (ico) el.appendChild(ico);
+    el.appendChild(document.createTextNode(label));
+  });
+  const pausePresets = [
+    ['pauseAudioMuteAll', 'pause.audioMuteAll'],
+    ['pauseAudioRestore', 'pause.audioRestore'],
+    ['pauseAudioSfxOnly', 'pause.audioSfxOnly'],
+  ];
+  for (const [id, key] of pausePresets) {
+    const el = document.getElementById(id);
+    if (el) el.textContent = t(key);
+  }
+  if (typeof UI !== 'undefined') UI.pauseSubDefault = t('pause.sub');
+}
+
 function applyLangStaticScreens() {
   if (!canApplyDomI18n()) return;
   if (document.documentElement) document.documentElement.lang = getLang();
@@ -2631,50 +2687,7 @@ function applyLangStaticScreens() {
   const charFightBtn = document.getElementById('btnCharFight');
   if (charFightBtn) charFightBtn.textContent = t('ui.charFight');
 
-  setText('pauseHead', 'pause.title');
-  setText('pauseSub', 'pause.sub');
-  const pauseResume = document.getElementById('pauseResume');
-  if (pauseResume) {
-    const d = pauseResume.querySelector('div');
-    if (d) d.textContent = t('pause.resume');
-  }
-  const pauseQuit = document.getElementById('pauseQuit');
-  if (pauseQuit) {
-    const d = pauseQuit.querySelector('div');
-    if (d) {
-      const arcade = typeof hubForPlayMode === 'function'
-        && hubForPlayMode(typeof game !== 'undefined' && game && game.mode) === 'arcade';
-      d.textContent = t(arcade ? 'pause.quitArcade' : 'pause.quit');
-    }
-  }
-  const pauseVs = document.getElementById('pauseVsRestart');
-  if (pauseVs) {
-    const d = pauseVs.querySelector('div');
-    if (d) d.innerHTML = t('pause.vsRestart') + '<small>' + t('pause.vsRestartSub') + '</small>';
-  }
-  const pauseVsSwapEl = document.getElementById('pauseVsSwap');
-  if (pauseVsSwapEl) {
-    const d = pauseVsSwapEl.querySelector('div');
-    if (d) d.innerHTML = t('pause.vsSwap') + '<small>' + t('pause.vsSwapSub') + '</small>';
-  }
-  ['pauseTogMusic', 'pauseTogSfx'].forEach((id, i) => {
-    const el = document.getElementById(id);
-    if (!el) return;
-    const ico = el.querySelector('.tog-ico');
-    const label = t(i ? 'pause.sfx' : 'pause.music');
-    el.textContent = '';
-    if (ico) el.appendChild(ico);
-    el.appendChild(document.createTextNode(label));
-  });
-  const pausePresets = [
-    ['pauseAudioMuteAll', 'pause.audioMuteAll'],
-    ['pauseAudioRestore', 'pause.audioRestore'],
-    ['pauseAudioSfxOnly', 'pause.audioSfxOnly'],
-  ];
-  for (const [id, key] of pausePresets) {
-    const el = document.getElementById(id);
-    if (el) el.textContent = t(key);
-  }
+  applyPauseChrome();
 
   const resAgain = document.getElementById('resAgain');
   if (resAgain) {
