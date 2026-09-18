@@ -5846,9 +5846,17 @@
       margin: 0;
       box-sizing: border-box;
     }
+    /* P1 landscape FOMO: Avontuur stays tappable while Vandaag docks left.
+       Portrait 390 hub lock (inert + pointer-events:none) stays. */
+    #menuScreen.is-fomo .menu-chrome {
+      pointer-events: auto;
+    }
     body.fomo-open #menuScreen .menu-landing-body,
-    body.fomo-open #menuScreen .menu-game-grid {
+    body.fomo-open #menuScreen .menu-game-grid,
+    body.fomo-open #menuScreen #btnAdventure,
+    body.fomo-open #menuScreen #btnContinue {
       visibility: visible;
+      pointer-events: auto;
     }
     body.fomo-open #menuScreen.menu-video-overhaul .menu-title-glass {
       visibility: hidden;

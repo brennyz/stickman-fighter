@@ -34,6 +34,10 @@ must(/#menuScreen\.menu-video-overhaul \.menu-chrome \{[\s\S]{0,220}grid-templat
   'HOME landscape must put title left + Play tiles right');
 must(/P0 landscape FOMO: dock Vandaag/.test(css),
   'landscape FOMO must dock left and leave SPELEN/Avontuur clear');
+must(/P1 landscape FOMO: Avontuur stays tappable/.test(css),
+  'short landscape must keep Avontuur tappable while Vandaag is open');
+must(/#menuScreen\.is-fomo \.menu-chrome \{[\s\S]{0,80}pointer-events:\s*auto/.test(css),
+  'short landscape must restore pointer-events on HOME chrome');
 must(/body:has\(#sfSplash\.is-title\) #menuScreen #fomoRitual/.test(css),
   'FOMO must hide while the Begin SPELEN gate is up');
 must(/id="sfTitleStart"/.test(html) && /id="btnAdventure"/.test(html),
@@ -225,6 +229,7 @@ async function runAt(browser, width, height, label) {
     const playCs = play ? getComputedStyle(play) : null;
     const playPainted = !!(playCs && playCs.visibility !== 'hidden' && playCs.display !== 'none'
       && Number(playCs.opacity) > 0.2);
+    const chrome = document.querySelector('#menuScreen .menu-chrome');
     return {
       open: !!(overlay && !overlay.hidden && getComputedStyle(overlay).display !== 'none'),
       sheet: a,
@@ -235,6 +240,9 @@ async function runAt(browser, width, height, label) {
       playVisible: !!(b && b.h >= 44 && b.top >= -2 && b.bottom <= window.innerHeight + 2 && playPainted),
       playPainted,
       playHit: !!(b && hit(b.left + b.w / 2, b.top + Math.min(20, b.h / 2))),
+      chromeInert: !!(chrome && chrome.hasAttribute('inert')),
+      playInert: !!(play && play.closest('[inert]')),
+      playPe: playCs ? playCs.pointerEvents : null,
     };
   });
   await shot(page, `${label}-fomo.png`);
@@ -243,6 +251,32 @@ async function runAt(browser, width, height, label) {
     if (fomo.overlapPlay) fails.push({ where: `${label} FOMO sheet covers Avontuur`, fomo });
     if (fomo.overlapStart) fails.push({ where: `${label} FOMO sheet covers SPELEN`, fomo });
     if (!fomo.playVisible) fails.push({ where: `${label} Avontuur hidden under FOMO`, fomo });
+    if (fomo.chromeInert || fomo.playInert) {
+      fails.push({ where: `${label} Avontuur still inert while FOMO open`, fomo });
+    }
+    if (!fomo.playHit) {
+      fails.push({ where: `${label} Avontuur not hittable while FOMO open`, fomo });
+    }
+    if (fomo.play && fomo.playHit) {
+      await page.mouse.click(
+        fomo.play.left + fomo.play.w / 2,
+        fomo.play.top + Math.min(20, fomo.play.h / 2),
+      );
+      const afterTap = await page.evaluate(() => {
+        const level = document.getElementById('levelScreen');
+        const overlay = document.getElementById('fomoRitual');
+        const playing = document.body.classList.contains('is-playing');
+        return {
+          level: !!(level && level.classList.contains('active')),
+          playing,
+          fomoOpen: !!(overlay && !overlay.hidden),
+        };
+      });
+      await shot(page, `${label}-fomo-avontuur-tap.png`);
+      if (!afterTap.level && !afterTap.playing && afterTap.fomoOpen) {
+        fails.push({ where: `${label} Avontuur tap did not start play or dismiss FOMO`, afterTap });
+      }
+    }
   }
 
   await page.close();
