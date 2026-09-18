@@ -156,11 +156,16 @@ async function run() {
     const phone = await runViewport(browser, base, {
       id: 'phone-390', w: 390, h: 844, mobile: true, expectScale: 0.5, expectMaxAlive: 12,
     });
+    const land = await runViewport(browser, base, {
+      id: 'phone-land-844', w: 844, h: 390, mobile: true, expectMaxAlive: 14,
+    });
     const desk = await runViewport(browser, base, {
       id: 'desktop-1280', w: 1280, h: 800, mobile: false, expectScale: 1, expectMaxAlive: 78,
     });
     if (phone.delayMs >= desk.delayMs + 50) fail('phone lose CTA should not be slower than desktop', { phone, desk });
-    console.log('LOSE_RETRY', { phone, desk });
+    if (land.delayMs >= 3000) fail('landscape death→CTA must be under 3s', land);
+    if (land.againH < 64) fail('landscape retry not fat enough', land);
+    console.log('LOSE_RETRY', { phone, land, desk });
     console.log('SMOKE_OK lose-retry');
   } finally {
     await browser.close();

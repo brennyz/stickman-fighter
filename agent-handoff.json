@@ -50,6 +50,14 @@
   },
   "userWishlist": [
     {
+      "id": "w-20260918T160800",
+      "from": "user",
+      "text": "PLAYTEST BOT 5/9 — Stickman Fighter. LIVE main c9a29fc v1.18.190 SW400. Until ~18:36 Amsterdam. Focus: DEATH→RETRY — die, fat Nog één keer <3s, same-level rematch, killer tip. Portrait+landscape. Draft findings. No Versus. No main.",
+      "status": "done-in-code",
+      "updated": "2026-09-18",
+      "notes": "Playtest lane 5/9 death-retry. Draft findings only, do not merge main."
+    },
+    {
       "id": "w-20260918T155700",
       "from": "user",
       "text": "MEGA-MERGE Stickman 20m-session drafts to main. Brendon wants playtest swarm on a fixed build next. Priority: #333 invisible fighters, #325 landscape combat camera/floor, #334 examinator feel (keep pauseG), #329 landscape begin/HOME SPELEN + FOMO dock, #332 telegraph readability (keep #314 density), #331 landscape touch, #328 first-30s teach, #330 combat juice, #326 death-retry polish, #327 fxLite if mergeable. No Versus. speel.html. No force-push. Conflict: keep #333 drawCombatants+recover, #325 viewport/floor, #334 pauseG HUD, #329 two-col SPELEN + FOMO left dock, #323/#326 fat gold Nog één keer + restartAdventureInstant.",
@@ -1231,6 +1239,10 @@
   ],
   "sessionLog": [
     {
+      "at": "2026-09-18T16:28:35Z",
+      "summary": "PLAYTEST 5/9 DEATH→RETRY draft: LIVE c9a29fc v1.18.190 die→fat Nog één keer ~720ms, rematch same L1, killer tip. P2 heat/dice lecture. No Versus, no main."
+    },
+    {
       "at": "2026-09-18T16:06:11Z",
       "summary": "MEGA-MERGE 20m drafts #333–#327 onto main. v1.18.190 / SW 400. Playtest swarm. SKIP #324. Leave #311."
     },
@@ -1325,10 +1337,6 @@
     {
       "at": "2026-09-18T12:31:56Z",
       "summary": "LANGUAGE: factory desc + nameShort, FOMO/HUD locale, export gear/fabriek i18n. Draft #317, geen main."
-    },
-    {
-      "at": "2026-09-18T12:30:17Z",
-      "summary": "LANGUAGE worker: layout-safe NL/EN/DE/FR/ES copy (factory desc, FOMO, HUD telegraphs). Draft, geen main."
     }
   ],
   "implementedFeaturesSummary": "d18 char select deel 1+2 (v1.11.1-2); Mats coinrun + shuriken mik/vliegers + anti-spam (v1.12.0); speel.html (v1.12.2+). Zie HANDOFF-ZOEKINDEX.md en improvement-d20-bag.json userFeatureLog.",
