@@ -746,7 +746,7 @@ bindPress(document.getElementById('pausePetChip'), () => {
       return;
     }
     if (typeof spawnGamePet === 'function' && typeof game !== 'undefined' && game) {
-      try { spawnGamePet(game); } catch (_) {}
+      try { spawnGamePet(game, { fromEquip: true }); } catch (_) {}
     }
     const name = (typeof petsSpeciesName === 'function') ? petsSpeciesName(res.def) : (res.id || '');
     if (res.kind === 'equip') {

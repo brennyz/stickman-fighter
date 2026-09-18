@@ -148,6 +148,7 @@ Schrijf **1–3 regels** per sessie: datum, d#, wat, versie.
 
 | Datum (UTC) | d# | Update |
 |-------------|-----|--------|
+| 2026-09-18 | — | **Pets P0 feel #319:** snappy follow (vx/vy + face-flip/dash/jump), assist telegraph, light hit/kill/equip juice. No Versus, no main. **v1.18.176 / SW 386**. |
 | 2026-09-18 | — | **Pets P3 DONE #319:** EN/DE/FR/ES HOME Pets tile + pause chip + egg CTAs. Draft, no main. **v1.18.175 / SW 385**. |
 | 2026-09-18 | — | **Pets P0 on #319:** chrome daily-egg CTA; HOME 1-tap Pets + pause chip (equip/cycle, no mid-fight hop); locked Dex short on 390px. No Versus. Draft. **v1.18.174 / SW 384**. |
 | 2026-09-16 | — | **MEGA-MERGE → main** Grok wave #295–#309 (i18n → systems → UI → pixels → polish). Feature-base PRs (#297/#300/#307/#309) cherry-picked. **v1.18.172 / SW 382**. speel.html na Pages. |

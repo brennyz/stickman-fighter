@@ -8,6 +8,17 @@ Share / playtest URL stays **`speel.html`**. **No Versus.**
 
 **P3 DONE** (draft #319, not on main): HOME Pets tile, pause chip, and daily-egg CTAs are i18n’d in EN / DE / FR / ES / NL.
 
+## Combat feel (P0 sluggish follow)
+
+Feel-only — assist damage and cooldown numbers unchanged.
+
+- Shared `companionFollow`: exp smoothing + player vx/vy predict + face-flip / dash / jump snap
+- Assist **telegraph** (ring + dashed intent + chevron) in the last ~0.28s of CD; hit still fires on the old beat
+- Missed range no longer burns a full CD
+- Light juice: lunge + extra sparks on hit, ring on pet kill, stretch while catching up, bigger sparkles on pause-equip
+- Egg companion uses the same chase
+- Reduced-motion / Lite FX stay quieter. No extra toasts.
+
 ## What this ships
 
 - **HOME 1-tap Pets** tile (same pattern as gear) + Collection tile

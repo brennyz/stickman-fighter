@@ -149,7 +149,7 @@ class EggPet {
     this.y = game.player ? game.player.y - 48 : game.ground - 48;
     this.t = Math.random() * 6;
     this.size = 11;
-    this.spawnT = motionReduced() ? 0 : 0.5;
+    this.spawnT = motionReduced() ? 0 : 0.32;
   }
 
   update(dt) {
@@ -159,15 +159,22 @@ class EggPet {
     this.t += dt;
     if (this.spawnT > 0) this.spawnT = Math.max(0, this.spawnT - dt);
     const bob = Math.sin(this.t * 4.5) * 3;
-    const tx = p.x + p.face * (IS_TOUCH ? 26 : 30);
-    const ty = p.y - 46 + bob;
-    const follow = g.traveling ? 10 : 7;
-    this.x += (tx - this.x) * Math.min(1, dt * follow);
-    this.y += (ty - this.y) * Math.min(1, dt * 9);
+    if (typeof companionFollow === 'function') {
+      companionFollow(this, p, {
+        dt, side: 1, bob,
+        dist: typeof IS_TOUCH !== 'undefined' && IS_TOUCH ? 26 : 30,
+        hoverY: -46, traveling: !!g.traveling,
+      });
+    } else {
+      const tx = p.x + p.face * (IS_TOUCH ? 26 : 30);
+      const ty = p.y - 46 + bob;
+      this.x += (tx - this.x) * Math.min(1, dt * 18);
+      this.y += (ty - this.y) * Math.min(1, dt * 16);
+    }
   }
 
   draw(c) {
-    const appear = this.spawnT > 0 ? clamp(1 - this.spawnT / 0.5, 0, 1) : 1;
+    const appear = this.spawnT > 0 ? clamp(1 - this.spawnT / 0.32, 0, 1) : 1;
     const sc = 0.2 + appear * 0.8;
     c.save();
     if (appear < 1 && !fxLite() && !motionReduced()) {
