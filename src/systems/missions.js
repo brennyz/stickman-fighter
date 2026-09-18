@@ -294,7 +294,7 @@ function claimDailyTask(taskId, opts) {
     AudioSys.sfx('bonus');
     UI.toast(t('toast.claimXp', { xp: def.xp, text: dailyText(taskId) }), 2800);
   }
-  if (!persistOrToast('missie-claim')) {
+  if (!persistOrToast('mission')) {
     task.claimed = snap.claimed;
     save.xp = snap.xp;
     save.lvl = snap.lvl;
@@ -399,7 +399,7 @@ function claimDailyDayBonus() {
     grantMetaXP(120, { deferPersist: true });
   }
   AudioSys.sfx('win');
-  if (!persistOrToast('dagbonus')) {
+  if (!persistOrToast('daily')) {
     save.daily.dayBonusClaimed = snap.dayBonusClaimed;
     save.stats.dailyBonusCount = snap.dailyBonusCount;
     save.stats.dailyStreak = snap.dailyStreak;
@@ -1075,14 +1075,14 @@ function updateSaveImportPreview(text) {
     const { save: next, meta, warnings } = previewImportSave(text);
     previewEl.style.display = 'block';
     previewEl.style.color = '#ffd75e';
-    const metaLine = meta && meta.app ? ` · export v${meta.app}` : '';
+    const metaLine = meta && meta.app ? t('ui.importPreviewMeta', { app: meta.app }) : '';
     const warnLine = warnings && warnings.length ? '\n' + warnings.join(' · ') : '';
     previewEl.textContent =
-      `Preview: ${saveExportSummaryLine(next)}${metaLine}.${warnLine} Import 2× om te laden.`;
+      t('ui.importPreview', { summary: saveExportSummaryLine(next), meta: metaLine }) + warnLine;
   } catch (e) {
     previewEl.style.display = 'block';
     previewEl.style.color = '#ffb0b8';
-    previewEl.textContent = (e && e.message) ? e.message : 'Ongeldige save-JSON';
+    previewEl.textContent = (e && e.message) ? e.message : t('ui.importInvalid');
   }
 }
 
@@ -1435,67 +1435,67 @@ function importPreviewWarnings(next, meta) {
       }
     } catch (_) {}
   }
-  if (meta && meta.app) lines.push('App-versie export: v' + meta.app);
+  if (meta && meta.app) lines.push(t('ui.importAppVer', { v: meta.app }));
   if (meta && meta.summary && typeof meta.summary === 'object') {
     const s = meta.summary;
     let sum = t('ui.saveHealthStats', { lvl: s.lvl, unlocked: s.unlocked, dex: s.dex, kills: s.kills || 0 }) + t('ui.saveExportAch', { n: s.achievements });
     if (s.summons) sum += t('ui.saveHealthSummon', { n: s.summons });
     if (s.pets) sum += t('ui.saveHealthPet', { n: s.pets });
     if (s.eggs) sum += t('ui.saveHealthEgg', { n: s.eggs });
-    if (s.skillUpLv) sum += ` · skill +${s.skillUpLv} Lv`;
-    if (s.itemUpLv) sum += ` · item +${s.itemUpLv} Lv`;
-    if (s.petCoins) sum += ` · ${s.petCoins} pet coins`;
-    if (s.style && s.style !== 'classic') sum += ` · stijl ${s.style}`;
+    if (s.skillUpLv) sum += t('ui.saveHealthSkill', { n: s.skillUpLv });
+    if (s.itemUpLv) sum += t('ui.saveHealthItem', { n: s.itemUpLv });
+    if (s.petCoins) sum += t('ui.saveHealthPetCoins', { n: s.petCoins });
+    if (s.style && s.style !== 'classic') sum += t('ui.saveHealthStyle', { name: s.style });
     lines.push(sum);
   }
   const summonN = summonCountFromSave(next);
   const curSummonN = summonCountFromSave(save);
-  if (summonN > curSummonN) lines.push(`+${summonN - curSummonN} summon-wapen(s) in import`);
-  else if (summonN < curSummonN) lines.push(`Minder summons dan nu (${summonN} vs ${curSummonN})`);
+  if (summonN > curSummonN) lines.push(t('ui.importMore', { n: summonN - curSummonN, kind: t('ui.importKindSummon') }));
+  else if (summonN < curSummonN) lines.push(t('ui.importFewer', { kind: t('ui.importKindSummon'), a: summonN, b: curSummonN }));
   const petN = petCountFromSave(next);
   const curPetN = petCountFromSave(save);
-  if (petN > curPetN) lines.push(`+${petN - curPetN} dex-pet(s) in import`);
-  else if (petN < curPetN) lines.push(`Minder pets dan nu (${petN} vs ${curPetN})`);
+  if (petN > curPetN) lines.push(t('ui.importMore', { n: petN - curPetN, kind: t('ui.importKindPet') }));
+  else if (petN < curPetN) lines.push(t('ui.importFewer', { kind: t('ui.importKindPet'), a: petN, b: curPetN }));
   const eggN = eggCountFromSave(next);
   const curEggN = eggCountFromSave(save);
-  if (eggN > curEggN) lines.push(`+${eggN - curEggN} ei-pet(s) in import`);
-  else if (eggN < curEggN) lines.push(`Minder ei-pets dan nu (${eggN} vs ${curEggN})`);
+  if (eggN > curEggN) lines.push(t('ui.importMore', { n: eggN - curEggN, kind: t('ui.importKindEgg') }));
+  else if (eggN < curEggN) lines.push(t('ui.importFewer', { kind: t('ui.importKindEgg'), a: eggN, b: curEggN }));
   if (typeof countSkillUpgradeLevels === 'function') {
     const skN = countSkillUpgradeLevels(next);
     const curSkN = countSkillUpgradeLevels(save);
-    if (skN > curSkN) lines.push(`+${skN - curSkN} skill-upgrade Lv in import`);
-    else if (skN < curSkN) lines.push(`Minder skill-upgrades (${skN} vs ${curSkN} Lv)`);
+    if (skN > curSkN) lines.push(t('ui.importMore', { n: skN - curSkN, kind: t('ui.importKindSkill') }));
+    else if (skN < curSkN) lines.push(t('ui.importFewer', { kind: t('ui.importKindSkill'), a: skN, b: curSkN }));
   }
   if (typeof countItemUpgradeLevels === 'function') {
     const itN = countItemUpgradeLevels(next);
     const curItN = countItemUpgradeLevels(save);
-    if (itN > curItN) lines.push(`+${itN - curItN} item-upgrade Lv in import`);
-    else if (itN < curItN) lines.push(`Minder item-upgrades (${itN} vs ${curItN} Lv)`);
+    if (itN > curItN) lines.push(t('ui.importMore', { n: itN - curItN, kind: t('ui.importKindItem') }));
+    else if (itN < curItN) lines.push(t('ui.importFewer', { kind: t('ui.importKindItem'), a: itN, b: curItN }));
   }
   const impCoins = Math.max(0, Math.floor(Number(next.petCoins) || 0));
   const curCoins = Math.max(0, Math.floor(Number(save.petCoins) || 0));
-  if (impCoins > curCoins) lines.push(`+${impCoins - curCoins} pet coins in import`);
-  else if (impCoins < curCoins) lines.push(`Minder pet coins (${impCoins} vs ${curCoins})`);
+  if (impCoins > curCoins) lines.push(t('ui.importMore', { n: impCoins - curCoins, kind: t('ui.importKindCoins') }));
+  else if (impCoins < curCoins) lines.push(t('ui.importFewer', { kind: t('ui.importKindCoins'), a: impCoins, b: curCoins }));
   if (next.style !== save.style) {
-    lines.push(`Stijl ${save.style || 'classic'} → ${next.style || 'classic'}`);
+    lines.push(t('ui.importStyleChange', { from: save.style || 'classic', to: next.style || 'classic' }));
   }
   if (next.lvl < save.lvl || next.unlocked < save.unlocked) {
-    lines.push('Lager niveau/unlock dan huidige save op dit apparaat');
+    lines.push(t('ui.importLower'));
   } else if (next.lvl > save.lvl || next.unlocked > save.unlocked) {
-    lines.push('Hogere voortgang dan huidige save — goed voor overzet');
+    lines.push(t('ui.importHigher'));
   }
   return lines;
 }
 
 function previewImportSave(text) {
-  if (typeof text !== 'string' || !text.trim()) throw new Error('Plak eerst save-JSON in het vak');
-  if (text.length > 120000) throw new Error('Save te groot of ongeldig');
+  if (typeof text !== 'string' || !text.trim()) throw new Error(t('ui.importErrEmpty'));
+  if (text.length > 120000) throw new Error(t('ui.importErrTooBig'));
   let parsed;
   try { parsed = JSON.parse(text); } catch (_) {
-    throw new Error('Geen geldige JSON — controleer plaksel');
+    throw new Error(t('ui.importErrJson'));
   }
   if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) {
-    throw new Error('Ongeldige save-structuur');
+    throw new Error(t('ui.importErrStruct'));
   }
   parsed = unwrapSavePayload(parsed);
   const meta = parsed._exportMeta;

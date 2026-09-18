@@ -145,8 +145,8 @@ if (/Gratis Pull/.test(i18n)) fail('DE pets.crackEggSub still has leftover Dutch
 
 if (!/updateReady: 'Nouvelle version prête/.test(i18n)) fail('FR net chrome missing');
 if (!/updateReady: 'Nueva versión lista/.test(i18n)) fail('ES net chrome missing');
-if (!/summons: 'Summons', summonsSub: 'Coffre du jour/.test(i18n)) fail('FR summons chrome missing');
-if (!/summons: 'Summons', summonsSub: 'Cofre diario/.test(i18n)) fail('ES summons chrome missing');
+if (!/summons: 'Coffres', summonsSub: 'Coffre du jour/.test(i18n)) fail('FR summons chrome missing');
+if (!/summons: 'Cofres', summonsSub: 'Cofre diario/.test(i18n)) fail('ES summons chrome missing');
 if (/teens\+/.test(i18nEs)) fail('ES ageHint still has English teens+');
 if (/Version fraîche/.test(i18n)) fail('FR still has calque Version fraîche');
 
@@ -286,5 +286,34 @@ if (!/-webkit-line-clamp: 2/.test(css) || !/\.card \.cname/.test(css)) fail('car
 if (!/overflow-wrap:anywhere/.test(css.replace(/\s/g, '')) && !/overflow-wrap:\s*anywhere/.test(css)) {
   fail('toast/card overflow-wrap missing for 390px');
 }
+if (/persistOrToast\('stijl'\)/.test(ui)) fail('persistOrToast still interpolates Dutch stijl');
+if (/persistOrToast\('wapen'\)/.test(ui + missions)) fail('persistOrToast still interpolates Dutch wapen');
+if (/Preview: \$\{/.test(missions) || /Import 2× om te laden/.test(missions)) {
+  fail('settings import preview still hardcodes EN Preview / NL Import 2×');
+}
+if (!/ui\.importPreview/.test(missions)) fail('settings import preview must use ui.importPreview');
+if (!/style-card-tip/.test(css) || !/style-card-name/.test(css)) fail('style-card clamp classes missing');
+if (!/#seasonHubBeat/.test(css) && !/#seasonBlurb/.test(css)) fail('season blurb clamp missing');
+if (/Random-Summons/.test(deChrome + locales)) fail('DE summonQuota still says Random-Summons');
+if (/Keine Summons mehr/.test(deChrome + locales)) fail('DE summonNoMore still says Summons');
+if (!/summonQuota: 'Heute: \{left\}\/\{total\} Kisten'/.test(deChrome + locales)) fail('DE summonQuota must be Kisten');
+if (!/summonQuota: 'Aujourd/.test(locales)) fail('FR ui.summonQuota missing — EN Today leak');
+if (!/summonQuota: 'Hoy:/.test(locales)) fail('ES ui.summonQuota missing — EN Today leak');
+if (!/saveHealthStats: 'Nv \{lvl\} · libre/.test(locales)) fail('FR/ES saveHealthStats missing');
+if (/kickTele: 'TRITT — spring\/block!'/.test(deChrome)) fail('DE kickTele still English block');
+if (!/kickTele: 'TRITT — spring\/blocken!'/.test(deChrome + locales)) fail('DE kickTele must say blocken');
+if (/block: 'BLOCK!'/.test(locales.split('overlayI18nCatalog(CATALOG_DE')[1] || '')) {
+  fail('DE fighter.block overlay still English BLOCK');
+}
+if (!/persistCtxWeapon:/.test(catalog + locales + deChrome)) fail('toast.persistCtxWeapon missing');
+if (!/errSummonLoad:/.test(catalog + locales)) fail('ui.errSummonLoad missing');
+if (!/function persistContextLabel/.test(fs.readFileSync(path.join(root, 'src/core/storage.js'), 'utf8'))) {
+  fail('persistOrToast must localize context via persistContextLabel');
+}
+if (/syncFailed: 'Sync fallida/.test(locales)) fail('ES toast.syncFailed still English Sync');
+if (/syncFailed: 'Sync fehlgeschlagen/.test(locales + deChrome)) fail('DE toast.syncFailed still English Sync');
+if (/syncConfirm: 'Sync overschrijft/.test(catalog.split('const CATALOG_EN')[0] || '')) {
+  fail('NL toast.syncConfirm still English Sync');
+}
 
-console.log('SMOKE_OK i18n-locale: Tips/VERLOREN + #273 coverage + #283 overlays + 2026-09-18 pets/gear locale');
+console.log('SMOKE_OK i18n-locale: Tips/VERLOREN + #273 coverage + #283 overlays + 2026-09-18 HUD/settings');

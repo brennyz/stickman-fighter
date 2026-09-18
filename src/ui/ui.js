@@ -2319,7 +2319,7 @@ const UI = {
       try { syncPlayLayer(); } catch (_) {}
       try { hardenButtonIcons(document.getElementById('summonScreen')); } catch (_) {}
     } catch (err) {
-      sfReportError('renderSummon', err, 'Summons laden mislukt');
+      sfReportError('renderSummon', err, t('ui.errSummonLoad'));
       try { this.goMenu(); } catch (_) { ensureVisibleScreen(); }
     }
   },
@@ -2372,9 +2372,9 @@ const UI = {
       this.safeOpen('summonScreen', () => {
         this.renderSummon();
         try { ensureSummonVideoPreloaded(); } catch (_) {}
-      }, { msg: 'Summons laden mislukt' });
+      }, { msg: t('ui.errSummonLoad') });
     } catch (err) {
-      sfReportError('openSummonHub', err, 'Summons openen mislukt');
+      sfReportError('openSummonHub', err, t('ui.errSummonOpen'));
       try { this.goMenu(); } catch (_) {}
     }
   },
@@ -3495,7 +3495,7 @@ const UI = {
         safeUiAction(() => {
           save.weapon = w.id;
           this.weaponPreviewId = w.id;
-          if (!persistOrToast('wapen')) return;
+          if (!persistOrToast('weapon')) return;
           playWeaponPickFeedback(w.id);
           if (islandLocked) UI.toast(t('toast.weaponIslandCap', { cap: adventureWeaponCap() }), 2800);
           this.renderWeapons();
@@ -4224,11 +4224,13 @@ const UI = {
       drawStyleLookPreview(cc, st, 80, 86);
       el.appendChild(cv);
       const cap = document.createElement('div');
+      cap.className = 'style-card-name';
       cap.style.fontSize = '13px';
       cap.style.color = st.accent;
       cap.textContent = styleLabel(st);
       el.appendChild(cap);
       const bonus = document.createElement('div');
+      bonus.className = 'style-card-bonus';
       bonus.style.fontSize = '11px';
       bonus.style.fontWeight = '800';
       bonus.style.color = ok ? '#7cf5ff' : '#8fa3d9';
@@ -4237,6 +4239,7 @@ const UI = {
       bonus.style.opacity = ok ? '1' : '0.55';
       el.appendChild(bonus);
       const tip = document.createElement('div');
+      tip.className = 'style-card-tip';
       tip.style.fontSize = '10px';
       tip.style.opacity = '0.72';
       tip.style.marginTop = '4px';
@@ -4244,6 +4247,7 @@ const UI = {
       tip.textContent = styleLabel(st, 'tooltip') || styleLabel(st, 'hint');
       el.appendChild(tip);
       const sub = document.createElement('div');
+      sub.className = 'style-card-sub';
       sub.style.fontSize = '11px';
       sub.style.fontWeight = '600';
       sub.style.opacity = '0.75';
@@ -4255,12 +4259,12 @@ const UI = {
         bindPress(el, () => {
           safeUiAction(() => {
             save.style = st.id;
-            if (!persistOrToast('stijl')) return;
+            if (!persistOrToast('style')) return;
             AudioSys.sfx('select');
             this.renderStyle();
             this.renderMenu();
             UI.toast(t('toast.styleEquipped', { name: styleLabel(st) }), 2200);
-          }, 'pickStyle/' + st.id, 'Stijl kiezen mislukt');
+          }, 'pickStyle/' + st.id, t('ui.errStylePick'));
         });
       }
       grid.appendChild(el);

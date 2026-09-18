@@ -323,9 +323,9 @@ const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const VERSION_UPDATE_SAVE_KEY = 'stickfighter_version_update_save_v1';
 const VERSION_UPDATE_FLAG_KEY = 'stickfighter_version_update_flag_v1';
 const SAVE_EXPORT_SCHEMA = 3;
-const APP_VERSION = '1.18.174';
+const APP_VERSION = '1.18.175';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 384;
+const SW_CACHE_REV = 385;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', petCoins: 0, dex: {}, summons: {}, pets: {}, activePet: null,
   eggPets: {}, activeEggPet: null, eggDaily: null,
   chestDaily: null, chestWeapons: {},
@@ -1579,14 +1579,40 @@ function safeUiAction(fn, label, userMsg) {
   }
 }
 
+function persistContextLabel(context) {
+  const raw = String(context || '').trim();
+  if (!raw) return '';
+  const map = {
+    skill: 'toast.persistCtxSkill', super: 'toast.persistCtxSuper',
+    wapen: 'toast.persistCtxWeapon', weapon: 'toast.persistCtxWeapon',
+    style: 'toast.persistCtxStyle', stijl: 'toast.persistCtxStyle',
+    'missie-claim': 'toast.persistCtxMission', mission: 'toast.persistCtxMission',
+    'claim-all': 'toast.persistCtxClaim', dagbonus: 'toast.persistCtxDaily',
+    daily: 'toast.persistCtxDaily', XP: 'toast.persistCtxXp', xp: 'toast.persistCtxXp',
+    gear: 'toast.persistCtxGear', 'tide-battle': 'toast.persistCtxTide',
+  };
+  let key = map[raw];
+  if (!key) {
+    if (raw.indexOf('building/') === 0) key = 'toast.persistCtxBuilding';
+    else if (raw.indexOf('itemUp/') === 0) key = 'toast.persistCtxItem';
+    else if (raw.indexOf('skillUp/') === 0) key = 'toast.persistCtxSkill';
+  }
+  if (key && typeof t === 'function') {
+    const label = t(key);
+    if (label && label !== key) return label;
+  }
+  return raw;
+}
+
 function persistOrToast(context) {
   if (persist()) return true;
   const key = context || 'save';
+  const ctxLabel = persistContextLabel(context);
   window.__sfPersistCtxWarn = window.__sfPersistCtxWarn || {};
   if (!window.__sfPersistCtxWarn[key]) {
     window.__sfPersistCtxWarn[key] = true;
     userToast(context
-      ? toastT('toast.persistFailCtx', { context }, `Opslaan mislukt (${context}) — export save in Instellingen`)
+      ? toastT('toast.persistFailCtx', { context: ctxLabel }, `Opslaan mislukt (${ctxLabel}) — export save in Instellingen`)
       : toastT('toast.persistFail', null, 'Opslaan mislukt — export save in Instellingen'), 4200, { tone: 'warn' });
   }
   return false;
@@ -2438,7 +2464,7 @@ const I18N = {
     },
     season: {
       title: 'Seizoen',
-      hint: 'Sfeerlaag boven het originele scherm. Auto volgt de kalender. Tikken blijven vrij.',
+      hint: 'Sfeerlaag. Auto volgt de kalender. Tikken blijven vrij.',
       auto: 'Auto',
       classic: 'Klassiek',
       jungle: 'Jungle',
@@ -2750,7 +2776,7 @@ const I18N = {
     },
     season: {
       title: 'Season',
-      hint: 'A mood layer on the original screen. Auto follows the calendar. Taps stay free.',
+      hint: 'Mood layer. Auto follows the calendar. Taps stay free.',
       auto: 'Auto',
       classic: 'Classic',
       jungle: 'Jungle',
@@ -3135,7 +3161,7 @@ const I18N = {
     },
     season: {
       title: 'Saison',
-      hint: 'Stimmungsschicht über dem Originalbildschirm. Auto folgt dem Kalender. Tippen bleiben frei.',
+      hint: 'Stimmungsschicht. Auto folgt dem Kalender. Tippen frei.',
       auto: 'Auto',
       classic: 'Klassisch',
       jungle: 'Dschungel',
@@ -3250,7 +3276,8 @@ const I18N = {
       collect: 'Collection', collectSub: 'Armes · style · bestiaire',
       buildings: 'Usines', buildingsSub: 'Usines · récolte · améliorer',
       music: 'Musique', missions: 'Missions',
-      summons: 'Summons', summonsSub: 'Coffre du jour · arme et pet',
+      summons: 'Coffres', summonsSub: 'Coffre du jour · arme et pet',
+      profileAria: 'Profil et missions',
       options: 'Options', tips: 'Astuces', fresh: 'Nouvelle version', install: 'Ajouter comme app', installSub: 'Une icône, comme une vraie app',
       pressStart: 'insert coin', missionReady: 'mission prête', dayBonus: 'Bonus du jour',
       choosePath: 'CHOISIS TON CHEMIN', lastPlayed: 'DERNIER', playHere: 'JOUER', saveSync: 'sauv. OK',
@@ -3418,7 +3445,7 @@ const I18N = {
     },
     season: {
       title: 'Saison',
-      hint: 'Une couche d’ambiance sur l’écran d’origine. Auto suit le calendrier. Les appuis restent libres.',
+      hint: 'Couche d’ambiance. Auto suit le calendrier. Appuis libres.',
       auto: 'Auto',
       classic: 'Classique',
       jungle: 'Jungle',
@@ -3536,7 +3563,8 @@ const I18N = {
       collect: 'Colección', collectSub: 'Armas · estilo · bestiario',
       buildings: 'Fábricas', buildingsSub: 'Obras · recolectar · mejorar',
       music: 'Música', missions: 'Misiones',
-      summons: 'Summons', summonsSub: 'Cofre diario · arma y pet',
+      summons: 'Cofres', summonsSub: 'Cofre diario · arma y pet',
+      profileAria: 'Perfil y misiones',
       options: 'Opciones', tips: 'Consejos', fresh: 'Versión nueva', install: 'Añadir como app', installSub: 'Un icono, como una app real',
       pressStart: 'insert coin', missionReady: 'misión lista', dayBonus: 'Bonus diario',
       choosePath: 'ELIGE TU CAMINO', lastPlayed: 'ÚLTIMO', playHere: 'JUEGA', saveSync: 'guardado OK',
@@ -3704,7 +3732,7 @@ const I18N = {
     },
     season: {
       title: 'Temporada',
-      hint: 'Capa de ambiente sobre la pantalla original. Auto sigue el calendario. Los toques siguen libres.',
+      hint: 'Capa de ambiente. Auto sigue el calendario. Toques libres.',
       auto: 'Auto',
       classic: 'Clásico',
       jungle: 'Jungla',
@@ -4797,7 +4825,7 @@ function claimDailyTask(taskId, opts) {
     AudioSys.sfx('bonus');
     UI.toast(t('toast.claimXp', { xp: def.xp, text: dailyText(taskId) }), 2800);
   }
-  if (!persistOrToast('missie-claim')) {
+  if (!persistOrToast('mission')) {
     task.claimed = snap.claimed;
     save.xp = snap.xp;
     save.lvl = snap.lvl;
@@ -4902,7 +4930,7 @@ function claimDailyDayBonus() {
     grantMetaXP(120, { deferPersist: true });
   }
   AudioSys.sfx('win');
-  if (!persistOrToast('dagbonus')) {
+  if (!persistOrToast('daily')) {
     save.daily.dayBonusClaimed = snap.dayBonusClaimed;
     save.stats.dailyBonusCount = snap.dailyBonusCount;
     save.stats.dailyStreak = snap.dailyStreak;
@@ -5578,14 +5606,14 @@ function updateSaveImportPreview(text) {
     const { save: next, meta, warnings } = previewImportSave(text);
     previewEl.style.display = 'block';
     previewEl.style.color = '#ffd75e';
-    const metaLine = meta && meta.app ? ` · export v${meta.app}` : '';
+    const metaLine = meta && meta.app ? t('ui.importPreviewMeta', { app: meta.app }) : '';
     const warnLine = warnings && warnings.length ? '\n' + warnings.join(' · ') : '';
     previewEl.textContent =
-      `Preview: ${saveExportSummaryLine(next)}${metaLine}.${warnLine} Import 2× om te laden.`;
+      t('ui.importPreview', { summary: saveExportSummaryLine(next), meta: metaLine }) + warnLine;
   } catch (e) {
     previewEl.style.display = 'block';
     previewEl.style.color = '#ffb0b8';
-    previewEl.textContent = (e && e.message) ? e.message : 'Ongeldige save-JSON';
+    previewEl.textContent = (e && e.message) ? e.message : t('ui.importInvalid');
   }
 }
 
@@ -5938,67 +5966,67 @@ function importPreviewWarnings(next, meta) {
       }
     } catch (_) {}
   }
-  if (meta && meta.app) lines.push('App-versie export: v' + meta.app);
+  if (meta && meta.app) lines.push(t('ui.importAppVer', { v: meta.app }));
   if (meta && meta.summary && typeof meta.summary === 'object') {
     const s = meta.summary;
     let sum = t('ui.saveHealthStats', { lvl: s.lvl, unlocked: s.unlocked, dex: s.dex, kills: s.kills || 0 }) + t('ui.saveExportAch', { n: s.achievements });
     if (s.summons) sum += t('ui.saveHealthSummon', { n: s.summons });
     if (s.pets) sum += t('ui.saveHealthPet', { n: s.pets });
     if (s.eggs) sum += t('ui.saveHealthEgg', { n: s.eggs });
-    if (s.skillUpLv) sum += ` · skill +${s.skillUpLv} Lv`;
-    if (s.itemUpLv) sum += ` · item +${s.itemUpLv} Lv`;
-    if (s.petCoins) sum += ` · ${s.petCoins} pet coins`;
-    if (s.style && s.style !== 'classic') sum += ` · stijl ${s.style}`;
+    if (s.skillUpLv) sum += t('ui.saveHealthSkill', { n: s.skillUpLv });
+    if (s.itemUpLv) sum += t('ui.saveHealthItem', { n: s.itemUpLv });
+    if (s.petCoins) sum += t('ui.saveHealthPetCoins', { n: s.petCoins });
+    if (s.style && s.style !== 'classic') sum += t('ui.saveHealthStyle', { name: s.style });
     lines.push(sum);
   }
   const summonN = summonCountFromSave(next);
   const curSummonN = summonCountFromSave(save);
-  if (summonN > curSummonN) lines.push(`+${summonN - curSummonN} summon-wapen(s) in import`);
-  else if (summonN < curSummonN) lines.push(`Minder summons dan nu (${summonN} vs ${curSummonN})`);
+  if (summonN > curSummonN) lines.push(t('ui.importMore', { n: summonN - curSummonN, kind: t('ui.importKindSummon') }));
+  else if (summonN < curSummonN) lines.push(t('ui.importFewer', { kind: t('ui.importKindSummon'), a: summonN, b: curSummonN }));
   const petN = petCountFromSave(next);
   const curPetN = petCountFromSave(save);
-  if (petN > curPetN) lines.push(`+${petN - curPetN} dex-pet(s) in import`);
-  else if (petN < curPetN) lines.push(`Minder pets dan nu (${petN} vs ${curPetN})`);
+  if (petN > curPetN) lines.push(t('ui.importMore', { n: petN - curPetN, kind: t('ui.importKindPet') }));
+  else if (petN < curPetN) lines.push(t('ui.importFewer', { kind: t('ui.importKindPet'), a: petN, b: curPetN }));
   const eggN = eggCountFromSave(next);
   const curEggN = eggCountFromSave(save);
-  if (eggN > curEggN) lines.push(`+${eggN - curEggN} ei-pet(s) in import`);
-  else if (eggN < curEggN) lines.push(`Minder ei-pets dan nu (${eggN} vs ${curEggN})`);
+  if (eggN > curEggN) lines.push(t('ui.importMore', { n: eggN - curEggN, kind: t('ui.importKindEgg') }));
+  else if (eggN < curEggN) lines.push(t('ui.importFewer', { kind: t('ui.importKindEgg'), a: eggN, b: curEggN }));
   if (typeof countSkillUpgradeLevels === 'function') {
     const skN = countSkillUpgradeLevels(next);
     const curSkN = countSkillUpgradeLevels(save);
-    if (skN > curSkN) lines.push(`+${skN - curSkN} skill-upgrade Lv in import`);
-    else if (skN < curSkN) lines.push(`Minder skill-upgrades (${skN} vs ${curSkN} Lv)`);
+    if (skN > curSkN) lines.push(t('ui.importMore', { n: skN - curSkN, kind: t('ui.importKindSkill') }));
+    else if (skN < curSkN) lines.push(t('ui.importFewer', { kind: t('ui.importKindSkill'), a: skN, b: curSkN }));
   }
   if (typeof countItemUpgradeLevels === 'function') {
     const itN = countItemUpgradeLevels(next);
     const curItN = countItemUpgradeLevels(save);
-    if (itN > curItN) lines.push(`+${itN - curItN} item-upgrade Lv in import`);
-    else if (itN < curItN) lines.push(`Minder item-upgrades (${itN} vs ${curItN} Lv)`);
+    if (itN > curItN) lines.push(t('ui.importMore', { n: itN - curItN, kind: t('ui.importKindItem') }));
+    else if (itN < curItN) lines.push(t('ui.importFewer', { kind: t('ui.importKindItem'), a: itN, b: curItN }));
   }
   const impCoins = Math.max(0, Math.floor(Number(next.petCoins) || 0));
   const curCoins = Math.max(0, Math.floor(Number(save.petCoins) || 0));
-  if (impCoins > curCoins) lines.push(`+${impCoins - curCoins} pet coins in import`);
-  else if (impCoins < curCoins) lines.push(`Minder pet coins (${impCoins} vs ${curCoins})`);
+  if (impCoins > curCoins) lines.push(t('ui.importMore', { n: impCoins - curCoins, kind: t('ui.importKindCoins') }));
+  else if (impCoins < curCoins) lines.push(t('ui.importFewer', { kind: t('ui.importKindCoins'), a: impCoins, b: curCoins }));
   if (next.style !== save.style) {
-    lines.push(`Stijl ${save.style || 'classic'} → ${next.style || 'classic'}`);
+    lines.push(t('ui.importStyleChange', { from: save.style || 'classic', to: next.style || 'classic' }));
   }
   if (next.lvl < save.lvl || next.unlocked < save.unlocked) {
-    lines.push('Lager niveau/unlock dan huidige save op dit apparaat');
+    lines.push(t('ui.importLower'));
   } else if (next.lvl > save.lvl || next.unlocked > save.unlocked) {
-    lines.push('Hogere voortgang dan huidige save — goed voor overzet');
+    lines.push(t('ui.importHigher'));
   }
   return lines;
 }
 
 function previewImportSave(text) {
-  if (typeof text !== 'string' || !text.trim()) throw new Error('Plak eerst save-JSON in het vak');
-  if (text.length > 120000) throw new Error('Save te groot of ongeldig');
+  if (typeof text !== 'string' || !text.trim()) throw new Error(t('ui.importErrEmpty'));
+  if (text.length > 120000) throw new Error(t('ui.importErrTooBig'));
   let parsed;
   try { parsed = JSON.parse(text); } catch (_) {
-    throw new Error('Geen geldige JSON — controleer plaksel');
+    throw new Error(t('ui.importErrJson'));
   }
   if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) {
-    throw new Error('Ongeldige save-structuur');
+    throw new Error(t('ui.importErrStruct'));
   }
   parsed = unwrapSavePayload(parsed);
   const meta = parsed._exportMeta;
@@ -21031,9 +21059,9 @@ function seedNlGameStrings() {
     backupDrift: ' (hoofd en backup verschillen)',
     backupRestored: 'Backup teruggezet — save + backup synchroon',
     backupFailed: 'Backup herstellen mislukt — export save als je die hebt',
-    syncConfirm: 'Sync overschrijft backup met hoofd-save — tik nogmaals',
-    syncOk: 'Backup gesynchroniseerd met hoofd-save',
-    syncFailed: 'Sync mislukt — export save als vangnet',
+    syncConfirm: 'Online-save overschrijft backup — tik nogmaals',
+    syncOk: 'Backup gelijk met hoofd-save',
+    syncFailed: 'Afstemming mislukt — export save als vangnet',
     clearConfirm: 'Nogmaals tikken = voortgang wissen (backup blijft)',
     newStart: 'Nieuwe start — backup staat nog in Instellingen',
     exportCopied: 'Save gekopieerd + download · {summary} (~{size})',
@@ -21048,6 +21076,10 @@ function seedNlGameStrings() {
     persistPrimaryFail: 'Hoofd-save mislukt — backup wel bijgewerkt (export in Instellingen)',
     persistFail: 'Opslaan mislukt — export save in Instellingen',
     persistFailCtx: 'Opslaan mislukt ({context}) — export save in Instellingen',
+    persistCtxSkill: 'skill', persistCtxSuper: 'super', persistCtxWeapon: 'wapen',
+    persistCtxStyle: 'stijl', persistCtxMission: 'missie', persistCtxClaim: 'claim',
+    persistCtxDaily: 'dagbonus', persistCtxXp: 'XP', persistCtxGear: 'uitrusting',
+    persistCtxBuilding: 'fabriek', persistCtxItem: 'item', persistCtxTide: 'tide',
     pickFileOrPaste: 'Kies een exportbestand of plak save-JSON in het vak',
     saveLoadedPreview: 'Save uit {src} — tik Import om te kijken',
     filePickerUnavailable: 'Bestand kiezen niet beschikbaar',
@@ -21379,7 +21411,7 @@ function seedNlGameStrings() {
     superStat_charge: 'Laden',
     superHudCd: 'Nood-super {n}s',
     weaponHead: 'Wapens',
-    weaponSub: 'Summons zijn echt · eiland-skill gate: alleen wapens tot je huidige eiland-cap in avontuur',
+    weaponSub: 'Oproepen zijn echt · eiland-skill: wapens tot cap',
     skillHead: 'Upgrades',
     skillSub: 'Shards in avontuur · skills, wapens, pets & stijl · meestal max Lv 3 · zeldzaam Lv 5',
     skillTabSkills: 'Skills',
@@ -21502,7 +21534,7 @@ function seedNlGameStrings() {
     summonDone: 'Op',
     summonOpen: 'Open kist',
     summonOpenAria: 'Open kist, {n} over',
-    summonNoMore: 'Geen summons meer vandaag',
+    summonNoMore: 'Geen oproepen meer vandaag',
     summonOpening: 'Kist opent…',
     summonNoPulls: 'Nog geen pulls vandaag.',
     summonFail: 'Summon mislukt — probeer opnieuw',
@@ -21545,7 +21577,7 @@ function seedNlGameStrings() {
     hubStatDexLine: '{n}/{total} · +max HP',
     summonHead: 'Oproepen',
     summonSub: 'Dagelijkse kist · 10× random · wapen of pet',
-    summonWhere: 'Menu → Oproepen · buit in Collectie → Wapens / Pets (badge Kist)',
+    summonWhere: 'Menu → Oproepen · buit in Collectie',
     summonQuota: 'Vandaag: {left}/{total} random oproepen',
     summonPull: 'Open kist',
     summonPullLeft: '{n} over',
@@ -21558,7 +21590,7 @@ function seedNlGameStrings() {
     summonGotoWeapons: 'Naar wapens',
     summonGotoPets: 'Naar pets',
     summonGotoSub: 'Collectie',
-    summonLogEmpty: 'Nog geen pulls vandaag.',
+    summonLogEmpty: 'Nog geen trekkingen vandaag.',
     summonLeftToday: '{n} over vandaag',
     summonDoneToday: 'op voor vandaag',
     sharePlayLinkOk: '✓ Speel-link — deel met vrienden (Android)',
@@ -21607,7 +21639,30 @@ function seedNlGameStrings() {
     petActive: 'actief',
     petEquip: 'uitrusten',
     styleSummary: 'Outfits {unlocked}/{total} · actief {name}',
-    styleSummaryHint: 'Elke stijl heeft een eigen bonus — hover of lees de tooltip. Cosmetisch + lichte combat-perks.',
+    styleSummaryHint: 'Elke stijl heeft een bonus — look + lichte perk.',
+    errStylePick: 'Stijl kiezen mislukt',
+    errSummonLoad: 'Oproepen laden mislukt',
+    errSummonOpen: 'Oproepen openen mislukt',
+    saveHealthStyle: ' · stijl {name}',
+    importPreview: 'Voorbeeld: {summary}{meta}. Tik Laden 2×.',
+    importPreviewMeta: ' · v{app}',
+    importInvalid: 'Ongeldige save',
+    importErrEmpty: 'Plak eerst de save-JSON',
+    importErrTooBig: 'Save te groot',
+    importErrJson: 'Geen geldige JSON',
+    importErrStruct: 'Ongeldige save-structuur',
+    importMore: '+{n} {kind}',
+    importFewer: 'Minder {kind} ({a} vs {b})',
+    importKindSummon: 'oproepen',
+    importKindPet: 'pets',
+    importKindEgg: 'ei-pets',
+    importKindSkill: 'skill-Lv',
+    importKindItem: 'item-Lv',
+    importKindCoins: 'pet coins',
+    importStyleChange: 'Stijl {from} → {to}',
+    importLower: 'Lager dan de save hier',
+    importHigher: 'Hoger dan de save hier',
+    importAppVer: 'Export v{v}',
     petBuy: 'kopen',
     eggCosmetic: 'Cosmetisch metgezel',
     eggUnhatched: 'Nog niet uitgekomen',
@@ -21629,7 +21684,7 @@ function seedNlGameStrings() {
     dexType: { hop: 'Hups', fly: 'Vlieg', charge: 'Charge', shoot: 'Schiet', tank: 'Tank', dragon: 'Draak', swim: 'Zee' },
     dexBiome: { farm: 'Boerderij', zoo: 'Dierentuin', sea: 'Zee', wild: 'Woud', crypt: 'Crypte', scrap: 'Schroot', frost: 'Vorst', classic: 'Klassiek', secret: 'Geheim' },
     saveHealthStats: 'Lv {lvl} · vrij {unlocked} · boek {dex} · kills {kills}',
-    saveHealthSummon: ' · ✦ {n} summon',
+    saveHealthSummon: ' · ✦ {n} oproep',
     saveHealthPet: ' · pet {n}',
     saveHealthEgg: ' · ei {n}',
     saveHealthSkill: ' · skill +{n} Lv',
@@ -22222,6 +22277,10 @@ const CATALOG_EN = {
     persistPrimaryFail: 'Main save failed — backup updated (export in Settings)',
     persistFail: 'Save failed — export in Settings',
     persistFailCtx: 'Save failed ({context}) — export in Settings',
+    persistCtxSkill: 'skill', persistCtxSuper: 'super', persistCtxWeapon: 'weapon',
+    persistCtxStyle: 'style', persistCtxMission: 'mission', persistCtxClaim: 'claim',
+    persistCtxDaily: 'daily', persistCtxXp: 'XP', persistCtxGear: 'gear',
+    persistCtxBuilding: 'factory', persistCtxItem: 'item', persistCtxTide: 'tide',
     pickFileOrPaste: 'Pick an export file or paste save JSON in the box',
     saveLoadedPreview: 'Save from {src} — tap Import to preview',
     filePickerUnavailable: 'File picker not available',
@@ -22718,7 +22777,7 @@ const CATALOG_EN = {
     hubStatDexLine: '{n}/{total} · +max HP',
     summonHead: 'Summons',
     summonSub: 'Daily chest · 10× random · weapon or pet',
-    summonWhere: 'Menu → Summons · loot in Collection → Weapons / Pets (Chest badge)',
+    summonWhere: 'Menu → Summons · loot in Collection',
     summonQuota: 'Today: {left}/{total} random summons',
     summonPull: 'Open chest',
     summonPullLeft: '{n} left',
@@ -22780,7 +22839,30 @@ const CATALOG_EN = {
     petActive: 'active',
     petEquip: 'equip',
     styleSummary: 'Outfits {unlocked}/{total} · active {name}',
-    styleSummaryHint: 'Each style has its own bonus — hover or read the tooltip. Cosmetic + light combat perks.',
+    styleSummaryHint: 'Each style has a bonus — look + light perk.',
+    errStylePick: 'Could not pick style',
+    errSummonLoad: 'Could not load chests',
+    errSummonOpen: 'Could not open chests',
+    saveHealthStyle: ' · style {name}',
+    importPreview: 'Preview: {summary}{meta}. Tap Load twice.',
+    importPreviewMeta: ' · v{app}',
+    importInvalid: 'Invalid save',
+    importErrEmpty: 'Paste the save JSON first',
+    importErrTooBig: 'Save too large',
+    importErrJson: 'Invalid JSON',
+    importErrStruct: 'Invalid save structure',
+    importMore: '+{n} {kind}',
+    importFewer: 'Fewer {kind} ({a} vs {b})',
+    importKindSummon: 'summons',
+    importKindPet: 'pets',
+    importKindEgg: 'egg pets',
+    importKindSkill: 'skill Lv',
+    importKindItem: 'item Lv',
+    importKindCoins: 'pet coins',
+    importStyleChange: 'Style {from} → {to}',
+    importLower: 'Lower than the save here',
+    importHigher: 'Higher than the save here',
+    importAppVer: 'Export v{v}',
     petBuy: 'buy',
     eggCosmetic: 'Cosmetic companion',
     eggUnhatched: 'Not hatched yet',
@@ -23755,7 +23837,7 @@ const CATALOG_DE_CHROME = {
   },
   fighter: {
     energyEmpty: 'Energy nicht voll!', subst: 'Substitution!', dash: 'Dash!',
-    shield: 'Schild!', parry: 'PARRY!', block: 'BLOCK!', miss: 'MISS!',
+    shield: 'Schild!', parry: 'PARRY!', block: 'ABWEHR!', miss: 'DANEBEN!',
   },
   egg: {
     dailyReady: 'Tages-Ei bereit', advBonus: 'Bonus-Ei: 1× Abenteuer gewinnen', tomorrow: 'Ei wieder morgen',
@@ -23836,6 +23918,10 @@ const CATALOG_DE_CHROME = {
     persistPrimaryFail: 'Haupt-Save fehlgeschlagen — Backup aktualisiert (Export in Einstellungen)',
     persistFail: 'Speichern fehlgeschlagen — Export in Einstellungen',
     persistFailCtx: 'Speichern fehlgeschlagen ({context}) — Export in Einstellungen',
+    persistCtxSkill: 'Skill', persistCtxSuper: 'Super', persistCtxWeapon: 'Waffe',
+    persistCtxStyle: 'Stil', persistCtxMission: 'Mission', persistCtxClaim: 'Claim',
+    persistCtxDaily: 'Tagesbonus', persistCtxXp: 'XP', persistCtxGear: 'Ausrüstung',
+    persistCtxBuilding: 'Fabrik', persistCtxItem: 'Item', persistCtxTide: 'Tide',
     pickFileOrPaste: 'Exportdatei wählen oder Save-JSON einfügen',
     saveLoadedPreview: 'Save von {src} — Import für Vorschau tippen',
     filePickerUnavailable: 'Dateiwähler nicht verfügbar',
@@ -23850,10 +23936,10 @@ const CATALOG_DE_CHROME = {
     saveRestoredAfterLoad: 'Save nach Ladefehler aus Backup wiederhergestellt',
     saveLoadFailedFresh: 'Save konnte nicht laden — neu gestartet',
     staleCacheMenu: 'Alter Cache — Menü hängt. Tippe «Neue Version» in der Leiste.',
-    backupRestored: 'Backup wiederhergestellt — Save + Backup im Sync',
+    backupRestored: 'Backup wiederhergestellt — Save + Backup gleich',
     backupFailed: 'Backup-Wiederherstellung fehlgeschlagen — Save exportieren',
-    syncConfirm: 'Sync überschreibt Backup mit Haupt-Save — nochmal tippen',
-    syncOk: 'Backup mit Haupt-Save synchron', syncFailed: 'Sync fehlgeschlagen — Save als Backup exportieren',
+    syncConfirm: 'Abgleich überschreibt Backup — nochmal tippen',
+    syncOk: 'Backup mit Haupt-Save gleich', syncFailed: 'Abgleich fehlgeschlagen — Save exportieren',
     clearConfirm: 'Nochmal tippen = Fortschritt löschen (Backup bleibt)', newStart: 'Neustart — Backup noch in Einstellungen',
     exportCopied: 'Save kopiert + Download · {summary} (~{size})',
     exportBox: 'Save im Feld + Download · {summary} (~{size})',
@@ -24080,7 +24166,7 @@ const CATALOG_DE_CHROME = {
     trainTipDefault: 'Tipp: Laser springen · volle Energy → Spiral Orb',
     energyNotFull: 'Energy {have}/{need} — treffen zum Füllen',
     protected: 'Sicher!', iframe: 'Sicher!',
-    blockChip: 'BLOCK −{n}', parry: 'PARRY!', miss: 'MISS!',
+    blockChip: 'ABWEHR −{n}', parry: 'PARRY!', miss: 'DANEBEN!',
   },
   hud: {
     super: 'SUPER', masterShort: 'MEISTER +20%', masterSword: 'DAWNBLADE {n}s',
@@ -24095,14 +24181,14 @@ const CATALOG_DE_CHROME = {
     satanHintKb: 'Satan reflektiert 85% — zielen, ausweichen, Orbs',
     star2: ' · 2★ bei >{pct}% HP', star3: ' · 3★ bei >{pct}% HP', hpPct: '{pct}% HP{hint}',
     enemiesLeft1: 'Noch 1 Gegner in dieser Welle', enemiesLeftN: 'Noch {n} Gegner in dieser Welle',
-    waveFunnel: '{cleared}/{total} weg · Spawn aktiv',
+    waveFunnel: '{cleared}/{total} weg · Start',
     starBeat: '+{n}★ Rekord!', starBest: 'best {n}★',
-    stageClearSec: 'Stage klar — {sec}s',
+    stageClearSec: 'Level klar — {sec}s',
     toBoss: 'Zum Boss — {sec}s', walkNext: 'Weiterlaufen… nächste Welle {sec}s',
     streak: 'STREAK ×{n}', combo: 'COMBO ×{n}', rage: 'RAGE {n}s', shield: 'Schild {n}s',
     earLaser: 'OHR-LASER — spring!', lightning_pierceTele: 'LIGHTNING PIERCE — Dash/Spring!',
     lightning_pierceMiss: 'Lightning Pierce verfehlt — Springen wirkt!',
-    kickTele: 'TRITT — spring/block!', punchTele: 'SCHLAG — block/weg!', earLaserShort: 'OHR-LASER',
+    kickTele: 'TRITT — spring/blocken!', punchTele: 'SCHLAG — blocken/weg!', earLaserShort: 'OHR-LASER',
     rabbitRobot: 'RABBITROBOT · {pct}%',
     rabbitRobotHp: 'RABBIT {hp}/{max}',
     roundInfo: 'Runde {n} · zuerst 2 · {s}-{r}',
@@ -24240,7 +24326,7 @@ const CATALOG_DE_CHROME = {
     superStat_charge: 'Laden',
     superHudCd: 'Notfall-Super {n}s',
     weaponHead: 'Waffen',
-    weaponSub: 'Summons sind echt · Insel-Skill-Gate: Waffen bis zu deinem Insel-Cap im Abenteuer',
+    weaponSub: 'Kisten zählen · Insel-Skill: Waffen bis Cap',
     skillTabSkills: 'Skills',
     skillTabWeapons: 'Waffen',
     skillTabPets: 'Pets',
@@ -24389,28 +24475,28 @@ const CATALOG_DE_CHROME = {
     hubStatDexLine: '{n}/{total} · +max HP',
     summonHead: 'Beschwörungen',
     summonSub: 'Tägliche Kiste · 10× random · Waffe oder Pet',
-    summonWhere: 'Menü → Beschwörungen · Beute in Sammlung → Waffen / Pets (Kisten-Badge)',
-    summonQuota: 'Heute: {left}/{total} Random-Summons',
+    summonWhere: 'Menü → Kisten · Beute in Sammlung',
+    summonQuota: 'Heute: {left}/{total} Kisten',
     summonLeft: '{n} übrig',
     summonDone: 'Leer',
     summonOpen: 'Kiste öffnen',
     summonOpenAria: 'Kiste öffnen, {n} übrig',
-    summonNoMore: 'Keine Summons mehr heute',
+    summonNoMore: 'Keine Kisten mehr heute',
     summonOpening: 'Kiste öffnet…',
-    summonNoPulls: 'Heute noch keine Pulls.',
-    summonFail: 'Summon fehlgeschlagen — nochmal versuchen',
+    summonNoPulls: 'Heute noch keine Züge.',
+    summonFail: 'Kiste fehlgeschlagen — nochmal versuchen',
     summonPull: 'Kiste öffnen',
     summonPullLeft: '{n} übrig',
     summonPullEmpty: 'Leer',
     summonAriaPull: 'Kiste öffnen, {n} übrig',
-    summonAriaEmpty: 'Keine Summons mehr heute',
+    summonAriaEmpty: 'Keine Kisten mehr heute',
     summonAriaBusy: 'Kiste öffnet…',
     summonHint: 'Kiste tippen zum Öffnen',
     summonReveal: 'Kiste oder Öffnen tippen — Beute erscheint in der Kiste',
     summonGotoWeapons: 'Zu Waffen',
     summonGotoPets: 'Zu Pets',
     summonGotoSub: 'Sammlung',
-    summonLogEmpty: 'Heute noch keine Pulls.',
+    summonLogEmpty: 'Heute noch keine Züge.',
     summonLeftToday: '{n} übrig heute',
     summonDoneToday: 'für heute leer',
     sharePlayLinkOk: '✓ Spiel-Link — mit Freunden teilen (Android)',
@@ -24464,7 +24550,30 @@ const CATALOG_DE_CHROME = {
     petActive: 'aktiv',
     petEquip: 'ausrüsten',
     styleSummary: 'Outfits {unlocked}/{total} · aktiv {name}',
-    styleSummaryHint: 'Jeder Stil hat einen eigenen Bonus — Hover oder Tooltip. Kosmetik + leichte Kampf-Perks.',
+    styleSummaryHint: 'Jeder Stil hat einen Bonus — Look + leichter Perk.',
+    errStylePick: 'Stil wählen fehlgeschlagen',
+    errSummonLoad: 'Kisten laden fehlgeschlagen',
+    errSummonOpen: 'Kisten öffnen fehlgeschlagen',
+    saveHealthStyle: ' · Stil {name}',
+    importPreview: 'Vorschau: {summary}{meta}. Laden 2× tippen.',
+    importPreviewMeta: ' · v{app}',
+    importInvalid: 'Ungültiger Save',
+    importErrEmpty: 'Zuerst Save-JSON einfügen',
+    importErrTooBig: 'Save zu groß',
+    importErrJson: 'Ungültiges JSON',
+    importErrStruct: 'Ungültige Save-Struktur',
+    importMore: '+{n} {kind}',
+    importFewer: 'Weniger {kind} ({a} vs {b})',
+    importKindSummon: 'Kisten',
+    importKindPet: 'Pets',
+    importKindEgg: 'Ei-Pets',
+    importKindSkill: 'Skill-Lv',
+    importKindItem: 'Item-Lv',
+    importKindCoins: 'Pet-Coins',
+    importStyleChange: 'Stil {from} → {to}',
+    importLower: 'Niedriger als der Save hier',
+    importHigher: 'Höher als der Save hier',
+    importAppVer: 'Export v{v}',
     petBuy: 'kaufen',
     eggCosmetic: 'Kosmetischer Begleiter',
     eggUnhatched: 'Noch nicht geschlüpft',
@@ -24485,8 +24594,8 @@ const CATALOG_DE_CHROME = {
     dexStats: '{type} · Basis-HP {hp} · dmg {dmg} · spd {spd} · {xp} XP · Lv {lvl}',
     dexType: { hop: 'Hopser', fly: 'Flug', charge: 'Charge', shoot: 'Schuss', tank: 'Tank', dragon: 'Drache', swim: 'Meer' },
     dexBiome: { farm: 'Farm', zoo: 'Zoo', sea: 'Meer', wild: 'Wald', crypt: 'Krypta', scrap: 'Schrott', frost: 'Frost', classic: 'Klassisch', secret: 'Geheim' },
-    saveHealthStats: 'Lv {lvl} · Unlock {unlocked} · Buch {dex} · Kills {kills}',
-    saveHealthSummon: ' · ✦ {n} Summon',
+    saveHealthStats: 'Lv {lvl} · frei {unlocked} · Buch {dex} · Kills {kills}',
+    saveHealthSummon: ' · ✦ {n} Kiste',
     saveHealthPet: ' · Pet {n}',
     saveHealthEgg: ' · Ei {n}',
     saveHealthSkill: ' · Skill +{n} Lv',
@@ -24749,6 +24858,10 @@ overlayI18nCatalog(CATALOG_FR, {
     persistPrimaryFail: 'Sauvegarde principale ratée — copie à jour (exporte dans Options)',
     persistFail: 'Sauvegarde ratée — exporte dans Options',
     persistFailCtx: 'Sauvegarde ratée ({context}) — exporte dans Options',
+    persistCtxSkill: 'skill', persistCtxSuper: 'super', persistCtxWeapon: 'arme',
+    persistCtxStyle: 'style', persistCtxMission: 'mission', persistCtxClaim: 'réclame',
+    persistCtxDaily: 'bonus', persistCtxXp: 'XP', persistCtxGear: 'équipement',
+    persistCtxBuilding: 'usine', persistCtxItem: 'objet', persistCtxTide: 'tide',
     pickFileOrPaste: 'Choisis un fichier ou colle le JSON dans la case',
     saveLoadedPreview: 'Sauvegarde de {src} — tape Charger pour l’aperçu',
     filePickerUnavailable: 'Sélecteur de fichier indisponible',
@@ -24758,14 +24871,14 @@ overlayI18nCatalog(CATALOG_FR, {
     zoneDrop: '{zone} : {name} !', zoneFallback: 'Zone',
     masteryTier: '{name} : {tier} !',
     saveRepaired: 'Sauvegarde réparée : {notes}',
-    saveCorruptOverwritten: 'Sauvegarde corrompue écrasée — l’export reste ton filet',
+    saveCorruptOverwritten: 'Sauvegarde corrompue écrasée — la copie reste ton filet',
     saveRestoredAfterLoad: 'Sauvegarde restaurée après une erreur de chargement',
     saveLoadFailedFresh: 'Sauvegarde illisible — nouvelle partie (exporte une copie si tu en avais une)',
     staleCacheMenu: 'Vieux cache — le menu ne répond pas. Tape « Nouvelle version » dans le dock.',
     backupRestored: 'Copie restaurée — tout est aligné',
     backupFailed: 'Restauration ratée — exporte ta sauvegarde si tu en as une',
-    syncConfirm: 'La sync écrase la copie — tape encore',
-    syncOk: 'Copie alignée sur la sauvegarde', syncFailed: 'Sync ratée — exporte une copie',
+    syncConfirm: 'La synchro écrase la copie — tape encore',
+    syncOk: 'Copie alignée sur la sauvegarde', syncFailed: 'Synchro ratée — exporte une copie',
     clearConfirm: 'Encore une fois = tout effacer (la copie reste)', newStart: 'Nouveau départ — la copie est encore dans Options',
     exportCopied: 'Sauvegarde copiée + téléchargement · {summary} (~{size})',
     exportBox: 'Sauvegarde dans la case + téléchargement · {summary} (~{size})',
@@ -24942,13 +25055,24 @@ overlayI18nCatalog(CATALOG_FR, {
     summonHead: 'Coffres',
     summonSub: 'Coffre du jour · 10× · arme ou pet',
     summonWhere: 'Menu → Coffres · butin dans Collection',
+    summonQuota: 'Aujourd’hui : {left}/{total} coffres',
+    summonNoMore: 'Plus de coffres aujourd’hui',
+    summonAriaPull: 'Ouvrir le coffre, {n} restants',
+    summonAriaEmpty: 'Plus de coffres aujourd’hui',
+    summonAriaBusy: 'Coffre en cours…',
+    summonLeftToday: '{n} restants aujourd’hui',
+    summonDoneToday: 'fini pour aujourd’hui',
     summonPull: 'Ouvrir',
+    summonPullLeft: '{n} restants',
+    summonPullEmpty: 'Vide',
     summonGotoWeapons: 'Armes',
     summonGotoPets: 'Pets',
     summonGotoSub: 'Collection',
     summonLogEmpty: 'Pas encore de tirage.',
     summonHint: 'Tape le coffre',
     summonReveal: 'Tape le coffre — le butin apparaît',
+    errSummonLoad: 'Coffres impossibles à charger',
+    errSummonOpen: 'Coffres impossibles à ouvrir',
     dexAllBiomes: 'Tous les biomes',
     dexBiome: { farm: 'Ferme', zoo: 'Zoo', sea: 'Mer', wild: 'Bois', crypt: 'Crypte', scrap: 'Ferraille', frost: 'Givre', classic: 'Classique', secret: 'Secret' },
     petCoinTip: 'Joue <b>bonus pièces</b> (2 or = 1 PC). Achète ou apprivoise via le bestiaire.',
@@ -24968,6 +25092,35 @@ overlayI18nCatalog(CATALOG_FR, {
     petLineActive: 'Pet · actif',
     petLineTamed: 'Pet · apprivoisé',
     petLineBuy: 'Pet · acheter {cost} PC',
+    saveHealthStats: 'Nv {lvl} · libre {unlocked} · livre {dex} · K.O. {kills}',
+    saveHealthSummon: ' · ✦ {n} coffre',
+    saveHealthPet: ' · pet {n}',
+    saveHealthEgg: ' · œuf {n}',
+    saveExportAch: ' · {n} succès',
+    saveHealthStyle: ' · style {name}',
+    dexSummary: 'Livre {n}/{total} · K.O. {kills} · bonus PV +{hp} · raretés {tiers}/6',
+    dexAllTypes: 'Tous types',
+    styleSummaryHint: 'Chaque style a un bonus — look + perk léger.',
+    errStylePick: 'Style impossible à choisir',
+    importPreview: 'Aperçu : {summary}{meta}. Tape Charger 2×.',
+    importPreviewMeta: ' · v{app}',
+    importInvalid: 'Sauvegarde invalide',
+    importErrEmpty: 'Colle d’abord le JSON',
+    importErrTooBig: 'Sauvegarde trop grande',
+    importErrJson: 'JSON invalide',
+    importErrStruct: 'Structure invalide',
+    importMore: '+{n} {kind}',
+    importFewer: 'Moins de {kind} ({a} vs {b})',
+    importKindSummon: 'coffres',
+    importKindPet: 'pets',
+    importKindEgg: 'œufs',
+    importKindSkill: 'skill Nv',
+    importKindItem: 'objet Nv',
+    importKindCoins: 'pet coins',
+    importStyleChange: 'Style {from} → {to}',
+    importLower: 'Plus bas que la save ici',
+    importHigher: 'Plus haut que la save ici',
+    importAppVer: 'Export v{v}',
   },
   fomo: {
     ritualTitle: 'Aujourd’hui',
@@ -25095,7 +25248,7 @@ overlayI18nCatalog(CATALOG_FR, {
     satanHintKb: 'Satan renvoie 85 % — vise, esquive, prends les orbes',
     star2: ' · 2★ à >{pct}% PV', star3: ' · 3★ à >{pct}% PV', hpPct: '{pct}% PV{hint}',
     enemiesLeft1: '1 ennemi restant', enemiesLeftN: '{n} ennemis restants',
-    waveFunnel: '{cleared}/{total} à terre · spawn',
+    waveFunnel: '{cleared}/{total} à terre · départ',
     starBeat: '+{n}★ record !', starBest: 'meilleur {n}★',
     stageClearSec: 'Niveau fini — {sec}s', toBoss: 'Vers le boss — {sec}s',
     walkNext: 'On avance… vague suivante {sec}s',
@@ -25311,6 +25464,10 @@ overlayI18nCatalog(CATALOG_ES, {
     persistPrimaryFail: 'Partida principal fallida — copia actualizada (exporta en Opciones)',
     persistFail: 'No se pudo guardar — exporta en Opciones',
     persistFailCtx: 'No se pudo guardar ({context}) — exporta en Opciones',
+    persistCtxSkill: 'skill', persistCtxSuper: 'super', persistCtxWeapon: 'arma',
+    persistCtxStyle: 'estilo', persistCtxMission: 'misión', persistCtxClaim: 'reclamo',
+    persistCtxDaily: 'bonus', persistCtxXp: 'XP', persistCtxGear: 'equipo',
+    persistCtxBuilding: 'fábrica', persistCtxItem: 'objeto', persistCtxTide: 'tide',
     pickFileOrPaste: 'Elige un archivo o pega el JSON en la caja',
     saveLoadedPreview: 'Partida de {src} — toca Cargar para ver',
     filePickerUnavailable: 'Selector de archivo no disponible',
@@ -25326,8 +25483,8 @@ overlayI18nCatalog(CATALOG_ES, {
     staleCacheMenu: 'Caché vieja — el menú no responde. Toca «Versión nueva» en el dock.',
     backupRestored: 'Copia restaurada — todo alineado',
     backupFailed: 'Restaurar falló — exporta la partida si tienes una',
-    syncConfirm: 'La sync sobrescribe la copia — toca otra vez',
-    syncOk: 'Copia alineada con la partida', syncFailed: 'Sync fallida — exporta una copia',
+    syncConfirm: 'La copia se sobrescribe — toca otra vez',
+    syncOk: 'Copia alineada con la partida', syncFailed: 'Copia no alineada — exporta una copia',
     clearConfirm: 'Otra vez = borrar progreso (la copia se queda)', newStart: 'Nuevo inicio — la copia sigue en Opciones',
     exportCopied: 'Partida copiada + descarga · {summary} (~{size})',
     exportBox: 'Partida en la caja + descarga · {summary} (~{size})',
@@ -25504,13 +25661,24 @@ overlayI18nCatalog(CATALOG_ES, {
     summonHead: 'Cofres',
     summonSub: 'Cofre diario · 10× · arma o pet',
     summonWhere: 'Menú → Cofres · botín en Colección',
+    summonQuota: 'Hoy: {left}/{total} cofres',
+    summonNoMore: 'No quedan cofres hoy',
+    summonAriaPull: 'Abrir cofre, {n} restantes',
+    summonAriaEmpty: 'No quedan cofres hoy',
+    summonAriaBusy: 'Cofre abriendo…',
+    summonLeftToday: '{n} restantes hoy',
+    summonDoneToday: 'listo por hoy',
     summonPull: 'Abrir',
+    summonPullLeft: '{n} restantes',
+    summonPullEmpty: 'Vacío',
     summonGotoWeapons: 'Armas',
     summonGotoPets: 'Pets',
     summonGotoSub: 'Colección',
     summonLogEmpty: 'Aún no hay tiradas.',
     summonHint: 'Toca el cofre',
     summonReveal: 'Toca el cofre — aparece el botín',
+    errSummonLoad: 'No se pudieron cargar los cofres',
+    errSummonOpen: 'No se pudieron abrir los cofres',
     dexAllBiomes: 'Todos los biomas',
     dexBiome: { farm: 'Granja', zoo: 'Zoo', sea: 'Mar', wild: 'Bosque', crypt: 'Cripta', scrap: 'Chatarra', frost: 'Escarcha', classic: 'Clásico', secret: 'Secreto' },
     petCoinTip: 'Juega <b>bonus monedas</b> (2 oro = 1 PC). Compra o doma en el bestiario.',
@@ -25530,6 +25698,35 @@ overlayI18nCatalog(CATALOG_ES, {
     petLineActive: 'Pet · activo',
     petLineTamed: 'Pet · domado',
     petLineBuy: 'Pet · comprar {cost} PC',
+    saveHealthStats: 'Nv {lvl} · libre {unlocked} · libro {dex} · KO {kills}',
+    saveHealthSummon: ' · ✦ {n} cofre',
+    saveHealthPet: ' · pet {n}',
+    saveHealthEgg: ' · huevo {n}',
+    saveExportAch: ' · {n} logros',
+    saveHealthStyle: ' · estilo {name}',
+    dexSummary: 'Libro {n}/{total} · KO {kills} · bonus HP +{hp} · rarezas {tiers}/6',
+    dexAllTypes: 'Todos tipos',
+    styleSummaryHint: 'Cada estilo tiene bonus — look + perk ligero.',
+    errStylePick: 'No se pudo elegir estilo',
+    importPreview: 'Vista: {summary}{meta}. Toca Cargar 2×.',
+    importPreviewMeta: ' · v{app}',
+    importInvalid: 'Partida inválida',
+    importErrEmpty: 'Pega primero el JSON',
+    importErrTooBig: 'Partida demasiado grande',
+    importErrJson: 'JSON inválido',
+    importErrStruct: 'Estructura inválida',
+    importMore: '+{n} {kind}',
+    importFewer: 'Menos {kind} ({a} vs {b})',
+    importKindSummon: 'cofres',
+    importKindPet: 'pets',
+    importKindEgg: 'huevos',
+    importKindSkill: 'skill Nv',
+    importKindItem: 'objeto Nv',
+    importKindCoins: 'pet coins',
+    importStyleChange: 'Estilo {from} → {to}',
+    importLower: 'Más bajo que la partida aquí',
+    importHigher: 'Más alto que la partida aquí',
+    importAppVer: 'Export v{v}',
   },
   fomo: {
     ritualTitle: 'Hoy',
@@ -25657,7 +25854,7 @@ overlayI18nCatalog(CATALOG_ES, {
     satanHintKb: 'Satan devuelve 85% — apunta, esquiva, coge orbes',
     star2: ' · 2★ a >{pct}% HP', star3: ' · 3★ a >{pct}% HP', hpPct: '{pct}% HP{hint}',
     enemiesLeft1: '1 enemigo restante', enemiesLeftN: '{n} enemigos restantes',
-    waveFunnel: '{cleared}/{total} caídos · spawn',
+    waveFunnel: '{cleared}/{total} caídos · salida',
     starBeat: '¡+{n}★ récord!', starBest: 'mejor {n}★',
     stageClearSec: 'Nivel listo — {sec}s', toBoss: 'Hacia el jefe — {sec}s',
     walkNext: 'Sigue andando… siguiente oleada {sec}s',
@@ -25887,6 +26084,10 @@ overlayI18nCatalog(CATALOG_DE, {
     persistPrimaryFail: 'Hauptsave fehlgeschlagen — Backup aktualisiert (Export in Einstellungen)',
     persistFail: 'Speichern fehlgeschlagen — Export in Einstellungen',
     persistFailCtx: 'Speichern fehlgeschlagen ({context}) — Export in Einstellungen',
+    persistCtxSkill: 'Skill', persistCtxSuper: 'Super', persistCtxWeapon: 'Waffe',
+    persistCtxStyle: 'Stil', persistCtxMission: 'Mission', persistCtxClaim: 'Claim',
+    persistCtxDaily: 'Tagesbonus', persistCtxXp: 'XP', persistCtxGear: 'Ausrüstung',
+    persistCtxBuilding: 'Fabrik', persistCtxItem: 'Item', persistCtxTide: 'Tide',
     pickFileOrPaste: 'Datei wählen oder JSON ins Feld einfügen',
     saveLoadedPreview: 'Save aus {src} — Laden tippen für Vorschau',
     filePickerUnavailable: 'Dateiauswahl nicht verfügbar',
@@ -25902,8 +26103,8 @@ overlayI18nCatalog(CATALOG_DE, {
     staleCacheMenu: 'Alter Cache — Menü hängt. Tippe «Neue Version» im Dock.',
     backupRestored: 'Backup wiederhergestellt — Save + Backup gleich',
     backupFailed: 'Backup fehlgeschlagen — exportiere den Save, wenn du einen hast',
-    syncConfirm: 'Sync überschreibt Backup — nochmal tippen',
-    syncOk: 'Backup mit Hauptsave synchron', syncFailed: 'Sync fehlgeschlagen — Save exportieren',
+    syncConfirm: 'Abgleich überschreibt Backup — nochmal tippen',
+    syncOk: 'Backup mit Hauptsave gleich', syncFailed: 'Abgleich fehlgeschlagen — Save exportieren',
     clearConfirm: 'Nochmal tippen = Fortschritt löschen (Backup bleibt)', newStart: 'Neustart — Backup noch in Einstellungen',
     exportCopied: 'Save kopiert + Download · {summary} (~{size})',
     exportBox: 'Save im Feld + Download · {summary} (~{size})',
@@ -26091,6 +26292,40 @@ overlayI18nCatalog(CATALOG_DE, {
     petLineActive: 'Pet · aktiv',
     petLineTamed: 'Pet · gezähmt',
     petLineBuy: 'Pet · kaufen {cost} PC',
+    saveHealthStats: 'Lv {lvl} · frei {unlocked} · Buch {dex} · Kills {kills}',
+    saveHealthSummon: ' · ✦ {n} Kiste',
+    saveExportAch: ' · {n} Erfolge',
+    saveHealthStyle: ' · Stil {name}',
+    dexSummary: 'Buch {n}/{total} · Kills {kills} · Bonus max HP +{hp} · Seltenheiten {tiers}/6',
+    dexAllTypes: 'Alle Typen',
+    styleSummaryHint: 'Jeder Stil hat einen Bonus — Look + leichter Perk.',
+    errStylePick: 'Stil wählen fehlgeschlagen',
+    errSummonLoad: 'Kisten laden fehlgeschlagen',
+    errSummonOpen: 'Kisten öffnen fehlgeschlagen',
+    summonQuota: 'Heute: {left}/{total} Kisten',
+    summonNoMore: 'Keine Kisten mehr heute',
+    summonAriaEmpty: 'Keine Kisten mehr heute',
+    summonLeftToday: '{n} übrig heute',
+    summonDoneToday: 'leer für heute',
+    importPreview: 'Vorschau: {summary}{meta}. Laden 2× tippen.',
+    importPreviewMeta: ' · v{app}',
+    importInvalid: 'Ungültiger Save',
+    importErrEmpty: 'Zuerst Save-JSON einfügen',
+    importErrTooBig: 'Save zu groß',
+    importErrJson: 'Ungültiges JSON',
+    importErrStruct: 'Ungültige Save-Struktur',
+    importMore: '+{n} {kind}',
+    importFewer: 'Weniger {kind} ({a} vs {b})',
+    importKindSummon: 'Kisten',
+    importKindPet: 'Pets',
+    importKindEgg: 'Ei-Pets',
+    importKindSkill: 'Skill-Lv',
+    importKindItem: 'Item-Lv',
+    importKindCoins: 'Pet-Coins',
+    importStyleChange: 'Stil {from} → {to}',
+    importLower: 'Niedriger als der Save hier',
+    importHigher: 'Höher als der Save hier',
+    importAppVer: 'Export v{v}',
   },
   fomo: {
     ritualTitle: 'Heute',
@@ -26107,7 +26342,7 @@ overlayI18nCatalog(CATALOG_DE, {
     streakReward7: '+Ei oder Kisten',
     streakReward14: '+120 XP',
   },
-  fighter: { energyEmpty: 'Energy nicht voll!', subst: 'Substitution!', dash: 'Dash!', shield: 'Schild!', parry: 'PARRY!', block: 'BLOCK!', miss: 'DANEBEN!' },
+  fighter: { energyEmpty: 'Energy nicht voll!', subst: 'Substitution!', dash: 'Dash!', shield: 'Schild!', parry: 'PARRY!', block: 'ABWEHR!', miss: 'DANEBEN!' },
   egg: {
     dailyReady: 'Tages-Ei bereit', advBonus: 'Bonus-Ei: 1× Abenteuer gewinnen', tomorrow: 'Ei morgen wieder',
     name: {
@@ -26203,7 +26438,7 @@ overlayI18nCatalog(CATALOG_DE, {
     trainLossTip: 'Spring während LIGHTNING PIERCE — Roboter verfehlt · spring Ohr-Laser',
     trainTipDefault: 'Tipp: Laser springen · Energy voll → Spiral Orb',
     energyNotFull: 'Energy {have}/{need} — treffen zum Füllen',
-    protected: 'Geschützt!', iframe: 'Geschützt!', blockChip: 'BLOCK −{n}', parry: 'PARRY!', miss: 'DANEBEN!',
+    protected: 'Geschützt!', iframe: 'Geschützt!', blockChip: 'ABWEHR −{n}', parry: 'PARRY!', miss: 'DANEBEN!',
   },
   hud: {
     super: 'SUPER', masterShort: 'MEISTER +20%', masterSword: 'DAWNBLADE {n}s',
@@ -26218,14 +26453,14 @@ overlayI18nCatalog(CATALOG_DE, {
     satanHintKb: 'Satan reflektiert 85% — zielen, ausweichen, Kugeln holen',
     star2: ' · 2★ bei >{pct}% HP', star3: ' · 3★ bei >{pct}% HP', hpPct: '{pct}% HP{hint}',
     enemiesLeft1: '1 Gegner übrig', enemiesLeftN: '{n} Gegner übrig',
-    waveFunnel: '{cleared}/{total} weg · Spawn',
+    waveFunnel: '{cleared}/{total} weg · Start',
     starBeat: '+{n}★ Rekord!', starBest: 'Rekord {n}★',
-    stageClearSec: 'Stage klar — {sec}s', toBoss: 'Zum Boss — {sec}s',
+    stageClearSec: 'Level klar — {sec}s', toBoss: 'Zum Boss — {sec}s',
     walkNext: 'Weiterlaufen… nächste Welle {sec}s',
     streak: 'STREAK ×{n}', combo: 'COMBO ×{n}', rage: 'RAGE {n}s', shield: 'Schild {n}s',
     earLaser: 'OHR-LASER — spring!', lightning_pierceTele: 'LIGHTNING PIERCE — Dash/spring!',
     lightning_pierceMiss: 'Lightning Pierce verfehlt — Springen wirkt!',
-    kickTele: 'TRITT — spring/block!', punchTele: 'SCHLAG — block/weg!', earLaserShort: 'OHR-LASER',
+    kickTele: 'TRITT — spring/blocken!', punchTele: 'SCHLAG — blocken/weg!', earLaserShort: 'OHR-LASER',
     rabbitRobot: 'RABBITROBOT · {pct}%', roundInfo: 'Runde {n} · zuerst 2 · {s}-{r}',
     dummyGrace: 'Dummy {n}s — Combo üben', goal: 'Ziel ×{n}', record: 'Rekord ×{n}',
     time: 'ZEIT', wallGen: 'MAUER ×{n}', stones: 'Steine: {n}',
@@ -48784,7 +49019,7 @@ const UI = {
       try { syncPlayLayer(); } catch (_) {}
       try { hardenButtonIcons(document.getElementById('summonScreen')); } catch (_) {}
     } catch (err) {
-      sfReportError('renderSummon', err, 'Summons laden mislukt');
+      sfReportError('renderSummon', err, t('ui.errSummonLoad'));
       try { this.goMenu(); } catch (_) { ensureVisibleScreen(); }
     }
   },
@@ -48837,9 +49072,9 @@ const UI = {
       this.safeOpen('summonScreen', () => {
         this.renderSummon();
         try { ensureSummonVideoPreloaded(); } catch (_) {}
-      }, { msg: 'Summons laden mislukt' });
+      }, { msg: t('ui.errSummonLoad') });
     } catch (err) {
-      sfReportError('openSummonHub', err, 'Summons openen mislukt');
+      sfReportError('openSummonHub', err, t('ui.errSummonOpen'));
       try { this.goMenu(); } catch (_) {}
     }
   },
@@ -49960,7 +50195,7 @@ const UI = {
         safeUiAction(() => {
           save.weapon = w.id;
           this.weaponPreviewId = w.id;
-          if (!persistOrToast('wapen')) return;
+          if (!persistOrToast('weapon')) return;
           playWeaponPickFeedback(w.id);
           if (islandLocked) UI.toast(t('toast.weaponIslandCap', { cap: adventureWeaponCap() }), 2800);
           this.renderWeapons();
@@ -50689,11 +50924,13 @@ const UI = {
       drawStyleLookPreview(cc, st, 80, 86);
       el.appendChild(cv);
       const cap = document.createElement('div');
+      cap.className = 'style-card-name';
       cap.style.fontSize = '13px';
       cap.style.color = st.accent;
       cap.textContent = styleLabel(st);
       el.appendChild(cap);
       const bonus = document.createElement('div');
+      bonus.className = 'style-card-bonus';
       bonus.style.fontSize = '11px';
       bonus.style.fontWeight = '800';
       bonus.style.color = ok ? '#7cf5ff' : '#8fa3d9';
@@ -50702,6 +50939,7 @@ const UI = {
       bonus.style.opacity = ok ? '1' : '0.55';
       el.appendChild(bonus);
       const tip = document.createElement('div');
+      tip.className = 'style-card-tip';
       tip.style.fontSize = '10px';
       tip.style.opacity = '0.72';
       tip.style.marginTop = '4px';
@@ -50709,6 +50947,7 @@ const UI = {
       tip.textContent = styleLabel(st, 'tooltip') || styleLabel(st, 'hint');
       el.appendChild(tip);
       const sub = document.createElement('div');
+      sub.className = 'style-card-sub';
       sub.style.fontSize = '11px';
       sub.style.fontWeight = '600';
       sub.style.opacity = '0.75';
@@ -50720,12 +50959,12 @@ const UI = {
         bindPress(el, () => {
           safeUiAction(() => {
             save.style = st.id;
-            if (!persistOrToast('stijl')) return;
+            if (!persistOrToast('style')) return;
             AudioSys.sfx('select');
             this.renderStyle();
             this.renderMenu();
             UI.toast(t('toast.styleEquipped', { name: styleLabel(st) }), 2200);
-          }, 'pickStyle/' + st.id, 'Stijl kiezen mislukt');
+          }, 'pickStyle/' + st.id, t('ui.errStylePick'));
         });
       }
       grid.appendChild(el);

@@ -74,10 +74,15 @@ async function run() {
       const tPerk = typeof t === 'function' ? t('pets.perk.pet_slymo') : '';
       const tEgg = typeof t === 'function' ? t('egg.name.egg_pebble') : '';
       const tKills = typeof t === 'function' ? t('ui.petKillsLeft', { n: 3 }) : '';
+      const tKick = typeof t === 'function' ? t('hud.kickTele') : '';
+      const tImport = typeof t === 'function' ? t('ui.importPreview', { summary: 'x', meta: '' }) : '';
+      const tStats = typeof t === 'function' ? t('ui.saveHealthStats', { lvl: 1, unlocked: 1, dex: 1, kills: 0 }) : '';
+      const tQuota = typeof t === 'function' ? t('ui.summonQuota', { left: 3, total: 10 }) : '';
+      const tPersist = typeof t === 'function' ? t('toast.persistCtxWeapon') : '';
       return {
         lang, adv, collect, help, weapons, settings, dexSum, dexTypes, eggBtn, exportHint,
         musicName, sfxName, profileAria, summons, tAdv, tHud, leftover,
-        tGearLock, tPetSum, tPerk, tEgg, tKills,
+        tGearLock, tPetSum, tPerk, tEgg, tKills, tKick, tImport, tStats, tQuota, tPersist,
       };
     }
     const en = snap('en');
@@ -94,7 +99,9 @@ async function run() {
       && /Book|All types|All biomes/i.test(en.dexSum + ' ' + en.dexTypes)
       && /Music/i.test(en.musicName) && /Effect/i.test(en.sfxName)
       && /Profile/i.test(en.profileAria)
-      && /Not found yet/.test(en.tGearLock) && /Hop assist/.test(en.tPerk) && /Pebble/.test(en.tEgg);
+      && /Not found yet/.test(en.tGearLock) && /Hop assist/.test(en.tPerk) && /Pebble/.test(en.tEgg)
+      && /KICK/.test(en.tKick) && /Preview/.test(en.tImport) && !/tik Laden|om te laden/.test(en.tImport)
+      && /weapon/.test(en.tPersist);
     const deOk = /Abenteuer/i.test(de.adv) && /Sammlung/i.test(de.collect)
       && /Waffen/i.test(de.weapons) && /Einstellungen/i.test(de.settings)
       && /Tipp/i.test(de.help) && !DUTCH.test(de.leftover)
@@ -104,7 +111,9 @@ async function run() {
       && /Profil/i.test(de.profileAria)
       && /Beschwörung/i.test(de.summons)
       && /Noch nicht gefunden/.test(de.tGearLock) && !EN_LOCK.test(de.tGearLock)
-      && /Sprung-Assist/.test(de.tPerk) && /Kiesel/.test(de.tEgg) && !DUTCH_COPY.test(de.tPerk + de.tEgg + de.tGearLock);
+      && /Sprung-Assist/.test(de.tPerk) && /Kiesel/.test(de.tEgg) && !DUTCH_COPY.test(de.tPerk + de.tEgg + de.tGearLock)
+      && /TRITT/.test(de.tKick) && !/Unlock/.test(de.tStats) && /Kiste/.test(de.tQuota) && !/Summon/i.test(de.tQuota)
+      && /Waffe/.test(de.tPersist) && !/Preview:/.test(de.tImport);
     const nlOk = /Avontuur/.test(nl.adv) && /Collectie/.test(nl.collect)
       && /Wapens/.test(nl.weapons) && /Instellingen/.test(nl.settings)
       && /Tips/.test(nl.help) && /Boek|Alle types/.test(nl.dexSum + ' ' + nl.dexTypes)
@@ -112,10 +121,14 @@ async function run() {
       && /Nog niet gevonden/.test(nl.tGearLock) && /Kiezel/.test(nl.tEgg);
     const frOk = /Pas encore trouvé/.test(fr.tGearLock) && !EN_LOCK.test(fr.tGearLock)
       && /Aide saut/.test(fr.tPerk) && /Galet/.test(fr.tEgg) && !DUTCH_COPY.test(fr.tPerk + fr.tEgg + fr.tGearLock + fr.tPetSum)
-      && /Apprivoisés/.test(fr.tPetSum);
+      && /Apprivoisés/.test(fr.tPetSum)
+      && /Coffre/.test(fr.summons) && /PIED/.test(fr.tKick) && /coffre/i.test(fr.tQuota)
+      && !/Unlock/.test(fr.tStats) && /arme/.test(fr.tPersist);
     const esOk = /Aún no hallado/.test(es.tGearLock) && !EN_LOCK.test(es.tGearLock)
       && /Ayuda salto/.test(es.tPerk) && /Guijarro/.test(es.tEgg) && !DUTCH_COPY.test(es.tPerk + es.tEgg + es.tGearLock + es.tPetSum)
-      && /Domados/.test(es.tPetSum);
+      && /Domados/.test(es.tPetSum)
+      && /Cofre/.test(es.summons) && /PATADA/.test(es.tKick) && /cofre/i.test(es.tQuota)
+      && !/Unlock/.test(es.tStats) && /arma/.test(es.tPersist);
     return { ok: !!(enOk && deOk && nlOk && frOk && esOk), en, de, nl, fr, es, enOk, deOk, nlOk, frOk, esOk };
   });
 

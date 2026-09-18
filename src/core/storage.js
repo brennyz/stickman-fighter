@@ -5,9 +5,9 @@ const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const VERSION_UPDATE_SAVE_KEY = 'stickfighter_version_update_save_v1';
 const VERSION_UPDATE_FLAG_KEY = 'stickfighter_version_update_flag_v1';
 const SAVE_EXPORT_SCHEMA = 3;
-const APP_VERSION = '1.18.174';
+const APP_VERSION = '1.18.175';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 384;
+const SW_CACHE_REV = 385;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', petCoins: 0, dex: {}, summons: {}, pets: {}, activePet: null,
   eggPets: {}, activeEggPet: null, eggDaily: null,
   chestDaily: null, chestWeapons: {},
@@ -1261,14 +1261,40 @@ function safeUiAction(fn, label, userMsg) {
   }
 }
 
+function persistContextLabel(context) {
+  const raw = String(context || '').trim();
+  if (!raw) return '';
+  const map = {
+    skill: 'toast.persistCtxSkill', super: 'toast.persistCtxSuper',
+    wapen: 'toast.persistCtxWeapon', weapon: 'toast.persistCtxWeapon',
+    style: 'toast.persistCtxStyle', stijl: 'toast.persistCtxStyle',
+    'missie-claim': 'toast.persistCtxMission', mission: 'toast.persistCtxMission',
+    'claim-all': 'toast.persistCtxClaim', dagbonus: 'toast.persistCtxDaily',
+    daily: 'toast.persistCtxDaily', XP: 'toast.persistCtxXp', xp: 'toast.persistCtxXp',
+    gear: 'toast.persistCtxGear', 'tide-battle': 'toast.persistCtxTide',
+  };
+  let key = map[raw];
+  if (!key) {
+    if (raw.indexOf('building/') === 0) key = 'toast.persistCtxBuilding';
+    else if (raw.indexOf('itemUp/') === 0) key = 'toast.persistCtxItem';
+    else if (raw.indexOf('skillUp/') === 0) key = 'toast.persistCtxSkill';
+  }
+  if (key && typeof t === 'function') {
+    const label = t(key);
+    if (label && label !== key) return label;
+  }
+  return raw;
+}
+
 function persistOrToast(context) {
   if (persist()) return true;
   const key = context || 'save';
+  const ctxLabel = persistContextLabel(context);
   window.__sfPersistCtxWarn = window.__sfPersistCtxWarn || {};
   if (!window.__sfPersistCtxWarn[key]) {
     window.__sfPersistCtxWarn[key] = true;
     userToast(context
-      ? toastT('toast.persistFailCtx', { context }, `Opslaan mislukt (${context}) — export save in Instellingen`)
+      ? toastT('toast.persistFailCtx', { context: ctxLabel }, `Opslaan mislukt (${ctxLabel}) — export save in Instellingen`)
       : toastT('toast.persistFail', null, 'Opslaan mislukt — export save in Instellingen'), 4200, { tone: 'warn' });
   }
   return false;

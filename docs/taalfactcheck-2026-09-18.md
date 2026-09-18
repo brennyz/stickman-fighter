@@ -54,4 +54,17 @@ Post-mega-merge (`v1.18.172`) audit, Z→A: **nl → fr → es → en → de**. 
 | de | `gear.weaponAsideHint` | Te lang op ~390px | `Sammlung · kein 6. Slot` |
 | nl | `ui.petCoinTip` / `pets.sub` / egg hint | Overflow op 390px | Ingekort + card/toast clamp |
 
-Versie: **v1.18.174 / SW 384**. Draft PR, geen main-merge. Deel-URL `speel.html`.
+## Examiner P0 — HUD + settings + style/season (zelfde draft)
+
+| locale | key / locatie | probleem | fix |
+|--------|---------------|----------|-----|
+| fr/es | HOME `menu.summons` | Tile bleef EN *Summons* | Coffres / Cofres |
+| fr/es | `ui.summonQuota` / empty | Overlay miste keys → EN *Today … summons* | coffres / cofres |
+| de | `summonQuota` / `summonNoMore` | *Random-Summons* / *Keine Summons* | Kisten |
+| de | HUD `kickTele` / `fighter.block` | leftover *block* / *BLOCK* | blocken / ABWEHR |
+| * | settings import preview | `Preview:` + NL *Import 2×* + NL warnings | `ui.importPreview` + kind-keys |
+| * | `persistOrToast('wapen'/'stijl')` | Dutch context in elke taal | `persistContextLabel` + `toast.persistCtx*` |
+| de/es/nl | toast sync | leftover *Sync* | Abgleich / Copia / Online-save |
+| * | style cards / season blurbs | Lange tooltip/blurb overlap 390px | 2–3 line clamp + kortere hint |
+
+Versie: **v1.18.175 / SW 385**. Draft PR, geen main-merge. Deel-URL `speel.html`.
