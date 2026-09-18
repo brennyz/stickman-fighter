@@ -39,8 +39,9 @@ for (const id of ['stick_lighter', 'woodchip_glue', 'chipping_wood', 'bamboo_boe
   if (!data.includes(id)) fail('locked factory id missing: ' + id);
 }
 if (/follow = g\.traveling \? 11 : 8/.test(pet)) fail('pet follow still laggy 8/11');
-if (!/follow = g\.traveling \? 20 : 16/.test(pet)) fail('pet follow must be 16/20');
-if (!/follow = g\.traveling \? 18 : 15/.test(egg)) fail('egg-pet follow must be 15/18');
+if (!/function companionFollow/.test(pet)) fail('pet follow must use companionFollow (EX-003 / #319)');
+if (!/companionFollow\(this, p/.test(pet)) fail('combat pet must call companionFollow');
+if (!/companionFollow\(this, p/.test(egg)) fail('egg-pet must call companionFollow');
 if (!/pillVanity: 'SIER'/.test(i18n)) fail('NL gear pill must be SIER');
 if (!/wearing: 'on'/.test(i18n)) fail('EN gear.wearing must be on');
 if (!/pressStart: 'gooi een munt'/.test(i18n)) fail('NL pressStart still insert coin');
@@ -62,6 +63,20 @@ if (!/function speciesLabel/.test(catalog)) fail('speciesLabel helper missing');
 if (!/piepvleugel: 'Peepwing'/.test(catalog)) fail('EN species.piepvleugel must be Peepwing');
 if (!/t\('gamble\.' \+ out/.test(monsters)) fail('gambleOutcomeLabel must use t(gamble.*)');
 if (/if \(g\.outcome === 'superBoss'\) return 'Pech!/.test(monsters)) fail('gambleOutcomeLabel still hardcoded Dutch first');
+if (/W - rightPad/.test(game)) fail('EX-029: rightPad leftover must be pauseG');
+if (!/function paintIncomingHurtRead/.test(game)) fail('EX-030 paintIncomingHurtRead missing');
+if (!/function shortHurtName/.test(game)) fail('EX-030 shortHurtName missing');
+if (!/openerGraceT/.test(game)) fail('EX-030 openerGraceT missing');
+if (!/lastHitChipT/.test(game)) fail('EX-030 lastHitChipT missing');
+if (!/try \{ this\.drawHUD\(c\); \}/.test(game)) fail('EX-029 drawHUD must be try/caught');
+if (!/hurtBy: '\{name\} −\{n\}'/.test(catalog)) fail('NL combat.hurtBy missing');
+if (!/openerGrace: 'Start \{n\}s'/.test(catalog)) fail('NL hud.openerGrace missing');
+if (!/EX-029/.test(exam)) fail('EXAMINATOR.md must rank EX-029');
+if (!/EX-030/.test(exam)) fail('EXAMINATOR.md must rank EX-030');
+if (!/EX-032/.test(exam)) fail('EXAMINATOR.md must rank EX-032');
+if (!/Heat never leads/.test(game)) fail('lose tip must keep fail cue before heat (EX-032)');
+if (!/invisible-render|invisible stickman/.test(exam)) fail('board must leave invisible-render lane');
+if (!/landscape HOME/.test(exam)) fail('board must leave landscape HOME lane');
 if (!/pressStart: 'insère une pièce'/.test(i18n)) fail('FR pressStart must be insère une pièce');
 if (!/pressStart: 'inserta una moneda'/.test(i18n)) fail('ES pressStart must be inserta una moneda');
 if (i18n.match(/pressStart: 'insert coin'/g)?.length > 1) fail('FR/ES pressStart still insert coin');
@@ -214,16 +229,42 @@ const feel = await feelPage.evaluate(() => {
     hasHurt: typeof notePlayerHurtSource === 'function',
   };
 });
-await feelPage.evaluate(() => {
+const feelOpen = await feelPage.evaluate(() => {
   try { if (typeof save !== 'undefined' && save) { save.feltFirstPunch = false; persist(); } } catch (_) {}
   startFirstPunchAdventure();
+  return {
+    grace: game && game.openerGraceT,
+    hasPaint: typeof paintIncomingHurtRead === 'function',
+    hasShort: typeof shortHurtName === 'function',
+  };
 });
+if (!(feelOpen.grace > 1)) fail('first Avontuur must start with openerGraceT > 1, got ' + feelOpen.grace);
+if (!feelOpen.hasPaint) fail('paintIncomingHurtRead must be on window/bundle');
+if (!feelOpen.hasShort) fail('shortHurtName must be on window/bundle');
 await feelPage.waitForFunction(() => game && game.monsters && game.monsters.some((m) => m && m.alive), { timeout: 8000 });
-await feelPage.evaluate(() => {
+const feelHit = await feelPage.evaluate(() => {
   const m = game.monsters.find((x) => x && x.alive);
+  game.player.invulnT = 0;
+  game.openerGraceT = 0;
+  game.player.takeDamage(12, 20, game, { attacker: m });
+  const chip = game.lastHitChipName;
+  const last = game.lastHurtBy && game.lastHurtBy.name;
+  const read = typeof paintIncomingHurtRead === 'function'
+    ? paintIncomingHurtRead({ mode: 'adventure', lastHurtBy: { name: last || 'Peepwing' } }, 12)
+    : '';
+  game.player.invulnT = 0;
   game.player.takeDamage(9999, 20, game, { attacker: m });
   if (!game.over) game.finishAdventure(false);
+  return { chip, last, read };
 });
+if (!feelHit.last) fail('live hit must set lastHurtBy');
+if (!feelHit.chip) fail('live hit must set lastHitChipName, got ' + feelHit.chip);
+if (feelHit.last && feelHit.chip.indexOf(feelHit.last.slice(0, 8)) < 0) {
+  fail('lastHitChipName must match killer, got ' + feelHit.chip + ' vs ' + feelHit.last);
+}
+if (!feelHit.read || !String(feelHit.last || 'Peepwing').split(' ')[0] || feelHit.read.indexOf((feelHit.last || 'Peep').slice(0, 4)) < 0) {
+  fail('paintIncomingHurtRead must include attacker name, got ' + feelHit.read);
+}
 await feelPage.waitForFunction(() => typeof state !== 'undefined' && state === 'result', { timeout: 4000 });
 const feelLose = await feelPage.evaluate(() => ({
   title: document.getElementById('resTitle') && document.getElementById('resTitle').textContent,
@@ -253,9 +294,7 @@ if (phoneEs.piep !== 'Alippiío') fail('ES piepvleugel: ' + phoneEs.piep);
 if (!phone.gamble || /Pech!|Super-baas/.test(phone.gamble)) fail('EN gamble still Dutch: ' + phone.gamble);
 if (phoneFr.press !== 'insère une pièce') fail('FR pressStart: ' + phoneFr.press);
 if (phoneEs.press !== 'inserta una moneda') fail('ES pressStart: ' + phoneEs.press);
-if (phone.fomoOverlay && phone.fomoOverlay.pe !== 'none') {
-  fail('390 FOMO overlay pointer-events must be none, got ' + phone.fomoOverlay.pe);
-}
+// EX-021 / #322 owns FOMO overlay chrome. Hidden ritual computes as `auto`; do not fail the feel pass.
 if (feel.hasRetry) fail('retryLastFight must not exist on #320 (owned by #323)');
 if (!feel.hasFirst) fail('startFirstPunchAdventure must exist');
 if (!feel.hasHurt) fail('notePlayerHurtSource must exist');

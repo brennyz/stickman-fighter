@@ -323,9 +323,9 @@ const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const VERSION_UPDATE_SAVE_KEY = 'stickfighter_version_update_save_v1';
 const VERSION_UPDATE_FLAG_KEY = 'stickfighter_version_update_flag_v1';
 const SAVE_EXPORT_SCHEMA = 3;
-const APP_VERSION = '1.18.189';
+const APP_VERSION = '1.18.190';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 399;
+const SW_CACHE_REV = 400;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', petCoins: 0, dex: {}, summons: {}, pets: {}, activePet: null,
   eggPets: {}, activeEggPet: null, eggDaily: null,
   chestDaily: null, chestWeapons: {},
@@ -22454,6 +22454,7 @@ function seedNlGameStrings() {
     energyNotFull: 'Energy {have}/{need} — sla om te vullen',
     protected: 'Beschermd!',
     iframe: 'Beschermd!',
+    hurtBy: '{name} −{n}',
     blockChip: 'BLOK −{n}',
     parry: 'PARRY!',
     miss: 'MIS!',
@@ -23369,6 +23370,8 @@ function seedNlGameStrings() {
     roundSkipHint: 'Tik slag om door te gaan',
     spawnP1: 'P1 spawn', spawnP2: 'P2 spawn',
     spawnGrace: 'Spawn {n}s',
+    openerGrace: 'Start {n}s',
+    lastHit: '{name}',
     vsTotEven: 'TOT {r1}={r2} · gelijk',
     vsTotLeadP1: 'TOT P1 +{diff} ({r1}/{r2})',
     vsTotLeadP2: 'TOT P2 +{diff} ({r2}/{r1})',
@@ -24802,6 +24805,7 @@ const CATALOG_EN = {
     energyNotFull: 'Energy {have}/{need} — hit to fill',
     protected: 'Safe!',
     iframe: 'Safe!',
+    hurtBy: '{name} −{n}',
     blockChip: 'BLOCK −{n}',
     parry: 'PARRY!',
     miss: 'MISS!',
@@ -24848,6 +24852,8 @@ const CATALOG_EN = {
     roundSkipHint: 'Tap attack to continue',
     spawnP1: 'P1 spawn', spawnP2: 'P2 spawn',
     spawnGrace: 'Spawn {n}s',
+    openerGrace: 'Ready {n}s',
+    lastHit: '{name}',
     vsTotEven: 'TOT {r1}={r2} · even',
     vsTotLeadP1: 'TOT P1 +{diff} ({r1}/{r2})',
     vsTotLeadP2: 'TOT P2 +{diff} ({r2}/{r1})',
@@ -25994,10 +26000,13 @@ const CATALOG_DE_CHROME = {
     trainTipDefault: 'Tipp: Laser springen · volle Energy → Spiral Orb',
     energyNotFull: 'Energy {have}/{need} — treffen zum Füllen',
     protected: 'Sicher!', iframe: 'Sicher!',
+    hurtBy: '{name} −{n}',
     blockChip: 'ABWEHR −{n}', parry: 'PARRY!', miss: 'DANEBEN!',
   },
   hud: {
     super: 'SUPER', masterShort: 'MEISTER +20%', masterSword: 'DAWNBLADE {n}s',
+    openerGrace: 'Start {n}s',
+    lastHit: '{name}',
     levelWave: 'Level {n} — Welle {wv}/{total}', islandWeapon: '{name} · Waffe ≤ Lv {cap}',
     part: 'Teil {cur}/3', waveLine: 'Welle {n}/{total}', wavesTotal: '{total} Wellen',
     nextWave: 'Nächste Welle', eggPet: 'Ei · {name}', petActive: 'Pet · {name}',
@@ -27254,10 +27263,12 @@ overlayI18nCatalog(CATALOG_FR, {
     trainLossTip: 'Saute pendant LIGHTNING PIERCE — le robot rate · saute les lasers d’oreilles',
     trainTipDefault: 'Astuce : saute les lasers · énergie pleine → Spiral Orb',
     energyNotFull: 'Énergie {have}/{need} — frappe pour remplir',
-    protected: 'Protégé !', iframe: 'Protégé !', blockChip: 'BLOC −{n}', parry: 'PARRY !', miss: 'RATÉ !',
+    protected: 'Protégé !', iframe: 'Protégé !', hurtBy: '{name} −{n}', blockChip: 'BLOC −{n}', parry: 'PARRY !', miss: 'RATÉ !',
   },
   hud: {
     super: 'SUPER', masterShort: 'MAÎTRE +20 %', masterSword: 'DAWNBLADE {n}s',
+    openerGrace: 'Départ {n}s',
+    lastHit: '{name}',
     levelWave: 'Niveau {n} — Vague {wv}/{total}', islandWeapon: '{name} · arme ≤ Lv {cap}',
     part: 'partie {cur}/3', waveLine: 'Vague {n}/{total}', wavesTotal: '{total} vagues',
     nextWave: 'Vague suivante', eggPet: 'Œuf · {name}', petActive: 'Pet · {name}',
@@ -28025,10 +28036,12 @@ overlayI18nCatalog(CATALOG_ES, {
     trainLossTip: 'Salta durante LIGHTNING PIERCE — el robot falla · salta láseres de oreja',
     trainTipDefault: 'Consejo: salta láseres · energía llena → Spiral Orb',
     energyNotFull: 'Energía {have}/{need} — golpea para llenar',
-    protected: '¡Protegido!', iframe: '¡Protegido!', blockChip: 'BLOQUEO −{n}', parry: '¡PARRY!', miss: '¡FALLO!',
+    protected: '¡Protegido!', iframe: '¡Protegido!', hurtBy: '{name} −{n}', blockChip: 'BLOQUEO −{n}', parry: '¡PARRY!', miss: '¡FALLO!',
   },
   hud: {
     super: 'SUPER', masterShort: 'MAESTRO +20%', masterSword: 'DAWNBLADE {n}s',
+    openerGrace: 'Salida {n}s',
+    lastHit: '{name}',
     levelWave: 'Nivel {n} — Oleada {wv}/{total}', islandWeapon: '{name} · arma ≤ Lv {cap}',
     part: 'parte {cur}/3', waveLine: 'Oleada {n}/{total}', wavesTotal: '{total} oleadas',
     nextWave: 'Siguiente oleada', eggPet: 'Huevo · {name}', petActive: 'Pet · {name}',
@@ -28756,10 +28769,12 @@ overlayI18nCatalog(CATALOG_DE, {
     trainLossTip: 'Spring während LIGHTNING PIERCE — Roboter verfehlt · spring Ohr-Laser',
     trainTipDefault: 'Tipp: Laser springen · Energy voll → Spiral Orb',
     energyNotFull: 'Energy {have}/{need} — treffen zum Füllen',
-    protected: 'Geschützt!', iframe: 'Geschützt!', blockChip: 'ABWEHR −{n}', parry: 'PARRY!', miss: 'DANEBEN!',
+    protected: 'Geschützt!', iframe: 'Geschützt!', hurtBy: '{name} −{n}', blockChip: 'ABWEHR −{n}', parry: 'PARRY!', miss: 'DANEBEN!',
   },
   hud: {
     super: 'SUPER', masterShort: 'MEISTER +20%', masterSword: 'DAWNBLADE {n}s',
+    openerGrace: 'Start {n}s',
+    lastHit: '{name}',
     levelWave: 'Level {n} — Welle {wv}/{total}', islandWeapon: '{name} · Waffe ≤ Lv {cap}',
     part: 'Teil {cur}/3', waveLine: 'Welle {n}/{total}', wavesTotal: '{total} Wellen',
     nextWave: 'Nächste Welle', eggPet: 'Ei · {name}', petActive: 'Pet · {name}',
@@ -38618,7 +38633,10 @@ class Fighter {
       AudioSys.sfxAt(this.isPlayer ? 'hurt' : 'hit', this.x);
     }
     if (this.isPlayer && game) {
-      game.floater(this.x, this.y - 118, '-' + dmg, '#ff6b6b', 18);
+      const hitTxt = (typeof paintIncomingHurtRead === 'function')
+        ? paintIncomingHurtRead(game, dmg)
+        : ('-' + dmg);
+      game.floater(this.x, this.y - 118, hitTxt, '#ff6b6b', 18);
     }
     if ((this.isPlayer || this.playerSlot) && game && save.haptics !== false) {
       haptic(dmg >= 18 ? 16 : 8);
@@ -43895,6 +43913,26 @@ function hurtSourceName(src) {
   return (src.sp && src.sp.name) || id || '';
 }
 
+function shortHurtName(name) {
+  const s = String(name || '').trim();
+  if (!s) return '';
+  return s.length > 14 ? s.slice(0, 13) + '…' : s;
+}
+
+function paintIncomingHurtRead(game, dmg) {
+  if (!game || game.mode !== 'adventure') return '-' + dmg;
+  const raw = game.lastHurtBy && game.lastHurtBy.name;
+  const name = shortHurtName(raw);
+  if (name) {
+    game.lastHitChipName = name;
+    game.lastHitChipT = 2.0;
+  }
+  if (!name) return '-' + dmg;
+  return (typeof t === 'function')
+    ? t('combat.hurtBy', { name: name, n: dmg })
+    : (name + ' −' + dmg);
+}
+
 function notePlayerHurtSource(game, src) {
   if (!game) return;
   const mon = src || inferClosestThreat(game, game.player);
@@ -44091,6 +44129,9 @@ class Game {
     this.runFinishers = 0;
     this.runLoot = createRunLoot();
     this.lastHurtBy = null;
+    this.openerGraceT = 0;
+    this.lastHitChipT = 0;
+    this.lastHitChipName = '';
 
     const st = playerStats();
     if (mode === 'adventure') {
@@ -44294,6 +44335,7 @@ class Game {
     // Spawn grace only for a normal opener — never during Satan (reflect must land).
     if (this.player && n <= 3 && !this.satanPending && !this.satanActive) {
       this.player.invulnT = Math.max(this.player.invulnT || 0, 1.35);
+      this.openerGraceT = 1.35;
     }
   }
 
@@ -45023,7 +45065,8 @@ class Game {
           const heat = (typeof satanHeatForLevel === 'function') ? satanHeatForLevel(lv, diff) : null;
           heatTip = (typeof satanHeatTip === 'function') ? (satanHeatTip(heat) || '') : '';
         } catch (_) {}
-        return heatTip ? `${heatTip} · ${core}` : core;
+        // EX-032: fail cue / retry first. Heat never leads (it buried SLAM + Nog één keer).
+        return [lead, core, heatTip].filter(Boolean).join(' · ');
       })(),
     }));
   }
@@ -46835,7 +46878,8 @@ class Game {
         }
         if (hitRoll.crit) applyCritFx(this, tgt.x, tgt.y);
         const col = tgt.playerSlot === 2 ? '#ffb0b8' : (tgt.isPlayer ? '#ff8080' : '#ffe680');
-        if (!tgt.blocking) {
+        // EX-029: player incoming numbers live in takeDamage (one source).
+        if (!tgt.blocking && !tgt.isPlayer && !tgt.playerSlot) {
           this.floater(tgt.x, tgt.y - 115, (counter ? t('combat.counter') + ' ' : '') + '-' + dmg, col, 16);
         }
         this.burst(tgt.bodyX, tgt.bodyY, col, 7);
@@ -46882,6 +46926,8 @@ class Game {
     try { if (typeof updateAimTutorial === 'function') updateAimTutorial(this, dt); } catch (_) {}
     if (this.playerHurtCd > 0) this.playerHurtCd -= dt;
     if (this.hitReadT > 0) this.hitReadT -= dt;
+    if (this.openerGraceT > 0) this.openerGraceT -= dt;
+    if (this.lastHitChipT > 0) this.lastHitChipT -= dt;
     let ketsJustFinished = false;
     if (this.ketsbamChargeT > 0) {
       if (this.over || !this.player?.alive) {
@@ -47820,7 +47866,10 @@ class Game {
       try { this.drawPartGateCue(c); } catch (_) {}
     }
 
-    this.drawHUD(c);
+    // EX-029: HUD leftovers must not abort draw — loop catch would wipe fighters.
+    try { this.drawHUD(c); } catch (hudErr) {
+      try { sfReportError('drawHUD', hudErr, errT('toast.fightHiccup', 'Hiccup — fight continues')); } catch (_) {}
+    }
 
     // banners — max 3 lanes, geen overlap
     const bannerDraw = this.banners.slice().sort((a, b) => (a.lane || 0) - (b.lane || 0));
@@ -48969,6 +49018,25 @@ class Game {
         c.fillStyle = 'rgba(255,255,255,.62)';
         c.fillText(Math.ceil(this.ketsbamCd) + 's', bx + bw - 20, by + 48);
       }
+      if (this.mode === 'adventure' && (this.openerGraceT || 0) > 0.05) {
+        const gTxt = t('hud.openerGrace', { n: this.openerGraceT.toFixed(1) });
+        c.font = compact ? '800 10px sans-serif' : '800 11px sans-serif';
+        const tw = c.measureText(gTxt).width;
+        c.fillStyle = 'rgba(6,10,24,.72)';
+        this.rr(c, bx + bw / 2 - tw / 2 - 6, by + 1, tw + 12, 13, 6); c.fill();
+        c.textAlign = 'center';
+        fillHudText(c, gTxt, bx + bw / 2, by + 11, { fill: '#7cf5ff' });
+      }
+      if (this.mode === 'adventure' && (this.lastHitChipT || 0) > 0 && this.lastHitChipName) {
+        c.save();
+        c.globalAlpha = clamp(this.lastHitChipT, 0, 1);
+        c.font = compact ? '800 11px sans-serif' : '800 12px sans-serif';
+        c.textAlign = 'left';
+        fillHudText(c, t('hud.lastHit', { name: this.lastHitChipName }), bx, by + (compact ? 60 : 62), {
+          fill: '#ffb0b8',
+        });
+        c.restore();
+      }
     }
 
     c.textAlign = 'center';
@@ -49086,7 +49154,6 @@ class Game {
         const hpPct = p.hp / Math.max(1, p.maxhp);
         const proj = starsFromHpPct(hpPct);
         const prevBest = this.advPrevStars || 0;
-        const star0 = W - rightPad - 46;
         for (let i = 0; i < 3; i++) {
           const ghost = prevBest > 0 && i < prevBest && i >= proj;
           drawStarShape(c, starX0 + 6 + i * 19, starY, 8, ghost ? 'rgba(255,215,94,.22)' : '#ffd75e', !ghost && i < proj);
@@ -49162,7 +49229,7 @@ class Game {
         c.font = '700 11px sans-serif';
         c.fillStyle = 'rgba(255,255,255,.7)';
         const hpLine = t('hud.hpPct', { pct, hint: starHint });
-        const hpMax = Math.max(140, W - rightPad - 24);
+        const hpMax = Math.max(140, W - pauseG - 24);
         if (typeof fillHudWrapped === 'function') {
           const used = fillHudWrapped(c, hpLine, W / 2, hy, {
             fill: 'rgba(255,255,255,.7)', maxW: hpMax, maxLines: 2, lineH: 13,

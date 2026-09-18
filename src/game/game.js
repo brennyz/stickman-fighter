@@ -34,6 +34,26 @@ function hurtSourceName(src) {
   return (src.sp && src.sp.name) || id || '';
 }
 
+function shortHurtName(name) {
+  const s = String(name || '').trim();
+  if (!s) return '';
+  return s.length > 14 ? s.slice(0, 13) + '…' : s;
+}
+
+function paintIncomingHurtRead(game, dmg) {
+  if (!game || game.mode !== 'adventure') return '-' + dmg;
+  const raw = game.lastHurtBy && game.lastHurtBy.name;
+  const name = shortHurtName(raw);
+  if (name) {
+    game.lastHitChipName = name;
+    game.lastHitChipT = 2.0;
+  }
+  if (!name) return '-' + dmg;
+  return (typeof t === 'function')
+    ? t('combat.hurtBy', { name: name, n: dmg })
+    : (name + ' −' + dmg);
+}
+
 function notePlayerHurtSource(game, src) {
   if (!game) return;
   const mon = src || inferClosestThreat(game, game.player);
@@ -230,6 +250,9 @@ class Game {
     this.runFinishers = 0;
     this.runLoot = createRunLoot();
     this.lastHurtBy = null;
+    this.openerGraceT = 0;
+    this.lastHitChipT = 0;
+    this.lastHitChipName = '';
 
     const st = playerStats();
     if (mode === 'adventure') {
@@ -433,6 +456,7 @@ class Game {
     // Spawn grace only for a normal opener — never during Satan (reflect must land).
     if (this.player && n <= 3 && !this.satanPending && !this.satanActive) {
       this.player.invulnT = Math.max(this.player.invulnT || 0, 1.35);
+      this.openerGraceT = 1.35;
     }
   }
 
@@ -1162,7 +1186,8 @@ class Game {
           const heat = (typeof satanHeatForLevel === 'function') ? satanHeatForLevel(lv, diff) : null;
           heatTip = (typeof satanHeatTip === 'function') ? (satanHeatTip(heat) || '') : '';
         } catch (_) {}
-        return heatTip ? `${heatTip} · ${core}` : core;
+        // EX-032: fail cue / retry first. Heat never leads (it buried SLAM + Nog één keer).
+        return [lead, core, heatTip].filter(Boolean).join(' · ');
       })(),
     }));
   }
@@ -2974,7 +2999,8 @@ class Game {
         }
         if (hitRoll.crit) applyCritFx(this, tgt.x, tgt.y);
         const col = tgt.playerSlot === 2 ? '#ffb0b8' : (tgt.isPlayer ? '#ff8080' : '#ffe680');
-        if (!tgt.blocking) {
+        // EX-029: player incoming numbers live in takeDamage (one source).
+        if (!tgt.blocking && !tgt.isPlayer && !tgt.playerSlot) {
           this.floater(tgt.x, tgt.y - 115, (counter ? t('combat.counter') + ' ' : '') + '-' + dmg, col, 16);
         }
         this.burst(tgt.bodyX, tgt.bodyY, col, 7);
@@ -3021,6 +3047,8 @@ class Game {
     try { if (typeof updateAimTutorial === 'function') updateAimTutorial(this, dt); } catch (_) {}
     if (this.playerHurtCd > 0) this.playerHurtCd -= dt;
     if (this.hitReadT > 0) this.hitReadT -= dt;
+    if (this.openerGraceT > 0) this.openerGraceT -= dt;
+    if (this.lastHitChipT > 0) this.lastHitChipT -= dt;
     let ketsJustFinished = false;
     if (this.ketsbamChargeT > 0) {
       if (this.over || !this.player?.alive) {
@@ -3959,7 +3987,10 @@ class Game {
       try { this.drawPartGateCue(c); } catch (_) {}
     }
 
-    this.drawHUD(c);
+    // EX-029: HUD leftovers must not abort draw — loop catch would wipe fighters.
+    try { this.drawHUD(c); } catch (hudErr) {
+      try { sfReportError('drawHUD', hudErr, errT('toast.fightHiccup', 'Hiccup — fight continues')); } catch (_) {}
+    }
 
     // banners — max 3 lanes, geen overlap
     const bannerDraw = this.banners.slice().sort((a, b) => (a.lane || 0) - (b.lane || 0));
@@ -5108,6 +5139,25 @@ class Game {
         c.fillStyle = 'rgba(255,255,255,.62)';
         c.fillText(Math.ceil(this.ketsbamCd) + 's', bx + bw - 20, by + 48);
       }
+      if (this.mode === 'adventure' && (this.openerGraceT || 0) > 0.05) {
+        const gTxt = t('hud.openerGrace', { n: this.openerGraceT.toFixed(1) });
+        c.font = compact ? '800 10px sans-serif' : '800 11px sans-serif';
+        const tw = c.measureText(gTxt).width;
+        c.fillStyle = 'rgba(6,10,24,.72)';
+        this.rr(c, bx + bw / 2 - tw / 2 - 6, by + 1, tw + 12, 13, 6); c.fill();
+        c.textAlign = 'center';
+        fillHudText(c, gTxt, bx + bw / 2, by + 11, { fill: '#7cf5ff' });
+      }
+      if (this.mode === 'adventure' && (this.lastHitChipT || 0) > 0 && this.lastHitChipName) {
+        c.save();
+        c.globalAlpha = clamp(this.lastHitChipT, 0, 1);
+        c.font = compact ? '800 11px sans-serif' : '800 12px sans-serif';
+        c.textAlign = 'left';
+        fillHudText(c, t('hud.lastHit', { name: this.lastHitChipName }), bx, by + (compact ? 60 : 62), {
+          fill: '#ffb0b8',
+        });
+        c.restore();
+      }
     }
 
     c.textAlign = 'center';
@@ -5225,7 +5275,6 @@ class Game {
         const hpPct = p.hp / Math.max(1, p.maxhp);
         const proj = starsFromHpPct(hpPct);
         const prevBest = this.advPrevStars || 0;
-        const star0 = W - rightPad - 46;
         for (let i = 0; i < 3; i++) {
           const ghost = prevBest > 0 && i < prevBest && i >= proj;
           drawStarShape(c, starX0 + 6 + i * 19, starY, 8, ghost ? 'rgba(255,215,94,.22)' : '#ffd75e', !ghost && i < proj);
@@ -5301,7 +5350,7 @@ class Game {
         c.font = '700 11px sans-serif';
         c.fillStyle = 'rgba(255,255,255,.7)';
         const hpLine = t('hud.hpPct', { pct, hint: starHint });
-        const hpMax = Math.max(140, W - rightPad - 24);
+        const hpMax = Math.max(140, W - pauseG - 24);
         if (typeof fillHudWrapped === 'function') {
           const used = fillHudWrapped(c, hpLine, W / 2, hy, {
             fill: 'rgba(255,255,255,.7)', maxW: hpMax, maxLines: 2, lineH: 13,
