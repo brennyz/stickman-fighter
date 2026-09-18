@@ -2084,18 +2084,6 @@
   #resultScreen .stars-big { font-size:min(10vw,42px); color:#ffd75e; letter-spacing:6px; margin:8px 0 14px;
       text-shadow:0 3px 0 #a86818; }
   #resultScreen .btn { margin-top:8px; }
-  /* EX-022 FEEL: lose = one primary retry CTA, menu is secondary. */
-  #resultScreen.is-lose .bigres { margin: 16px 0 6px; }
-  #resultScreen.is-lose #resLoot { max-height: min(22vh, 140px); }
-  #resultScreen.is-lose #resAgain {
-    width: min(92vw, 440px); min-height: 58px; margin-top: 12px;
-    box-shadow: 0 8px 22px rgba(255, 107, 107, .22);
-  }
-  #resultScreen.is-lose #resMenu {
-    background: transparent; border: 0; box-shadow: none;
-    min-height: 40px; margin-top: 4px; opacity: .72; font-size: 14px;
-  }
-  #resultScreen.is-lose #resMenu .ico { display: none; }
 
   /* Android Chrome/TWA: HTML-toast onder statusbalk. Queue + toon (ok/warn/danger) van #260. */
   #toastHost { position:fixed; left:50%; top:max(12px, calc(env(safe-area-inset-top, 0px) + 10px));

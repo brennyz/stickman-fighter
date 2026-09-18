@@ -165,7 +165,7 @@ class Monster {
         this.shootCD = rand(2.2, 3.2);
         game.spawnProjectile({
           x: this.x + dir * this.size, y: this.y - 4,
-          vx: dir * 300, vy: 0, r: 8, dmg: this.dmg, from: 'enemy',
+          vx: dir * 300, vy: 0, r: 8, dmg: this.dmg, from: 'enemy', srcMon: this,
           kind: this.sp.art === 'ghost' ? 'orb' : 'laser',
         });
         AudioSys.sfx(this.sp.art === 'ghost' ? 'shoot' : 'laser');
@@ -176,7 +176,7 @@ class Monster {
         if (this.telegraphT <= 0) {
           AudioSys.sfx('hit2'); game.shake(8, 0.25);
           if (Math.abs(p.x - this.x) < this.size + 62 && p.y > game.ground - 90)
-            p.takeDamage(this.dmg, Math.sign(p.x - this.x) * 320, game);
+            p.takeDamage(this.dmg, Math.sign(p.x - this.x) * 320, game, { attacker: this });
         }
       } else {
         this.x += dir * this.speed * dt;
@@ -199,7 +199,7 @@ class Monster {
         this.shootCD = (this.elite ? rand(1.4, 2.0) : rand(1.9, 2.6)) / (this.enraged ? 1.35 : 1);
         const a = Math.atan2((p.y - 40) - this.y, p.x - this.x);
         game.spawnProjectile({ x: this.x + Math.cos(a) * this.size, y: this.y + Math.sin(a) * this.size,
-          vx: Math.cos(a) * 260, vy: Math.sin(a) * 260, r: 10, dmg: this.dmg, from: 'enemy', kind: 'fire', grav: 60 });
+          vx: Math.cos(a) * 260, vy: Math.sin(a) * 260, r: 10, dmg: this.dmg, from: 'enemy', srcMon: this, kind: 'fire', grav: 60 });
         AudioSys.sfx('roar');
       }
     } else if (type === 'swim') {
@@ -232,7 +232,7 @@ class Monster {
           this.shootCD = rand(1.9, 2.8);
           game.spawnProjectile({
             x: this.x + dir * this.size, y: this.y - 8,
-            vx: dir * 250, vy: rand(-50, 50), r: 9, dmg: this.dmg, from: 'enemy', kind: 'ink',
+            vx: dir * 250, vy: rand(-50, 50), r: 9, dmg: this.dmg, from: 'enemy', srcMon: this, kind: 'ink',
           });
           try { AudioSys.sfx('shoot'); } catch (_) {}
         }
@@ -249,7 +249,7 @@ class Monster {
       const rr = (this.size + p.bodyR) * 0.82;
       if ((p.x - this.x) ** 2 + (p.bodyY - this.y) ** 2 < rr * rr) {
         const d = this.dashT > 0 ? this.dmg * 1.3 : this.dmg;
-        if (p.takeDamage(d, dir * 180, game) > 0) {
+        if (p.takeDamage(d, dir * 180, game, { attacker: this }) > 0) {
           game.shake(4, 0.15);
           applyHitStop(game, { kind: 'punch', dmg: d }, { playerHurt: true, heavy: d >= 18 });
         }
@@ -328,7 +328,7 @@ class Monster {
       if (this.satanBoss && this.reflectRatio > 0 && dmg > 0 && game && game.player && game.player.alive) {
         const rd = Math.max(1, Math.round(dmg * this.reflectRatio));
         try {
-          game.player.takeDamage(rd, Math.sign(game.player.x - this.x) * 220, game, { reflect: true, skipHitSfx: true });
+          game.player.takeDamage(rd, Math.sign(game.player.x - this.x) * 220, game, { reflect: true, skipHitSfx: true, attacker: this });
           game.floater(game.player.x, game.player.y - 70, t('combat.satanReflect', { n: rd }), '#ff3040', 13);
           game.burst(game.player.x, game.player.y - 40, '#ff3040', fxLite() ? 4 : 8);
           AudioSys.sfxAt('hit', game.player.x);

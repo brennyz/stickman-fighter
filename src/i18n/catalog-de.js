@@ -39,7 +39,12 @@ const CATALOG_DE_CHROME = {
     petCoinsLine: '+{n} Pet-Coins',
   },
   result: {
-    advWin: 'GEWONNEN!', advLose: 'VERLOREN', trainWin: 'MEISTER!', trainLose: 'ROBOT GEWINNT...',
+    advWin: 'GEWONNEN!', advLose: 'VERLOREN', advLoseBy: 'VERLOREN · {name}',
+    trainWin: 'MEISTER!', trainLose: 'ROBOT GEWINNT...',
+    killedBy: '{name} hat dich erwischt · {prog}',
+    killedByFlyer: '{name} (Flieger) — nach oben zielen · {prog}',
+    killedBySlam: '{name} hat dich plattgemacht — Slam springen · {prog}',
+    killedByBoss: '{name} war der Boss · {prog}',
     trainDetailWin: 'RabbitRobot besiegt ({p}-{r}) · max Combo ×{combo} · {wins}× gewonnen',
     trainDetailLose: 'RabbitRobot war zu stark ({p}-{r}) · max Combo ×{combo}',
     vsP1Win: 'SPIELER 1 GEWINNT!', vsP2Win: 'SPIELER 2 GEWINNT!', wallRecord: 'NEUER REKORD!', wallTime: 'ZEIT UM!',

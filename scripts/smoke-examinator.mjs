@@ -72,15 +72,35 @@ if (!/#menuScreen #fomoRitual \{\s*align-items: flex-end;[\s\S]*pointer-events: 
 if (!/max-height: min\(44vh, 340px\)/.test(css)) fail('390 FOMO sheet must be compact max-height');
 if (!/FEEL bar/.test(exam)) fail('EXAMINATOR.md must keep FEEL bar');
 if (!/EX-022/.test(exam)) fail('EXAMINATOR.md must rank EX-022 retry');
+if (!/DELEGATED #323/.test(exam)) fail('EX-022 must be DELEGATED #323');
+if (!/EX-023/.test(exam) || !/feltFirstPunch/.test(exam)) fail('EXAMINATOR.md must keep EX-023 first punch');
+if (!/EX-024/.test(exam) || !/advLoseBy/.test(exam)) fail('EXAMINATOR.md must keep EX-024 killer name');
 if (!/EX-026/.test(exam) || !/IAP out of scope/.test(exam)) fail('EXAMINATOR.md must note IAP out of scope');
-if (!/win \? 1600 : 380/.test(game)) fail('adventure lose result delay must be 380ms');
-if (!/win \? 1400 : 380/.test(game)) fail('training lose result delay must be 380ms');
-if (!/classList.toggle\('is-lose'/.test(ui)) fail('resultScreen must toggle is-lose');
-if (!/#resultScreen.is-lose #resAgain/.test(css)) fail('lose result must promote Opnieuw');
-if (!/#resultScreen.is-lose #resMenu/.test(css)) fail('lose result must demote Menu');
+if (/win \? 1600 : 380/.test(game) || /win \? 1400 : 380/.test(game)) {
+  fail('lose 380ms retry belongs to #323 — do not keep EX-022 delays');
+}
+if (!/win \? 1600 : 1400/.test(game)) fail('adventure lose delay must restore 1400ms (#323 owns fast retry)');
+if (!/scheduleGameResult\(this, 1400/.test(game)) fail('training result delay must restore 1400ms');
+if (/#resultScreen.is-lose #resAgain/.test(css) || /#resultScreen.is-lose #resMenu/.test(css)) {
+  fail('is-lose Opnieuw/Menu CSS fights #323 — remove it');
+}
 const startJs = fs.readFileSync(path.join(root, 'src/boot/start.js'), 'utf8');
-if (!/function retryLastFight/.test(startJs)) fail('retryLastFight helper missing');
-if (!/gamble: null/.test(startJs)) fail('lose adventure retry must skip gamble');
+const missions = fs.readFileSync(path.join(root, 'src/systems/missions.js'), 'utf8');
+if (/function retryLastFight/.test(startJs)) fail('retryLastFight must stay off #320 (EX-022 is #323)');
+if (!/function firstPunchPending/.test(startJs)) fail('firstPunchPending helper missing');
+if (!/function startFirstPunchAdventure/.test(startJs)) fail('startFirstPunchAdventure helper missing');
+if (!/function markFeltFirstPunch/.test(startJs)) fail('markFeltFirstPunch helper missing');
+if (!/feltFirstPunch/.test(fs.readFileSync(path.join(root, 'src/core/storage.js'), 'utf8'))) {
+  fail('DEFAULT_SAVE must keep feltFirstPunch');
+}
+if (!/firstPunchPending\(\)/.test(missions)) fail('fomoRitualPending / gokGooiStartLevel must honor firstPunchPending');
+if (!/function notePlayerHurtSource/.test(game)) fail('notePlayerHurtSource helper missing');
+if (!/function adventureLoseCopy/.test(game)) fail('adventureLoseCopy helper missing');
+if (!/lastHurtBy/.test(game)) fail('game.lastHurtBy must be tracked');
+if (!/advLoseBy: 'VERLOREN · \{name\}'/.test(catalog)) fail('NL result.advLoseBy missing');
+if (!/advLoseBy: 'YOU LOSE · \{name\}'/.test(catalog)) fail('EN result.advLoseBy missing');
+if (!/killedByFlyer/.test(catalog)) fail('result.killedByFlyer missing');
+if (!/titleParams/.test(ui)) fail('showResult must pass titleParams for killer name');
 
 console.log('SMOKE_OK examinator: static P0 guards');
 
@@ -128,6 +148,9 @@ async function snap(browser, w, h, lang) {
       press: typeof t === 'function' ? t('menu.pressStart') : null,
       piep: typeof speciesLabel === 'function' ? speciesLabel('piepvleugel') : null,
       gamble: typeof gambleOutcomeLabel === 'function' ? gambleOutcomeLabel({ outcome: 'superBoss' }) : null,
+      firstPunch: typeof firstPunchPending === 'function' ? firstPunchPending() : null,
+      loseBy: typeof t === 'function' ? t('result.advLoseBy', { name: 'Peepwing' }) : null,
+      killedBy: typeof t === 'function' ? t('result.killedBy', { name: 'Peepwing', prog: '1/3' }) : null,
       fomoSheet: (() => {
         const el = document.querySelector('#fomoRitual .fomo-ritual-sheet');
         if (!el) return null;
@@ -164,19 +187,21 @@ await feelPage.goto(smokeBaseUrl(8793), { waitUntil: 'load', timeout: 30000 });
 await feelPage.waitForFunction(() => window.__sfBooted, { timeout: 25000 });
 const feel = await feelPage.evaluate(() => {
   try { if (typeof enterHubFromTitle === 'function') enterHubFromTitle({}); } catch (_) {}
+  const pending = typeof firstPunchPending === 'function' ? firstPunchPending() : null;
+  const fomoOff = typeof fomoRitualPending === 'function' ? fomoRitualPending() : null;
   UI.showResult(false, {
     mode: 'adventure', level: 1, win: false, xp: 0,
-    titleKey: 'result.advLose', title: 'VERLOREN',
+    titleKey: 'result.advLoseBy', titleParams: { name: 'Peepwing' },
     detail: 'feel', tip: 'jump',
   });
-  const rs = document.getElementById('resultScreen');
-  const again = document.getElementById('resAgain');
-  const menu = document.getElementById('resMenu');
+  const title = document.getElementById('resTitle');
   return {
-    lose: !!(rs && rs.classList.contains('is-lose')),
-    againH: again ? Math.round(again.getBoundingClientRect().height) : 0,
-    menuH: menu ? Math.round(menu.getBoundingClientRect().height) : 0,
+    pending,
+    fomoOff,
+    title: title ? title.textContent : '',
     hasRetry: typeof retryLastFight === 'function',
+    hasFirst: typeof startFirstPunchAdventure === 'function',
+    hasHurt: typeof notePlayerHurtSource === 'function',
   };
 });
 await feelPage.close();
@@ -203,9 +228,16 @@ if (phoneEs.press !== 'inserta una moneda') fail('ES pressStart: ' + phoneEs.pre
 if (phone.fomoOverlay && phone.fomoOverlay.pe !== 'none') {
   fail('390 FOMO overlay pointer-events must be none, got ' + phone.fomoOverlay.pe);
 }
-if (!feel.lose) fail('lose result must set #resultScreen.is-lose');
-if (!feel.hasRetry) fail('retryLastFight must exist on lose');
-if (feel.againH < 50) fail('lose Opnieuw CTA too small: ' + feel.againH);
-if (feel.menuH >= feel.againH) fail('lose Menu must be smaller than Opnieuw');
+if (feel.hasRetry) fail('retryLastFight must not exist on #320 (owned by #323)');
+if (!feel.hasFirst) fail('startFirstPunchAdventure must exist');
+if (!feel.hasHurt) fail('notePlayerHurtSource must exist');
+if (feel.pending !== true) fail('fresh save must firstPunchPending');
+if (feel.fomoOff !== false) fail('FOMO must stay off until first punch, got ' + feel.fomoOff);
+if (!/Peepwing/.test(feel.title || '')) fail('lose title must name killer, got ' + feel.title);
+if (!phone.loseBy || !/Peepwing/.test(phone.loseBy)) fail('EN advLoseBy: ' + phone.loseBy);
+if (!phoneNl.loseBy || !/VERLOREN/.test(phoneNl.loseBy)) fail('NL advLoseBy: ' + phoneNl.loseBy);
+if (!phoneDe.loseBy || !/VERLOREN/.test(phoneDe.loseBy)) fail('DE advLoseBy: ' + phoneDe.loseBy);
+if (!phoneFr.loseBy || !/DÉFAITE/.test(phoneFr.loseBy)) fail('FR advLoseBy: ' + phoneFr.loseBy);
+if (!phoneEs.loseBy || !/DERROTA/.test(phoneEs.loseBy)) fail('ES advLoseBy: ' + phoneEs.loseBy);
 
 console.log('SMOKE_OK examinator: phone', phone.lv10total, '/', phone.lv20total, 'desk', desk.lv10total, '/', desk.lv20total);

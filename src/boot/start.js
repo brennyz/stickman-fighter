@@ -131,7 +131,11 @@ document.querySelectorAll('[data-hub]').forEach((el) => {
     AudioSys.init(); AudioSys.sfx('select');
     const hub = el.dataset.hub;
     if (hub === 'adventure') {
-      UI.safeOpen('levelScreen', () => UI.renderLevels(), { msg: t('ui.errLoadAdventure') });
+      if (typeof firstPunchPending === 'function' && firstPunchPending()) {
+        startFirstPunchAdventure();
+      } else {
+        UI.safeOpen('levelScreen', () => UI.renderLevels(), { msg: t('ui.errLoadAdventure') });
+      }
     } else if (hub === 'versus') {
       try { toastVersusRetired(); } catch (_) {}
     } else if (hub === 'summon') {
@@ -780,44 +784,44 @@ if (pauseVsSwap) {
     }), 2800);
   });
 }
-/** EX-022: lose retry skips gamble flash so death → fight stays under 3s. */
-function retryLastFight() {
-  const d = UI.lastResult;
-  if (!d || !d.mode) return false;
-  AudioSys.sfx('select');
-  try { if (game) game._resultToken = (game._resultToken || 0) + 1; } catch (_) {}
-  if (d.mode === 'adventure') {
-    if (!d.win) {
-      const diff = d.difficulty || (typeof currentAdvDiff === 'function' ? currentAdvDiff() : 'normal');
-      startGame('adventure', { level: d.level || 1, gamble: null, difficulty: diff });
-      return true;
-    }
-    gokGooiStartLevel(d.level);
+/** EX-023: first Avontuur is a punch, not island + gamble + FOMO. */
+function firstPunchPending() {
+  try {
+    return !(typeof save !== 'undefined' && save && save.feltFirstPunch);
+  } catch (_) {
     return true;
   }
-  if (d.mode === 'versus') {
+}
+
+function markFeltFirstPunch() {
+  try {
+    if (typeof save === 'undefined' || !save || save.feltFirstPunch) return;
+    save.feltFirstPunch = true;
+    if (typeof persist === 'function') persist();
+  } catch (_) {}
+}
+
+function startFirstPunchAdventure() {
+  const lv = 1;
+  const diff = (typeof currentAdvDiff === 'function') ? currentAdvDiff() : 'normal';
+  startGame('adventure', { level: lv, gamble: null, difficulty: diff });
+}
+
+bindPress(document.getElementById('resAgain'), () => {
+  const d = UI.lastResult;
+  if (!d || !d.mode) return;
+  AudioSys.sfx('select');
+  try { if (game) game._resultToken = (game._resultToken || 0) + 1; } catch (_) {}
+  if (d.mode === 'adventure') gokGooiStartLevel(d.level);
+  else if (d.mode === 'versus') {
     const p1 = d.p1 || vsSelect.p1;
     const p2 = d.p2 || vsSelect.p2;
     vsSelect.p1 = p1;
     vsSelect.p2 = p2;
     UI.toast(`Rematch · ${vsRosterName(p1) || 'P1'} vs ${vsRosterName(p2) || 'P2'}`, 2600);
     startGame('versus', { p1, p2 });
-    return true;
   }
-  startGame(d.mode);
-  return true;
-}
-bindPress(document.getElementById('resAgain'), () => {
-  retryLastFight();
-});
-['resTitle', 'resDetail', 'resTip', 'resXp', 'resStars'].forEach((id) => {
-  const el = document.getElementById(id);
-  if (!el) return;
-  bindPress(el, () => {
-    const d = UI.lastResult;
-    if (!d || d.win) return;
-    retryLastFight();
-  });
+  else startGame(d.mode);
 });
 bindPress(document.getElementById('resNext'), () => {
   const d = UI.lastResult;

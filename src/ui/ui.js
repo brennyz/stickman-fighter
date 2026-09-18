@@ -5031,7 +5031,9 @@ const UI = {
       ? (win ? tOr('result.trainWin', 'KAMPIOEN!') : tOr('result.trainLose', 'ROBOT WINT...'))
       : (win ? tOr('result.advWin', 'GEWONNEN!') : tOr('result.advLose', 'VERLOREN'));
     // Never reuse a stale English title (ROBOT WINS / YOU LOST) when the UI is NL.
-    const painted = (typeof tOr === 'function') ? tOr(titleKey, titleFallback) : titleFallback;
+    const painted = (typeof tOr === 'function')
+      ? tOr(titleKey, titleFallback, data.titleParams || {})
+      : titleFallback;
     title.textContent = painted;
     data.titleKey = titleKey;
     data.title = painted;

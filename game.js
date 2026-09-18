@@ -323,9 +323,9 @@ const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const VERSION_UPDATE_SAVE_KEY = 'stickfighter_version_update_save_v1';
 const VERSION_UPDATE_FLAG_KEY = 'stickfighter_version_update_flag_v1';
 const SAVE_EXPORT_SCHEMA = 3;
-const APP_VERSION = '1.18.175';
+const APP_VERSION = '1.18.176';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 385;
+const SW_CACHE_REV = 386;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', petCoins: 0, dex: {}, summons: {}, pets: {}, activePet: null,
   eggPets: {}, activeEggPet: null, eggDaily: null,
   chestDaily: null, chestWeapons: {},
@@ -358,6 +358,8 @@ const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', petCoins: 0,
   /** auto | classic | jungle | halloween | winter | summer — CSS overlay pref */
   seasonPref: 'auto',
   playerTag: '', lastPlay: null, tipsSeen: {},
+  /** EX-023: first punch landed — until then skip island/gamble/FOMO. */
+  feltFirstPunch: false,
   /** Epoch ms — set once in sanitizeSave. Time gates use account age from this. */
   createdAt: 0,
   /** 5-slot loadout — see src/data/gear.js + docs/GEAR-SYSTEM.md */
@@ -1888,6 +1890,7 @@ function sanitizeSave(s) {
       ? (String(out.seasonPref).toLowerCase() === 'default' ? 'classic' : String(out.seasonPref).toLowerCase())
       : 'auto');
   out.tipsSeen = sanitizeTipsSeen(out.tipsSeen);
+  out.feltFirstPunch = !!out.feltFirstPunch;
   out.missionsIntroSeen = !!out.missionsIntroSeen;
   if (out.lastPlay && typeof out.lastPlay === 'object') {
     const lp = out.lastPlay;
@@ -4582,6 +4585,7 @@ function fomoRitualHubReady() {
 
 function fomoRitualPending() {
   if (typeof save === 'undefined' || !save) return false;
+  if (typeof firstPunchPending === 'function' && firstPunchPending()) return false;
   ensureFomo();
   const today = todayKey();
   if (save.fomo.ritualSeenDate === today) return false;
@@ -6634,6 +6638,12 @@ function playGambleRollSfx(g) {
  * Alleen cancelGambleStart() (token bump) mag de start killen.
  */
 function gokGooiStartLevel(n) {
+  if (typeof firstPunchPending === 'function' && firstPunchPending()) {
+    const lv = Math.max(1, Math.min(MAX_LEVEL, Number(n) || 1));
+    const diff = typeof currentAdvDiff === 'function' ? currentAdvDiff() : 'normal';
+    startGame('adventure', { level: lv, gamble: null, difficulty: diff });
+    return;
+  }
   if (gokStartBusy) return;
   cancelGambleStart();
   gokStartBusy = true;
@@ -6670,6 +6680,10 @@ function gokGooiStartLevel(n) {
 }
 
 function gokGooiStartFromScreen() {
+  if (typeof firstPunchPending === 'function' && firstPunchPending()) {
+    if (typeof startFirstPunchAdventure === 'function') startFirstPunchAdventure();
+    return;
+  }
   if (gokStartBusy) return;
   cancelGambleStart();
   gokStartBusy = true;
@@ -20711,7 +20725,12 @@ function seedNlGameStrings() {
   });
   if (!I18N.nl.result) I18N.nl.result = {};
   Object.assign(I18N.nl.result, {
-    advWin: 'GEWONNEN!', advLose: 'VERLOREN', trainWin: 'KAMPIOEN!', trainLose: 'ROBOT WINT...',
+    advWin: 'GEWONNEN!', advLose: 'VERLOREN', advLoseBy: 'VERLOREN · {name}',
+    trainWin: 'KAMPIOEN!', trainLose: 'ROBOT WINT...',
+    killedBy: '{name} tikte je uit · {prog}',
+    killedByFlyer: '{name} (vlieger) — mik omhoog · {prog}',
+    killedBySlam: '{name} sloeg plat — spring de slam · {prog}',
+    killedByBoss: '{name} was de baas · {prog}',
     advLoseKeep: 'XP en loot van deze run blijven',
     trainAgainSub: 'vs RabbitRobot',
     wavesStart: 'begin',
@@ -21990,7 +22009,12 @@ const CATALOG_EN = {
   },
   pickup: { heal: '+HP', rage: 'RAGE', energy: 'ENERGY', shield: 'SHIELD' },
   result: {
-    advWin: 'VICTORY!', advLose: 'YOU LOSE', trainWin: 'CHAMPION!', trainLose: 'ROBOT WINS...',
+    advWin: 'VICTORY!', advLose: 'YOU LOSE', advLoseBy: 'YOU LOSE · {name}',
+    trainWin: 'CHAMPION!', trainLose: 'ROBOT WINS...',
+    killedBy: '{name} took you out · {prog}',
+    killedByFlyer: '{name} (flyer) — aim up · {prog}',
+    killedBySlam: '{name} slammed you — jump the slam · {prog}',
+    killedByBoss: '{name} was the boss · {prog}',
     advLoseKeep: 'XP and loot from this run stay',
     trainAgainSub: 'vs RabbitRobot',
     wavesStart: 'start',
@@ -23104,7 +23128,12 @@ const CATALOG_DE = {
     tome: { name: 'Buchmeister', hint: 'Hälfte des Buches', tooltip: 'Monsterbuch auf dem Rücken.', bonus: '+4 max HP · Buchweisheit' },
   },
   result: {
-    advWin: 'GEWONNEN!', advLose: 'VERLOREN', trainWin: 'MEISTER!', trainLose: 'ROBOT GEWINNT...',
+    advWin: 'GEWONNEN!', advLose: 'VERLOREN', advLoseBy: 'VERLOREN · {name}',
+    trainWin: 'MEISTER!', trainLose: 'ROBOT GEWINNT...',
+    killedBy: '{name} hat dich erwischt · {prog}',
+    killedByFlyer: '{name} (Flieger) — nach oben zielen · {prog}',
+    killedBySlam: '{name} hat dich plattgemacht — Slam springen · {prog}',
+    killedByBoss: '{name} war der Boss · {prog}',
     advLoseKeep: 'XP und Beute von diesem Lauf bleiben',
     trainAgainSub: 'vs RabbitRobot',
     wavesStart: 'Start',
@@ -23213,7 +23242,12 @@ const CATALOG_FR = {
     tome: { name: 'Maître du livre', hint: 'Moitié du bestiaire', tooltip: 'Bestiaire sur le dos.', bonus: '+4 PV max · sagesse' },
   },
   result: {
-    advWin: 'VICTOIRE !', advLose: 'DÉFAITE...', trainWin: 'CHAMPION !', trainLose: 'ROBOT GAGNE...',
+    advWin: 'VICTOIRE !', advLose: 'DÉFAITE...', advLoseBy: 'DÉFAITE · {name}',
+    trainWin: 'CHAMPION !', trainLose: 'ROBOT GAGNE...',
+    killedBy: '{name} t’a mis KO · {prog}',
+    killedByFlyer: '{name} (volant) — vise en haut · {prog}',
+    killedBySlam: '{name} t’a écrasé — saute le slam · {prog}',
+    killedByBoss: '{name} était le boss · {prog}',
     advLoseKeep: 'XP et butin de cette run restent',
     trainAgainSub: 'vs RabbitRobot',
     wavesStart: 'début',
@@ -23322,7 +23356,12 @@ const CATALOG_ES = {
     tome: { name: 'Maestro del libro', hint: 'Mitad del bestiario', tooltip: 'Libro en la espalda.', bonus: '+4 HP máx · sabiduría' },
   },
   result: {
-    advWin: '¡VICTORIA!', advLose: 'DERROTA...', trainWin: '¡CAMPEÓN!', trainLose: 'ROBOT GANA...',
+    advWin: '¡VICTORIA!', advLose: 'DERROTA...', advLoseBy: 'DERROTA · {name}',
+    trainWin: '¡CAMPEÓN!', trainLose: 'ROBOT GANA...',
+    killedBy: '{name} te dejó fuera · {prog}',
+    killedByFlyer: '{name} (volador) — apunta arriba · {prog}',
+    killedBySlam: '{name} te aplastó — salta el slam · {prog}',
+    killedByBoss: '{name} era el jefe · {prog}',
     advLoseKeep: 'XP y botín de esta run se quedan',
     trainAgainSub: 'vs RabbitRobot',
     wavesStart: 'inicio',
@@ -23597,7 +23636,12 @@ const CATALOG_DE_CHROME = {
     petCoinsLine: '+{n} Pet-Coins',
   },
   result: {
-    advWin: 'GEWONNEN!', advLose: 'VERLOREN', trainWin: 'MEISTER!', trainLose: 'ROBOT GEWINNT...',
+    advWin: 'GEWONNEN!', advLose: 'VERLOREN', advLoseBy: 'VERLOREN · {name}',
+    trainWin: 'MEISTER!', trainLose: 'ROBOT GEWINNT...',
+    killedBy: '{name} hat dich erwischt · {prog}',
+    killedByFlyer: '{name} (Flieger) — nach oben zielen · {prog}',
+    killedBySlam: '{name} hat dich plattgemacht — Slam springen · {prog}',
+    killedByBoss: '{name} war der Boss · {prog}',
     trainDetailWin: 'RabbitRobot besiegt ({p}-{r}) · max Combo ×{combo} · {wins}× gewonnen',
     trainDetailLose: 'RabbitRobot war zu stark ({p}-{r}) · max Combo ×{combo}',
     vsP1Win: 'SPIELER 1 GEWINNT!', vsP2Win: 'SPIELER 2 GEWINNT!', wallRecord: 'NEUER REKORD!', wallTime: 'ZEIT UM!',
@@ -24521,7 +24565,12 @@ overlayI18nCatalog(CATALOG_FR, {
   },
   pickup: { heal: '+PV', rage: 'RAGE', energy: 'ÉNERGIE', shield: 'BOUCLIER' },
   result: {
-    advWin: 'VICTOIRE !', advLose: 'DÉFAITE', trainWin: 'CHAMPION !', trainLose: 'LE ROBOT GAGNE…',
+    advWin: 'VICTOIRE !', advLose: 'DÉFAITE', advLoseBy: 'DÉFAITE · {name}',
+    trainWin: 'CHAMPION !', trainLose: 'LE ROBOT GAGNE…',
+    killedBy: '{name} t’a mis KO · {prog}',
+    killedByFlyer: '{name} (volant) — vise en haut · {prog}',
+    killedBySlam: '{name} t’a écrasé — saute le slam · {prog}',
+    killedByBoss: '{name} était le boss · {prog}',
     trainDetailWin: 'RabbitRobot à terre ({p}-{r}) · combo max ×{combo} · {wins}× gagné',
     trainDetailLose: 'RabbitRobot trop fort ({p}-{r}) · combo max ×{combo}',
     vsP1Win: 'JOUEUR 1 GAGNE !', vsP2Win: 'JOUEUR 2 GAGNE !', wallRecord: 'NOUVEAU RECORD !', wallTime: 'TEMPS ÉCOULÉ !',
@@ -25052,7 +25101,12 @@ overlayI18nCatalog(CATALOG_ES, {
   },
   pickup: { heal: '+PV', rage: 'RAGE', energy: 'ENERGÍA', shield: 'ESCUDO' },
   result: {
-    advWin: '¡VICTORIA!', advLose: 'DERROTA', trainWin: '¡CAMPEÓN!', trainLose: 'EL ROBOT GANA…',
+    advWin: '¡VICTORIA!', advLose: 'DERROTA', advLoseBy: 'DERROTA · {name}',
+    trainWin: '¡CAMPEÓN!', trainLose: 'EL ROBOT GANA…',
+    killedBy: '{name} te dejó fuera · {prog}',
+    killedByFlyer: '{name} (volador) — apunta arriba · {prog}',
+    killedBySlam: '{name} te aplastó — salta el slam · {prog}',
+    killedByBoss: '{name} era el jefe · {prog}',
     trainDetailWin: 'RabbitRobot caído ({p}-{r}) · combo máx ×{combo} · {wins}× ganado',
     trainDetailLose: 'RabbitRobot demasiado fuerte ({p}-{r}) · combo máx ×{combo}',
     vsP1Win: '¡JUGADOR 1 GANA!', vsP2Win: '¡JUGADOR 2 GANA!', wallRecord: '¡NUEVO RÉCORD!', wallTime: '¡SE ACABÓ EL TIEMPO!',
@@ -25596,7 +25650,12 @@ overlayI18nCatalog(CATALOG_DE, {
   },
   pickup: { heal: '+HP', rage: 'RAGE', energy: 'ENERGY', shield: 'SCHILD' },
   result: {
-    advWin: 'GEWONNEN!', advLose: 'VERLOREN', trainWin: 'MEISTER!', trainLose: 'ROBOT GEWINNT…',
+    advWin: 'GEWONNEN!', advLose: 'VERLOREN', advLoseBy: 'VERLOREN · {name}',
+    trainWin: 'MEISTER!', trainLose: 'ROBOT GEWINNT…',
+    killedBy: '{name} hat dich erwischt · {prog}',
+    killedByFlyer: '{name} (Flieger) — nach oben zielen · {prog}',
+    killedBySlam: '{name} hat dich plattgemacht — Slam springen · {prog}',
+    killedByBoss: '{name} war der Boss · {prog}',
     trainDetailWin: 'RabbitRobot besiegt ({p}-{r}) · max Combo ×{combo} · {wins}× gewonnen',
     trainDetailLose: 'RabbitRobot war zu stark ({p}-{r}) · max Combo ×{combo}',
     vsP1Win: 'SPIELER 1 GEWINNT!', vsP2Win: 'SPIELER 2 GEWINNT!', wallRecord: 'NEUER REKORD!', wallTime: 'ZEIT UM!',
@@ -35097,6 +35156,9 @@ class Fighter {
       if ((this.hpGhostT || 0) <= 0) this.hpGhost = hpBefore;
       this.hpGhost = Math.max(this.hpGhost || hpBefore, hpBefore);
       this.hpGhostT = 0.45;
+      if (this.isPlayer && game) {
+        try { notePlayerHurtSource(game, opts.attacker || opts.srcMon); } catch (_) {}
+      }
       return dmg;
     }
     if (this.isPlayer && game && game.playerShieldT > 0) {
@@ -35118,6 +35180,9 @@ class Fighter {
     if ((this.hpGhostT || 0) <= 0) this.hpGhost = hpBefore;
     this.hpGhost = Math.max(this.hpGhost || hpBefore, hpBefore);
     this.hpGhostT = 0.55;
+    if (this.isPlayer && game) {
+      try { notePlayerHurtSource(game, opts.attacker || opts.srcMon); } catch (_) {}
+    }
     if (this.isPlayer && game) {
       if (game.mode === 'training' || game.mode === 'adventure') {
         game.combo = 0;
@@ -35651,7 +35716,7 @@ class Monster {
         this.shootCD = rand(2.2, 3.2);
         game.spawnProjectile({
           x: this.x + dir * this.size, y: this.y - 4,
-          vx: dir * 300, vy: 0, r: 8, dmg: this.dmg, from: 'enemy',
+          vx: dir * 300, vy: 0, r: 8, dmg: this.dmg, from: 'enemy', srcMon: this,
           kind: this.sp.art === 'ghost' ? 'orb' : 'laser',
         });
         AudioSys.sfx(this.sp.art === 'ghost' ? 'shoot' : 'laser');
@@ -35662,7 +35727,7 @@ class Monster {
         if (this.telegraphT <= 0) {
           AudioSys.sfx('hit2'); game.shake(8, 0.25);
           if (Math.abs(p.x - this.x) < this.size + 62 && p.y > game.ground - 90)
-            p.takeDamage(this.dmg, Math.sign(p.x - this.x) * 320, game);
+            p.takeDamage(this.dmg, Math.sign(p.x - this.x) * 320, game, { attacker: this });
         }
       } else {
         this.x += dir * this.speed * dt;
@@ -35685,7 +35750,7 @@ class Monster {
         this.shootCD = (this.elite ? rand(1.4, 2.0) : rand(1.9, 2.6)) / (this.enraged ? 1.35 : 1);
         const a = Math.atan2((p.y - 40) - this.y, p.x - this.x);
         game.spawnProjectile({ x: this.x + Math.cos(a) * this.size, y: this.y + Math.sin(a) * this.size,
-          vx: Math.cos(a) * 260, vy: Math.sin(a) * 260, r: 10, dmg: this.dmg, from: 'enemy', kind: 'fire', grav: 60 });
+          vx: Math.cos(a) * 260, vy: Math.sin(a) * 260, r: 10, dmg: this.dmg, from: 'enemy', srcMon: this, kind: 'fire', grav: 60 });
         AudioSys.sfx('roar');
       }
     } else if (type === 'swim') {
@@ -35718,7 +35783,7 @@ class Monster {
           this.shootCD = rand(1.9, 2.8);
           game.spawnProjectile({
             x: this.x + dir * this.size, y: this.y - 8,
-            vx: dir * 250, vy: rand(-50, 50), r: 9, dmg: this.dmg, from: 'enemy', kind: 'ink',
+            vx: dir * 250, vy: rand(-50, 50), r: 9, dmg: this.dmg, from: 'enemy', srcMon: this, kind: 'ink',
           });
           try { AudioSys.sfx('shoot'); } catch (_) {}
         }
@@ -35735,7 +35800,7 @@ class Monster {
       const rr = (this.size + p.bodyR) * 0.82;
       if ((p.x - this.x) ** 2 + (p.bodyY - this.y) ** 2 < rr * rr) {
         const d = this.dashT > 0 ? this.dmg * 1.3 : this.dmg;
-        if (p.takeDamage(d, dir * 180, game) > 0) {
+        if (p.takeDamage(d, dir * 180, game, { attacker: this }) > 0) {
           game.shake(4, 0.15);
           applyHitStop(game, { kind: 'punch', dmg: d }, { playerHurt: true, heavy: d >= 18 });
         }
@@ -35814,7 +35879,7 @@ class Monster {
       if (this.satanBoss && this.reflectRatio > 0 && dmg > 0 && game && game.player && game.player.alive) {
         const rd = Math.max(1, Math.round(dmg * this.reflectRatio));
         try {
-          game.player.takeDamage(rd, Math.sign(game.player.x - this.x) * 220, game, { reflect: true, skipHitSfx: true });
+          game.player.takeDamage(rd, Math.sign(game.player.x - this.x) * 220, game, { reflect: true, skipHitSfx: true, attacker: this });
           game.floater(game.player.x, game.player.y - 70, t('combat.satanReflect', { n: rd }), '#ff3040', 13);
           game.burst(game.player.x, game.player.y - 40, '#ff3040', fxLite() ? 4 : 8);
           AudioSys.sfxAt('hit', game.player.x);
@@ -40182,6 +40247,72 @@ let game = null;
 const SHARD_PICKUP_LIFE = 36;
 const GENERIC_PICKUP_LIFE = 22;
 
+/** EX-024: last thing that hurt the player — fair-fail name on VERLOREN. */
+function inferClosestThreat(game, player) {
+  if (!game) return null;
+  if (game.mode === 'training' && game.robot && game.robot.alive) return game.robot;
+  let best = null;
+  let bestD = Infinity;
+  const px = player && player.x;
+  const py = player && player.y;
+  for (const m of game.monsters || []) {
+    if (!m || !m.alive) continue;
+    const dx = (m.x || 0) - (px || 0);
+    const dy = (m.y || 0) - (py || 0);
+    const d = dx * dx + dy * dy;
+    if (d < bestD) { bestD = d; best = m; }
+  }
+  return best;
+}
+
+function hurtSourceName(src) {
+  if (!src) return '';
+  if (src.isRobot) return 'RabbitRobot';
+  const id = src.spId || '';
+  if (typeof speciesLabel === 'function') {
+    const n = speciesLabel(src.sp || src.spId || id);
+    if (n) return n;
+  }
+  return (src.sp && src.sp.name) || id || '';
+}
+
+function notePlayerHurtSource(game, src) {
+  if (!game) return;
+  const mon = src || inferClosestThreat(game, game.player);
+  const name = hurtSourceName(mon);
+  if (!name) return;
+  game.lastHurtBy = {
+    name,
+    fly: !!(mon.flying || (mon.sp && (mon.sp.type === 'fly' || mon.sp.type === 'dragon'))),
+    slam: !!(mon.sp && mon.sp.type === 'tank'),
+    boss: !!(mon.bossCore || mon.superBoss || mon.satanBoss),
+    robot: !!mon.isRobot,
+    type: mon.sp && mon.sp.type,
+  };
+}
+
+function adventureLoseCopy(game) {
+  const h = game && game.lastHurtBy;
+  const name = h && h.name;
+  if (!name) return { titleKey: 'result.advLose', title: t('result.advLose') };
+  const params = { name };
+  return {
+    titleKey: 'result.advLoseBy',
+    title: t('result.advLoseBy', params),
+    titleParams: params,
+  };
+}
+
+function adventureKillTip(game, prog) {
+  const h = game && game.lastHurtBy;
+  if (!h || !h.name) return '';
+  const p = { name: h.name, prog };
+  if (h.fly) return t('result.killedByFlyer', p);
+  if (h.slam) return t('result.killedBySlam', p);
+  if (h.boss) return t('result.killedByBoss', p);
+  return t('result.killedBy', p);
+}
+
 /** Deferred UI (toast/banner) — negeer na menu-exit of nieuw gevecht. */
 function gameUiTimerOk(ref, opts) {
   opts = opts || {};
@@ -40309,6 +40440,7 @@ class Game {
     this.comboT = 0;
     this.runFinishers = 0;
     this.runLoot = createRunLoot();
+    this.lastHurtBy = null;
 
     const st = playerStats();
     if (mode === 'adventure') {
@@ -41142,9 +41274,11 @@ class Game {
       this.banner(t('banner.lost'), 2, '#ff6b6b', 50);
     }
     // Resultaat-scherm altijd tonen (Volgende level / Opnieuw) — niet stil naar menu
-    scheduleGameResult(this, win ? 1600 : 380, () => UI.showResult(win, {
-      titleKey: win ? 'result.advWin' : 'result.advLose',
-      title: win ? t('result.advWin') : t('result.advLose'),
+    const loseCopy = !win && typeof adventureLoseCopy === 'function' ? adventureLoseCopy(this) : null;
+    scheduleGameResult(this, win ? 1600 : 1400, () => UI.showResult(win, {
+      titleKey: win ? 'result.advWin' : ((loseCopy && loseCopy.titleKey) || 'result.advLose'),
+      title: win ? t('result.advWin') : ((loseCopy && loseCopy.title) || t('result.advLose')),
+      titleParams: loseCopy && loseCopy.titleParams,
       detailKey: win ? 'result.advDetailWin' : 'result.advDetailLose',
       finishersN: this.runFinishers || 0,
       streakN: this.sessionBestKillStreak || 0,
@@ -41195,9 +41329,10 @@ class Game {
         } else if (failsNow >= 7) {
           heatTip = t('result.heatRising', { n: failsNow, max: SATAN_FAIL_THRESHOLD });
         }
-        const base = this.player.hp <= 0
+        const named = typeof adventureKillTip === 'function' ? adventureKillTip(this, prog) : '';
+        const base = named || (this.player.hp <= 0
           ? t('result.lossBlockTip', { prog })
-          : t('result.lossOrbTip', { prog });
+          : t('result.lossOrbTip', { prog }));
         const once = onceResultTip('adventure', 'loss',
           t('result.lossGambleTip'));
         const core = once ? `${once} · ${base}` : base;
@@ -41806,7 +41941,7 @@ class Game {
     this.spawnProjectile({
       x: r.x + dir * 30, y,
       vx: dir * 480, vy: 0, r: 13, dmg,
-      from: 'enemy', kind: 'robolaser', life: 0.6, grav: 0,
+      from: 'enemy', srcMon: r, kind: 'robolaser', life: 0.6, grav: 0,
     });
     AudioSys.sfx('laser');
     this.shake(3, 0.1);
@@ -41889,7 +42024,7 @@ class Game {
           : tOr('result.trainStyleMore', 'Unlock stijlen door meer train-wins!')))
       : onceResultTip('training', 'loss', tOr('combat.trainLostTip', tOr('combat.trainLossTip', 'Spring tijdens LIGHTNING PIERCE — robot mist · spring oor-lasers')))
         || tOr('combat.trainTipDefault', 'Tip: spring lasers · energy vol → Spiral Orb');
-    scheduleGameResult(this, win ? 1400 : 380, () => UI.showResult(win, {
+    scheduleGameResult(this, 1400, () => UI.showResult(win, {
       titleKey: win ? 'result.trainWin' : 'result.trainLose',
       title: win ? tOr('result.trainWin', 'KAMPIOEN!') : tOr('result.trainLose', 'ROBOT WINT...'),
       detailKey: win ? 'result.trainDetailWin' : 'result.trainDetailLose',
@@ -42752,13 +42887,13 @@ class Game {
     if (j === 'spiral_orb') {
       this.spawnProjectile({
         x: m.x + dir * m.size, y: y0, vx: dir * 360, vy: 0, r: 22, dmg,
-        from: 'enemy', kind: 'spiral_orb', life: 1.15, spin: 0, hitSet: new Set(),
+        from: 'enemy', srcMon: m, kind: 'spiral_orb', life: 1.15, spin: 0, hitSet: new Set(),
       });
       try { AudioSys.sfx('spiral_orb'); } catch (_) {}
     } else if (j === 'lightning_pierce') {
       this.spawnProjectile({
         x: m.x + dir * m.size, y: y0, vx: dir * 500, vy: 0, r: 17, dmg,
-        from: 'enemy', kind: 'lightning_pierce', life: 0.34, hitSet: new Set(),
+        from: 'enemy', srcMon: m, kind: 'lightning_pierce', life: 0.34, hitSet: new Set(),
       });
       try { AudioSys.sfx('lightning_pierce'); } catch (_) {}
     } else {
@@ -42766,7 +42901,7 @@ class Game {
       this.spawnProjectile({
         x: m.x + Math.cos(a) * m.size, y: y0 + Math.sin(a) * m.size,
         vx: Math.cos(a) * 400, vy: Math.sin(a) * 400, r: 28, dmg,
-        from: 'enemy', kind: 'wave_cannon', life: 1.05, spin: 0, hitSet: new Set(),
+        from: 'enemy', srcMon: m, kind: 'wave_cannon', life: 1.05, spin: 0, hitSet: new Set(),
       });
       try { this.shake(7, 0.22); AudioSys.sfx('spiral_orb'); } catch (_) {}
     }
@@ -42884,6 +43019,7 @@ class Game {
           if (save.haptics !== false) haptic(9);
         }
         m.takeDamage(hitRoll.dmg, kbHit, this, { crit: hitRoll.crit, kind: spec.kind });
+        if (f.isPlayer && typeof markFeltFirstPunch === 'function') markFeltFirstPunch();
         if (f.isPlayer && typeof applyBuildingCombatHook === 'function') {
           try {
             applyBuildingCombatHook(this, spec.kind === 'weapon' ? 'onWeaponHit' : 'onFirstMeleeHit', {
@@ -42959,6 +43095,7 @@ class Game {
           unblockable: spec.unblockable, attacker: f, kind: spec.kind,
         });
         if (dmg <= 0) continue;
+        if (f.isPlayer && typeof markFeltFirstPunch === 'function') markFeltFirstPunch();
         if (f.isPlayer && typeof applyBuildingCombatHook === 'function') {
           try {
             applyBuildingCombatHook(this, spec.kind === 'weapon' ? 'onWeaponHit' : 'onFirstMeleeHit', {
@@ -43288,7 +43425,7 @@ class Game {
         if (pl && pl.alive && this.playerHurtCd <= 0
             && projHitsTarget(p, pl.bodyX, pl.bodyY, pl.bodyR * 0.8)) {
           const hit = resolveProjHit(p);
-          pl.takeDamage(hit.dmg, projKnockDir(p, pl.x) * 260, this);
+          pl.takeDamage(hit.dmg, projKnockDir(p, pl.x) * 260, this, { attacker: p.srcMon || p.owner });
           applyHitStop(this, { kind: skProj && (skProj.behavior === 'dash' || skProj.behavior === 'slash') ? 'special' : 'punch', dmg: hit.dmg },
             { crit: hit.crit, heavy: hit.dmg >= 18, playerHurt: true });
           this.floater(pl.x, pl.y - 115, '-' + hit.dmg, '#ff8080', 16);
@@ -43317,6 +43454,7 @@ class Game {
             const dir = projKnockDir(p, m.x);
             try { AudioSys.sfxAt(weaponHitSfx(p.throwId || 'shuriken', hit.dmg), m.x); } catch (_) {}
             m.takeDamage(hit.dmg, dir * 300 * (p.kbMul || 1), this, { skipHitSfx: true, crit: hit.crit });
+            if (p.from !== 'enemy' && typeof markFeltFirstPunch === 'function') markFeltFirstPunch();
             if (hit.crit) applyCritFx(this, m.x, m.y);
             if (p.throwId && typeof applyWeaponOnHitEffect === 'function') {
               const owner = this.player;
@@ -43344,6 +43482,7 @@ class Game {
           if (projHit) {
             const hit = resolveProjHit(p);
             const d = rb.takeDamage(hit.dmg, projKnockDir(p, rb.x) * 300 * (p.kbMul || 1), this);
+            if (p.from !== 'enemy' && typeof markFeltFirstPunch === 'function') markFeltFirstPunch();
             this.floater(rb.x, rb.y - 115, '-' + d, '#ffe680', 16);
             if (hit.crit) applyCritFx(this, rb.x, rb.y);
             if (skProj) spawnTechniqueImpactFx(this, rb.bodyX, rb.bodyY, p.kind, 'full');
@@ -51377,7 +51516,9 @@ const UI = {
       ? (win ? tOr('result.trainWin', 'KAMPIOEN!') : tOr('result.trainLose', 'ROBOT WINT...'))
       : (win ? tOr('result.advWin', 'GEWONNEN!') : tOr('result.advLose', 'VERLOREN'));
     // Never reuse a stale English title (ROBOT WINS / YOU LOST) when the UI is NL.
-    const painted = (typeof tOr === 'function') ? tOr(titleKey, titleFallback) : titleFallback;
+    const painted = (typeof tOr === 'function')
+      ? tOr(titleKey, titleFallback, data.titleParams || {})
+      : titleFallback;
     title.textContent = painted;
     data.titleKey = titleKey;
     data.title = painted;
@@ -52228,7 +52369,11 @@ document.querySelectorAll('[data-hub]').forEach((el) => {
     AudioSys.init(); AudioSys.sfx('select');
     const hub = el.dataset.hub;
     if (hub === 'adventure') {
-      UI.safeOpen('levelScreen', () => UI.renderLevels(), { msg: t('ui.errLoadAdventure') });
+      if (typeof firstPunchPending === 'function' && firstPunchPending()) {
+        startFirstPunchAdventure();
+      } else {
+        UI.safeOpen('levelScreen', () => UI.renderLevels(), { msg: t('ui.errLoadAdventure') });
+      }
     } else if (hub === 'versus') {
       try { toastVersusRetired(); } catch (_) {}
     } else if (hub === 'summon') {
@@ -52877,44 +53022,44 @@ if (pauseVsSwap) {
     }), 2800);
   });
 }
-/** EX-022: lose retry skips gamble flash so death → fight stays under 3s. */
-function retryLastFight() {
-  const d = UI.lastResult;
-  if (!d || !d.mode) return false;
-  AudioSys.sfx('select');
-  try { if (game) game._resultToken = (game._resultToken || 0) + 1; } catch (_) {}
-  if (d.mode === 'adventure') {
-    if (!d.win) {
-      const diff = d.difficulty || (typeof currentAdvDiff === 'function' ? currentAdvDiff() : 'normal');
-      startGame('adventure', { level: d.level || 1, gamble: null, difficulty: diff });
-      return true;
-    }
-    gokGooiStartLevel(d.level);
+/** EX-023: first Avontuur is a punch, not island + gamble + FOMO. */
+function firstPunchPending() {
+  try {
+    return !(typeof save !== 'undefined' && save && save.feltFirstPunch);
+  } catch (_) {
     return true;
   }
-  if (d.mode === 'versus') {
+}
+
+function markFeltFirstPunch() {
+  try {
+    if (typeof save === 'undefined' || !save || save.feltFirstPunch) return;
+    save.feltFirstPunch = true;
+    if (typeof persist === 'function') persist();
+  } catch (_) {}
+}
+
+function startFirstPunchAdventure() {
+  const lv = 1;
+  const diff = (typeof currentAdvDiff === 'function') ? currentAdvDiff() : 'normal';
+  startGame('adventure', { level: lv, gamble: null, difficulty: diff });
+}
+
+bindPress(document.getElementById('resAgain'), () => {
+  const d = UI.lastResult;
+  if (!d || !d.mode) return;
+  AudioSys.sfx('select');
+  try { if (game) game._resultToken = (game._resultToken || 0) + 1; } catch (_) {}
+  if (d.mode === 'adventure') gokGooiStartLevel(d.level);
+  else if (d.mode === 'versus') {
     const p1 = d.p1 || vsSelect.p1;
     const p2 = d.p2 || vsSelect.p2;
     vsSelect.p1 = p1;
     vsSelect.p2 = p2;
     UI.toast(`Rematch · ${vsRosterName(p1) || 'P1'} vs ${vsRosterName(p2) || 'P2'}`, 2600);
     startGame('versus', { p1, p2 });
-    return true;
   }
-  startGame(d.mode);
-  return true;
-}
-bindPress(document.getElementById('resAgain'), () => {
-  retryLastFight();
-});
-['resTitle', 'resDetail', 'resTip', 'resXp', 'resStars'].forEach((id) => {
-  const el = document.getElementById(id);
-  if (!el) return;
-  bindPress(el, () => {
-    const d = UI.lastResult;
-    if (!d || d.win) return;
-    retryLastFight();
-  });
+  else startGame(d.mode);
 });
 bindPress(document.getElementById('resNext'), () => {
   const d = UI.lastResult;

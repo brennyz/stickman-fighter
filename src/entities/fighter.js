@@ -600,6 +600,9 @@ class Fighter {
       if ((this.hpGhostT || 0) <= 0) this.hpGhost = hpBefore;
       this.hpGhost = Math.max(this.hpGhost || hpBefore, hpBefore);
       this.hpGhostT = 0.45;
+      if (this.isPlayer && game) {
+        try { notePlayerHurtSource(game, opts.attacker || opts.srcMon); } catch (_) {}
+      }
       return dmg;
     }
     if (this.isPlayer && game && game.playerShieldT > 0) {
@@ -621,6 +624,9 @@ class Fighter {
     if ((this.hpGhostT || 0) <= 0) this.hpGhost = hpBefore;
     this.hpGhost = Math.max(this.hpGhost || hpBefore, hpBefore);
     this.hpGhostT = 0.55;
+    if (this.isPlayer && game) {
+      try { notePlayerHurtSource(game, opts.attacker || opts.srcMon); } catch (_) {}
+    }
     if (this.isPlayer && game) {
       if (game.mode === 'training' || game.mode === 'adventure') {
         game.combo = 0;

@@ -190,6 +190,7 @@ function fomoRitualHubReady() {
 
 function fomoRitualPending() {
   if (typeof save === 'undefined' || !save) return false;
+  if (typeof firstPunchPending === 'function' && firstPunchPending()) return false;
   ensureFomo();
   const today = todayKey();
   if (save.fomo.ritualSeenDate === today) return false;
@@ -2242,6 +2243,12 @@ function playGambleRollSfx(g) {
  * Alleen cancelGambleStart() (token bump) mag de start killen.
  */
 function gokGooiStartLevel(n) {
+  if (typeof firstPunchPending === 'function' && firstPunchPending()) {
+    const lv = Math.max(1, Math.min(MAX_LEVEL, Number(n) || 1));
+    const diff = typeof currentAdvDiff === 'function' ? currentAdvDiff() : 'normal';
+    startGame('adventure', { level: lv, gamble: null, difficulty: diff });
+    return;
+  }
   if (gokStartBusy) return;
   cancelGambleStart();
   gokStartBusy = true;
@@ -2278,6 +2285,10 @@ function gokGooiStartLevel(n) {
 }
 
 function gokGooiStartFromScreen() {
+  if (typeof firstPunchPending === 'function' && firstPunchPending()) {
+    if (typeof startFirstPunchAdventure === 'function') startFirstPunchAdventure();
+    return;
+  }
   if (gokStartBusy) return;
   cancelGambleStart();
   gokStartBusy = true;

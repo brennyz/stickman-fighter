@@ -8,7 +8,7 @@
 **This sprint:** mobile **web** viewport only. Native Android APK / TWA / Play upload = **out of scope** (see bottom).
 
 **Baseline playtested:** v1.18.172 / SW 382 (`origin/main` `a7a4b74`)  
-**This draft PR:** v1.18.175 / SW 385 · branch `cursor/examinator-p0-bb6c` · **#320 — do not merge to main**
+**This draft PR:** v1.18.176 / SW 386 · branch `cursor/examinator-p0-bb6c` · **#320 — do not merge to main**
 
 How to pick work: take the **lowest open EX-id** in your lane. Mark `in-progress` / `done` / `DELEGATED #PR` here when you start/finish. Do not steal a `done` or `DELEGATED` item unless the owner asks to change it.
 
@@ -26,6 +26,7 @@ How to pick work: take the **lowest open EX-id** in your lane. Mark `in-progress
 | **#317** | `cursor/i18n-layout-copy-f2a3` | i18n layout | factories/FOMO/HUD/gear **layout** copy — **not** EX-013/014/015 |
 | **#316** | `cursor/juice-feel-f8cf` | juice | KO confirm / empty CTAs / reduced-motion · **EX-025** |
 | **#318** | `cursor/ui-layout-polish-7643` | UI | **EX-017** · **EX-018** · HOME/Collectie chrome |
+| **#323** | `cursor/flappy-retry-18b8` | Flappy retry | **EX-022** · `Nog één keer` · `restartAdventureInstant` · ~700ms · `#resRetrySafe` |
 
 ---
 
@@ -35,11 +36,11 @@ Stickman is judged against a one-tap arcade loop — not a store sim. Payments /
 
 | Bar | Pass looks like | Stickman now |
 |-----|-----------------|--------------|
-| **Fair fail** | You know *why* you died (pipe, not RNG). Next try feels earned. | Lose banner is generic VERLOREN; the why-tip is a small line. Gamble can add a random super-boss on the *next* start. |
-| **&lt;3s retry** | Death → next flap in under three seconds. | Was **P0**: 1400ms hold + result card + two equal buttons + `gokGooiStartLevel` flash (~420ms). |
-| **One primary CTA** | One tap does the core verb (flap / retry). | HOME is a hub (many tiles — OK). Result lose had Opnieuw **and** Hoofdmenu as twin mode-btns. |
+| **Fair fail** | You know *why* you died (pipe, not RNG). Next try feels earned. | **#320 EX-024:** VERLOREN · {killer} + killed-by tip. Gamble on the *next* start still exists after first punch. |
+| **&lt;3s retry** | Death → next flap in under three seconds. | **DELEGATED #323** (`Nog één keer`, `restartAdventureInstant`, ~700ms, `#resRetrySafe`). #320 stripped its Opnieuw / 380ms / gamble-skip retry so the merge does not fight. |
+| **One primary CTA** | One tap does the core verb (flap / retry). | HOME is a hub (many tiles — OK). Lose retry CTA chrome = **#323**. |
 | **Juice on core action** | Punch / kick / jump has snap, hit-stop, audio. | **DELEGATED #316** (KO confirm, empty CTAs, reduced-motion). Do not restage. |
-| **First-30s teach-by-doing** | Learn by playing, not by reading. | Title → HOME → island → gamble flash → HUD hint. Aim tutorial is closer to doing; the funnel still talks first. |
+| **First-30s teach-by-doing** | Learn by playing, not by reading. | **#320 EX-023:** first Avontuur skips island + gamble + FOMO until `feltFirstPunch`. Aim tutorial stays (doing). HUD density stays **#314**. |
 
 ---
 
@@ -66,8 +67,7 @@ Stickman is judged against a one-tap arcade loop — not a store sim. Payments /
 | EX-018 | P2 | **DELEGATED #318** | A–Z | “Verder spelen” continue banner stays on HOME after a run | `#btnContinue` / `menu.continue` |
 | EX-019 | P3 | **DELEGATED #315** | i18n | Gear chips LOOK/STAT still English tokens in FR/ES (short on purpose) | catalog-locales overlays |
 | EX-020 | P3 | open | Android native | TWA / Play / APK signing, back-gesture, display-cutout, install prompt — **next sprint** | `native/android/` · `docs/store/` |
-| EX-023 | P1 | open | FEEL / first-30s | Island pick + gamble flash + FOMO + HUD hint before the first punch — reading, not doing | `gokGooiStartLevel` · `levelScreen` · `#fomoRitual` |
-| EX-024 | P1 | open | FEEL / fair fail | VERLOREN does not name the killer / telegraph; tip is easy to miss on 390 | `src/game/game.js` lose `tip` · `resTip` |
+| EX-022 | P0 | **DELEGATED #323** | FEEL / retry | Death → fight under 3s + one primary CTA. #323 owns `Nog één keer` / `restartAdventureInstant` / ~700ms / `#resRetrySafe`. Do **not** restage Opnieuw / `retryLastFight` / 380ms / lose-gamble-skip on #320 | `src/systems/missions.js` on #323 |
 | EX-025 | P2 | **DELEGATED #316** | FEEL / juice | Punch/kick/KO snap, empty-collection CTA, reduced-motion | `docs` / `smoke:juice-feel` on #316 |
 | EX-026 | P3 | open · **IAP out of scope** | payments | No coins-for-cash / Play Billing until Android Play is live. Do not add IAP. Note only. | `docs/store/` · `native/android/` |
 
@@ -87,7 +87,8 @@ Stickman is judged against a one-tap arcade loop — not a store sim. Payments /
 | EX-014 | P2 | **done** | `gambleOutcomeLabel()` uses `t('gamble.*')` — EN no longer sees “Pech! Super-baas…”. |
 | EX-015 | P2 | **done** | FR `insère une pièce` · ES `inserta una moneda` (`menu.pressStart`). DE already `Münze einwerfen`. |
 | EX-021 | P2 | **done** | 390px FOMO sheet compact + HOME tiles stay tappable (backdrop only lower half). **Does not** restage #313 HOME-only / `fomo-open` chrome hide. |
-| EX-022 | P0 | **done** | FEEL &lt;3s retry + one CTA on **lose**: result delay 380ms; `#resultScreen.is-lose` promotes Opnieuw, demotes Menu; lose+Opnieuw skips gamble flash (`startGame` same level). Title/tip tap retries. Win path unchanged (gamble + Volgend level). Not #314/#316. |
+| EX-023 | P1 | **done** | First-30s teach-by-doing: `firstPunchPending()` until `save.feltFirstPunch`. First Avontuur → `startFirstPunchAdventure()` (lv1, no island, `gamble: null`). `fomoRitualPending()` false until first punch. `gokGooiStartLevel` also skips the flash while pending. HUD density stays #314. |
+| EX-024 | P1 | **done** | Fair fail: `lastHurtBy` from `takeDamage` / proj `srcMon` / closest threat. Lose title `result.advLoseBy` = VERLOREN · {name}. Tip `killedBy` / Flyer / Slam / Boss (NL/EN/DE/FR/ES). |
 
 ---
 
@@ -99,16 +100,17 @@ Desktop ~1280×800 and phone 390×844 (Puppeteer + computer-use). Versus tile ab
 | Surface | 390px | Desktop | Notes |
 |---------|-------|---------|-------|
 | Title gate / SPELEN | ok | ok | Android-first landing on `speel.html` |
-| HOME hub | tiles usable above compact FOMO sheet (EX-021) | 2-col | NL/EN/DE switch clean on chrome |
+| HOME hub | first visit: no FOMO until first punch (EX-023) | 2-col | After `feltFirstPunch`, compact FOMO (EX-021) |
+| Avontuur first tap | straight into lv1 fight | same | island + gamble after first punch |
 | Factories | list→detail | dual-pane killed on #320 | ids confirmed; further copy = #312 |
 | Gear | pills wrap | long scroll | LOOK/STAT leftover FR/ES = #315 |
 | Summons | chest-heavy | sparse CTA | EX-010 = #313 |
 | Adventure Lv1 | 2+3/4 mobs | same | opener already soft |
 | Adventure Lv10/20 | phone scaled | desk 96 / 214 | EX-001 + #314 |
 | Pets | follow snap | follow snap | collection screen = #319 |
-| Gamble toast | locale | locale | EX-014 |
+| Gamble toast | locale | locale | EX-014 — not on first punch |
 | Species names | Peepwing on EN | same | EX-013 |
-| Result lose | one Opnieuw CTA, 380ms | same | EX-022 FEEL retry |
+| Result lose | VERLOREN · {killer} | same | EX-024. Retry chrome = #323 |
 
 Probe (pre-fix, v1.18.172):
 
@@ -137,7 +139,7 @@ factory ids stick_lighter…echo_whistle  OK
 - Bubblewrap / TWA `appVersionName` still 1.18.172 until a Play drop  
 - Predictive back, display-cutout, installability QA on a real device  
 - Play Console store listing / data-safety (docs exist, not this PR)  
-- Offline SW on Android Chrome after this cache rev (385) — player taps «Verse versie»
+- Offline SW on Android Chrome after this cache rev (386) — player taps «Verse versie»
 - **Payments / IAP** — out of scope until Play is live (EX-026). No shop, no Billing SDK on this sprint.
 
 ---

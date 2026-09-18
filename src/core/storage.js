@@ -5,9 +5,9 @@ const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const VERSION_UPDATE_SAVE_KEY = 'stickfighter_version_update_save_v1';
 const VERSION_UPDATE_FLAG_KEY = 'stickfighter_version_update_flag_v1';
 const SAVE_EXPORT_SCHEMA = 3;
-const APP_VERSION = '1.18.175';
+const APP_VERSION = '1.18.176';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 385;
+const SW_CACHE_REV = 386;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', petCoins: 0, dex: {}, summons: {}, pets: {}, activePet: null,
   eggPets: {}, activeEggPet: null, eggDaily: null,
   chestDaily: null, chestWeapons: {},
@@ -40,6 +40,8 @@ const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', petCoins: 0,
   /** auto | classic | jungle | halloween | winter | summer — CSS overlay pref */
   seasonPref: 'auto',
   playerTag: '', lastPlay: null, tipsSeen: {},
+  /** EX-023: first punch landed — until then skip island/gamble/FOMO. */
+  feltFirstPunch: false,
   /** Epoch ms — set once in sanitizeSave. Time gates use account age from this. */
   createdAt: 0,
   /** 5-slot loadout — see src/data/gear.js + docs/GEAR-SYSTEM.md */
@@ -1570,6 +1572,7 @@ function sanitizeSave(s) {
       ? (String(out.seasonPref).toLowerCase() === 'default' ? 'classic' : String(out.seasonPref).toLowerCase())
       : 'auto');
   out.tipsSeen = sanitizeTipsSeen(out.tipsSeen);
+  out.feltFirstPunch = !!out.feltFirstPunch;
   out.missionsIntroSeen = !!out.missionsIntroSeen;
   if (out.lastPlay && typeof out.lastPlay === 'object') {
     const lp = out.lastPlay;
