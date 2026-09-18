@@ -1279,6 +1279,10 @@
   ],
   "sessionLog": [
     {
+      "at": "2026-09-18T16:47:53Z",
+      "summary": "Ingested #339 PERF-01–06. Bots 3–4: spawnLite whole fight; gate juice+hitStop freezes."
+    },
+    {
       "at": "2026-09-18T16:46:49Z",
       "summary": "Ingested #340 MM-010/011/012 landscape leftovers. Bots 10/14/15. Skip tablet-834."
     },
@@ -1373,10 +1377,6 @@
     {
       "at": "2026-09-18T12:43:55Z",
       "summary": "examiner P0 HUD/FOMO/settings start"
-    },
-    {
-      "at": "2026-09-18T12:40:47Z",
-      "summary": "LANGUAGE examiner #317: pets/gear DE/FR/ES keys, egg names, 390px clamp, EN gear wipe fix. Draft, geen main. v1.18.174 / SW 384"
     }
   ],
   "implementedFeaturesSummary": "d18 char select deel 1+2 (v1.11.1-2); Mats coinrun + shuriken mik/vliegers + anti-spam (v1.12.0); speel.html (v1.12.2+). Zie HANDOFF-ZOEKINDEX.md en improvement-d20-bag.json userFeatureLog.",

@@ -1,3 +1,4 @@
+| 2026-09-18 | **PLAYTEST LEAD #339 PERF** | PERF-01–06 ingested. Bots 3–4: spawnLite on touch whole fight; gate juiceKillSnap + hitStop freeze. Draft. Niet main. |
 | 2026-09-18 | **PLAYTEST LEAD #340 land** | MM-010/011/012 briefs: 844 doll-only · 0 pet cards · Open kist clip. Bots 10/14/15. Skip tablet-834. Draft. Niet main. |
 | 2026-09-18 | **PLAYTEST LEAD #338 EX-036** | Landscape HOME visibility PASS. P1: FOMO `inert` + `pointer-events:none` blocks Avontuur while sheet open. × recover PASS. Bot 2 brief tightened. Draft. Niet main. |
 | 2026-09-18 | **PLAYTEST LEAD #340 MM-001–005** | Deepened gear 4k / pets fold / factories smoke / 2.2s blank / FOMO cover. Wave-2 bots 11–13. Draft. **v1.18.190 / SW 400**. Niet main. |

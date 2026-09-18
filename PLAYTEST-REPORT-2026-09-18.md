@@ -57,9 +57,9 @@ Status: `open` · `pass` · `fixed-on-draft` · `DELEGATED` · `out`
 |----|--------|------------|-------|--------|
 | **EX-034** | **open · #336 H** | **visibility** | Die in portrait (corpse visible) → rotate to 844×390 **before** VERLOREN sheet → player body gone, tiny enemy remains. `pinPlayfieldBodies` / `onResize` must keep a **dead** player on the painted floor. | #336 |
 | **EX-036** | open · **#338** | landscape-begin / FOMO | **Visibility PASS** (SPELEN 338×91 · Avontuur 552×60 · `overlapPlay: false` · sheet left ~200 px). **P1:** pointer-tap Avontuur while Vandaag open does **not** start play. `#318` hub lock (`inert` + `pointer-events: none` on `.menu-chrome`) still applies on short landscape after `#329` restored paint. × (48×48) → `inert` off → next tap starts L1 (local + live). `smoke:landscape-begin` is geometry only. | #338 |
-| **PERF-01** | open | fxLite | After first ~90 frames / `Perf.tier` still 0, `fxSpawnLite` drops → elite intro 26 particles + ~100ms freeze. | #339 |
-| **PERF-02** | open | fxLite | Colossal / super-boss 48 particles + ~220ms freeze when spawnLite off. Same bot as PERF-01. | #339 |
-| **PERF-03** | open | juice | `juiceKillSnap` freeze 58–75ms ignores Lite FX. | #339 |
+| **PERF-01** | open · **#339** | fxLite | `fxSpawnLite` = `liteFx \|\| reduced \|\| tier≥1 \|\| (touch && frames<90)`. Smooth opener stays **tier 0** → guard dies at frame 90. Next elite: **26 particles + freezeT 0.10s** (`triggerSpecialEnemyIntro`). Wave-1 still 4 / 0. | #339 |
+| **PERF-02** | open · **#339** | fxLite | Same cliff. Colossal / super-boss: **48 particles + freezeT 0.22s** + shake 16/0.55s. Satan/Tide skip freeze only while spawnLite still on. Same bot as PERF-01. | #339 |
+| **PERF-03** | open · **#339** | juice | `juiceKillSnap` sets `freezeT` **before** shake rate-limit. Lite FX on: common **0.058s** · elite **0.075s**. Horde clear = stacked hitches. Shake limited; freeze not. | #339 |
 | **TF-001** | **fixed-on-draft #342** | telegraph | Lose tip stole sticky `vlieger` from a prior bat chip. **Do not restage.** Land #342. | #342 |
 | **TF-002** | open | telegraph | Hop/fly have no wind-up. L1 deaths are contact; body is the pipe. | #342 |
 | **TF-003** | open | telegraph | CHARGE world ring washes out on day sky; HUD bar does the work. | #342 |
@@ -85,7 +85,8 @@ Status: `open` · `pass` · `fixed-on-draft` · `DELEGATED` · `out`
 | F30-cont | open | first-30s / #318 | After first punch, Continue → `gokGooiStartLevel` (skips island). |
 | F30-fomo | open | FOMO | `fomoRitualPending` true after punch; auto-sheet flaky unless `#menuScreen.active`. |
 | LC-001/002 | open | landscape-combat | Mid-jump rotate snaps Y on short land; inverse keeps hop. Leave. |
-| PERF-04/05 | open | juice / fxLite | `applyHitStop` ignores Lite; mid-phone desktop-weight until EMA. |
+| PERF-04 | open · #339 | juice | `applyHitStop` only early-outs on `motionReduced()`. Punch freeze **0.034s** with Lite FX still on. Gate with PERF-03. |
+| PERF-05 | open · #339 | fxLite | After 90 frames tier 0: spawnLite **and** `fxLite()` both false. Touch cap still 100. Auto Lite hint waits for **tier 2 + 120 frames** (after the hitch). |
 | EX-012 | DELEGATED #314 | HUD | First-minute hint + stars + wave tight on 390. |
 
 ### P3 / out
@@ -94,10 +95,25 @@ Status: `open` · `pass` · `fixed-on-draft` · `DELEGATED` · `out`
 |----|--------|-------|
 | EX-020 | out | Android native / TWA |
 | EX-026 | out | IAP |
-| PERF-06 | open | Menu UI canvases leftover |
+| PERF-06 | P3 · #339 | Fight FX path no leak (24× training: pool 48, live 0). Leftover = menu `createElement('canvas')` on upgrades/pets/gear. |
 | Versus | retired | Do not revive |
 | LH-dock | P3 · #338 | Landscape HOME meta-dock under 390 fold — play tile above fold |
 | LH-copy | P3 · #338 | “Naar / oproepen” wrap · NL “power-ups” on mission row |
+
+### #339 PERF-01–06 (canonical)
+
+Source: `docs/PLAYTEST-PERF-MIDPHONE-2026-09-18.md`. 390 touch DPR 2.2. No P0 (fighters draw).
+
+| ID | P | Gate / number | Bot |
+|----|---|---------------|-----|
+| PERF-01 | P1 | After 90 frames tier 0: elite **26 + 0.10s** | **3** |
+| PERF-02 | P1 | Same cliff: colossal **48 + 0.22s** | **3** |
+| PERF-03 | P1 | `juiceKillSnap` Lite on: 58 / 75 ms | **4** |
+| PERF-04 | P2 | `applyHitStop` punch 34 ms with Lite on | **4** (same PR) |
+| PERF-05 | P2 | After opener, spawnLite and fxLite both false; hint waits tier 2 + 120 f | 3 leftover |
+| PERF-06 | P3 | 24× training: pool OK. Menu UI canvases leftover | leave |
+
+**Plan:** keep `fxSpawnLite()` on `fxTouchDevice()` **whole fight**; gate freezes on Lite / spawnLite / touch.
 
 ### #338 landscape HOME (canonical)
 
@@ -154,7 +170,7 @@ Older EX-001…032 stay on `EXAMINATOR.md`. Do not re-file.
 | **#336** | invisible / draw | **EX-034 P1** dead+rotate. Alive PASS. |
 | **#337** | death-retry | **PASS.** P2 heat / dice lecture / unused 650ms. |
 | **#338** | landscape HOME | **Visibility PASS** (SPELEN/Avontuur ≥44 px, left dock, no overlap). **EX-036 P1** `#318` `inert` + `pointer-events:none` while sheet open. × recover PASS. Keep portrait hub lock. |
-| **#339** | mid-phone perf | **PERF-01…03 P1.** Keep spawnLite; gate freezes. |
+| **#339** | mid-phone perf | **#327 opener PASS** (4 sparks / 0 freeze). **PERF-01/02 P1** 90-frame cliff. **PERF-03/04** freeze ignores Lite. Plan: spawnLite on touch **whole fight**; gate `juiceKillSnap` + `applyHitStop`. PERF-05 P2 · PERF-06 P3. |
 | **#340** | meta menus | **MM-001–005 P1 ingested** (gear scroll, pets fold, factories smoke, 2.2s blank, FOMO cover). Landscape 010–012 P1. Skip tablet-834 as new owner. Open times 14–37 ms — clunk is chrome/scroll, not JS. |
 | **#341** | landscape combat | **PASS.** P2 hop asymmetry only. |
 | **#342** | telegraph | **TF-001 fixed here (land).** TF-002/003 open P1. Density unchanged. |
@@ -175,6 +191,7 @@ Older EX-001…032 stay on `EXAMINATOR.md`. Do not re-file.
 | 18:42 | — | **#340 deepen MM-001–005** | Gear 4k scroll · pets fold · factories smoke fail · summon 2.2s blank · FOMO cover. Wave-2 bots 11–13. |
 | 18:44 | — | **#338 deepen EX-036** | Landscape HOME visibility PASS. P1: FOMO `inert` + `pointer-events:none` blocks Avontuur while sheet open. × recover PASS. |
 | 18:46 | — | **#340 MM-010/011/012** | 844 gear doll-only · 0 pet cards · Open kist clipped. Wave-3 bots 14–15. Skip tablet-834. |
+| 18:47 | — | **#339 PERF-01–06** | 90-frame spawnLite cliff · juice/hitStop ignore Lite. Bots 3–4: keep spawnLite on touch; gate freezes. |
 
 Lead evidence: `/opt/cursor/artifacts/playtest_adventure_390_and_844_first_pass.mp4`
 

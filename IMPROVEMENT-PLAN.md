@@ -17,7 +17,7 @@ Each bot = **one 30-min slice**. Branch `cursor/<lane>-9e0e`. Smoke + 390 or 844
 | **1** | EX-034 | P1 | visibility | Death **then** rotate → pin **dead** player |
 | **2** | EX-036 | P1 | landscape-begin / FOMO | FOMO open must not `inert` Avontuur |
 | **3** | PERF-01/02 | P1 | fxLite | Keep `fxSpawnLite` on touch **whole fight** |
-| **4** | PERF-03 | P1 | juice | Gate kill/hit freeze when Lite FX |
+| **4** | PERF-03/04 | P1 | juice | Gate `juiceKillSnap` + `applyHitStop` freeze |
 | **5** | TF-003 | P1 | telegraph | CHARGE world ring readable on day sky |
 | **6** | TF-002 | P1 | telegraph | Hop/fly need a visible wind |
 | **7** | J-001 | P1 | juice | First-kill: toast **XOR** banner |
@@ -89,29 +89,48 @@ Keep portrait `inert` lock.
 
 ## Bot 3 — PERF-01/02 spawnLite whole fight (fxLite)
 
-**Source:** #339.  
-**Files:** `src/systems` fxLite / `fxSpawnLite` · `docs/FX-LITE.md`.  
-**Do not:** change actor draw. Do not retune density.
+**Source:** #339 · `docs/PLAYTEST-PERF-MIDPHONE-2026-09-18.md`. Adjacent #327.  
+**Files:** `fxSpawnLite()` (touch && `frames<90` clause) · `triggerSpecialEnemyIntro` in `src/data/monsters.js` · `docs/FX-LITE.md`.  
+**Do not:** skip fighter `draw()`. Do not retune density. Do not wait for a hitch before the guard stays on. PERF-05 hint timing is P2 (same lane if time).
 
-**Bug:** #327 holds the opener (~90 frames / wave-1: 4 sparks, 0 freeze). Then `fxSpawnLite` drops while `Perf.tier` is still 0 → elite hitch (26 particles + ~100ms) and colossal hitch (48 + ~220ms).
+**#327 opener PASS:** first ~90 frames / wave-1: **4 sparks, freezeT 0**, pool prewarm 48, Lite cap 58. Fighters always draw.
 
-**Fix:** On touch / compact / mid-phone, keep `fxSpawnLite === true` for the **whole fight**, not only the opener. Fighters always draw.
+**Bug:** `fxSpawnLite()` = `liteFx || reduced || tier≥1 || (touch && frames<90)`. Smooth opener stays **tier 0** (EMA never >22ms) → guard **false** after frame 90.
 
-**Prove:** `npm run smoke:fx-lite`. Spawn an elite after t&gt;3s on 390 — no 100ms freeze, particle cap held.
+| Moment | spawnLite | particles | freezeT |
+|--------|-----------|-----------|---------|
+| Wave 1 / frames &lt; 90 | true | 4 | 0 |
+| After 90, tier 0 elite | **false** | **26** | **0.10s** |
+| After 90, colossal / super | **false** | **48** | **0.22s** (+ shake 16/0.55s) |
+
+844 landscape: `W<720` is false; guard still trips via `IS_TOUCH` — same cliff.
+
+**Fix:** Keep `fxSpawnLite()` **true on `fxTouchDevice()` for the whole fight** (or until a healthy-tier sample for N seconds). Not only 90 frames.
+
+**Prove:** `npm run smoke:fx-lite` + `node scripts/smoke-playtest-perf-midphone.mjs`. Elite intro after t&gt;2s / frames&gt;90 on touch: spawnLite still true, freezeT 0, particles ≤4 (or Lite cap).
 
 ---
 
-## Bot 4 — PERF-03 juice freeze vs Lite (juice)
+## Bot 4 — PERF-03 (+ PERF-04) gate freezes (juice)
 
-**Source:** #339. Adjacent PERF-04 (hit-stop) is P2 — do it only if time left.  
-**Files:** `src/systems/combat-juice.js` `juiceKillSnap` / `applyHitStop`.  
-**Do not:** restage retry CTA or first-kill toasts (bot 7).
+**Source:** #339. **Gate both freezes** (`juiceKillSnap` P1 + `applyHitStop` P2 — same files, do both).  
+**Files:** `src/systems/combat-juice.js` `juiceKillSnap` · `src/data/monsters.js` `applyHitStop`.  
+**Do not:** restage retry CTA or first-kill toasts (bot 7). Do not drop KO floater / haptic.
 
-**Bug:** `juiceKillSnap` freeze 58–75ms (and hit-stop 34–72ms) ignore Lite FX / spawnLite.
+**Bug:** Freeze is set **before** the shake rate-limit. Only `motionReduced()` skips. Measured with `save.liteFx = true`:
 
-**Fix:** If `fxLite()` or `fxSpawnLite()`, skip or cap freeze (≤16ms) and keep squash/floater. Reduced-motion already skips shake.
+| Call | freezeT (Lite FX on) |
+|------|----------------------|
+| `juiceKillSnap` common | **0.058s** |
+| `juiceKillSnap` elite | **0.075s** |
+| `applyHitStop` punch | **0.034s** |
+| `applyHitStop` heavy crit | **0.072s** |
 
-**Prove:** `npm run smoke:juice-feel`. Lite FX on → KO still confirms, no 60ms hitch.
+Horde wave-clear = stacked 58ms hitches. Punch + kill on the same beat stacks PERF-04 + PERF-03.
+
+**Fix:** If `fxLite()` **or** `fxSpawnLite()` **or** `fxTouchDevice()`, skip or cap `freezeT` (≤16ms). Keep squash + KO floater + haptic. Shake can stay rate-limited.
+
+**Prove:** `npm run smoke:juice-feel` with Lite FX on → KO confirms, `freezeT` ≈ 0. `applyHitStop` punch does not add 34ms.
 
 ---
 
