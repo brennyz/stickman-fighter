@@ -17,23 +17,23 @@
     "swCache": "stickfighter-app-v400",
     "gameJsQuery": "game.js?v=400",
     "cssQuery": "styles/main.css?v=400",
-    "featureBranch": "cursor/mega-merge-20m-332a",
+    "featureBranch": "main",
     "pushBlocked": null,
     "shareUrl": "https://brennyz.github.io/stickman-fighter/speel.html",
-    "note": "20m MEGA-MERGE stack. Landed #333 #325 #334 #329 #332 #331 #328 #330 #326 #327. SKIP #324. Leave #311 (conflicts). v1.18.190 / SW 400. speel.html. Playtest swarm after Pages.",
-    "updated": "2026-09-18T16:03:01Z",
-    "localMainHead": null,
-    "remoteMainHead": null
+    "note": "20m MEGA-MERGE LIVE. #333 #325 #334 #329 #332 #331 #328 #330 #326 #327. SKIP #324. Leave #311. v1.18.190 / SW 400. speel.html. Pages ~1–3 min then Verse versie. Playtest swarm.",
+    "updated": "2026-09-18T16:06:11Z",
+    "localMainHead": "aa80d25c5f708549af287716914c2016228a2a46",
+    "remoteMainHead": "aa80d25c5f708549af287716914c2016228a2a46"
   },
   "githubSync": {
     "policy": "Trigger van de user: «merge main» = commit (als nodig) + push origin/main. Daarna GitHub Pages (~1–3 min) → speel.html is LIVE. Niet stil pushen. Houd pendingUpload bij tot origin/main gelijk is.",
     "pcEqualsMain": true,
-    "localHead": "c9cba4b925db7b76a1e55ba0a6f20f89a6b1c378",
-    "remoteMainHead": "c9cba4b925db7b76a1e55ba0a6f20f89a6b1c378",
+    "localHead": "aa80d25c5f708549af287716914c2016228a2a46",
+    "remoteMainHead": "aa80d25c5f708549af287716914c2016228a2a46",
     "ahead": 0,
     "behind": 0,
     "dirty": false,
-    "lastChecked": "2026-09-16T12:31:58Z",
+    "lastChecked": "2026-09-18T16:06:11Z",
     "lastAsked": "2026-08-17T14:01:21Z",
     "pendingUpload": [],
     "pendingMerge": [
@@ -53,9 +53,9 @@
       "id": "w-20260918T155700",
       "from": "user",
       "text": "MEGA-MERGE Stickman 20m-session drafts to main. Brendon wants playtest swarm on a fixed build next. Priority: #333 invisible fighters, #325 landscape combat camera/floor, #334 examinator feel (keep pauseG), #329 landscape begin/HOME SPELEN + FOMO dock, #332 telegraph readability (keep #314 density), #331 landscape touch, #328 first-30s teach, #330 combat juice, #326 death-retry polish, #327 fxLite if mergeable. No Versus. speel.html. No force-push. Conflict: keep #333 drawCombatants+recover, #325 viewport/floor, #334 pauseG HUD, #329 two-col SPELEN + FOMO left dock, #323/#326 fat gold Nog één keer + restartAdventureInstant.",
-      "status": "in-progress",
+      "status": "done-in-code",
       "updated": "2026-09-18",
-      "notes": "Merged all 10 drafts on cursor/mega-merge-20m-332a. Version 1.18.190 / SW 400. Push main next."
+      "notes": "LIVE main. Landed #333 #325 #334 #329 #332 #331 #328 #330 #326 #327. SKIP #324. Leave #311. v1.18.190 / SW 400."
     },
     {
       "id": "w-20260918T141700",
@@ -1231,6 +1231,10 @@
   ],
   "sessionLog": [
     {
+      "at": "2026-09-18T16:06:11Z",
+      "summary": "MEGA-MERGE 20m drafts #333–#327 onto main. v1.18.190 / SW 400. Playtest swarm. SKIP #324. Leave #311."
+    },
+    {
       "at": "2026-09-18T15:01:24Z",
       "summary": "Leftover stack: #318 UI chrome + #322 FOMO 390px on main. Keep #321 HUD + #323 retry. SKIP #324. Leave #311."
     },
@@ -1325,10 +1329,6 @@
     {
       "at": "2026-09-18T12:30:17Z",
       "summary": "LANGUAGE worker: layout-safe NL/EN/DE/FR/ES copy (factory desc, FOMO, HUD telegraphs). Draft, geen main."
-    },
-    {
-      "at": "2026-09-16T12:33:04Z",
-      "summary": "Mega-merge leftover GitHub PRs #297 #300 #302 #307 #308 #309 closed — content already on origin/main 0044b2e (v1.18.172 / SW 382). Pages live."
     }
   ],
   "implementedFeaturesSummary": "d18 char select deel 1+2 (v1.11.1-2); Mats coinrun + shuriken mik/vliegers + anti-spam (v1.12.0); speel.html (v1.12.2+). Zie HANDOFF-ZOEKINDEX.md en improvement-d20-bag.json userFeatureLog.",
