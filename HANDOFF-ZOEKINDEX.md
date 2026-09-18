@@ -20,7 +20,7 @@ rg -l "handoff|coinrun|projAimVelocity|charSelectScreen|ASSET-STYLE" .
 | Gebruiker vroeg | Versie | Commit | Waar in code |
 |-----------------|--------|--------|----------------|
 | **Mobile combat density** | 1.18.186 | main | `src/systems/combat-density.js` · `buildLevel` / spawn cadence · `docs/COMBAT-DENSITY.md` · Versus out |
-| **Lose tip THIS killing hit (TF-001)** | 1.18.190 | this branch | `notePlayerFailTele` always writes this hit; no leftover vlieger / no steal alive flyer · `smoke:telegraph-read` + `smoke:lose-retry` |
+| **Lose tip THIS killing hit (TF-001)** | 1.18.190 | #349 DONE draft | `notePlayerFailTele` always writes this hit; no leftover vlieger / no steal alive flyer · `smoke:telegraph-read` + `smoke:lose-retry`. Parked, no main. |
 | **MOTION lived-in + Styles head** | 1.18.170 | #301 `cursor/equip-look-head-a6cb` | `src/render/live-fx.js` ready/flame/spark/cloth; `fighter.pose` idle; gear doll rAF. Versus out. |
 | **Buildings UX unclunk** | 1.18.177 | this branch | cards + collect-all i18n · pill 8u tip · sheet chips · empty start · `src/ui/buildings-ui.js` |
 | **Buildings UI harden** | 1.18.168 | this branch | list→detail · `#buildingsWallet` · collect once · `src/ui/buildings-ui.js` |

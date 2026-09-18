@@ -20,7 +20,7 @@
     "featureBranch": "cursor/lose-tip-telegraph-f013",
     "pushBlocked": null,
     "shareUrl": "https://brennyz.github.io/stickman-fighter/speel.html",
-    "note": "Draft TF-001: lose tip is THIS killing hit only (no leftover vlieger after Bubbel). Off main. No Versus. v1.18.190 / SW 400.",
+    "note": "DONE #349 TF-001: lose tip is THIS killing hit only. Draft parked. No Versus. No main. v1.18.190 / SW 400.",
     "updated": "2026-09-18T15:01:07Z",
     "localMainHead": "c9cba4b925db7b76a1e55ba0a6f20f89a6b1c378",
     "remoteMainHead": "c9cba4b925db7b76a1e55ba0a6f20f89a6b1c378"
@@ -39,7 +39,8 @@
     "pendingMerge": [
       {
         "pr": 349,
-        "title": "fix(TF-001): lose tip follows this killing hit only"
+        "title": "DONE TF-001 lose tip this killing hit (draft, no main)",
+        "status": "done-draft"
       },
       {
         "pr": 311,
@@ -59,7 +60,7 @@
       "text": "FIX BOT 30m — Stickman. Off main. Draft only. Until ~19:10 Amsterdam. From #342 TF-001: Lose tip sticky wrong telegraph (e.g. vlieger after Bubbel kill). Ensure tip follows THIS killing hit only. May cherry-pick/reimplement from draft #342 if useful. Smoke:telegraph-read + lose-retry. No Versus. No main.",
       "status": "done-in-code",
       "updated": "2026-09-18",
-      "notes": "Reimplemented #342 this-hit-only lastFailTele write on cursor/lose-tip-telegraph-f013."
+      "notes": "DONE + STOP. Draft #349. this-hit-only lastFailTele. smoke:telegraph-read + lose-retry OK. No main."
     },
     {
       "id": "w-20260918T141700",
@@ -1188,6 +1189,10 @@
   ],
   "sessionLog": [
     {
+      "at": "2026-09-18T16:46:45Z",
+      "summary": "DONE + STOP #349 TF-001 lose tip this killing hit. Draft parked. No main."
+    },
+    {
       "at": "2026-09-18T16:45:56Z",
       "summary": "TF-001: lose tip is this killing hit only (no leftover vlieger after Bubbel). Draft #349. smoke:telegraph-read + lose-retry OK."
     },
@@ -1282,10 +1287,6 @@
     {
       "at": "2026-09-18T12:31:56Z",
       "summary": "LANGUAGE: factory desc + nameShort, FOMO/HUD locale, export gear/fabriek i18n. Draft #317, geen main."
-    },
-    {
-      "at": "2026-09-18T12:30:17Z",
-      "summary": "LANGUAGE worker: layout-safe NL/EN/DE/FR/ES copy (factory desc, FOMO, HUD telegraphs). Draft, geen main."
     }
   ],
   "implementedFeaturesSummary": "d18 char select deel 1+2 (v1.11.1-2); Mats coinrun + shuriken mik/vliegers + anti-spam (v1.12.0); speel.html (v1.12.2+). Zie HANDOFF-ZOEKINDEX.md en improvement-d20-bag.json userFeatureLog.",
