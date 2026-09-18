@@ -52,7 +52,7 @@
       "text": "WORKER lane: UI/UX LAYOUT — texts/buttons stacking over each other, safe areas, z-index, sheets, sticky wallets, overflow on ~390px and desktop. Polish HOME, Collectie, factories, gear, summons, pets screens. No Versus. Draft PR only. speel.html.",
       "status": "done-in-code",
       "updated": "2026-09-18",
-      "notes": "Lane owns layout only (overflow, safe-area, z-index, sheets, sticky wallets). No Versus. Draft PR."
+      "notes": "Draft PR #318 cursor/ui-layout-polish-7643. v1.18.173 / SW 383. Wait «merge main»."
     },
     {
       "id": "w-20260916T121500",
