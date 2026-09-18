@@ -20,7 +20,7 @@
     "featureBranch": "cursor/fomo-landscape-avontuur-a294",
     "pushBlocked": null,
     "shareUrl": "https://brennyz.github.io/stickman-fighter/speel.html",
-    "note": "Draft #350 short-landscape FOMO Avontuur tap. No main. v1.18.191 / SW 401.",
+    "note": "DONE STOP. Draft #350 short-landscape FOMO Avontuur tap. No main. v1.18.191 / SW 401.",
     "updated": "2026-09-18T16:06:11Z",
     "localMainHead": "aa80d25c5f708549af287716914c2016228a2a46",
     "remoteMainHead": "aa80d25c5f708549af287716914c2016228a2a46"
@@ -55,12 +55,20 @@
   },
   "userWishlist": [
     {
+      "id": "w-20260918T164600",
+      "from": "user",
+      "text": "Good #350. Mark DONE and STOP. Draft only, no main.",
+      "status": "done-in-code",
+      "updated": "2026-09-18",
+      "notes": "DONE STOP. Draft #350. No main."
+    },
+    {
       "id": "w-20260918T164000",
       "from": "user",
       "text": "FIX BOT 30m — P1 from #338: landscape 844×390 Vandaag/FOMO open leaves Avontuur visible but inert. Short-landscape only: keep Avontuur (and play CTA) tappable OR auto-dismiss on Avontuur tap. Portrait 390 lock may stay. Prove smoke:landscape-begin. Draft only. No Versus. No main.",
       "status": "done-in-code",
       "updated": "2026-09-18",
-      "notes": "Off main. Draft PR."
+      "notes": "DONE STOP. Draft #350. smoke:landscape-begin green. No main."
     },
     {
       "id": "w-20260918T155700",
@@ -1244,6 +1252,10 @@
   ],
   "sessionLog": [
     {
+      "at": "2026-09-18T16:46:23Z",
+      "summary": "DONE STOP #350: short-landscape FOMO Avontuur tap frozen. Draft only, no main."
+    },
+    {
       "at": "2026-09-18T16:45:27Z",
       "summary": "P1 #338: short-landscape FOMO no longer locks Avontuur; smoke:landscape-begin green. Draft #350. No main."
     },
@@ -1338,10 +1350,6 @@
     {
       "at": "2026-09-18T12:36:17Z",
       "summary": "examiner P0: pets/gear locale + 390px overflow (start)"
-    },
-    {
-      "at": "2026-09-18T12:31:56Z",
-      "summary": "LANGUAGE: factory desc + nameShort, FOMO/HUD locale, export gear/fabriek i18n. Draft #317, geen main."
     }
   ],
   "implementedFeaturesSummary": "d18 char select deel 1+2 (v1.11.1-2); Mats coinrun + shuriken mik/vliegers + anti-spam (v1.12.0); speel.html (v1.12.2+). Zie HANDOFF-ZOEKINDEX.md en improvement-d20-bag.json userFeatureLog.",

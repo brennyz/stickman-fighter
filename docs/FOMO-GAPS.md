@@ -141,7 +141,7 @@ Do **not** rename `SAVE_KEY`.
 - [ ] Second open same day: no sheet; `#btnMissions` still `tog-alert` if claimable.
 - [ ] Versus string absent. `npm test` green.
 - [ ] **EX-021** (390): `#fomoRitual` above HOME tiles / sticky footer / toast (`--z-fomo`). Open lock: `#menuScreen.is-fomo` + chrome/stage `inert` + `pointer-events:none`. X / backdrop dismiss clears the lock. Sheet ≥24px above gesture strip. No nuclear `.screen { display:none !important }`.
-- [ ] **EX-021 short landscape (844×390):** Vandaag docks left and must not lock painted Avontuur / play CTA. Skip chrome `inert` + restore `pointer-events` on `.menu-chrome` / `#btnAdventure` / `#btnContinue`. Portrait 390 hub lock may stay. Prove `smoke:landscape-begin`.
+- [x] **EX-021 short landscape (844×390):** Vandaag docks left and must not lock painted Avontuur / play CTA. Skip chrome `inert` + restore `pointer-events` on `.menu-chrome` / `#btnAdventure` / `#btnContinue`. Portrait 390 hub lock may stay. Prove `smoke:landscape-begin`. **DONE #350 draft — STOP, no main.**
 
 ---
 
