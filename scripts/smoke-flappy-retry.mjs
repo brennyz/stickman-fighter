@@ -29,15 +29,21 @@ const css = fs.readFileSync(path.join(root, 'styles/main.css'), 'utf8');
 const i18n = fs.readFileSync(path.join(root, 'src/i18n/i18n.js'), 'utf8');
 
 must(/RESULT_SHOW_LOSE_MS = 700/.test(missions), 'lose delay must be 700ms');
-must(/function adventureResultDelayMs/.test(missions), 'missing adventureResultDelayMs');
+must(/function resultShowDelayMs/.test(missions) && /function paintResultRetryLabel/.test(missions),
+  'missing resultShowDelayMs / paintResultRetryLabel');
 must(/function restartAdventureInstant/.test(missions), 'missing restartAdventureInstant');
+must(/function runResultRetry/.test(start) && /resRetrySafe/.test(start),
+  'tap-safe retry helper missing');
 must(/restartAdventureInstant/.test(start) && !/if \(d\.mode === 'adventure'\) gokGooiStartLevel\(d\.level\)/.test(start),
   'resAgain adventure must skip dice maze');
-must(/adventureResultDelayMs\(win\)/.test(game), 'finishAdventure must use adventureResultDelayMs');
-must(/result\.onceMore/.test(ui) && /is-lose/.test(ui), 'showResult must paint onceMore + lose class');
+must(/resultShowDelayMs\(win, 'adventure'\)/.test(game), 'finishAdventure must use resultShowDelayMs');
+must(/resultShowDelayMs\(win, 'training'\)/.test(game), 'training must use <3s retry delay');
+must(/resultShowDelayMs\(true, 'wall'\)/.test(game) && /resultShowDelayMs\(true, 'coinrun'\)/.test(game),
+  'wall/coinrun must use fast retry delay');
+must(/result\.onceMore/.test(ui) && /is-retry-first/.test(ui), 'showResult must paint onceMore + retry-first');
 must(/hideFomoRitual/.test(ui) && /showResult/.test(ui), 'result must hide FOMO');
-must(/id="resCtaDock"/.test(html) && /Nog één keer/.test(html), 'result dock / onceMore HTML missing');
-must(/result-cta-primary/.test(css) && /min-height:\s*84px/.test(css), 'huge 390px CTA missing');
+must(/id="resCtaDock"/.test(html) && /id="resRetrySafe"/.test(html), 'result dock / tap-safe missing');
+must(/result-retry-safe/.test(css) && /min-height:\s*84px/.test(css), 'huge 390px CTA / safe zone CSS missing');
 must(/body:has\(#resultScreen\.active\) #fomoRitual/.test(css), 'FOMO must hide on result');
 must(/onceMore: 'Nog één keer'/.test(i18n) && /onceMore: 'One more go'/.test(i18n),
   'onceMore NL/EN missing');
@@ -116,6 +122,77 @@ async function run() {
     must(layout.nextHidden && layout.menuQuiet && layout.primary, 'lose should be one primary CTA: ' + JSON.stringify(layout));
     must(layout.fomoHidden, 'FOMO must not fight result: ' + JSON.stringify(layout));
 
+    const locales = await page.evaluate(() => {
+      const paint = (lang) => {
+        setLang(lang);
+        UI.showResult(false, {
+          mode: 'adventure', level: 1, win: false, xp: 0, difficulty: 'normal',
+          titleKey: 'result.advLose', detail: 'test',
+        });
+        const again = document.getElementById('resAgain');
+        return ((again && again.querySelector('div')) || again || {}).textContent || '';
+      };
+      const out = {
+        en: paint('en'), de: paint('de'), fr: paint('fr'), es: paint('es'), nl: paint('nl'),
+      };
+      return out;
+    });
+    must(/one more go/i.test(locales.en), 'EN onceMore missing: ' + locales.en);
+    must(/noch einmal/i.test(locales.de), 'DE onceMore missing: ' + locales.de);
+    must(/encore une fois/i.test(locales.fr), 'FR onceMore missing: ' + locales.fr);
+    must(/una más/i.test(locales.es), 'ES onceMore missing: ' + locales.es);
+    must(/nog één keer/i.test(locales.nl), 'NL onceMore missing: ' + locales.nl);
+    must(!/nog één keer/i.test(locales.en + locales.de + locales.fr + locales.es),
+      'non-NL still has Dutch onceMore: ' + JSON.stringify(locales));
+
+    const trainSnap = await page.evaluate(() => {
+      UI.showResult(false, { mode: 'training', win: false, xp: 0, titleKey: 'result.trainLose' });
+      const again = document.getElementById('resAgain');
+      const menu = document.getElementById('resMenu');
+      const screen = document.getElementById('resultScreen');
+      const ar = again ? again.getBoundingClientRect() : null;
+      const mr = menu ? menu.getBoundingClientRect() : null;
+      return {
+        label: ((again && again.querySelector('div')) || again || {}).textContent || '',
+        primary: !!(again && again.classList.contains('result-cta-primary')),
+        retryFirst: !!(screen && screen.classList.contains('is-retry-first')),
+        againH: ar ? Math.round(ar.height) : 0,
+        menuW: mr ? Math.round(mr.width) : 0,
+        gap: (ar && mr) ? Math.round(mr.top - ar.bottom) : 0,
+        delay: typeof resultShowDelayMs === 'function' ? resultShowDelayMs(false, 'training') : -1,
+      };
+    });
+    must(/nog één keer|one more go/i.test(trainSnap.label), 'training lose onceMore missing: ' + trainSnap.label);
+    must(trainSnap.primary && trainSnap.retryFirst && trainSnap.againH >= 72,
+      'training lose CTA not huge: ' + JSON.stringify(trainSnap));
+    must(trainSnap.delay <= 700, 'training lose delay not <3s: ' + trainSnap.delay);
+    must(trainSnap.menuW > 0 && trainSnap.menuW < 220 && trainSnap.gap >= 10,
+      'menu not isolated from retry: ' + JSON.stringify(trainSnap));
+
+    const safeSnap = await page.evaluate(() => {
+      UI.showResult(false, {
+        mode: 'adventure', level: 1, win: false, xp: 0, difficulty: 'normal',
+        titleKey: 'result.advLose',
+      });
+      const title = document.getElementById('resTitle');
+      const safe = document.getElementById('resRetrySafe');
+      const menu = document.getElementById('resMenu');
+      const tr = title.getBoundingClientRect();
+      const hit = document.elementFromPoint(tr.left + tr.width / 2, tr.top + tr.height / 2);
+      const mr = menu.getBoundingClientRect();
+      const beside = document.elementFromPoint(Math.min(window.innerWidth - 8, mr.right + 24), mr.top + mr.height / 2);
+      return {
+        hasSafe: !!safe,
+        hitId: hit ? hit.id : '',
+        besideId: beside ? beside.id : '',
+        menuW: Math.round(mr.width),
+      };
+    });
+    must(safeSnap.hasSafe && safeSnap.hitId === 'resRetrySafe',
+      'tap on title must hit retry-safe, not menu: ' + JSON.stringify(safeSnap));
+    must(safeSnap.besideId !== 'resMenu',
+      'tap beside menu must not hit Menu: ' + JSON.stringify(safeSnap));
+
     const timed = await page.evaluate(async () => {
       UI.goMenu();
       startGame('adventure', { level: 1, difficulty: 'normal' });
@@ -168,8 +245,44 @@ async function run() {
     must(!retry.gambleActive && !retry.resultActive && !retry.fomoOpen,
       'retry must skip dice/FOMO/menu maze: ' + JSON.stringify(retry));
 
+    const trainTimed = await page.evaluate(async () => {
+      UI.goMenu();
+      startGame('training');
+      const t0 = performance.now();
+      try { game.finishTraining(false); } catch (e) { return { err: String(e && e.message || e) }; }
+      const deadline = t0 + 3200;
+      while (performance.now() < deadline) {
+        const sc = document.getElementById('resultScreen');
+        if (sc && sc.classList.contains('active') && sc.classList.contains('is-retry-first')) {
+          return { ms: Math.round(performance.now() - t0), state };
+        }
+        await new Promise((r) => setTimeout(r, 40));
+      }
+      return { ms: 9999, state };
+    });
+    must(!trainTimed.err, 'finishTraining failed: ' + trainTimed.err);
+    must(trainTimed.ms < 3000 && trainTimed.state === 'result',
+      'training retry CTA not visible in <3s: ' + JSON.stringify(trainTimed));
+
+    const tapAnywhere = await page.evaluate(() => {
+      UI.showResult(false, {
+        mode: 'adventure', level: 1, win: false, xp: 0, difficulty: 'normal',
+        titleKey: 'result.advLose',
+      });
+      const safe = document.getElementById('resRetrySafe');
+      if (safe) safe.click();
+      return {
+        state: typeof state !== 'undefined' ? state : null,
+        mode: game ? game.mode : null,
+        isPlaying: document.body.classList.contains('is-playing'),
+        menuActive: !!(document.getElementById('menuScreen') && document.getElementById('menuScreen').classList.contains('active')),
+      };
+    });
+    must(tapAnywhere.state === 'play' && tapAnywhere.mode === 'adventure' && !tapAnywhere.menuActive,
+      'tap-anywhere must retry, not Menu: ' + JSON.stringify(tapAnywhere));
+
     await page.screenshot({ path: path.join(outDir, 'flappy-retry-390.png') });
-    console.log('SMOKE_OK flappy-retry', JSON.stringify({ layout, timed, retry }));
+    console.log('SMOKE_OK flappy-retry', JSON.stringify({ layout, locales, trainSnap, safeSnap, timed, retry, trainTimed, tapAnywhere }));
   } finally {
     await browser.close();
     if (server && server.close) try { server.close(); } catch (_) {}

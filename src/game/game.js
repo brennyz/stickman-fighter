@@ -960,8 +960,8 @@ class Game {
       this.banner(t('banner.lost'), 2, '#ff6b6b', 50);
     }
     // Resultaat-scherm altijd tonen (Volgende / Nog één keer) — niet stil naar menu
-    const resultDelay = (typeof adventureResultDelayMs === 'function')
-      ? adventureResultDelayMs(win)
+    const resultDelay = (typeof resultShowDelayMs === 'function')
+      ? resultShowDelayMs(win, 'adventure')
       : (win ? 1400 : 700);
     scheduleGameResult(this, resultDelay, () => UI.showResult(win, {
       titleKey: win ? 'result.advWin' : 'result.advLose',
@@ -1710,7 +1710,10 @@ class Game {
           : tOr('result.trainStyleMore', 'Unlock stijlen door meer train-wins!')))
       : onceResultTip('training', 'loss', tOr('combat.trainLostTip', tOr('combat.trainLossTip', 'Spring tijdens LIGHTNING PIERCE — robot mist · spring oor-lasers')))
         || tOr('combat.trainTipDefault', 'Tip: spring lasers · energy vol → Spiral Orb');
-    scheduleGameResult(this, 1400, () => UI.showResult(win, {
+    const trainDelay = (typeof resultShowDelayMs === 'function')
+      ? resultShowDelayMs(win, 'training')
+      : (win ? 1400 : 700);
+    scheduleGameResult(this, trainDelay, () => UI.showResult(win, {
       titleKey: win ? 'result.trainWin' : 'result.trainLose',
       title: win ? tOr('result.trainWin', 'KAMPIOEN!') : tOr('result.trainLose', 'ROBOT WINT...'),
       detailKey: win ? 'result.trainDetailWin' : 'result.trainDetailLose',
@@ -2139,7 +2142,10 @@ class Game {
       else if (paceDelta != null && paceDelta < -3) tip = t('result.wallBehindPace');
       else if (paceDelta != null && paceDelta >= 3) tip = t('result.wallGoodPace');
     }
-    scheduleGameResult(this, 1200, () => UI.showResult(true, {
+    const wallDelay = (typeof resultShowDelayMs === 'function')
+      ? resultShowDelayMs(true, 'wall')
+      : 700;
+    scheduleGameResult(this, wallDelay, () => UI.showResult(true, {
       titleKey: isRecord ? 'result.wallRecord' : 'result.wallTime',
       title: isRecord ? t('result.wallRecord') : t('result.wallTime'),
       detail: t('result.wallDetail', {
@@ -2249,7 +2255,10 @@ class Game {
     AudioSys.sfx(isRecord ? 'win' : 'bonus');
     this.banner(t('banner.bonusDone'), 1.4, '#7cfc8a', 40);
     const wallet = petCoinsBalance();
-    scheduleGameResult(this, 1200, () => UI.showResult(true, {
+    const matsDelay = (typeof resultShowDelayMs === 'function')
+      ? resultShowDelayMs(true, 'coinrun')
+      : 700;
+    scheduleGameResult(this, matsDelay, () => UI.showResult(true, {
       titleKey: isRecord ? 'result.matsRecord' : 'result.matsDone',
       title: isRecord ? t('result.matsRecord') : t('result.matsDone'),
       detail: t('result.matsDetail', {

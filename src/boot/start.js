@@ -780,9 +780,10 @@ if (pauseVsSwap) {
     }), 2800);
   });
 }
-bindPress(document.getElementById('resAgain'), () => {
+function runResultRetry() {
   const d = UI.lastResult;
   if (!d || !d.mode) return;
+  if (d.mode === 'versus') return;
   AudioSys.sfx('select');
   try { if (game) game._resultToken = (game._resultToken || 0) + 1; } catch (_) {}
   if (d.mode === 'adventure') {
@@ -790,16 +791,10 @@ bindPress(document.getElementById('resAgain'), () => {
     else startGame('adventure', { level: d.level, difficulty: d.difficulty });
     return;
   }
-  else if (d.mode === 'versus') {
-    const p1 = d.p1 || vsSelect.p1;
-    const p2 = d.p2 || vsSelect.p2;
-    vsSelect.p1 = p1;
-    vsSelect.p2 = p2;
-    UI.toast(`Rematch · ${vsRosterName(p1) || 'P1'} vs ${vsRosterName(p2) || 'P2'}`, 2600);
-    startGame('versus', { p1, p2 });
-  }
-  else startGame(d.mode);
-});
+  startGame(d.mode);
+}
+bindPress(document.getElementById('resAgain'), () => { runResultRetry(); });
+bindPress(document.getElementById('resRetrySafe'), () => { runResultRetry(); });
 bindPress(document.getElementById('resNext'), () => {
   const d = UI.lastResult;
   if (!d || d.mode !== 'adventure' || !d.win) return;
@@ -807,7 +802,8 @@ bindPress(document.getElementById('resNext'), () => {
   try { if (game) game._resultToken = (game._resultToken || 0) + 1; } catch (_) {}
   gokGooiStartLevel(Math.min(MAX_LEVEL, d.level + 1));
 });
-bindPress(document.getElementById('resMenu'), () => {
+bindPress(document.getElementById('resMenu'), (e) => {
+  try { if (e && e.stopPropagation) e.stopPropagation(); } catch (_) {}
   try { if (game) game._resultToken = (game._resultToken || 0) + 1; } catch (_) {}
   UI.goMenu({ fromPlay: true });
 });

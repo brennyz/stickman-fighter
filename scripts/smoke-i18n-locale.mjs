@@ -40,6 +40,11 @@ if (/i18nList\('menu\.tips'\)/.test(catalog)) fail('menuTipAt still reads menu.t
 if (!/tips: 'Tips'/.test(i18n)) fail('menu.tips label string missing');
 if (!/setTitle\('btnHelp', 'menu\.tips'\)/.test(i18n)) fail('help tooltip must use menu.tips label');
 
+if (!/onceMore: 'Nog één keer'/.test(i18n)) fail('NL result.onceMore missing');
+if (!/onceMore: 'One more go'/.test(i18n)) fail('EN result.onceMore missing');
+if (!/onceMore: 'Noch einmal'/.test(i18n)) fail('DE result.onceMore missing');
+if (!/onceMore: 'Encore une fois'/.test(i18n)) fail('FR result.onceMore missing');
+if (!/onceMore: 'Una más'/.test(i18n)) fail('ES result.onceMore missing');
 if (!/advLose: 'VERLOREN'/.test(catalog)) fail('NL result.advLose must be VERLOREN');
 if (!/lost: 'VERLOREN'/.test(catalog)) fail('NL banner.lost must be VERLOREN');
 if (!/advLose: 'YOU LOSE'/.test(catalogEn)) fail('EN result.advLose must be YOU LOSE');

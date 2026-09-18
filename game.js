@@ -323,9 +323,9 @@ const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const VERSION_UPDATE_SAVE_KEY = 'stickfighter_version_update_save_v1';
 const VERSION_UPDATE_FLAG_KEY = 'stickfighter_version_update_flag_v1';
 const SAVE_EXPORT_SCHEMA = 3;
-const APP_VERSION = '1.18.173';
+const APP_VERSION = '1.18.174';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 383;
+const SW_CACHE_REV = 384;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', petCoins: 0, dex: {}, summons: {}, pets: {}, activePet: null,
   eggPets: {}, activeEggPet: null, eggDaily: null,
   chestDaily: null, chestWeapons: {},
@@ -4121,11 +4121,13 @@ function applyLangStaticScreens() {
   const resAgain = document.getElementById('resAgain');
   if (resAgain) {
     const d = resAgain.querySelector('div');
-    if (d) {
-      const loseAdv = typeof UI !== 'undefined' && UI.lastResult
-        && UI.lastResult.mode === 'adventure' && !UI.lastResult.win;
-      d.textContent = loseAdv ? t('result.onceMore') : t('result.again');
+    if (d && typeof paintResultRetryLabel === 'function' && typeof UI !== 'undefined' && UI.lastResult) {
+      paintResultRetryLabel(d, UI.lastResult);
+    } else if (d) {
+      d.textContent = t('result.onceMore');
     }
+    const safe = document.getElementById('resRetrySafe');
+    if (safe) safe.setAttribute('aria-label', (d && d.textContent) || t('result.onceMore'));
   }
   const resNext = document.getElementById('resNext');
   if (resNext) {
@@ -6400,13 +6402,37 @@ function ensureVisibleScreen() {
   ensureMenuScreenActive();
 }
 
-/** Adventure lose: land the retry CTA well under 3s (Flappy-feel). Win can stay a beat longer. */
+/** Lose / arcade-end: land the retry CTA well under 3s (Flappy-feel). Versus untouched. */
 const RESULT_SHOW_WIN_MS = 1400;
 const RESULT_SHOW_LOSE_MS = 700;
 function adventureResultDelayMs(win) {
+  return resultShowDelayMs(win, 'adventure');
+}
+function resultShowDelayMs(win, mode) {
+  if (mode === 'versus') return 1200;
   const rm = typeof motionReduced === 'function' && motionReduced();
-  if (win) return rm ? 400 : RESULT_SHOW_WIN_MS;
-  return rm ? 160 : RESULT_SHOW_LOSE_MS;
+  if (mode === 'training' || mode === 'wall' || mode === 'coinrun' || !win) {
+    return rm ? 160 : RESULT_SHOW_LOSE_MS;
+  }
+  return rm ? 400 : RESULT_SHOW_WIN_MS;
+}
+function resultUsesOnceMore(data) {
+  if (!data || data.mode === 'versus') return false;
+  if (data.mode === 'adventure' && data.win) return false;
+  return true;
+}
+function paintResultRetryLabel(el, data) {
+  if (!el) return;
+  if (data && data.mode === 'versus') {
+    el.innerHTML = t('result.rematch') + '<small>' + t('result.rematchSub') + '</small>';
+    return;
+  }
+  const main = resultUsesOnceMore(data) ? t('result.onceMore') : t('result.again');
+  if (data && data.mode === 'training') {
+    el.innerHTML = main + '<small>' + tOr('result.trainAgainSub', 'vs RabbitRobot') + '</small>';
+    return;
+  }
+  el.textContent = main;
 }
 
 /** Instant same-level rematch — no island / dice / HOME maze after death. */
@@ -40942,8 +40968,8 @@ class Game {
       this.banner(t('banner.lost'), 2, '#ff6b6b', 50);
     }
     // Resultaat-scherm altijd tonen (Volgende / Nog één keer) — niet stil naar menu
-    const resultDelay = (typeof adventureResultDelayMs === 'function')
-      ? adventureResultDelayMs(win)
+    const resultDelay = (typeof resultShowDelayMs === 'function')
+      ? resultShowDelayMs(win, 'adventure')
       : (win ? 1400 : 700);
     scheduleGameResult(this, resultDelay, () => UI.showResult(win, {
       titleKey: win ? 'result.advWin' : 'result.advLose',
@@ -41692,7 +41718,10 @@ class Game {
           : tOr('result.trainStyleMore', 'Unlock stijlen door meer train-wins!')))
       : onceResultTip('training', 'loss', tOr('combat.trainLostTip', tOr('combat.trainLossTip', 'Spring tijdens LIGHTNING PIERCE — robot mist · spring oor-lasers')))
         || tOr('combat.trainTipDefault', 'Tip: spring lasers · energy vol → Spiral Orb');
-    scheduleGameResult(this, 1400, () => UI.showResult(win, {
+    const trainDelay = (typeof resultShowDelayMs === 'function')
+      ? resultShowDelayMs(win, 'training')
+      : (win ? 1400 : 700);
+    scheduleGameResult(this, trainDelay, () => UI.showResult(win, {
       titleKey: win ? 'result.trainWin' : 'result.trainLose',
       title: win ? tOr('result.trainWin', 'KAMPIOEN!') : tOr('result.trainLose', 'ROBOT WINT...'),
       detailKey: win ? 'result.trainDetailWin' : 'result.trainDetailLose',
@@ -42121,7 +42150,10 @@ class Game {
       else if (paceDelta != null && paceDelta < -3) tip = t('result.wallBehindPace');
       else if (paceDelta != null && paceDelta >= 3) tip = t('result.wallGoodPace');
     }
-    scheduleGameResult(this, 1200, () => UI.showResult(true, {
+    const wallDelay = (typeof resultShowDelayMs === 'function')
+      ? resultShowDelayMs(true, 'wall')
+      : 700;
+    scheduleGameResult(this, wallDelay, () => UI.showResult(true, {
       titleKey: isRecord ? 'result.wallRecord' : 'result.wallTime',
       title: isRecord ? t('result.wallRecord') : t('result.wallTime'),
       detail: t('result.wallDetail', {
@@ -42231,7 +42263,10 @@ class Game {
     AudioSys.sfx(isRecord ? 'win' : 'bonus');
     this.banner(t('banner.bonusDone'), 1.4, '#7cfc8a', 40);
     const wallet = petCoinsBalance();
-    scheduleGameResult(this, 1200, () => UI.showResult(true, {
+    const matsDelay = (typeof resultShowDelayMs === 'function')
+      ? resultShowDelayMs(true, 'coinrun')
+      : 700;
+    scheduleGameResult(this, matsDelay, () => UI.showResult(true, {
       titleKey: isRecord ? 'result.matsRecord' : 'result.matsDone',
       title: isRecord ? t('result.matsRecord') : t('result.matsDone'),
       detail: t('result.matsDetail', {
@@ -51228,16 +51263,23 @@ const UI = {
       nextBtn.classList.toggle('result-cta-primary', showNext);
     }
     const again = document.getElementById('resAgain');
+    const retryFirst = !showNext && data.mode !== 'versus';
     if (again) {
       const label = again.querySelector('div');
-      const loseAdv = !win && data.mode === 'adventure';
-      again.classList.toggle('result-cta-primary', loseAdv || !showNext);
+      again.classList.toggle('result-cta-primary', retryFirst);
       again.classList.toggle('result-cta-secondary', !!(win && showNext));
-      if (label) {
-        if (data.mode === 'versus') label.innerHTML = t('result.rematch') + '<small>' + t('result.rematchSub') + '</small>';
-        else if (data.mode === 'training') label.innerHTML = t('result.again') + '<small>' + tOr('result.trainAgainSub', 'vs RabbitRobot') + '</small>';
-        else label.textContent = loseAdv ? t('result.onceMore') : t('result.again');
+      if (label && typeof paintResultRetryLabel === 'function') paintResultRetryLabel(label, data);
+      else if (label) {
+        label.textContent = (!win || data.mode === 'training' || data.mode === 'wall' || data.mode === 'coinrun')
+          ? t('result.onceMore') : t('result.again');
       }
+      again.setAttribute('aria-label', (label && label.textContent) || t('result.onceMore'));
+    }
+    const safe = document.getElementById('resRetrySafe');
+    if (safe) {
+      const lab = (again && again.getAttribute('aria-label')) || t('result.onceMore');
+      safe.setAttribute('aria-label', lab);
+      safe.hidden = data.mode === 'versus';
     }
     const menuBtn = document.getElementById('resMenu');
     if (menuBtn) {
@@ -51245,13 +51287,14 @@ const UI = {
       if (label) {
         label.textContent = hubForPlayMode(data.mode) === 'arcade' ? t('result.menuArcade') : t('result.menu');
       }
-      menuBtn.classList.toggle('result-cta-quiet', !win && data.mode === 'adventure');
+      menuBtn.classList.toggle('result-cta-quiet', retryFirst);
     }
     const screen = document.getElementById('resultScreen');
     if (screen) {
       screen.classList.toggle('is-win', !!win);
       screen.classList.toggle('is-lose', !win);
       screen.classList.toggle('is-adventure', data.mode === 'adventure');
+      screen.classList.toggle('is-retry-first', retryFirst);
     }
     state = 'result';
     scheduleResize();
@@ -52670,9 +52713,10 @@ if (pauseVsSwap) {
     }), 2800);
   });
 }
-bindPress(document.getElementById('resAgain'), () => {
+function runResultRetry() {
   const d = UI.lastResult;
   if (!d || !d.mode) return;
+  if (d.mode === 'versus') return;
   AudioSys.sfx('select');
   try { if (game) game._resultToken = (game._resultToken || 0) + 1; } catch (_) {}
   if (d.mode === 'adventure') {
@@ -52680,16 +52724,10 @@ bindPress(document.getElementById('resAgain'), () => {
     else startGame('adventure', { level: d.level, difficulty: d.difficulty });
     return;
   }
-  else if (d.mode === 'versus') {
-    const p1 = d.p1 || vsSelect.p1;
-    const p2 = d.p2 || vsSelect.p2;
-    vsSelect.p1 = p1;
-    vsSelect.p2 = p2;
-    UI.toast(`Rematch · ${vsRosterName(p1) || 'P1'} vs ${vsRosterName(p2) || 'P2'}`, 2600);
-    startGame('versus', { p1, p2 });
-  }
-  else startGame(d.mode);
-});
+  startGame(d.mode);
+}
+bindPress(document.getElementById('resAgain'), () => { runResultRetry(); });
+bindPress(document.getElementById('resRetrySafe'), () => { runResultRetry(); });
 bindPress(document.getElementById('resNext'), () => {
   const d = UI.lastResult;
   if (!d || d.mode !== 'adventure' || !d.win) return;
@@ -52697,7 +52735,8 @@ bindPress(document.getElementById('resNext'), () => {
   try { if (game) game._resultToken = (game._resultToken || 0) + 1; } catch (_) {}
   gokGooiStartLevel(Math.min(MAX_LEVEL, d.level + 1));
 });
-bindPress(document.getElementById('resMenu'), () => {
+bindPress(document.getElementById('resMenu'), (e) => {
+  try { if (e && e.stopPropagation) e.stopPropagation(); } catch (_) {}
   try { if (game) game._resultToken = (game._resultToken || 0) + 1; } catch (_) {}
   UI.goMenu({ fromPlay: true });
 });

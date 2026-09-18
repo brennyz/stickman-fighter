@@ -1824,11 +1824,13 @@ function applyLangStaticScreens() {
   const resAgain = document.getElementById('resAgain');
   if (resAgain) {
     const d = resAgain.querySelector('div');
-    if (d) {
-      const loseAdv = typeof UI !== 'undefined' && UI.lastResult
-        && UI.lastResult.mode === 'adventure' && !UI.lastResult.win;
-      d.textContent = loseAdv ? t('result.onceMore') : t('result.again');
+    if (d && typeof paintResultRetryLabel === 'function' && typeof UI !== 'undefined' && UI.lastResult) {
+      paintResultRetryLabel(d, UI.lastResult);
+    } else if (d) {
+      d.textContent = t('result.onceMore');
     }
+    const safe = document.getElementById('resRetrySafe');
+    if (safe) safe.setAttribute('aria-label', (d && d.textContent) || t('result.onceMore'));
   }
   const resNext = document.getElementById('resNext');
   if (resNext) {

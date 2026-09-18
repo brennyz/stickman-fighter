@@ -2069,9 +2069,18 @@
     flex-direction: column; align-items: center;
     padding-bottom: max(16px, env(safe-area-inset-bottom, 0px));
   }
+  #resultScreen .result-retry-safe {
+    position: absolute; inset: 0; z-index: 1;
+    border: 0; padding: 0; margin: 0; background: transparent;
+    cursor: pointer;
+  }
+  #resultScreen.screen.active > *:not(.result-retry-safe):not(.result-cta-dock):not(.run-loot-panel) {
+    pointer-events: none; position: relative; z-index: 2;
+  }
+  #resultScreen .run-loot-panel { position: relative; z-index: 2; }
   #resultScreen .result-cta-dock {
     width: min(92vw, 420px); margin-top: auto; padding-top: 12px;
-    display: flex; flex-direction: column; align-items: center; gap: 8px;
+    display: flex; flex-direction: column; align-items: center; gap: 10px;
     position: sticky; bottom: max(10px, env(safe-area-inset-bottom, 0px));
     z-index: 6;
   }
@@ -2083,18 +2092,19 @@
   #resultScreen .result-cta-primary div {
     font-size: inherit; font-weight: 900;
   }
-  #resultScreen.is-lose.is-adventure #resAgain.result-cta-primary {
+  #resultScreen #resAgain.result-cta-primary {
     background: linear-gradient(180deg, #ffd75e 0%, #e8a820 55%, #c97a20 100%);
     border: 2px solid rgba(255,255,255,.22); color: #1a1208;
     box-shadow: 0 6px 0 #7a4a10, 0 10px 22px rgba(0,0,0,.35);
   }
-  #resultScreen.is-lose.is-adventure #resAgain.result-cta-primary div { color: #1a1208; }
+  #resultScreen #resAgain.result-cta-primary div { color: #1a1208; }
   #resultScreen .result-cta-secondary { min-height: 48px; width: 100%; opacity: .92; }
-  #resultScreen.is-lose.is-adventure #resMenu.result-cta-quiet {
-    min-height: 44px; width: auto; margin-top: 2px;
-    background: transparent; box-shadow: none; border-color: transparent;
-    font-size: 14px; opacity: .72;
+  #resultScreen #resMenu.result-cta-quiet {
+    min-height: 40px; width: auto; max-width: 42%; margin-top: 14px;
+    padding: 6px 12px; background: transparent; box-shadow: none;
+    border: 0; font-size: 13px; opacity: .65; align-self: center;
   }
+  #resultScreen #resMenu.result-cta-quiet .ico { width: 16px; height: 16px; }
   #resultScreen.is-lose .run-loot-panel { max-height: min(22vh, 160px); }
   #resultScreen.is-lose .detail { font-size: 14px; }
   body:has(#resultScreen.active) #fomoRitual,

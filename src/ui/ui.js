@@ -5097,16 +5097,23 @@ const UI = {
       nextBtn.classList.toggle('result-cta-primary', showNext);
     }
     const again = document.getElementById('resAgain');
+    const retryFirst = !showNext && data.mode !== 'versus';
     if (again) {
       const label = again.querySelector('div');
-      const loseAdv = !win && data.mode === 'adventure';
-      again.classList.toggle('result-cta-primary', loseAdv || !showNext);
+      again.classList.toggle('result-cta-primary', retryFirst);
       again.classList.toggle('result-cta-secondary', !!(win && showNext));
-      if (label) {
-        if (data.mode === 'versus') label.innerHTML = t('result.rematch') + '<small>' + t('result.rematchSub') + '</small>';
-        else if (data.mode === 'training') label.innerHTML = t('result.again') + '<small>' + tOr('result.trainAgainSub', 'vs RabbitRobot') + '</small>';
-        else label.textContent = loseAdv ? t('result.onceMore') : t('result.again');
+      if (label && typeof paintResultRetryLabel === 'function') paintResultRetryLabel(label, data);
+      else if (label) {
+        label.textContent = (!win || data.mode === 'training' || data.mode === 'wall' || data.mode === 'coinrun')
+          ? t('result.onceMore') : t('result.again');
       }
+      again.setAttribute('aria-label', (label && label.textContent) || t('result.onceMore'));
+    }
+    const safe = document.getElementById('resRetrySafe');
+    if (safe) {
+      const lab = (again && again.getAttribute('aria-label')) || t('result.onceMore');
+      safe.setAttribute('aria-label', lab);
+      safe.hidden = data.mode === 'versus';
     }
     const menuBtn = document.getElementById('resMenu');
     if (menuBtn) {
@@ -5114,13 +5121,14 @@ const UI = {
       if (label) {
         label.textContent = hubForPlayMode(data.mode) === 'arcade' ? t('result.menuArcade') : t('result.menu');
       }
-      menuBtn.classList.toggle('result-cta-quiet', !win && data.mode === 'adventure');
+      menuBtn.classList.toggle('result-cta-quiet', retryFirst);
     }
     const screen = document.getElementById('resultScreen');
     if (screen) {
       screen.classList.toggle('is-win', !!win);
       screen.classList.toggle('is-lose', !win);
       screen.classList.toggle('is-adventure', data.mode === 'adventure');
+      screen.classList.toggle('is-retry-first', retryFirst);
     }
     state = 'result';
     scheduleResize();
