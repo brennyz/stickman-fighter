@@ -23,6 +23,7 @@ function must(cond, msg, extra) {
 
 const densSrc = fs.readFileSync(path.join(root, 'src/systems/combat-density.js'), 'utf8');
 const fighterSrc = fs.readFileSync(path.join(root, 'src/entities/fighter.js'), 'utf8');
+const gameSrc = fs.readFileSync(path.join(root, 'src/game/game.js'), 'utf8');
 const versusSrc = fs.readFileSync(path.join(root, 'src/systems/versus.js'), 'utf8');
 
 must(/function notePlayerFailTele\(/.test(densSrc), 'notePlayerFailTele missing');
@@ -34,6 +35,8 @@ must(!/m\.flying \|\| \(m\.sp && \(m\.sp\.type === 'fly'/.test(densSrc),
   'must not infer flyer from any alive bat');
 must(!/adventureTelegraphHuds\(game\.monsters\)/.test(densSrc),
   'must not steal HUD telegraph from another monster');
+must(/return tele \? \(tele \+ ' · ' \+ body\) : body/.test(gameSrc),
+  'lose tip must prefix THIS hit cue only (empty = no leftover vlieger)');
 must(/notePlayerFailTele/.test(fighterSrc), 'player hurt must note fail telegraph');
 must((fighterSrc.match(/notePlayerFailTele\(game, opts\)/g) || []).length >= 2,
   'block chip and open hit must both record THIS hit');

@@ -48,14 +48,22 @@ async function runViewport(browser, base, vp) {
     if (typeof notePlayerFailTele === 'function') {
       notePlayerFailTele(g, { attacker: { flying: false, dashT: 0, sp: { type: 'hop', art: 'slime', name: 'Bubbel' } } });
     }
+    const slimeTele = g.lastFailTele;
+    const slimeTip = (typeof combatFailRetryTip === 'function') ? combatFailRetryTip(g, '') : '';
+    if (typeof notePlayerFailTele === 'function') {
+      notePlayerFailTele(g, { failKind: 'slam' });
+    }
     const t0 = performance.now();
     try { g.finishAdventure(false); } catch (e) { return { ok: false, why: String(e) }; }
     return {
       ok: true, t0, dens, loseMs: (typeof combatLoseResultMs === 'function') ? combatLoseResultMs() : null,
-      over: !!g.over,
+      over: !!g.over, slimeTele, slimeTip, lastFailTele: g.lastFailTele,
     };
   }, 1);
   if (!seeded.ok) fail(vp.id + ' seed failed', seeded);
+  if (seeded.slimeTele !== '') fail(vp.id + ' TF-001 slime kill must clear leftover flyer', seeded);
+  if (seeded.slimeTip) fail(vp.id + ' TF-001 slime kill must not keep a flyer cue tip', seeded);
+  if (seeded.lastFailTele !== 'slam') fail(vp.id + ' slam killing hit must record slam', seeded);
 
   const shown = await page.waitForFunction(() => {
     return typeof state !== 'undefined' && state === 'result'
@@ -88,11 +96,11 @@ async function runViewport(browser, base, vp) {
     fail(vp.id + ' retry label must be Nog één keer (or locale)', ui);
   }
   if (vp.mobile && ui.againH < 64) fail(vp.id + ' retry button not fat enough', ui);
-  if (!/SLAM|CHARGE|vlieger|flyer|Nog één keer|One more time/i.test(ui.tip)) {
-    fail(vp.id + ' tip must name fail cue or retry', ui);
+  if (!/SLAM/i.test(ui.tip)) {
+    fail(vp.id + ' tip must name THIS killing hit (SLAM)', ui);
   }
   if (/^(vlieger|flyer|Flieger|volant|volador)\s*→/i.test((ui.tip || '').trim())) {
-    fail(vp.id + ' TF-001 slime killing hit must not lead with leftover flyer telegraph', ui);
+    fail(vp.id + ' TF-001 leftover flyer must not lead the tip', ui);
   }
   if (ui.fomo) fail(vp.id + ' FOMO should hide on result', ui);
 

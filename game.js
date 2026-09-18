@@ -45012,7 +45012,9 @@ class Game {
           const heat = (typeof satanHeatForLevel === 'function') ? satanHeatForLevel(lv, diff) : null;
           heatTip = (typeof satanHeatTip === 'function') ? (satanHeatTip(heat) || '') : '';
         } catch (_) {}
-        return heatTip ? `${heatTip} · ${core}` : core;
+        const body = heatTip ? `${heatTip} · ${core}` : core;
+        // TF-001: this killing hit only. Empty tele = contact (Bubbel) — do not keep vlieger.
+        return tele ? (tele + ' · ' + body) : body;
       })(),
     }));
   }
