@@ -104,6 +104,9 @@ async function run() {
       const tRunRem = typeof t === 'function' ? t('missionsUi.remainderRun') : '';
       const tPick3 = typeof t === 'function' ? t('daily.pick3.text') : '';
       const tHelp0 = (typeof i18nList === 'function' && i18nList('help.tips')[0]) || '';
+      const tFirstMin = typeof t === 'function' ? t('ui.firstMinuteAdventure') : '';
+      const tPetTip = typeof t === 'function' ? t('ui.petCoinTip') : '';
+      const petSub = txt('petScreenSub');
       let collectTitle = '';
       let collectGear = '';
       try {
@@ -127,7 +130,7 @@ async function run() {
         tPower, tProduce, tGearToast, tNameShort, collectTitle, collectGear, playState, playMode,
         tStyleLeaf, tStyleEnergy, tStyleVoid, tAdvLose, tTrainLose, tKeep, tSeasonBeat,
         tErrRetry, tOpenMode, tDaily, tFightHiccup, tAchLv70, tAchZone,
-        tPickRem, tKillRem, tRunRem, tPick3, tHelp0,
+        tPickRem, tKillRem, tRunRem, tPick3, tHelp0, tFirstMin, tPetTip, petSub,
       };
     }
     const en = snap('en');
@@ -154,6 +157,8 @@ async function run() {
       && /Defeat 12|12 monsters/i.test(en.tDaily) && /fight continues/.test(en.tFightHiccup)
       && /Hell legend/.test(en.tAchLv70) && /Zone collector/.test(en.tAchZone)
       && !/Hel-legende|Zone-verzamelaar/.test(en.tAchLv70 + en.tAchZone)
+      && /Move · punch/.test(en.tFirstMin) && !/First minute:/.test(en.tFirstMin) && en.tFirstMin.length < 56
+      && /Coin bonus/.test(en.tPetTip) && !/monster book|monsterboek/.test(en.tPetTip)
       && en.playState === 'play' && /train/.test(en.playMode);
     const deOk = /Abenteuer/i.test(de.adv) && /Sammlung/i.test(de.collect)
       && /Waffen/i.test(de.weapons) && /Einstellungen/i.test(de.settings)
@@ -184,6 +189,8 @@ async function run() {
       && /Monster/.test(de.tKillRem) && !/\bKills?\b/.test(de.tKillRem)
       && /Lauf/.test(de.tRunRem)
       && /^Funde:/.test(de.tHelp0) && !/Power-ups/i.test(de.tHelp0)
+      && /Laufen/.test(de.tFirstMin) && !/Erste Minute:|Eerste minuut:|First minute:/.test(de.tFirstMin)
+      && /Münzen-Bonus/.test(de.tPetTip) && !/Monsterbuch zähmen|monsterboek/.test(de.tPetTip)
       && de.playState === 'play' && /train/.test(de.playMode);
     const nlOk = /Avontuur/.test(nl.adv) && /Collectie/.test(nl.collect)
       && /Wapens/.test(nl.weapons) && /Instellingen/.test(nl.settings)
@@ -197,6 +204,9 @@ async function run() {
       && /mislukt/.test(nl.tErrRetry) && /Kon modus/.test(nl.tOpenMode)
       && /Versla 12/.test(nl.tDaily)
       && /Hel-legende/.test(nl.tAchLv70) && /Zone-verzamelaar/.test(nl.tAchZone)
+      && /Loop · sla/.test(nl.tFirstMin) && !/Eerste minuut:/.test(nl.tFirstMin)
+      && /Munten-bonus/.test(nl.tPetTip) && !/monsterboek/.test(nl.tPetTip)
+      && /monsterboek|arcade/.test(nl.petSub) && !/cosmetisch of assist/.test(nl.petSub)
       && nl.playState === 'play' && /train/.test(nl.playMode);
     const frOk = /Pas encore trouvé/.test(fr.tGearLock) && !EN_LOCK.test(fr.tGearLock)
       && /Aide saut/.test(fr.tPerk) && /Galet/.test(fr.tEgg) && !DUTCH_COPY.test(fr.tPerk + fr.tEgg + fr.tGearLock + fr.tPetSum)
@@ -219,6 +229,8 @@ async function run() {
       && /monstres/.test(fr.tKillRem) && !/\bkills?\b/.test(fr.tKillRem)
       && /partie/.test(fr.tRunRem) && !/\brun\b/.test(fr.tRunRem)
       && /^Orbes/.test(fr.tHelp0) && !/Power-ups/i.test(fr.tHelp0)
+      && /Cours · frappe/.test(fr.tFirstMin) && !/First minute:|Eerste minuut:/.test(fr.tFirstMin)
+      && /Bonus pièces/.test(fr.tPetTip) && !/bestiaire|monsterboek/.test(fr.tPetTip)
       && fr.playState === 'play' && /train/.test(fr.playMode);
     const esOk = /Aún no hallado/.test(es.tGearLock) && !EN_LOCK.test(es.tGearLock)
       && /Ayuda salto/.test(es.tPerk) && /Guijarro/.test(es.tEgg) && !DUTCH_COPY.test(es.tPerk + es.tEgg + es.tGearLock + es.tPetSum)
@@ -241,6 +253,8 @@ async function run() {
       && /monstruos/.test(es.tKillRem) && !/\bkills?\b/.test(es.tKillRem)
       && /partida/.test(es.tRunRem) && !/\brun\b/.test(es.tRunRem)
       && /^Orbes/.test(es.tHelp0) && !/Power-ups/i.test(es.tHelp0)
+      && /Corre · pega/.test(es.tFirstMin) && !/First minute:|Eerste minuut:/.test(es.tFirstMin)
+      && /Bonus monedas/.test(es.tPetTip) && !/bestiario|monsterboek/.test(es.tPetTip)
       && es.playState === 'play' && /train/.test(es.playMode);
     return { ok: !!(enOk && deOk && nlOk && frOk && esOk), en, de, nl, fr, es, enOk, deOk, nlOk, frOk, esOk };
   });

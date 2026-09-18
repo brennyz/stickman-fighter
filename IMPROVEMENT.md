@@ -154,6 +154,7 @@ Schrijf **1–3 regels** per sessie: datum, d#, wat, versie.
 
 | Datum (UTC) | d# | Update |
 |-------------|-----|--------|
+| 2026-09-18 | — | LANGUAGE examiner #317 P0 overlap: HUD wrap + korte firstMinute, 390px pets/gear/factories/summons clamps. Draft, geen main. **v1.18.183 / SW 393**. |
 | 2026-09-18 | — | LANGUAGE examiner #317 sprint DONE (P3): Tips Funde/Orbes. Draft, geen main. **v1.18.182 / SW 392**. |
 | 2026-09-18 | — | LANGUAGE examiner #317: mission-labels + errT mislukt keys + fight hiccups. Draft, geen main. **v1.18.178 / SW 388**. |
 | 2026-09-18 | — | LANGUAGE examiner #317: style tips DE/FR/ES + result win/lose consistency + Dutch audit. Draft, geen main. **v1.18.177 / SW 387**. |

@@ -323,9 +323,9 @@ const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const VERSION_UPDATE_SAVE_KEY = 'stickfighter_version_update_save_v1';
 const VERSION_UPDATE_FLAG_KEY = 'stickfighter_version_update_flag_v1';
 const SAVE_EXPORT_SCHEMA = 3;
-const APP_VERSION = '1.18.182';
+const APP_VERSION = '1.18.183';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 392;
+const SW_CACHE_REV = 393;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', petCoins: 0, dex: {}, summons: {}, pets: {}, activePet: null,
   eggPets: {}, activeEggPet: null, eggDaily: null,
   chestDaily: null, chestWeapons: {},
@@ -15193,6 +15193,51 @@ function refreshA11yUi() {
   } catch (_) {}
 }
 
+/** Wrap / ellipsis canvas HUD copy so a 390px-scaled fight stays one readable pill. */
+function wrapHudLines(c, text, maxW, maxLines) {
+  maxLines = Math.max(1, maxLines || 2);
+  maxW = Math.max(24, maxW || 200);
+  text = String(text == null ? '' : text).replace(/\s+/g, ' ').trim();
+  if (!text) return [''];
+  function fit(str) {
+    if (c.measureText(str).width <= maxW) return str;
+    let s = str;
+    while (s.length > 1 && c.measureText(s + '…').width > maxW) s = s.slice(0, -1);
+    return s.replace(/\s+$/, '') + '…';
+  }
+  if (c.measureText(text).width <= maxW) return [text];
+  const words = text.split(' ');
+  const lines = [];
+  let cur = '';
+  for (let i = 0; i < words.length; i++) {
+    const word = words[i];
+    const next = cur ? cur + ' ' + word : word;
+    if (cur && c.measureText(next).width > maxW) {
+      lines.push(cur);
+      cur = word;
+      if (lines.length >= maxLines - 1) {
+        lines.push(fit([cur].concat(words.slice(i + 1)).join(' ')));
+        return lines;
+      }
+      if (c.measureText(cur).width > maxW) {
+        lines.push(fit(cur));
+        cur = '';
+        if (lines.length >= maxLines) return lines;
+      }
+    } else {
+      cur = next;
+    }
+  }
+  if (cur) {
+    if (lines.length >= maxLines) {
+      lines[maxLines - 1] = fit(lines[maxLines - 1] + ' ' + cur);
+      return lines.slice(0, maxLines);
+    }
+    lines.push(c.measureText(cur).width > maxW ? fit(cur) : cur);
+  }
+  return lines.length ? lines : [fit(text)];
+}
+
 /** Canvas HUD-tekst met optionele stroke bij hoog contrast (geen flits). */
 function fillHudText(c, text, x, y, opts) {
   opts = opts || {};
@@ -21649,11 +21694,11 @@ function seedNlGameStrings() {
     hubStatSkills: '{n}/{total} · {skill} · {super}',
     hubStatSkillsEmpty: '{total} skills',
     hubStatDex: '{n}/{total} · +max HP',
-    petCoinTip: 'Speel <b>munten bonus</b> (2 goud = 1 PC). Koop of tem via het monsterboek.',
+    petCoinTip: '<b>Munten-bonus</b>: 2 goud = 1 PC',
     petSummaryTamed: 'Getemd <b>{tamed}/{total}</b> · actief <b>{active}</b> · <b>{wallet} pet coins</b>',
     petNone: 'geen',
     installSub: 'Lade · beginscherm',
-    summonQuota: 'Vandaag: {left}/{total} random oproepen',
+    summonQuota: 'Vandaag: {left}/{total} kisten',
     summonLeft: '{n} over',
     summonDone: 'Op',
     summonOpen: 'Open kist',
@@ -21669,21 +21714,21 @@ function seedNlGameStrings() {
     modeWall: '60s · combo ×3/×5/×8 hints · record-tempo + projectie in HUD · 5s waarschuwing',
     modeVersus: 'P1 links P2 rechts · best-of-3 · rematch in pauze',
     modeCoinrun: '45s munten · 2 munten = 1 pet coin · mik ↑ · vliegers +3',
-    firstMinuteAdventure: 'Eerste minuut: links lopen · rechts slaan · joy ↑ mik op vliegers · vol energy = SUPER',
-    firstMinuteTraining: 'Eerste minuut: spring rode laser · blokkeer dichtbij · energy vol → SUPER',
-    firstMinuteWall: '60s · combo ×3/×5/×8 hints · record-tempo + projectie in HUD',
-    firstMinuteVersus: 'Eerste minuut: P1 links · P2 rechts',
-    firstMinuteCoinrun: '45s munten · joy ↑ mik · roze vlieger = +3 · max 3 shuriken snel',
-    firstMinuteAdventureKb: 'Eerste minuut: A/D lopen · W springen · J/K/L · U speciaal · Shift wissel',
-    firstMinuteTrainingKb: 'Eerste minuut: spring lasers · Shift = substitutie · energy vol → U',
-    firstMinuteWallKb: '60s · combo-milestones · A/D · J/K/L · record-tempo in HUD',
-    firstMinuteVersusKb: 'Eerste minuut: P1 WASD+JKL · P2 pijltjes+1-5 · best-of-3',
-    firstMinuteCoinrunKb: 'Munten pakken · W/↑ hoger mikken · J/K shuriken · max 3 snel',
+    firstMinuteAdventure: 'Loop · sla · energy vol = SUPER',
+    firstMinuteTraining: 'Spring laser · blokkeer · SUPER',
+    firstMinuteWall: '60s · combo ×3/×5/×8',
+    firstMinuteVersus: 'P1 links · P2 rechts',
+    firstMinuteCoinrun: 'Pak munten · mik ↑',
+    firstMinuteAdventureKb: 'A/D loop · W spring · J sla · U SUPER',
+    firstMinuteTrainingKb: 'Spring lasers · Shift blok · U SUPER',
+    firstMinuteWallKb: '60s · A/D · J sla',
+    firstMinuteVersusKb: 'P1 WASD · P2 pijltjes',
+    firstMinuteCoinrunKb: 'Munten · W mik · J shuriken',
     weaponComboHint: 'Wapen 3× = ①②③ · ①+② raken → gouden ③',
     gambleOnboardTouch: 'Eerste keer gok: lage som = super-baas · hoge som = bondgenoot · Overslaan = normaal level',
     gambleOnboardKb: 'Eerste keer: sum ≤5 super-baas · sum ≥9 ally buff · Skip = geen gok',
-    ketsbamOnboardTouch: 'Omringd? Tik het midden-symbool — Ketsbam-ontsnapping · 9s cooldown',
-    ketsbamOnboardKb: 'Omringd? E of midden-symbool = Ketsbam · 9s cooldown',
+    ketsbamOnboardTouch: 'Omringd? Tik midden — Ketsbam',
+    ketsbamOnboardKb: 'Omringd? E = Ketsbam',
     tideBattleOnboardTouch: 'Eerste Tide Battle: versla {name} — geen andere golven tot klaar',
     tideBattleOnboardKb: 'Eerste Tide Battle: versla {name} — golven pauzeren tot klaar',
     langSwitchFail: 'Taal wisselen mislukt',
@@ -21702,7 +21747,7 @@ function seedNlGameStrings() {
     summonHead: 'Oproepen',
     summonSub: 'Dagelijkse kist · 10× random · wapen of pet',
     summonWhere: 'Menu → Oproepen · buit in Collectie',
-    summonQuota: 'Vandaag: {left}/{total} random oproepen',
+    summonQuota: 'Vandaag: {left}/{total} kisten',
     summonPull: 'Open kist',
     summonPullLeft: '{n} over',
     summonPullEmpty: 'Op',
@@ -22878,11 +22923,11 @@ const CATALOG_EN = {
     hubStatSkills: '{n}/{total} · {skill} · {super}',
     hubStatSkillsEmpty: '{total} specials',
     hubStatDex: '{n}/{total} · +max HP',
-    petCoinTip: 'Play <b>coin bonus</b> (2 gold = 1 PC). Buy here or tame via the monster book.',
+    petCoinTip: '<b>Coin bonus</b>: 2 gold = 1 PC',
     petSummaryTamed: 'Tamed <b>{tamed}/{total}</b> · active <b>{active}</b> · <b>{wallet} pet coins</b>',
     petNone: 'none',
     installSub: 'Home screen',
-    summonQuota: 'Today: {left}/{total} random summons',
+    summonQuota: 'Today: {left}/{total} chests',
     summonLeft: '{n} left',
     summonDone: 'Done',
     summonOpen: 'Open chest',
@@ -22898,21 +22943,21 @@ const CATALOG_EN = {
     modeWall: '60s · combo ×3/×5/×8 hints · record pace + projection in HUD · 5s warning',
     modeVersus: 'P1 left P2 right · best-of-3 · rematch in pause',
     modeCoinrun: '45s coins · 2 coins = 1 pet coin · aim ↑ · flyers +3',
-    firstMinuteAdventure: 'First minute: move left · punch right · joy ↑ aim flyers · full energy = SUPER',
-    firstMinuteTraining: 'First minute: jump the red laser · block up close · full energy → SUPER',
-    firstMinuteWall: '60s · combo ×3/×5/×8 hints · record pace + projection in HUD',
-    firstMinuteVersus: 'First minute: P1 left · P2 right',
-    firstMinuteCoinrun: '45s coins · joy ↑ aim · pink flyer = +3 · max 3 shuriken fast',
-    firstMinuteAdventureKb: 'First minute: A/D move · W jump · J/K/L · U special · Shift swap',
-    firstMinuteTrainingKb: 'First minute: jump lasers · Shift = subst · full energy → U',
-    firstMinuteWallKb: '60s · combo milestones · A/D · J/K/L · record pace in HUD',
-    firstMinuteVersusKb: 'First minute: P1 WASD+JKL · P2 arrows+1-5 · best-of-3',
-    firstMinuteCoinrunKb: 'Grab coins · W/↑ aim higher · J/K shuriken · max 3 fast',
+    firstMinuteAdventure: 'Move · punch · full energy = SUPER',
+    firstMinuteTraining: 'Jump laser · block · SUPER',
+    firstMinuteWall: '60s · combo ×3/×5/×8',
+    firstMinuteVersus: 'P1 left · P2 right',
+    firstMinuteCoinrun: 'Grab coins · aim ↑',
+    firstMinuteAdventureKb: 'A/D move · W jump · J punch · U SUPER',
+    firstMinuteTrainingKb: 'Jump lasers · Shift block · U SUPER',
+    firstMinuteWallKb: '60s · A/D · J punch',
+    firstMinuteVersusKb: 'P1 WASD · P2 arrows',
+    firstMinuteCoinrunKb: 'Coins · W aim · J shuriken',
     weaponComboHint: 'Weapon 3× = ①②③ · hit ①+② → golden ③',
     gambleOnboardTouch: 'First gamble: low sum = super-boss · high sum = ally · Skip = normal level',
     gambleOnboardKb: 'First time: sum ≤5 super-boss · sum ≥9 ally buff · Skip = no gamble',
-    ketsbamOnboardTouch: 'Surrounded? Tap the center symbol — Ketsbam escape · 9s cooldown',
-    ketsbamOnboardKb: 'Surrounded? E or center symbol = Ketsbam · 9s cooldown',
+    ketsbamOnboardTouch: 'Surrounded? Tap center — Ketsbam',
+    ketsbamOnboardKb: 'Surrounded? E = Ketsbam',
     tideBattleOnboardTouch: 'First Tide Battle: defeat {name} — no other waves until done',
     tideBattleOnboardKb: 'First Tide Battle: defeat {name} — waves pause until done',
     langSwitchFail: 'Language switch failed',
@@ -22931,7 +22976,7 @@ const CATALOG_EN = {
     summonHead: 'Summons',
     summonSub: 'Daily chest · 10× random · weapon or pet',
     summonWhere: 'Menu → Summons · loot in Collection',
-    summonQuota: 'Today: {left}/{total} random summons',
+    summonQuota: 'Today: {left}/{total} chests',
     summonPull: 'Open chest',
     summonPullLeft: '{n} left',
     summonPullEmpty: 'Done',
@@ -24617,7 +24662,7 @@ const CATALOG_DE_CHROME = {
     hubStatStyle: '{n}/{total} Outfits',
     hubStatGear: '{n}/{total} Items',
     hubStatDex: '{n}/{total} · +max HP',
-    petCoinTip: 'Spiel <b>Münzen-Bonus</b> (2 Gold = 1 PC). Kaufen oder im Monsterbuch zähmen.',
+    petCoinTip: '<b>Münzen-Bonus</b>: 2 Gold = 1 PC',
     petSummaryTamed: 'Gezähmt <b>{tamed}/{total}</b> · aktiv <b>{active}</b> · <b>{wallet} Pet-Coins</b>',
     petNone: 'keine',
     installSub: 'Ein Icon, wie eine echte App',
@@ -24628,21 +24673,21 @@ const CATALOG_DE_CHROME = {
     modeWall: '60s · Combo ×3/×5/×8 · Rekord-Tempo + Projektion im HUD',
     modeVersus: 'P1 links P2 rechts · Best-of-3 · Rematch in Pause',
     modeCoinrun: '45s Münzen · 2 Münzen = 1 Pet-Coin · zielen ↑ · Flieger +3',
-    firstMinuteAdventure: 'Erste Minute: links laufen · rechts schlagen · Joy ↑ Flieger · volle Energy = SUPER',
-    firstMinuteTraining: 'Erste Minute: roten Laser springen · nah blocken · volle Energy → SUPER',
-    firstMinuteWall: '60s · Combo ×3/×5/×8 · Rekord-Tempo + Projektion im HUD',
-    firstMinuteVersus: 'Erste Minute: P1 links · P2 rechts',
-    firstMinuteCoinrun: '45s Münzen · Joy ↑ zielen · rosa Flieger = +3 · max 3 Shuriken schnell',
-    firstMinuteAdventureKb: 'Erste Minute: A/D laufen · W springen · J/K/L · U Spezial · Shift Wechsel',
-    firstMinuteTrainingKb: 'Erste Minute: Laser springen · Shift = Subst · volle Energy → U',
-    firstMinuteWallKb: '60s · Combo-Meilensteine · A/D · J/K/L · Rekord-Tempo im HUD',
-    firstMinuteVersusKb: 'Erste Minute: P1 WASD+JKL · P2 Pfeile+1-5 · Best-of-3',
-    firstMinuteCoinrunKb: 'Münzen holen · W/↑ höher zielen · J/K Shuriken · max 3 schnell',
+    firstMinuteAdventure: 'Laufen · schlagen · Energy voll = SUPER',
+    firstMinuteTraining: 'Laser springen · blocken · SUPER',
+    firstMinuteWall: '60s · Combo ×3/×5/×8',
+    firstMinuteVersus: 'P1 links · P2 rechts',
+    firstMinuteCoinrun: 'Münzen · zielen ↑',
+    firstMinuteAdventureKb: 'A/D laufen · W springen · J schlagen · U SUPER',
+    firstMinuteTrainingKb: 'Laser springen · Shift block · U SUPER',
+    firstMinuteWallKb: '60s · A/D · J schlagen',
+    firstMinuteVersusKb: 'P1 WASD · P2 Pfeile',
+    firstMinuteCoinrunKb: 'Münzen · W zielen · J Shuriken',
     weaponComboHint: 'Waffe 3× = ①②③ · ①+② treffen → goldenes ③',
     gambleOnboardTouch: 'Erste Wette: niedrige Summe = Super-Boss · hohe = Verbündeter · Skip = normal',
     gambleOnboardKb: 'Erstes Mal: Summe ≤5 Super-Boss · ≥9 Verbündeter · Skip = keine Wette',
-    ketsbamOnboardTouch: 'Umzingelt? Mitte tippen — Ketsbam-Flucht · 9s Cooldown',
-    ketsbamOnboardKb: 'Umzingelt? E oder Mitte = Ketsbam · 9s Cooldown',
+    ketsbamOnboardTouch: 'Umzingelt? Mitte tippen — Ketsbam',
+    ketsbamOnboardKb: 'Umzingelt? E = Ketsbam',
     tideBattleOnboardTouch: 'Erste Tide Battle: {name} besiegen — keine anderen Wellen bis fertig',
     tideBattleOnboardKb: 'Erste Tide Battle: {name} besiegen — Wellen pausieren',
     langSwitchFail: 'Sprache wechseln fehlgeschlagen',
@@ -25314,7 +25359,19 @@ overlayI18nCatalog(CATALOG_FR, {
     errSummonOpen: 'Coffres impossibles à ouvrir',
     dexAllBiomes: 'Tous les biomes',
     dexBiome: { farm: 'Ferme', zoo: 'Zoo', sea: 'Mer', wild: 'Bois', crypt: 'Crypte', scrap: 'Ferraille', frost: 'Givre', classic: 'Classique', secret: 'Secret' },
-    petCoinTip: 'Joue <b>bonus pièces</b> (2 or = 1 PC). Achète ou apprivoise via le bestiaire.',
+    petCoinTip: '<b>Bonus pièces</b> : 2 or = 1 PC',
+    firstMinuteAdventure: 'Cours · frappe · énergie pleine = SUPER',
+    firstMinuteTraining: 'Saute laser · bloque · SUPER',
+    firstMinuteWall: '60s · combo ×3/×5/×8',
+    firstMinuteVersus: 'P1 gauche · P2 droite',
+    firstMinuteCoinrun: 'Pièces · vise ↑',
+    firstMinuteAdventureKb: 'A/D cours · W saute · J frappe · U SUPER',
+    firstMinuteTrainingKb: 'Saute lasers · Shift bloque · U SUPER',
+    firstMinuteWallKb: '60s · A/D · J frappe',
+    firstMinuteVersusKb: 'P1 WASD · P2 flèches',
+    firstMinuteCoinrunKb: 'Pièces · W vise · J shuriken',
+    ketsbamOnboardTouch: 'Cerné ? Tape le centre — Ketsbam',
+    ketsbamOnboardKb: 'Cerné ? E = Ketsbam',
     petSummaryTamed: 'Apprivoisés <b>{tamed}/{total}</b> · actif <b>{active}</b> · <b>{wallet} pet coins</b>',
     petNone: 'aucun',
     petTamedAssist: 'Apprivoisé · aide en aventure',
@@ -25951,7 +26008,19 @@ overlayI18nCatalog(CATALOG_ES, {
     errSummonOpen: 'No se pudieron abrir los cofres',
     dexAllBiomes: 'Todos los biomas',
     dexBiome: { farm: 'Granja', zoo: 'Zoo', sea: 'Mar', wild: 'Bosque', crypt: 'Cripta', scrap: 'Chatarra', frost: 'Escarcha', classic: 'Clásico', secret: 'Secreto' },
-    petCoinTip: 'Juega <b>bonus monedas</b> (2 oro = 1 PC). Compra o doma en el bestiario.',
+    petCoinTip: '<b>Bonus monedas</b>: 2 oro = 1 PC',
+    firstMinuteAdventure: 'Corre · pega · energía llena = SUPER',
+    firstMinuteTraining: 'Salta láser · bloquea · SUPER',
+    firstMinuteWall: '60s · combo ×3/×5/×8',
+    firstMinuteVersus: 'P1 izq · P2 der',
+    firstMinuteCoinrun: 'Monedas · apunta ↑',
+    firstMinuteAdventureKb: 'A/D corre · W salta · J pega · U SUPER',
+    firstMinuteTrainingKb: 'Salta láseres · Shift bloquea · U SUPER',
+    firstMinuteWallKb: '60s · A/D · J pega',
+    firstMinuteVersusKb: 'P1 WASD · P2 flechas',
+    firstMinuteCoinrunKb: 'Monedas · W apunta · J shuriken',
+    ketsbamOnboardTouch: '¿Rodeado? Toca el centro — Ketsbam',
+    ketsbamOnboardKb: '¿Rodeado? E = Ketsbam',
     petSummaryTamed: 'Domados <b>{tamed}/{total}</b> · activo <b>{active}</b> · <b>{wallet} pet coins</b>',
     petNone: 'ninguno',
     petTamedAssist: 'Domado · ayuda en aventura',
@@ -26582,7 +26651,19 @@ overlayI18nCatalog(CATALOG_DE, {
     gearSub: '5 Slots · Look vs Stats · Level und Zeit',
     dexAllBiomes: 'Alle Biome',
     dexBiome: { farm: 'Farm', zoo: 'Zoo', sea: 'Meer', wild: 'Wald', crypt: 'Krypta', scrap: 'Schrott', frost: 'Frost', classic: 'Klassisch', secret: 'Geheim' },
-    petCoinTip: 'Spiel <b>Münzen-Bonus</b> (2 Gold = 1 PC). Kaufen oder im Monsterbuch zähmen.',
+    petCoinTip: '<b>Münzen-Bonus</b>: 2 Gold = 1 PC',
+    firstMinuteAdventure: 'Laufen · schlagen · Energy voll = SUPER',
+    firstMinuteTraining: 'Laser springen · blocken · SUPER',
+    firstMinuteWall: '60s · Combo ×3/×5/×8',
+    firstMinuteVersus: 'P1 links · P2 rechts',
+    firstMinuteCoinrun: 'Münzen · zielen ↑',
+    firstMinuteAdventureKb: 'A/D laufen · W springen · J schlagen · U SUPER',
+    firstMinuteTrainingKb: 'Laser springen · Shift block · U SUPER',
+    firstMinuteWallKb: '60s · A/D · J schlagen',
+    firstMinuteVersusKb: 'P1 WASD · P2 Pfeile',
+    firstMinuteCoinrunKb: 'Münzen · W zielen · J Shuriken',
+    ketsbamOnboardTouch: 'Umzingelt? Mitte tippen — Ketsbam',
+    ketsbamOnboardKb: 'Umzingelt? E = Ketsbam',
     petSummaryTamed: 'Gezähmt <b>{tamed}/{total}</b> · aktiv <b>{active}</b> · <b>{wallet} Pet-Coins</b>',
     petNone: 'keine',
     petTamedAssist: 'Gezähmt · Assist im Abenteuer',
@@ -40920,11 +41001,14 @@ function drawTelegraphBar(c, game, tele, y) {
   }
   c.font = '900 15px sans-serif';
   c.textAlign = 'center';
+  const teleLabel = typeof wrapHudLines === 'function'
+    ? wrapHudLines(c, tele.label, barW - (tele.icon ? 40 : 16), 1)[0]
+    : tele.label;
   if (typeof fillHudText === 'function') {
-    fillHudText(c, tele.label, W / 2, y, { fill: tele.color, strokeW: 3 });
+    fillHudText(c, teleLabel, W / 2, y, { fill: tele.color, strokeW: 3 });
   } else {
     c.fillStyle = tele.color;
-    c.fillText(tele.label, W / 2, y);
+    c.fillText(teleLabel, W / 2, y);
   }
   c.fillStyle = 'rgba(255,255,255,.2)';
   game.rr(c, bx, y + 8, barW, 8, 4);
@@ -44675,24 +44759,31 @@ class Game {
       }
       c.font = '600 15px -apple-system, sans-serif';
       c.textAlign = 'center';
-      const tw = c.measureText(hintTxt).width;
+      const maxW = Math.min(W * 0.72, 500);
+      const lines = typeof wrapHudLines === 'function' ? wrapHudLines(c, hintTxt, maxW, 2) : [hintTxt];
+      const lineH = 18;
+      let tw = 0;
+      for (let i = 0; i < lines.length; i++) tw = Math.max(tw, c.measureText(lines[i]).width);
       const padX = 16;
+      const pillH = 12 + lines.length * lineH;
       const hintY = (this.mode === 'adventure' && this.advHudBottom > 0)
         ? Math.max(H * 0.2, this.advHudBottom + 20)
         : H * 0.2;
-      const pillY = hintY - 24;
+      const pillY = hintY - 20;
       c.fillStyle = 'rgba(6,10,24,.78)';
-      this.rr(c, W / 2 - tw / 2 - padX, pillY, tw + padX * 2, 30, 10);
+      this.rr(c, W / 2 - tw / 2 - padX, pillY, tw + padX * 2, pillH, 10);
       c.fill();
       c.strokeStyle = 'rgba(255,215,94,.35)';
       c.lineWidth = a11yHighContrast() ? 2.5 : 1.5;
-      this.rr(c, W / 2 - tw / 2 - padX, pillY, tw + padX * 2, 30, 10);
+      this.rr(c, W / 2 - tw / 2 - padX, pillY, tw + padX * 2, pillH, 10);
       c.stroke();
-      fillHudText(c, hintTxt, W / 2, hintY, {
-        fill: '#fff',
-        stroke: 'rgba(0,0,0,.85)',
-        strokeW: a11yHighContrast() ? 3.5 : 0,
-      });
+      for (let i = 0; i < lines.length; i++) {
+        fillHudText(c, lines[i], W / 2, pillY + 16 + i * lineH, {
+          fill: '#fff',
+          stroke: 'rgba(0,0,0,.85)',
+          strokeW: a11yHighContrast() ? 3.5 : 0,
+        });
+      }
       c.globalAlpha = 1;
     }
     try { if (typeof drawAimTutorial === 'function') drawAimTutorial(c, this); } catch (_) {}
@@ -46081,7 +46172,10 @@ class Game {
         }
         c.font = '800 11px sans-serif';
         c.textAlign = 'center';
-        fillHudText(c, tele.label, W / 2, 102, { fill: tele.color, strokeW: a11yHighContrast() ? 3 : 0 });
+        const trainTeleLabel = typeof wrapHudLines === 'function'
+          ? wrapHudLines(c, tele.label, barW - (tele.icon ? 36 : 12), 1)[0]
+          : tele.label;
+        fillHudText(c, trainTeleLabel, W / 2, 102, { fill: tele.color, strokeW: a11yHighContrast() ? 3 : 0 });
         c.fillStyle = 'rgba(255,255,255,.15)';
         this.rr(c, bx, 108, barW, 5, 3);
         c.fill();
@@ -51019,7 +51113,7 @@ const UI = {
           wallet,
         }) +
         (petChips ? `<div style="margin-top:6px;line-height:1.7">${petChips}</div>` : '') +
-        `<div style="margin-top:6px;font-size:12px;opacity:.85">${t('ui.petCoinTip')}</div>`;
+        `<div class="pet-coin-tip">${t('ui.petCoinTip')}</div>`;
     }
     const list = document.getElementById('petList');
     if (!list) return;

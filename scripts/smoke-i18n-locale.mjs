@@ -26,6 +26,7 @@ const ui = fs.readFileSync(path.join(root, 'src/ui/ui.js'), 'utf8');
 const locales = fs.readFileSync(path.join(root, 'src/i18n/catalog-locales.js'), 'utf8');
 const start = fs.readFileSync(path.join(root, 'src/boot/start.js'), 'utf8');
 const deChrome = fs.readFileSync(path.join(root, 'src/i18n/catalog-de.js'), 'utf8');
+const a11y = fs.readFileSync(path.join(root, 'src/systems/a11y.js'), 'utf8');
 const manifest = fs.readFileSync(path.join(root, 'src/manifest.json'), 'utf8');
 const catalogEn = catalog.split('const CATALOG_EN')[1] || '';
 const i18nEs = (i18n.split(/\n\s+es:\s+\{/)[1] || '').split(/\n\s+zh:\s+\{/)[0];
@@ -395,4 +396,24 @@ if (/userMsg \|\| 'Actie mislukt/.test(fs.readFileSync(path.join(root, 'src/core
 if (/Hiccup — spel gaat door'\)/.test(missions)) fail('sfReportError default still Dutch');
 if (/'Speler hiccup/.test(game)) fail('player update hiccup still Dutch');
 
-console.log('SMOKE_OK i18n-locale: Tips/VERLOREN + #273 coverage + #283 overlays + 2026-09-18 errT/missions');
+if (/firstMinuteAdventure: 'Eerste minuut:/.test(catalog)) fail('NL firstMinute still a text wall');
+if (/firstMinuteAdventure: 'First minute:/.test(catalog)) fail('EN firstMinute still a text wall');
+if (/firstMinuteAdventure: 'Erste Minute:/.test(deChrome + locales)) fail('DE firstMinute still a text wall');
+if (!/firstMinuteAdventure: 'Loop · sla/.test(catalog)) fail('NL firstMinuteAdventure must be a short verb phrase');
+if (!/firstMinuteAdventure: 'Move · punch/.test(catalog)) fail('EN firstMinuteAdventure must be a short verb phrase');
+if (!/firstMinuteAdventure: 'Laufen · schlagen/.test(deChrome + locales)) fail('DE firstMinuteAdventure must be a short verb phrase');
+if (!/firstMinuteAdventure: 'Cours · frappe/.test(locales)) fail('FR firstMinute missing — EN/NL leak');
+if (!/firstMinuteAdventure: 'Corre · pega/.test(locales)) fail('ES firstMinute missing — EN/NL leak');
+if (!/function wrapHudLines/.test(a11y)) fail('wrapHudLines missing');
+if (!/wrapHudLines\(c, hintTxt/.test(game)) fail('HUD hint must wrap via wrapHudLines');
+if (/Koop of tem via het monsterboek/.test(catalog)) fail('NL petCoinTip still a wall');
+if (/Buy here or tame via the monster book/.test(catalog)) fail('EN petCoinTip still a wall');
+if (/Kaufen oder im Monsterbuch zähmen/.test(deChrome + locales)) fail('DE petCoinTip still a wall');
+if (/Dex-pets via monsterboek · Ei-pets via dagelijkse/.test(html)) fail('petScreenSub HTML still a wall');
+if (!/max-width: 430px/.test(css)) fail('430px overlap media missing');
+if (!/\.buildings-card-does/.test(css) || !/-webkit-line-clamp: 2/.test(css)) {
+  fail('buildings-card-does clamp missing');
+}
+if (!/\.pet-coin-tip/.test(css)) fail('pet-coin-tip clamp missing');
+
+console.log('SMOKE_OK i18n-locale: Tips/VERLOREN + #273 coverage + #283 overlays + 2026-09-18 overlap HUD wrap');

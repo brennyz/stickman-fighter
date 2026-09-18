@@ -151,3 +151,18 @@ Versie: **v1.18.181 / SW 391**. Draft PR, geen main-merge. Deel-URL `speel.html`
 EN/NL blijven *Power-ups*. Examiner-sprint #317 **DONE** (P3). Draft, geen main.
 
 Versie: **v1.18.182 / SW 392**. Deel-URL `speel.html`.
+
+## Examiner P0 — overlap / cramped copy (HUD + collection)
+
+| locatie | probleem | fix |
+|---------|----------|-----|
+| HUD `firstMinute*` | Lange single-line pill overlapte combo/HP op 390px-scale | Korte verb-zin (geen “Eerste minuut:”) + `wrapHudLines` max 2 regels, pill ≤72% W |
+| FR/ES `ui.firstMinute*` | Keys ontbraken → EN/NL wall | Overlay-keys |
+| HUD telegraph | Lange labels over de balk | 1-regel ellipsis via `wrapHudLines` |
+| pets `petCoinTip` + HTML `#petScreenSub` | Tekstmuur boven de lijst | 1 regel + 2-line clamp |
+| gear/factories/summons | Unclamped does/detail/filter/quota | 2–3 line clamp + 430px card/canvas/right-col |
+| ketsbam onboard | Lange HUD-hint | Tik midden — Ketsbam |
+
+Eerste 30s = learn-by-doing, één primaire actie. Versus ongemoeid. Draft, geen main.
+
+Versie: **v1.18.183 / SW 393**. Deel-URL `speel.html`.

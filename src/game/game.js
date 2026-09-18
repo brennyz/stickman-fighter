@@ -57,11 +57,14 @@ function drawTelegraphBar(c, game, tele, y) {
   }
   c.font = '900 15px sans-serif';
   c.textAlign = 'center';
+  const teleLabel = typeof wrapHudLines === 'function'
+    ? wrapHudLines(c, tele.label, barW - (tele.icon ? 40 : 16), 1)[0]
+    : tele.label;
   if (typeof fillHudText === 'function') {
-    fillHudText(c, tele.label, W / 2, y, { fill: tele.color, strokeW: 3 });
+    fillHudText(c, teleLabel, W / 2, y, { fill: tele.color, strokeW: 3 });
   } else {
     c.fillStyle = tele.color;
-    c.fillText(tele.label, W / 2, y);
+    c.fillText(teleLabel, W / 2, y);
   }
   c.fillStyle = 'rgba(255,255,255,.2)';
   game.rr(c, bx, y + 8, barW, 8, 4);
@@ -3812,24 +3815,31 @@ class Game {
       }
       c.font = '600 15px -apple-system, sans-serif';
       c.textAlign = 'center';
-      const tw = c.measureText(hintTxt).width;
+      const maxW = Math.min(W * 0.72, 500);
+      const lines = typeof wrapHudLines === 'function' ? wrapHudLines(c, hintTxt, maxW, 2) : [hintTxt];
+      const lineH = 18;
+      let tw = 0;
+      for (let i = 0; i < lines.length; i++) tw = Math.max(tw, c.measureText(lines[i]).width);
       const padX = 16;
+      const pillH = 12 + lines.length * lineH;
       const hintY = (this.mode === 'adventure' && this.advHudBottom > 0)
         ? Math.max(H * 0.2, this.advHudBottom + 20)
         : H * 0.2;
-      const pillY = hintY - 24;
+      const pillY = hintY - 20;
       c.fillStyle = 'rgba(6,10,24,.78)';
-      this.rr(c, W / 2 - tw / 2 - padX, pillY, tw + padX * 2, 30, 10);
+      this.rr(c, W / 2 - tw / 2 - padX, pillY, tw + padX * 2, pillH, 10);
       c.fill();
       c.strokeStyle = 'rgba(255,215,94,.35)';
       c.lineWidth = a11yHighContrast() ? 2.5 : 1.5;
-      this.rr(c, W / 2 - tw / 2 - padX, pillY, tw + padX * 2, 30, 10);
+      this.rr(c, W / 2 - tw / 2 - padX, pillY, tw + padX * 2, pillH, 10);
       c.stroke();
-      fillHudText(c, hintTxt, W / 2, hintY, {
-        fill: '#fff',
-        stroke: 'rgba(0,0,0,.85)',
-        strokeW: a11yHighContrast() ? 3.5 : 0,
-      });
+      for (let i = 0; i < lines.length; i++) {
+        fillHudText(c, lines[i], W / 2, pillY + 16 + i * lineH, {
+          fill: '#fff',
+          stroke: 'rgba(0,0,0,.85)',
+          strokeW: a11yHighContrast() ? 3.5 : 0,
+        });
+      }
       c.globalAlpha = 1;
     }
     try { if (typeof drawAimTutorial === 'function') drawAimTutorial(c, this); } catch (_) {}
@@ -5218,7 +5228,10 @@ class Game {
         }
         c.font = '800 11px sans-serif';
         c.textAlign = 'center';
-        fillHudText(c, tele.label, W / 2, 102, { fill: tele.color, strokeW: a11yHighContrast() ? 3 : 0 });
+        const trainTeleLabel = typeof wrapHudLines === 'function'
+          ? wrapHudLines(c, tele.label, barW - (tele.icon ? 36 : 12), 1)[0]
+          : tele.label;
+        fillHudText(c, trainTeleLabel, W / 2, 102, { fill: tele.color, strokeW: a11yHighContrast() ? 3 : 0 });
         c.fillStyle = 'rgba(255,255,255,.15)';
         this.rr(c, bx, 108, barW, 5, 3);
         c.fill();
