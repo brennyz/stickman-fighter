@@ -43,7 +43,7 @@
       "id": "w-20260918T123617",
       "from": "user",
       "text": "KEEP IMPROVING #317: scan pets+gear for NL fallback / EN leak in DE/FR/ES + NL overflow; fix 390px overlap; re-run i18n/buildings/gear/summon smokes. Draft only, no Versus, speel.html.",
-      "status": "open",
+      "status": "done-in-code",
       "updated": "2026-09-18"
     },
     {
@@ -1073,6 +1073,10 @@
   ],
   "sessionLog": [
     {
+      "at": "2026-09-18T12:40:47Z",
+      "summary": "LANGUAGE examiner #317: pets/gear DE/FR/ES keys, egg names, 390px clamp, EN gear wipe fix. Draft, geen main. v1.18.174 / SW 384"
+    },
+    {
       "at": "2026-09-18T12:36:17Z",
       "summary": "examiner P0: pets/gear locale + 390px overflow (start)"
     },
@@ -1167,10 +1171,6 @@
     {
       "at": "2026-09-14T13:00:52Z",
       "summary": "Training hit-reg: capsule + face-naar-robot; W-aim J/K chippen RabbitRobot. Floaters niet links clippen. Resultaat VERLOREN/YOU LOST. v1.18.158 / SW 368."
-    },
-    {
-      "at": "2026-09-14T12:46:48Z",
-      "summary": "P1 entry: Android-first landing — één install-blok, geen iPad op Android · v1.18.157 / SW 367"
     }
   ],
   "implementedFeaturesSummary": "d18 char select deel 1+2 (v1.11.1-2); Mats coinrun + shuriken mik/vliegers + anti-spam (v1.12.0); speel.html (v1.12.2+). Zie HANDOFF-ZOEKINDEX.md en improvement-d20-bag.json userFeatureLog.",
