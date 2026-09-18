@@ -21,7 +21,7 @@
     "pushBlocked": null,
     "shareUrl": "https://brennyz.github.io/stickman-fighter/speel.html",
     "note": "Draft #323 keep-improving: training/arcade <3s retry, tap-safe, onceMore i18n. Versus + speel.html untouched. No main.",
-    "updated": "2026-09-18T13:20:00Z",
+    "updated": "2026-09-18T13:23:13Z",
     "localMainHead": "a18fc9e67633773cb18b638c64c9a86916d02d27",
     "remoteMainHead": "a18fc9e67633773cb18b638c64c9a86916d02d27"
   },
@@ -51,9 +51,9 @@
       "id": "w-20260918T131800",
       "from": "user",
       "text": "Good — #323 draft. KEEP IMPROVING on same branch: (1) Training / other modes same <3s primary retry if missing. (2) Tap-anywhere-safe zone so mistaps don’t open Menu. (3) i18n for Nog één keer in EN/DE/FR/ES. Re-smoke flappy-retry. No Versus, no payments, no main.",
-      "status": "in-progress",
+      "status": "done-in-code",
       "updated": "2026-09-18",
-      "notes": "Same #323: training/wall/coinrun delay+CTA, tap-safe vs Menu, onceMore locales."
+      "notes": "Draft #323: training/wall/coinrun 700ms + onceMore; #resRetrySafe tap-safe (splash dismissed); EN/DE/FR/ES. smoke:flappy-retry 731ms/725ms. Versus + speel.html untouched."
     },
     {
       "id": "w-20260918T131100",
@@ -1082,6 +1082,10 @@
   ],
   "sessionLog": [
     {
+      "at": "2026-09-18T13:23:13Z",
+      "summary": "#323 keep-improving: training/arcade <3s retry, tap-safe vs Menu, onceMore EN/DE/FR/ES. smoke:flappy-retry groen. v1.18.174 / SW 384. Draft, niet main."
+    },
+    {
       "at": "2026-09-18T13:17:02Z",
       "summary": "Adventure Flappy-retry #323: death CTA Nog één keer in ~700ms, no dice maze, FOMO off result. v1.18.173 / SW 383. Draft."
     },
@@ -1176,10 +1180,6 @@
     {
       "at": "2026-09-14T12:45:42Z",
       "summary": "P1 entry: Android-first landing — geen iPad-blok op Android"
-    },
-    {
-      "at": "2026-09-14T12:44:05Z",
-      "summary": "Toast-wachtrij: één tegelijk, Android Chrome/TWA zelfde HTML onder statusbalk · v1.18.156 / SW 366"
     }
   ],
   "implementedFeaturesSummary": "d18 char select deel 1+2 (v1.11.1-2); Mats coinrun + shuriken mik/vliegers + anti-spam (v1.12.0); speel.html (v1.12.2+). Zie HANDOFF-ZOEKINDEX.md en improvement-d20-bag.json userFeatureLog.",
