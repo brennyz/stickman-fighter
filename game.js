@@ -323,9 +323,9 @@ const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const VERSION_UPDATE_SAVE_KEY = 'stickfighter_version_update_save_v1';
 const VERSION_UPDATE_FLAG_KEY = 'stickfighter_version_update_flag_v1';
 const SAVE_EXPORT_SCHEMA = 3;
-const APP_VERSION = '1.18.173';
+const APP_VERSION = '1.18.174';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 383;
+const SW_CACHE_REV = 384;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', petCoins: 0, dex: {}, summons: {}, pets: {}, activePet: null,
   eggPets: {}, activeEggPet: null, eggDaily: null,
   chestDaily: null, chestWeapons: {},
@@ -48267,17 +48267,40 @@ const UI = {
     }
   },
 
+  _syncFomoHubLock(open) {
+    const on = !!open;
+    const menu = document.getElementById('menuScreen');
+    const el = document.getElementById('fomoRitual');
+    document.body.classList.toggle('is-fomo', on);
+    if (menu) {
+      menu.classList.toggle('is-fomo', on);
+      const chrome = menu.querySelector('.menu-chrome');
+      const stage = menu.querySelector('.menu-stage');
+      [chrome, stage].forEach((node) => {
+        if (!node) return;
+        if (on) node.setAttribute('inert', '');
+        else node.removeAttribute('inert');
+      });
+    }
+    if (el) el.setAttribute('aria-hidden', on ? 'false' : 'true');
+  },
+
   hideFomoRitual() {
     const el = document.getElementById('fomoRitual');
     if (el) el.hidden = true;
+    this._syncFomoHubLock(false);
   },
 
   showFomoRitual(force) {
     const el = document.getElementById('fomoRitual');
     if (!el) return;
-    if (!force && this._fomoRitualHide) { el.hidden = true; return; }
-    if (!force && typeof fomoRitualPending === 'function' && !fomoRitualPending()) {
+    const hideQuiet = () => {
       el.hidden = true;
+      this._syncFomoHubLock(false);
+    };
+    if (!force && this._fomoRitualHide) { hideQuiet(); return; }
+    if (!force && typeof fomoRitualPending === 'function' && !fomoRitualPending()) {
+      hideQuiet();
       return;
     }
     const rows = document.getElementById('fomoRitualRows');
@@ -48332,6 +48355,7 @@ const UI = {
     const dismiss = document.getElementById('fomoRitualDismiss');
     if (dismiss) dismiss.setAttribute('aria-label', tOr('fomo.ritualDismiss', 'Sluiten'));
     el.hidden = false;
+    this._syncFomoHubLock(true);
   },
 
   runFomoRitualCta() {
@@ -50323,11 +50347,13 @@ const UI = {
       drawStyleLookPreview(cc, st, 80, 86);
       el.appendChild(cv);
       const cap = document.createElement('div');
+      cap.className = 'style-card-name';
       cap.style.fontSize = '13px';
       cap.style.color = st.accent;
       cap.textContent = styleLabel(st);
       el.appendChild(cap);
       const bonus = document.createElement('div');
+      bonus.className = 'style-card-bonus';
       bonus.style.fontSize = '11px';
       bonus.style.fontWeight = '800';
       bonus.style.color = ok ? '#7cf5ff' : '#8fa3d9';
@@ -50336,6 +50362,7 @@ const UI = {
       bonus.style.opacity = ok ? '1' : '0.55';
       el.appendChild(bonus);
       const tip = document.createElement('div');
+      tip.className = 'style-card-tip';
       tip.style.fontSize = '10px';
       tip.style.opacity = '0.72';
       tip.style.marginTop = '4px';
@@ -50343,6 +50370,7 @@ const UI = {
       tip.textContent = styleLabel(st, 'tooltip') || styleLabel(st, 'hint');
       el.appendChild(tip);
       const sub = document.createElement('div');
+      sub.className = 'style-card-sub';
       sub.style.fontSize = '11px';
       sub.style.fontWeight = '600';
       sub.style.opacity = '0.75';

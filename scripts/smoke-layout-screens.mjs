@@ -26,6 +26,16 @@ const sw = fs.readFileSync(path.join(root, 'sw.js'), 'utf8');
 
 must(/--z-back:/.test(css) && /--z-sticky:/.test(css) && /--z-sheet:/.test(css),
   'missing layout z-index tokens');
+must(/--z-fomo:/.test(css) && /--z-toast:/.test(css), 'missing FOMO/toast z tokens (EX-021)');
+must(/#menuScreen\.is-fomo/.test(css) && /_syncFomoHubLock/.test(fs.readFileSync(path.join(root, 'src/ui/ui.js'), 'utf8')),
+  'FOMO hub lock (is-fomo + _syncFomoHubLock) missing');
+must(/\.hub-tile-featured::before[\s\S]{0,180}right:\s*36px/.test(css),
+  'featured hub badge must sit left of the › column');
+must(/\.settings-home-tile[\s\S]{0,160}minmax\(0,\s*1fr\)/.test(css),
+  'settings home tile must shrink columns on narrow rails');
+must(/\.style-card-tip[\s\S]{0,80}-webkit-line-clamp:\s*3/.test(css),
+  'style card copy must clamp instead of overflowing');
+must(/EX-021/.test(css), 'EX-021 FOMO overlay contract missing from CSS');
 must(/--sticky-under-back:/.test(css), 'missing --sticky-under-back token');
 must(/\.hub-tile \{[\s\S]*?overflow:\s*hidden/.test(css), 'hub tiles must clip overflow');
 must(/-webkit-line-clamp:\s*2/.test(css), 'hub tile titles/subs must clamp');
@@ -324,6 +334,130 @@ async function runAt(browser, width, height, label) {
   if (pets.overflow) report.fails.push({ where: 'pets overflow', pets });
   if (pets.cardHits.length) report.fails.push({ where: 'pet cards overlap', pets });
   if (!pets.tabsUnderBack) report.fails.push({ where: 'pet tabs stacked on back', pets });
+
+  await page.evaluate(() => {
+    document.querySelectorAll('.screen').forEach((el) => el.classList.remove('active'));
+    const menu = document.getElementById('menuScreen');
+    if (menu) menu.classList.add('active');
+    if (typeof UI === 'object' && UI) {
+      UI._fomoRitualHide = false;
+      UI._fomoRitualForce = true;
+      if (UI.showFomoRitual) UI.showFomoRitual(true);
+    }
+  });
+  const fomo = await page.evaluate(() => {
+    const overlay = document.getElementById('fomoRitual');
+    const sheet = overlay && overlay.querySelector('.fomo-ritual-sheet');
+    const x = document.getElementById('fomoRitualDismiss');
+    const menu = document.getElementById('menuScreen');
+    const chrome = menu && menu.querySelector('.menu-chrome');
+    const tile = document.getElementById('btnAdventure');
+    const toast = document.getElementById('toastHost');
+    const xr = x && x.getBoundingClientRect();
+    const sr = sheet && sheet.getBoundingClientRect();
+    const tr = tile && tile.getBoundingClientRect();
+    const hitAt = (el) => {
+      if (!el) return null;
+      const r = el.getBoundingClientRect();
+      const node = document.elementFromPoint(r.left + r.width / 2, r.top + r.height / 2);
+      return node && (node.id || node.className || node.tagName);
+    };
+    const tileHit = tr
+      ? document.elementFromPoint(tr.left + tr.width / 2, tr.top + Math.min(24, tr.height / 2))
+      : null;
+    const tileSteals = !!(tileHit && tile && (tile === tileHit || tile.contains(tileHit)
+      || (tileHit.closest && tileHit.closest('.hub-tile, .menu-dock, .menu-chrome'))));
+    const zFomo = overlay ? Number(getComputedStyle(overlay).zIndex) || 0 : 0;
+    const zMenu = menu ? Number(getComputedStyle(menu).zIndex) || 0 : 0;
+    const zToast = toast ? Number(getComputedStyle(toast).zIndex) || 0 : 0;
+    return {
+      open: !!(overlay && !overlay.hidden),
+      isFomo: !!(menu && menu.classList.contains('is-fomo')),
+      chromeInert: !!(chrome && chrome.hasAttribute('inert')),
+      xHit: hitAt(x),
+      tileBlocked: !tileSteals,
+      sheetBottom: sr && Math.round(sr.bottom),
+      vh: window.innerHeight,
+      safeGap: sr ? Math.round(window.innerHeight - sr.bottom) : 0,
+      zFomo,
+      zMenu,
+      zToast,
+      xOverflow: !!(xr && (xr.right > window.innerWidth + 2 || xr.left < -2)),
+    };
+  });
+  if (!fomo.open) report.fails.push({ where: 'FOMO sheet did not open', fomo });
+  if (!fomo.isFomo || !fomo.chromeInert) report.fails.push({ where: 'EX-021 FOMO hub lock', fomo });
+  if (fomo.xOverflow) report.fails.push({ where: 'FOMO X overflow', fomo });
+  if (fomo.safeGap < 20) report.fails.push({ where: 'FOMO sheet too close to gesture strip', fomo });
+  if (!(fomo.zMenu >= fomo.zToast || fomo.zFomo >= fomo.zToast)) {
+    report.fails.push({ where: 'FOMO under toast', fomo });
+  }
+  if (fomo.open && !fomo.tileBlocked) report.fails.push({ where: 'HOME tile click-through FOMO', fomo });
+
+  await page.evaluate(() => {
+    if (typeof dismissFomoRitual === 'function') dismissFomoRitual();
+    else if (typeof UI === 'object' && UI.hideFomoRitual) UI.hideFomoRitual();
+  });
+  const fomoClosed = await page.evaluate(() => {
+    const overlay = document.getElementById('fomoRitual');
+    const menu = document.getElementById('menuScreen');
+    const chrome = menu && menu.querySelector('.menu-chrome');
+    return {
+      hidden: !!(overlay && overlay.hidden),
+      isFomo: !!(menu && menu.classList.contains('is-fomo')),
+      chromeInert: !!(chrome && chrome.hasAttribute('inert')),
+    };
+  });
+  if (!fomoClosed.hidden || fomoClosed.isFomo || fomoClosed.chromeInert) {
+    report.fails.push({ where: 'FOMO dismiss did not unlock HOME', fomoClosed });
+  }
+
+  await page.evaluate(() => {
+    if (typeof UI === 'object' && UI.safeOpen) UI.safeOpen('settingsScreen', () => UI.renderSettings && UI.renderSettings());
+    const fold = document.getElementById('settingsShareFold');
+    if (fold) fold.open = true;
+  });
+  const settings = await page.evaluate(() => {
+    const nodes = [
+      document.getElementById('settingsSaveAutoCard'),
+      document.getElementById('settingsShareFold'),
+      document.getElementById('settingsSaveFold'),
+      document.getElementById('hostingLink'),
+      ...document.querySelectorAll('#settingsScreen .settings-card'),
+      ...document.querySelectorAll('#settingsScreen .settings-fold'),
+    ].filter(Boolean);
+    const overflow = nodes.filter((el) => {
+      const r = el.getBoundingClientRect();
+      return r.right > window.innerWidth + 2 || r.left < -2;
+    }).map((el) => el.id || el.className);
+    return { overflow, count: nodes.length };
+  });
+  if (settings.overflow.length) report.fails.push({ where: 'settings overflow', settings });
+
+  await page.evaluate(() => {
+    if (typeof UI === 'object' && UI.safeOpen) UI.safeOpen('styleScreen', () => UI.renderStyle());
+  });
+  const style = await page.evaluate(() => {
+    const cards = [...document.querySelectorAll('#styleGrid .style-card')];
+    const overflow = [document.getElementById('styleGrid'), ...cards].filter(Boolean).filter((el) => {
+      const r = el.getBoundingClientRect();
+      return r.right > window.innerWidth + 2 || r.left < -2;
+    }).length;
+    const hits = [];
+    for (let i = 0; i < Math.min(cards.length, 8); i++) {
+      for (let j = i + 1; j < Math.min(cards.length, 8); j++) {
+        const a = cards[i].getBoundingClientRect();
+        const b = cards[j].getBoundingClientRect();
+        if (a.left < b.right - 3 && a.right > b.left + 3 && a.top < b.bottom - 3 && a.bottom > b.top + 3) {
+          hits.push(i + '/' + j);
+        }
+      }
+    }
+    return { cards: cards.length, overflow, hits };
+  });
+  if (style.overflow) report.fails.push({ where: 'style cards overflow', style });
+  if (style.hits.length) report.fails.push({ where: 'style cards overlap', style });
+  if (!(style.cards >= 4)) report.fails.push({ where: 'style cards missing', style });
 
   await page.close();
   return report;

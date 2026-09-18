@@ -65,6 +65,9 @@ if (!/\bfomo:/.test(storage) || !/lastDayBonusDate/.test(storage)) {
 if (!/showFomoRitual/.test(ui) || !/lastOpenDate/.test(ui)) {
   fail('F1 renderMenu ritual / lastOpenDate missing');
 }
+if (!/_syncFomoHubLock/.test(ui) || !/is-fomo/.test(ui)) {
+  fail('EX-021: FOMO hub lock (_syncFomoHubLock / is-fomo) missing');
+}
 
 function makeEl(id) {
   return {
