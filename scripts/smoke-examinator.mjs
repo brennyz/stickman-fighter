@@ -39,8 +39,9 @@ for (const id of ['stick_lighter', 'woodchip_glue', 'chipping_wood', 'bamboo_boe
   if (!data.includes(id)) fail('locked factory id missing: ' + id);
 }
 if (/follow = g\.traveling \? 11 : 8/.test(pet)) fail('pet follow still laggy 8/11');
-if (!/follow = g\.traveling \? 20 : 16/.test(pet)) fail('pet follow must be 16/20');
-if (!/follow = g\.traveling \? 18 : 15/.test(egg)) fail('egg-pet follow must be 15/18');
+if (!/function companionFollow/.test(pet)) fail('pet follow helper missing');
+if (!/opts\.traveling \? 28/.test(pet)) fail('companionFollow must keep snap chase');
+if (!/companionFollow\(/.test(egg)) fail('egg-pet must use companionFollow');
 if (!/pillVanity: 'SIER'/.test(i18n)) fail('NL gear pill must be SIER');
 if (!/wearing: 'on'/.test(i18n)) fail('EN gear.wearing must be on');
 if (!/pressStart: 'gooi een munt'/.test(i18n)) fail('NL pressStart still insert coin');

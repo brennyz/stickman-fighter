@@ -74,7 +74,7 @@ async function run() {
   const page = await browser.newPage();
   const pageErrors = [];
   page.on('pageerror', (e) => pageErrors.push(String(e)));
-  await page.goto(smokeBaseUrl(8788) + '/index.html?nosplash=1', { waitUntil: 'load', timeout: 30000 });
+  await page.goto(smokeBaseUrl(8788, '/index.html?nosplash=1'), { waitUntil: 'load', timeout: 30000 });
   await page.waitForFunction(() => window.__sfBooted, { timeout: 25000 });
 
   const result = await page.evaluate(() => {
