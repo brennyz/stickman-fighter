@@ -13,15 +13,15 @@
     "tunnelBookmark": "https://stickfighter-ipad-b75e.loca.lt/ipad.html"
   },
   "codeTruth": {
-    "appVersion": "1.18.176",
-    "swCache": "stickfighter-app-v386",
-    "gameJsQuery": "game.js?v=386",
-    "cssQuery": "styles/main.css?v=386",
+    "appVersion": "1.18.177",
+    "swCache": "stickfighter-app-v387",
+    "gameJsQuery": "game.js?v=387",
+    "cssQuery": "styles/main.css?v=387",
     "featureBranch": "cursor/i18n-layout-copy-f2a3",
     "pushBlocked": null,
     "shareUrl": "https://brennyz.github.io/stickman-fighter/speel.html",
-    "note": "LANGUAGE examiner #317: factory powers/detail + gear lock toasts + DE nameShort. v1.18.176 / SW 386. Versus ongemoeid. No main merge.",
-    "updated": "2026-09-18T12:45:00Z",
+    "note": "LANGUAGE examiner #317: style tips DE/FR/ES + result win/lose consistency + Dutch audit. v1.18.177 / SW 387. Versus ongemoeid. No main merge.",
+    "updated": "2026-09-18T13:10:00Z",
     "localMainHead": "a18fc9e67633773cb18b638c64c9a86916d02d27",
     "remoteMainHead": "a18fc9e67633773cb18b638c64c9a86916d02d27"
   },
@@ -43,7 +43,7 @@
       "id": "w-20260918T125544",
       "from": "user",
       "text": "KEEP IMPROVING #317: season story beats + style tips EN/NL mix in DE/FR/ES; combat result/defeat/victory consistency; grep hardcoded Dutch UI. Draft only, speel.html, no Versus.",
-      "status": "open",
+      "status": "done-in-code",
       "updated": "2026-09-18"
     },
     {
@@ -1094,6 +1094,10 @@
   ],
   "sessionLog": [
     {
+      "at": "2026-09-18T13:04:42Z",
+      "summary": "Examiner #317: style tips DE/FR/ES + result win/lose consistency + Dutch audit. v1.18.177 / SW 387. Draft, geen main."
+    },
+    {
       "at": "2026-09-18T12:55:44Z",
       "summary": "examiner P0 season beats + style tips + result copy start"
     },
@@ -1188,10 +1192,6 @@
     {
       "at": "2026-09-14T14:12:19Z",
       "summary": "#264 merged 68e5ccc (v1.18.161/SW371 LIVE). #266 start polish + HOME unify (v1.18.162/SW372). #265 closed folded. #263 parked."
-    },
-    {
-      "at": "2026-09-14T13:50:58Z",
-      "summary": "Same PR #264: EN tooltips + SW-banner follow game lang; Arcade pick already HOME tiles."
     }
   ],
   "implementedFeaturesSummary": "d18 char select deel 1+2 (v1.11.1-2); Mats coinrun + shuriken mik/vliegers + anti-spam (v1.12.0); speel.html (v1.12.2+). Zie HANDOFF-ZOEKINDEX.md en improvement-d20-bag.json userFeatureLog.",
