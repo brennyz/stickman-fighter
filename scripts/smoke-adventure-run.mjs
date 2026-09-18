@@ -33,6 +33,7 @@ async function run() {
     executablePath: chrome, headless: 'new', args: ['--no-sandbox', '--window-size=390,844'],
   });
   const page = await browser.newPage();
+  await page.setViewport({ width: 390, height: 844, deviceScaleFactor: 2, isMobile: true, hasTouch: true });
   const pageErrors = [];
   page.on('pageerror', (e) => pageErrors.push(String(e)));
   page.on('console', (msg) => {
@@ -93,6 +94,57 @@ async function run() {
     startGame('adventure', { level: lv, gamble: null });
     const g = game;
     if (!g || !g.player) return { ok: false, why: 'no game after start' };
+
+    const vp = {
+      w: (typeof W === 'number' && W > 0) ? W : 390,
+      h: (typeof H === 'number' && H > 0) ? H : 844,
+    };
+    const fit168 = (typeof combatFitBossSize === 'function') ? combatFitBossSize(168, vp) : null;
+    const hellWalk = (typeof combatEnrageWalkMul === 'function') ? combatEnrageWalkMul(1.32, vp) : null;
+    const lootFan = (typeof combatSpreadPickupX === 'function')
+      ? combatSpreadPickupX(180, [{ x: 180, life: 1 }], vp) : null;
+    const hudMocks = (typeof adventureTelegraphHuds === 'function')
+      ? adventureTelegraphHuds([
+        { alive: true, telegraphT: 0.40, telegraphMax: 0.45, sp: { type: 'tank' } },
+        { alive: true, telegraphT: 0.22, telegraphMax: 0.45, sp: { type: 'charge' } },
+      ]) : [];
+    const hudPick = (typeof combatPickTelegraphHuds === 'function')
+      ? combatPickTelegraphHuds(hudMocks, vp) : hudMocks;
+    const flyerGate = {
+      hover: (typeof combatFlyerHover === 'function') ? combatFlyerHover(110, vp) : null,
+      lift: (typeof combatMeleeAimLift === 'function') ? combatMeleeAimLift(vp) : null,
+      gate: (typeof combatPartGateWalkSec === 'function') ? combatPartGateWalkSec(vp) : null,
+    };
+    const phoneCad = (typeof combatDensityProfile === 'function') ? combatDensityProfile(vp) : null;
+    const openerStrike = {
+      hold: (typeof combatOpenerHold === 'function') ? combatOpenerHold(0, vp) : null,
+      openIv: (typeof adventureSpawnCadence === 'function')
+        ? adventureSpawnCadence(2, true, false, 1.55, phoneCad, 0).interval : null,
+      wave2iv: (typeof adventureSpawnCadence === 'function')
+        ? adventureSpawnCadence(4, false, false, 1, phoneCad, 5).interval : null,
+      lateIv: (typeof adventureSpawnCadence === 'function')
+        ? adventureSpawnCadence(4, false, false, 1, phoneCad, 31).interval : null,
+      min1Iv: (typeof adventureSpawnCadence === 'function')
+        ? adventureSpawnCadence(30, false, false, 1, phoneCad, 65).interval : null,
+      waveGap: (typeof combatWaveGapSec === 'function') ? combatWaveGapSec(1.55, 65, vp) : null,
+      edge: (typeof combatSpawnEdgeX === 'function') ? combatSpawnEdgeX(1, vp) : null,
+      swipeOld42: (typeof combatJoySwipeAccepts === 'function')
+        ? combatJoySwipeAccepts(150, 700, 390, 844, vp) : null,
+      nearKick: (typeof combatPreferStrike === 'function')
+        ? !!(combatPreferStrike(230, 800, [{ id: 'kick', x: 268, y: 800, r: 24 }], { x: 64, y: 800 }, vp)) : null,
+    };
+    const colossalProbe = {
+      w: vp.w,
+      h: vp.h,
+      compact: (typeof combatDensityProfile === 'function') ? !!combatDensityProfile(vp).compact : null,
+      mul: (typeof combatColossalSizeMul === 'function') ? combatColossalSizeMul(vp) : null,
+      raw168: 168,
+      fit168,
+      lane: (typeof combatColossalFairLane === 'function' && fit168 != null)
+        ? combatColossalFairLane(fit168, vp) : null,
+      wind: (typeof applyCombatTelegraphWind === 'function')
+        ? applyCombatTelegraphWind(0.45, vp, { colossal: true }) : null,
+    };
 
     g.inputLocked = false;
     g.over = false;
@@ -172,11 +224,53 @@ async function run() {
       errors: errors.slice(0, 10),
       milestones,
       appVersion: typeof APP_VERSION !== 'undefined' ? APP_VERSION : '?',
+      colossalProbe,
+      enrageLootProbe: { hellWalk, lootFan },
+      flyerGateProbe: flyerGate,
+      openerStrikeProbe: openerStrike,
+      teleHudProbe: {
+        n: hudMocks.length,
+        shown: hudPick.length,
+        first: hudPick[0] && hudPick[0].kind,
+        extra: (hudPick[0] && hudPick[0].extra) || 0,
+      },
     };
   }, levelN);
 
   result.pageErrors = pageErrors.slice(0, 10);
   if (result.pageErrors.length) result.ok = false;
+  const probe = result.colossalProbe || {};
+  if (!(probe.w > 0 && probe.w < 520) || probe.compact !== true) {
+    result.ok = false;
+    result.errors = (result.errors || []).concat(['colossal:viewport-not-compact ' + JSON.stringify(probe)]);
+  }
+  if (!(probe.fit168 > 0 && probe.fit168 < probe.raw168 && probe.lane >= 80 && probe.wind >= 0.46)) {
+    result.ok = false;
+    result.errors = (result.errors || []).concat(['colossal:fair-window ' + JSON.stringify(probe)]);
+  }
+  const er = result.enrageLootProbe || {};
+  if (!(er.hellWalk > 1.32 && er.hellWalk < 1.5 && Math.abs((er.lootFan || 0) - 180) >= 40)) {
+    result.ok = false;
+    result.errors = (result.errors || []).concat(['enrage-loot:phone-fair ' + JSON.stringify(er)]);
+  }
+  const hud = result.teleHudProbe || {};
+  if (!(hud.n === 2 && hud.shown === 2 && hud.first === 'charge')) {
+    result.ok = false;
+    result.errors = (result.errors || []).concat(['tele-hud:multi-cue ' + JSON.stringify(hud)]);
+  }
+  const fg = result.flyerGateProbe || {};
+  if (!(fg.hover === 110 && fg.lift === 96 && fg.gate === 2.2)) {
+    result.ok = false;
+    result.errors = (result.errors || []).concat(['flyer-gate:phone ' + JSON.stringify(fg)]);
+  }
+  const op = result.openerStrikeProbe || {};
+  if (!(op.hold === 0.55 && op.openIv >= 0.70 && op.openIv <= 1.12 && op.wave2iv >= 0.70 && op.wave2iv <= 1.12
+    && op.lateIv >= 0.62 && op.lateIv <= 1.05 && op.min1Iv >= 0.62 && op.min1Iv <= 1.05
+    && op.waveGap < 1.55 && op.waveGap >= 0.82
+    && op.edge === 408 && op.swipeOld42 === false && op.nearKick === true)) {
+    result.ok = false;
+    result.errors = (result.errors || []).concat(['opener-strike:phone ' + JSON.stringify(op)]);
+  }
 
   await browser.close();
   if (server) server.close();

@@ -2393,7 +2393,7 @@ const I18N = {
       audioHint: 'Volume in pauze — sliders sync met Instellingen',
       audioMuteAll: 'Alles uit', audioRestore: 'Standaard', audioSfxOnly: 'Alleen geluid',
     },
-    result: { again: 'Opnieuw', onceMore: 'Nog één keer', next: 'Volgend level', menu: 'Hoofdmenu', menuArcade: 'Arcade', rematch: 'Rematch', rematchSub: 'Zelfde vechters',
+    result: { again: 'Opnieuw', onceMore: 'Nog één keer', againRetry: 'Nog één keer', next: 'Volgend level', menu: 'Hoofdmenu', menuArcade: 'Arcade', rematch: 'Rematch', rematchSub: 'Zelfde vechters',
       trainAgainSub: 'vs RabbitRobot',
       advWin: 'GEWONNEN!', advLose: 'VERLOREN', trainWin: 'KAMPIOEN!', trainLose: 'ROBOT WINT...',
       advLoseKeep: 'XP en buit van deze ronde blijven',
@@ -2728,7 +2728,7 @@ const I18N = {
       audioHint: 'Volume in pause — sliders sync with Settings',
       audioMuteAll: 'Mute all', audioRestore: 'Default', audioSfxOnly: 'SFX only',
     },
-    result: { again: 'Again', onceMore: 'One more go', next: 'Next level', menu: 'Main menu', menuArcade: 'Arcade', rematch: 'Rematch', rematchSub: 'Same fighters',
+    result: { again: 'Again', onceMore: 'One more go', againRetry: 'One more time', next: 'Next level', menu: 'Main menu', menuArcade: 'Arcade', rematch: 'Rematch', rematchSub: 'Same fighters',
       trainAgainSub: 'vs RabbitRobot',
       advWin: 'VICTORY!', advLose: 'YOU LOSE', trainWin: 'CHAMPION!', trainLose: 'ROBOT WINS...',
       advLoseKeep: 'XP and loot from this run stay',
@@ -3157,7 +3157,7 @@ const I18N = {
       audioHint: 'Lautstärke in Pause — Regler wie in Einstellungen',
       audioMuteAll: 'Alles aus', audioRestore: 'Standard', audioSfxOnly: 'Nur Ton',
     },
-    result: { again: 'Nochmal', onceMore: 'Noch einmal', next: 'Nächstes Level', menu: 'Hauptmenü', menuArcade: 'Arcade', rematch: 'Revanche', rematchSub: 'Gleiche Kämpfer',
+    result: { again: 'Nochmal', onceMore: 'Noch einmal', againRetry: 'Noch einmal', next: 'Nächstes Level', menu: 'Hauptmenü', menuArcade: 'Arcade', rematch: 'Revanche', rematchSub: 'Gleiche Kämpfer',
       trainAgainSub: 'vs RabbitRobot',
       advWin: 'GEWONNEN!', advLose: 'VERLOREN', trainWin: 'MEISTER!', trainLose: 'ROBOT GEWINNT…',
       advLoseKeep: 'XP und Beute von diesem Lauf bleiben',
@@ -3483,7 +3483,7 @@ const I18N = {
       audioHint: 'Volume en pause — comme dans Options',
       audioMuteAll: 'Tout couper', audioRestore: 'Par défaut', audioSfxOnly: 'Son seulement',
     },
-    result: { again: 'Rejouer', onceMore: 'Encore une fois', next: 'Niveau suivant', menu: 'Menu principal', menuArcade: 'Arcade', rematch: 'Revanche', rematchSub: 'Mêmes combattants',
+    result: { again: 'Rejouer', onceMore: 'Encore une fois', againRetry: 'Encore une fois', next: 'Niveau suivant', menu: 'Menu principal', menuArcade: 'Arcade', rematch: 'Revanche', rematchSub: 'Mêmes combattants',
       trainAgainSub: 'vs RabbitRobot',
       advWin: 'VICTOIRE !', advLose: 'DÉFAITE', trainWin: 'CHAMPION !', trainLose: 'LE ROBOT GAGNE…',
       advLoseKeep: 'XP et butin de cette partie restent',
@@ -3812,7 +3812,7 @@ const I18N = {
       audioHint: 'Volumen en pausa — igual que en Opciones',
       audioMuteAll: 'Todo apagado', audioRestore: 'Predeterminado', audioSfxOnly: 'Solo sonido',
     },
-    result: { again: 'Otra vez', onceMore: 'Una más', next: 'Siguiente nivel', menu: 'Menú principal', menuArcade: 'Arcade', rematch: 'Revancha', rematchSub: 'Mismos luchadores',
+    result: { again: 'Otra vez', onceMore: 'Una más', againRetry: 'Una vez más', next: 'Siguiente nivel', menu: 'Menú principal', menuArcade: 'Arcade', rematch: 'Revancha', rematchSub: 'Mismos luchadores',
       trainAgainSub: 'vs RabbitRobot',
       advWin: '¡VICTORIA!', advLose: 'DERROTA', trainWin: '¡CAMPEÓN!', trainLose: 'EL ROBOT GANA…',
       advLoseKeep: 'XP y botín de esta partida se quedan',
@@ -6756,18 +6756,33 @@ function paintResultRetryLabel(el, data) {
   el.textContent = main;
 }
 
-/** Instant same-level rematch — no island / dice / HOME maze after death. */
-function restartAdventureInstant(data) {
+/** Instant same-level rematch — no island / dice / HOME maze after death.
+ * Accepts #323 `{level,difficulty}` or #314 `(n, diff, gamble)`. */
+function restartAdventureInstant(dataOrN, diff, gamble) {
   try { if (typeof UI !== 'undefined' && UI.hideFomoRitual) UI.hideFomoRitual(); } catch (_) {}
   try { if (typeof UI !== 'undefined' && UI.hideGambleRollFlash) UI.hideGambleRollFlash(); } catch (_) {}
   try { if (typeof cancelGambleStart === 'function') cancelGambleStart(); } catch (_) {}
-  const level = Math.max(1, Math.min(MAX_LEVEL, Number(data && data.level) || 1));
-  let difficulty = 'normal';
+  let level;
+  let difficulty;
+  let g = null;
+  if (dataOrN && typeof dataOrN === 'object') {
+    level = dataOrN.level;
+    difficulty = dataOrN.difficulty;
+    g = dataOrN.gamble || null;
+  } else {
+    level = dataOrN;
+    difficulty = diff;
+    g = gamble || null;
+  }
+  level = Math.max(1, Math.min(MAX_LEVEL, Number(level) || 1));
   try {
-    difficulty = (data && data.difficulty)
-      || (typeof currentAdvDiff === 'function' ? currentAdvDiff() : 'normal');
-  } catch (_) {}
-  startGame('adventure', { level, difficulty });
+    difficulty = (typeof normalizeAdvDiffId === 'function')
+      ? normalizeAdvDiffId(difficulty || (typeof currentAdvDiff === 'function' ? currentAdvDiff() : 'normal'))
+      : (difficulty || (typeof currentAdvDiff === 'function' ? currentAdvDiff() : 'normal'));
+  } catch (_) {
+    difficulty = difficulty || 'normal';
+  }
+  startGame('adventure', { level, difficulty, gamble: g, instantRetry: true });
 }
 
 /** Veilig resultaat na gevecht — voorkomt ReferenceError + zwart scherm. */
@@ -16775,11 +16790,12 @@ function adventureHordeProfile() {
 }
 
 function adventureMaxAlive() {
+  if (typeof adventureMaxAliveNow === 'function') return adventureMaxAliveNow();
   return adventureHordeProfile().maxAlive;
 }
 
-/** Legacy alias — prefer adventureMaxAlive() so phone/tablet scale. */
-const ADVENTURE_MAX_ALIVE = (typeof IS_TOUCH !== 'undefined' && IS_TOUCH) ? 54 : 78;
+/** Desktop ceiling. Live cap is `adventureMaxAliveNow()` (viewport density). */
+const ADVENTURE_MAX_ALIVE = 78;
 const GIANT_SPAWN_CHANCE = 0.15;
 const GIANT_SIZE_MUL = 1.52;
 const GIANT_HP_MUL = 1.34;
@@ -17168,11 +17184,14 @@ function maxRarityForAdvLevel(n, diff) {
   return maxRarity;
 }
 
-function buildLevel(n, diffId) {
+function buildLevel(n, diffId, densityOpts) {
   const diff = typeof advDiffMeta === 'function' ? advDiffMeta(diffId) : {
     id: 'normal', order: 0, hpMul: 1, dmgMul: 1, rarityBoost: 0, eliteBonus: 0, giantBonus: 0,
     theme: null, speedMul: 1, enrageMul: 1, enrageAt: 0.5, hordeMul: 1, model: '1.0',
   };
+  const dens = (typeof combatDensityProfile === 'function')
+    ? combatDensityProfile(densityOpts || {})
+    : { scale: 1, maxAlive: ADVENTURE_MAX_ALIVE, w: 1100, h: 620 };
   const hpMul = (1 + (n - 1) * 0.14) * (diff.hpMul || 1);
   const dmgMul = (1 + (n - 1) * 0.08) * (diff.dmgMul || 1);
   const maxRarity = maxRarityForAdvLevel(n, diff.id);
@@ -17195,10 +17214,13 @@ function buildLevel(n, diffId) {
   const horde = (typeof adventureHordeProfile === 'function')
     ? adventureHordeProfile()
     : { mul: ADVENTURE_HORDE_MUL, maxPerWave: ADVENTURE_HORDE_MAX_PER_WAVE, openerCapMul: 1 };
-  const perWave = Math.min(
-    Math.max(2, Math.ceil(basePerWave * (horde.mul || ADVENTURE_HORDE_MUL) * hordeScale)),
-    horde.maxPerWave || ADVENTURE_HORDE_MAX_PER_WAVE
+  const rawPerWave = Math.min(
+    Math.max(2, Math.ceil(basePerWave * ADVENTURE_HORDE_MUL * hordeScale)),
+    ADVENTURE_HORDE_MAX_PER_WAVE
   );
+  const perWave = (typeof scaleAdventurePerWave === 'function')
+    ? scaleAdventurePerWave(rawPerWave, dens)
+    : rawPerWave;
   for (let w = 0; w < waveCount; w++) {
     const list = [];
     for (let i = 0; i < perWave; i++) {
@@ -17358,7 +17380,10 @@ function buildLevel(n, diffId) {
   }
   if (BOSS_AT[n]) {
     const bossWave = BOSS_AT[n].map(x => Object.assign({}, x, { bossCore: !!x.elite }));
-    const hordePad = Math.min(3 + Math.floor(n / 8) + (diff.order || 0) * 2, horde.band === 'phone' ? 4 : 12);
+    const hordePadRaw = Math.min(3 + Math.floor(n / 8) + (diff.order || 0) * 2, horde && horde.band === 'phone' ? 4 : 12);
+    const hordePad = (typeof scaleAdventureHordePad === 'function')
+      ? scaleAdventureHordePad(hordePadRaw, dens)
+      : hordePadRaw;
     for (let i = 0; i < hordePad; i++) {
       const elite = Math.random() < (0.1 + (diff.eliteBonus || 0) * 0.5);
       const bsp = weightedPick(pool, n, rarityBias);
@@ -17377,6 +17402,12 @@ function buildLevel(n, diffId) {
     model: diff.model || '1.0',
     enrageMul: diff.enrageMul || 1,
     enrageAt: diff.enrageAt != null ? diff.enrageAt : 0.5,
+    combatDensity: {
+      scale: dens.scale,
+      maxAlive: dens.maxAlive,
+      w: dens.w,
+      h: dens.h,
+    },
   };
 }
 
@@ -17496,28 +17527,31 @@ function triggerSpecialEnemyIntro(game, monster, kind) {
         if (typeof playFightBgm === 'function') playFightBgm('boss');
         else AudioSys.play('boss');
         const title = typeof t === 'function' ? t('banner.superBossTitle') : 'SUPER BAAS';
-        game.banner(title, 2.8, col, bigBoss ? 68 : 44);
+        const ban = (n) => (typeof combatBannerSize === 'function') ? combatBannerSize(n) : n;
+        game.banner(title, 2.8, col, ban(bigBoss ? 68 : 44));
         game.banner(colossal
           ? (typeof t === 'function' ? t('banner.colossalBossName', { name }) : `COLOSSALE ${name}!`)
-          : (typeof t === 'function' ? t('banner.bossName', { name }) : name), 2.5, '#fff', bigBoss ? 52 : 40);
+          : (typeof t === 'function' ? t('banner.bossName', { name }) : name), 2.5, '#fff', ban(bigBoss ? 52 : 40));
       } else if (tier === 'boss') {
         AudioSys.sting('bossIntro');
         if (typeof playFightBgm === 'function') playFightBgm('boss');
         else AudioSys.play('boss');
+        const ban = (n) => (typeof combatBannerSize === 'function') ? combatBannerSize(n) : n;
         if (bigBoss) {
           const title = typeof t === 'function' ? t('banner.bossTitle') : 'BAAS';
-          game.banner(title, 2.6, col, 64);
+          game.banner(title, 2.6, col, ban(64));
           game.banner(colossal
             ? (typeof t === 'function' ? t('banner.colossalBossName', { name }) : `COLOSSALE ${name}!`)
-            : (typeof t === 'function' ? t('banner.bossName', { name }) : `${name}!`), 2.35, '#fff', 50);
+            : (typeof t === 'function' ? t('banner.bossName', { name }) : `${name}!`), 2.35, '#fff', ban(50));
         } else {
-          game.banner(typeof t === 'function' ? t('banner.bossNamed', { name }) : `BAAS — ${name}!`, 1.8, col, 42);
+          game.banner(typeof t === 'function' ? t('banner.bossNamed', { name }) : `BAAS — ${name}!`, 1.8, col, ban(42));
         }
       } else {
         AudioSys.sting('eliteIntro');
         if (typeof playFightBgm === 'function') playFightBgm('elite');
         else AudioSys.play('elite');
-        game.banner(typeof t === 'function' ? t('banner.eliteNamed', { name }) : `ELITE — ${name}!`, 1.5, col, 38);
+        const ban = (n) => (typeof combatBannerSize === 'function') ? combatBannerSize(n) : n;
+        game.banner(typeof t === 'function' ? t('banner.eliteNamed', { name }) : `ELITE — ${name}!`, 1.5, col, ban(38));
       }
     } catch (_) {}
     try { AudioSys.sfx('roar'); } catch (_) {}
@@ -21164,6 +21198,13 @@ function seedNlGameStrings() {
     matsRecord: 'RECORD!', matsDone: 'Goed gedaan!',
     perfectRun: 'Perfecte ronde — hou je HP hoog!',
     pickupsHelp: '{hint} — pickups helpen',
+    againRetry: 'Nog één keer',
+    failTeleTip: '{cue} → {again}',
+    failTeleSlam: 'SLAM',
+    failTeleCharge: 'CHARGE',
+    failTeleFlyer: 'vlieger',
+    failTeleShoot: 'SCHIET',
+    failTeleFire: 'VUUR',
     lossBlockTip: 'Tip: blokkeer · mik omhoog op vliegers · {prog}',
     lossOrbTip: 'Tip: pak groene orbs · vul SUPER vóór baas · {prog}',
     lossGambleTip: 'Eerste nederlaag: vóór elk level kun je dobbelen — bondgenoot helpt tussen golven.',
@@ -22523,6 +22564,13 @@ const CATALOG_EN = {
     matsRecord: 'NEW RECORD!', matsDone: 'Well done!',
     perfectRun: 'Perfect run — keep HP high!',
     pickupsHelp: '{hint} — pickups help',
+    againRetry: 'One more time',
+    failTeleTip: '{cue} → {again}',
+    failTeleSlam: 'SLAM',
+    failTeleCharge: 'CHARGE',
+    failTeleFlyer: 'flyer',
+    failTeleShoot: 'SHOT',
+    failTeleFire: 'FIRE',
     lossBlockTip: 'Tip: block · aim up at flyers · {prog}',
     lossOrbTip: 'Tip: grab green orbs · fill SUPER before boss · {prog}',
     lossGambleTip: 'First loss: before each level you can gamble — ally helps between waves.',
@@ -24255,6 +24303,13 @@ const CATALOG_DE_CHROME = {
     matsRecord: 'NEUER REKORD!', matsDone: 'Gut gemacht!',
     perfectRun: 'Perfekter Lauf — HP hoch halten!',
     pickupsHelp: '{hint} — Funde helfen',
+    againRetry: 'Noch einmal',
+    failTeleTip: '{cue} → {again}',
+    failTeleSlam: 'SLAM',
+    failTeleCharge: 'CHARGE',
+    failTeleFlyer: 'Flieger',
+    failTeleShoot: 'SCHUSS',
+    failTeleFire: 'FEUER',
     lossBlockTip: 'Tipp: blocken · nach oben zielen auf Flieger · {prog}',
     lossOrbTip: 'Tipp: grüne Orbs · SUPER vor dem Boss füllen · {prog}',
     lossGambleTip: 'Erste Niederlage: vor jedem Level würfeln — Verbündeter hilft zwischen Wellen.',
@@ -25275,6 +25330,13 @@ overlayI18nCatalog(CATALOG_FR, {
     matsRecord: 'NOUVEAU RECORD !', matsDone: 'Bien joué !',
     perfectRun: 'Partie parfaite — garde tes PV hauts !',
     pickupsHelp: '{hint} — les orbes aident',
+    againRetry: 'Encore une fois',
+    failTeleTip: '{cue} → {again}',
+    failTeleSlam: 'SLAM',
+    failTeleCharge: 'CHARGE',
+    failTeleFlyer: 'volant',
+    failTeleShoot: 'TIR',
+    failTeleFire: 'FEU',
     lossBlockTip: 'Astuce : bloque · vise en haut les voiliers · {prog}',
     lossOrbTip: 'Astuce : prends les orbes verts · remplis SUPER avant le boss · {prog}',
     lossGambleTip: '1re défaite : avant chaque niveau tu peux parier — un allié aide entre les vagues.',
@@ -25947,6 +26009,13 @@ overlayI18nCatalog(CATALOG_ES, {
     matsRecord: '¡NUEVO RÉCORD!', matsDone: '¡Bien hecho!',
     perfectRun: 'Partida perfecta — mantén el PV alto',
     pickupsHelp: '{hint} — los orbes ayudan',
+    againRetry: 'Una vez más',
+    failTeleTip: '{cue} → {again}',
+    failTeleSlam: 'SLAM',
+    failTeleCharge: 'CHARGE',
+    failTeleFlyer: 'volador',
+    failTeleShoot: 'DISPARO',
+    failTeleFire: 'FUEGO',
     lossBlockTip: 'Consejo: bloquea · apunta arriba a los voladores · {prog}',
     lossOrbTip: 'Consejo: coge orbes verdes · llena SUPER antes del jefe · {prog}',
     lossGambleTip: 'Primera derrota: antes de cada nivel puedes apostar — un aliado ayuda entre oleadas.',
@@ -26638,6 +26707,13 @@ overlayI18nCatalog(CATALOG_DE, {
     matsRecord: 'NEUER REKORD!', matsDone: 'Gut gemacht!',
     perfectRun: 'Perfekter Lauf — halte HP hoch!',
     pickupsHelp: '{hint} — Kugeln helfen',
+    againRetry: 'Noch einmal',
+    failTeleTip: '{cue} → {again}',
+    failTeleSlam: 'SLAM',
+    failTeleCharge: 'CHARGE',
+    failTeleFlyer: 'Flieger',
+    failTeleShoot: 'SCHUSS',
+    failTeleFire: 'FEUER',
     lossBlockTip: 'Tipp: blocken · nach oben auf Flieger zielen · {prog}',
     lossOrbTip: 'Tipp: grüne Kugeln · SUPER vor dem Boss füllen · {prog}',
     lossGambleTip: 'Erste Niederlage: vor jedem Level kannst du würfeln — Verbündeter hilft zwischen Wellen.',
@@ -29961,9 +30037,11 @@ function fighterAimNorm(f) {
     const jx = pad.joy.dx;
     const jy = pad.joy.dy;
     // Verticale mik los van horizontale looprichting — joy ↑ blijft duidelijk
-    if (Math.abs(jy) >= JOY_AIM_DEAD_PX) {
+    const aimDead = (typeof combatJoyAimDead === 'function') ? combatJoyAimDead() : JOY_AIM_DEAD_PX;
+    const aimGain = (typeof combatJoyAimGain === 'function') ? combatJoyAimGain() : 1;
+    if (Math.abs(jy) >= aimDead) {
       ny = clamp(jy / JOY_MAX_PX, -1.05, 0.78);
-      if (ny < -0.14) ny = clamp(ny * 1.38, -1.15, 0);
+      if (ny < -0.14) ny = clamp(ny * 1.38 * aimGain, -1.15, 0);
     }
     if (Math.abs(jx) >= JOY_DEAD_PX) nx = clamp(jx / JOY_MAX_PX, -1, 1);
     else nx = face * 0.72;
@@ -30149,7 +30227,8 @@ function meleeHitPoint(f, spec) {
   const range = (spec && spec.range) || 40;
   const hx = f.x + f.face * range * (0.72 + Math.abs(aim.nx) * 0.18);
   const moveOff = (spec && spec.moveHitY) || 0;
-  const hy = f.y - 48 + clamp(aim.ny, -1, 0.65) * 88 + moveOff;
+  const lift = (typeof combatMeleeAimLift === 'function') ? combatMeleeAimLift() : 88;
+  const hy = f.y - 48 + clamp(aim.ny, -1, 0.65) * lift + moveOff;
   return { hx, hy, aim };
 }
 
@@ -30254,11 +30333,13 @@ function touchBtnPressXform(b) {
 /** Dichtstbijzijnde knop binnen slop — voorkomt verkeerde match bij overlap/slop (d9). */
 function hitTouchButton(buttons, x, y) {
   const slop = btnHitSlop();
+  const jumpExtra = (typeof combatJumpSlopExtra === 'function') ? combatJumpSlopExtra() : 0;
   let best = null;
   let bestD = Infinity;
   for (const b of buttons) {
+    const extra = (b.id === 'jump') ? jumpExtra : 0;
     const d = Math.hypot(x - b.x, y - b.y);
-    if (d <= b.r + slop && d < bestD) {
+    if (d <= b.r + slop + extra && d < bestD) {
       bestD = d;
       best = b;
     }
@@ -30273,7 +30354,12 @@ function joyGuardRadius(pad) {
 
 function pointInJoyZone(pad, x, y) {
   const home = (pad && pad.joyHome) || { x: 110, y: (H || 600) - 110 };
-  return Math.hypot(x - home.x, y - home.y) <= joyGuardRadius(pad) + btnHitSlop() * 0.5;
+  if (Math.hypot(x - home.x, y - home.y) <= joyGuardRadius(pad) + btnHitSlop() * 0.5) return true;
+  if (typeof combatJoySwipeAccepts === 'function' && combatJoySwipeAccepts(x, y, W, H)) {
+    if (nearAnyTouchButton((pad && pad.buttons) || [], x, y, 4)) return false;
+    return true;
+  }
+  return false;
 }
 
 function nearAnyTouchButton(buttons, x, y, extra) {
@@ -30283,6 +30369,24 @@ function nearAnyTouchButton(buttons, x, y, extra) {
     if (Math.hypot(x - b.x, y - b.y) < b.r + slop) return true;
   }
   return false;
+}
+
+/** Compact 1P: near-miss punch/kick beats the joy pad. Dual/desktop: no-op. */
+function claimTouchStrike(pad, x, y) {
+  if (typeof combatPreferStrike !== 'function') return null;
+  return combatPreferStrike(x, y, (pad && pad.buttons) || [], (pad && pad.joyHome) || null);
+}
+
+function pressTouchButton(pad, b, id) {
+  if (!pad || !b) return false;
+  if (b.held) return true;
+  pad.btnPointers[id] = b.id;
+  b.held = true;
+  b.pressVis = 1;
+  b._pressSyncAt = (typeof performance !== 'undefined' && performance.now) ? performance.now() : Date.now();
+  pad.press(b.id);
+  try { if (typeof haptic === 'function') haptic(6); } catch (_) {}
+  return true;
 }
 
 const TOUCH_BTN_META = {
@@ -30915,16 +31019,9 @@ function makePad(side) {
       if (this.activePointers.size >= MAX_PAD_POINTERS && !this.activePointers.has(id)) return false;
       this.activePointers.add(id);
       if (dual) this.pointerPads[id] = this.side;
-      const b = this.hitButton(x, y);
+      const b = this.hitButton(x, y) || claimTouchStrike(this, x, y);
       if (b) {
-        if (b.held) return true;
-        this.btnPointers[id] = b.id;
-        b.held = true;
-        b.pressVis = 1;
-        b._pressSyncAt = (typeof performance !== 'undefined' && performance.now) ? performance.now() : Date.now();
-        this.press(b.id);
-        try { if (typeof haptic === 'function') haptic(6); } catch (_) {}
-        return true;
+        return pressTouchButton(this, b, id);
       }
       if (this.joy.active && this.joy.id !== id && !this.activePointers.has(this.joy.id)) {
         this.releaseJoy();
@@ -31015,15 +31112,9 @@ Object.assign(Input, {
       }
       if (this.activePointers.size >= MAX_PAD_POINTERS && !this.activePointers.has(id)) return;
       this.activePointers.add(id);
-      const b = hitTouchButton(this.buttons, x, y);
+      const b = hitTouchButton(this.buttons, x, y) || claimTouchStrike(this, x, y);
       if (b) {
-        if (b.held) return;
-        this.btnPointers[id] = b.id;
-        b.held = true;
-        b.pressVis = 1;
-        b._pressSyncAt = (typeof performance !== 'undefined' && performance.now) ? performance.now() : Date.now();
-        this.press(b.id);
-        try { if (typeof haptic === 'function') haptic(6); } catch (_) {}
+        pressTouchButton(this, b, id);
         return;
       }
       if (!pointInJoyZone(this, x, y)) {
@@ -31187,6 +31278,580 @@ addEventListener('keyup', e => {
   }
 });
 
+/* --- src/systems/combat-density.js --- */
+/**
+ * Adventure combat density — viewport / safe-playfield scale.
+ *
+ * Phone playfields are ~1/3 the width of desktop, but used the same horde
+ * counts (`ADVENTURE_HORDE_MUL` × wave size, up to 36, 54–78 alive). That
+ * piles threats on top of the player. Scale spawn *counts*, *spacing*, and
+ * *simultaneous alive* by playfield size.
+ *
+ * Rules:
+ * - Desktop / wide tablets (width ≥ 960) stay at 1.0 — do not gut PC.
+ * - Phone stays a horde (scale floor 0.50), just not a pile-on.
+ * - Versus / training / wall / coinrun are untouched.
+ * - Wave *count* (stage length) is not shortened.
+ */
+const COMBAT_DENSITY_REF_W = 1100;
+const COMBAT_DENSITY_REF_H = 620;
+const COMBAT_DENSITY_WIDE_W = 960;
+const COMBAT_DENSITY_MIN = 0.50;
+const COMBAT_DENSITY_MAX = 1;
+const COMBAT_DENSITY_SLOT_PX = 64;
+const ADVENTURE_MAX_ALIVE_DESKTOP = 78;
+const ADVENTURE_MAX_ALIVE_TOUCH = 54;
+
+function combatDensityClamp(v, a, b) {
+  if (typeof clamp === 'function') return clamp(v, a, b);
+  return v < a ? a : (v > b ? b : v);
+}
+
+function combatPlayfieldSize(opts) {
+  opts = opts || {};
+  let w = Number(opts.w);
+  let h = Number(opts.h);
+  if (!(w > 0)) {
+    if (typeof W === 'number' && W > 80) w = W;
+    else if (typeof viewportGameSize === 'function') w = viewportGameSize().w;
+    else if (typeof innerWidth === 'number' && innerWidth > 0) w = innerWidth;
+    else w = COMBAT_DENSITY_REF_W;
+  }
+  if (!(h > 0)) {
+    if (typeof H === 'number' && H > 80) h = H;
+    else if (typeof viewportGameSize === 'function') h = viewportGameSize().h;
+    else if (typeof innerHeight === 'number' && innerHeight > 0) h = innerHeight;
+    else h = COMBAT_DENSITY_REF_H;
+  }
+  return { w: Math.max(1, Math.round(w)), h: Math.max(1, Math.round(h)) };
+}
+
+/** True when the fight strip is phone-small (portrait or short landscape). */
+function combatDensityIsCompact(w, h) {
+  return w < 520 || h < 430 || (w < 820 && h < 500);
+}
+
+function combatDensityIsTablet(w, h) {
+  return !combatDensityIsCompact(w, h) && w < COMBAT_DENSITY_WIDE_W;
+}
+
+/**
+ * 0.50–1.00 density factor. Width-weighted: side-spawns walk in across W.
+ * Wide screens (≥960) always return 1 so desktop math is unchanged.
+ */
+function combatDensityScale(wOrOpts, h) {
+  const sz = (wOrOpts && typeof wOrOpts === 'object')
+    ? combatPlayfieldSize(wOrOpts)
+    : combatPlayfieldSize({ w: wOrOpts, h: h });
+  if (sz.w >= COMBAT_DENSITY_WIDE_W) return COMBAT_DENSITY_MAX;
+  const widthRatio = sz.w / COMBAT_DENSITY_REF_W;
+  const areaRatio = (sz.w * Math.min(sz.h, 780)) / (COMBAT_DENSITY_REF_W * COMBAT_DENSITY_REF_H);
+  const raw = widthRatio * 0.78 + Math.sqrt(Math.max(0.18, areaRatio)) * 0.22;
+  return combatDensityClamp(raw, COMBAT_DENSITY_MIN, COMBAT_DENSITY_MAX);
+}
+
+function combatDensityTouchCeil() {
+  return (typeof IS_TOUCH !== 'undefined' && IS_TOUCH)
+    ? ADVENTURE_MAX_ALIVE_TOUCH
+    : ADVENTURE_MAX_ALIVE_DESKTOP;
+}
+
+function combatDensityProfile(wOrOpts, h) {
+  const sz = (wOrOpts && typeof wOrOpts === 'object')
+    ? combatPlayfieldSize(wOrOpts)
+    : combatPlayfieldSize({ w: wOrOpts, h: h });
+  const scale = combatDensityScale(sz);
+  const compact = combatDensityIsCompact(sz.w, sz.h);
+  const tablet = combatDensityIsTablet(sz.w, sz.h);
+  const touchCeil = combatDensityTouchCeil();
+  const slots = Math.max(4, Math.floor(sz.w / COMBAT_DENSITY_SLOT_PX));
+  const layers = compact ? 1.65 : (tablet ? 2.4 : 3);
+  const offscreen = compact ? 2 : (tablet ? 6 : 10);
+  const fromSlots = Math.round(slots * layers + offscreen);
+  const fromLegacy = Math.round(touchCeil * scale);
+  let maxAlive;
+  if (scale >= 0.98) {
+    maxAlive = touchCeil;
+  } else {
+    maxAlive = Math.min(fromSlots, fromLegacy);
+    maxAlive = combatDensityClamp(maxAlive, compact ? 8 : 14, compact ? 14 : touchCeil);
+  }
+  return {
+    w: sz.w,
+    h: sz.h,
+    scale,
+    compact: !!compact,
+    tablet: !!tablet,
+    maxAlive,
+    spawnIntervalMul: compact ? 1.55 : (tablet ? 1.12 : 1),
+    spawnGapPx: compact ? 64 : (tablet ? 42 : 32),
+    spawnBatchMax: compact ? 1 : (tablet ? 2 : 3),
+  };
+}
+
+function scaleAdventurePerWave(basePerWave, profile) {
+  profile = profile || combatDensityProfile();
+  const n = Math.ceil(Number(basePerWave) * (profile.scale || 1));
+  return Math.max(2, n);
+}
+
+function scaleAdventureHordePad(basePad, profile) {
+  profile = profile || combatDensityProfile();
+  return Math.max(1, Math.round(Number(basePad) * (profile.scale || 1)));
+}
+
+function adventureMaxAliveNow(profile) {
+  profile = profile || combatDensityProfile();
+  return profile.maxAlive || combatDensityTouchCeil();
+}
+
+const COMBAT_OPEN_SEC = 30;
+const COMBAT_OPEN_MIN = 0.70;
+const COMBAT_OPEN_MAX = 1.12;
+const COMBAT_SUSTAIN_MIN = 0.62;
+const COMBAT_SUSTAIN_MAX = 1.05;
+const COMBAT_TAB_OPEN_MIN = 0.66;
+const COMBAT_TAB_OPEN_MAX = 1.22;
+const COMBAT_TAB_SUSTAIN_MIN = 0.55;
+const COMBAT_TAB_SUSTAIN_MAX = 1.15;
+const COMBAT_OPEN_HOLD_COMPACT = 0.55;
+const COMBAT_OPEN_HOLD_TABLET = 0.80;
+const COMBAT_OPEN_HOLD_DESK = 1.2;
+const COMBAT_SPAWN_EDGE_COMPACT = 18;
+const COMBAT_SPAWN_EDGE_TABLET = 28;
+const COMBAT_SPAWN_EDGE_DESK = 40;
+
+/** Compact/tablet cadence band. Desktop (wide) returns null = raw. */
+function combatCadenceBand(elapsedSec, profile) {
+  profile = asCombatProfile(profile);
+  const t = Number(elapsedSec);
+  if (!Number.isFinite(t)) return null;
+  if (profile.compact) {
+    return t < COMBAT_OPEN_SEC
+      ? { min: COMBAT_OPEN_MIN, max: COMBAT_OPEN_MAX }
+      : { min: COMBAT_SUSTAIN_MIN, max: COMBAT_SUSTAIN_MAX };
+  }
+  if (profile.tablet) {
+    return t < COMBAT_OPEN_SEC
+      ? { min: COMBAT_TAB_OPEN_MIN, max: COMBAT_TAB_OPEN_MAX }
+      : { min: COMBAT_TAB_SUSTAIN_MIN, max: COMBAT_TAB_SUSTAIN_MAX };
+  }
+  return null;
+}
+
+/**
+ * Spawn interval clamp. Desktop stays raw.
+ * Phone: 0.70–1.12 first 30s, 0.62–1.05 after.
+ * Tablet 834 mid-band: milder 0.66–1.22 / 0.55–1.15 (batch 2, no 0.31s dump).
+ */
+function combatSmoothOpenInterval(raw, elapsedSec, profile) {
+  const n = Number(raw);
+  if (!(n > 0)) return n;
+  const band = combatCadenceBand(elapsedSec, profile);
+  if (!band) return n;
+  return combatDensityClamp(n, band.min, band.max);
+}
+
+/**
+ * Between-wave hole. Desktop unchanged.
+ * Win-clear fanfare (base ≥ 2.3) stays — that is not a combat spike.
+ * Result CTA layout stays with #318/#323; lose delay is combatLoseResultMs.
+ */
+function combatWaveGapSec(base, elapsedSec, profile) {
+  const n = Number(base);
+  if (!(n > 0)) return n;
+  profile = asCombatProfile(profile);
+  if (n >= 2.3) return n;
+  if (profile.compact) return combatDensityClamp(n * 0.56, 0.82, 1.25);
+  if (profile.tablet) return combatDensityClamp(n * 0.72, 1.00, 1.60);
+  return n;
+}
+
+/** First-30s wave hold. Desktop / after 30s stay 1.2s. */
+function combatOpenerHold(elapsedSec, profile) {
+  profile = asCombatProfile(profile);
+  const t = Number(elapsedSec);
+  if (!(t < COMBAT_OPEN_SEC)) return COMBAT_OPEN_HOLD_DESK;
+  if (profile.compact) return COMBAT_OPEN_HOLD_COMPACT;
+  if (profile.tablet) return COMBAT_OPEN_HOLD_TABLET;
+  return COMBAT_OPEN_HOLD_DESK;
+}
+
+function combatSpawnEdgeOff(profile) {
+  profile = asCombatProfile(profile);
+  if (profile.compact) return COMBAT_SPAWN_EDGE_COMPACT;
+  if (profile.tablet) return COMBAT_SPAWN_EDGE_TABLET;
+  return COMBAT_SPAWN_EDGE_DESK;
+}
+
+/** Compact: spawn closer to the strip so the first walker is on-screen sooner. */
+function combatSpawnEdgeX(side, profile) {
+  profile = asCombatProfile(profile);
+  const off = combatSpawnEdgeOff(profile);
+  return side > 0 ? (profile.w + off) : -off;
+}
+
+/** Cadence used by Adventure spawn loop. Desktop profile == legacy 0.38 / batch 3 / gap 32. */
+function adventureSpawnCadence(queueLeft, opener, bossWave, spawnMul, profile, elapsedSec) {
+  profile = asCombatProfile(profile);
+  const batchWish = opener ? 1 : (queueLeft > 28 ? 3 : queueLeft > 14 ? 2 : 1);
+  const batch = Math.max(1, Math.min(batchWish, profile.spawnBatchMax || 3));
+  const pace = opener ? 1.55 : (queueLeft > 20 ? 0.72 : queueLeft > 10 ? 0.86 : 1);
+  const base = bossWave ? 0.92 : (opener ? 0.78 : 0.38);
+  let interval = base * (spawnMul || 1) * pace * (profile.spawnIntervalMul || 1);
+  interval = combatSmoothOpenInterval(interval, elapsedSec, profile);
+  return {
+    batch: opener ? 1 : batch,
+    interval,
+    gapPx: profile.spawnGapPx || 32,
+    edgePx: combatSpawnEdgeOff(profile),
+  };
+}
+
+const COMBAT_TELEGRAPH_FLOOR = 0.38;
+
+function asCombatProfile(profileOrSize) {
+  if (!profileOrSize) return combatDensityProfile();
+  if (typeof profileOrSize.compact === 'boolean' && typeof profileOrSize.scale === 'number') {
+    return profileOrSize;
+  }
+  return combatDensityProfile(profileOrSize);
+}
+
+/** Compact phones: slightly longer dodge window. Desktop winds stay 1.0. */
+function combatTelegraphMul(profile) {
+  profile = asCombatProfile(profile);
+  if (profile.compact) return 1.28;
+  if (profile.tablet) return 1.10;
+  return 1;
+}
+
+/**
+ * Charge/shark telegraph trigger distance. On a 390px strip the legacy 240px
+ * cue starts off-screen (ring invisible). Keep the cue on the playfield.
+ */
+function combatChargeTeleDist(base, profile) {
+  profile = asCombatProfile(profile);
+  const b = Number(base);
+  const raw = b > 0 ? b : 240;
+  if (!profile.compact) return raw;
+  return Math.min(raw, Math.max(140, Math.round(profile.w * 0.42)));
+}
+
+function combatTankTeleReach(size, profile) {
+  profile = asCombatProfile(profile);
+  const extra = profile.compact ? 72 : 48;
+  return (Number(size) || 40) + extra;
+}
+
+/** Elite/boss title card: freeze aggression on compact so the cue is readable. */
+function combatIntroHolds(profile) {
+  profile = asCombatProfile(profile);
+  return !!profile.compact;
+}
+
+function combatBannerSize(base, profile) {
+  profile = asCombatProfile(profile);
+  const b = Number(base) || 40;
+  if (!profile.compact) return b;
+  return Math.min(b, 40);
+}
+
+/** Extra jump slop on compact — dodge is the telegraph answer. */
+function combatJumpSlopExtra(profile) {
+  profile = asCombatProfile(profile);
+  return profile.compact ? 10 : 0;
+}
+
+/**
+ * 1P compact: left-bottom playfield is a swipe/move pad so empty space after
+ * a thinner horde is not a dead zone. Dual/Versus stays out.
+ * Tightened to 34% × below 62% so the band does not steal punch/kick near-misses.
+ */
+function combatJoySwipeAccepts(x, y, w, h, profile) {
+  profile = asCombatProfile(profile || { w: w, h: h });
+  if (!profile.compact) return false;
+  if (typeof Input !== 'undefined' && Input && Input.dualMode) return false;
+  const W0 = w > 0 ? w : profile.w;
+  const H0 = h > 0 ? h : profile.h;
+  return x < W0 * 0.34 && y > H0 * 0.62;
+}
+
+/**
+ * Punch/kick win the ambiguous band between the joy pad and the right cluster.
+ * Desktop / dual: no extra claim (legacy hit slop only).
+ */
+function combatPreferStrike(x, y, buttons, joyHome, profile) {
+  profile = asCombatProfile(profile);
+  if (!profile.compact) return null;
+  if (typeof Input !== 'undefined' && Input && Input.dualMode) return null;
+  const extra = 32;
+  const list = buttons || [];
+  let best = null;
+  let bestD = Infinity;
+  for (let i = 0; i < list.length; i++) {
+    const b = list[i];
+    if (!b || (b.id !== 'punch' && b.id !== 'kick')) continue;
+    const d = Math.hypot(x - b.x, y - b.y);
+    if (d <= (Number(b.r) || 24) + extra && d < bestD) {
+      bestD = d;
+      best = b;
+    }
+  }
+  if (!best) return null;
+  const jx = joyHome && Number.isFinite(Number(joyHome.x)) ? Number(joyHome.x) : 64;
+  const jy = joyHome && Number.isFinite(Number(joyHome.y)) ? Number(joyHome.y) : profile.h - 80;
+  const joyD = Math.hypot(x - jx, y - jy);
+  if (bestD + 8 <= joyD) return best;
+  return null;
+}
+
+const COMBAT_ENRAGE_WALK_BASE = 1.32;
+const COMBAT_ENRAGE_WALK_COMPACT = 0.52;
+const COMBAT_PICKUP_GAP_COMPACT = 40;
+const COMBAT_COLOSSAL_MUL_DESKTOP = 2;
+const COMBAT_COLOSSAL_MUL_PHONE = 1.38;
+const COMBAT_COLOSSAL_CAP_FRAC = 0.24;
+const COMBAT_COLOSSAL_CAP_MIN = 64;
+
+/**
+ * Hell stacks speedMul 1.16 × enrage 1.32 × walk 1.32 ≈ 2.02×. On 390px that
+ * deletes the dodge window after the density cut. Desktop stays raw.
+ * Compact keeps a real enrage bump (Hell still > Normal desktop 1.32).
+ */
+function combatEnrageWalkMul(enrageMul, profile) {
+  const raw = COMBAT_ENRAGE_WALK_BASE * (Number(enrageMul) > 0 ? Number(enrageMul) : 1);
+  profile = asCombatProfile(profile);
+  if (!profile.compact) return raw;
+  const extra = Math.max(0, raw - 1);
+  return 1 + extra * COMBAT_ENRAGE_WALK_COMPACT;
+}
+
+/** Compact: fan floor loot so gear + shards do not pile on one x. Desktop unchanged. */
+function combatSpreadPickupX(x, others, profile, bounds) {
+  profile = asCombatProfile(profile);
+  const raw = Number(x);
+  const nx0 = Number.isFinite(raw) ? raw : Math.round(profile.w * 0.5);
+  if (!profile.compact) return Math.round(nx0);
+  const minX = bounds && bounds.minX != null ? Number(bounds.minX) : 48;
+  const maxX = bounds && bounds.maxX != null ? Number(bounds.maxX) : Math.max(minX + 8, profile.w - 48);
+  let nx = combatDensityClamp(nx0, minX, maxX);
+  const list = (others || []).filter((p) => p && p.life > 0 && !p._got && Number.isFinite(Number(p.x)));
+  if (!list.length) return Math.round(nx);
+  const gap = COMBAT_PICKUP_GAP_COMPACT;
+  function free(tx) {
+    return list.every((p) => Math.abs(Number(p.x) - tx) >= gap);
+  }
+  if (free(nx)) return Math.round(nx);
+  for (let step = 1; step <= 10; step++) {
+    const left = combatDensityClamp(nx - step * gap, minX, maxX);
+    if (free(left)) return Math.round(left);
+    const right = combatDensityClamp(nx + step * gap, minX, maxX);
+    if (free(right)) return Math.round(right);
+  }
+  return Math.round(nx);
+}
+
+/** Short landscape (844×390): little air between HUD and ground. */
+function combatIsShort(profile) {
+  profile = asCombatProfile(profile);
+  return profile.h < 430;
+}
+
+/**
+ * Flyer/dragon hover above ground. Desktop stays 110/130.
+ * Short strip caps so the body stays in the aim-up band, not the HUD.
+ */
+function combatFlyerHover(base, profile) {
+  profile = asCombatProfile(profile);
+  const b = Number(base) > 0 ? Number(base) : 110;
+  if (profile.h >= 500) return b;
+  const ground = profile.h * 0.78;
+  const air = Math.max(90, ground - (profile.h < 430 ? 56 : 70));
+  const cap = Math.max(54, Math.round(air * 0.34));
+  return Math.max(54, Math.min(b, cap));
+}
+
+function combatFlyerBob(base, profile) {
+  const b = Number(base) > 0 ? Number(base) : 42;
+  if (!combatIsShort(profile)) return b;
+  return Math.max(12, Math.round(b * 0.55));
+}
+
+function combatFlyerCeilY(profile) {
+  profile = asCombatProfile(profile);
+  return profile.h < 430 ? 56 : 72;
+}
+
+/** Melee aim-up lift (px). Desktop 88. Short/compact get a bit more reach. */
+function combatMeleeAimLift(profile) {
+  profile = asCombatProfile(profile);
+  if (combatIsShort(profile)) return 104;
+  if (profile.compact) return 96;
+  return 88;
+}
+
+/** Extra ny gain after the legacy 1.38 so a short swipe still aims up. */
+function combatJoyAimGain(profile) {
+  profile = asCombatProfile(profile);
+  if (combatIsShort(profile)) return 1.22;
+  if (profile.compact) return 1.10;
+  return 1;
+}
+
+function combatJoyAimDead(profile) {
+  profile = asCombatProfile(profile);
+  return combatIsShort(profile) ? 5 : 7;
+}
+
+/** Checkpoint hold-right. Desktop 3.35s. Compact/phone 2.2s. */
+function combatPartGateWalkSec(profile) {
+  profile = asCombatProfile(profile);
+  if (profile.compact) return 2.2;
+  return 3.35;
+}
+
+/** How many HUD telegraph bars fit. Short landscape keeps 1 + overflow chip. */
+function combatTelegraphHudSlots(profile) {
+  profile = asCombatProfile(profile);
+  if (profile.h < 430) return 1;
+  return 2;
+}
+
+function combatPickTelegraphHuds(teles, profile) {
+  profile = asCombatProfile(profile);
+  const list = (teles || []).slice().sort((a, b) => (Number(a.remain) || 99) - (Number(b.remain) || 99));
+  const slots = combatTelegraphHudSlots(profile);
+  const shown = list.slice(0, slots);
+  const extra = list.length - shown.length;
+  if (extra > 0 && shown[0]) shown[0].extra = extra;
+  return shown;
+}
+
+/** Desktop stays 2.0. Phone keeps a "huge" boss without eating the 390px strip. */
+function combatColossalSizeMul(profile) {
+  profile = asCombatProfile(profile);
+  if (profile.compact) return COMBAT_COLOSSAL_MUL_PHONE;
+  return COMBAT_COLOSSAL_MUL_DESKTOP;
+}
+
+function combatBossSizeCap(profile) {
+  profile = asCombatProfile(profile);
+  if (!profile.compact) return Infinity;
+  const strip = Math.min(profile.w, Math.max(280, profile.h * 0.55));
+  return Math.max(COMBAT_COLOSSAL_CAP_MIN, Math.round(strip * COMBAT_COLOSSAL_CAP_FRAC));
+}
+
+function combatFitBossSize(rawSize, profile) {
+  profile = asCombatProfile(profile);
+  const s = Math.max(1, Number(rawSize) || 40);
+  if (!profile.compact) return Math.round(s);
+  return Math.round(Math.min(s, combatBossSizeCap(profile)));
+}
+
+/** Leftover ground (px) if a body of `size` stands at mid-strip. */
+function combatColossalFairLane(size, profile) {
+  profile = asCombatProfile(profile);
+  const contact = (Number(size) + 16) * 0.82;
+  return Math.max(0, Math.round(profile.w - 2 * contact));
+}
+
+function applyCombatTelegraphWind(baseWind, profile, flags) {
+  profile = asCombatProfile(profile);
+  let w = Number(baseWind) * combatTelegraphMul(profile);
+  if (profile.compact) w = Math.max(w, COMBAT_TELEGRAPH_FLOOR);
+  if (profile.compact && flags && flags.colossal) w = Math.max(w, 0.46);
+  return w;
+}
+
+const COMBAT_LOSE_MS_COMPACT = 650;
+const COMBAT_LOSE_MS_DESK = 850;
+const COMBAT_LOSE_MS_REDUCED = 160;
+
+/** Death → result CTA. Compact ~650ms, desktop ~850ms, reduced-motion 160. Win stays 1600. */
+function combatLoseResultMs(profile) {
+  if (typeof motionReduced === 'function' && motionReduced()) return COMBAT_LOSE_MS_REDUCED;
+  profile = asCombatProfile(profile);
+  return profile.compact ? COMBAT_LOSE_MS_COMPACT : COMBAT_LOSE_MS_DESK;
+}
+
+function combatFailTeleKind(src) {
+  if (!src) return '';
+  if (typeof src === 'string') return src;
+  const kind = src.kind || src.failKind || '';
+  if (kind === 'slam' || kind === 'charge' || kind === 'flyer' || kind === 'fire') return kind;
+  if (kind === 'laser' || kind === 'orb' || kind === 'ink' || kind === 'shoot') return 'shoot';
+  const attacker = src.attacker || src;
+  const sp = attacker.sp || {};
+  if (sp.type === 'tank') return 'slam';
+  if (sp.type === 'charge' || (sp.type === 'swim' && sp.art === 'shark')) return 'charge';
+  if (sp.type === 'fly' || sp.type === 'dragon' || attacker.flying) return 'flyer';
+  if (sp.type === 'shoot') return 'shoot';
+  if ((attacker.dashT || 0) > 0) return 'charge';
+  if ((attacker.telegraphT || 0) > 0 && sp.type === 'tank') return 'slam';
+  return '';
+}
+
+function combatFailCueLabel(kind) {
+  const map = {
+    slam: ['result.failTeleSlam', 'SLAM'],
+    charge: ['result.failTeleCharge', 'CHARGE'],
+    flyer: ['result.failTeleFlyer', 'vlieger'],
+    shoot: ['result.failTeleShoot', 'SCHIET'],
+    fire: ['result.failTeleFire', 'VUUR'],
+  };
+  const pair = map[kind];
+  if (!pair) return '';
+  return (typeof tOr === 'function') ? tOr(pair[0], pair[1]) : pair[1];
+}
+
+/** Record last readable fail cue on player hurt (Adventure). */
+function notePlayerFailTele(game, src) {
+  if (!game || game.mode !== 'adventure') return;
+  let kind = combatFailTeleKind(src);
+  if (!kind && game.monsters && game.monsters.length) {
+    const teles = (typeof adventureTelegraphHuds === 'function')
+      ? adventureTelegraphHuds(game.monsters)
+      : [];
+    if (teles[0] && teles[0].kind) {
+      kind = teles[0].kind === 'fire' ? 'fire' : (teles[0].kind === 'shoot' ? 'shoot' : teles[0].kind);
+    } else {
+      for (let i = 0; i < game.monsters.length; i++) {
+        const m = game.monsters[i];
+        if (!m || !m.alive) continue;
+        if (m.flying || (m.sp && (m.sp.type === 'fly' || m.sp.type === 'dragon'))) {
+          kind = 'flyer';
+          break;
+        }
+      }
+    }
+  }
+  if (kind) game.lastFailTele = kind;
+}
+
+/** One-line tip: "SLAM → Nog één keer". Empty when no cue (caller falls back). */
+function combatFailRetryTip(game, fallback) {
+  const again = (typeof tOr === 'function') ? tOr('result.againRetry', 'Nog één keer') : 'Nog één keer';
+  const cue = combatFailCueLabel(game && game.lastFailTele);
+  if (!cue) return fallback == null ? '' : fallback;
+  if (typeof tOr === 'function') return tOr('result.failTeleTip', '{cue} → {again}', { cue: cue, again: again });
+  return cue + ' → ' + again;
+}
+
+/** Resize: keep baked colossal HP, refit radius to the current playfield. */
+function refreshAdventureBossScale(game) {
+  if (!game || game.mode !== 'adventure' || !game.monsters) return;
+  for (const m of game.monsters) {
+    if (!m || !m.alive || m.satanBoss) continue;
+    if (!m.colossal || !(m._fitSizeRaw > 0)) continue;
+    const next = combatFitBossSize(m._fitSizeRaw);
+    if (!(next > 0) || Math.abs(next - m.size) < 1) continue;
+    m.size = next;
+    try {
+      if (!m.flying && game.ground > 0) m.y = game.ground - m.size;
+    } catch (_) {}
+  }
+}
 /* --- src/systems/fighter-move.js --- */
 /* ========================== FIGHTER MOVE ========================== */
 /**
@@ -32406,6 +33071,7 @@ function resize() {
   ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
   Input.layout(W, H);
   try { if (typeof refreshSatanCombatScale === 'function' && typeof game !== 'undefined') refreshSatanCombatScale(game); } catch (_) {}
+  try { if (typeof refreshAdventureBossScale === 'function' && typeof game !== 'undefined') refreshAdventureBossScale(game); } catch (_) {}
   if (game) game.onResize();
 }
 function scheduleResize() {
@@ -36282,6 +36948,9 @@ class Fighter {
         game.comboT = 0;
       }
       if (game.mode === 'adventure') game.killStreak = 0;
+      if (game.mode === 'adventure' && typeof notePlayerFailTele === 'function') {
+        try { notePlayerFailTele(game, opts); } catch (_) {}
+      }
     }
     this.hurtT = dmg >= 18 ? 0.28 : 0.24;
     this.hitFlashT = motionReduced() ? 0.06 : (dmg >= 18 ? 0.18 : 0.14);
@@ -36696,10 +37365,15 @@ class Monster {
       }
       if (Math.random() < COLOSSAL_CHANCE) {
         this.colossal = true;
-        this.size = Math.round(this.size * COLOSSAL_SIZE_MUL);
+        const cMul = (typeof combatColossalSizeMul === 'function')
+          ? combatColossalSizeMul()
+          : COLOSSAL_SIZE_MUL;
+        this.size = Math.round(this.size * cMul);
         this.maxhp = Math.round(this.maxhp * COLOSSAL_HP_MUL);
         this.hp = this.maxhp;
         this.dmg = Math.round(this.dmg * COLOSSAL_DMG_MUL);
+        this._fitSizeRaw = this.size;
+        if (typeof combatFitBossSize === 'function') this.size = combatFitBossSize(this.size);
       }
     }
     if (opts.giant && !this.superBoss && !this.bossCore && !this.satanBoss) {
@@ -36716,7 +37390,14 @@ class Monster {
     this.x = x;
     this.flying = sp.type === 'fly' || sp.type === 'dragon';
     this.swimming = sp.type === 'swim';
-    this.y = this.flying ? game.ground - rand(90, 160) : game.ground - this.size;
+    if (this.flying) {
+      const hover = (typeof combatFlyerHover === 'function') ? combatFlyerHover(110) : 110;
+      const lo = Math.max(54, Math.round(hover * 0.75));
+      const hi = Math.max(lo + 8, Math.round(hover * 1.25));
+      this.y = game.ground - rand(lo, hi);
+    } else {
+      this.y = game.ground - this.size;
+    }
     this.vx = 0; this.vy = 0;
     this.t = rand(0, 10); this.flashT = 0; this.deadT = -1;
     this.atkCD = rand(0.5, 1.5); this.shootCD = rand(1, 2.5);
@@ -36760,13 +37441,22 @@ class Monster {
     if (this.flashT > 0) this.flashT -= dt;
     if (this.phase2FlashT > 0) this.phase2FlashT -= dt;
     if (!this.alive) { this.deadT += dt; return; }
+    if (this.introT > 0 && typeof combatIntroHolds === 'function' && combatIntroHolds()) {
+      if (!this.flying && !this.swimming) this.y = game.ground - this.size;
+      this.x = clamp(this.x, game.minX - 20, game.maxX + 20);
+      return;
+    }
     const p = game.player;
     const dx = p.x - this.x, dir = Math.sign(dx) || 1, dist = Math.abs(dx);
     this.face = dir;
     this.atkCD -= dt; this.shootCD -= dt;
     if (this.superSlowT > 0) this.superSlowT -= dt;
     const gentechniqueMul = (this.superSlowT > 0) ? (this.superSlowMul || 0.25) : 1;
-    const enrageSpd = this.enraged ? (1.32 * (this.enrageMul || 1)) : 1;
+    const enrageSpd = this.enraged
+      ? ((typeof combatEnrageWalkMul === 'function')
+        ? combatEnrageWalkMul(this.enrageMul)
+        : (1.32 * (this.enrageMul || 1)))
+      : 1;
     const spdMul = enrageSpd * gentechniqueMul;
     const type = this.sp.type;
 
@@ -36780,7 +37470,10 @@ class Monster {
       this.x += this.vx * dt; this.y += this.vy * dt;
       if (this.y >= game.ground - this.size) { this.y = game.ground - this.size; this.vy = 0; this.vx *= 0.4; }
     } else if (type === 'fly') {
-      const ty = game.ground - 110 + Math.sin(this.t * 2.4) * 42;
+      const hover = (typeof combatFlyerHover === 'function') ? combatFlyerHover(110) : 110;
+      const bob = (typeof combatFlyerBob === 'function') ? combatFlyerBob(42) : 42;
+      let ty = game.ground - hover + Math.sin(this.t * 2.4) * bob;
+      if (typeof combatFlyerCeilY === 'function') ty = Math.max(ty, combatFlyerCeilY());
       this.y += (ty - this.y) * dt * 2.2;
       this.x += dir * this.speed * spdMul * dt * (dist > 30 ? 1 : 0);
     } else if (type === 'charge') {
@@ -36792,8 +37485,12 @@ class Monster {
         if (this.telegraphT <= 0) { this.dashT = 0.5; this.vx = dir * this.speed * spdMul * 3.4; AudioSys.sfx('swing'); }
       } else {
         this.x += dir * this.speed * spdMul * dt * 0.6;
-        if (dist < 240 && this.atkCD <= 0) {
-          const wind = (this.enraged ? 0.28 : (this.softTelegraph ? 0.88 : 0.45)) * (this.biomeTelegraphMul || 1);
+        const chargeDist = (typeof combatChargeTeleDist === 'function') ? combatChargeTeleDist(240) : 240;
+        if (dist < chargeDist && this.atkCD <= 0) {
+          let wind = (this.enraged ? 0.28 : (this.softTelegraph ? 0.88 : 0.45)) * (this.biomeTelegraphMul || 1);
+          if (typeof applyCombatTelegraphWind === 'function') {
+            wind = applyCombatTelegraphWind(wind, null, { colossal: !!this.colossal });
+          }
           this.telegraphT = wind;
           this.telegraphMax = wind;
           this.atkCD = rand(1.6, 2.6) / (this.enraged ? 1.25 : 1);
@@ -36820,12 +37517,18 @@ class Monster {
         if (this.telegraphT <= 0) {
           AudioSys.sfx('hit2'); game.shake(8, 0.25);
           if (Math.abs(p.x - this.x) < this.size + 62 && p.y > game.ground - 90)
-            p.takeDamage(this.dmg, Math.sign(p.x - this.x) * 320, game, { attacker: this });
+            p.takeDamage(this.dmg, Math.sign(p.x - this.x) * 320, game, { attacker: this, failKind: 'slam' });
         }
       } else {
         this.x += dir * this.speed * dt;
-        if (dist < this.size + 48 && this.atkCD <= 0) {
-          const wind = (this.softTelegraph ? 0.98 : 0.55) * (this.biomeTelegraphMul || 1);
+        const tankReach = (typeof combatTankTeleReach === 'function')
+          ? combatTankTeleReach(this.size)
+          : (this.size + 48);
+        if (dist < tankReach && this.atkCD <= 0) {
+          let wind = (this.softTelegraph ? 0.98 : 0.55) * (this.biomeTelegraphMul || 1);
+          if (typeof applyCombatTelegraphWind === 'function') {
+            wind = applyCombatTelegraphWind(wind, null, { colossal: !!this.colossal });
+          }
           this.telegraphT = wind;
           this.telegraphMax = wind;
           this.atkCD = 2.0;
@@ -36834,7 +37537,10 @@ class Monster {
       }
       this.y = game.ground - this.size;
     } else if (type === 'dragon') {
-      const ty = game.ground - 130 + Math.sin(this.t * 1.7) * 36;
+      const hover = (typeof combatFlyerHover === 'function') ? combatFlyerHover(130) : 130;
+      const bob = (typeof combatFlyerBob === 'function') ? combatFlyerBob(36) : 36;
+      let ty = game.ground - hover + Math.sin(this.t * 1.7) * bob;
+      if (typeof combatFlyerCeilY === 'function') ty = Math.max(ty, combatFlyerCeilY());
       this.y += (ty - this.y) * dt * 1.6;
       const want = 200;
       if (dist > want + 40) this.x += dir * this.speed * dt;
@@ -36862,8 +37568,12 @@ class Monster {
           }
         } else {
           this.x += dir * this.speed * spdMul * dt * 0.78;
-          if (dist < 230 && this.atkCD <= 0) {
-            const wind = (this.enraged ? 0.2 : (this.softTelegraph ? 0.58 : 0.36)) * (this.biomeTelegraphMul || 1);
+          const sharkDist = (typeof combatChargeTeleDist === 'function') ? combatChargeTeleDist(230) : 230;
+          if (dist < sharkDist && this.atkCD <= 0) {
+            let wind = (this.enraged ? 0.2 : (this.softTelegraph ? 0.58 : 0.36)) * (this.biomeTelegraphMul || 1);
+            if (typeof applyCombatTelegraphWind === 'function') {
+              wind = applyCombatTelegraphWind(wind, null, { colossal: !!this.colossal });
+            }
             this.telegraphT = wind;
             this.telegraphMax = wind;
             this.atkCD = rand(1.35, 2.1) / (this.enraged ? 1.25 : 1);
@@ -36913,7 +37623,11 @@ class Monster {
     }
     if (this.techniqueCD > 0 || dist < 130 || dist > 520) return;
     if (this.dashT > 0 || this.telegraphT > 0) return;
-    this.techniqueTelegraphT = this.enemyTechnique === 'wave_cannon' ? 0.9 : 0.5;
+    let techWind = this.enemyTechnique === 'wave_cannon' ? 0.9 : 0.5;
+    if (typeof applyCombatTelegraphWind === 'function') {
+      techWind = applyCombatTelegraphWind(techWind, null, { colossal: !!this.colossal });
+    }
+    this.techniqueTelegraphT = techWind;
     this.techniqueCD = rand(5, 8.5) / (this.enraged ? 1.2 : 1);
     try {
       AudioSys.sfx(this.enemyTechnique === 'wave_cannon' ? 'ketsbamCharge' : 'roar');
@@ -41418,19 +42132,25 @@ function gameUiTimerOk(ref, opts) {
 }
 
 function adventureTelegraphHud(m) {
-  if (!m || !m.alive) return null;
+  return adventureTelegraphHudFromMonster(m);
+}
+
+function adventureTelegraphHudFromMonster(m) {
+  if (!m || !m.alive || !m.sp) return null;
   if (m.telegraphT > 0) {
     const max = Math.max(0.2, m.telegraphMax || m.telegraphT);
     if (m.sp.type === 'tank') {
       return {
         label: (typeof t === 'function' ? t('hud.teleSlam') : 'SLAM — spring!'),
         color: '#ff9a3d', frac: m.telegraphT / max, max, icon: 'jump',
+        remain: m.telegraphT, kind: 'slam',
       };
     }
     if (m.sp.type === 'charge' || (m.sp.type === 'swim' && m.sp.art === 'shark')) {
       return {
         label: (typeof t === 'function' ? t('hud.teleCharge') : 'CHARGE — uit de weg!'),
         color: '#ffdd66', frac: m.telegraphT / max, max, icon: 'jump',
+        remain: m.telegraphT, kind: 'charge',
       };
     }
   }
@@ -41438,27 +42158,43 @@ function adventureTelegraphHud(m) {
     return {
       label: (typeof t === 'function' ? t('hud.teleShoot') : 'SCHIET — side-step!'),
       color: '#7cf5ff', frac: 1 - m.shootCD / 0.32, max: 0.32,
+      remain: m.shootCD, kind: 'shoot',
     };
   }
   if (m.sp.type === 'dragon' && m.shootCD > 0 && m.shootCD < 0.38) {
     return {
       label: (typeof t === 'function' ? t('hud.teleFire') : 'VUUR — side-step!'),
       color: '#ff7a4d', frac: 1 - m.shootCD / 0.38, max: 0.38,
+      remain: m.shootCD, kind: 'fire',
     };
   }
   return null;
 }
 
-function drawTelegraphBar(c, game, tele, y) {
-  const barW = Math.min(320, W - 32);
+function adventureTelegraphHuds(monsters) {
+  const out = [];
+  for (const m of monsters || []) {
+    const one = adventureTelegraphHudFromMonster(m);
+    if (one) out.push(one);
+  }
+  return out;
+}
+
+function drawTelegraphBar(c, game, tele, y, index) {
+  const dens = (typeof combatDensityProfile === 'function') ? combatDensityProfile() : null;
+  const compact = !!(dens && dens.compact);
+  const short = (typeof H === 'number' && H < 500);
+  const barW = Math.min(compact ? 268 : 320, W - (compact ? 24 : 32));
   const bx = (W - barW) / 2;
+  if (compact || short) y = Math.min(y, H * (short ? 0.50 : 0.58));
+  y += (Number(index) || 0) * (compact ? 38 : 36);
   c.fillStyle = 'rgba(0,0,0,.62)';
   game.rr(c, bx - 8, y - 20, barW + 16, 34, 10);
   c.fill();
   if (tele.icon && typeof drawStrikeHudChip === 'function') {
-    drawStrikeHudChip(c, tele.icon, bx + 10, y - 2, 11);
+    drawStrikeHudChip(c, tele.icon, bx + 10, y - 2, compact ? 12 : 11);
   }
-  c.font = '900 15px sans-serif';
+  c.font = compact ? '900 16px sans-serif' : '900 15px sans-serif';
   c.textAlign = 'center';
   const teleLabel = typeof wrapHudLines === 'function'
     ? wrapHudLines(c, tele.label, barW - (tele.icon ? 40 : 16), 1)[0]
@@ -41468,6 +42204,12 @@ function drawTelegraphBar(c, game, tele, y) {
   } else {
     c.fillStyle = tele.color;
     c.fillText(teleLabel, W / 2, y);
+  }
+  if (tele.extra > 0) {
+    c.font = compact ? '900 14px sans-serif' : '900 13px sans-serif';
+    c.textAlign = 'right';
+    c.fillStyle = '#fff';
+    c.fillText('+' + tele.extra, bx + barW - 2, y);
   }
   c.fillStyle = 'rgba(255,255,255,.2)';
   game.rr(c, bx, y + 8, barW, 8, 4);
@@ -41543,6 +42285,7 @@ class Game {
     const st = playerStats();
     if (mode === 'adventure') {
       this.advDiff = normalizeAdvDiffId(opts.difficulty || currentAdvDiff());
+      this.lastFailTele = null;
     }
     if (mode !== 'versus') {
       const advLevel = mode === 'adventure' ? (opts.level || 1) : 0;
@@ -41630,7 +42373,7 @@ class Game {
     this.spawnQueue = [];
     this.spawnTimer = 0;
     this.kills = 0;
-    this.betweenT = 1.2;
+    this.betweenT = (typeof combatOpenerHold === 'function') ? combatOpenerHold(0) : 1.2;
     this.pickups = this.pickups || [];
     this.worldX = 0;
     this.traveling = false;
@@ -41801,7 +42544,10 @@ class Game {
     const bossWave = isBossWave(this.level, this.waveIdx);
     this.spawnQueue = wave.slice();
     this.waveTotal = wave.length;
-    this.spawnTimer = bossWave ? 1.0 : 0.45;
+    const densStart = (typeof combatDensityProfile === 'function') ? combatDensityProfile() : null;
+    let startT = (bossWave ? 1.0 : 0.45) * ((densStart && densStart.spawnIntervalMul) || 1);
+    if (typeof combatSmoothOpenInterval === 'function') startT = combatSmoothOpenInterval(startT, this.t);
+    this.spawnTimer = startT;
     this.wavePause = 0;
     if (this.stageShieldPerWave > 0 && this.player) {
       this.playerShieldT = Math.max(this.playerShieldT, this.stageShieldPerWave);
@@ -41932,7 +42678,9 @@ class Game {
     if (pg.walking) {
       pg.idleT = 0;
       pg.idleHintShown = false;
-      pg.progress = Math.min(1, (pg.progress || 0) + dt / PART_GATE_WALK_SEC);
+      const gateSec = (typeof combatPartGateWalkSec === 'function')
+        ? combatPartGateWalkSec() : PART_GATE_WALK_SEC;
+      pg.progress = Math.min(1, (pg.progress || 0) + dt / gateSec);
       this.worldX = (this.worldX || 0) + dt * (115 + move * 175);
       const tick = Math.floor((pg.progress || 0) * 3);
       if (tick > (pg.milestone || 0)) {
@@ -41948,7 +42696,9 @@ class Game {
         }
       }
     } else if (move < -0.05 && (pg.progress || 0) > 0) {
-      pg.progress = Math.max(0, pg.progress - (dt / PART_GATE_WALK_SEC) * PART_GATE_DECAY_MUL);
+      const gateSec = (typeof combatPartGateWalkSec === 'function')
+        ? combatPartGateWalkSec() : PART_GATE_WALK_SEC;
+      pg.progress = Math.max(0, pg.progress - (dt / gateSec) * PART_GATE_DECAY_MUL);
       this.worldX = (this.worldX || 0) + dt * 16;
       pg.idleT = (pg.idleT || 0) + dt;
     } else {
@@ -42136,26 +42886,36 @@ class Game {
       // Satan / tide-beloning: geen normale golven tot duel klaar
     } else if (this.spawnQueue.length) {
       const alive = this.monsters.filter((m) => m.alive).length;
+      const aliveCap = (typeof adventureMaxAliveNow === 'function')
+        ? adventureMaxAliveNow()
+        : ADVENTURE_MAX_ALIVE;
       this.spawnTimer -= dt;
-      const aliveCap = (typeof adventureMaxAlive === 'function') ? adventureMaxAlive() : ADVENTURE_MAX_ALIVE;
       if (this.spawnTimer <= 0 && alive < aliveCap) {
         const bossWave = isBossWave(this.level, this.waveIdx);
         const meta = this.level.waveMeta && this.level.waveMeta[this.waveIdx];
         const spawnMul = (meta && meta.spawnMul) || 1;
         const queueLeft = this.spawnQueue.length;
         const opener = this.level && this.level.n <= 2 && this.waveIdx === 0;
-        const band = (typeof adventureHordeProfile === 'function') ? adventureHordeProfile().band : 'desk';
-        const batch = opener ? 1 : (band === 'phone' ? 1 : (queueLeft > 28 ? 3 : queueLeft > 14 ? 2 : 1));
+        const dens = (typeof adventureSpawnCadence === 'function')
+          ? adventureSpawnCadence(queueLeft, opener, bossWave, spawnMul, null, this.t)
+          : null;
+        const batch = opener ? 1 : (dens ? dens.batch : (queueLeft > 28 ? 3 : queueLeft > 14 ? 2 : 1));
         const intervalMul = opener ? 1.55 : (queueLeft > 20 ? 0.72 : queueLeft > 10 ? 0.86 : 1);
-        const viewMul = (typeof adventureHordeProfile === 'function')
-          ? (adventureHordeProfile().spawnIntervalMul || 1)
-          : 1;
-        this.spawnTimer = (bossWave ? 0.92 : (opener ? 0.78 : 0.38)) * spawnMul * intervalMul * viewMul;
+        let nextT = dens
+          ? dens.interval
+          : (bossWave ? 0.92 : (opener ? 0.78 : 0.38)) * spawnMul * intervalMul;
+        if (!dens && typeof combatSmoothOpenInterval === 'function') {
+          nextT = combatSmoothOpenInterval(nextT, this.t);
+        }
+        this.spawnTimer = nextT;
+        const gapPx = (dens && dens.gapPx) || 32;
         for (let b = 0; b < batch && this.spawnQueue.length && this.monsters.filter((m) => m.alive).length < aliveCap; b++) {
           const def = this.spawnQueue.shift();
           if (!def || !def.sp || !SPECIES[def.sp]) continue;
           const side = Math.random() < 0.75 ? 1 : -1;
-          const x = (side > 0 ? W + 40 : -40) + b * side * 32;
+          const x = ((typeof combatSpawnEdgeX === 'function')
+            ? combatSpawnEdgeX(side)
+            : (side > 0 ? W + 40 : -40)) + b * side * gapPx;
           const mon = new Monster(def.sp, x, this, {
             elite: !!(def.elite || def.superBoss),
             superBoss: !!def.superBoss,
@@ -42208,7 +42968,9 @@ class Game {
             }
           } catch (_) {}
         } else {
-          this.wavePause = nextIsBoss ? 2.15 : 1.55;
+          let gap = nextIsBoss ? 2.15 : 1.55;
+          if (typeof combatWaveGapSec === 'function') gap = combatWaveGapSec(gap, this.t);
+          this.wavePause = gap;
           this.wavePauseTotal = this.wavePause;
         }
         const waveHeal = Math.max(4, Math.round(this.player.maxhp * 0.06));
@@ -42369,13 +43131,15 @@ class Game {
       persist();
       // Heat / master already land on the VERLOREN result tip — late toasts stuck on that screen.
       AudioSys.sfx('lose');
-      this.banner(t('banner.lost'), 2, '#ff6b6b', 50);
+      try { this.shake(6, 0.22); } catch (_) {}
+      this.banner(t('banner.lost'), 1.1, '#ff6b6b', 50);
     }
     // Resultaat-scherm altijd tonen (Volgende / Nog één keer) — niet stil naar menu
     const loseCopy = !win && typeof adventureLoseCopy === 'function' ? adventureLoseCopy(this) : null;
+    const loseMs = (typeof combatLoseResultMs === 'function') ? combatLoseResultMs() : 700;
     const resultDelay = (typeof resultShowDelayMs === 'function')
       ? resultShowDelayMs(win, 'adventure')
-      : (win ? 1400 : 700);
+      : (win ? 1400 : loseMs);
     scheduleGameResult(this, resultDelay, () => UI.showResult(win, {
       titleKey: win ? 'result.advWin' : 'result.advLose',
       title: win ? t('result.advWin') : ((loseCopy && loseCopy.title) || t('result.advLose')),
@@ -42420,15 +43184,19 @@ class Game {
         : (stars >= 3 ? t('result.perfectRun') : (stars > prevStars
         ? t('result.starImproved', { stars, prev: prevStars })
         : t('result.pickupsHelp', { hint: starHintLine() })))) : (() => {
-        const prog = this.waveIdx >= 0 ? t('result.wavesProg', { cur: this.waveIdx + 1, total: this.level.waves.length }) : tOr('result.wavesStart', 'begin');
         const failsNow = advFailCount(lv, diff);
-        let heatTip = '';
+        const retry = tOr('result.againRetry', 'Nog één keer');
+        const tele = (typeof combatFailRetryTip === 'function') ? combatFailRetryTip(this, '') : '';
+        const waveTotal = (this.level && this.level.waves && this.level.waves.length) || 0;
+        const prog = this.waveIdx >= 0
+          ? t('result.wavesProg', { cur: this.waveIdx + 1, total: waveTotal })
+          : tOr('result.wavesStart', 'begin');
+        const lead = (tele || retry) + ' · ' + prog;
         if (failsNow >= SATAN_FAIL_THRESHOLD && typeof shouldTriggerSatan === 'function' && shouldTriggerSatan(lv, diff)) {
-          heatTip = t('result.heatSatanNext');
-        } else if (failsNow >= SATAN_DANGER_FAILS) {
-          heatTip = t('result.heatDanger');
-        } else if (failsNow >= 7) {
-          heatTip = t('result.heatRising', { n: failsNow, max: SATAN_FAIL_THRESHOLD });
+          return lead + ' · ' + t('result.heatSatanNext');
+        }
+        if (failsNow >= SATAN_DANGER_FAILS) {
+          return lead + ' · ' + t('result.heatDanger');
         }
         const named = typeof adventureKillTip === 'function' ? adventureKillTip(this, prog) : '';
         const base = named || (this.player.hp <= 0
@@ -42440,6 +43208,11 @@ class Game {
           once = onceResultTip('adventure', 'loss', t('result.lossGambleTip'));
         }
         const core = once ? `${base} · ${once}` : base;
+        let heatTip = '';
+        try {
+          const heat = (typeof satanHeatForLevel === 'function') ? satanHeatForLevel(lv, diff) : null;
+          heatTip = (typeof satanHeatTip === 'function') ? (satanHeatTip(heat) || '') : '';
+        } catch (_) {}
         return heatTip ? `${heatTip} · ${core}` : core;
       })(),
     }));
@@ -42786,6 +43559,13 @@ class Game {
     const pos = this.clampPickupPos(x, y);
     x = pos.x;
     y = pos.y;
+    if (typeof combatSpreadPickupX === 'function') {
+      const padX = 32;
+      x = combatSpreadPickupX(x, this.pickups, null, {
+        minX: (this.minX != null ? this.minX : 40) + padX,
+        maxX: (this.maxX != null ? this.maxX : W - 40) - padX,
+      });
+    }
     if (opts.skillId && SKILL_DEFS[opts.skillId]) {
       this.pickups.push({
         x, y, kind: 'skill_shard', skillId: opts.skillId, dropTier: opts.dropTier || 'normal',
@@ -44538,7 +45318,7 @@ class Game {
         if (pl && pl.alive && this.playerHurtCd <= 0
             && projHitsTarget(p, pl.bodyX, pl.bodyY, pl.bodyR * 0.8)) {
           const hit = resolveProjHit(p);
-          pl.takeDamage(hit.dmg, projKnockDir(p, pl.x) * 260, this, { attacker: p.srcMon || p.owner });
+          pl.takeDamage(hit.dmg, projKnockDir(p, pl.x) * 260, this, { attacker: p.srcMon || p.owner, kind: p.kind || 'shoot' });
           applyHitStop(this, { kind: skProj && (skProj.behavior === 'dash' || skProj.behavior === 'slash') ? 'special' : 'punch', dmg: hit.dmg },
             { crit: hit.crit, heavy: hit.dmg >= 18, playerHurt: true });
           this.floater(pl.x, pl.y - 115, '-' + hit.dmg, '#ff8080', 16);
@@ -45751,7 +46531,8 @@ class Game {
     {
       const edgePulse = calm ? 0.72 : (0.5 + Math.max(0, Math.sin(gt * (walking ? 7 : 4))) * 0.5);
       const edgeX = W - Math.max(48, 56 * ui);
-      const edgeY = this.ground - 110;
+      const edgeLift = (typeof combatFlyerHover === 'function') ? combatFlyerHover(110) : 110;
+      const edgeY = this.ground - edgeLift;
       const edgeSz = Math.max(36, 48 * ui) * (walking ? 1.08 : 1);
       c.globalAlpha = 0.35 + edgePulse * 0.55;
       c.fillStyle = walking ? '#ffd75e' : '#7cf5ff';
@@ -46602,12 +47383,14 @@ class Game {
         });
         if (!stageClear) this.drawNextWavePreview(c);
       }
-      let advTele = null;
-      for (const m of this.monsters) {
-        advTele = adventureTelegraphHud(m);
-        if (advTele) break;
+      const advTelesRaw = adventureTelegraphHuds(this.monsters);
+      const advTeles = (typeof combatPickTelegraphHuds === 'function')
+        ? combatPickTelegraphHuds(advTelesRaw)
+        : advTelesRaw.slice(0, 1);
+      const teleY = bossAlive ? hy + 8 : hy;
+      for (let i = 0; i < advTeles.length; i++) {
+        drawTelegraphBar(c, this, advTeles[i], teleY, i);
       }
-      if (advTele) drawTelegraphBar(c, this, advTele, bossAlive ? hy + 8 : hy);
     } else if (this.mode === 'training') {
       const r = this.robot;
       const half = Math.min(300, W * 0.36);
@@ -52721,9 +53504,9 @@ const UI = {
       if (label && typeof paintResultRetryLabel === 'function') paintResultRetryLabel(label, data);
       else if (label) {
         label.textContent = (!win || data.mode === 'training' || data.mode === 'wall' || data.mode === 'coinrun')
-          ? t('result.onceMore') : t('result.again');
+          ? tOr('result.onceMore', tOr('result.againRetry', 'Nog één keer')) : t('result.again');
       }
-      again.setAttribute('aria-label', (label && label.textContent) || t('result.onceMore'));
+      again.setAttribute('aria-label', (label && label.textContent) || tOr('result.onceMore', tOr('result.againRetry', 'Nog één keer')));
     }
     const safe = document.getElementById('resRetrySafe');
     if (safe) {
@@ -52741,6 +53524,7 @@ const UI = {
     }
     const screen = document.getElementById('resultScreen');
     if (screen) {
+      screen.classList.toggle('lose-retry', !win && data.mode === 'adventure');
       screen.classList.toggle('is-win', !!win);
       screen.classList.toggle('is-lose', !win);
       screen.classList.toggle('is-adventure', data.mode === 'adventure');
@@ -52749,8 +53533,6 @@ const UI = {
     state = 'result';
     scheduleResize();
     document.getElementById('pauseBtn')?.classList.remove('show');
-    const rs = document.getElementById('resultScreen');
-    if (rs) rs.classList.toggle('is-lose', !win);
     this.show('resultScreen');
     AudioSys.setPaused(false);
     playMenuBgm(true);
@@ -55220,7 +56002,40 @@ function bootGame() {
     isTop20: (id) => (typeof isTop20StrongestSpecies === 'function' ? isTop20StrongestSpecies(id) : false),
     spawnTop20: (id) => (typeof spawnTop20ForTest === 'function' ? spawnTop20ForTest(game, id) : null),
     hordeProfile: () => (typeof adventureHordeProfile === 'function' ? adventureHordeProfile() : null),
-    maxAlive: () => (typeof adventureMaxAlive === 'function' ? adventureMaxAlive() : null),
+    maxAlive: () => (typeof adventureMaxAliveNow === 'function'
+      ? adventureMaxAliveNow()
+      : (typeof adventureMaxAlive === 'function' ? adventureMaxAlive() : null)),
+    combatDensity: (typeof combatDensityProfile === 'function') ? {
+      scale: combatDensityScale,
+      profile: combatDensityProfile,
+      maxAlive: adventureMaxAliveNow,
+      cadence: adventureSpawnCadence,
+      smoothOpen: combatSmoothOpenInterval,
+      waveGap: combatWaveGapSec,
+      openerHold: combatOpenerHold,
+      spawnEdgeX: combatSpawnEdgeX,
+      preferStrike: combatPreferStrike,
+      perWave: scaleAdventurePerWave,
+      telegraphWind: applyCombatTelegraphWind,
+      chargeDist: combatChargeTeleDist,
+      introHolds: combatIntroHolds,
+      jumpSlop: combatJumpSlopExtra,
+      joySwipe: combatJoySwipeAccepts,
+      colossalMul: combatColossalSizeMul,
+      fitBossSize: combatFitBossSize,
+      fairLane: combatColossalFairLane,
+      enrageWalk: combatEnrageWalkMul,
+      spreadPickupX: combatSpreadPickupX,
+      teleHudSlots: combatTelegraphHudSlots,
+      pickTeleHuds: combatPickTelegraphHuds,
+      flyerHover: combatFlyerHover,
+      meleeLift: combatMeleeAimLift,
+      partGateSec: combatPartGateWalkSec,
+      loseResultMs: combatLoseResultMs,
+      failRetryTip: combatFailRetryTip,
+      noteFailTele: notePlayerFailTele,
+      cadenceBand: combatCadenceBand,
+    } : null,
     previewTop20Spawn: () => {
       try { AudioSys.init(); AudioSys.sfx('top20Spawn'); } catch (_) {}
       try { if (game && typeof game.shake === 'function') game.shake(4, 0.16); } catch (_) {}

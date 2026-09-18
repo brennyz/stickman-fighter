@@ -2052,18 +2052,33 @@ function paintResultRetryLabel(el, data) {
   el.textContent = main;
 }
 
-/** Instant same-level rematch — no island / dice / HOME maze after death. */
-function restartAdventureInstant(data) {
+/** Instant same-level rematch — no island / dice / HOME maze after death.
+ * Accepts #323 `{level,difficulty}` or #314 `(n, diff, gamble)`. */
+function restartAdventureInstant(dataOrN, diff, gamble) {
   try { if (typeof UI !== 'undefined' && UI.hideFomoRitual) UI.hideFomoRitual(); } catch (_) {}
   try { if (typeof UI !== 'undefined' && UI.hideGambleRollFlash) UI.hideGambleRollFlash(); } catch (_) {}
   try { if (typeof cancelGambleStart === 'function') cancelGambleStart(); } catch (_) {}
-  const level = Math.max(1, Math.min(MAX_LEVEL, Number(data && data.level) || 1));
-  let difficulty = 'normal';
+  let level;
+  let difficulty;
+  let g = null;
+  if (dataOrN && typeof dataOrN === 'object') {
+    level = dataOrN.level;
+    difficulty = dataOrN.difficulty;
+    g = dataOrN.gamble || null;
+  } else {
+    level = dataOrN;
+    difficulty = diff;
+    g = gamble || null;
+  }
+  level = Math.max(1, Math.min(MAX_LEVEL, Number(level) || 1));
   try {
-    difficulty = (data && data.difficulty)
-      || (typeof currentAdvDiff === 'function' ? currentAdvDiff() : 'normal');
-  } catch (_) {}
-  startGame('adventure', { level, difficulty });
+    difficulty = (typeof normalizeAdvDiffId === 'function')
+      ? normalizeAdvDiffId(difficulty || (typeof currentAdvDiff === 'function' ? currentAdvDiff() : 'normal'))
+      : (difficulty || (typeof currentAdvDiff === 'function' ? currentAdvDiff() : 'normal'));
+  } catch (_) {
+    difficulty = difficulty || 'normal';
+  }
+  startGame('adventure', { level, difficulty, gamble: g, instantRetry: true });
 }
 
 /** Veilig resultaat na gevecht — voorkomt ReferenceError + zwart scherm. */

@@ -2162,6 +2162,20 @@
       text-shadow:0 3px 0 #a86818; }
   #resultScreen .btn { margin-top:8px; }
 
+  /* Adventure lose: one fat Flappy-style retry. No extra chrome. */
+  #resultScreen.lose-retry #resAgain {
+    min-height: 72px;
+    font-size: min(7.2vw, 26px);
+    font-weight: 900;
+    letter-spacing: 0.02em;
+    margin-top: 12px;
+  }
+  #resultScreen.lose-retry #resAgain div { font-size: inherit; line-height: 1.1; }
+  #resultScreen.lose-retry #resMenu { min-height: 44px; opacity: 0.88; }
+  @media (min-width: 960px) {
+    #resultScreen.lose-retry #resAgain { min-height: 64px; font-size: 24px; }
+  }
+
   /* Android Chrome/TWA: HTML-toast onder statusbalk. Queue + toon (ok/warn/danger) van #260. */
   #toastHost { position:fixed; left:50%; top:max(12px, calc(env(safe-area-inset-top, 0px) + 10px));
       transform:translateX(-50%); z-index:40; pointer-events:none;

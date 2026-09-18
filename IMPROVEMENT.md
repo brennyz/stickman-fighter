@@ -162,6 +162,7 @@ Schrijf **1–3 regels** per sessie: datum, d#, wat, versie.
 
 | Datum (UTC) | d# | Update |
 |-------------|-----|--------|
+| 2026-09-18 | — | **MEGA-MERGE #314:** phone 0.50 + tablet 834 mid-band onto main. Desktop 1.0 kept. Retry stays #323. |
 | 2026-09-18 | — | **MEGA-MERGE:** #317 i18n + #323 Flappy retry onto main (keep #317 copy + #323 onceMore/`restartAdventureInstant`/`#resRetrySafe`). |
 | 2026-09-18 | — | LANGUAGE examiner **#317 DONE**: pets/summons/gear empty states (DE overlay wipe → EN pulls/Done; FR/ES summonNoPulls; NL trekkingen). Copy only, geen layout. Draft, geen main. **v1.18.186 / SW 396**. |
 | 2026-09-18 | — | LANGUAGE examiner #317: lose/win/FOMO/settings FR/ES/DE leaks (run→partie, SUMMON→Coffre/Kiste, Unlock/Skip/Sound, settings chrome). Draft, geen main. **v1.18.185 / SW 395**. |
@@ -176,6 +177,16 @@ Schrijf **1–3 regels** per sessie: datum, d#, wat, versie.
 | 2026-09-18 | — | **#323 DONE (P0–P2).** Shared result-dock hooks with #318 (`#resCtaDock`, 84px gold, 700ms). Behavior (`restartAdventureInstant`, `#resRetrySafe`) stays on this lane. P3 leftover. **v1.18.174 / SW 384**. Draft, niet main. |
 | 2026-09-18 | — | **#323 keep-improving:** Training/Wall/Coinrun zelfde &lt;3s retry; tap-safe `#resRetrySafe` (mistap ≠ Menu); onceMore EN/DE/FR/ES. smoke:flappy-retry groen (731ms / 725ms). **v1.18.174 / SW 384**. Draft, niet main. |
 | 2026-09-18 | — | **Flappy-retry #323:** Avontuur-dood → “Nog één keer” in ~700ms, 84px tap 390px, geen dobbel-doolhof, FOMO uit result. #316 juice ongemoeid. **v1.18.173 / SW 383**. Draft, niet main. |
+| 2026-09-18 | — | **#314 tablet 834 mid-band:** scale 0.806 / ~37 alive between phone 0.50 and desktop 1.0; cadence 0.66–1.22 / 0.55–1.15; hold 0.80; gap ×0.72; edge 28. Result CTA left as-is. **v1.18.183 / SW 393**. Draft, niet main. |
+| 2026-09-18 | — | **#314 P0 reopen:** compact floor **0.50** / ~12 alive (cap 8–14) / gap 64 / interval ×1.55; fail telegraph → **Nog één keer**; lose CTA 650ms + instant rematch (no dice). Desktop 1.0 unchanged. **v1.18.182 / SW 392**. Draft, niet main. |
+| 2026-09-18 | — | **#314 lane DONE:** minute-1+ sustain clamp 0.62–1.05 + compact wave-gap ×0.56; result CTA left to #323 (1600/1400 untouched). P3 leftovers only. **v1.18.180 / SW 390**. Draft. |
+| 2026-09-18 | — | **#314 P0 combat feel:** compact first-30s spawn clamp 0.70–1.12s + hold 0.55 + edge 18; punch/kick prefer-strike vs joy (swipe 34%×62%). Contract in `docs/COMBAT-DENSITY.md`. **v1.18.179 / SW 389**. Draft. |
+| 2026-09-18 | — | **#314 EX-5/6:** short-landscape flyer hover+aim lift; compact part-gate 2.2s (desktop 3.35). **v1.18.178 / SW 388**. Draft. |
+| 2026-09-18 | — | **#314 EX-4:** multi telegraph HUD — 2 stacked bars on 390 (soonest first); short landscape 1 +N. **v1.18.177 / SW 387**. Draft. |
+| 2026-09-18 | — | **#314 EX-2/3:** compact Hell enrage walk extra ×0.52 (1.742→1.386; desktop raw); floor-loot 40px fan on 390. **v1.18.176 / SW 386**. Draft. |
+| 2026-09-18 | — | **#314 EX-1 colossal:** phone size ×1.38 + 0.24-strip cap (fair lane ≥80px); desktop ×2.0 uncapped; HP/dmg same; wind 0.46s. **v1.18.175 / SW 385**. Draft. |
+| 2026-09-18 | — | **#314 examinator:** 390px elite/boss telegraph readable (wind floor 0.38, on-screen trigger, intro hold, banner cap); compact jump slop + left-bottom swipe pad. Desktop winds unchanged. **v1.18.174 / SW 384**. Draft. |
+| 2026-09-18 | — | **Mobile combat density:** Adventure spawn counts / gap / max-alive scale by viewport. Phone portrait 0.60 / ~17 alive / single-file; desktop 1.0 / 78 unchanged. Versus out. **v1.18.173 / SW 383**. Draft, niet main. Docs: `docs/COMBAT-DENSITY.md`. |
 | 2026-09-16 | — | **MEGA-MERGE → main** Grok wave #295–#309 (i18n → systems → UI → pixels → polish). Feature-base PRs (#297/#300/#307/#309) cherry-picked. **v1.18.172 / SW 382**. speel.html na Pages. |
 | 2026-09-16 | — | Gear UI ↔ #295 equip-API: sheets via gearSlotInventory, tap via gearEquipItem(id,{expectSlot}), states ok/vanity-ok/already-equipped/locked/not-owned/wrong-slot/unknown. DOM/schema 1 ongewijzigd. v1.18.171 / SW 381. Draft, niet main. |
 | 2026-09-16 | — | Gear UX pass: HOME-sibling (1-tap Uitrusting, grotere hero + overlays, slot/wapen HOME-cards, tap=aan/uit, safe Back, één page-scroll). Schema ongewijzigd. v1.18.170 / SW 380. Draft, niet main. |

@@ -5131,9 +5131,9 @@ const UI = {
       if (label && typeof paintResultRetryLabel === 'function') paintResultRetryLabel(label, data);
       else if (label) {
         label.textContent = (!win || data.mode === 'training' || data.mode === 'wall' || data.mode === 'coinrun')
-          ? t('result.onceMore') : t('result.again');
+          ? tOr('result.onceMore', tOr('result.againRetry', 'Nog één keer')) : t('result.again');
       }
-      again.setAttribute('aria-label', (label && label.textContent) || t('result.onceMore'));
+      again.setAttribute('aria-label', (label && label.textContent) || tOr('result.onceMore', tOr('result.againRetry', 'Nog één keer')));
     }
     const safe = document.getElementById('resRetrySafe');
     if (safe) {
@@ -5151,6 +5151,7 @@ const UI = {
     }
     const screen = document.getElementById('resultScreen');
     if (screen) {
+      screen.classList.toggle('lose-retry', !win && data.mode === 'adventure');
       screen.classList.toggle('is-win', !!win);
       screen.classList.toggle('is-lose', !win);
       screen.classList.toggle('is-adventure', data.mode === 'adventure');
@@ -5159,8 +5160,6 @@ const UI = {
     state = 'result';
     scheduleResize();
     document.getElementById('pauseBtn')?.classList.remove('show');
-    const rs = document.getElementById('resultScreen');
-    if (rs) rs.classList.toggle('is-lose', !win);
     this.show('resultScreen');
     AudioSys.setPaused(false);
     playMenuBgm(true);

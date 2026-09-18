@@ -25,6 +25,7 @@ const REQUIRED_MODULES = [
   'src/systems/fighter-move.js',
   'src/systems/input.js',
   'src/systems/aim-tutorial.js',
+  'src/systems/combat-density.js',
 ];
 for (const req of REQUIRED_MODULES) {
   if (!files.includes(req)) {

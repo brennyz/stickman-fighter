@@ -52,10 +52,15 @@ class Monster {
       }
       if (Math.random() < COLOSSAL_CHANCE) {
         this.colossal = true;
-        this.size = Math.round(this.size * COLOSSAL_SIZE_MUL);
+        const cMul = (typeof combatColossalSizeMul === 'function')
+          ? combatColossalSizeMul()
+          : COLOSSAL_SIZE_MUL;
+        this.size = Math.round(this.size * cMul);
         this.maxhp = Math.round(this.maxhp * COLOSSAL_HP_MUL);
         this.hp = this.maxhp;
         this.dmg = Math.round(this.dmg * COLOSSAL_DMG_MUL);
+        this._fitSizeRaw = this.size;
+        if (typeof combatFitBossSize === 'function') this.size = combatFitBossSize(this.size);
       }
     }
     if (opts.giant && !this.superBoss && !this.bossCore && !this.satanBoss) {
@@ -72,7 +77,14 @@ class Monster {
     this.x = x;
     this.flying = sp.type === 'fly' || sp.type === 'dragon';
     this.swimming = sp.type === 'swim';
-    this.y = this.flying ? game.ground - rand(90, 160) : game.ground - this.size;
+    if (this.flying) {
+      const hover = (typeof combatFlyerHover === 'function') ? combatFlyerHover(110) : 110;
+      const lo = Math.max(54, Math.round(hover * 0.75));
+      const hi = Math.max(lo + 8, Math.round(hover * 1.25));
+      this.y = game.ground - rand(lo, hi);
+    } else {
+      this.y = game.ground - this.size;
+    }
     this.vx = 0; this.vy = 0;
     this.t = rand(0, 10); this.flashT = 0; this.deadT = -1;
     this.atkCD = rand(0.5, 1.5); this.shootCD = rand(1, 2.5);
@@ -116,13 +128,22 @@ class Monster {
     if (this.flashT > 0) this.flashT -= dt;
     if (this.phase2FlashT > 0) this.phase2FlashT -= dt;
     if (!this.alive) { this.deadT += dt; return; }
+    if (this.introT > 0 && typeof combatIntroHolds === 'function' && combatIntroHolds()) {
+      if (!this.flying && !this.swimming) this.y = game.ground - this.size;
+      this.x = clamp(this.x, game.minX - 20, game.maxX + 20);
+      return;
+    }
     const p = game.player;
     const dx = p.x - this.x, dir = Math.sign(dx) || 1, dist = Math.abs(dx);
     this.face = dir;
     this.atkCD -= dt; this.shootCD -= dt;
     if (this.superSlowT > 0) this.superSlowT -= dt;
     const gentechniqueMul = (this.superSlowT > 0) ? (this.superSlowMul || 0.25) : 1;
-    const enrageSpd = this.enraged ? (1.32 * (this.enrageMul || 1)) : 1;
+    const enrageSpd = this.enraged
+      ? ((typeof combatEnrageWalkMul === 'function')
+        ? combatEnrageWalkMul(this.enrageMul)
+        : (1.32 * (this.enrageMul || 1)))
+      : 1;
     const spdMul = enrageSpd * gentechniqueMul;
     const type = this.sp.type;
 
@@ -136,7 +157,10 @@ class Monster {
       this.x += this.vx * dt; this.y += this.vy * dt;
       if (this.y >= game.ground - this.size) { this.y = game.ground - this.size; this.vy = 0; this.vx *= 0.4; }
     } else if (type === 'fly') {
-      const ty = game.ground - 110 + Math.sin(this.t * 2.4) * 42;
+      const hover = (typeof combatFlyerHover === 'function') ? combatFlyerHover(110) : 110;
+      const bob = (typeof combatFlyerBob === 'function') ? combatFlyerBob(42) : 42;
+      let ty = game.ground - hover + Math.sin(this.t * 2.4) * bob;
+      if (typeof combatFlyerCeilY === 'function') ty = Math.max(ty, combatFlyerCeilY());
       this.y += (ty - this.y) * dt * 2.2;
       this.x += dir * this.speed * spdMul * dt * (dist > 30 ? 1 : 0);
     } else if (type === 'charge') {
@@ -148,8 +172,12 @@ class Monster {
         if (this.telegraphT <= 0) { this.dashT = 0.5; this.vx = dir * this.speed * spdMul * 3.4; AudioSys.sfx('swing'); }
       } else {
         this.x += dir * this.speed * spdMul * dt * 0.6;
-        if (dist < 240 && this.atkCD <= 0) {
-          const wind = (this.enraged ? 0.28 : (this.softTelegraph ? 0.88 : 0.45)) * (this.biomeTelegraphMul || 1);
+        const chargeDist = (typeof combatChargeTeleDist === 'function') ? combatChargeTeleDist(240) : 240;
+        if (dist < chargeDist && this.atkCD <= 0) {
+          let wind = (this.enraged ? 0.28 : (this.softTelegraph ? 0.88 : 0.45)) * (this.biomeTelegraphMul || 1);
+          if (typeof applyCombatTelegraphWind === 'function') {
+            wind = applyCombatTelegraphWind(wind, null, { colossal: !!this.colossal });
+          }
           this.telegraphT = wind;
           this.telegraphMax = wind;
           this.atkCD = rand(1.6, 2.6) / (this.enraged ? 1.25 : 1);
@@ -176,12 +204,18 @@ class Monster {
         if (this.telegraphT <= 0) {
           AudioSys.sfx('hit2'); game.shake(8, 0.25);
           if (Math.abs(p.x - this.x) < this.size + 62 && p.y > game.ground - 90)
-            p.takeDamage(this.dmg, Math.sign(p.x - this.x) * 320, game, { attacker: this });
+            p.takeDamage(this.dmg, Math.sign(p.x - this.x) * 320, game, { attacker: this, failKind: 'slam' });
         }
       } else {
         this.x += dir * this.speed * dt;
-        if (dist < this.size + 48 && this.atkCD <= 0) {
-          const wind = (this.softTelegraph ? 0.98 : 0.55) * (this.biomeTelegraphMul || 1);
+        const tankReach = (typeof combatTankTeleReach === 'function')
+          ? combatTankTeleReach(this.size)
+          : (this.size + 48);
+        if (dist < tankReach && this.atkCD <= 0) {
+          let wind = (this.softTelegraph ? 0.98 : 0.55) * (this.biomeTelegraphMul || 1);
+          if (typeof applyCombatTelegraphWind === 'function') {
+            wind = applyCombatTelegraphWind(wind, null, { colossal: !!this.colossal });
+          }
           this.telegraphT = wind;
           this.telegraphMax = wind;
           this.atkCD = 2.0;
@@ -190,7 +224,10 @@ class Monster {
       }
       this.y = game.ground - this.size;
     } else if (type === 'dragon') {
-      const ty = game.ground - 130 + Math.sin(this.t * 1.7) * 36;
+      const hover = (typeof combatFlyerHover === 'function') ? combatFlyerHover(130) : 130;
+      const bob = (typeof combatFlyerBob === 'function') ? combatFlyerBob(36) : 36;
+      let ty = game.ground - hover + Math.sin(this.t * 1.7) * bob;
+      if (typeof combatFlyerCeilY === 'function') ty = Math.max(ty, combatFlyerCeilY());
       this.y += (ty - this.y) * dt * 1.6;
       const want = 200;
       if (dist > want + 40) this.x += dir * this.speed * dt;
@@ -218,8 +255,12 @@ class Monster {
           }
         } else {
           this.x += dir * this.speed * spdMul * dt * 0.78;
-          if (dist < 230 && this.atkCD <= 0) {
-            const wind = (this.enraged ? 0.2 : (this.softTelegraph ? 0.58 : 0.36)) * (this.biomeTelegraphMul || 1);
+          const sharkDist = (typeof combatChargeTeleDist === 'function') ? combatChargeTeleDist(230) : 230;
+          if (dist < sharkDist && this.atkCD <= 0) {
+            let wind = (this.enraged ? 0.2 : (this.softTelegraph ? 0.58 : 0.36)) * (this.biomeTelegraphMul || 1);
+            if (typeof applyCombatTelegraphWind === 'function') {
+              wind = applyCombatTelegraphWind(wind, null, { colossal: !!this.colossal });
+            }
             this.telegraphT = wind;
             this.telegraphMax = wind;
             this.atkCD = rand(1.35, 2.1) / (this.enraged ? 1.25 : 1);
@@ -269,7 +310,11 @@ class Monster {
     }
     if (this.techniqueCD > 0 || dist < 130 || dist > 520) return;
     if (this.dashT > 0 || this.telegraphT > 0) return;
-    this.techniqueTelegraphT = this.enemyTechnique === 'wave_cannon' ? 0.9 : 0.5;
+    let techWind = this.enemyTechnique === 'wave_cannon' ? 0.9 : 0.5;
+    if (typeof applyCombatTelegraphWind === 'function') {
+      techWind = applyCombatTelegraphWind(techWind, null, { colossal: !!this.colossal });
+    }
+    this.techniqueTelegraphT = techWind;
     this.techniqueCD = rand(5, 8.5) / (this.enraged ? 1.2 : 1);
     try {
       AudioSys.sfx(this.enemyTechnique === 'wave_cannon' ? 'ketsbamCharge' : 'roar');

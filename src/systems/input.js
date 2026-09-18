@@ -18,9 +18,11 @@ function fighterAimNorm(f) {
     const jx = pad.joy.dx;
     const jy = pad.joy.dy;
     // Verticale mik los van horizontale looprichting — joy ↑ blijft duidelijk
-    if (Math.abs(jy) >= JOY_AIM_DEAD_PX) {
+    const aimDead = (typeof combatJoyAimDead === 'function') ? combatJoyAimDead() : JOY_AIM_DEAD_PX;
+    const aimGain = (typeof combatJoyAimGain === 'function') ? combatJoyAimGain() : 1;
+    if (Math.abs(jy) >= aimDead) {
       ny = clamp(jy / JOY_MAX_PX, -1.05, 0.78);
-      if (ny < -0.14) ny = clamp(ny * 1.38, -1.15, 0);
+      if (ny < -0.14) ny = clamp(ny * 1.38 * aimGain, -1.15, 0);
     }
     if (Math.abs(jx) >= JOY_DEAD_PX) nx = clamp(jx / JOY_MAX_PX, -1, 1);
     else nx = face * 0.72;
@@ -206,7 +208,8 @@ function meleeHitPoint(f, spec) {
   const range = (spec && spec.range) || 40;
   const hx = f.x + f.face * range * (0.72 + Math.abs(aim.nx) * 0.18);
   const moveOff = (spec && spec.moveHitY) || 0;
-  const hy = f.y - 48 + clamp(aim.ny, -1, 0.65) * 88 + moveOff;
+  const lift = (typeof combatMeleeAimLift === 'function') ? combatMeleeAimLift() : 88;
+  const hy = f.y - 48 + clamp(aim.ny, -1, 0.65) * lift + moveOff;
   return { hx, hy, aim };
 }
 
@@ -311,11 +314,13 @@ function touchBtnPressXform(b) {
 /** Dichtstbijzijnde knop binnen slop — voorkomt verkeerde match bij overlap/slop (d9). */
 function hitTouchButton(buttons, x, y) {
   const slop = btnHitSlop();
+  const jumpExtra = (typeof combatJumpSlopExtra === 'function') ? combatJumpSlopExtra() : 0;
   let best = null;
   let bestD = Infinity;
   for (const b of buttons) {
+    const extra = (b.id === 'jump') ? jumpExtra : 0;
     const d = Math.hypot(x - b.x, y - b.y);
-    if (d <= b.r + slop && d < bestD) {
+    if (d <= b.r + slop + extra && d < bestD) {
       bestD = d;
       best = b;
     }
@@ -330,7 +335,12 @@ function joyGuardRadius(pad) {
 
 function pointInJoyZone(pad, x, y) {
   const home = (pad && pad.joyHome) || { x: 110, y: (H || 600) - 110 };
-  return Math.hypot(x - home.x, y - home.y) <= joyGuardRadius(pad) + btnHitSlop() * 0.5;
+  if (Math.hypot(x - home.x, y - home.y) <= joyGuardRadius(pad) + btnHitSlop() * 0.5) return true;
+  if (typeof combatJoySwipeAccepts === 'function' && combatJoySwipeAccepts(x, y, W, H)) {
+    if (nearAnyTouchButton((pad && pad.buttons) || [], x, y, 4)) return false;
+    return true;
+  }
+  return false;
 }
 
 function nearAnyTouchButton(buttons, x, y, extra) {
@@ -340,6 +350,24 @@ function nearAnyTouchButton(buttons, x, y, extra) {
     if (Math.hypot(x - b.x, y - b.y) < b.r + slop) return true;
   }
   return false;
+}
+
+/** Compact 1P: near-miss punch/kick beats the joy pad. Dual/desktop: no-op. */
+function claimTouchStrike(pad, x, y) {
+  if (typeof combatPreferStrike !== 'function') return null;
+  return combatPreferStrike(x, y, (pad && pad.buttons) || [], (pad && pad.joyHome) || null);
+}
+
+function pressTouchButton(pad, b, id) {
+  if (!pad || !b) return false;
+  if (b.held) return true;
+  pad.btnPointers[id] = b.id;
+  b.held = true;
+  b.pressVis = 1;
+  b._pressSyncAt = (typeof performance !== 'undefined' && performance.now) ? performance.now() : Date.now();
+  pad.press(b.id);
+  try { if (typeof haptic === 'function') haptic(6); } catch (_) {}
+  return true;
 }
 
 const TOUCH_BTN_META = {
@@ -972,16 +1000,9 @@ function makePad(side) {
       if (this.activePointers.size >= MAX_PAD_POINTERS && !this.activePointers.has(id)) return false;
       this.activePointers.add(id);
       if (dual) this.pointerPads[id] = this.side;
-      const b = this.hitButton(x, y);
+      const b = this.hitButton(x, y) || claimTouchStrike(this, x, y);
       if (b) {
-        if (b.held) return true;
-        this.btnPointers[id] = b.id;
-        b.held = true;
-        b.pressVis = 1;
-        b._pressSyncAt = (typeof performance !== 'undefined' && performance.now) ? performance.now() : Date.now();
-        this.press(b.id);
-        try { if (typeof haptic === 'function') haptic(6); } catch (_) {}
-        return true;
+        return pressTouchButton(this, b, id);
       }
       if (this.joy.active && this.joy.id !== id && !this.activePointers.has(this.joy.id)) {
         this.releaseJoy();
@@ -1072,15 +1093,9 @@ Object.assign(Input, {
       }
       if (this.activePointers.size >= MAX_PAD_POINTERS && !this.activePointers.has(id)) return;
       this.activePointers.add(id);
-      const b = hitTouchButton(this.buttons, x, y);
+      const b = hitTouchButton(this.buttons, x, y) || claimTouchStrike(this, x, y);
       if (b) {
-        if (b.held) return;
-        this.btnPointers[id] = b.id;
-        b.held = true;
-        b.pressVis = 1;
-        b._pressSyncAt = (typeof performance !== 'undefined' && performance.now) ? performance.now() : Date.now();
-        this.press(b.id);
-        try { if (typeof haptic === 'function') haptic(6); } catch (_) {}
+        pressTouchButton(this, b, id);
         return;
       }
       if (!pointInJoyZone(this, x, y)) {

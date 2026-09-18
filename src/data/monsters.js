@@ -510,11 +510,12 @@ function adventureHordeProfile() {
 }
 
 function adventureMaxAlive() {
+  if (typeof adventureMaxAliveNow === 'function') return adventureMaxAliveNow();
   return adventureHordeProfile().maxAlive;
 }
 
-/** Legacy alias — prefer adventureMaxAlive() so phone/tablet scale. */
-const ADVENTURE_MAX_ALIVE = (typeof IS_TOUCH !== 'undefined' && IS_TOUCH) ? 54 : 78;
+/** Desktop ceiling. Live cap is `adventureMaxAliveNow()` (viewport density). */
+const ADVENTURE_MAX_ALIVE = 78;
 const GIANT_SPAWN_CHANCE = 0.15;
 const GIANT_SIZE_MUL = 1.52;
 const GIANT_HP_MUL = 1.34;
@@ -903,11 +904,14 @@ function maxRarityForAdvLevel(n, diff) {
   return maxRarity;
 }
 
-function buildLevel(n, diffId) {
+function buildLevel(n, diffId, densityOpts) {
   const diff = typeof advDiffMeta === 'function' ? advDiffMeta(diffId) : {
     id: 'normal', order: 0, hpMul: 1, dmgMul: 1, rarityBoost: 0, eliteBonus: 0, giantBonus: 0,
     theme: null, speedMul: 1, enrageMul: 1, enrageAt: 0.5, hordeMul: 1, model: '1.0',
   };
+  const dens = (typeof combatDensityProfile === 'function')
+    ? combatDensityProfile(densityOpts || {})
+    : { scale: 1, maxAlive: ADVENTURE_MAX_ALIVE, w: 1100, h: 620 };
   const hpMul = (1 + (n - 1) * 0.14) * (diff.hpMul || 1);
   const dmgMul = (1 + (n - 1) * 0.08) * (diff.dmgMul || 1);
   const maxRarity = maxRarityForAdvLevel(n, diff.id);
@@ -930,10 +934,13 @@ function buildLevel(n, diffId) {
   const horde = (typeof adventureHordeProfile === 'function')
     ? adventureHordeProfile()
     : { mul: ADVENTURE_HORDE_MUL, maxPerWave: ADVENTURE_HORDE_MAX_PER_WAVE, openerCapMul: 1 };
-  const perWave = Math.min(
-    Math.max(2, Math.ceil(basePerWave * (horde.mul || ADVENTURE_HORDE_MUL) * hordeScale)),
-    horde.maxPerWave || ADVENTURE_HORDE_MAX_PER_WAVE
+  const rawPerWave = Math.min(
+    Math.max(2, Math.ceil(basePerWave * ADVENTURE_HORDE_MUL * hordeScale)),
+    ADVENTURE_HORDE_MAX_PER_WAVE
   );
+  const perWave = (typeof scaleAdventurePerWave === 'function')
+    ? scaleAdventurePerWave(rawPerWave, dens)
+    : rawPerWave;
   for (let w = 0; w < waveCount; w++) {
     const list = [];
     for (let i = 0; i < perWave; i++) {
@@ -1093,7 +1100,10 @@ function buildLevel(n, diffId) {
   }
   if (BOSS_AT[n]) {
     const bossWave = BOSS_AT[n].map(x => Object.assign({}, x, { bossCore: !!x.elite }));
-    const hordePad = Math.min(3 + Math.floor(n / 8) + (diff.order || 0) * 2, horde.band === 'phone' ? 4 : 12);
+    const hordePadRaw = Math.min(3 + Math.floor(n / 8) + (diff.order || 0) * 2, horde && horde.band === 'phone' ? 4 : 12);
+    const hordePad = (typeof scaleAdventureHordePad === 'function')
+      ? scaleAdventureHordePad(hordePadRaw, dens)
+      : hordePadRaw;
     for (let i = 0; i < hordePad; i++) {
       const elite = Math.random() < (0.1 + (diff.eliteBonus || 0) * 0.5);
       const bsp = weightedPick(pool, n, rarityBias);
@@ -1112,6 +1122,12 @@ function buildLevel(n, diffId) {
     model: diff.model || '1.0',
     enrageMul: diff.enrageMul || 1,
     enrageAt: diff.enrageAt != null ? diff.enrageAt : 0.5,
+    combatDensity: {
+      scale: dens.scale,
+      maxAlive: dens.maxAlive,
+      w: dens.w,
+      h: dens.h,
+    },
   };
 }
 
@@ -1231,28 +1247,31 @@ function triggerSpecialEnemyIntro(game, monster, kind) {
         if (typeof playFightBgm === 'function') playFightBgm('boss');
         else AudioSys.play('boss');
         const title = typeof t === 'function' ? t('banner.superBossTitle') : 'SUPER BAAS';
-        game.banner(title, 2.8, col, bigBoss ? 68 : 44);
+        const ban = (n) => (typeof combatBannerSize === 'function') ? combatBannerSize(n) : n;
+        game.banner(title, 2.8, col, ban(bigBoss ? 68 : 44));
         game.banner(colossal
           ? (typeof t === 'function' ? t('banner.colossalBossName', { name }) : `COLOSSALE ${name}!`)
-          : (typeof t === 'function' ? t('banner.bossName', { name }) : name), 2.5, '#fff', bigBoss ? 52 : 40);
+          : (typeof t === 'function' ? t('banner.bossName', { name }) : name), 2.5, '#fff', ban(bigBoss ? 52 : 40));
       } else if (tier === 'boss') {
         AudioSys.sting('bossIntro');
         if (typeof playFightBgm === 'function') playFightBgm('boss');
         else AudioSys.play('boss');
+        const ban = (n) => (typeof combatBannerSize === 'function') ? combatBannerSize(n) : n;
         if (bigBoss) {
           const title = typeof t === 'function' ? t('banner.bossTitle') : 'BAAS';
-          game.banner(title, 2.6, col, 64);
+          game.banner(title, 2.6, col, ban(64));
           game.banner(colossal
             ? (typeof t === 'function' ? t('banner.colossalBossName', { name }) : `COLOSSALE ${name}!`)
-            : (typeof t === 'function' ? t('banner.bossName', { name }) : `${name}!`), 2.35, '#fff', 50);
+            : (typeof t === 'function' ? t('banner.bossName', { name }) : `${name}!`), 2.35, '#fff', ban(50));
         } else {
-          game.banner(typeof t === 'function' ? t('banner.bossNamed', { name }) : `BAAS — ${name}!`, 1.8, col, 42);
+          game.banner(typeof t === 'function' ? t('banner.bossNamed', { name }) : `BAAS — ${name}!`, 1.8, col, ban(42));
         }
       } else {
         AudioSys.sting('eliteIntro');
         if (typeof playFightBgm === 'function') playFightBgm('elite');
         else AudioSys.play('elite');
-        game.banner(typeof t === 'function' ? t('banner.eliteNamed', { name }) : `ELITE — ${name}!`, 1.5, col, 38);
+        const ban = (n) => (typeof combatBannerSize === 'function') ? combatBannerSize(n) : n;
+        game.banner(typeof t === 'function' ? t('banner.eliteNamed', { name }) : `ELITE — ${name}!`, 1.5, col, ban(38));
       }
     } catch (_) {}
     try { AudioSys.sfx('roar'); } catch (_) {}

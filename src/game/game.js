@@ -81,19 +81,25 @@ function gameUiTimerOk(ref, opts) {
 }
 
 function adventureTelegraphHud(m) {
-  if (!m || !m.alive) return null;
+  return adventureTelegraphHudFromMonster(m);
+}
+
+function adventureTelegraphHudFromMonster(m) {
+  if (!m || !m.alive || !m.sp) return null;
   if (m.telegraphT > 0) {
     const max = Math.max(0.2, m.telegraphMax || m.telegraphT);
     if (m.sp.type === 'tank') {
       return {
         label: (typeof t === 'function' ? t('hud.teleSlam') : 'SLAM — spring!'),
         color: '#ff9a3d', frac: m.telegraphT / max, max, icon: 'jump',
+        remain: m.telegraphT, kind: 'slam',
       };
     }
     if (m.sp.type === 'charge' || (m.sp.type === 'swim' && m.sp.art === 'shark')) {
       return {
         label: (typeof t === 'function' ? t('hud.teleCharge') : 'CHARGE — uit de weg!'),
         color: '#ffdd66', frac: m.telegraphT / max, max, icon: 'jump',
+        remain: m.telegraphT, kind: 'charge',
       };
     }
   }
@@ -101,27 +107,43 @@ function adventureTelegraphHud(m) {
     return {
       label: (typeof t === 'function' ? t('hud.teleShoot') : 'SCHIET — side-step!'),
       color: '#7cf5ff', frac: 1 - m.shootCD / 0.32, max: 0.32,
+      remain: m.shootCD, kind: 'shoot',
     };
   }
   if (m.sp.type === 'dragon' && m.shootCD > 0 && m.shootCD < 0.38) {
     return {
       label: (typeof t === 'function' ? t('hud.teleFire') : 'VUUR — side-step!'),
       color: '#ff7a4d', frac: 1 - m.shootCD / 0.38, max: 0.38,
+      remain: m.shootCD, kind: 'fire',
     };
   }
   return null;
 }
 
-function drawTelegraphBar(c, game, tele, y) {
-  const barW = Math.min(320, W - 32);
+function adventureTelegraphHuds(monsters) {
+  const out = [];
+  for (const m of monsters || []) {
+    const one = adventureTelegraphHudFromMonster(m);
+    if (one) out.push(one);
+  }
+  return out;
+}
+
+function drawTelegraphBar(c, game, tele, y, index) {
+  const dens = (typeof combatDensityProfile === 'function') ? combatDensityProfile() : null;
+  const compact = !!(dens && dens.compact);
+  const short = (typeof H === 'number' && H < 500);
+  const barW = Math.min(compact ? 268 : 320, W - (compact ? 24 : 32));
   const bx = (W - barW) / 2;
+  if (compact || short) y = Math.min(y, H * (short ? 0.50 : 0.58));
+  y += (Number(index) || 0) * (compact ? 38 : 36);
   c.fillStyle = 'rgba(0,0,0,.62)';
   game.rr(c, bx - 8, y - 20, barW + 16, 34, 10);
   c.fill();
   if (tele.icon && typeof drawStrikeHudChip === 'function') {
-    drawStrikeHudChip(c, tele.icon, bx + 10, y - 2, 11);
+    drawStrikeHudChip(c, tele.icon, bx + 10, y - 2, compact ? 12 : 11);
   }
-  c.font = '900 15px sans-serif';
+  c.font = compact ? '900 16px sans-serif' : '900 15px sans-serif';
   c.textAlign = 'center';
   const teleLabel = typeof wrapHudLines === 'function'
     ? wrapHudLines(c, tele.label, barW - (tele.icon ? 40 : 16), 1)[0]
@@ -131,6 +153,12 @@ function drawTelegraphBar(c, game, tele, y) {
   } else {
     c.fillStyle = tele.color;
     c.fillText(teleLabel, W / 2, y);
+  }
+  if (tele.extra > 0) {
+    c.font = compact ? '900 14px sans-serif' : '900 13px sans-serif';
+    c.textAlign = 'right';
+    c.fillStyle = '#fff';
+    c.fillText('+' + tele.extra, bx + barW - 2, y);
   }
   c.fillStyle = 'rgba(255,255,255,.2)';
   game.rr(c, bx, y + 8, barW, 8, 4);
@@ -206,6 +234,7 @@ class Game {
     const st = playerStats();
     if (mode === 'adventure') {
       this.advDiff = normalizeAdvDiffId(opts.difficulty || currentAdvDiff());
+      this.lastFailTele = null;
     }
     if (mode !== 'versus') {
       const advLevel = mode === 'adventure' ? (opts.level || 1) : 0;
@@ -293,7 +322,7 @@ class Game {
     this.spawnQueue = [];
     this.spawnTimer = 0;
     this.kills = 0;
-    this.betweenT = 1.2;
+    this.betweenT = (typeof combatOpenerHold === 'function') ? combatOpenerHold(0) : 1.2;
     this.pickups = this.pickups || [];
     this.worldX = 0;
     this.traveling = false;
@@ -464,7 +493,10 @@ class Game {
     const bossWave = isBossWave(this.level, this.waveIdx);
     this.spawnQueue = wave.slice();
     this.waveTotal = wave.length;
-    this.spawnTimer = bossWave ? 1.0 : 0.45;
+    const densStart = (typeof combatDensityProfile === 'function') ? combatDensityProfile() : null;
+    let startT = (bossWave ? 1.0 : 0.45) * ((densStart && densStart.spawnIntervalMul) || 1);
+    if (typeof combatSmoothOpenInterval === 'function') startT = combatSmoothOpenInterval(startT, this.t);
+    this.spawnTimer = startT;
     this.wavePause = 0;
     if (this.stageShieldPerWave > 0 && this.player) {
       this.playerShieldT = Math.max(this.playerShieldT, this.stageShieldPerWave);
@@ -595,7 +627,9 @@ class Game {
     if (pg.walking) {
       pg.idleT = 0;
       pg.idleHintShown = false;
-      pg.progress = Math.min(1, (pg.progress || 0) + dt / PART_GATE_WALK_SEC);
+      const gateSec = (typeof combatPartGateWalkSec === 'function')
+        ? combatPartGateWalkSec() : PART_GATE_WALK_SEC;
+      pg.progress = Math.min(1, (pg.progress || 0) + dt / gateSec);
       this.worldX = (this.worldX || 0) + dt * (115 + move * 175);
       const tick = Math.floor((pg.progress || 0) * 3);
       if (tick > (pg.milestone || 0)) {
@@ -611,7 +645,9 @@ class Game {
         }
       }
     } else if (move < -0.05 && (pg.progress || 0) > 0) {
-      pg.progress = Math.max(0, pg.progress - (dt / PART_GATE_WALK_SEC) * PART_GATE_DECAY_MUL);
+      const gateSec = (typeof combatPartGateWalkSec === 'function')
+        ? combatPartGateWalkSec() : PART_GATE_WALK_SEC;
+      pg.progress = Math.max(0, pg.progress - (dt / gateSec) * PART_GATE_DECAY_MUL);
       this.worldX = (this.worldX || 0) + dt * 16;
       pg.idleT = (pg.idleT || 0) + dt;
     } else {
@@ -799,26 +835,36 @@ class Game {
       // Satan / tide-beloning: geen normale golven tot duel klaar
     } else if (this.spawnQueue.length) {
       const alive = this.monsters.filter((m) => m.alive).length;
+      const aliveCap = (typeof adventureMaxAliveNow === 'function')
+        ? adventureMaxAliveNow()
+        : ADVENTURE_MAX_ALIVE;
       this.spawnTimer -= dt;
-      const aliveCap = (typeof adventureMaxAlive === 'function') ? adventureMaxAlive() : ADVENTURE_MAX_ALIVE;
       if (this.spawnTimer <= 0 && alive < aliveCap) {
         const bossWave = isBossWave(this.level, this.waveIdx);
         const meta = this.level.waveMeta && this.level.waveMeta[this.waveIdx];
         const spawnMul = (meta && meta.spawnMul) || 1;
         const queueLeft = this.spawnQueue.length;
         const opener = this.level && this.level.n <= 2 && this.waveIdx === 0;
-        const band = (typeof adventureHordeProfile === 'function') ? adventureHordeProfile().band : 'desk';
-        const batch = opener ? 1 : (band === 'phone' ? 1 : (queueLeft > 28 ? 3 : queueLeft > 14 ? 2 : 1));
+        const dens = (typeof adventureSpawnCadence === 'function')
+          ? adventureSpawnCadence(queueLeft, opener, bossWave, spawnMul, null, this.t)
+          : null;
+        const batch = opener ? 1 : (dens ? dens.batch : (queueLeft > 28 ? 3 : queueLeft > 14 ? 2 : 1));
         const intervalMul = opener ? 1.55 : (queueLeft > 20 ? 0.72 : queueLeft > 10 ? 0.86 : 1);
-        const viewMul = (typeof adventureHordeProfile === 'function')
-          ? (adventureHordeProfile().spawnIntervalMul || 1)
-          : 1;
-        this.spawnTimer = (bossWave ? 0.92 : (opener ? 0.78 : 0.38)) * spawnMul * intervalMul * viewMul;
+        let nextT = dens
+          ? dens.interval
+          : (bossWave ? 0.92 : (opener ? 0.78 : 0.38)) * spawnMul * intervalMul;
+        if (!dens && typeof combatSmoothOpenInterval === 'function') {
+          nextT = combatSmoothOpenInterval(nextT, this.t);
+        }
+        this.spawnTimer = nextT;
+        const gapPx = (dens && dens.gapPx) || 32;
         for (let b = 0; b < batch && this.spawnQueue.length && this.monsters.filter((m) => m.alive).length < aliveCap; b++) {
           const def = this.spawnQueue.shift();
           if (!def || !def.sp || !SPECIES[def.sp]) continue;
           const side = Math.random() < 0.75 ? 1 : -1;
-          const x = (side > 0 ? W + 40 : -40) + b * side * 32;
+          const x = ((typeof combatSpawnEdgeX === 'function')
+            ? combatSpawnEdgeX(side)
+            : (side > 0 ? W + 40 : -40)) + b * side * gapPx;
           const mon = new Monster(def.sp, x, this, {
             elite: !!(def.elite || def.superBoss),
             superBoss: !!def.superBoss,
@@ -871,7 +917,9 @@ class Game {
             }
           } catch (_) {}
         } else {
-          this.wavePause = nextIsBoss ? 2.15 : 1.55;
+          let gap = nextIsBoss ? 2.15 : 1.55;
+          if (typeof combatWaveGapSec === 'function') gap = combatWaveGapSec(gap, this.t);
+          this.wavePause = gap;
           this.wavePauseTotal = this.wavePause;
         }
         const waveHeal = Math.max(4, Math.round(this.player.maxhp * 0.06));
@@ -1032,13 +1080,15 @@ class Game {
       persist();
       // Heat / master already land on the VERLOREN result tip — late toasts stuck on that screen.
       AudioSys.sfx('lose');
-      this.banner(t('banner.lost'), 2, '#ff6b6b', 50);
+      try { this.shake(6, 0.22); } catch (_) {}
+      this.banner(t('banner.lost'), 1.1, '#ff6b6b', 50);
     }
     // Resultaat-scherm altijd tonen (Volgende / Nog één keer) — niet stil naar menu
     const loseCopy = !win && typeof adventureLoseCopy === 'function' ? adventureLoseCopy(this) : null;
+    const loseMs = (typeof combatLoseResultMs === 'function') ? combatLoseResultMs() : 700;
     const resultDelay = (typeof resultShowDelayMs === 'function')
       ? resultShowDelayMs(win, 'adventure')
-      : (win ? 1400 : 700);
+      : (win ? 1400 : loseMs);
     scheduleGameResult(this, resultDelay, () => UI.showResult(win, {
       titleKey: win ? 'result.advWin' : 'result.advLose',
       title: win ? t('result.advWin') : ((loseCopy && loseCopy.title) || t('result.advLose')),
@@ -1083,15 +1133,19 @@ class Game {
         : (stars >= 3 ? t('result.perfectRun') : (stars > prevStars
         ? t('result.starImproved', { stars, prev: prevStars })
         : t('result.pickupsHelp', { hint: starHintLine() })))) : (() => {
-        const prog = this.waveIdx >= 0 ? t('result.wavesProg', { cur: this.waveIdx + 1, total: this.level.waves.length }) : tOr('result.wavesStart', 'begin');
         const failsNow = advFailCount(lv, diff);
-        let heatTip = '';
+        const retry = tOr('result.againRetry', 'Nog één keer');
+        const tele = (typeof combatFailRetryTip === 'function') ? combatFailRetryTip(this, '') : '';
+        const waveTotal = (this.level && this.level.waves && this.level.waves.length) || 0;
+        const prog = this.waveIdx >= 0
+          ? t('result.wavesProg', { cur: this.waveIdx + 1, total: waveTotal })
+          : tOr('result.wavesStart', 'begin');
+        const lead = (tele || retry) + ' · ' + prog;
         if (failsNow >= SATAN_FAIL_THRESHOLD && typeof shouldTriggerSatan === 'function' && shouldTriggerSatan(lv, diff)) {
-          heatTip = t('result.heatSatanNext');
-        } else if (failsNow >= SATAN_DANGER_FAILS) {
-          heatTip = t('result.heatDanger');
-        } else if (failsNow >= 7) {
-          heatTip = t('result.heatRising', { n: failsNow, max: SATAN_FAIL_THRESHOLD });
+          return lead + ' · ' + t('result.heatSatanNext');
+        }
+        if (failsNow >= SATAN_DANGER_FAILS) {
+          return lead + ' · ' + t('result.heatDanger');
         }
         const named = typeof adventureKillTip === 'function' ? adventureKillTip(this, prog) : '';
         const base = named || (this.player.hp <= 0
@@ -1103,6 +1157,11 @@ class Game {
           once = onceResultTip('adventure', 'loss', t('result.lossGambleTip'));
         }
         const core = once ? `${base} · ${once}` : base;
+        let heatTip = '';
+        try {
+          const heat = (typeof satanHeatForLevel === 'function') ? satanHeatForLevel(lv, diff) : null;
+          heatTip = (typeof satanHeatTip === 'function') ? (satanHeatTip(heat) || '') : '';
+        } catch (_) {}
         return heatTip ? `${heatTip} · ${core}` : core;
       })(),
     }));
@@ -1449,6 +1508,13 @@ class Game {
     const pos = this.clampPickupPos(x, y);
     x = pos.x;
     y = pos.y;
+    if (typeof combatSpreadPickupX === 'function') {
+      const padX = 32;
+      x = combatSpreadPickupX(x, this.pickups, null, {
+        minX: (this.minX != null ? this.minX : 40) + padX,
+        maxX: (this.maxX != null ? this.maxX : W - 40) - padX,
+      });
+    }
     if (opts.skillId && SKILL_DEFS[opts.skillId]) {
       this.pickups.push({
         x, y, kind: 'skill_shard', skillId: opts.skillId, dropTier: opts.dropTier || 'normal',
@@ -3201,7 +3267,7 @@ class Game {
         if (pl && pl.alive && this.playerHurtCd <= 0
             && projHitsTarget(p, pl.bodyX, pl.bodyY, pl.bodyR * 0.8)) {
           const hit = resolveProjHit(p);
-          pl.takeDamage(hit.dmg, projKnockDir(p, pl.x) * 260, this, { attacker: p.srcMon || p.owner });
+          pl.takeDamage(hit.dmg, projKnockDir(p, pl.x) * 260, this, { attacker: p.srcMon || p.owner, kind: p.kind || 'shoot' });
           applyHitStop(this, { kind: skProj && (skProj.behavior === 'dash' || skProj.behavior === 'slash') ? 'special' : 'punch', dmg: hit.dmg },
             { crit: hit.crit, heavy: hit.dmg >= 18, playerHurt: true });
           this.floater(pl.x, pl.y - 115, '-' + hit.dmg, '#ff8080', 16);
@@ -4414,7 +4480,8 @@ class Game {
     {
       const edgePulse = calm ? 0.72 : (0.5 + Math.max(0, Math.sin(gt * (walking ? 7 : 4))) * 0.5);
       const edgeX = W - Math.max(48, 56 * ui);
-      const edgeY = this.ground - 110;
+      const edgeLift = (typeof combatFlyerHover === 'function') ? combatFlyerHover(110) : 110;
+      const edgeY = this.ground - edgeLift;
       const edgeSz = Math.max(36, 48 * ui) * (walking ? 1.08 : 1);
       c.globalAlpha = 0.35 + edgePulse * 0.55;
       c.fillStyle = walking ? '#ffd75e' : '#7cf5ff';
@@ -5265,12 +5332,14 @@ class Game {
         });
         if (!stageClear) this.drawNextWavePreview(c);
       }
-      let advTele = null;
-      for (const m of this.monsters) {
-        advTele = adventureTelegraphHud(m);
-        if (advTele) break;
+      const advTelesRaw = adventureTelegraphHuds(this.monsters);
+      const advTeles = (typeof combatPickTelegraphHuds === 'function')
+        ? combatPickTelegraphHuds(advTelesRaw)
+        : advTelesRaw.slice(0, 1);
+      const teleY = bossAlive ? hy + 8 : hy;
+      for (let i = 0; i < advTeles.length; i++) {
+        drawTelegraphBar(c, this, advTeles[i], teleY, i);
       }
-      if (advTele) drawTelegraphBar(c, this, advTele, bossAlive ? hy + 8 : hy);
     } else if (this.mode === 'training') {
       const r = this.robot;
       const half = Math.min(300, W * 0.36);
