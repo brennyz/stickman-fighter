@@ -38,6 +38,10 @@
     "pendingUpload": [],
     "pendingMerge": [
       {
+        "pr": 349,
+        "title": "fix(TF-001): lose tip follows this killing hit only"
+      },
+      {
         "pr": 311,
         "title": "playtest-harden-cycles"
       },
@@ -53,7 +57,7 @@
       "id": "w-20260918T164000",
       "from": "user",
       "text": "FIX BOT 30m — Stickman. Off main. Draft only. Until ~19:10 Amsterdam. From #342 TF-001: Lose tip sticky wrong telegraph (e.g. vlieger after Bubbel kill). Ensure tip follows THIS killing hit only. May cherry-pick/reimplement from draft #342 if useful. Smoke:telegraph-read + lose-retry. No Versus. No main.",
-      "status": "in-progress",
+      "status": "done-in-code",
       "updated": "2026-09-18",
       "notes": "Reimplemented #342 this-hit-only lastFailTele write on cursor/lose-tip-telegraph-f013."
     },
@@ -1184,6 +1188,10 @@
   ],
   "sessionLog": [
     {
+      "at": "2026-09-18T16:45:56Z",
+      "summary": "TF-001: lose tip is this killing hit only (no leftover vlieger after Bubbel). Draft #349. smoke:telegraph-read + lose-retry OK."
+    },
+    {
       "at": "2026-09-18T15:01:24Z",
       "summary": "Leftover stack: #318 UI chrome + #322 FOMO 390px on main. Keep #321 HUD + #323 retry. SKIP #324. Leave #311."
     },
@@ -1278,10 +1286,6 @@
     {
       "at": "2026-09-18T12:30:17Z",
       "summary": "LANGUAGE worker: layout-safe NL/EN/DE/FR/ES copy (factory desc, FOMO, HUD telegraphs). Draft, geen main."
-    },
-    {
-      "at": "2026-09-16T12:33:04Z",
-      "summary": "Mega-merge leftover GitHub PRs #297 #300 #302 #307 #308 #309 closed — content already on origin/main 0044b2e (v1.18.172 / SW 382). Pages live."
     }
   ],
   "implementedFeaturesSummary": "d18 char select deel 1+2 (v1.11.1-2); Mats coinrun + shuriken mik/vliegers + anti-spam (v1.12.0); speel.html (v1.12.2+). Zie HANDOFF-ZOEKINDEX.md en improvement-d20-bag.json userFeatureLog.",
