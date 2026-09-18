@@ -50,7 +50,7 @@
       "id": "w-20260918T152400",
       "from": "user",
       "text": "#314 DONE. NEW optional P0 draft if capacity: Tablet mid-band 834px density (P3 leftover) OR help examinator board gaps not owned elsewhere. If nothing clean, idle. No Versus, no main.",
-      "status": "in-progress",
+      "status": "done-in-code",
       "updated": "2026-09-18"
     },
     {
@@ -1129,6 +1129,10 @@
   ],
   "sessionLog": [
     {
+      "at": "2026-09-18T13:26:57Z",
+      "summary": "Optional P0: tablet 834 mid-band cadence follow-up on #314 (milder clamp). Examinator leftovers already on #320. Draft, no main."
+    },
+    {
       "at": "2026-09-18T13:20:12Z",
       "summary": "P0 on #314: compact first-30s spawn clamp 0.70–1.12 + hold 0.55 + edge 18; punch/kick prefer-strike vs joy (swipe 34×62). Contract in docs/COMBAT-DENSITY.md. Draft, no main."
     },
@@ -1223,10 +1227,6 @@
     {
       "at": "2026-09-14T13:49:29Z",
       "summary": "Arcade pick-mode HOME-tegels + chrome i18n volgt taal. PR #264. #263 geparkeerd. Niet stil main."
-    },
-    {
-      "at": "2026-09-14T13:44:04Z",
-      "summary": "Arcade pick-mode restyle + i18n chrome volgt game-taal"
     }
   ],
   "implementedFeaturesSummary": "d18 char select deel 1+2 (v1.11.1-2); Mats coinrun + shuriken mik/vliegers + anti-spam (v1.12.0); speel.html (v1.12.2+). Zie HANDOFF-ZOEKINDEX.md en improvement-d20-bag.json userFeatureLog.",
