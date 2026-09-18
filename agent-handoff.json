@@ -38,6 +38,46 @@
     "pendingUpload": [],
     "pendingMerge": [
       {
+        "pr": 345,
+        "title": "PLAYTEST LEAD frozen board + 10-bot plan"
+      },
+      {
+        "pr": 336,
+        "title": "playtest invisible/draw findings"
+      },
+      {
+        "pr": 337,
+        "title": "playtest death-retry findings"
+      },
+      {
+        "pr": 338,
+        "title": "playtest landscape HOME findings"
+      },
+      {
+        "pr": 339,
+        "title": "playtest mid-phone perf findings"
+      },
+      {
+        "pr": 340,
+        "title": "playtest meta-menu findings"
+      },
+      {
+        "pr": 341,
+        "title": "playtest landscape combat findings"
+      },
+      {
+        "pr": 342,
+        "title": "playtest telegraph findings (TF-001 fixed on draft)"
+      },
+      {
+        "pr": 343,
+        "title": "playtest first-30s findings"
+      },
+      {
+        "pr": 344,
+        "title": "playtest juice findings"
+      },
+      {
         "pr": 311,
         "title": "playtest-harden-cycles"
       },
