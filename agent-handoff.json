@@ -56,6 +56,14 @@
   },
   "userWishlist": [
     {
+      "id": "w-20260918T161600",
+      "from": "user",
+      "text": "Good MM-001–005. Until ~18:36 Amsterdam (still >6m): deepen one more pass — tablet 834 or landscape meta if quick; else STOP and leave findings for LEAD. Draft only, no main.",
+      "status": "done-in-code",
+      "updated": "2026-09-18",
+      "notes": "#340 extra pass: tablet 834 + land 844x390. MM-010/011/012 landscape. STOP for LEAD. No main."
+    },
+    {
       "id": "w-20260918T160700",
       "from": "user",
       "text": "PLAYTEST BOT 8/9 — Stickman Fighter. LIVE main c9a29fc v1.18.190 SW400. Until ~18:36 Amsterdam. Focus: META MENUS — factories, gear, pets, summons on 390; clunky/ugly/lag. Draft findings. No Versus. No main.",
@@ -1245,6 +1253,10 @@
   ],
   "sessionLog": [
     {
+      "at": "2026-09-18T16:18:32Z",
+      "summary": "Extra pass tablet 834 + land 844x390: MM-010/011/012 landscape leftovers. STOP for LEAD. Draft #340, no main."
+    },
+    {
       "at": "2026-09-18T16:14:16Z",
       "summary": "PLAYTEST 8/9 meta menus @390 on LIVE v1.18.190: draft findings MM-001..009 (gear 4k scroll, pets chrome, factory wallet, summon blank card). No Versus, no main."
     },
@@ -1339,10 +1351,6 @@
     {
       "at": "2026-09-18T12:36:17Z",
       "summary": "examiner P0: pets/gear locale + 390px overflow (start)"
-    },
-    {
-      "at": "2026-09-18T12:31:56Z",
-      "summary": "LANGUAGE: factory desc + nameShort, FOMO/HUD locale, export gear/fabriek i18n. Draft #317, geen main."
     }
   ],
   "implementedFeaturesSummary": "d18 char select deel 1+2 (v1.11.1-2); Mats coinrun + shuriken mik/vliegers + anti-spam (v1.12.0); speel.html (v1.12.2+). Zie HANDOFF-ZOEKINDEX.md en improvement-d20-bag.json userFeatureLog.",

@@ -1,12 +1,12 @@
 # PLAYTEST BOT 8/9 — META MENUS @ 390
 
 **Build:** LIVE `origin/main` `c9a29fc` · **v1.18.190 / SW 400**  
-**Viewport:** 390×844 Chrome headless (deviceScaleFactor 2)  
+**Viewport:** 390×844 + extra **834×1194** tablet + **844×390** landscape  
 **Window:** until ~18:36 Amsterdam · 2026-09-18  
 **Share:** `speel.html` · **Versus:** retired (no `data-hub="versus"`)  
-**This PR:** draft findings only. **Do not merge main.**
+**This PR:** draft findings only. **Do not merge main.** STOP for LEAD after extra pass.
 
-Re-run: `node scripts/playtest-meta-menus-390.mjs` → `docs/playtest-meta-390/report.json` + PNGs.
+Re-run: `node scripts/playtest-meta-menus-390.mjs` · `node scripts/playtest-meta-menus-extra.mjs`
 
 ## Method
 
@@ -42,8 +42,27 @@ Suggested next owners if Brendon wants fixes (new drafts, not this PR):
 | **MM-007** | P2 | gear | Filter labels jam counts (`Alles27`, `Look15`); rarity chips wrap (`legendarisch` / `nachtmerrie`). Hunt CTA + picker empty CTA duplicate. |
 | **MM-008** | P2 | pets | Egg wallet chip **74×36** (under 44). Hero perk repeats the next-goal line. |
 | **MM-009** | P3 | summons | Honest `geen pity` + `✦14% · mid 30%` is readable; junk pull feels empty. |
+| **MM-010** | P1 | gear / landscape | 844×390 first paint is **doll only**. Slots start y≈594. Scroll still **3804 px**. Dual-pane CSS is `min-width: 900px` so 834 and 844 stay one column. |
+| **MM-011** | P1 | pets / landscape | 844×390: **0** dex cards on the fold. Chrome (title + wallet + hero) fills 390. List scrollH **2311**. |
+| **MM-012** | P1 | summons / landscape | 844×390: gold `Open kist` is **clipped** at the bottom edge. Stage still readable. |
 
 No Versus. Factory ids unchanged (`stick_lighter` … `echo_whistle`).
+
+---
+
+## Extra pass — tablet 834 + landscape 844×390
+
+Veteran seed only. Numbers: `docs/playtest-meta-390/extra-report.json`. Versus still gone.
+
+| Surface | 834×1194 tablet | 844×390 landscape | vs 390 |
+|---------|-----------------|-------------------|--------|
+| HOME / FOMO | Vandaag covers tiles (`tab834-vet-00-home.png`) | **Left dock** — Fabrieken/Uitrusting/Pets/Oproepen stay tappable (`land844-vet-00-home.png`) | MM-005 is **portrait**. Landscape #329 dock works. |
+| Fabrieken | All 5 cards + labeled wallet + Oogst-2. Fits one screen. | Wallet labeled; first card + Oogst-2 on screen; rest scroll (949 / 390) | MM-003 unlabeled dots are **phone-only**. |
+| Gear | All 5 slots on first paint. Catalog still **3843 px**. `grid = none` (needs 900). | **Doll only** on first paint (`MM-010`). Slot tap → chip wall, no rows. 3804 px. | MM-001 first-paint softens on tablet, **worsens** on landscape. |
+| Pets | **5 cards** on fold + filters. Triple egg still there. | **0 cards** on fold (`MM-011`). Hero clipped. | MM-002 is phone + landscape, not tablet. |
+| Summons | Stage tall (ratio 3.1). Pull ~1.6 s. | CTA clipped (`MM-012`). Ratio 1.3. Pull ~1.6 s. | MM-004 timing holds; landscape clips the primary. |
+
+**LEAD pick:** do not treat tablet 834 as a new owner — it mostly **confirms** MM-001 (no 900 px dual-pane) and **clears** MM-002/003 first-paint. New unique leftovers are **landscape** MM-010/011/012. Suggested fix still: gear sheet (helps 390 + 834 + 844) → pets chrome collapse (helps 390 + 844) → summon CTA `min()` on `max-height: 420px` landscape.
 
 ---
 
@@ -145,3 +164,9 @@ This is **EX-010 still live on main** after #313.
 | `fresh-30-pets.png` | Triple egg, no list |
 | `veteran-00-home.png` | FOMO covers meta tiles |
 | `veteran-41-summons-pull.png` | Blank card, `Schroot` in log |
+| `tab834-vet-20-gear.png` | Tablet: 5 slots visible, still one column |
+| `tab834-vet-30-pets.png` | Tablet: dex list on first screen |
+| `land844-vet-00-home.png` | Landscape FOMO dock — tiles stay up |
+| `land844-vet-20-gear.png` | Landscape: doll only (`MM-010`) |
+| `land844-vet-30-pets.png` | Landscape: no list (`MM-011`) |
+| `land844-vet-40-summons.png` | Landscape: CTA clipped (`MM-012`) |
