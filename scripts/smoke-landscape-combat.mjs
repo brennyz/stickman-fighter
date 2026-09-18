@@ -32,6 +32,7 @@ must(/pinCanvasCssBox/.test(canvasSrc), 'pinCanvasCssBox missing');
 must(/offsetX \|\| 0\) \+ ',' \+ \(vp\.offsetY/.test(canvasSrc), 'resize sizeKey must include visualViewport offset');
 must(/forceGameResize[\s\S]{0,180}new Game/.test(startSrc), 'startGame must resize before spawn');
 must(/alignCombatPlayfield\(this\)/.test(gameSrc), 'Game.onResize must align playfield');
+must(!/\brightPad\b/.test(gameSrc), 'HUD must use pauseGutter, not leftover rightPad');
 must(/#game \{[^}]*--vv-w/.test(css) && /#game \{[^}]*--vv-h/.test(css),
   '#game CSS must follow visual viewport vars');
 must(!/mode === 'versus'[\s\S]{0,40}alignCombat/.test(gameSrc), 'must not rewrite Versus HUD/arena');
@@ -76,26 +77,65 @@ async function run() {
   page.on('pageerror', (e) => pageErrors.push(String(e)));
 
   await page.setViewport({ width: 844, height: 390, deviceScaleFactor: 2, isMobile: true, hasTouch: true, isLandscape: true });
-  const base = process.argv[2] || smokeBaseUrl(8787);
-  await page.goto(base, { waitUntil: 'load', timeout: 30000 });
+  const base = (process.argv[2] || smokeBaseUrl(8787)).replace(/#.*$/, '');
+  const url = base.includes('?') ? `${base}&nosplash=1` : `${base}?nosplash=1`;
+  await page.goto(url, { waitUntil: 'load', timeout: 30000 });
   await page.waitForFunction(() => window.__sfBooted, { timeout: 25000 });
 
   const land = await page.evaluate(() => {
+    try {
+      const splash = document.getElementById('sfSplash');
+      if (splash) { splash.hidden = true; splash.style.display = 'none'; }
+    } catch (_) {}
+    try {
+      if (typeof save !== 'undefined' && save) {
+        save.tipsSeen = save.tipsSeen || {};
+        save.tipsSeen.moveBarAim = 1;
+      }
+    } catch (_) {}
     try { startGame('adventure', { level: 1, gamble: null }); } catch (e) {
       return { ok: false, why: 'start:' + e };
     }
     if (typeof forceGameResize === 'function') forceGameResize();
     const g = game;
     if (!g || !g.player) return { ok: false, why: 'no game' };
+    try { if (ctx && typeof g.draw === 'function') g.draw(ctx); } catch (e) {
+      return { ok: false, why: 'draw:' + e };
+    }
     const snap = (typeof combatViewAlign === 'function') ? combatViewAlign(g) : null;
     if (!snap) return { ok: false, why: 'no combatViewAlign' };
-    return Object.assign({ ok: true, mode: g.mode }, snap);
+    let floorPx = null;
+    try {
+      const dpr = (typeof DPR === 'number' && DPR > 0) ? DPR : 1;
+      const fx = Math.round(Math.min(W - 4, Math.max(4, g.player.x)) * dpr);
+      const fy = Math.round(Math.min(H - 4, Math.max(4, g.ground + 4)) * dpr);
+      const px = ctx.getImageData(fx, fy, 1, 1).data;
+      floorPx = { r: px[0], g: px[1], b: px[2], a: px[3] };
+    } catch (_) {}
+    const canvasVis = (() => {
+      try {
+        const el = document.getElementById('game');
+        const cs = el ? getComputedStyle(el) : null;
+        return {
+          playing: !!(document.body && document.body.classList.contains('is-playing')),
+          vis: cs ? cs.visibility : null,
+          w: el ? el.style.width : null,
+          h: el ? el.style.height : null,
+        };
+      } catch (_) { return null; }
+    })();
+    return Object.assign({ ok: true, mode: g.mode, floorPx, canvasVis }, snap);
   });
   assertView('landscape 844×390', land);
   must(land.w >= 800 && land.h <= 430, 'expected short landscape, got ' + land.w + 'x' + land.h);
+  must(land.canvasVis && land.canvasVis.playing, 'body.is-playing missing on landscape start');
+  if (land.floorPx) {
+    must(land.floorPx.a > 10, 'floor pixel transparent — canvas/world not painted at ground');
+    must(land.floorPx.r + land.floorPx.g + land.floorPx.b > 12, 'floor pixel black — dead zone under fighters');
+  }
 
   try {
-    await page.screenshot({ path: path.join(outDir, 'landscape-844x390.png') });
+    await page.screenshot({ path: path.join(outDir, 'landscape-844x390.png'), fullPage: false });
   } catch (_) {}
 
   await page.setViewport({ width: 390, height: 844, deviceScaleFactor: 2, isMobile: true, hasTouch: true, isLandscape: false });
@@ -106,6 +146,9 @@ async function run() {
     } catch (e) { return { ok: false, why: 'resize:' + e }; }
     const g = game;
     if (!g || !g.player) return { ok: false, why: 'no game after portrait' };
+    try { if (ctx && typeof g.draw === 'function') g.draw(ctx); } catch (e) {
+      return { ok: false, why: 'draw:' + e };
+    }
     const snap = combatViewAlign(g);
     return Object.assign({ ok: true, mode: g.mode }, snap);
   });
@@ -113,7 +156,7 @@ async function run() {
   must(port.w <= 430 && port.h >= 700, 'expected tall portrait, got ' + port.w + 'x' + port.h);
 
   try {
-    await page.screenshot({ path: path.join(outDir, 'portrait-390x844.png') });
+    await page.screenshot({ path: path.join(outDir, 'portrait-390x844.png'), fullPage: false });
   } catch (_) {}
 
   await page.setViewport({ width: 844, height: 390, deviceScaleFactor: 2, isMobile: true, hasTouch: true, isLandscape: true });
