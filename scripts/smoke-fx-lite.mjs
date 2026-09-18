@@ -45,8 +45,9 @@ must(/function fxLite\(/.test(drawH), 'fxLite missing');
 must(/allocFxParticle/.test(gameSrc), 'burst must use particle pool');
 must(/releaseFxParticle/.test(gameSrc), 'dead particles must return to pool');
 must(/Fighters always draw/.test(gameSrc), 'draw() must document fighters-always-visible');
-must(/for \(const m of this\.monsters\) m\.draw\(c\);/.test(gameSrc), 'monsters must always draw');
-must(/this\.player\.draw\(c\);/.test(gameSrc), 'player must always draw');
+must(/drawCombatants\(c\)/.test(gameSrc) || /for \(const m of this\.monsters\) m\.draw\(c\);/.test(gameSrc),
+  'monsters must always draw (drawCombatants or inline)');
+must(/this\.player\.draw\(c\)/.test(gameSrc), 'player must always draw');
 
 {
   const skipBlock = gameSrc.match(/const skipFx[\s\S]{0,200}for \(const pt of this\.particles\)/);

@@ -44760,6 +44760,7 @@ function adventureLoseFeelTip(game, ctx) {
   const genericKey = (game && game.player && game.player.hp <= 0) ? 'result.lossBlockTip' : 'result.lossOrbTip';
   const generic = trimResultTipPart(t(genericKey, { prog: '' }));
   const advice = named || generic;
+  // EX-027: killer first. Skip gamble lecture until first punch (don't burn the once-flag).
   let once = '';
   if (!(typeof firstPunchPending === 'function' && firstPunchPending())) {
     once = onceResultTip('adventure', 'loss', t('result.lossGambleTip'));
@@ -44772,6 +44773,7 @@ function adventureLoseFeelTip(game, ctx) {
   const parts = [lead];
   if (advice && advice !== lead && advice.indexOf(lead) < 0) parts.push(advice);
   if (prog) parts.push(prog);
+  // EX-032: fail cue / retry first. Heat never leads (it buried SLAM + Nog één keer).
   // First deaths: keep killer + fail cue readable on 390. Heat lecture waits.
   const skipHeat = failsNow < 5 || (typeof firstPunchPending === 'function' && firstPunchPending());
   if (heatTip && !skipHeat) parts.push(trimResultTipPart(heatTip));
@@ -58873,14 +58875,12 @@ function startGame(mode, opts) {
   // Pin W/H + canvas CSS to the visual viewport BEFORE spawn so landscape
   // 844×390 does not inherit a portrait floor (fighters in a dead zone).
   try {
-    if (typeof forceGameResize === 'function') forceGameResize();
-    else if (typeof resize === 'function') resize();
+    if (typeof prewarmFxPool === 'function') prewarmFxPool();
+    if (typeof speciesTop20Ranked === 'function') speciesTop20Ranked();
   } catch (_) {}
   try {
-    try {
-      if (typeof prewarmFxPool === 'function') prewarmFxPool();
-      if (typeof speciesTop20Ranked === 'function') speciesTop20Ranked();
-    } catch (_) {}
+    if (typeof forceGameResize === 'function') forceGameResize();
+    else if (typeof resize === 'function') resize();
     game = new Game(mode, opts);
   } catch (err) {
     sfReportError('start/' + mode, err);
