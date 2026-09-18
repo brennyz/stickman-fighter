@@ -43996,7 +43996,9 @@ function adventureLoseFeelTip(game, ctx) {
   const parts = [lead];
   if (advice && advice !== lead && advice.indexOf(lead) < 0) parts.push(advice);
   if (prog) parts.push(prog);
-  if (heatTip) parts.push(trimResultTipPart(heatTip));
+  // First deaths: keep killer + fail cue readable on 390. Heat lecture waits.
+  const skipHeat = failsNow < 5 || (typeof firstPunchPending === 'function' && firstPunchPending());
+  if (heatTip && !skipHeat) parts.push(trimResultTipPart(heatTip));
   if (once) parts.push(trimResultTipPart(once));
   return parts.filter(Boolean).join(' · ');
 }
