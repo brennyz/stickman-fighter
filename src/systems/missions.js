@@ -197,9 +197,41 @@ function fomoRitualHubReady() {
     if (splash && !splash.classList.contains('is-done')) return false;
   } catch (_) {}
   try {
+    if (typeof save !== 'undefined' && save && save.feltFirstPunch) return true;
+  } catch (_) {}
+  try {
     if (juiceFirstPlayPending()) return false;
   } catch (_) {}
   return true;
+}
+
+/** #338 short landscape: Vandaag + inert locks Avontuur. Skip auto-sheet then. */
+function fomoRitualWouldBlockPlay() {
+  try {
+    const w = (typeof innerWidth === 'number' && innerWidth > 0) ? innerWidth : 390;
+    const h = (typeof innerHeight === 'number' && innerHeight > 0) ? innerHeight : 844;
+    if (w >= h && h <= 420) return true;
+  } catch (_) {}
+  try {
+    if (typeof matchMedia === 'function') {
+      const mq = matchMedia('(orientation: landscape) and (max-height: 420px)');
+      if (mq && mq.matches) return true;
+    }
+  } catch (_) {}
+  return false;
+}
+
+/** After first punch, Continue must not permanently skip “Kies een eiland”. */
+function islandPickPending() {
+  try {
+    if (typeof save === 'undefined' || !save) return false;
+    if (typeof firstPunchPending === 'function' && firstPunchPending()) return false;
+    if (!save.feltFirstPunch) return false;
+    if (save.tipsSeen && save.tipsSeen.islands) return false;
+    return true;
+  } catch (_) {
+    return false;
+  }
 }
 
 function fomoRitualPending() {
@@ -2265,6 +2297,13 @@ function resumeLastPlay() {
   if (!lp || !lp.mode) return false;
   try {
     if (lp.mode === 'adventure') {
+      if (typeof islandPickPending === 'function' && islandPickPending()) {
+        try { if (typeof UI !== 'undefined' && UI.hideFomoRitual) UI.hideFomoRitual(); } catch (_) {}
+        if (typeof UI !== 'undefined' && UI.safeOpen) {
+          UI.safeOpen('levelScreen', () => UI.renderLevels());
+          return true;
+        }
+      }
       if (lp.difficulty && advDiffAvailable(lp.difficulty)) setAdvDiff(lp.difficulty);
       gokGooiStartLevel(lp.level || 1);
     } else if (lp.mode === 'versus') {

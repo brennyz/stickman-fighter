@@ -385,9 +385,9 @@ const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const VERSION_UPDATE_SAVE_KEY = 'stickfighter_version_update_save_v1';
 const VERSION_UPDATE_FLAG_KEY = 'stickfighter_version_update_flag_v1';
 const SAVE_EXPORT_SCHEMA = 3;
-const APP_VERSION = '1.18.190';
+const APP_VERSION = '1.18.191';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 400;
+const SW_CACHE_REV = 401;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', petCoins: 0, dex: {}, summons: {}, pets: {}, activePet: null,
   eggPets: {}, activeEggPet: null, eggDaily: null,
   chestDaily: null, chestWeapons: {},
@@ -5554,9 +5554,41 @@ function fomoRitualHubReady() {
     if (splash && !splash.classList.contains('is-done')) return false;
   } catch (_) {}
   try {
+    if (typeof save !== 'undefined' && save && save.feltFirstPunch) return true;
+  } catch (_) {}
+  try {
     if (juiceFirstPlayPending()) return false;
   } catch (_) {}
   return true;
+}
+
+/** #338 short landscape: Vandaag + inert locks Avontuur. Skip auto-sheet then. */
+function fomoRitualWouldBlockPlay() {
+  try {
+    const w = (typeof innerWidth === 'number' && innerWidth > 0) ? innerWidth : 390;
+    const h = (typeof innerHeight === 'number' && innerHeight > 0) ? innerHeight : 844;
+    if (w >= h && h <= 420) return true;
+  } catch (_) {}
+  try {
+    if (typeof matchMedia === 'function') {
+      const mq = matchMedia('(orientation: landscape) and (max-height: 420px)');
+      if (mq && mq.matches) return true;
+    }
+  } catch (_) {}
+  return false;
+}
+
+/** After first punch, Continue must not permanently skip “Kies een eiland”. */
+function islandPickPending() {
+  try {
+    if (typeof save === 'undefined' || !save) return false;
+    if (typeof firstPunchPending === 'function' && firstPunchPending()) return false;
+    if (!save.feltFirstPunch) return false;
+    if (save.tipsSeen && save.tipsSeen.islands) return false;
+    return true;
+  } catch (_) {
+    return false;
+  }
 }
 
 function fomoRitualPending() {
@@ -7622,6 +7654,13 @@ function resumeLastPlay() {
   if (!lp || !lp.mode) return false;
   try {
     if (lp.mode === 'adventure') {
+      if (typeof islandPickPending === 'function' && islandPickPending()) {
+        try { if (typeof UI !== 'undefined' && UI.hideFomoRitual) UI.hideFomoRitual(); } catch (_) {}
+        if (typeof UI !== 'undefined' && UI.safeOpen) {
+          UI.safeOpen('levelScreen', () => UI.renderLevels());
+          return true;
+        }
+      }
       if (lp.difficulty && advDiffAvailable(lp.difficulty)) setAdvDiff(lp.difficulty);
       gokGooiStartLevel(lp.level || 1);
     } else if (lp.mode === 'versus') {
@@ -52563,6 +52602,9 @@ const UI = {
           if (!this.advIslandPick) this.advIslandPick = currentAdvIsland();
           try { applyIslandOnboarding(); } catch (_) {}
         }
+        if (id === 'menuScreen') {
+          try { this.maybeAutoShowFomoRitual(!!this._fomoRitualForce); } catch (_) {}
+        }
       } else if (game?.mode === 'versus') {
         try { this.refreshPauseSubtitle(); } catch (_) {}
       }
@@ -53543,13 +53585,7 @@ const UI = {
           persist();
         }
       }
-      if (typeof fomoRitualHubReady === 'function' && !fomoRitualHubReady()) this.hideFomoRitual();
-      else if (this._fomoRitualHide) this.hideFomoRitual();
-      else if (this._fomoRitualForce || (typeof fomoRitualPending === 'function' && fomoRitualPending())) {
-        this.showFomoRitual(!!this._fomoRitualForce);
-      } else {
-        this.hideFomoRitual();
-      }
+      this.maybeAutoShowFomoRitual(!!this._fomoRitualForce);
     } catch (_) {}
     } catch (err) {
       sfReportError('renderMenu', err, errT('ui.errMenuRefresh', 'Could not refresh menu'));
@@ -53644,6 +53680,43 @@ const UI = {
     this._syncFomoHubLock(false);
   },
 
+  /** HOME return: open Vandaag once menu is .active, or skip if sheet would block play. */
+  maybeAutoShowFomoRitual(force) {
+    force = !!force || !!this._fomoRitualForce;
+    try {
+      if (typeof fomoRitualHubReady === 'function' && !fomoRitualHubReady()) {
+        this.hideFomoRitual();
+        return false;
+      }
+    } catch (_) {}
+    if (!force && this._fomoRitualHide) {
+      this.hideFomoRitual();
+      return false;
+    }
+    const pending = force
+      || !!this._fomoRitualWanted
+      || (typeof fomoRitualPending === 'function' && fomoRitualPending());
+    if (!pending) {
+      this.hideFomoRitual();
+      return false;
+    }
+    const menu = document.getElementById('menuScreen');
+    if (!menu || !menu.classList.contains('active')) {
+      this._fomoRitualWanted = true;
+      this.hideFomoRitual();
+      return false;
+    }
+    if (!force && typeof fomoRitualWouldBlockPlay === 'function' && fomoRitualWouldBlockPlay()) {
+      this._fomoRitualHide = true;
+      this._fomoRitualWanted = false;
+      this.hideFomoRitual();
+      return false;
+    }
+    this._fomoRitualWanted = false;
+    this.showFomoRitual(force);
+    return true;
+  },
+
   showFomoRitual(force) {
     try { this.clearToasts(); } catch (_) {}
     const el = document.getElementById('fomoRitual');
@@ -53657,6 +53730,7 @@ const UI = {
     };
     const menu = document.getElementById('menuScreen');
     if (!menu || !menu.classList.contains('active')) {
+      this._fomoRitualWanted = true;
       hideQuiet();
       return;
     }

@@ -43,7 +43,7 @@ rg -l "handoff|coinrun|projAimVelocity|charSelectScreen|ASSET-STYLE" .
 | **Gear screens UX** | 1.18.173 | this branch | `#gearScreen` slot sheet · Aandoen/Uitdoen · filters/locks · `src/ui/ui.js` `renderGear` |
 | **Season overlay (CSS + story)** | 1.18.164 | — | `SEASON-OVERLAY.md`, `src/systems/seasons.js`, `styles/seasons.css` |
 | **Mik-indicator** kleur + radius (Options) | 1.18.164 | — | `save.aimColor` / `save.aimRadius`, `drawPlayerAimIndicator` |
-| **FOMO EX-021 Vandaag vs HOME** | 1.18.173 | this branch | compact `#fomoRitual` sheet ≤48vh · toast HUD `fomo-ritual-open` / `sf-sub-screen` · welcome key + dismiss |
+| **FOMO HOME flush after first punch** | 1.18.191 | this branch | `maybeAutoShowFomoRitual` · queue if menu not `.active` · skip auto-sheet if `fomoRitualWouldBlockPlay` · Continue → island until `tipsSeen.islands` |
 | **FOMO / retention gaps** | docs | — | `docs/FOMO-GAPS.md` (P0–P3 loops, accept criteria) |
 | **Asset / knop-stijl (leidend)** | docs | — | `ASSET-STYLE.md`, `assets/buttons/` |
 | **Buildings pixel (3 of 4)** | 1.18.164 | this branch | #292 ids `stick_lighter`…`bamboo_boesa`/`echo_whistle` · `BUILDING-PIXEL-MAP.md` |
