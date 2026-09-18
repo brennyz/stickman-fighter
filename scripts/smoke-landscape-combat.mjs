@@ -62,6 +62,7 @@ function assertView(label, snap) {
   must(snap.player.y > 8 && snap.player.y <= snap.h + 1, label + ' player Y dead zone ' + JSON.stringify(snap.player));
   must(Math.abs(snap.player.y - snap.ground) <= 6, label + ' player not on floor ' + JSON.stringify(snap));
   must(snap.aligned, label + ' combatViewAlign.aligned=false ' + JSON.stringify(snap));
+  must(snap.letterbox && !snap.letterbox.dead, label + ' letterbox dead zone ' + JSON.stringify(snap.letterbox));
 }
 
 async function run() {
@@ -159,6 +160,93 @@ async function run() {
     await page.screenshot({ path: path.join(outDir, 'portrait-390x844.png'), fullPage: false });
   } catch (_) {}
 
+  // Mid-fight rotate: portrait fight running, then landscape — the user screenshot path.
+  await page.setViewport({ width: 390, height: 844, deviceScaleFactor: 2, isMobile: true, hasTouch: true, isLandscape: false });
+  const midFight = await page.evaluate(() => {
+    try {
+      if (typeof save !== 'undefined' && save) {
+        save.tipsSeen = save.tipsSeen || {};
+        save.tipsSeen.moveBarAim = 1;
+      }
+      startGame('adventure', { level: 1, gamble: null });
+      if (typeof forceGameResize === 'function') forceGameResize();
+    } catch (e) { return { ok: false, why: 'mid-start:' + e }; }
+    const g = game;
+    if (!g || !g.player) return { ok: false, why: 'no mid-fight game' };
+    try {
+      Input.keys = Input.keys || {};
+      Input.keys.d = true;
+      Input.keys.arrowright = true;
+    } catch (_) {}
+    for (let i = 0; i < 48; i++) {
+      try { g.update(1 / 30); } catch (e) { return { ok: false, why: 'mid-update:' + e }; }
+    }
+    return { ok: true, t: g.t, waveIdx: g.waveIdx, x: g.player.x, y: g.player.y, ground: g.ground };
+  });
+  must(midFight && midFight.ok, 'mid-fight setup failed: ' + JSON.stringify(midFight));
+  must(midFight.t > 0.4, 'mid-fight did not advance t=' + midFight.t);
+
+  await page.setViewport({ width: 844, height: 390, deviceScaleFactor: 2, isMobile: true, hasTouch: true, isLandscape: true });
+  const rotated = await page.evaluate(() => {
+    try {
+      if (typeof forceGameResize === 'function') forceGameResize();
+      else if (typeof resize === 'function') resize();
+    } catch (e) { return { ok: false, why: 'mid-rotate:' + e }; }
+    const g = game;
+    if (!g || !g.player) return { ok: false, why: 'lost game mid-rotate' };
+    try { if (ctx && typeof g.draw === 'function') g.draw(ctx); } catch (e) {
+      return { ok: false, why: 'mid-draw:' + e };
+    }
+    const snap = combatViewAlign(g);
+    return Object.assign({ ok: true, t: g.t, waveIdx: g.waveIdx, theme: g.theme }, snap);
+  });
+  assertView('mid-fight rotate → 844×390', rotated);
+  must(rotated.w >= 800 && rotated.h <= 430, 'mid-fight rotate not landscape ' + rotated.w + 'x' + rotated.h);
+
+  try {
+    await page.screenshot({ path: path.join(outDir, 'landscape-midfight-rotate.png'), fullPage: false });
+  } catch (_) {}
+
+  const cyber = await page.evaluate(() => {
+    try {
+      if (typeof save !== 'undefined' && save) {
+        save.tipsSeen = save.tipsSeen || {};
+        save.tipsSeen.moveBarAim = 1;
+      }
+      startGame('adventure', { level: 13, gamble: null });
+      if (typeof forceGameResize === 'function') forceGameResize();
+    } catch (e) { return { ok: false, why: 'cyber-start:' + e }; }
+    const g = game;
+    if (!g || !g.player) return { ok: false, why: 'no cyber game' };
+    try { if (ctx && typeof g.draw === 'function') g.draw(ctx); } catch (e) {
+      return { ok: false, why: 'cyber-draw:' + e };
+    }
+    const snap = combatViewAlign(g);
+    let edge = null;
+    try {
+      const dpr = (typeof DPR === 'number' && DPR > 0) ? DPR : 1;
+      const y = Math.round(Math.max(8, (g.ground - 40)) * dpr);
+      const left = ctx.getImageData(2 * dpr, y, 1, 1).data;
+      const right = ctx.getImageData(Math.max(2, (W - 3) * dpr), y, 1, 1).data;
+      edge = {
+        left: { r: left[0], g: left[1], b: left[2], a: left[3] },
+        right: { r: right[0], g: right[1], b: right[2], a: right[3] },
+      };
+    } catch (_) {}
+    return Object.assign({ ok: true, theme: g.theme, edge }, snap);
+  });
+  assertView('cyber city 844×390', cyber);
+  must(cyber.theme === 'cyber', 'level 13 should be cyber city, got ' + cyber.theme);
+  if (cyber.edge) {
+    must(cyber.edge.left.a > 10 && cyber.edge.right.a > 10, 'city edge pixels missing — canvas clip ' + JSON.stringify(cyber.edge));
+    const sumR = cyber.edge.right.r + cyber.edge.right.g + cyber.edge.right.b;
+    must(sumR > 8, 'right edge black — letterbox/clip dead zone ' + JSON.stringify(cyber.edge.right));
+  }
+
+  try {
+    await page.screenshot({ path: path.join(outDir, 'landscape-cyber-844x390.png'), fullPage: false });
+  } catch (_) {}
+
   await page.setViewport({ width: 844, height: 390, deviceScaleFactor: 2, isMobile: true, hasTouch: true, isLandscape: true });
   const back = await page.evaluate(() => {
     const g = game;
@@ -207,11 +295,13 @@ async function run() {
 
   console.log(JSON.stringify({
     ok: true,
-    landscape: { w: land.w, h: land.h, ground: Math.round(land.ground), player: land.player },
+    landscape: { w: land.w, h: land.h, ground: Math.round(land.ground), player: land.player, letterbox: land.letterbox },
     portrait: { w: port.w, h: port.h, ground: Math.round(port.ground), player: port.player },
+    midFightRotate: { t: rotated.t, w: rotated.w, h: rotated.h, ground: Math.round(rotated.ground), player: rotated.player, letterbox: rotated.letterbox },
+    cyber: { theme: cyber.theme, w: cyber.w, h: cyber.h, ground: Math.round(cyber.ground), letterbox: cyber.letterbox, edge: cyber.edge },
     realign: { w: back.w, h: back.h, ground: Math.round(back.ground), player: back.player },
   }));
-  console.log('SMOKE_OK landscape-combat 844×390 + 390×844');
+  console.log('SMOKE_OK landscape-combat 844×390 + 390×844 + mid-fight rotate');
 }
 
 run().catch((e) => {

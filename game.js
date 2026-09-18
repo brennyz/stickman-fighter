@@ -32486,6 +32486,13 @@ function combatViewAlign(g) {
     || (Math.abs(cssW - vp.w) <= 3 && Math.abs(cssH - vp.h) <= 3);
   const worldOk = ground > 8 && ground < H
     && (!player || (player.x >= 0 && player.x <= W && player.y > 8 && player.y <= H + 1));
+  const letterbox = {
+    dx: Math.abs((cssW || 0) - (vp.w || 0)),
+    dy: Math.abs((cssH || 0) - (vp.h || 0)),
+    ox: Math.abs((cssL || 0) - (vp.offsetX || 0)),
+    oy: Math.abs((cssT || 0) - (vp.offsetY || 0)),
+  };
+  letterbox.dead = letterbox.dx > 3 || letterbox.dy > 3 || letterbox.ox > 3 || letterbox.oy > 3;
   return {
     w: W, h: H,
     vpW: vp.w, vpH: vp.h,
@@ -32493,7 +32500,8 @@ function combatViewAlign(g) {
     cssW, cssH, cssL, cssT,
     ground,
     player,
-    aligned: Math.abs(W - vp.w) <= 2 && Math.abs(H - vp.h) <= 2 && cssOk && worldOk,
+    letterbox,
+    aligned: Math.abs(W - vp.w) <= 2 && Math.abs(H - vp.h) <= 2 && cssOk && worldOk && !letterbox.dead,
   };
 }
 

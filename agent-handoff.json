@@ -38,6 +38,10 @@
     "pendingUpload": [],
     "pendingMerge": [
       {
+        "pr": 325,
+        "title": "P0 landscape combat camera/canvas align (844×390)"
+      },
+      {
         "pr": 311,
         "title": "playtest-harden-cycles"
       },
@@ -49,6 +53,14 @@
     ]
   },
   "userWishlist": [
+    {
+      "id": "w-20260918T154404",
+      "from": "user",
+      "text": "Strong #325. Until ~17:54 Amsterdam: (1) Coordinate note on PR: pixel-visibility may still be sibling — retest landscape after rotate mid-fight once more. (2) Any leftover clipped building / letterbox dead zone on 844×390? (3) If solid, mark DONE and stop. Draft only, speel.html, no Versus, no main.",
+      "status": "in-progress",
+      "updated": "2026-09-18",
+      "notes": "Keep on #325 until 17:54 CEST."
+    },
     {
       "id": "w-20260918T153730",
       "from": "user",
