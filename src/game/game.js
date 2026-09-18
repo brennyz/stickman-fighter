@@ -299,6 +299,7 @@ class Game {
   onResize() {
     this.ground = playfieldGroundY(H, W);
     this.maxX = W - 40;
+    if (typeof pinPlayfieldBodies === 'function') pinPlayfieldBodies(this);
     if (this.mode === 'versus' && this.p2) {
       applyVsArenaBounds(this);
       Input.dualMode = true;
@@ -3608,12 +3609,50 @@ class Game {
     c.textAlign = 'left';
   }
 
+  /** Stickman + mobs + pets — isolated so one throw cannot blank the stage. */
+  drawCombatants(c) {
+    if (!c) return;
+    if (this.mode === 'adventure') {
+      try { this.drawApproachingWave(c); } catch (_) {}
+      try { this.drawTravelSpeedLines(c); } catch (_) {}
+    }
+    if (this.monsters) {
+      for (const m of this.monsters) {
+        try { m.draw(c); } catch (_) {
+          if (typeof drawMonsterFallback === 'function') drawMonsterFallback(c, m);
+        }
+      }
+    }
+    if (this.robot) {
+      try { this.robot.draw(c); } catch (_) {
+        if (typeof drawFighterFallback === 'function') drawFighterFallback(c, this.robot);
+      }
+    }
+    if (this.p2) {
+      try { this.p2.draw(c); } catch (_) {
+        if (typeof drawFighterFallback === 'function') drawFighterFallback(c, this.p2);
+      }
+    }
+    if (this.eggPet) { try { this.eggPet.draw(c); } catch (_) {} }
+    if (this.pet) { try { this.pet.draw(c); } catch (_) {} }
+    if (this.mode === 'adventure') {
+      try { drawSuperShieldBubble(this, c, this.player); } catch (_) {}
+    }
+    if (this.player) {
+      try { this.player.draw(c); } catch (_) {
+        if (typeof drawFighterFallback === 'function') drawFighterFallback(c, this.player);
+      }
+    }
+  }
+
   /* ------------------------------ TEKENEN ----------------------------- */
   draw(c) {
     if (!c || W < 8 || H < 8) return;
     if (this.mode !== 'versus' && typeof Input !== 'undefined' && Input.dualMode) {
       try { Input.dualMode = false; } catch (_) {}
     }
+    if (typeof resetFightCanvas === 'function') resetFightCanvas(c);
+    if (typeof pinPlayfieldBodies === 'function') pinPlayfieldBodies(this);
     c.save();
     if (this.shakeT > 0) {
       c.translate(rand(-1, 1) * this.shakeMag, rand(-1, 1) * this.shakeMag);
@@ -3695,6 +3734,7 @@ class Game {
     }
 
     if (this.mode === 'adventure' && this.pickups) {
+      try {
       for (const pk of this.pickups) {
         const meta = PICKUP_META[pk.kind] || PICKUP_META.heal;
         const pkCol = (pk.kind === 'skill_shard' && pk.skillId && SKILL_DEFS[pk.skillId])
@@ -3739,20 +3779,13 @@ class Game {
         }
         c.restore();
       }
+      } catch (_) {}
     }
 
     if (this.mode === 'wall') this.drawWall(c);
     if (this.mode === 'coinrun') this.drawCoinRunLayer(c);
 
-    if (this.mode === 'adventure') this.drawApproachingWave(c);
-    if (this.mode === 'adventure') this.drawTravelSpeedLines(c);
-    for (const m of this.monsters) m.draw(c);
-    if (this.robot) this.robot.draw(c);
-    if (this.p2) this.p2.draw(c);
-    if (this.eggPet) this.eggPet.draw(c);
-    if (this.pet) this.pet.draw(c);
-    if (this.mode === 'adventure') drawSuperShieldBubble(this, c, this.player);
-    this.player.draw(c);
+    this.drawCombatants(c);
 
     // projectielen
     for (const p of this.projectiles) {
@@ -3959,11 +3992,13 @@ class Game {
       try { this.drawPartGateCue(c); } catch (_) {}
     }
 
-    this.drawHUD(c);
+    try { this.drawHUD(c); } catch (_) {}
 
     // banners — max 3 lanes, geen overlap
-    const bannerDraw = this.banners.slice().sort((a, b) => (a.lane || 0) - (b.lane || 0));
-    for (const b of bannerDraw) this.drawBannerLine(c, b);
+    try {
+      const bannerDraw = this.banners.slice().sort((a, b) => (a.lane || 0) - (b.lane || 0));
+      for (const b of bannerDraw) this.drawBannerLine(c, b);
+    } catch (_) {}
 
     if (typeof useTouchFightPads === 'function' ? useTouchFightPads() : IS_TOUCH) {
       try { this.drawTouchControls(c); } catch (_) {}
@@ -5092,9 +5127,9 @@ class Game {
         c.arc(bx + bw * 0.5, by + 25, joyR, 0, TAU);
         c.stroke();
       }
-      const wFam = weaponMoveFamily(p.weapon.id);
+      const wFam = (p && p.weapon && typeof weaponMoveFamily === 'function') ? weaponMoveFamily(p.weapon.id) : null;
       if (wFam) drawWeaponStylePips(c, bx + 10, by + 38, p);
-      const eqSp = equippedSuper();
+      const eqSp = (typeof equippedSuper === 'function' ? equippedSuper() : null) || { icon: 'star', color: '#ffd75e' };
       c.save();
       c.translate(bx + 6, by + 44);
       c.scale(0.19, 0.19);

@@ -323,9 +323,9 @@ const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const VERSION_UPDATE_SAVE_KEY = 'stickfighter_version_update_save_v1';
 const VERSION_UPDATE_FLAG_KEY = 'stickfighter_version_update_flag_v1';
 const SAVE_EXPORT_SCHEMA = 3;
-const APP_VERSION = '1.18.189';
+const APP_VERSION = '1.18.190';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 399;
+const SW_CACHE_REV = 400;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', petCoins: 0, dex: {}, summons: {}, pets: {}, activePet: null,
   eggPets: {}, activeEggPet: null, eggDaily: null,
   chestDaily: null, chestWeapons: {},
@@ -15516,13 +15516,13 @@ function drawSuperFxLayer(game, c) {
 
 function drawSuperShieldBubble(game, c, f) {
   if (!f || !f.alive || !game.playerShieldT || game.playerShieldT <= 0) return;
-  const sp = equippedSuper();
+  const sp = (typeof equippedSuper === 'function' ? equippedSuper() : null) || {};
   const pulse = game.t || 0;
   const calm = motionReduced();
   const r = 34 + (calm ? 0 : Math.sin(pulse * 8) * 3);
   c.save();
   c.globalAlpha = 0.22 + (calm ? 0 : Math.sin(pulse * 6) * 0.08);
-  c.strokeStyle = sp.behavior === 'shield' ? sp.color : '#9fd8ff';
+  c.strokeStyle = sp.behavior === 'shield' ? (sp.color || '#9fd8ff') : '#9fd8ff';
   c.lineWidth = 2.5;
   c.beginPath();
   c.ellipse(f.x, f.y - 48, r, r * 0.72, 0, 0, TAU);
@@ -32458,7 +32458,11 @@ function playfieldGroundY(H, W) {
   if (portrait && H < 520) return H * 0.7;
   if (portrait && H < 640) return H * 0.72;
   if (portrait) return H * 0.73;
-  return H * 0.78;
+  // Landscape phone (~844×390): keep a full stickman above the fold.
+  const raw = H * 0.72;
+  const minY = Math.min(H - 28, Math.max(96, H * 0.58));
+  const maxY = Math.max(minY, H - 28);
+  return raw < minY ? minY : (raw > maxY ? maxY : raw);
 }
 
 function pointerGameCoords(clientX, clientY) {
@@ -34732,6 +34736,140 @@ function scheduleResize() {
 function forceGameResize() {
   lastResizeKey = '';
   resize();
+}
+
+/** Pop leftover clip/transform after a mid-frame throw so the next fight paint is on-canvas. */
+function resetFightCanvas(c) {
+  if (!c) return;
+  try {
+    for (let i = 0; i < 24; i++) c.restore();
+  } catch (_) {}
+  try {
+    const dpr = (typeof DPR === 'number' && DPR > 0) ? DPR : 1;
+    c.setTransform(dpr, 0, 0, dpr, 0, 0);
+    c.globalAlpha = 1;
+    c.globalCompositeOperation = 'source-over';
+    c.shadowBlur = 0;
+    if ('filter' in c) c.filter = 'none';
+  } catch (_) {}
+}
+
+function playfieldSizeNow() {
+  const ww = (typeof W === 'number' && W > 8) ? W : 800;
+  const hh = (typeof H === 'number' && H > 8) ? H : 520;
+  return { w: ww, h: hh };
+}
+
+/** Keep fighters/mobs on the painted ground after rotate / late visualViewport. */
+function pinPlayfieldBodies(game) {
+  if (!game) return;
+  const { w: ww, h: hh } = playfieldSizeNow();
+  let gy = Number(game.ground);
+  if (!Number.isFinite(gy) || gy < 24 || gy > hh) {
+    gy = (typeof playfieldGroundY === 'function') ? playfieldGroundY(hh, ww) : hh * 0.72;
+  }
+  if (!Number.isFinite(gy) || gy < 24) gy = Math.max(80, hh * 0.7);
+  if (gy > hh - 12) gy = Math.max(80, hh - 28);
+  game.ground = gy;
+  game.minX = 40;
+  game.maxX = Math.max(80, ww - 40);
+  const pinFighter = (f, fallbackX) => {
+    if (!f) return;
+    if (!(f.scale > 0.2 && Number.isFinite(f.scale))) f.scale = 1;
+    if (!f.face) f.face = 1;
+    if (!Number.isFinite(f.x)) f.x = fallbackX;
+    f.x = clamp(f.x, game.minX, game.maxX);
+    if (!Number.isFinite(f.y) || f.y > hh + 16 || f.y < 12) f.y = gy;
+    else if (f.y > gy) f.y = gy;
+  };
+  pinFighter(game.player, ww * 0.25);
+  pinFighter(game.p2, ww * 0.72);
+  pinFighter(game.robot, ww * 0.7);
+  if (game.monsters) {
+    for (const m of game.monsters) {
+      if (!m) continue;
+      if (!Number.isFinite(m.x)) m.x = ww * 0.65;
+      m.x = clamp(m.x, 16, ww - 16);
+      if (!Number.isFinite(m.y) || m.y > hh + 40 || m.y < 8) {
+        m.y = (m.flying || (m.sp && (m.sp.type === 'fly' || m.sp.type === 'dragon')))
+          ? gy - 110
+          : gy;
+      } else if (!m.flying && !m.swimming && m.y > gy + 8) {
+        m.y = gy;
+      }
+    }
+  }
+  if (game.pet) {
+    if (!Number.isFinite(game.pet.x)) game.pet.x = (game.player && game.player.x) || ww * 0.2;
+    if (!Number.isFinite(game.pet.y) || game.pet.y > hh + 20 || game.pet.y < 8) game.pet.y = gy;
+  }
+  if (game.eggPet) {
+    if (!Number.isFinite(game.eggPet.x)) game.eggPet.x = (game.player && game.player.x) || ww * 0.2;
+    if (!Number.isFinite(game.eggPet.y) || game.eggPet.y > hh + 20 || game.eggPet.y < 8) game.eggPet.y = gy;
+  }
+}
+
+/** Dark style bodies (#1a2040 cyber, void, samurai) vanish on night/cyber stages. */
+function fighterCombatStroke(color) {
+  const col = color || '#f2f5ff';
+  const m = /^#([0-9a-f]{6})$/i.exec(String(col));
+  if (!m) return col;
+  const n = parseInt(m[1], 16);
+  const r = (n >> 16) & 255, g = (n >> 8) & 255, b = n & 255;
+  const lum = (0.2126 * r + 0.7152 * g + 0.0722 * b) / 255;
+  if (lum >= 0.38) return col;
+  const lift = 0.55 + (0.42 - lum);
+  const mix = (ch) => Math.min(255, Math.round(ch + (255 - ch) * lift));
+  const hex = (v) => v.toString(16).padStart(2, '0');
+  return '#' + hex(mix(r)) + hex(mix(g)) + hex(mix(b));
+}
+
+function drawFighterFallback(c, f) {
+  if (!c || !f) return;
+  const { w: ww, h: hh } = playfieldSizeNow();
+  const x = Number.isFinite(f.x) ? f.x : ww * 0.25;
+  const y = Number.isFinite(f.y) ? f.y : (hh * 0.72);
+  const col = fighterCombatStroke(f.color || '#f2f5ff');
+  c.save();
+  c.globalAlpha = 1;
+  c.strokeStyle = col;
+  c.fillStyle = col;
+  c.lineWidth = 5;
+  c.lineCap = 'round';
+  c.lineJoin = 'round';
+  c.beginPath();
+  c.arc(x, y - 70, 11, 0, Math.PI * 2);
+  c.stroke();
+  c.beginPath();
+  c.moveTo(x, y - 58);
+  c.lineTo(x, y - 22);
+  c.moveTo(x - 18, y - 46);
+  c.lineTo(x + 18, y - 46);
+  c.moveTo(x, y - 22);
+  c.lineTo(x - 14, y);
+  c.moveTo(x, y - 22);
+  c.lineTo(x + 14, y);
+  c.stroke();
+  c.restore();
+}
+
+function drawMonsterFallback(c, m) {
+  if (!c || !m) return;
+  const { w: ww, h: hh } = playfieldSizeNow();
+  const x = Number.isFinite(m.x) ? m.x : ww * 0.65;
+  const y = Number.isFinite(m.y) ? m.y : (hh * 0.72);
+  const r = (m.size > 4 && Number.isFinite(m.size)) ? m.size : 22;
+  const col = (m.sp && m.sp.c1) || '#ffb0b8';
+  c.save();
+  c.globalAlpha = 1;
+  c.fillStyle = col;
+  c.strokeStyle = '#f2f5ff';
+  c.lineWidth = 2;
+  c.beginPath();
+  c.ellipse(x, y - r * 0.35, r, r * 0.85, 0, 0, Math.PI * 2);
+  c.fill();
+  c.stroke();
+  c.restore();
 }
 addEventListener('resize', scheduleResize);
 addEventListener('orientationchange', () => {
@@ -38702,9 +38840,9 @@ class Fighter {
   }
 
   draw(c) {
-    const s = this.scale;
+    const s = (this.scale > 0.2 && Number.isFinite(this.scale)) ? this.scale : 1;
     c.save();
-    c.translate(this.x, this.y);
+    c.translate(Number.isFinite(this.x) ? this.x : 0, Number.isFinite(this.y) ? this.y : 0);
     if (this.hitFlashT > 0) {
       const flashA = motionReduced() ? 0.18 : 0.4;
       c.globalAlpha = Math.min(flashA, this.hitFlashT * (flashA / 0.14));
@@ -38719,7 +38857,9 @@ class Fighter {
     const shadowX = (this.state === 'idle' && !(typeof motionReduced === 'function' && motionReduced()))
       ? Math.sin(this.animT * 1.32) * 2.2 : 0;
     c.beginPath(); c.ellipse(shadowX, 2, 26 * s, 6 * s, 0, 0, TAU); c.fill();
-    c.scale(this.face * s, s);
+    const face = this.face < 0 ? -1 : 1;
+    const sc = (s > 0.2 && Number.isFinite(s)) ? s : 1;
+    c.scale(face * sc, sc);
 
     if (!this.alive) {
       const k = clamp(this.deadT * 2.2, 0, 1);
@@ -38732,7 +38872,10 @@ class Fighter {
     const shX = hipX + Math.sin(P.lean) * 32, shY = hipY - Math.cos(P.lean) * 32;
     const headX = shX + Math.sin(P.lean) * 12 + P.headB, headY = shY - Math.cos(P.lean) * 12 - 5;
 
-    c.strokeStyle = this.color; c.lineWidth = this.lineW; c.lineCap = 'round';
+    const strokeCol = (typeof fighterCombatStroke === 'function')
+      ? fighterCombatStroke(this.color)
+      : (this.color || '#f2f5ff');
+    c.strokeStyle = strokeCol; c.lineWidth = this.lineW; c.lineCap = 'round';
     const armL = 17, legL = 24;
 
     const drawLimb = (x, y, a1, a2, l1, l2) => {
@@ -38784,7 +38927,7 @@ class Fighter {
     bones.head = { x: headCX, y: headCY };
     /* Always paint a head disc first. Helmets sit on it; they must never leave a hole. */
     if (typeof drawStickmanHead === 'function') {
-      drawStickmanHead(c, headCX, headCY, this.color, { lineW: this.lineW, bald: !!this.bald });
+      drawStickmanHead(c, headCX, headCY, strokeCol, { lineW: this.lineW, bald: !!this.bald });
     } else if (this.bald) {
       c.fillStyle = '#ffe8c8';
       c.beginPath(); c.arc(headCX, headCY, 10.5, 0, TAU); c.fill();
@@ -38814,12 +38957,12 @@ class Fighter {
     if (typeof ensureEquipHeadVisible === 'function') {
       try { ensureEquipHeadVisible(c, looks, bones, this); } catch (_) {}
     } else {
-      c.strokeStyle = this.color;
+      c.strokeStyle = strokeCol;
       c.lineWidth = this.lineW;
       c.beginPath(); c.arc(headCX, headCY, 10.5, 0.18, Math.PI - 0.18); c.stroke();
     }
     if (this.isRobot) this.drawRobotHead(c, headCX, headCY);
-    c.strokeStyle = this.color; c.lineWidth = this.lineW; c.lineCap = 'round';
+    c.strokeStyle = strokeCol; c.lineWidth = this.lineW; c.lineCap = 'round';
 
     // voorste arm + wapen
     const [hx, hy] = drawLimb(shX, shY, P.arms[1][0], P.arms[1][1], armL, armL);
@@ -38828,7 +38971,7 @@ class Fighter {
     bones.hand = { x: hx, y: hy };
     paintLook('hands');
 
-    if (this.isPlayer && this.weapon.id !== 'vuist' && !this._boomerOut && !(this.attack && this.attack.kind === 'special')) {
+    if (this.isPlayer && this.weapon && this.weapon.id && this.weapon.id !== 'vuist' && !this._boomerOut && !(this.attack && this.attack.kind === 'special')) {
       const aimLift = (this._aimAtAttack && (this.attack?.kind === 'weapon' || this.attack?.kind === 'punch' || this.attack?.kind === 'kick'))
         ? clamp(this._aimAtAttack.ny, -1, 0.4) * 0.85
         : 0;
@@ -44160,6 +44303,7 @@ class Game {
   onResize() {
     this.ground = playfieldGroundY(H, W);
     this.maxX = W - 40;
+    if (typeof pinPlayfieldBodies === 'function') pinPlayfieldBodies(this);
     if (this.mode === 'versus' && this.p2) {
       applyVsArenaBounds(this);
       Input.dualMode = true;
@@ -47469,12 +47613,50 @@ class Game {
     c.textAlign = 'left';
   }
 
+  /** Stickman + mobs + pets — isolated so one throw cannot blank the stage. */
+  drawCombatants(c) {
+    if (!c) return;
+    if (this.mode === 'adventure') {
+      try { this.drawApproachingWave(c); } catch (_) {}
+      try { this.drawTravelSpeedLines(c); } catch (_) {}
+    }
+    if (this.monsters) {
+      for (const m of this.monsters) {
+        try { m.draw(c); } catch (_) {
+          if (typeof drawMonsterFallback === 'function') drawMonsterFallback(c, m);
+        }
+      }
+    }
+    if (this.robot) {
+      try { this.robot.draw(c); } catch (_) {
+        if (typeof drawFighterFallback === 'function') drawFighterFallback(c, this.robot);
+      }
+    }
+    if (this.p2) {
+      try { this.p2.draw(c); } catch (_) {
+        if (typeof drawFighterFallback === 'function') drawFighterFallback(c, this.p2);
+      }
+    }
+    if (this.eggPet) { try { this.eggPet.draw(c); } catch (_) {} }
+    if (this.pet) { try { this.pet.draw(c); } catch (_) {} }
+    if (this.mode === 'adventure') {
+      try { drawSuperShieldBubble(this, c, this.player); } catch (_) {}
+    }
+    if (this.player) {
+      try { this.player.draw(c); } catch (_) {
+        if (typeof drawFighterFallback === 'function') drawFighterFallback(c, this.player);
+      }
+    }
+  }
+
   /* ------------------------------ TEKENEN ----------------------------- */
   draw(c) {
     if (!c || W < 8 || H < 8) return;
     if (this.mode !== 'versus' && typeof Input !== 'undefined' && Input.dualMode) {
       try { Input.dualMode = false; } catch (_) {}
     }
+    if (typeof resetFightCanvas === 'function') resetFightCanvas(c);
+    if (typeof pinPlayfieldBodies === 'function') pinPlayfieldBodies(this);
     c.save();
     if (this.shakeT > 0) {
       c.translate(rand(-1, 1) * this.shakeMag, rand(-1, 1) * this.shakeMag);
@@ -47556,6 +47738,7 @@ class Game {
     }
 
     if (this.mode === 'adventure' && this.pickups) {
+      try {
       for (const pk of this.pickups) {
         const meta = PICKUP_META[pk.kind] || PICKUP_META.heal;
         const pkCol = (pk.kind === 'skill_shard' && pk.skillId && SKILL_DEFS[pk.skillId])
@@ -47600,20 +47783,13 @@ class Game {
         }
         c.restore();
       }
+      } catch (_) {}
     }
 
     if (this.mode === 'wall') this.drawWall(c);
     if (this.mode === 'coinrun') this.drawCoinRunLayer(c);
 
-    if (this.mode === 'adventure') this.drawApproachingWave(c);
-    if (this.mode === 'adventure') this.drawTravelSpeedLines(c);
-    for (const m of this.monsters) m.draw(c);
-    if (this.robot) this.robot.draw(c);
-    if (this.p2) this.p2.draw(c);
-    if (this.eggPet) this.eggPet.draw(c);
-    if (this.pet) this.pet.draw(c);
-    if (this.mode === 'adventure') drawSuperShieldBubble(this, c, this.player);
-    this.player.draw(c);
+    this.drawCombatants(c);
 
     // projectielen
     for (const p of this.projectiles) {
@@ -47820,11 +47996,13 @@ class Game {
       try { this.drawPartGateCue(c); } catch (_) {}
     }
 
-    this.drawHUD(c);
+    try { this.drawHUD(c); } catch (_) {}
 
     // banners — max 3 lanes, geen overlap
-    const bannerDraw = this.banners.slice().sort((a, b) => (a.lane || 0) - (b.lane || 0));
-    for (const b of bannerDraw) this.drawBannerLine(c, b);
+    try {
+      const bannerDraw = this.banners.slice().sort((a, b) => (a.lane || 0) - (b.lane || 0));
+      for (const b of bannerDraw) this.drawBannerLine(c, b);
+    } catch (_) {}
 
     if (typeof useTouchFightPads === 'function' ? useTouchFightPads() : IS_TOUCH) {
       try { this.drawTouchControls(c); } catch (_) {}
@@ -48953,9 +49131,9 @@ class Game {
         c.arc(bx + bw * 0.5, by + 25, joyR, 0, TAU);
         c.stroke();
       }
-      const wFam = weaponMoveFamily(p.weapon.id);
+      const wFam = (p && p.weapon && typeof weaponMoveFamily === 'function') ? weaponMoveFamily(p.weapon.id) : null;
       if (wFam) drawWeaponStylePips(c, bx + 10, by + 38, p);
-      const eqSp = equippedSuper();
+      const eqSp = (typeof equippedSuper === 'function' ? equippedSuper() : null) || { icon: 'star', color: '#ffd75e' };
       c.save();
       c.translate(bx + 6, by + 44);
       c.scale(0.19, 0.19);
@@ -59137,7 +59315,9 @@ function loop(now) {
           game.draw(ctx);
         } catch (drawErr) {
           try { sfReportError('draw', drawErr, errT('toast.fightHiccup', 'Hiccup — fight continues')); } catch (_) {}
-          // On error: still paint sky+ground so adventure doesn't go black
+          // Recover the stage — never wipe fighters with a background-only paint.
+          try { if (typeof resetFightCanvas === 'function') resetFightCanvas(ctx); } catch (_) {}
+          try { if (typeof pinPlayfieldBodies === 'function') pinPlayfieldBodies(game); } catch (_) {}
           try {
             if (game && typeof drawBackground === 'function') {
               drawBackground(ctx, game.theme || 'veld', game.t || 0, game.ground || H * 0.72, game.worldX || 0, null);
@@ -59145,8 +59325,10 @@ function loop(now) {
               ctx.fillStyle = '#0a0d18';
               ctx.fillRect(0, 0, W, H);
             }
+            if (game && typeof game.drawCombatants === 'function') game.drawCombatants(ctx);
           } catch (_) {
             try { ctx.fillStyle = '#0a0d18'; ctx.fillRect(0, 0, W, H); } catch (_) {}
+            try { if (game && typeof game.drawCombatants === 'function') game.drawCombatants(ctx); } catch (__) {}
           }
         }
       } else if (!game) {

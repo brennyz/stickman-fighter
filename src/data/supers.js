@@ -295,13 +295,13 @@ function drawSuperFxLayer(game, c) {
 
 function drawSuperShieldBubble(game, c, f) {
   if (!f || !f.alive || !game.playerShieldT || game.playerShieldT <= 0) return;
-  const sp = equippedSuper();
+  const sp = (typeof equippedSuper === 'function' ? equippedSuper() : null) || {};
   const pulse = game.t || 0;
   const calm = motionReduced();
   const r = 34 + (calm ? 0 : Math.sin(pulse * 8) * 3);
   c.save();
   c.globalAlpha = 0.22 + (calm ? 0 : Math.sin(pulse * 6) * 0.08);
-  c.strokeStyle = sp.behavior === 'shield' ? sp.color : '#9fd8ff';
+  c.strokeStyle = sp.behavior === 'shield' ? (sp.color || '#9fd8ff') : '#9fd8ff';
   c.lineWidth = 2.5;
   c.beginPath();
   c.ellipse(f.x, f.y - 48, r, r * 0.72, 0, 0, TAU);

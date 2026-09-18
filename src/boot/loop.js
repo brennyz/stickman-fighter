@@ -329,7 +329,9 @@ function loop(now) {
           game.draw(ctx);
         } catch (drawErr) {
           try { sfReportError('draw', drawErr, errT('toast.fightHiccup', 'Hiccup — fight continues')); } catch (_) {}
-          // On error: still paint sky+ground so adventure doesn't go black
+          // Recover the stage — never wipe fighters with a background-only paint.
+          try { if (typeof resetFightCanvas === 'function') resetFightCanvas(ctx); } catch (_) {}
+          try { if (typeof pinPlayfieldBodies === 'function') pinPlayfieldBodies(game); } catch (_) {}
           try {
             if (game && typeof drawBackground === 'function') {
               drawBackground(ctx, game.theme || 'veld', game.t || 0, game.ground || H * 0.72, game.worldX || 0, null);
@@ -337,8 +339,10 @@ function loop(now) {
               ctx.fillStyle = '#0a0d18';
               ctx.fillRect(0, 0, W, H);
             }
+            if (game && typeof game.drawCombatants === 'function') game.drawCombatants(ctx);
           } catch (_) {
             try { ctx.fillStyle = '#0a0d18'; ctx.fillRect(0, 0, W, H); } catch (_) {}
+            try { if (game && typeof game.drawCombatants === 'function') game.drawCombatants(ctx); } catch (__) {}
           }
         }
       } else if (!game) {
