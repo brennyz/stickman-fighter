@@ -22,6 +22,7 @@ rg -l "handoff|coinrun|projAimVelocity|charSelectScreen|ASSET-STYLE" .
 | **Invisible fighters recover** | 1.18.190 | main | `drawCombatants` · `pinPlayfieldBodies` · `fighterCombatStroke` · recover re-paint · `smoke:fighters-visible`. Versus out. |
 | **Landscape Begin/HOME SPELEN** | 1.18.190 | main | two-col title-gate + FOMO left dock · `smoke:landscape-begin`. Versus out. |
 | **Telegraph readability** | 1.18.190 | main | fair-fail ring + `combatFailRetryTip` · keep #314 density 0.50 · `docs/COMBAT-TELEGRAPH.md`. Versus out. |
+| **Playtest 6/9 fail cue** | 1.18.191 | this branch | `notePlayerFailTele` writes this hit only (no leftover vlieger) · `docs/PLAYTEST-TELEGRAPH-6.md`. Density unchanged. Versus out. |
 | **First-30s punch teach** | 1.18.190 | main | `src/systems/first-punch-teach.js` · skip island/gamble/FOMO until first punch · `smoke:first30-teach`. Versus out. |
 | **Death-retry fat gold CTA** | 1.18.190 | main | `#323` + `#326` `restartAdventureInstant` · `#resRetrySafe` · fat gold Nog één keer · `smoke:flappy-retry`. Versus out. |
 | **Mid-phone fxLite / spawn hitch** | 1.18.190 | main | `fxSpawnLite` · particle pool · `docs/FX-LITE.md` · fighters always draw · Versus out |

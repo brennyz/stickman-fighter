@@ -94,6 +94,17 @@ must(iso.combatTelegraphReadScale(phone) > iso.combatTelegraphReadScale(desk), '
 must(iso.combatTelegraphKindOf({ telegraphKind: 'fire', sp: { type: 'dragon' } }) === 'fire', 'kind tag wins');
 must(iso.combatTelegraphKindOf({ telegraphT: 0.2, sp: { type: 'tank' } }) === 'slam', 'tank infers slam');
 
+must(iso.combatFailTeleKind({ attacker: { flying: false, sp: { type: 'hop', art: 'slime' } } }) === '', 'hop slime is contact, not flyer');
+must(iso.combatFailTeleKind({ attacker: { flying: false, dashT: 0, sp: { type: 'swim', art: 'octo' } } }) === '', 'ink octo contact is not CHARGE');
+must(iso.combatFailTeleKind({ attacker: { flying: false, sp: { type: 'swim', art: 'shark' } } }) === 'charge', 'shark swim is charge');
+must(!/m\.flying \|\| \(m\.sp && \(m\.sp\.type === 'fly'/.test(densSrc), 'must not infer flyer from any alive bat');
+
+const sticky = { mode: 'adventure', lastFailTele: 'flyer', monsters: [{ alive: true, flying: true, sp: { type: 'fly' } }] };
+iso.notePlayerFailTele(sticky, { attacker: { flying: false, sp: { type: 'hop', art: 'slime' } } });
+must(sticky.lastFailTele === '', 'slime kill must clear leftover flyer cue', sticky.lastFailTele);
+iso.notePlayerFailTele(sticky, { attacker: { flying: true, sp: { type: 'fly' } } });
+must(sticky.lastFailTele === 'flyer', 'real flyer hit still tags flyer');
+
 console.log('TELEGRAPH_READ', {
   deskCharge: iso.applyCombatTelegraphWind(0.45, desk),
   deskEnrage: iso.applyCombatTelegraphWind(0.28, desk),

@@ -385,9 +385,9 @@ const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const VERSION_UPDATE_SAVE_KEY = 'stickfighter_version_update_save_v1';
 const VERSION_UPDATE_FLAG_KEY = 'stickfighter_version_update_flag_v1';
 const SAVE_EXPORT_SCHEMA = 3;
-const APP_VERSION = '1.18.190';
+const APP_VERSION = '1.18.191';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 400;
+const SW_CACHE_REV = 401;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', petCoins: 0, dex: {}, summons: {}, pets: {}, activePet: null,
   eggPets: {}, activeEggPet: null, eggDaily: null,
   chestDaily: null, chestWeapons: {},
@@ -33745,28 +33745,14 @@ function combatFailCueLabel(kind) {
   return (typeof tOr === 'function') ? tOr(pair[0], pair[1]) : pair[1];
 }
 
-/** Record last readable fail cue on player hurt (Adventure). */
+/**
+ * Record the fail cue for THIS hit (Adventure). Always write — a slime
+ * kill must not keep a leftover "vlieger" from an earlier bat chip, and
+ * must not steal another alive flyer's label.
+ */
 function notePlayerFailTele(game, src) {
   if (!game || game.mode !== 'adventure') return;
-  let kind = combatFailTeleKind(src);
-  if (!kind && game.monsters && game.monsters.length) {
-    const teles = (typeof adventureTelegraphHuds === 'function')
-      ? adventureTelegraphHuds(game.monsters)
-      : [];
-    if (teles[0] && teles[0].kind) {
-      kind = teles[0].kind === 'fire' ? 'fire' : (teles[0].kind === 'shoot' ? 'shoot' : teles[0].kind);
-    } else {
-      for (let i = 0; i < game.monsters.length; i++) {
-        const m = game.monsters[i];
-        if (!m || !m.alive) continue;
-        if (m.flying || (m.sp && (m.sp.type === 'fly' || m.sp.type === 'dragon'))) {
-          kind = 'flyer';
-          break;
-        }
-      }
-    }
-  }
-  if (kind) game.lastFailTele = kind;
+  game.lastFailTele = combatFailTeleKind(src) || '';
 }
 
 /** One-line tip: "SLAM → Nog één keer". Empty when no cue (caller falls back). */
@@ -44724,9 +44710,11 @@ function ensureAdventureFailTele(game) {
   if (h) {
     if (h.slam) { game.lastFailTele = 'slam'; return; }
     if (h.fly) { game.lastFailTele = 'flyer'; return; }
-    if (h.type === 'charge' || h.type === 'swim') { game.lastFailTele = 'charge'; return; }
+    if (h.type === 'charge') { game.lastFailTele = 'charge'; return; }
     if (h.type === 'shoot') { game.lastFailTele = 'shoot'; return; }
     if (h.type === 'dragon') { game.lastFailTele = 'fire'; return; }
+    // swim: shark dash already tagged charge on the hit; ink/octo is shoot. Never
+    // stamp every swim as CHARGE (that lied after an ink blob).
   }
   if (typeof notePlayerFailTele === 'function') {
     try { notePlayerFailTele(game, {}); } catch (_) {}
