@@ -1,7 +1,7 @@
 # PLAYTEST REPORT — 2026-09-18 · FROZEN
 
 **Role:** Playtest lead. Rank only. Do **not** own every fix.  
-**Status:** **FROZEN 18:51 CEST.** Deadline passed. Plan locked to **10 bots + MERGE #342**. No gameplay on this PR.  
+**Status:** **FROZEN 18:52 CEST.** All sibling PRs #336–#344 ingested. Plan locked to **10 bots + MERGE #342**. No gameplay on this PR.  
 **Pin:** LIVE `main` `c9a29fc` · **v1.18.190** · **SW 400**  
 **Share:** https://brennyz.github.io/stickman-fighter/speel.html  
 **Draft only. No Versus. No merge main.**
@@ -21,7 +21,7 @@ Fix bots launch from **`IMPROVEMENT-PLAN.md`** (10 lanes). This file is the boar
 | Visibility (alive) | PASS day-farm | #336 A–G PASS | **P1 EX-034** dead+rotate |
 | Landscape HOME | SPELEN/Avontuur on screen | #338 visible PASS | **P1 EX-036** FOMO `inert` |
 | Landscape fight | Floor + pads + bodies | **#341 PASS** (no P0/P1) | P2 LC-001/002 only — **do not launch** |
-| First 30s | `Tik slaan` on rematch | #343 PASS | P2 Continue / FOMO flake |
+| First 30s | `Tik slaan` on rematch | **#343 PASS** EX-023/#328 holds | P2 lang / Continue / FOMO flake — **no bot** |
 | Death-retry | Fat gold &lt;3s, rematch paints | **#337 PASS** ~720ms · rematch &lt;70ms | P2 heat/dice — **no bot** |
 | Fair telegraph | CHARGE HUD readable | #342 CHARGE PASS | **P1 TF-002/003** · TF-001 fixed on #342 |
 | Feel | Punch snap + named floater | **#344 PASS soft** | **P1 J-001** toast+banner on first KO |
@@ -81,9 +81,9 @@ Status: `open` · `pass` · `fixed-on-draft` · `DELEGATED` · `out`
 | EX-018 | open | #318 UI | Landscape HOME: `Verder spelen` takes the featured slot; Avontuur is a thin row. |
 | DR-heat | open · **low** | death-retry | After ~5 fails: `SLAM → … · Lv 1: 5/10 · 5 Meester · 9 gevaar · 10 Satan`. Cue still leads (EX-032). Prefer heat on the island card. **No bot this wave.** |
 | DR-dice | open · **low** | death-retry | With `feltFirstPunch`, tip says dobbelen before each level. CTA is `restartAdventureInstant` — **no dice**. Gate that once-tip on instant retry. **No bot this wave.** |
-| F30-lang | open | first-30s / i18n | `speel.html` follows `navigator.language`; in-game `initLang()` forces NL. |
-| F30-cont | open | first-30s / #318 | After first punch, Continue → `gokGooiStartLevel` (skips island). |
-| F30-fomo | open | FOMO | `fomoRitualPending` true after punch; auto-sheet flaky unless `#menuScreen.active`. |
+| F30-lang | open · **low** | first-30s / i18n | `speel.html` `detectSpeelLang()` → EN **PLAY**; `initLang()` forces NL HOME. **No bot.** |
+| F30-cont | open · **low** | first-30s / #318 | After punch, **Verder spelen** → `gokGooiStartLevel` (skips island). Island only on Avontuur tile. EX-018. **No bot.** |
+| F30-fomo | open · **low** | FOMO | After punch `fomoRitualPending` true; auto-sheet no-ops unless `#menuScreen.active`. Die before punch keeps the gate (intended). **No bot.** |
 | LC-001 | open · **low** | landscape-combat | Mid-jump rotate *to* 844×390 snaps Y to new floor (old Y would be below `H`). Hop cancelled. Necessary. **No bot.** |
 | LC-002 | open · **low** | landscape-combat | Landscape → portrait while airborne **keeps** the hop (still on canvas). Inverse of LC-001; looks correct. **No bot.** |
 | TF-004 | open · #342 | telegraph | LIVE `swim` → CHARGE leftover stamp. Draft stops it; shark still tags charge. Not seen in L1. |
@@ -104,6 +104,41 @@ Status: `open` · `pass` · `fixed-on-draft` · `DELEGATED` · `out`
 | LH-dock | P3 · #338 | Landscape HOME meta-dock under 390 fold — play tile above fold |
 | LH-copy | P3 · #338 | “Naar / oproepen” wrap · NL “power-ups” on mission row |
 | LC-pads | P3 · #341 | Phone-land pads sit on the 44px floor (no slack). iPad 3×2 jump-left is documented out of #331. |
+
+### NEXT SPRINT — exact bot lanes (frozen)
+
+No P0. Ranked P1 from #336–#344. Full briefs in `IMPROVEMENT-PLAN.md`.
+
+| Sprint | ID | Source | Lane | 30-min task |
+|--------|----|--------|------|-------------|
+| **MERGE** | TF-001 | #342 | telegraph | Land existing draft — sticky `vlieger` tip. Do not clone. |
+| **1** | EX-034 | #336 | visibility | Death then rotate — pin dead player |
+| **2** | EX-036 | #338 | landscape-begin | Skip `inert` / restore `pointer-events` on 844 FOMO |
+| **3** | PERF-01/02 | #339 | fxLite | `fxSpawnLite` on touch **whole fight** |
+| **4** | PERF-03/04 | #339 | juice | Gate `juiceKillSnap` + `applyHitStop` freeze |
+| **5** | TF-003 | #342 | telegraph | CHARGE world ring contrast (no wind-time change) |
+| **6** | TF-002 | #342 | telegraph | Hop/fly visual wind |
+| **7** | J-001 | #344 | juice | First-kill toast **XOR** banner |
+| **8** | MM-004 | #340 | summons | No 2.2s blank pull |
+| **9** | MM-005 | #340 | FOMO | Portrait Vandaag must not cover meta tiles |
+| **10** | MM-010 | #340 | gear | 844 first paint shows slots |
+
+**Do not launch this sprint:** #337 retry PASS · #341 combat PASS · #343 first-30s PASS · LC/DR/F30 P2s · waves 11–15.
+
+### #343 first-30s (canonical) — PASS · no bot
+
+Source: `docs/PLAYTEST-FIRST30S-2026-09-18.md`. `smoke:first30-teach` **SMOKE_OK** (`Druk J` delay 0.85).
+
+| Check | Fresh | After first punch |
+|-------|-------|-------------------|
+| FOMO / Vandaag | **off** | pending (auto-sheet flaky — P2) |
+| Avontuur | lv1 · `gamble: null` · no island · `Tik slaan` | **Kies een eiland** |
+| Aim wall | **off** | offered later |
+| Versus / welcome | **gone / off** | — |
+
+Die before a hit keeps the gate (intended).
+
+**P2 low (no bot):** EN PLAY → NL HOME · Continue skips island · FOMO auto-sheet flaky.
 
 ### #344 juice (canonical)
 
@@ -251,7 +286,7 @@ Older EX-001…032 stay on `EXAMINATOR.md`. Do not re-file.
 | **#340** | meta menus | **MM-001–005 P1 ingested** (gear scroll, pets fold, factories smoke, 2.2s blank, FOMO cover). Landscape 010–012 P1. Skip tablet-834 as new owner. Open times 14–37 ms — clunk is chrome/scroll, not JS. |
 | **#341** | landscape combat | **PASS — no P0/P1.** Camera/floor/pads hold. 844 start ground 312 · player (211,312) · letterbox 0 · punch+jump 44px fire. Mid-fight rotate still on floor. Cyber lv13 visible. **LC-001/002 P2 low — no bot.** |
 | **#342** | telegraph | **TF-001 FIXED on draft — MERGE FIRST** (wrong `vlieger` tip). TF-002/003 open P1 (hop wind · CHARGE ring). Density **unchanged** (0.50 / 12 / ×1.55 / batch 1 / gap 64). No full-HP one-shot. |
-| **#343** | first-30s | **PASS.** P2 lang / Continue / FOMO flake. |
+| **#343** | first-30s | **PASS — no P0/P1.** EX-023/#328 holds. `Tik slaan` 0.85s. Island/FOMO after punch only. P2 lang/Continue/FOMO flake — **no bot.** |
 | **#344** | juice | **PASS soft** (punch/KO/RM). **J-001 P1** first-kill toast+banner on KO. Training has no KO snap (P2, no bot). |
 
 ---
@@ -273,6 +308,7 @@ Older EX-001…032 stay on `EXAMINATOR.md`. Do not re-file.
 | 18:49 | — | **#342 TF** | TF-001 merge-first. TF-002/003 P1 bots 6/5. Density report-only. |
 | 18:50 | — | **#337 PASS** | Death-retry ~720ms fat gold. P2 heat/dice — no bot. |
 | 18:51 | — | **#344 juice** | PASS soft. J-001 first-kill chrome. Plan frozen to **10 bots**. |
+| 18:52 | — | **#343 PASS + FREEZE** | First-30s holds. P2 lang/Continue/FOMO — no bot. **10 sprint lanes locked.** |
 
 Lead evidence: `/opt/cursor/artifacts/playtest_adventure_390_and_844_first_pass.mp4`
 

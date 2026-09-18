@@ -1,9 +1,9 @@
 # IMPROVEMENT PLAN — 10 fix-bot lanes · FROZEN
 
-**FROZEN 18:51 CEST.** Pin LIVE `c9a29fc` / **v1.18.190** / **SW 400**.  
+**FROZEN 18:52 CEST.** Pin LIVE `c9a29fc` / **v1.18.190** / **SW 400**.  
 **Share:** `speel.html`. **Draft PRs only. No Versus. No merge main** until Brendon says «merge main».
 
-**Launch only bots 1–10 + MERGE #342.** Waves 11–15 stay briefed below but are **after** this freeze.
+**NEXT SPRINT = MERGE #342 + bots 1–10 only.** #337/#341/#343 are PASS — no bot. Waves 11–15 stay briefed below but are **after** this freeze.
 
 Board: `PLAYTEST-REPORT-2026-09-18.md`.  
 Each bot = **one 30-min slice**. Branch `cursor/<lane>-9e0e`. Smoke + 390 or 844 proof. Then STOP.
@@ -316,7 +316,7 @@ Later kills are clean. First kill is the one new players feel.
 | TF-001 | Already on #342 — land, don't clone |
 | LC-001/002 | **#341 PASS.** P2 hop-rotate asymmetry only. Low priority. **No bot.** Alive rotate is fine (not EX-034). |
 | EX-033 / DR-heat / DR-dice | **#337 PASS.** ~720ms fat gold · rematch &lt;70ms. P2 heat pile + dice lecture — **low, no bot.** |
-| F30-* | First-30s **PASS**; lang/Continue/FOMO flake are P2 |
+| F30-lang / F30-cont / F30-fomo | **#343 PASS.** EX-023/#328 holds. P2 EN PLAY→NL HOME · Continue skips island · FOMO sheet flaky — **no bot.** |
 | MM-006…009 | P2 from #340 (toast park, `Alles27`, egg 74×36, pity copy) |
 | Tablet-834 owner | SKIP — confirms MM-001 1-col; clears MM-002/003 first-paint |
 | EX-020 / IAP / Versus | Out of scope |

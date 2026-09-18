@@ -1,3 +1,4 @@
+| 2026-09-18 | **PLAYTEST LEAD FREEZE** | #343 first-30s PASS. 10 sprint lanes locked + MERGE #342. Draft. Niet main. |
 | 2026-09-18 | **PLAYTEST LEAD #344** | Juice PASS soft. J-001 first-kill toast XOR banner. Plan frozen to 10 bots. Draft. Niet main. |
 | 2026-09-18 | **PLAYTEST LEAD #337** | Death-retry PASS (~720ms fat gold). P2 heat pile + dice lecture — no bot. Draft. Niet main. |
 | 2026-09-18 | **PLAYTEST LEAD #342** | TF-001 merge-first (sticky vlieger tip fixed on draft). TF-002/003 P1 bots 6/5. Density unchanged. Draft. Niet main. |

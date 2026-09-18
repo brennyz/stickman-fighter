@@ -1279,6 +1279,10 @@
   ],
   "sessionLog": [
     {
+      "at": "2026-09-18T16:52:31Z",
+      "summary": "FROZEN: #343 first-30s PASS. 10 sprint lanes + MERGE #342 locked. Draft only."
+    },
+    {
       "at": "2026-09-18T16:51:40Z",
       "summary": "Ingested #344 juice PASS soft. J-001 first-kill toast XOR banner. Plan frozen to 10 bots."
     },
@@ -1373,10 +1377,6 @@
     {
       "at": "2026-09-18T13:04:42Z",
       "summary": "Examiner #317: style tips DE/FR/ES + result win/lose consistency + Dutch audit. v1.18.177 / SW 387. Draft, geen main."
-    },
-    {
-      "at": "2026-09-18T12:55:44Z",
-      "summary": "examiner P0 season beats + style tips + result copy start"
     }
   ],
   "implementedFeaturesSummary": "d18 char select deel 1+2 (v1.11.1-2); Mats coinrun + shuriken mik/vliegers + anti-spam (v1.12.0); speel.html (v1.12.2+). Zie HANDOFF-ZOEKINDEX.md en improvement-d20-bag.json userFeatureLog.",
