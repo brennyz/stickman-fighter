@@ -293,7 +293,7 @@ Horde wave-clear = stacked 58ms hitches. Punch + kill on the same beat stacks PE
 | Item | Why |
 |------|-----|
 | TF-001 | Already on #342 — land, don't clone |
-| LC-001/002 | P2 hop-rotate asymmetry — #341 PASS |
+| LC-001/002 | **#341 PASS.** P2 hop-rotate asymmetry only. Low priority. **No bot.** Alive rotate is fine (not EX-034). |
 | EX-033 / DR-* | Retry **PASS**; delay contract / heat pile are P2 |
 | F30-* | First-30s **PASS**; lang/Continue/FOMO flake are P2 |
 | MM-006…009 | P2 from #340 (toast park, `Alles27`, egg 74×36, pity copy) |

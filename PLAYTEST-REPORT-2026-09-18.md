@@ -20,7 +20,7 @@ Fix bots launch from **`IMPROVEMENT-PLAN.md`** (10 lanes). This file is the boar
 |-----|--------------|---------|--------|
 | Visibility (alive) | PASS day-farm | #336 A–G PASS | **P1 EX-034** dead+rotate |
 | Landscape HOME | SPELEN/Avontuur on screen | #338 visible PASS | **P1 EX-036** FOMO `inert` |
-| Landscape fight | Floor + pads + bodies | #341 PASS | P2 hop-rotate only |
+| Landscape fight | Floor + pads + bodies | **#341 PASS** (no P0/P1) | P2 LC-001/002 only — **do not launch** |
 | First 30s | `Tik slaan` on rematch | #343 PASS | P2 Continue / FOMO flake |
 | Death-retry | Fat gold &lt;3s, rematch paints | #337 PASS ~730ms | P2 heat pile / unused 650ms |
 | Fair telegraph | CHARGE HUD readable | #342 CHARGE PASS | **P1 TF-002/003** · TF-001 fixed on #342 |
@@ -84,7 +84,8 @@ Status: `open` · `pass` · `fixed-on-draft` · `DELEGATED` · `out`
 | F30-lang | open | first-30s / i18n | `speel.html` follows `navigator.language`; in-game `initLang()` forces NL. |
 | F30-cont | open | first-30s / #318 | After first punch, Continue → `gokGooiStartLevel` (skips island). |
 | F30-fomo | open | FOMO | `fomoRitualPending` true after punch; auto-sheet flaky unless `#menuScreen.active`. |
-| LC-001/002 | open | landscape-combat | Mid-jump rotate snaps Y on short land; inverse keeps hop. Leave. |
+| LC-001 | open · **low** | landscape-combat | Mid-jump rotate *to* 844×390 snaps Y to new floor (old Y would be below `H`). Hop cancelled. Necessary. **No bot.** |
+| LC-002 | open · **low** | landscape-combat | Landscape → portrait while airborne **keeps** the hop (still on canvas). Inverse of LC-001; looks correct. **No bot.** |
 | PERF-04 | open · #339 | juice | `applyHitStop` only early-outs on `motionReduced()`. Punch freeze **0.034s** with Lite FX still on. Gate with PERF-03. |
 | PERF-05 | open · #339 | fxLite | After 90 frames tier 0: spawnLite **and** `fxLite()` both false. Touch cap still 100. Auto Lite hint waits for **tier 2 + 120 frames** (after the hitch). |
 | EX-012 | DELEGATED #314 | HUD | First-minute hint + stars + wave tight on 390. |
@@ -99,6 +100,26 @@ Status: `open` · `pass` · `fixed-on-draft` · `DELEGATED` · `out`
 | Versus | retired | Do not revive |
 | LH-dock | P3 · #338 | Landscape HOME meta-dock under 390 fold — play tile above fold |
 | LH-copy | P3 · #338 | “Naar / oproepen” wrap · NL “power-ups” on mission row |
+| LC-pads | P3 · #341 | Phone-land pads sit on the 44px floor (no slack). iPad 3×2 jump-left is documented out of #331. |
+
+### #341 landscape combat (canonical) — PASS · no bot
+
+Source: `docs/playtest-landscape-combat-2026-09-18.md`. Smokes: `landscape-combat` · `landscape-touch` · `touch-btns`.
+
+| Case | Result |
+|------|--------|
+| 844×390 start | W/H match · ground **312** · player **(211, 312)** · letterbox 0 · punch+jump 44px **both fire** |
+| 667 / 736 / 915 land | aligned · pads ≥44px · punch/jump fire |
+| Mid-fight rotate → 844 | t≈1.8 · player **(350, 312)** on floor · pads still fire |
+| Training 844 | player + robot on floor · punch fires |
+| Cyber lv13 844 | fighter visible · no letterbox |
+| iPad 1180×820 | on floor · 3×2 pads (jump left of punch — out of #331) |
+
+**P0 / P1: none.** Alive rotate is fine — do not confuse with **EX-034** (dead then rotate).
+
+**P2 LC-001:** hop → short land snaps to new floor (old Y below `H`). Necessary. Leave.  
+**P2 LC-002:** land → portrait keeps the hop. Inverse; looks correct.  
+**Low priority. Do not launch a fix bot.**
 
 ### #339 PERF-01–06 (canonical)
 
@@ -172,7 +193,7 @@ Older EX-001…032 stay on `EXAMINATOR.md`. Do not re-file.
 | **#338** | landscape HOME | **Visibility PASS** (SPELEN/Avontuur ≥44 px, left dock, no overlap). **EX-036 P1** `#318` `inert` + `pointer-events:none` while sheet open. × recover PASS. Keep portrait hub lock. |
 | **#339** | mid-phone perf | **#327 opener PASS** (4 sparks / 0 freeze). **PERF-01/02 P1** 90-frame cliff. **PERF-03/04** freeze ignores Lite. Plan: spawnLite on touch **whole fight**; gate `juiceKillSnap` + `applyHitStop`. PERF-05 P2 · PERF-06 P3. |
 | **#340** | meta menus | **MM-001–005 P1 ingested** (gear scroll, pets fold, factories smoke, 2.2s blank, FOMO cover). Landscape 010–012 P1. Skip tablet-834 as new owner. Open times 14–37 ms — clunk is chrome/scroll, not JS. |
-| **#341** | landscape combat | **PASS.** P2 hop asymmetry only. |
+| **#341** | landscape combat | **PASS — no P0/P1.** Camera/floor/pads hold. 844 start ground 312 · player (211,312) · letterbox 0 · punch+jump 44px fire. Mid-fight rotate still on floor. Cyber lv13 visible. **LC-001/002 P2 low — no bot.** |
 | **#342** | telegraph | **TF-001 fixed here (land).** TF-002/003 open P1. Density unchanged. |
 | **#343** | first-30s | **PASS.** P2 lang / Continue / FOMO flake. |
 | **#344** | juice | Soft PASS. **J-001 P1** first-kill chrome. |
@@ -192,6 +213,7 @@ Older EX-001…032 stay on `EXAMINATOR.md`. Do not re-file.
 | 18:44 | — | **#338 deepen EX-036** | Landscape HOME visibility PASS. P1: FOMO `inert` + `pointer-events:none` blocks Avontuur while sheet open. × recover PASS. |
 | 18:46 | — | **#340 MM-010/011/012** | 844 gear doll-only · 0 pet cards · Open kist clipped. Wave-3 bots 14–15. Skip tablet-834. |
 | 18:47 | — | **#339 PERF-01–06** | 90-frame spawnLite cliff · juice/hitStop ignore Lite. Bots 3–4: keep spawnLite on touch; gate freezes. |
+| 18:48 | — | **#341 PASS** | Landscape combat camera/floor/pads. LC-001/002 hop asymmetry P2 — no bot. |
 
 Lead evidence: `/opt/cursor/artifacts/playtest_adventure_390_and_844_first_pass.mp4`
 
