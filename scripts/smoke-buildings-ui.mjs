@@ -337,8 +337,8 @@ async function runBrowser() {
       }
       if (typeof UI.buildingsShowList === 'function') UI.buildingsShowList();
       const walkEmpty = !!document.querySelector('[data-buildings-empty]');
-      if (typeof UI.buildingsShowDetail === 'function') UI.buildingsShowDetail('stick_lighter');
-      if (typeof UI.buildingsShowUpgradeStep === 'function') UI.buildingsShowUpgradeStep();
+      UI._buildingsCollectBusy = null;
+      if (typeof UI.buildingsShowUpgradeStep === 'function') UI.buildingsShowUpgradeStep('stick_lighter');
       const firstSheet = document.getElementById('buildingsUpgradeSheet');
       const firstTitle = ((firstSheet && firstSheet.querySelector('h3')) || {}).textContent || '';
       const firstConfirm = ((document.getElementById('btnBuildingUpgradeConfirm')) || {}).textContent || '';
