@@ -220,6 +220,12 @@ bindPress(document.getElementById('btnSummonCancel'), () => {
   AudioSys.sfx('select');
   UI.finishSummonReveal();
 });
+bindPress(document.getElementById('btnSummonTutDismiss'), () => {
+  AudioSys.init();
+  AudioSys.sfx('select');
+  if (typeof dismissSummonTut === 'function') dismissSummonTut();
+  try { UI.renderSummon(); } catch (_) {}
+});
 bindPress(document.getElementById('summonStage'), () => {
   if (UI._chestPullBusy && UI._summonSkipReady) {
     AudioSys.init();

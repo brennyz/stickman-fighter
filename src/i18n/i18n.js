@@ -1754,6 +1754,8 @@ function applyLangStaticScreens() {
   setText('btnSummonGotoPets', 'ui.summonGotoPets');
   setText('btnSummonCancel', 'ui.summonCancel');
   setText('summonLogHead', 'ui.summonLogNewest');
+  setText('summonTutLine', 'ui.summonTut');
+  setTitle('btnSummonTutDismiss', 'ui.summonTutDismiss');
   setText('btnWeaponsGotoSummon', 'ui.summonGotoChest');
   setText('btnPetsGotoSummon', 'ui.summonGotoChest');
 

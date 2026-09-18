@@ -2334,7 +2334,7 @@ const UI = {
       if (pullLbl) {
         pullLbl.textContent = skipReady
           ? (left > 0
-            ? tOr('ui.summonNextProgress', 'Volgende · {left}/{total}', { left, total: glance.total || CHEST_DAILY_TOTAL })
+            ? t('ui.summonNextProgress', { left, total: glance.total || CHEST_DAILY_TOTAL })
             : t('ui.summonPullEmpty'))
           : (empty ? tOr('ui.summonEmptyHint', 'Morgen weer') : t('ui.summonPullLeft', { n: left }));
       }
@@ -2347,7 +2347,7 @@ const UI = {
           titleEl.appendChild(document.createTextNode(
             skipReady
               ? (left > 0
-                ? tOr('ui.summonNextProgress', 'Volgende · {left}/{total}', { left, total: glance.total || CHEST_DAILY_TOTAL })
+                ? t('ui.summonNextProgress', { left, total: glance.total || CHEST_DAILY_TOTAL })
                 : tOr('ui.summonOpen', 'Open kist'))
               : tOr('ui.summonOpen', 'Open kist')
           ));
@@ -2355,16 +2355,23 @@ const UI = {
         }
         pullBtn.setAttribute('aria-label', skipReady
           ? (left > 0
-            ? tOr('ui.summonNextProgress', 'Volgende · {left}/{total}', { left, total: glance.total || CHEST_DAILY_TOTAL })
+            ? t('ui.summonNextProgress', { left, total: glance.total || CHEST_DAILY_TOTAL })
             : t('ui.summonAriaEmpty'))
           : (left > 0 ? t('ui.summonAriaPull', { n: left }) : t('ui.summonAriaEmpty')));
       }
       const cancelBtn = document.getElementById('btnSummonCancel');
       if (cancelBtn) {
-        cancelBtn.textContent = tOr('ui.summonCancel', 'Stop');
+        cancelBtn.textContent = t('ui.summonCancel');
         cancelBtn.hidden = !this._chestPullBusy;
-        cancelBtn.setAttribute('aria-label', tOr('ui.summonCancel', 'Stop'));
+        cancelBtn.setAttribute('aria-label', t('ui.summonCancel'));
       }
+      const tut = document.getElementById('summonTut');
+      const tutLine = document.getElementById('summonTutLine');
+      const tutX = document.getElementById('btnSummonTutDismiss');
+      const showTut = !this._chestPullBusy && typeof summonTutSeen === 'function' && !summonTutSeen();
+      if (tutLine) tutLine.textContent = t('ui.summonTut');
+      if (tutX) tutX.setAttribute('aria-label', t('ui.summonTutDismiss'));
+      if (tut) tut.hidden = !showTut;
       const stage = document.getElementById('summonStage');
       if (stage) {
         const canPull = left > 0 && !this._chestPullBusy;
@@ -2411,7 +2418,7 @@ const UI = {
             ? save.chestDaily.pulls.slice().reverse().slice(0, cap) : []);
         logEl.textContent = '';
         if (logHead) {
-          logHead.textContent = tOr('ui.summonLogNewest', 'Nieuwste');
+          logHead.textContent = t('ui.summonLogNewest');
           logHead.hidden = !pulls.length;
         }
         if (!pulls.length) {
@@ -2887,6 +2894,7 @@ const UI = {
       }
 
       this._summonEmptyToast = false;
+      try { if (typeof dismissSummonTut === 'function') dismissSummonTut(); } catch (_) {}
       this.runSummonRevealTimeline(res);
       this._summonPullLock = false;
       try { this.renderMenu(); } catch (_) {}

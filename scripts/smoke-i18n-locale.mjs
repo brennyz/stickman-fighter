@@ -169,6 +169,16 @@ if (!/summonNoMore:/.test(catalog) && !/summonPullEmpty:/.test(catalog)) fail('s
 if (!/summonQuota:/.test(catalog)) fail('summon quota copy must be i18n');
 if (!/ui\.summonQuota/.test(ui)) fail('renderSummon quota must use i18n');
 if (!/ui\.summonLogEmpty/.test(ui) && !/ui\.summonNoPulls/.test(ui)) fail('summon log empty state must use i18n');
+for (const key of ['summonNextProgress', 'summonCancel', 'summonLogNewest', 'summonTut', 'summonTutDismiss']) {
+  if (!new RegExp(key + ':').test(catalog)) fail('NL/EN missing ui.' + key);
+  if (!new RegExp(key + ':').test(deChrome)) fail('DE missing ui.' + key);
+  if (!new RegExp(key + ':').test(locales)) fail('FR/ES missing ui.' + key);
+}
+if (/summonLogNewest: 'Nieuwste'/.test(deChrome + locales)) fail('DE/FR/ES log head still hardcoded Dutch Nieuwste');
+if (/summonNextProgress: 'Volgende/.test(deChrome + locales)) fail('DE/FR/ES next CTA still hardcoded Dutch Volgende');
+if (!/summonCancel: 'Abbrechen'/.test(deChrome)) fail('DE cancel must be Abbrechen');
+if (!/summonCancel: 'Arrêter'/.test(locales)) fail('FR cancel must be Arrêter');
+if (!/summonCancel: 'Parar'/.test(locales)) fail('ES cancel must be Parar');
 
 const speel = fs.readFileSync(path.join(root, 'speel.html'), 'utf8');
 if (!/id="stepsIos"/.test(speel)) fail('speel.html must restore #stepsIos for iPhone/iPad');

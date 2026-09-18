@@ -323,9 +323,9 @@ const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const VERSION_UPDATE_SAVE_KEY = 'stickfighter_version_update_save_v1';
 const VERSION_UPDATE_FLAG_KEY = 'stickfighter_version_update_flag_v1';
 const SAVE_EXPORT_SCHEMA = 3;
-const APP_VERSION = '1.18.176';
+const APP_VERSION = '1.18.177';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 386;
+const SW_CACHE_REV = 387;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', petCoins: 0, dex: {}, summons: {}, pets: {}, activePet: null,
   eggPets: {}, activeEggPet: null, eggDaily: null,
   chestDaily: null, chestWeapons: {},
@@ -4051,6 +4051,8 @@ function applyLangStaticScreens() {
   setText('btnSummonGotoPets', 'ui.summonGotoPets');
   setText('btnSummonCancel', 'ui.summonCancel');
   setText('summonLogHead', 'ui.summonLogNewest');
+  setText('summonTutLine', 'ui.summonTut');
+  setTitle('btnSummonTutDismiss', 'ui.summonTutDismiss');
   setText('btnWeaponsGotoSummon', 'ui.summonGotoChest');
   setText('btnPetsGotoSummon', 'ui.summonGotoChest');
 
@@ -20515,6 +20517,27 @@ function summonRevealCardDelayMs(totalMs) {
   const total = Math.max(SUMMON_CARD_LAST_MS + 400, Number(totalMs) || SUMMON_REVEAL_TOTAL_MS);
   return Math.max(0, total - SUMMON_CARD_LAST_MS);
 }
+
+function summonTutSeen() {
+  try {
+    if (typeof save === 'undefined' || !save) return true;
+    if (!save.tipsSeen || typeof save.tipsSeen !== 'object' || Array.isArray(save.tipsSeen)) {
+      save.tipsSeen = {};
+    }
+    return !!save.tipsSeen.summonHub;
+  } catch (_) { return true; }
+}
+
+function dismissSummonTut() {
+  try {
+    if (typeof save === 'undefined' || !save) return;
+    if (!save.tipsSeen || typeof save.tipsSeen !== 'object' || Array.isArray(save.tipsSeen)) {
+      save.tipsSeen = {};
+    }
+    save.tipsSeen.summonHub = 1;
+    if (typeof persist === 'function') persist();
+  } catch (_) {}
+}
 /* --- src/data/building-pixels.js --- */
 /* ======================== BUILDING PIXEL WIRE MAP ======================== */
 /**
@@ -21600,6 +21623,8 @@ function seedNlGameStrings() {
     summonNextProgress: 'Volgende · {left}/{total}',
     summonCancel: 'Stop',
     summonLogNewest: 'Nieuwste',
+    summonTut: 'Tik de kist — 10× per dag, wapen of pet.',
+    summonTutDismiss: 'Tip sluiten',
     summonGotoWeapons: 'Wapens',
     summonGotoPets: 'Pets',
     summonGotoChest: 'Kist',
@@ -22780,6 +22805,8 @@ const CATALOG_EN = {
     summonNextProgress: 'Next · {left}/{total}',
     summonCancel: 'Stop',
     summonLogNewest: 'Newest',
+    summonTut: 'Tap the chest — 10× a day, weapon or pet.',
+    summonTutDismiss: 'Dismiss tip',
     summonGotoWeapons: 'Weapons',
     summonGotoPets: 'Pets',
     summonGotoChest: 'Chest',
@@ -24411,8 +24438,10 @@ const CATALOG_DE_CHROME = {
     summonSkip: 'Tippen zum Weiter',
     summonNext: 'Weiter',
     summonNextProgress: 'Weiter · {left}/{total}',
-    summonCancel: 'Stop',
+    summonCancel: 'Abbrechen',
     summonLogNewest: 'Neueste',
+    summonTut: 'Kiste tippen — 10× am Tag, Waffe oder Pet.',
+    summonTutDismiss: 'Tipp schließen',
     summonGotoWeapons: 'Waffen',
     summonGotoPets: 'Pets',
     summonGotoChest: 'Kiste',
@@ -24949,8 +24978,10 @@ overlayI18nCatalog(CATALOG_FR, {
     summonSkip: 'Touche pour continuer',
     summonNext: 'Suivant',
     summonNextProgress: 'Suivant · {left}/{total}',
-    summonCancel: 'Stop',
+    summonCancel: 'Arrêter',
     summonLogNewest: 'Plus récent',
+    summonTut: 'Touche le coffre — 10× par jour, arme ou pet.',
+    summonTutDismiss: 'Fermer l’astuce',
     summonGotoWeapons: 'Armes',
     summonGotoPets: 'Pets',
     summonGotoChest: 'Coffre',
@@ -25508,6 +25539,8 @@ overlayI18nCatalog(CATALOG_ES, {
     summonNextProgress: 'Siguiente · {left}/{total}',
     summonCancel: 'Parar',
     summonLogNewest: 'Más reciente',
+    summonTut: 'Toca el cofre — 10× al día, arma o pet.',
+    summonTutDismiss: 'Cerrar consejo',
     summonGotoWeapons: 'Armas',
     summonGotoPets: 'Pets',
     summonGotoChest: 'Cofre',
@@ -48754,7 +48787,7 @@ const UI = {
       if (pullLbl) {
         pullLbl.textContent = skipReady
           ? (left > 0
-            ? tOr('ui.summonNextProgress', 'Volgende · {left}/{total}', { left, total: glance.total || CHEST_DAILY_TOTAL })
+            ? t('ui.summonNextProgress', { left, total: glance.total || CHEST_DAILY_TOTAL })
             : t('ui.summonPullEmpty'))
           : (empty ? tOr('ui.summonEmptyHint', 'Morgen weer') : t('ui.summonPullLeft', { n: left }));
       }
@@ -48767,7 +48800,7 @@ const UI = {
           titleEl.appendChild(document.createTextNode(
             skipReady
               ? (left > 0
-                ? tOr('ui.summonNextProgress', 'Volgende · {left}/{total}', { left, total: glance.total || CHEST_DAILY_TOTAL })
+                ? t('ui.summonNextProgress', { left, total: glance.total || CHEST_DAILY_TOTAL })
                 : tOr('ui.summonOpen', 'Open kist'))
               : tOr('ui.summonOpen', 'Open kist')
           ));
@@ -48775,16 +48808,23 @@ const UI = {
         }
         pullBtn.setAttribute('aria-label', skipReady
           ? (left > 0
-            ? tOr('ui.summonNextProgress', 'Volgende · {left}/{total}', { left, total: glance.total || CHEST_DAILY_TOTAL })
+            ? t('ui.summonNextProgress', { left, total: glance.total || CHEST_DAILY_TOTAL })
             : t('ui.summonAriaEmpty'))
           : (left > 0 ? t('ui.summonAriaPull', { n: left }) : t('ui.summonAriaEmpty')));
       }
       const cancelBtn = document.getElementById('btnSummonCancel');
       if (cancelBtn) {
-        cancelBtn.textContent = tOr('ui.summonCancel', 'Stop');
+        cancelBtn.textContent = t('ui.summonCancel');
         cancelBtn.hidden = !this._chestPullBusy;
-        cancelBtn.setAttribute('aria-label', tOr('ui.summonCancel', 'Stop'));
+        cancelBtn.setAttribute('aria-label', t('ui.summonCancel'));
       }
+      const tut = document.getElementById('summonTut');
+      const tutLine = document.getElementById('summonTutLine');
+      const tutX = document.getElementById('btnSummonTutDismiss');
+      const showTut = !this._chestPullBusy && typeof summonTutSeen === 'function' && !summonTutSeen();
+      if (tutLine) tutLine.textContent = t('ui.summonTut');
+      if (tutX) tutX.setAttribute('aria-label', t('ui.summonTutDismiss'));
+      if (tut) tut.hidden = !showTut;
       const stage = document.getElementById('summonStage');
       if (stage) {
         const canPull = left > 0 && !this._chestPullBusy;
@@ -48831,7 +48871,7 @@ const UI = {
             ? save.chestDaily.pulls.slice().reverse().slice(0, cap) : []);
         logEl.textContent = '';
         if (logHead) {
-          logHead.textContent = tOr('ui.summonLogNewest', 'Nieuwste');
+          logHead.textContent = t('ui.summonLogNewest');
           logHead.hidden = !pulls.length;
         }
         if (!pulls.length) {
@@ -49307,6 +49347,7 @@ const UI = {
       }
 
       this._summonEmptyToast = false;
+      try { if (typeof dismissSummonTut === 'function') dismissSummonTut(); } catch (_) {}
       this.runSummonRevealTimeline(res);
       this._summonPullLock = false;
       try { this.renderMenu(); } catch (_) {}
@@ -52586,6 +52627,12 @@ bindPress(document.getElementById('btnSummonCancel'), () => {
   AudioSys.init();
   AudioSys.sfx('select');
   UI.finishSummonReveal();
+});
+bindPress(document.getElementById('btnSummonTutDismiss'), () => {
+  AudioSys.init();
+  AudioSys.sfx('select');
+  if (typeof dismissSummonTut === 'function') dismissSummonTut();
+  try { UI.renderSummon(); } catch (_) {}
 });
 bindPress(document.getElementById('summonStage'), () => {
   if (UI._chestPullBusy && UI._summonSkipReady) {

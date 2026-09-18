@@ -681,3 +681,24 @@ function summonRevealCardDelayMs(totalMs) {
   const total = Math.max(SUMMON_CARD_LAST_MS + 400, Number(totalMs) || SUMMON_REVEAL_TOTAL_MS);
   return Math.max(0, total - SUMMON_CARD_LAST_MS);
 }
+
+function summonTutSeen() {
+  try {
+    if (typeof save === 'undefined' || !save) return true;
+    if (!save.tipsSeen || typeof save.tipsSeen !== 'object' || Array.isArray(save.tipsSeen)) {
+      save.tipsSeen = {};
+    }
+    return !!save.tipsSeen.summonHub;
+  } catch (_) { return true; }
+}
+
+function dismissSummonTut() {
+  try {
+    if (typeof save === 'undefined' || !save) return;
+    if (!save.tipsSeen || typeof save.tipsSeen !== 'object' || Array.isArray(save.tipsSeen)) {
+      save.tipsSeen = {};
+    }
+    save.tipsSeen.summonHub = 1;
+    if (typeof persist === 'function') persist();
+  } catch (_) {}
+}

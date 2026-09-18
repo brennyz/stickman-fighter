@@ -40,6 +40,8 @@ must(/id="summonCenterCard"/.test(html), 'missing summon center card');
 must(/id="summonCardKind"/.test(html), 'missing summon kind badge');
 must(/id="btnSummonCancel"/.test(html), 'missing summon cancel/stop');
 must(/id="summonLogHead"/.test(html), 'missing newest-first log head');
+must(/id="summonTut"/.test(html) && /id="btnSummonTutDismiss"/.test(html),
+  'missing dismissible first-time summon tip');
 must(!/id="btnChestPull10"|id="btnSummonx10"|data-pull="x10"/.test(html),
   'unexpected x10 multi-pull button — keep sequential leftover + Stop');
 must(/body:has\(#summonScreen\.active\) #fomoRitual/.test(css),

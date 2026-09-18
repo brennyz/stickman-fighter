@@ -135,6 +135,76 @@ async function run() {
     must(openSnap.hasCancel && openSnap.noX10, 'expected Stop, no x10 batch: ' + JSON.stringify(openSnap));
     must(openSnap.hasLogHead && openSnap.logNewestFn && openSnap.logCap === 4 && openSnap.storeCap === 5,
       'log cap / newest helper missing: ' + JSON.stringify(openSnap));
+
+    const tipSnap = await page.evaluate(() => {
+      const tip = document.getElementById('summonTut');
+      const line = document.getElementById('summonTutLine');
+      const x = document.getElementById('btnSummonTutDismiss');
+      return {
+        visible: !!(tip && !tip.hidden),
+        line: (line && line.textContent) || '',
+        dismissH: x ? Math.round(x.getBoundingClientRect().height) : 0,
+        seenFn: typeof summonTutSeen === 'function' && !summonTutSeen(),
+      };
+    });
+    must(tipSnap.visible && tipSnap.seenFn && /kist/i.test(tipSnap.line),
+      'first-time summon tip missing: ' + JSON.stringify(tipSnap));
+    must(tipSnap.dismissH >= 44, 'tip dismiss tap target < 44px: ' + tipSnap.dismissH);
+
+    const locSnap = await page.evaluate(() => {
+      const DUTCH = /Nieuwste|Volgende|geen pity|Open kist|Tik kist|Tik de kist|Wapens|Morgen weer|Buit landt|Tip sluiten/;
+      const chrome = () => {
+        if (typeof UI !== 'undefined' && UI.renderSummon) UI.renderSummon();
+        return {
+          lang: (typeof getLang === 'function') ? getLang() : (save && save.lang),
+          logHead: (document.getElementById('summonLogHead') || {}).textContent || '',
+          cancel: (document.getElementById('btnSummonCancel') || {}).textContent || '',
+          odds: (document.getElementById('summonOdds') || {}).textContent || '',
+          pull: ((document.getElementById('btnChestPull') || {}).textContent || '').replace(/\s+/g, ' ').trim(),
+          gotoW: (document.getElementById('btnSummonGotoWeapons') || {}).textContent || '',
+          tip: (document.getElementById('summonTutLine') || {}).textContent || '',
+          newest: t('ui.summonLogNewest'),
+          next: t('ui.summonNextProgress', { left: 3, total: 10 }),
+          tut: t('ui.summonTut'),
+        };
+      };
+      setLang('en');
+      const en = chrome();
+      setLang('de');
+      const de = chrome();
+      setLang('fr');
+      const fr = { newest: t('ui.summonLogNewest'), cancel: t('ui.summonCancel'), next: t('ui.summonNextProgress', { left: 3, total: 10 }) };
+      setLang('es');
+      const es = { newest: t('ui.summonLogNewest'), cancel: t('ui.summonCancel'), next: t('ui.summonNextProgress', { left: 3, total: 10 }) };
+      setLang('nl');
+      chrome();
+      return { en, de, fr, es, vw: window.innerWidth };
+    });
+    must(locSnap.vw === 390, 'expected 390px viewport, got ' + locSnap.vw);
+    must(/Newest/i.test(locSnap.en.newest) && /Next · 3\/10/.test(locSnap.en.next) && /Tap the chest/.test(locSnap.en.tut),
+      'EN summon chrome missing: ' + JSON.stringify(locSnap.en));
+    must(/Open chest/i.test(locSnap.en.pull) && /Weapons/i.test(locSnap.en.gotoW) && /no pity/i.test(locSnap.en.odds),
+      'EN DOM still not translated: ' + JSON.stringify(locSnap.en));
+    must(!/Nieuwste|Volgende|geen pity|Open kist|Wapens/.test(JSON.stringify(locSnap.en)),
+      'EN still has Dutch leftovers: ' + JSON.stringify(locSnap.en));
+    must(/Neueste/i.test(locSnap.de.newest) && /Weiter · 3\/10/.test(locSnap.de.next) && /Kiste tippen/.test(locSnap.de.tut),
+      'DE summon chrome missing: ' + JSON.stringify(locSnap.de));
+    must(/Kiste öffnen/i.test(locSnap.de.pull) && /Waffen/i.test(locSnap.de.gotoW) && /kein Pity/i.test(locSnap.de.odds),
+      'DE DOM still not translated: ' + JSON.stringify(locSnap.de));
+    must(/Abbrechen/.test(locSnap.de.cancel) && !/Nieuwste|Volgende|geen pity|Open kist/.test(JSON.stringify(locSnap.de)),
+      'DE still has Dutch leftovers: ' + JSON.stringify(locSnap.de));
+    must(/Plus récent/.test(locSnap.fr.newest) && /Arrêter/.test(locSnap.fr.cancel) && /Suivant/.test(locSnap.fr.next),
+      'FR keys missing: ' + JSON.stringify(locSnap.fr));
+    must(/Más reciente/.test(locSnap.es.newest) && /Parar/.test(locSnap.es.cancel) && /Siguiente/.test(locSnap.es.next),
+      'ES keys missing: ' + JSON.stringify(locSnap.es));
+
+    const dismissed = await page.evaluate(() => {
+      if (typeof dismissSummonTut === 'function') dismissSummonTut();
+      UI.renderSummon();
+      const tip = document.getElementById('summonTut');
+      return { hidden: !!(tip && tip.hidden), seen: typeof summonTutSeen === 'function' && summonTutSeen() };
+    });
+    must(dismissed.hidden && dismissed.seen, 'tip dismiss did not persist: ' + JSON.stringify(dismissed));
     const btnTxt = await page.evaluate(() => (document.getElementById('btnChestPull') || {}).textContent || '');
     must(/open kist/i.test(btnTxt), 'expected Open kist CTA, got: ' + btnTxt);
     const chrome = await page.evaluate(() => {

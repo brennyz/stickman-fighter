@@ -915,6 +915,44 @@
   .summon-glance.is-error {
     border-color: rgba(255,107,107,.45);
   }
+  .summon-tut {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 0;
+    padding: 6px 8px 6px 12px;
+    border-radius: 10px;
+    border: 1px solid rgba(124,245,255,.28);
+    background: #101826;
+  }
+  .summon-tut[hidden] { display: none; }
+  .summon-tut-line {
+    flex: 1 1 auto;
+    margin: 0;
+    font-size: clamp(12px, 3.1vw, 14px);
+    font-weight: 800;
+    line-height: 1.3;
+    color: #e8f0ff;
+  }
+  .summon-tut-x {
+    flex: 0 0 auto;
+    width: 44px;
+    height: 44px;
+    border: 0;
+    border-radius: 10px;
+    background: transparent;
+    color: #9db1e3;
+    font-size: 26px;
+    line-height: 1;
+    font-weight: 700;
+    cursor: pointer;
+    touch-action: manipulation;
+  }
+  .summon-tut-x:focus-visible {
+    outline: 2px solid rgba(124,245,255,.7);
+    outline-offset: 2px;
+  }
   .summon-screen .subtitle {
     font-size: var(--type-caption);
     opacity: .78;
@@ -1008,6 +1046,7 @@
   .summon-screen.is-pulling > .head,
   .summon-screen.is-pulling > .subtitle,
   .summon-screen.is-pulling .summon-where,
+  .summon-screen.is-pulling .summon-tut,
   .summon-screen.is-pulling .summon-glance,
   .summon-screen.is-pulling .summon-quota,
   .summon-screen.is-pulling .summon-actions,
