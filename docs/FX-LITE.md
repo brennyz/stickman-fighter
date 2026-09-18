@@ -19,7 +19,7 @@ Keep combat smooth on mid phones. Particle and FX caps, a recycled pool, and a s
 | Fighters / monsters / pet | always `draw()` | always `draw()` — `skipFx` only skips **particles** |
 
 `fxLite()` stays opt-in (`save.liteFx` / Perf.tier ≥ 2 / reduced-motion).  
-`fxSpawnLite()` stays **on for the whole fight** on touch / Lite FX / Perf.tier ≥ 1 — not only the first ~90 frames.  
+`fxSpawnLite()` stays **on for the whole fight** on touch / Lite FX / Perf.tier ≥ 1 — not only the first ~90 frames (elite intro after minute 1 still lite).  
 `fxSkipFreeze()` gates `juiceKillSnap` / `applyHitStop` freeze on Lite FX / touch.
 
 Helpers: `fxCaps`, `fxSpawnLite`, `fxSkipFreeze`, `fxTouchDevice`, `prewarmFxPool`, `allocFxParticle`, `perfFxBudgetAllow`. QA: `__sf.fx`.

@@ -248,6 +248,17 @@ must(run('(game.freezeT || 0) >= 0.05'), 'desktop juiceKillSnap still freezes');
 run('game.freezeT = 0; applyHitStop(game, { kind: "punch", dmg: 22 }, { heavy: true });');
 must(run('(game.freezeT || 0) >= 0.03'), 'desktop applyHitStop still freezes');
 
+run('save.liteFx = false; save.reducedMotion = false; Perf.tier = 0; Perf.frames = 3600; window.__sfForceTouchFx = true;');
+run('game._specialIntroKey = ""; game.waveIdx = (game.waveIdx || 0) + 1; game.particles = []; game._fxBudgetFrame = -1; game._fxBudgetUsed = 0; game.freezeT = 0;');
+must(run('fxSpawnLite()'), 'mid-phone after minute 1 (~3600 frames) must stay spawnLite');
+must(run('fxSkipFreeze()'), 'mid-phone after minute 1 must skip freeze');
+run('var __lateMon = { x: 300, y: (game.ground || 400) - 40, size: 40, elite: true, sp: { name: "X", rarity: "rare" } };');
+run('triggerSpecialEnemyIntro(game, __lateMon, "elite");');
+const lateEliteN = run('game.particles.length');
+must(run('(game.freezeT || 0) === 0'), 'minute-1 mid-phone elite intro must not freeze');
+must(lateEliteN >= 1, 'minute-1 elite intro must still show a spark', lateEliteN);
+must(lateEliteN <= 12, 'minute-1 elite intro must stay spawnLite-sized (not 18+ desktop dump)', lateEliteN);
+
 must(run('typeof game.player.draw === "function"'), 'player.draw missing');
 
 console.log('SMOKE_OK fx-lite', {
@@ -255,6 +266,7 @@ console.log('SMOKE_OK fx-lite', {
   touchParticles: touchCaps.particles,
   deskParticles: deskCaps.particles,
   burstN,
+  lateEliteN,
   pool: run('fxPoolSize()'),
   skipFreeze: true,
 });

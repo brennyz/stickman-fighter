@@ -20,7 +20,7 @@
     "featureBranch": "cursor/fx-lite-touch-hold-4679",
     "pushBlocked": null,
     "shareUrl": "https://brennyz.github.io/stickman-fighter/speel.html",
-    "note": "Draft #339 PERF fix: touch spawnLite whole fight + skip kill/hit freeze. v1.18.191 / SW 401. No main.",
+    "note": "DONE #347: touch spawnLite whole fight + freeze gate. Minute-1 elite still lite. Draft, STOP, no main. v1.18.191 / SW 401.",
     "updated": "2026-09-18T16:43:13Z",
     "localMainHead": "aa80d25c5f708549af287716914c2016228a2a46",
     "remoteMainHead": "aa80d25c5f708549af287716914c2016228a2a46"
@@ -49,6 +49,13 @@
     ]
   },
   "userWishlist": [
+    {
+      "id": "w-20260918T164500",
+      "from": "user",
+      "text": "Good #347. Until ~19:10 Amsterdam: if solid mark DONE and STOP. Optional: one mid-phone elite intro after minute 1 still spawnLite. Draft only, no main.",
+      "status": "done-in-code",
+      "updated": "2026-09-18"
+    },
     {
       "id": "w-20260918T164000",
       "from": "user",
@@ -1239,6 +1246,10 @@
   ],
   "sessionLog": [
     {
+      "at": "2026-09-18T16:46:05Z",
+      "summary": "DONE #347: touch spawnLite whole fight + freeze gate; minute-1 mid-phone elite intro still 4 sparks/0 freeze. smoke:fx-lite OK. Draft, STOP, no main."
+    },
+    {
       "at": "2026-09-18T16:44:02Z",
       "summary": "FIX #339 PERF: touch keeps fxSpawnLite whole fight; skip juiceKillSnap/hitStop freeze on Lite FX/touch. smoke:fx-lite OK. Draft #347, no main."
     },
@@ -1333,10 +1344,6 @@
     {
       "at": "2026-09-18T12:36:17Z",
       "summary": "examiner P0: pets/gear locale + 390px overflow (start)"
-    },
-    {
-      "at": "2026-09-18T12:31:56Z",
-      "summary": "LANGUAGE: factory desc + nameShort, FOMO/HUD locale, export gear/fabriek i18n. Draft #317, geen main."
     }
   ],
   "implementedFeaturesSummary": "d18 char select deel 1+2 (v1.11.1-2); Mats coinrun + shuriken mik/vliegers + anti-spam (v1.12.0); speel.html (v1.12.2+). Zie HANDOFF-ZOEKINDEX.md en improvement-d20-bag.json userFeatureLog.",
