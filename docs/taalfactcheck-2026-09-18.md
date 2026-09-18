@@ -27,6 +27,7 @@ Post-mega-merge (`v1.18.172`) audit, Z→A: **nl → fr → es → en → de**. 
 | fr | bamboo-blurb `qui vapeur` | `qui étuve` |
 | de/fr/es | `trainStyleUnlock` Energy glow | lokale wording |
 | de overlay | `waveFunnel` “down”, `starBest` “best” | weg / Rekord |
+| * | settings export ` · gear n` / ` · fabriek` | `ui.saveHealthGear` / `Factory` per locale |
 
 ## Bewust niet
 

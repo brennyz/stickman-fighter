@@ -134,6 +134,8 @@ if (!/ui\.saveExportContains/.test(ui) && !/exportHint\.textContent = saveExport
 }
 const missions = fs.readFileSync(path.join(root, 'src/systems/missions.js'), 'utf8');
 if (/boek \$\{dexCountFromSave/.test(missions) || /\$\{[^}]+\} prestaties/.test(missions)) fail('save export summary still hardcodes Dutch');
+if (/ · gear \$\{/.test(missions) || / · fabriek \+/.test(missions)) fail('save export still hardcodes gear/fabriek');
+if (!/ui\.saveHealthGear/.test(missions) || !/ui\.saveHealthFactory/.test(missions)) fail('save export gear/factory must use t()');
 if (/Volgende prestatie/.test(missions)) fail('dex next achievement still hardcodes Dutch');
 if (!/pets\.crackEgg/.test(ui)) fail('egg crack must use pets.crackEgg');
 if (!/egg\.dailyReady/.test(fs.readFileSync(path.join(root, 'src/data/egg-pets.js'), 'utf8'))) {

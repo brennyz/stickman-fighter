@@ -5359,20 +5359,20 @@ function saveExportSummaryLine(s) {
   if (eggs) line += t('ui.saveHealthEgg', { n: eggs });
   if (typeof countSkillUpgradeLevels === 'function') {
     const sk = countSkillUpgradeLevels(st);
-    if (sk) line += ` · skill +${sk} Lv`;
+    if (sk) line += t('ui.saveHealthSkill', { n: sk });
   }
   if (typeof countItemUpgradeLevels === 'function') {
     const it = countItemUpgradeLevels(st);
-    if (it) line += ` · item +${it} Lv`;
+    if (it) line += t('ui.saveHealthItem', { n: it });
   }
   const pc = Math.max(0, Math.floor(Number(st.petCoins) || 0));
-  if (pc) line += ` · ${pc} pet coins`;
+  if (pc) line += t('ui.saveHealthPetCoins', { n: pc });
   const gearN = st.gear && st.gear.owned && typeof st.gear.owned === 'object'
     ? Object.keys(st.gear.owned).length : 0;
-  if (gearN) line += ` · gear ${gearN}`;
+  if (gearN) line += t('ui.saveHealthGear', { n: gearN });
   if (typeof countBuildingLevels === 'function') {
     const bl = countBuildingLevels(st);
-    if (bl) line += ` · fabriek +${bl} Lv`;
+    if (bl) line += t('ui.saveHealthFactory', { n: bl });
   }
   return line;
 }
@@ -21572,6 +21572,11 @@ function seedNlGameStrings() {
     saveHealthSummon: ' · ✦ {n} summon',
     saveHealthPet: ' · pet {n}',
     saveHealthEgg: ' · ei {n}',
+    saveHealthSkill: ' · skill +{n} Lv',
+    saveHealthItem: ' · item +{n} Lv',
+    saveHealthPetCoins: ' · {n} pet coins',
+    saveHealthGear: ' · uitrusting {n}',
+    saveHealthFactory: ' · fabriek +{n} Lv',
     saveOk: 'Save OK',
     savePrimaryCorrupt: 'Hoofd-save corrupt',
     saveUnreadable: 'Save onleesbaar',
@@ -22735,6 +22740,11 @@ const CATALOG_EN = {
     saveHealthSummon: ' · ✦ {n} summon',
     saveHealthPet: ' · pet {n}',
     saveHealthEgg: ' · egg {n}',
+    saveHealthSkill: ' · skill +{n} Lv',
+    saveHealthItem: ' · item +{n} Lv',
+    saveHealthPetCoins: ' · {n} pet coins',
+    saveHealthGear: ' · gear {n}',
+    saveHealthFactory: ' · factory +{n} Lv',
     saveOk: 'Save OK',
     savePrimaryCorrupt: 'Main save corrupt',
     saveUnreadable: 'Save unreadable',
@@ -24350,6 +24360,11 @@ const CATALOG_DE_CHROME = {
     saveHealthSummon: ' · ✦ {n} Summon',
     saveHealthPet: ' · Pet {n}',
     saveHealthEgg: ' · Ei {n}',
+    saveHealthSkill: ' · Skill +{n} Lv',
+    saveHealthItem: ' · Item +{n} Lv',
+    saveHealthPetCoins: ' · {n} Pet-Coins',
+    saveHealthGear: ' · Ausrüstung {n}',
+    saveHealthFactory: ' · Fabrik +{n} Lv',
     saveOk: 'Save OK',
     savePrimaryCorrupt: 'Hauptsave defekt',
     saveUnreadable: 'Save unlesbar',
@@ -24770,6 +24785,11 @@ overlayI18nCatalog(CATALOG_FR, {
     errLoadHelp: 'Astuces impossibles à charger',
     charLocked: 'Verrouillé', charHead: 'CHOISIS UN COMBATTANT',
     charBig5Hint: 'Tes combattants · choix rapide',
+    saveHealthGear: ' · équipement {n}',
+    saveHealthFactory: ' · usine +{n} Nv',
+    saveHealthSkill: ' · skill +{n} Nv',
+    saveHealthItem: ' · objet +{n} Nv',
+    saveHealthPetCoins: ' · {n} pet coins',
     continueLastMode: 'Dernier mode',
     gearHead: 'Équipement',
     gearSub: '5 emplacements · look vs stats · niveau et temps',
@@ -25297,6 +25317,11 @@ overlayI18nCatalog(CATALOG_ES, {
     errLoadHelp: 'No se pudieron cargar los consejos',
     charLocked: 'Bloqueado', charHead: 'ELIGE LUCHADOR',
     charBig5Hint: 'Tus luchadores · elección rápida',
+    saveHealthGear: ' · equipo {n}',
+    saveHealthFactory: ' · fábrica +{n} Nv',
+    saveHealthSkill: ' · skill +{n} Nv',
+    saveHealthItem: ' · objeto +{n} Nv',
+    saveHealthPetCoins: ' · {n} pet coins',
     continueLastMode: 'Último modo',
     gearHead: 'Equipo',
     gearSub: '5 huecos · look vs stats · nivel y tiempo',

@@ -896,20 +896,20 @@ function saveExportSummaryLine(s) {
   if (eggs) line += t('ui.saveHealthEgg', { n: eggs });
   if (typeof countSkillUpgradeLevels === 'function') {
     const sk = countSkillUpgradeLevels(st);
-    if (sk) line += ` · skill +${sk} Lv`;
+    if (sk) line += t('ui.saveHealthSkill', { n: sk });
   }
   if (typeof countItemUpgradeLevels === 'function') {
     const it = countItemUpgradeLevels(st);
-    if (it) line += ` · item +${it} Lv`;
+    if (it) line += t('ui.saveHealthItem', { n: it });
   }
   const pc = Math.max(0, Math.floor(Number(st.petCoins) || 0));
-  if (pc) line += ` · ${pc} pet coins`;
+  if (pc) line += t('ui.saveHealthPetCoins', { n: pc });
   const gearN = st.gear && st.gear.owned && typeof st.gear.owned === 'object'
     ? Object.keys(st.gear.owned).length : 0;
-  if (gearN) line += ` · gear ${gearN}`;
+  if (gearN) line += t('ui.saveHealthGear', { n: gearN });
   if (typeof countBuildingLevels === 'function') {
     const bl = countBuildingLevels(st);
-    if (bl) line += ` · fabriek +${bl} Lv`;
+    if (bl) line += t('ui.saveHealthFactory', { n: bl });
   }
   return line;
 }
