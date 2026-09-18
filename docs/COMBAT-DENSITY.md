@@ -140,4 +140,4 @@ Combat density on 390px was still a pile-on at floor 0.60 / ~17 alive. This pass
 | Hell 20+ many-minute juice (feel, not counts) | later |
 | Android native / TWA bump | out of scope |
 
-Re-check: `npm run smoke:combat-density && npm run smoke:adventure`.
+Re-check: `npm run smoke:combat-density && npm run smoke:lose-retry && npm run smoke:adventure`.
