@@ -51,7 +51,7 @@
       "id": "w-20260918T134000",
       "from": "user",
       "text": "Keep going on PR #319 (same branch). Pets remain a top P0: laggy/sluggish pets. Deepen the catch-up pass — smooth follow/pathing, snappy response to player moves, readable telegraph when a pet acts, light juice on hit/kill/equip (not UI spam). Mobile web ~390px + desktop PWA only; no Android native. Do not merge to main. Push more commits to this PR.",
-      "status": "in-progress",
+      "status": "done-in-code",
       "updated": "2026-09-18",
       "notes": "Feel-only combat pet motion. No Versus. Draft #319. speel.html."
     },
@@ -1098,6 +1098,10 @@
   ],
   "sessionLog": [
     {
+      "at": "2026-09-18T14:02:06Z",
+      "summary": "Pets P0 feel on #319: snappy follow + readable telegraph + light juice. Draft, no main. v1.18.176 / SW 386."
+    },
+    {
       "at": "2026-09-18T13:31:16Z",
       "summary": "Pets P0 on #319: chrome daily-egg CTA, HOME/pause equip, short 390px Dex. Draft, no main."
     },
@@ -1192,10 +1196,6 @@
     {
       "at": "2026-09-14T12:46:48Z",
       "summary": "P1 entry: Android-first landing — één install-blok, geen iPad op Android · v1.18.157 / SW 367"
-    },
-    {
-      "at": "2026-09-14T12:45:42Z",
-      "summary": "P1 entry: Android-first landing — geen iPad-blok op Android"
     }
   ],
   "implementedFeaturesSummary": "d18 char select deel 1+2 (v1.11.1-2); Mats coinrun + shuriken mik/vliegers + anti-spam (v1.12.0); speel.html (v1.12.2+). Zie HANDOFF-ZOEKINDEX.md en improvement-d20-bag.json userFeatureLog.",
