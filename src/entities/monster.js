@@ -88,7 +88,7 @@ class Monster {
     this.vx = 0; this.vy = 0;
     this.t = rand(0, 10); this.flashT = 0; this.deadT = -1;
     this.atkCD = rand(0.5, 1.5); this.shootCD = rand(1, 2.5);
-    this.dashT = 0; this.telegraphT = 0; this.telegraphMax = 0; this.hopT = rand(0, 0.8);
+    this.dashT = 0; this.telegraphT = 0; this.telegraphMax = 0; this.telegraphKind = ''; this.hopT = rand(0, 0.8);
     /** Soft-feel: langere dodge-telegraphs op golf 1 / vroege levels. */
     this.softTelegraph = !!opts.softTelegraph;
     this.biomeId = (typeof speciesBiomeId === 'function')
@@ -102,6 +102,7 @@ class Monster {
       if (this.enemyTechnique) {
         this.techniqueCD = rand(3.2, 6.5);
         this.techniqueTelegraphT = 0;
+        this.techniqueTelegraphMax = 0;
       }
     }
     this.face = -1;
@@ -180,6 +181,7 @@ class Monster {
           }
           this.telegraphT = wind;
           this.telegraphMax = wind;
+          this.telegraphKind = 'charge';
           this.atkCD = rand(1.6, 2.6) / (this.enraged ? 1.25 : 1);
         }
       }
@@ -189,14 +191,25 @@ class Monster {
       else if (dist > 330) this.x += dir * this.speed * spdMul * dt;
       if (this.sp.art === 'ghost') this.y = game.ground - this.size - 26 + Math.sin(this.t * 2) * 14;
       else this.y = game.ground - this.size;
-      if (this.shootCD <= 0 && dist < 560) {
+      if (this.telegraphT > 0) {
+        this.telegraphT -= dt;
+        if (this.telegraphT <= 0) {
+          game.spawnProjectile({
+            x: this.x + dir * this.size, y: this.y - 4,
+            vx: dir * 300, vy: 0, r: 8, dmg: this.dmg, from: 'enemy', srcMon: this,
+            kind: this.sp.art === 'ghost' ? 'orb' : 'laser',
+          });
+          AudioSys.sfx(this.sp.art === 'ghost' ? 'shoot' : 'laser');
+        }
+      } else if (this.shootCD <= 0 && dist < 560) {
         this.shootCD = rand(2.2, 3.2);
-        game.spawnProjectile({
-          x: this.x + dir * this.size, y: this.y - 4,
-          vx: dir * 300, vy: 0, r: 8, dmg: this.dmg, from: 'enemy', srcMon: this,
-          kind: this.sp.art === 'ghost' ? 'orb' : 'laser',
-        });
-        AudioSys.sfx(this.sp.art === 'ghost' ? 'shoot' : 'laser');
+        let wind = (this.softTelegraph ? 0.62 : 0.42) * (this.biomeTelegraphMul || 1);
+        if (typeof applyCombatTelegraphWind === 'function') {
+          wind = applyCombatTelegraphWind(wind, null, { colossal: !!this.colossal, ranged: true });
+        }
+        this.telegraphT = wind;
+        this.telegraphMax = wind;
+        this.telegraphKind = 'shoot';
       }
     } else if (type === 'tank') {
       if (this.telegraphT > 0) {
@@ -218,6 +231,7 @@ class Monster {
           }
           this.telegraphT = wind;
           this.telegraphMax = wind;
+          this.telegraphKind = 'slam';
           this.atkCD = 2.0;
           AudioSys.sfx('roar');
         }
@@ -232,12 +246,23 @@ class Monster {
       const want = 200;
       if (dist > want + 40) this.x += dir * this.speed * dt;
       else if (dist < want - 60) this.x -= dir * this.speed * dt * 0.7;
-      if (this.shootCD <= 0) {
+      if (this.telegraphT > 0) {
+        this.telegraphT -= dt;
+        if (this.telegraphT <= 0) {
+          const a = Math.atan2((p.y - 40) - this.y, p.x - this.x);
+          game.spawnProjectile({ x: this.x + Math.cos(a) * this.size, y: this.y + Math.sin(a) * this.size,
+            vx: Math.cos(a) * 260, vy: Math.sin(a) * 260, r: 10, dmg: this.dmg, from: 'enemy', srcMon: this, kind: 'fire', grav: 60 });
+          AudioSys.sfx('roar');
+        }
+      } else if (this.shootCD <= 0) {
         this.shootCD = (this.elite ? rand(1.4, 2.0) : rand(1.9, 2.6)) / (this.enraged ? 1.35 : 1);
-        const a = Math.atan2((p.y - 40) - this.y, p.x - this.x);
-        game.spawnProjectile({ x: this.x + Math.cos(a) * this.size, y: this.y + Math.sin(a) * this.size,
-          vx: Math.cos(a) * 260, vy: Math.sin(a) * 260, r: 10, dmg: this.dmg, from: 'enemy', srcMon: this, kind: 'fire', grav: 60 });
-        AudioSys.sfx('roar');
+        let wind = (this.softTelegraph ? 0.68 : 0.48) * (this.biomeTelegraphMul || 1);
+        if (typeof applyCombatTelegraphWind === 'function') {
+          wind = applyCombatTelegraphWind(wind, null, { colossal: !!this.colossal, ranged: true });
+        }
+        this.telegraphT = wind;
+        this.telegraphMax = wind;
+        this.telegraphKind = 'fire';
       }
     } else if (type === 'swim') {
       const bob = Math.sin(this.t * 3.4) * 6;
@@ -263,19 +288,31 @@ class Monster {
             }
             this.telegraphT = wind;
             this.telegraphMax = wind;
+            this.telegraphKind = 'charge';
             this.atkCD = rand(1.35, 2.1) / (this.enraged ? 1.25 : 1);
           }
         }
       } else {
         if (dist < 200) this.x -= dir * this.speed * spdMul * dt * 0.45;
         else if (dist > 340) this.x += dir * this.speed * spdMul * dt * 0.65;
-        if (this.shootCD <= 0 && dist < 540) {
+        if (this.telegraphT > 0) {
+          this.telegraphT -= dt;
+          if (this.telegraphT <= 0) {
+            game.spawnProjectile({
+              x: this.x + dir * this.size, y: this.y - 8,
+              vx: dir * 250, vy: rand(-50, 50), r: 9, dmg: this.dmg, from: 'enemy', srcMon: this, kind: 'ink',
+            });
+            try { AudioSys.sfx('shoot'); } catch (_) {}
+          }
+        } else if (this.shootCD <= 0 && dist < 540) {
           this.shootCD = rand(1.9, 2.8);
-          game.spawnProjectile({
-            x: this.x + dir * this.size, y: this.y - 8,
-            vx: dir * 250, vy: rand(-50, 50), r: 9, dmg: this.dmg, from: 'enemy', srcMon: this, kind: 'ink',
-          });
-          try { AudioSys.sfx('shoot'); } catch (_) {}
+          let wind = (this.softTelegraph ? 0.58 : 0.40) * (this.biomeTelegraphMul || 1);
+          if (typeof applyCombatTelegraphWind === 'function') {
+            wind = applyCombatTelegraphWind(wind, null, { colossal: !!this.colossal, ranged: true });
+          }
+          this.telegraphT = wind;
+          this.telegraphMax = wind;
+          this.telegraphKind = 'ink';
         }
       }
     }
@@ -312,9 +349,10 @@ class Monster {
     if (this.dashT > 0 || this.telegraphT > 0) return;
     let techWind = this.enemyTechnique === 'wave_cannon' ? 0.9 : 0.5;
     if (typeof applyCombatTelegraphWind === 'function') {
-      techWind = applyCombatTelegraphWind(techWind, null, { colossal: !!this.colossal });
+      techWind = applyCombatTelegraphWind(techWind, null, { colossal: !!this.colossal, ranged: true });
     }
     this.techniqueTelegraphT = techWind;
+    this.techniqueTelegraphMax = techWind;
     this.techniqueCD = rand(5, 8.5) / (this.enraged ? 1.2 : 1);
     try {
       AudioSys.sfx(this.enemyTechnique === 'wave_cannon' ? 'ketsbamCharge' : 'roar');
@@ -536,32 +574,91 @@ class Monster {
       c.stroke();
       c.restore();
     }
-    // Soft-feel A3: duidelijke dodge-telegraph ring + richtingspijl vóór charge/slam.
-    if (this.telegraphT > 0 && this.alive) {
+    // Fair-fail telegraph: high-contrast ring + kind cue (lane / aim / slam pad).
+    if ((this.telegraphT > 0 || this.techniqueTelegraphT > 0) && this.alive) {
       c.save();
-      const maxT = Math.max(0.2, this.telegraphMax || this.telegraphT);
-      const frac = clamp(this.telegraphT / maxT, 0, 1);
+      const isTech = !(this.telegraphT > 0) && this.techniqueTelegraphT > 0;
+      const remain = isTech ? this.techniqueTelegraphT : this.telegraphT;
+      const maxT = Math.max(0.2, isTech
+        ? (this.techniqueTelegraphMax || remain)
+        : (this.telegraphMax || remain));
+      const frac = clamp(remain / maxT, 0, 1);
+      const kind = isTech
+        ? 'tech'
+        : ((typeof combatTelegraphKindOf === 'function') ? combatTelegraphKindOf(this) : (this.telegraphKind || ''));
+      const read = (typeof combatTelegraphReadScale === 'function') ? combatTelegraphReadScale() : 1;
+      const compact = (typeof combatDensityProfile === 'function') && combatDensityProfile().compact;
       const calm = motionReduced();
-      const pulse = calm ? 0.55 : (0.45 + Math.sin(this.t * 16) * 0.25);
-      const isSlam = this.sp && this.sp.type === 'tank';
-      c.globalAlpha = pulse * (0.55 + frac * 0.45);
-      c.strokeStyle = isSlam ? '#ff9a3d' : '#ffdd66';
-      c.lineWidth = 3.2 + (1 - frac) * 2.4;
+      const pulse = calm ? 0.62 : (0.52 + Math.sin(this.t * 18) * 0.28);
+      const imminent = frac < 0.28;
+      const color = kind === 'slam' ? '#ff9a3d'
+        : (kind === 'fire' ? '#ff7a4d'
+          : (kind === 'shoot' || kind === 'ink' || kind === 'tech' ? '#7cf5ff' : '#ffdd66'));
+      const rr = this.size * (1.42 + (1 - frac) * 0.30) * read;
+      c.lineJoin = 'round';
+      c.lineCap = 'round';
+      c.globalAlpha = 0.82;
+      c.strokeStyle = 'rgba(0,0,0,.78)';
+      c.lineWidth = (5.2 + (1 - frac) * 3.4) * (compact ? 1.18 : 1) * read;
       c.beginPath();
-      c.arc(0, 0, this.size * (1.38 + (1 - frac) * 0.22), 0, TAU);
+      c.arc(0, 0, rr + 2.2, 0, TAU);
       c.stroke();
-      if (!calm) {
+      c.globalAlpha = pulse * (0.62 + (1 - frac) * 0.38);
+      c.strokeStyle = imminent && !calm ? '#ffffff' : color;
+      c.lineWidth = (3.8 + (1 - frac) * 2.8) * (compact ? 1.12 : 1) * read;
+      c.beginPath();
+      c.arc(0, 0, rr, 0, TAU);
+      c.stroke();
+      if (kind === 'slam') {
+        c.globalAlpha = 0.30 + (1 - frac) * 0.38;
+        c.fillStyle = color;
+        c.beginPath();
+        c.ellipse(0, this.size * 0.92, this.size * (1.85 + (1 - frac) * 0.55) * read, this.size * 0.40 * read, 0, 0, TAU);
+        c.fill();
+      }
+      if (!calm && (kind === 'charge' || kind === 'slam')) {
         const arrowDir = this.face >= 0 ? 1 : -1;
-        c.globalAlpha = 0.55 + pulse * 0.35;
-        c.fillStyle = isSlam ? '#ff9a3d' : '#ffdd66';
-        const ax = arrowDir * this.size * 1.55;
-        const asz = this.size * 0.42;
+        c.globalAlpha = 0.62 + pulse * 0.32;
+        c.fillStyle = color;
+        const ax = arrowDir * this.size * 1.68 * read;
+        const asz = this.size * 0.50 * read;
         c.beginPath();
         c.moveTo(ax, 0);
-        c.lineTo(ax - arrowDir * asz, -asz * 0.7);
-        c.lineTo(ax - arrowDir * asz * 0.45, 0);
-        c.lineTo(ax - arrowDir * asz, asz * 0.7);
+        c.lineTo(ax - arrowDir * asz, -asz * 0.72);
+        c.lineTo(ax - arrowDir * asz * 0.42, 0);
+        c.lineTo(ax - arrowDir * asz, asz * 0.72);
         c.closePath();
+        c.fill();
+        if (kind === 'charge') {
+          c.globalAlpha = 0.42 + (1 - frac) * 0.28;
+          c.strokeStyle = color;
+          c.lineWidth = 3.4 * read;
+          c.setLineDash([7, 5]);
+          c.beginPath();
+          c.moveTo(arrowDir * this.size * 0.7, 0);
+          c.lineTo(arrowDir * this.size * 2.35 * read, 0);
+          c.stroke();
+          c.setLineDash([]);
+        }
+      }
+      if (kind === 'shoot' || kind === 'fire' || kind === 'ink' || kind === 'tech') {
+        const p = (typeof game !== 'undefined' && game && game.player) ? game.player : null;
+        const dx = p ? (p.x - this.x) : ((this.face >= 0 ? 1 : -1) * this.size * 3.2);
+        const dy = p ? ((p.bodyY || p.y) - this.y) : 0;
+        const len = Math.hypot(dx, dy) || 1;
+        const reach = Math.min(len, this.size * 4.2 * read);
+        c.globalAlpha = 0.48 + (1 - frac) * 0.32;
+        c.strokeStyle = color;
+        c.lineWidth = 3.2 * read;
+        c.setLineDash([8, 6]);
+        c.beginPath();
+        c.moveTo(0, 0);
+        c.lineTo(dx / len * reach, dy / len * reach);
+        c.stroke();
+        c.setLineDash([]);
+        c.fillStyle = color;
+        c.beginPath();
+        c.arc(dx / len * reach, dy / len * reach, 4.5 * read, 0, TAU);
         c.fill();
       }
       c.restore();
@@ -574,6 +671,7 @@ class Monster {
         telegraphMax: this.telegraphMax,
         dashT: this.dashT,
         techniqueTelegraphT: this.techniqueTelegraphT,
+        techniqueTelegraphMax: this.techniqueTelegraphMax,
       });
     if (this.enraged && this.alive) {
       c.save();
@@ -626,14 +724,15 @@ class Monster {
       }
       c.restore();
     }
-    if (this.techniqueTelegraphT > 0 && this.alive) {
+    if (this.techniqueTelegraphT > 0 && this.alive && !(this.telegraphT > 0)) {
       c.save();
-      const prog = 1 - this.techniqueTelegraphT / (this.enemyTechnique === 'wave_cannon' ? 0.9 : 0.5);
-      c.globalAlpha = 0.4 + prog * 0.35;
+      const techMax = Math.max(0.2, this.techniqueTelegraphMax || (this.enemyTechnique === 'wave_cannon' ? 0.9 : 0.5));
+      const prog = 1 - this.techniqueTelegraphT / techMax;
+      c.globalAlpha = 0.42 + prog * 0.38;
       c.strokeStyle = this.enemyTechnique === 'lightning_pierce' ? '#a8e0ff' : '#7cf5ff';
-      c.lineWidth = 2.5 + prog * 2;
+      c.lineWidth = 3.2 + prog * 2.4;
       c.beginPath();
-      c.arc(0, 0, this.size * (1.2 + prog * 0.35), 0, TAU);
+      c.arc(0, 0, this.size * (1.22 + prog * 0.38), 0, TAU);
       c.stroke();
       c.restore();
     }

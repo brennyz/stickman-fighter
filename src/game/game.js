@@ -108,33 +108,51 @@ function adventureTelegraphHudFromMonster(m) {
   if (!m || !m.alive || !m.sp) return null;
   if (m.telegraphT > 0) {
     const max = Math.max(0.2, m.telegraphMax || m.telegraphT);
-    if (m.sp.type === 'tank') {
+    const kind = (typeof combatTelegraphKindOf === 'function')
+      ? combatTelegraphKindOf(m)
+      : (m.telegraphKind || '');
+    if (kind === 'slam' || m.sp.type === 'tank') {
       return {
         label: (typeof t === 'function' ? t('hud.teleSlam') : 'SLAM — spring!'),
         color: '#ff9a3d', frac: m.telegraphT / max, max, icon: 'jump',
         remain: m.telegraphT, kind: 'slam',
       };
     }
-    if (m.sp.type === 'charge' || (m.sp.type === 'swim' && m.sp.art === 'shark')) {
+    if (kind === 'charge' || m.sp.type === 'charge' || (m.sp.type === 'swim' && m.sp.art === 'shark')) {
       return {
         label: (typeof t === 'function' ? t('hud.teleCharge') : 'CHARGE — uit de weg!'),
         color: '#ffdd66', frac: m.telegraphT / max, max, icon: 'jump',
         remain: m.telegraphT, kind: 'charge',
       };
     }
+    if (kind === 'shoot' || m.sp.type === 'shoot') {
+      return {
+        label: (typeof t === 'function' ? t('hud.teleShoot') : 'SCHIET — side-step!'),
+        color: '#7cf5ff', frac: m.telegraphT / max, max,
+        remain: m.telegraphT, kind: 'shoot',
+      };
+    }
+    if (kind === 'fire' || m.sp.type === 'dragon') {
+      return {
+        label: (typeof t === 'function' ? t('hud.teleFire') : 'VUUR — side-step!'),
+        color: '#ff7a4d', frac: m.telegraphT / max, max,
+        remain: m.telegraphT, kind: 'fire',
+      };
+    }
+    if (kind === 'ink') {
+      return {
+        label: (typeof t === 'function' ? t('hud.teleInk') : 'INKT — side-step!'),
+        color: '#9b8cff', frac: m.telegraphT / max, max,
+        remain: m.telegraphT, kind: 'shoot',
+      };
+    }
   }
-  if (m.sp.type === 'shoot' && m.shootCD > 0 && m.shootCD < 0.32) {
+  if (m.techniqueTelegraphT > 0) {
+    const max = Math.max(0.2, m.techniqueTelegraphMax || (m.enemyTechnique === 'wave_cannon' ? 0.9 : 0.5));
     return {
-      label: (typeof t === 'function' ? t('hud.teleShoot') : 'SCHIET — side-step!'),
-      color: '#7cf5ff', frac: 1 - m.shootCD / 0.32, max: 0.32,
-      remain: m.shootCD, kind: 'shoot',
-    };
-  }
-  if (m.sp.type === 'dragon' && m.shootCD > 0 && m.shootCD < 0.38) {
-    return {
-      label: (typeof t === 'function' ? t('hud.teleFire') : 'VUUR — side-step!'),
-      color: '#ff7a4d', frac: 1 - m.shootCD / 0.38, max: 0.38,
-      remain: m.shootCD, kind: 'fire',
+      label: (typeof t === 'function' ? t('hud.teleTech') : 'TECH — ontwijk!'),
+      color: '#a8e0ff', frac: m.techniqueTelegraphT / max, max,
+      remain: m.techniqueTelegraphT, kind: 'shoot',
     };
   }
   return null;
@@ -153,38 +171,40 @@ function drawTelegraphBar(c, game, tele, y, index) {
   const dens = (typeof combatDensityProfile === 'function') ? combatDensityProfile() : null;
   const compact = !!(dens && dens.compact);
   const short = (typeof H === 'number' && H < 500);
-  const barW = Math.min(compact ? 268 : 320, W - (compact ? 24 : 32));
+  const barW = Math.min(compact ? 280 : 340, W - (compact ? 20 : 28));
   const bx = (W - barW) / 2;
   if (compact || short) y = Math.min(y, H * (short ? 0.50 : 0.58));
-  y += (Number(index) || 0) * (compact ? 38 : 36);
-  c.fillStyle = 'rgba(0,0,0,.62)';
-  game.rr(c, bx - 8, y - 20, barW + 16, 34, 10);
+  y += (Number(index) || 0) * (compact ? 44 : 40);
+  const remain = Math.max(0, Number(tele.remain) || 0);
+  const imminent = remain > 0 && remain < 0.22;
+  c.fillStyle = imminent ? 'rgba(48,0,0,.80)' : 'rgba(0,0,0,.76)';
+  game.rr(c, bx - 8, y - 22, barW + 16, compact ? 42 : 38, 11);
   c.fill();
   if (tele.icon && typeof drawStrikeHudChip === 'function') {
-    drawStrikeHudChip(c, tele.icon, bx + 10, y - 2, compact ? 12 : 11);
+    drawStrikeHudChip(c, tele.icon, bx + 12, y - 2, compact ? 13 : 12);
   }
-  c.font = compact ? '900 16px sans-serif' : '900 15px sans-serif';
+  c.font = compact ? '900 17px sans-serif' : '900 16px sans-serif';
   c.textAlign = 'center';
   const teleLabel = typeof wrapHudLines === 'function'
-    ? wrapHudLines(c, tele.label, barW - (tele.icon ? 40 : 16), 1)[0]
+    ? wrapHudLines(c, tele.label, barW - (tele.icon ? 56 : 36), 1)[0]
     : tele.label;
+  const fill = imminent ? '#ffffff' : tele.color;
   if (typeof fillHudText === 'function') {
-    fillHudText(c, teleLabel, W / 2, y, { fill: tele.color, strokeW: 3 });
+    fillHudText(c, teleLabel, W / 2, y, { fill: fill, strokeW: 3.5 });
   } else {
-    c.fillStyle = tele.color;
+    c.fillStyle = fill;
     c.fillText(teleLabel, W / 2, y);
   }
-  if (tele.extra > 0) {
-    c.font = compact ? '900 14px sans-serif' : '900 13px sans-serif';
-    c.textAlign = 'right';
-    c.fillStyle = '#fff';
-    c.fillText('+' + tele.extra, bx + barW - 2, y);
-  }
-  c.fillStyle = 'rgba(255,255,255,.2)';
-  game.rr(c, bx, y + 8, barW, 8, 4);
+  c.font = compact ? '900 13px sans-serif' : '900 12px sans-serif';
+  c.textAlign = 'right';
+  c.fillStyle = '#fff';
+  const chip = (tele.extra > 0 ? '+' + tele.extra + ' · ' : '') + remain.toFixed(1);
+  c.fillText(chip, bx + barW - 2, y);
+  c.fillStyle = 'rgba(255,255,255,.22)';
+  game.rr(c, bx, y + 10, barW, 10, 5);
   c.fill();
   c.fillStyle = tele.color;
-  game.rr(c, bx, y + 8, barW * clamp(tele.frac, 0, 1), 8, 4);
+  game.rr(c, bx, y + 10, barW * clamp(tele.frac, 0, 1), 10, 5);
   c.fill();
 }
 
