@@ -20,8 +20,8 @@
     "featureBranch": "cursor/factories-ux-unclunky-d443",
     "pushBlocked": null,
     "shareUrl": "https://brennyz.github.io/stickman-fighter/speel.html",
-    "note": "Draft #312 near-DONE. P3: collect-all one label + first-build sheet title. v1.18.179 / SW 389. No main until 16:30 polish only.",
-    "updated": "2026-09-18T13:47:31Z",
+    "note": "Draft #312 DONE. P0–P3 factories UX. FOMO dock = #322. v1.18.179 / SW 389. No main.",
+    "updated": "2026-09-18T13:52:51Z",
     "localMainHead": "a18fc9e67633773cb18b638c64c9a86916d02d27",
     "remoteMainHead": "a18fc9e67633773cb18b638c64c9a86916d02d27"
   },
@@ -45,6 +45,13 @@
     ]
   },
   "userWishlist": [
+    {
+      "id": "w-20260918T135100",
+      "from": "user",
+      "text": "Factories #312 P0s done. Optional until ~16:30: (1) FOMO sheet vs HOME/buildings dock collision at 390 (coordinate — don't own FOMO copy). (2) If nothing left unique, STOP and mark DONE on PR. Draft only, speel.html, no Versus, no main.",
+      "status": "done-in-code",
+      "updated": "2026-09-18"
+    },
     {
       "id": "w-20260918T134600",
       "from": "user",
@@ -1113,6 +1120,10 @@
   ],
   "sessionLog": [
     {
+      "at": "2026-09-18T13:52:51Z",
+      "summary": "STOP — #312 DONE. FOMO/HOME dock owned by #322; factories have no unique leftover. Draft, no main."
+    },
+    {
       "at": "2026-09-18T13:47:37Z",
       "summary": "Mark #312 near-DONE: P3 collect-all one label + first-build Bouw title. v1.18.179 / SW 389. No main."
     },
@@ -1207,10 +1218,6 @@
     {
       "at": "2026-09-14T13:49:29Z",
       "summary": "Arcade pick-mode HOME-tegels + chrome i18n volgt taal. PR #264. #263 geparkeerd. Niet stil main."
-    },
-    {
-      "at": "2026-09-14T13:44:04Z",
-      "summary": "Arcade pick-mode restyle + i18n chrome volgt game-taal"
     }
   ],
   "implementedFeaturesSummary": "d18 char select deel 1+2 (v1.11.1-2); Mats coinrun + shuriken mik/vliegers + anti-spam (v1.12.0); speel.html (v1.12.2+). Zie HANDOFF-ZOEKINDEX.md en improvement-d20-bag.json userFeatureLog.",

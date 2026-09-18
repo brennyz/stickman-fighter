@@ -101,9 +101,11 @@ When `BUILDING_IDS` + `buildingCollect` are present, the HOME screen binds that 
 11. Long-press (or `title`) on a resource pill shows one line: `Max 8u offline · daarna VOL` (ready/full variants). Does not collect. Tip stays above the pill (clamped).
 12. First-build sheet title is **Bouw {short}** / EN **Build {short}** with confirm **Bouw / Build**. Already-built sheet stays **Upgrade {short}** + **Bevestig / Confirm**.
 
-## near-DONE (#312) — P3 only until 16:30 UTC 2026-09-18
+## DONE (#312) — draft, do not merge
 
-P0–P2 shipped. Freeze new features. **Do not merge to main.**
+P0–P3 shipped. No unique leftovers on this lane. **Do not merge to main** until «merge main».
+
+FOMO Vandaag vs HOME toast dock at 390 is **#322** (`cursor/fomo-vandaag-home-d443`) — not factories copy. `#fomoRitual` lives inside `#menuScreen` (`display:none` when Fabrieken is `.active`); `openBuildings` already `clearToasts()`.
 
 | Status | Item |
 |--------|------|
@@ -113,9 +115,9 @@ P0–P2 shipped. Freeze new features. **Do not merge to main.**
 | done | Cost chips red/green; short Lv toast; 390 walk |
 | done | Collect-all (2+) + EN/DE/FR/ES; 8h pill tip clamped |
 | done | openBuildings clears toasts (welcome vs title) |
-| P3 done | Collect-all single centered label (no “all ready” subtitle) |
-| P3 done | First-build sheet `buildTitle` + `pillBuild` (not Upgrade/Bevestig) |
-| leftover | Optional: more locale nits if a language-factcheck agent flags them |
+| done | Collect-all single centered label (no “all ready” subtitle) |
+| done | First-build sheet `buildTitle` + `pillBuild` (not Upgrade/Bevestig) |
+| other lane | FOMO sheet / HOME dock → #322 |
 
 Share / playtest stays **`speel.html`**. No Versus. No `origin/main` until user says «merge main».
 
