@@ -7,11 +7,15 @@
    Modi: Avontuur, Training, Versus 2P, Muur, Mats (coinrun).
    Audio (sfx + bgm) is procedureel via Web Audio — rechtenvrij.
    d20 c4 d5: horde FX scaling, pause perf strip helpers.
+   Mid-phone fxLite: particle pool + spawn hitch guard. Fighters always draw.
    ========================================================================= */
 
 const TAU = Math.PI * 2;
 const BANNER_LANES = 3;
 const FX_CAP = { particles: 140, floaters: 28, projectiles: 48, banners: BANNER_LANES, afterimages: 12 };
+const FX_POOL_PREWARM = 48;
+const FX_POOL_MAX = 160;
+const _fxParticlePool = [];
 const Perf = {
   tier: 0,
   emaMs: 16.7,
@@ -91,14 +95,69 @@ function perfHordeLoad() {
   else if (alive >= 10) mul = 0.9;
   return { alive, mul };
 }
+/** Mid-phone / compact viewport — tighter FX before Perf.tier has time to climb. */
+function fxTouchDevice() {
+  if (typeof window !== 'undefined' && window.__sfForceTouchFx) return true;
+  if (typeof IS_TOUCH !== 'undefined' && IS_TOUCH) return true;
+  if (typeof W === 'number' && W > 0 && W < 720) return true;
+  return false;
+}
+
+/**
+ * Spawn-hitch guard: liteFx, reduced-motion, Perf.tier, or first ~1.5s on mid phones.
+ * Caps bursts / freeze only — never hides fighters.
+ */
+function fxSpawnLite() {
+  if (typeof save !== 'undefined' && save && save.liteFx) return true;
+  if (typeof motionReduced === 'function' && motionReduced()) return true;
+  if (typeof Perf !== 'undefined' && Perf.tier >= 1) return true;
+  if (fxTouchDevice() && typeof Perf !== 'undefined' && Perf.frames < 90) return true;
+  return false;
+}
+
+function allocFxParticle() {
+  const p = _fxParticlePool.pop();
+  if (p) {
+    p.x = 0; p.y = 0; p.vx = 0; p.vy = 0;
+    p.life = 0; p.maxLife = 0; p.color = '#fff';
+    p.size = 2; p.kind = 'square'; p.grav = 900;
+    return p;
+  }
+  return { x: 0, y: 0, vx: 0, vy: 0, life: 0, maxLife: 0, color: '#fff', size: 2, kind: 'square', grav: 900 };
+}
+
+function releaseFxParticle(p) {
+  if (!p || _fxParticlePool.length >= FX_POOL_MAX) return;
+  _fxParticlePool.push(p);
+}
+
+function prewarmFxPool(n) {
+  const want = n == null ? FX_POOL_PREWARM : n;
+  const need = Math.max(0, want - _fxParticlePool.length);
+  for (let i = 0; i < need; i++) {
+    _fxParticlePool.push({
+      x: 0, y: 0, vx: 0, vy: 0, life: 0, maxLife: 0,
+      color: '#fff', size: 2, kind: 'square', grav: 900,
+    });
+  }
+  return _fxParticlePool.length;
+}
+
+function fxPoolSize() {
+  return _fxParticlePool.length;
+}
+
 function fxCaps() {
   let mul = 1;
-  if (save.liteFx) mul = 0.55;
+  if (save.liteFx) mul = 0.42;
   else if (Perf.tier >= 2) mul = 0.42;
-  else if (Perf.tier >= 1) mul = 0.68;
+  else if (Perf.tier >= 1) mul = 0.62;
+  else if (fxTouchDevice()) mul = 0.72;
   if (motionReduced()) mul *= 0.62;
   mul *= perfHordeLoad().mul;
-  const floor = { particles: 24, floaters: 8, projectiles: 16, banners: 2, afterimages: 4 };
+  const floor = (fxTouchDevice() || save.liteFx)
+    ? { particles: 16, floaters: 6, projectiles: 12, banners: 2, afterimages: 3 }
+    : { particles: 24, floaters: 8, projectiles: 16, banners: 2, afterimages: 4 };
   const out = {};
   for (const k of Object.keys(FX_CAP)) {
     out[k] = Math.max(floor[k] || 2, Math.floor(FX_CAP[k] * mul));
@@ -123,10 +182,13 @@ function perfFxRoom(g, type) {
 function perfFxBudgetAllow(g, cost) {
   cost = cost || 1;
   if (!g) return true;
-  if (!save.liteFx && Perf.tier < 1 && perfHordeLoad().mul >= 0.95) return true;
-  let maxPerFrame = save.liteFx ? 5 : (Perf.tier >= 2 ? 9 : 14);
+  // Mid phones / first-second spawn must not get an unlimited FX dump.
+  if (!save.liteFx && Perf.tier < 1 && perfHordeLoad().mul >= 0.95
+    && !fxSpawnLite() && !fxTouchDevice()) return true;
+  let maxPerFrame = save.liteFx ? 4 : (Perf.tier >= 2 ? 8 : (fxTouchDevice() ? 10 : 14));
+  if (fxSpawnLite()) maxPerFrame = Math.min(maxPerFrame, 6);
   const horde = perfHordeLoad();
-  if (horde.mul < 1) maxPerFrame = Math.max(4, Math.floor(maxPerFrame * horde.mul));
+  if (horde.mul < 1) maxPerFrame = Math.max(3, Math.floor(maxPerFrame * horde.mul));
   if (g._fxBudgetFrame !== Perf.frames) {
     g._fxBudgetFrame = Perf.frames;
     g._fxBudgetUsed = 0;
@@ -1151,8 +1213,21 @@ function applyHitConfirmFx(game, x, y, spec, opts) {
   const minGap = opts.counter ? 45 : 95;
   if (!opts.force && (now - last) < minGap) return;
   game._hitConfirmAt = now;
-  // Reduced-motion: skip particle pulse; flash + damage/KO floater stay readable.
+  // Haptic is not visual motion — punch confirm even under reduced-motion.
+  if (opts.haptic !== false && typeof save !== 'undefined' && save && save.haptics !== false) {
+    const hk = spec && spec.kind ? spec.kind : 'punch';
+    const heavy = !!(opts.heavy || (spec && spec.dmg >= 18) || opts.crit);
+    const ms = opts.counter ? 11 : (heavy ? 10 : hk === 'kick' ? 8 : 6);
+    try { haptic(ms); } catch (_) {}
+  }
+  // Reduced-motion: skip particle pulse + shake; flash + damage/KO floater stay readable.
   if (motionReduced()) return;
+  if (typeof save === 'undefined' || !save || save.shake !== false) {
+    try {
+      const mag = opts.counter ? 3.5 : (opts.heavy || (spec && spec.dmg >= 18) || opts.crit ? 3 : 2);
+      if (game.shake) game.shake(mag, opts.counter ? 0.1 : 0.07);
+    } catch (_) {}
+  }
   const kind = spec && spec.kind ? spec.kind : 'punch';
   let col = hitConfirmColor(kind);
   if (kind === 'weapon' && spec.move) col = weaponMoveFxColor(spec.move);
@@ -8202,6 +8277,12 @@ function markTideBattleOnboardSeen() {
 /** Eén eerste-minuut regel per modus in pauze — geen toast. */
 function pauseOnboardHintLine(mode) {
   if (!mode) return '';
+  // First Avontuur: punch first — no pause text wall.
+  try {
+    if (mode === 'adventure' && typeof firstPunchPending === 'function' && firstPunchPending()) {
+      return '';
+    }
+  } catch (_) {}
   ensureTipsSeen();
   const key = 'pauseHint_' + mode;
   if (save.tipsSeen[key]) return '';
@@ -8214,6 +8295,10 @@ function pauseOnboardHintLine(mode) {
 function applyModeOnboarding(mode, g) {
   if (!g || !mode) return;
   ensureTipsSeen();
+  const firstPunch = mode === 'adventure'
+    && typeof firstPunchPending === 'function'
+    && firstPunchPending();
+  if (firstPunch) g._juiceTeach = true;
   const key = 'onboard_' + mode;
   if (save.tipsSeen[key]) return;
   save.tipsSeen[key] = 1;
@@ -17797,7 +17882,7 @@ function applyHitStop(game, spec, opts) {
     return;
   }
   const kind = spec && spec.kind ? spec.kind : 'punch';
-  let base = kind === 'special' ? 0.052 : kind === 'kick' ? 0.038 : 0.026;
+  let base = kind === 'special' ? 0.052 : kind === 'kick' ? 0.044 : 0.034;
   if (opts.heavy || (spec && spec.dmg >= 18)) base += 0.008;
   if (opts.crit) base += 0.014;
   if (opts.combo >= 6) base += 0.006;
@@ -18215,12 +18300,15 @@ function triggerSpecialEnemyIntro(game, monster, kind) {
   }
 
   const x = monster.x, y = monster.y - (monster.size || 40) * 0.4;
-  const burstN = motionReduced() || fxLite()
-    ? 8
+  const spawnLite = (typeof fxSpawnLite === 'function' && fxSpawnLite())
+    || (typeof fxLite === 'function' && fxLite())
+    || motionReduced();
+  const burstN = spawnLite
+    ? (firstOfWave && (tier === 'superBoss' || colossal) ? 6 : 4)
     : (firstOfWave ? (tier === 'superBoss' || colossal ? 34 : (bigBoss ? 26 : 18)) : 8);
   try {
     game.burst(x, y, col, burstN);
-    if (firstOfWave) {
+    if (firstOfWave && !spawnLite) {
       game.burst(x, y, '#fff', Math.ceil(burstN * 0.35));
       spawnFxRing(game, x, y, col, tier === 'superBoss' || colossal ? 26 : (bigBoss ? 20 : 14));
       if (tier !== 'elite') spawnFxRing(game, x, y - 20, '#fff', bigBoss ? 14 : 10);
@@ -18230,6 +18318,13 @@ function triggerSpecialEnemyIntro(game, monster, kind) {
       game.shake(shakeAmt, shakeDur);
       game.freezeT = Math.max(game.freezeT || 0, colossal ? 0.22 : (tier === 'superBoss' ? 0.18 : (bigBoss ? 0.14 : 0.1)));
       haptic(colossal ? 36 : (tier === 'superBoss' ? 28 : (bigBoss ? 22 : 16)));
+    } else if (firstOfWave && spawnLite) {
+      // One ring + small shake — no freeze (that hitch is the mid-phone stutter).
+      if (typeof spawnFxRing === 'function') spawnFxRing(game, x, y, col, colossal ? 14 : 8);
+      if (colossal || tier === 'superBoss') {
+        try { game.shake(colossal ? 8 : 6, 0.22); } catch (_) {}
+        haptic(colossal ? 22 : 16);
+      }
     }
   } catch (_) {}
 }
@@ -18444,12 +18539,14 @@ function triggerTideBattleIntro(game, monster) {
   const x = monster.x;
   const y = monster.y - (monster.size || 40) * 0.4;
   try {
-    game.burst(x, y, '#4a9fff', motionReduced() || fxLite() ? 10 : 26);
-    game.burst(x, y, '#ffd75e', 12);
-    spawnFxRing(game, x, y, '#4a9fff', 24);
-    game.shake(14, 0.45);
-    game.freezeT = Math.max(game.freezeT || 0, 0.18);
-    haptic(30);
+    const spawnLite = (typeof fxSpawnLite === 'function' && fxSpawnLite())
+      || motionReduced() || (typeof fxLite === 'function' && fxLite());
+    game.burst(x, y, '#4a9fff', spawnLite ? 6 : 26);
+    if (!spawnLite) game.burst(x, y, '#ffd75e', 12);
+    spawnFxRing(game, x, y, '#4a9fff', spawnLite ? 12 : 24);
+    game.shake(spawnLite ? 8 : 14, spawnLite ? 0.22 : 0.45);
+    if (!spawnLite) game.freezeT = Math.max(game.freezeT || 0, 0.18);
+    haptic(spawnLite ? 18 : 30);
   } catch (_) {}
 }
 
@@ -18818,13 +18915,15 @@ function triggerSatanIntro(game, monster) {
   const x = monster.x;
   const y = monster.y - (monster.size || 40) * 0.4;
   try {
-    game.burst(x, y, '#ff3040', motionReduced() || fxLite() ? 12 : 30);
-    game.burst(x, y, '#ffd75e', 14);
-    spawnFxRing(game, x, y, '#ff3040', 26);
-    spawnFxRing(game, x, y - 18, '#1a0a10', 14);
-    game.shake(16, 0.5);
-    game.freezeT = Math.max(game.freezeT || 0, 0.2);
-    haptic(34);
+    const spawnLite = (typeof fxSpawnLite === 'function' && fxSpawnLite())
+      || motionReduced() || (typeof fxLite === 'function' && fxLite());
+    game.burst(x, y, '#ff3040', spawnLite ? 6 : 30);
+    if (!spawnLite) game.burst(x, y, '#ffd75e', 14);
+    spawnFxRing(game, x, y, '#ff3040', spawnLite ? 12 : 26);
+    if (!spawnLite) spawnFxRing(game, x, y - 18, '#1a0a10', 14);
+    game.shake(spawnLite ? 8 : 16, spawnLite ? 0.24 : 0.5);
+    if (!spawnLite) game.freezeT = Math.max(game.freezeT || 0, 0.2);
+    haptic(spawnLite ? 20 : 34);
   } catch (_) {}
 }
 
@@ -22454,6 +22553,7 @@ function seedNlGameStrings() {
     energyNotFull: 'Energy {have}/{need} — sla om te vullen',
     protected: 'Beschermd!',
     iframe: 'Beschermd!',
+    hurtBy: '{name} −{n}',
     blockChip: 'BLOK −{n}',
     parry: 'PARRY!',
     miss: 'MIS!',
@@ -23369,6 +23469,8 @@ function seedNlGameStrings() {
     roundSkipHint: 'Tik slag om door te gaan',
     spawnP1: 'P1 spawn', spawnP2: 'P2 spawn',
     spawnGrace: 'Spawn {n}s',
+    openerGrace: 'Start {n}s',
+    lastHit: '{name}',
     vsTotEven: 'TOT {r1}={r2} · gelijk',
     vsTotLeadP1: 'TOT P1 +{diff} ({r1}/{r2})',
     vsTotLeadP2: 'TOT P2 +{diff} ({r2}/{r1})',
@@ -24804,6 +24906,7 @@ const CATALOG_EN = {
     energyNotFull: 'Energy {have}/{need} — hit to fill',
     protected: 'Safe!',
     iframe: 'Safe!',
+    hurtBy: '{name} −{n}',
     blockChip: 'BLOCK −{n}',
     parry: 'PARRY!',
     miss: 'MISS!',
@@ -24850,6 +24953,8 @@ const CATALOG_EN = {
     roundSkipHint: 'Tap attack to continue',
     spawnP1: 'P1 spawn', spawnP2: 'P2 spawn',
     spawnGrace: 'Spawn {n}s',
+    openerGrace: 'Ready {n}s',
+    lastHit: '{name}',
     vsTotEven: 'TOT {r1}={r2} · even',
     vsTotLeadP1: 'TOT P1 +{diff} ({r1}/{r2})',
     vsTotLeadP2: 'TOT P2 +{diff} ({r2}/{r1})',
@@ -25998,10 +26103,13 @@ const CATALOG_DE_CHROME = {
     trainTipDefault: 'Tipp: Laser springen · volle Energy → Spiral Orb',
     energyNotFull: 'Energy {have}/{need} — treffen zum Füllen',
     protected: 'Sicher!', iframe: 'Sicher!',
+    hurtBy: '{name} −{n}',
     blockChip: 'ABWEHR −{n}', parry: 'PARRY!', miss: 'DANEBEN!',
   },
   hud: {
     super: 'SUPER', masterShort: 'MEISTER +20%', masterSword: 'DAWNBLADE {n}s',
+    openerGrace: 'Start {n}s',
+    lastHit: '{name}',
     levelWave: 'Level {n} — Welle {wv}/{total}', islandWeapon: '{name} · Waffe ≤ Lv {cap}',
     part: 'Teil {cur}/3', waveLine: 'Welle {n}/{total}', wavesTotal: '{total} Wellen',
     nextWave: 'Nächste Welle', eggPet: 'Ei · {name}', petActive: 'Pet · {name}',
@@ -27260,10 +27368,12 @@ overlayI18nCatalog(CATALOG_FR, {
     trainLossTip: 'Saute pendant LIGHTNING PIERCE — le robot rate · saute les lasers d’oreilles',
     trainTipDefault: 'Astuce : saute les lasers · énergie pleine → Spiral Orb',
     energyNotFull: 'Énergie {have}/{need} — frappe pour remplir',
-    protected: 'Protégé !', iframe: 'Protégé !', blockChip: 'BLOC −{n}', parry: 'PARRY !', miss: 'RATÉ !',
+    protected: 'Protégé !', iframe: 'Protégé !', hurtBy: '{name} −{n}', blockChip: 'BLOC −{n}', parry: 'PARRY !', miss: 'RATÉ !',
   },
   hud: {
     super: 'SUPER', masterShort: 'MAÎTRE +20 %', masterSword: 'DAWNBLADE {n}s',
+    openerGrace: 'Départ {n}s',
+    lastHit: '{name}',
     levelWave: 'Niveau {n} — Vague {wv}/{total}', islandWeapon: '{name} · arme ≤ Lv {cap}',
     part: 'partie {cur}/3', waveLine: 'Vague {n}/{total}', wavesTotal: '{total} vagues',
     nextWave: 'Vague suivante', eggPet: 'Œuf · {name}', petActive: 'Pet · {name}',
@@ -28032,10 +28142,12 @@ overlayI18nCatalog(CATALOG_ES, {
     trainLossTip: 'Salta durante LIGHTNING PIERCE — el robot falla · salta láseres de oreja',
     trainTipDefault: 'Consejo: salta láseres · energía llena → Spiral Orb',
     energyNotFull: 'Energía {have}/{need} — golpea para llenar',
-    protected: '¡Protegido!', iframe: '¡Protegido!', blockChip: 'BLOQUEO −{n}', parry: '¡PARRY!', miss: '¡FALLO!',
+    protected: '¡Protegido!', iframe: '¡Protegido!', hurtBy: '{name} −{n}', blockChip: 'BLOQUEO −{n}', parry: '¡PARRY!', miss: '¡FALLO!',
   },
   hud: {
     super: 'SUPER', masterShort: 'MAESTRO +20%', masterSword: 'DAWNBLADE {n}s',
+    openerGrace: 'Salida {n}s',
+    lastHit: '{name}',
     levelWave: 'Nivel {n} — Oleada {wv}/{total}', islandWeapon: '{name} · arma ≤ Lv {cap}',
     part: 'parte {cur}/3', waveLine: 'Oleada {n}/{total}', wavesTotal: '{total} oleadas',
     nextWave: 'Siguiente oleada', eggPet: 'Huevo · {name}', petActive: 'Pet · {name}',
@@ -28764,10 +28876,12 @@ overlayI18nCatalog(CATALOG_DE, {
     trainLossTip: 'Spring während LIGHTNING PIERCE — Roboter verfehlt · spring Ohr-Laser',
     trainTipDefault: 'Tipp: Laser springen · Energy voll → Spiral Orb',
     energyNotFull: 'Energy {have}/{need} — treffen zum Füllen',
-    protected: 'Geschützt!', iframe: 'Geschützt!', blockChip: 'ABWEHR −{n}', parry: 'PARRY!', miss: 'DANEBEN!',
+    protected: 'Geschützt!', iframe: 'Geschützt!', hurtBy: '{name} −{n}', blockChip: 'ABWEHR −{n}', parry: 'PARRY!', miss: 'DANEBEN!',
   },
   hud: {
     super: 'SUPER', masterShort: 'MEISTER +20%', masterSword: 'DAWNBLADE {n}s',
+    openerGrace: 'Start {n}s',
+    lastHit: '{name}',
     levelWave: 'Level {n} — Welle {wv}/{total}', islandWeapon: '{name} · Waffe ≤ Lv {cap}',
     part: 'Teil {cur}/3', waveLine: 'Welle {n}/{total}', wavesTotal: '{total} Wellen',
     nextWave: 'Nächste Welle', eggPet: 'Ei · {name}', petActive: 'Pet · {name}',
@@ -32508,22 +32622,134 @@ function hudRightReserve() {
 }
 
 function playfieldGroundY(H, W) {
-  const portrait = H > W * 1.02;
+  const hh = Math.max(1, Number(H) || 0);
+  const ww = Math.max(1, Number(W) || hh);
+  const portrait = hh > ww * 1.02;
   const dualVs = typeof Input !== 'undefined' && Input.dualMode;
+  let gy;
   if (dualVs && portrait) {
-    if (H < 520) return H * 0.63;
-    if (H < 640) return H * 0.65;
-    return H * 0.66;
+    if (hh < 520) gy = hh * 0.63;
+    else if (hh < 640) gy = hh * 0.65;
+    else gy = hh * 0.66;
+  } else if (portrait && hh < 480) gy = hh * 0.68;
+  else if (portrait && hh < 520) gy = hh * 0.7;
+  else if (portrait && hh < 640) gy = hh * 0.72;
+  else if (portrait) gy = hh * 0.73;
+  else if (hh <= 430) gy = Math.min(hh * 0.80, hh - 52);
+  else gy = hh * 0.78;
+  // Floor must sit inside the visible canvas — never in a CSS/camera dead zone.
+  const lo = Math.max(hh * 0.42, 48);
+  const hi = Math.max(lo + 8, hh - 8);
+  return clamp(gy, lo, hi);
+}
+
+/** Canvas box vs visual viewport vs world floor — used by resize + smoke. */
+function combatViewAlign(g) {
+  const vp = (typeof viewportGameSize === 'function')
+    ? viewportGameSize()
+    : { w: W, h: H, offsetX: 0, offsetY: 0 };
+  let cssW = 0, cssH = 0, cssL = 0, cssT = 0;
+  try {
+    if (typeof canvas !== 'undefined' && canvas && typeof canvas.getBoundingClientRect === 'function') {
+      const r = canvas.getBoundingClientRect();
+      cssW = r.width; cssH = r.height; cssL = r.left; cssT = r.top;
+    }
+  } catch (_) {}
+  const ground = g && g.ground != null ? g.ground : playfieldGroundY(H, W);
+  const player = g && g.player ? { x: g.player.x, y: g.player.y } : null;
+  const cssOk = !(cssW > 2 && cssH > 2)
+    || (Math.abs(cssW - vp.w) <= 3 && Math.abs(cssH - vp.h) <= 3);
+  const worldOk = ground > 8 && ground < H
+    && (!player || (player.x >= 0 && player.x <= W && player.y > 8 && player.y <= H + 1));
+  const letterbox = {
+    dx: Math.abs((cssW || 0) - (vp.w || 0)),
+    dy: Math.abs((cssH || 0) - (vp.h || 0)),
+    ox: Math.abs((cssL || 0) - (vp.offsetX || 0)),
+    oy: Math.abs((cssT || 0) - (vp.offsetY || 0)),
+  };
+  letterbox.dead = letterbox.dx > 3 || letterbox.dy > 3 || letterbox.ox > 3 || letterbox.oy > 3;
+  return {
+    w: W, h: H,
+    vpW: vp.w, vpH: vp.h,
+    offsetX: vp.offsetX || 0, offsetY: vp.offsetY || 0,
+    cssW, cssH, cssL, cssT,
+    ground,
+    player,
+    letterbox,
+    aligned: Math.abs(W - vp.w) <= 2 && Math.abs(H - vp.h) <= 2 && cssOk && worldOk && !letterbox.dead,
+  };
+}
+
+function _alignCombatBodyX(x, pad) {
+  const p = pad != null ? pad : 24;
+  return clamp(Number(x) || 0, p, Math.max(p + 8, W - p));
+}
+
+function _alignCombatKeepAbove(body, prevGround, nextGround, size) {
+  if (!body || body.y == null) return;
+  const sz = size || 0;
+  if (Number.isFinite(prevGround) && Math.abs(nextGround - prevGround) > 0.5) {
+    body.y = nextGround - (prevGround - body.y);
   }
-  if (portrait && H < 480) return H * 0.68;
-  if (portrait && H < 520) return H * 0.7;
-  if (portrait && H < 640) return H * 0.72;
-  if (portrait) return H * 0.73;
-  // Landscape phone (~844×390): keep a full stickman above the fold.
-  const raw = H * 0.72;
-  const minY = Math.min(H - 28, Math.max(96, H * 0.58));
-  const maxY = Math.max(minY, H - 28);
-  return raw < minY ? minY : (raw > maxY ? maxY : raw);
+  const minY = Math.max(16, sz * 0.35);
+  const maxY = Math.min(H - 4, nextGround - (sz > 0 ? Math.min(sz * 0.2, 36) : 0));
+  body.y = clamp(body.y, minY, Math.max(minY, maxY));
+}
+
+/**
+ * After rotate / HUD resize: world, floor, and entities follow the visible canvas.
+ * Does not draw fighters (render-visibility is a sibling PR).
+ */
+function alignCombatPlayfield(g) {
+  if (!g || !(W > 8) || !(H > 8)) return null;
+  const prevGround = Number(g.ground);
+  const nextGround = playfieldGroundY(H, W);
+  g.ground = nextGround;
+  g.minX = 40;
+  g.maxX = Math.max(80, W - 40);
+
+  const snapFighter = (f) => {
+    if (!f) return;
+    f.x = (typeof clampFighterX === 'function') ? clampFighterX(f, g, f.x) : _alignCombatBodyX(f.x, 40);
+    const airborne = f.onGround === false && (f.vy || 0) < -20 && f.y < nextGround - 8;
+    if (!airborne || f.y > nextGround || f.y > H - 2 || f.y < 8) {
+      f.y = nextGround;
+      if ((f.vy || 0) > 0) f.vy = 0;
+      f.onGround = true;
+    } else {
+      _alignCombatKeepAbove(f, prevGround, nextGround, 0);
+    }
+  };
+
+  snapFighter(g.player);
+  if (g.robot) snapFighter(g.robot);
+  if (g.p2) snapFighter(g.p2);
+
+  if (g.pet) {
+    g.pet.x = _alignCombatBodyX(g.pet.x, 12);
+    _alignCombatKeepAbove(g.pet, prevGround, nextGround, g.pet.size || 10);
+  }
+  if (g.eggPet) {
+    g.eggPet.x = _alignCombatBodyX(g.eggPet.x, 12);
+    _alignCombatKeepAbove(g.eggPet, prevGround, nextGround, g.eggPet.size || 10);
+  }
+  if (Array.isArray(g.monsters)) {
+    for (const m of g.monsters) {
+      if (!m) continue;
+      const pad = Math.max(16, (m.size || 20) * 0.45);
+      m.x = _alignCombatBodyX(m.x, pad);
+      if (m.flying) _alignCombatKeepAbove(m, prevGround, nextGround, m.size || 20);
+      else m.y = nextGround - (m.size || 0);
+    }
+  }
+  if (Array.isArray(g.pickups)) {
+    for (const p of g.pickups) {
+      if (!p) continue;
+      p.x = _alignCombatBodyX(p.x, 16);
+      if (p.y != null) p.y = clamp(p.y + (Number.isFinite(prevGround) ? (nextGround - prevGround) : 0), 12, nextGround);
+    }
+  }
+  return combatViewAlign(g);
 }
 
 function pointerGameCoords(clientX, clientY) {
@@ -33566,6 +33792,85 @@ function refreshAdventureBossScale(game) {
     } catch (_) {}
   }
 }
+/* --- src/systems/combat-juice.js --- */
+/**
+ * Combat juice — punch / kick / kill / equip snap.
+ * Flappy-like: juice the core action, not UI chrome (no extra toasts / HUD spam).
+ * Versus retired. Reduced-motion skips shake / squash / particles; haptic + KO text stay.
+ */
+function juiceNowMs() {
+  return (typeof performance !== 'undefined' && performance.now) ? performance.now() : Date.now();
+}
+
+function juiceGapOk(store, key, minMs) {
+  if (!store) return false;
+  const now = juiceNowMs();
+  if ((now - (store[key] || 0)) < minMs) return false;
+  store[key] = now;
+  return true;
+}
+
+/** Impact squash on the body that just got hit. Feel only — hitboxes stay. */
+function juiceApplyHitSquash(target, opts) {
+  if (!target) return;
+  if (typeof motionReduced === 'function' && motionReduced()) return;
+  opts = opts || {};
+  const heavy = !!(opts.heavy || opts.crit);
+  const dur = opts.counter ? 0.12 : (heavy ? 0.11 : 0.07);
+  const amt = opts.counter ? 0.16 : (heavy ? 0.14 : 0.09);
+  target.hitSquashT = Math.max(target.hitSquashT || 0, dur);
+  target.hitSquashAmt = Math.max(target.hitSquashAmt || 0, amt);
+}
+
+function juiceTickSquash(target, dt) {
+  if (!target) return;
+  if ((target.hitSquashT || 0) > 0) target.hitSquashT -= dt;
+}
+
+function juiceDrawSquash(c, target) {
+  if (!c || !target) return;
+  if (typeof motionReduced === 'function' && motionReduced()) return;
+  const t = target.hitSquashT || 0;
+  if (t <= 0) return;
+  const amt = target.hitSquashAmt || 0.1;
+  const k = Math.min(1, t / 0.11);
+  c.scale(1 + amt * k, Math.max(0.72, 1 - amt * 0.85 * k));
+}
+
+/**
+ * Kill snap: one freeze + rate-limited shake/haptic so a horde does not camera-spam.
+ * Caller still paints the single KO floater.
+ */
+function juiceKillSnap(game, m) {
+  if (!game) return;
+  const elite = !!(m && (m.elite || m.bossCore || m.superBoss || m.satanBoss || m.colossal));
+  game.freezeT = Math.max(game.freezeT || 0, elite ? 0.075 : 0.058);
+  if (!juiceGapOk(game, '_juiceKillSnapAt', elite ? 60 : 90)) return;
+  try { game.shake(elite ? 7 : 5, elite ? 0.22 : 0.16); } catch (_) {}
+  try { if (typeof haptic === 'function') haptic(elite ? 16 : 12); } catch (_) {}
+}
+
+/** World-drop / pickup equip: snap in the fight, not a second toast. */
+function juiceEquipCombat(game, x, y) {
+  if (!game) return;
+  try { if (typeof haptic === 'function') haptic(14); } catch (_) {}
+  if (typeof applyHitConfirmFx === 'function') {
+    try { applyHitConfirmFx(game, x, y, { kind: 'special' }, { force: true, haptic: false }); } catch (_) {}
+  }
+  if (typeof motionReduced === 'function' && motionReduced()) return;
+  game.freezeT = Math.max(game.freezeT || 0, 0.04);
+  try { game.shake(3, 0.1); } catch (_) {}
+}
+
+/** Gear-screen doll punch. Reduced-motion CSS keeps a static highlight. */
+function juiceEquipMenu(doll) {
+  if (!doll) return;
+  try {
+    doll.classList.remove('juice-flash');
+    void doll.offsetWidth;
+    doll.classList.add('juice-flash');
+  } catch (_) {}
+}
 /* --- src/systems/fighter-move.js --- */
 /* ========================== FIGHTER MOVE ========================== */
 /**
@@ -33711,7 +34016,14 @@ function resetAimTutorialFlag() {
 }
 
 function aimTutorialShouldOffer(mode) {
-  return !!(AIM_TUTORIAL_MODES[mode] && !aimTutorialSeen());
+  if (!AIM_TUTORIAL_MODES[mode] || aimTutorialSeen()) return false;
+  // MASTERGAME first-30s: punch first — no aim text wall on first Avontuur.
+  try {
+    if (mode === 'adventure' && typeof firstPunchPending === 'function' && firstPunchPending()) {
+      return false;
+    }
+  } catch (_) {}
+  return true;
 }
 
 function aimTutorialActive(g) {
@@ -34101,6 +34413,79 @@ function drawAimTutorial(c, g) {
   c.textBaseline = 'middle';
   c.fillText(got, gotX + gotW / 2, gotY + gotH / 2);
   c.restore();
+}
+/* --- src/systems/first-punch-teach.js --- */
+/* ======================== FIRST-30s PUNCH TEACH ======================== */
+/** MASTERGAME: first Avontuur teaches by punching — short nudge, no text wall. */
+
+const FIRST_PUNCH_NUDGE_SEC = 2.6;
+const FIRST_PUNCH_NUDGE_WINDOW = 30;
+const FIRST_PUNCH_NUDGE_DELAY_FIRST = 0.85;
+const FIRST_PUNCH_NUDGE_DELAY_LATER = 3;
+
+function firstPunchTeachPending(g) {
+  return !!(g && g._juiceTeach && !g._juiceTaught && !g.over);
+}
+
+function firstPunchTeachNudgeDelay(g) {
+  try {
+    if (g && g.mode === 'adventure' && typeof firstPunchPending === 'function' && firstPunchPending()) {
+      return FIRST_PUNCH_NUDGE_DELAY_FIRST;
+    }
+  } catch (_) {}
+  return FIRST_PUNCH_NUDGE_DELAY_LATER;
+}
+
+function firstPunchTeachNudgeLine() {
+  const touch = typeof useTouchFightPads === 'function'
+    ? useTouchFightPads()
+    : (typeof IS_TOUCH !== 'undefined' && IS_TOUCH);
+  if (typeof tOr === 'function') {
+    return tOr(touch ? 'juice.strikeNudge' : 'juice.strikeNudgeKb', touch ? 'Tik slaan' : 'Druk J');
+  }
+  return touch ? 'Tik slaan' : 'Druk J';
+}
+
+function firstPunchTeachLanded(g) {
+  if (!g) return false;
+  return (g.combo || 0) > 0 || (g.maxCombo || 0) > 0 || (g.kills || 0) > 0;
+}
+
+function updateFirstPunchTeach(g) {
+  if (!firstPunchTeachPending(g)) return;
+  if (firstPunchTeachLanded(g)) {
+    g._juiceTaught = true;
+    return;
+  }
+  if (g._juiceNudged) return;
+  if (g.t < firstPunchTeachNudgeDelay(g) || g.t >= FIRST_PUNCH_NUDGE_WINDOW) return;
+  if ((g.hint || 0) > 0) return;
+  g._juiceNudged = true;
+  g.modeHintLine = firstPunchTeachNudgeLine();
+  g.hint = FIRST_PUNCH_NUDGE_SEC;
+}
+
+function firstPunchTeachShouldPulsePunch(g) {
+  try {
+    if (!firstPunchTeachPending(g)) return false;
+    if (g.mode !== 'adventure') return false;
+    if (typeof firstPunchPending === 'function' && !firstPunchPending()) return false;
+    return true;
+  } catch (_) {
+    return false;
+  }
+}
+
+/** Retest: wipe the first-punch flag. Console: __sf.resetFirstPunchTeach() */
+function resetFirstPunchTeachFlag() {
+  try {
+    if (typeof save === 'undefined' || !save) return false;
+    save.feltFirstPunch = false;
+    if (typeof persist === 'function') persist();
+    return true;
+  } catch (_) {
+    return false;
+  }
 }
 /* --- src/systems/gear.js --- */
 /* ============================== GEAR UI ADAPTER ========================
@@ -34793,14 +35178,26 @@ function releaseCanvasPointer(id) {
   Input.onUp(id);
 }
 
+function pinCanvasCssBox(vp) {
+  if (!canvas || !vp) return;
+  canvas.style.left = (vp.offsetX || 0) + 'px';
+  canvas.style.top = (vp.offsetY || 0) + 'px';
+  canvas.style.width = vp.w + 'px';
+  canvas.style.height = vp.h + 'px';
+}
+
 function resize() {
   const vp = viewportGameSize();
   syncViewportCssVars(vp);
   const newDpr = Math.min(devicePixelRatio || 1, maxCanvasDpr());
   // Do NOT include Perf.tier — tier bumps must not recreate/blank the canvas mid-fight
   // (that + skipHeavyDraw caused adventure backgrounds to vanish for a frame).
-  const sizeKey = vp.w + 'x' + vp.h + '@' + newDpr;
-  if (sizeKey === lastResizeKey) return;
+  // Offset belongs in the key: visualViewport scroll/rotate can keep w×h and still shift the box.
+  const sizeKey = vp.w + 'x' + vp.h + '@' + newDpr + '+' + (vp.offsetX || 0) + ',' + (vp.offsetY || 0);
+  if (sizeKey === lastResizeKey) {
+    pinCanvasCssBox(vp);
+    return;
+  }
   lastResizeKey = sizeKey;
   try { if (typeof menuBgCacheInvalidate === 'function') menuBgCacheInvalidate(); } catch (_) {}
   DPR = newDpr;
@@ -34808,10 +35205,7 @@ function resize() {
   H = vp.h;
   canvas.width = W * DPR;
   canvas.height = H * DPR;
-  canvas.style.left = vp.offsetX + 'px';
-  canvas.style.top = vp.offsetY + 'px';
-  canvas.style.width = W + 'px';
-  canvas.style.height = H + 'px';
+  pinCanvasCssBox(vp);
   ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
   Input.layout(W, H);
   try { if (typeof refreshSatanCombatScale === 'function' && typeof game !== 'undefined') refreshSatanCombatScale(game); } catch (_) {}
@@ -35587,7 +35981,8 @@ function ensureParticleRoom(game, slots) {
   for (let i = 0; i < game.particles.length && need > 0; ) {
     const p = game.particles[i];
     if (p.kind === 'ring') { i++; continue; }
-    game.particles.splice(i, 1);
+    const gone = game.particles.splice(i, 1)[0];
+    if (typeof releaseFxParticle === 'function') releaseFxParticle(gone);
     need--;
     room++;
   }
@@ -35618,13 +36013,16 @@ function spawnFxRing(game, x, y, color, baseR) {
   const lite = fxLite();
   const life = lite ? 0.22 : 0.34;
   const size = (baseR || 12) * (lite ? 0.62 : 1);
-  game.particles.push({
-    x, y, vx: 0, vy: 0, life, maxLife: life,
-    color: color || '#7cf5ff',
-    size,
-    kind: 'ring',
-    grav: 0,
-  });
+  const pt = (typeof allocFxParticle === 'function') ? allocFxParticle() : {
+    x: 0, y: 0, vx: 0, vy: 0, life: 0, maxLife: 0, color: '#fff', size: 2, kind: 'square', grav: 900,
+  };
+  pt.x = x; pt.y = y; pt.vx = 0; pt.vy = 0;
+  pt.life = life; pt.maxLife = life;
+  pt.color = color || '#7cf5ff';
+  pt.size = size;
+  pt.kind = 'ring';
+  pt.grav = 0;
+  game.particles.push(pt);
 }
 
 /**
@@ -35654,18 +36052,20 @@ function spawnCompanionSparkles(game, x, y, color, opts) {
     if (perfFxRoom(game, 'particle') <= 0) break;
     const a = (i / stars) * TAU + Math.random() * 0.5;
     const sp = 35 + Math.random() * (big ? 70 : 45);
-    game.particles.push({
-      x: x + Math.cos(a) * 6,
-      y: y + Math.sin(a) * 4,
-      vx: Math.cos(a) * sp,
-      vy: Math.sin(a) * sp * 0.7 - 55,
-      life: 0.32 + Math.random() * 0.22,
-      maxLife: 0.55,
-      color: i % 2 ? col2 : col,
-      size: (big ? 3.2 : 2.6) + Math.random() * 2.2,
-      kind: 'star',
-      grav: 90,
-    });
+    const star = (typeof allocFxParticle === 'function') ? allocFxParticle() : {
+      x: 0, y: 0, vx: 0, vy: 0, life: 0, maxLife: 0, color: '#fff', size: 2, kind: 'square', grav: 900,
+    };
+    star.x = x + Math.cos(a) * 6;
+    star.y = y + Math.sin(a) * 4;
+    star.vx = Math.cos(a) * sp;
+    star.vy = Math.sin(a) * sp * 0.7 - 55;
+    star.life = 0.32 + Math.random() * 0.22;
+    star.maxLife = 0.55;
+    star.color = i % 2 ? col2 : col;
+    star.size = (big ? 3.2 : 2.6) + Math.random() * 2.2;
+    star.kind = 'star';
+    star.grav = 90;
+    game.particles.push(star);
   }
 }
 
@@ -38203,7 +38603,7 @@ class Fighter {
       weapon: weaponById('vuist'), speed: 260, jumpV: 620,
       ai: null, aiTimer: 0, aiMove: 0, aiCd: 2,
       name: 'Stickman',
-      substCd: 0, specialCd: 0, invulnT: 0, hitFlashT: 0, hpGhost: 0, hpGhostT: 0, afterimages: [], dashCd: 0,
+      substCd: 0, specialCd: 0, invulnT: 0, hitFlashT: 0, hitSquashT: 0, hitSquashAmt: 0, hpGhost: 0, hpGhostT: 0, afterimages: [], dashCd: 0,
       weaponComboIdx: 0, weaponComboT: 0, _lastWeaponKind: null, _weaponComboPrimed: false, _weaponComboHits: 0,
       style: null, playerSlot: 0, vsSpecial: 'spiral_orb',
     }, opts);
@@ -38607,6 +39007,7 @@ class Fighter {
     }
     if (this.invulnT > 0) this.invulnT -= dt;
     if (this.hitFlashT > 0) this.hitFlashT -= dt;
+    if (typeof juiceTickSquash === 'function') juiceTickSquash(this, dt);
     if (this.hpGhostT > 0) {
       this.hpGhostT -= dt;
       if (this.hpGhostT <= 0) this.hpGhost = this.hp;
@@ -38832,6 +39233,9 @@ class Fighter {
     }
     this.hurtT = dmg >= 18 ? 0.28 : 0.24;
     this.hitFlashT = motionReduced() ? 0.06 : (dmg >= 18 ? 0.18 : 0.14);
+    if (typeof juiceApplyHitSquash === 'function') {
+      juiceApplyHitSquash(this, { heavy: dmg >= 18 });
+    }
     this.attack = null;
     let kbScaled = scaleKnockback(kbx, dmg, { heavy: dmg >= 18 });
     if (this.isPlayer && game && game.buildingKbMul && game.buildingKbMul !== 1) {
@@ -38855,7 +39259,10 @@ class Fighter {
       AudioSys.sfxAt(this.isPlayer ? 'hurt' : 'hit', this.x);
     }
     if (this.isPlayer && game) {
-      game.floater(this.x, this.y - 118, '-' + dmg, '#ff6b6b', 18);
+      const hitTxt = (typeof paintIncomingHurtRead === 'function')
+        ? paintIncomingHurtRead(game, dmg)
+        : ('-' + dmg);
+      game.floater(this.x, this.y - 118, hitTxt, '#ff6b6b', 18);
     }
     if ((this.isPlayer || this.playerSlot) && game && save.haptics !== false) {
       haptic(dmg >= 18 ? 16 : 8);
@@ -38942,6 +39349,7 @@ class Fighter {
     const s = (this.scale > 0.2 && Number.isFinite(this.scale)) ? this.scale : 1;
     c.save();
     c.translate(Number.isFinite(this.x) ? this.x : 0, Number.isFinite(this.y) ? this.y : 0);
+    if (this.alive && typeof juiceDrawSquash === 'function') juiceDrawSquash(c, this);
     if (this.hitFlashT > 0) {
       const flashA = motionReduced() ? 0.18 : 0.4;
       c.globalAlpha = Math.min(flashA, this.hitFlashT * (flashA / 0.14));
@@ -39283,6 +39691,7 @@ class Monster {
     }
     this.vx = 0; this.vy = 0;
     this.t = rand(0, 10); this.flashT = 0; this.deadT = -1;
+    this.hitSquashT = 0; this.hitSquashAmt = 0;
     this.atkCD = rand(0.5, 1.5); this.shootCD = rand(1, 2.5);
     this.dashT = 0; this.telegraphT = 0; this.telegraphMax = 0; this.telegraphKind = ''; this.hopT = rand(0, 0.8);
     /** Soft-feel: langere dodge-telegraphs op golf 1 / vroege levels. */
@@ -39324,6 +39733,7 @@ class Monster {
     if (this.safetyT > 0) this.safetyT -= dt;
     if (this.flashT > 0) this.flashT -= dt;
     if (this.phase2FlashT > 0) this.phase2FlashT -= dt;
+    if (typeof juiceTickSquash === 'function') juiceTickSquash(this, dt);
     if (!this.alive) { this.deadT += dt; return; }
     if (this.introT > 0 && typeof combatIntroHolds === 'function' && combatIntroHolds()) {
       if (!this.flying && !this.swimming) this.y = game.ground - this.size;
@@ -39590,6 +40000,9 @@ class Monster {
     if (this.safetyT > 0 && this.hp - dmg < 1) dmg = Math.max(0, this.hp - 1);
     this.hp -= dmg;
     this.flashT = motionReduced() ? 0.06 : (dmg >= 18 ? 0.14 : opts.crit ? 0.12 : 0.1);
+    if (typeof juiceApplyHitSquash === 'function') {
+      juiceApplyHitSquash(this, { heavy: dmg >= 18, crit: opts.crit, kind: opts.kind });
+    }
     const kb = scaleKnockback(kbx, dmg, { crit: opts.crit, kind: opts.kind });
     this.x += Math.sign(kb || 1) * clamp(Math.abs(kb) * 0.038, 5, 26);
     if (!opts.quiet) {
@@ -39631,7 +40044,9 @@ class Monster {
     if (!this.alive) {
       const k = this.deadT / 0.6;
       c.globalAlpha = 1 - k;
-      if (!motionReduced()) c.scale(1 + k * 0.6, Math.max(0.05, 1 - k));
+      if (!motionReduced()) c.scale(1 + k * 0.75, Math.max(0.05, 1 - k));
+    } else if (typeof juiceDrawSquash === 'function') {
+      juiceDrawSquash(c, this);
     }
     // schaduw
     if (!this.flying && !this.swimming) {
@@ -44236,6 +44651,26 @@ function hurtSourceName(src) {
   return (src.sp && src.sp.name) || id || '';
 }
 
+function shortHurtName(name) {
+  const s = String(name || '').trim();
+  if (!s) return '';
+  return s.length > 14 ? s.slice(0, 13) + '…' : s;
+}
+
+function paintIncomingHurtRead(game, dmg) {
+  if (!game || game.mode !== 'adventure') return '-' + dmg;
+  const raw = game.lastHurtBy && game.lastHurtBy.name;
+  const name = shortHurtName(raw);
+  if (name) {
+    game.lastHitChipName = name;
+    game.lastHitChipT = 2.0;
+  }
+  if (!name) return '-' + dmg;
+  return (typeof t === 'function')
+    ? t('combat.hurtBy', { name: name, n: dmg })
+    : (name + ' −' + dmg);
+}
+
 function notePlayerHurtSource(game, src) {
   if (!game) return;
   const mon = src || inferClosestThreat(game, game.player);
@@ -44252,6 +44687,9 @@ function notePlayerHurtSource(game, src) {
 }
 
 function adventureLoseCopy(game) {
+  if (game && !game.lastHurtBy && typeof notePlayerHurtSource === 'function') {
+    try { notePlayerHurtSource(game, null); } catch (_) {}
+  }
   const h = game && game.lastHurtBy;
   const name = h && h.name;
   if (!name) return { titleKey: 'result.advLose', title: t('result.advLose') };
@@ -44263,14 +44701,82 @@ function adventureLoseCopy(game) {
   };
 }
 
+function trimResultTipPart(s) {
+  return String(s || '').replace(/(\s*·\s*)+$/g, '').trim();
+}
+
 function adventureKillTip(game, prog) {
   const h = game && game.lastHurtBy;
   if (!h || !h.name) return '';
-  const p = { name: h.name, prog };
-  if (h.fly) return t('result.killedByFlyer', p);
-  if (h.slam) return t('result.killedBySlam', p);
-  if (h.boss) return t('result.killedByBoss', p);
-  return t('result.killedBy', p);
+  const p = { name: h.name, prog: prog || '' };
+  let line = '';
+  if (h.fly) line = t('result.killedByFlyer', p);
+  else if (h.slam) line = t('result.killedBySlam', p);
+  else if (h.boss) line = t('result.killedByBoss', p);
+  else line = t('result.killedBy', p);
+  return trimResultTipPart(line);
+}
+
+/** Infer slam/flyer/charge from lastHurtBy flags when lastFailTele was never set. */
+function ensureAdventureFailTele(game) {
+  if (!game || game.lastFailTele) return;
+  const h = game.lastHurtBy;
+  if (h) {
+    if (h.slam) { game.lastFailTele = 'slam'; return; }
+    if (h.fly) { game.lastFailTele = 'flyer'; return; }
+    if (h.type === 'charge' || h.type === 'swim') { game.lastFailTele = 'charge'; return; }
+    if (h.type === 'shoot') { game.lastFailTele = 'shoot'; return; }
+    if (h.type === 'dragon') { game.lastFailTele = 'fire'; return; }
+  }
+  if (typeof notePlayerFailTele === 'function') {
+    try { notePlayerFailTele(game, {}); } catch (_) {}
+  }
+}
+
+/** Mega-merge feel: fail cue → Nog één keer first, then killer advice. Gamble waits. */
+function adventureLoseFeelTip(game, ctx) {
+  ctx = ctx || {};
+  const lv = ctx.lv != null ? ctx.lv : (game && game.level && game.level.n);
+  const diff = ctx.diff || (game && game.advDiff) || 'normal';
+  if (game && !game.lastHurtBy && typeof notePlayerHurtSource === 'function') {
+    try { notePlayerHurtSource(game, null); } catch (_) {}
+  }
+  ensureAdventureFailTele(game);
+  const waveTotal = (game && game.level && game.level.waves && game.level.waves.length) || 0;
+  const prog = game && game.waveIdx >= 0
+    ? t('result.wavesProg', { cur: game.waveIdx + 1, total: waveTotal })
+    : tOr('result.wavesStart', 'begin');
+  const retry = tOr('result.againRetry', 'Nog één keer');
+  const tele = (typeof combatFailRetryTip === 'function') ? combatFailRetryTip(game, '') : '';
+  const lead = trimResultTipPart(tele || retry);
+  const failsNow = (typeof advFailCount === 'function') ? advFailCount(lv, diff) : 0;
+  if (failsNow >= SATAN_FAIL_THRESHOLD && typeof shouldTriggerSatan === 'function' && shouldTriggerSatan(lv, diff)) {
+    return lead + ' · ' + t('result.heatSatanNext');
+  }
+  if (failsNow >= SATAN_DANGER_FAILS) {
+    return lead + ' · ' + t('result.heatDanger');
+  }
+  const named = adventureKillTip(game, '');
+  const genericKey = (game && game.player && game.player.hp <= 0) ? 'result.lossBlockTip' : 'result.lossOrbTip';
+  const generic = trimResultTipPart(t(genericKey, { prog: '' }));
+  const advice = named || generic;
+  let once = '';
+  if (!(typeof firstPunchPending === 'function' && firstPunchPending())) {
+    once = onceResultTip('adventure', 'loss', t('result.lossGambleTip'));
+  }
+  let heatTip = '';
+  try {
+    const heat = (typeof satanHeatForLevel === 'function') ? satanHeatForLevel(lv, diff) : null;
+    heatTip = (typeof satanHeatTip === 'function') ? (satanHeatTip(heat) || '') : '';
+  } catch (_) {}
+  const parts = [lead];
+  if (advice && advice !== lead && advice.indexOf(lead) < 0) parts.push(advice);
+  if (prog) parts.push(prog);
+  // First deaths: keep killer + fail cue readable on 390. Heat lecture waits.
+  const skipHeat = failsNow < 5 || (typeof firstPunchPending === 'function' && firstPunchPending());
+  if (heatTip && !skipHeat) parts.push(trimResultTipPart(heatTip));
+  if (once) parts.push(trimResultTipPart(once));
+  return parts.filter(Boolean).join(' · ');
 }
 
 /** Deferred UI (toast/banner) — negeer na menu-exit of nieuw gevecht. */
@@ -44439,6 +44945,7 @@ class Game {
     this.minX = 40; this.maxX = W - 40;
     this.shakeT = 0; this.shakeMag = 0; this.freezeT = 0;
     this.particles = []; this.floaters = []; this.projectiles = []; this.banners = [];
+    try { if (typeof prewarmFxPool === 'function') prewarmFxPool(); } catch (_) {}
     this.monsters = [];
     this.inputLocked = false;
     this.playerHurtCd = 0;
@@ -44452,6 +44959,9 @@ class Game {
     this.runFinishers = 0;
     this.runLoot = createRunLoot();
     this.lastHurtBy = null;
+    this.openerGraceT = 0;
+    this.lastHitChipT = 0;
+    this.lastHitChipName = '';
 
     const st = playerStats();
     if (mode === 'adventure') {
@@ -44519,8 +45029,11 @@ class Game {
   }
 
   onResize() {
-    this.ground = playfieldGroundY(H, W);
-    this.maxX = W - 40;
+    if (typeof alignCombatPlayfield === 'function') alignCombatPlayfield(this);
+    else {
+      this.ground = playfieldGroundY(H, W);
+      this.maxX = W - 40;
+    }
     if (typeof pinPlayfieldBodies === 'function') pinPlayfieldBodies(this);
     if (this.mode === 'versus' && this.p2) {
       applyVsArenaBounds(this);
@@ -44656,6 +45169,7 @@ class Game {
     // Spawn grace only for a normal opener — never during Satan (reflect must land).
     if (this.player && n <= 3 && !this.satanPending && !this.satanActive) {
       this.player.invulnT = Math.max(this.player.invulnT || 0, 1.35);
+      this.openerGraceT = 1.35;
     }
   }
 
@@ -45355,39 +45869,10 @@ class Game {
         ? t('result.satanAfterClear')
         : (stars >= 3 ? t('result.perfectRun') : (stars > prevStars
         ? t('result.starImproved', { stars, prev: prevStars })
-        : t('result.pickupsHelp', { hint: starHintLine() })))) : (() => {
-        const failsNow = advFailCount(lv, diff);
-        const retry = tOr('result.againRetry', 'Nog één keer');
-        const tele = (typeof combatFailRetryTip === 'function') ? combatFailRetryTip(this, '') : '';
-        const waveTotal = (this.level && this.level.waves && this.level.waves.length) || 0;
-        const prog = this.waveIdx >= 0
-          ? t('result.wavesProg', { cur: this.waveIdx + 1, total: waveTotal })
-          : tOr('result.wavesStart', 'begin');
-        const lead = (tele || retry) + ' · ' + prog;
-        if (failsNow >= SATAN_FAIL_THRESHOLD && typeof shouldTriggerSatan === 'function' && shouldTriggerSatan(lv, diff)) {
-          return lead + ' · ' + t('result.heatSatanNext');
-        }
-        if (failsNow >= SATAN_DANGER_FAILS) {
-          return lead + ' · ' + t('result.heatDanger');
-        }
-        const named = typeof adventureKillTip === 'function' ? adventureKillTip(this, prog) : '';
-        const base = named || (this.player.hp <= 0
-          ? t('result.lossBlockTip', { prog })
-          : t('result.lossOrbTip', { prog }));
-        // EX-027: killer first. Skip gamble lecture until first punch (don't burn the once-flag).
-        let once = '';
-        if (!(typeof firstPunchPending === 'function' && firstPunchPending())) {
-          once = onceResultTip('adventure', 'loss', t('result.lossGambleTip'));
-        }
-        const core = once ? `${base} · ${once}` : base;
-        let heatTip = '';
-        try {
-          const heat = (typeof satanHeatForLevel === 'function') ? satanHeatForLevel(lv, diff) : null;
-          heatTip = (typeof satanHeatTip === 'function') ? (satanHeatTip(heat) || '') : '';
-        } catch (_) {}
-        const body = heatTip ? `${heatTip} · ${core}` : core;
-        return lead + ' · ' + body;
-      })(),
+        : t('result.pickupsHelp', { hint: starHintLine() }))))
+        : ((typeof adventureLoseFeelTip === 'function')
+          ? adventureLoseFeelTip(this, { lv: lv, diff: diff })
+          : tOr('result.againRetry', 'Nog één keer')),
     }));
   }
 
@@ -45422,9 +45907,7 @@ class Game {
       }
       try { haptic(8 + Math.min(ks, 12)); } catch (_) {}
     }
-    this.freezeT = Math.max(this.freezeT || 0, 0.045 + Math.min(ks, 12) * 0.002);
-    try { this.shake(5, 0.18); } catch (_) {}
-    try { haptic(12); } catch (_) {}
+    try { if (typeof juiceKillSnap === 'function') juiceKillSnap(this, m); } catch (_) {}
     const sp = m.sp || {};
     const rar = rarityOf(sp.rarity);
     const killRingR = m.superBoss ? 18 : (m.elite ? 14 : (m.giant ? 12 : 9));
@@ -45846,9 +46329,9 @@ class Game {
         const lbl = typeof gearLabel === 'function' ? gearLabel(gdef) : gdef.name;
         this.floater(p.x, p.y - 100, t('combat.pickupGear', { name: lbl }), col, 15);
         if (fresh) {
-          try { haptic(14); } catch (_) {}
           try {
-            if (typeof applyHitConfirmFx === 'function') applyHitConfirmFx(this, p.x, p.y - 36, { kind: 'special' });
+            if (typeof juiceEquipCombat === 'function') juiceEquipCombat(this, p.x, p.y - 36);
+            else if (typeof applyHitConfirmFx === 'function') applyHitConfirmFx(this, p.x, p.y - 36, { kind: 'special' });
           } catch (_) {}
           try { UI.toast(t('toast.gearDrop', { name: lbl, slot: gearSlotLabel(gdef.slot) }), 3600, { tone: 'ok' }); } catch (_) {}
         }
@@ -47087,7 +47570,6 @@ class Game {
           if (m.techniqueTelegraphT > 0) m.techniqueTelegraphT = 0;
           if (m.telegraphT > 0) m.telegraphT = 0;
           if (m.dashT > 0) { m.dashT = 0; m.vx *= 0.35; }
-          if (save.haptics !== false) haptic(9);
         }
         m.takeDamage(hitRoll.dmg, kbHit, this, { crit: hitRoll.crit, kind: spec.kind });
         if (f.isPlayer && typeof markFeltFirstPunch === 'function') markFeltFirstPunch();
@@ -47109,7 +47591,9 @@ class Game {
           try { spawnWeaponLightHit(this, f, m, { finisher, crit: hitRoll.crit }); } catch (_) {}
         }
         if (counter) this.freezeT = Math.max(this.freezeT, 0.026);
-        applyHitConfirmFx(this, hx, hy, spec, counter ? { counter: true } : null);
+        applyHitConfirmFx(this, hx, hy, spec, {
+          counter: !!counter, heavy: hitRoll.dmg >= 18, crit: hitRoll.crit,
+        });
         if (f.isPlayer && this.styleLightning && !fxLite()) {
           this.burst(m.x, m.y - m.size * 0.5, f.style?.accent || '#7cf5ff', 5, { kind: 'spark', size: 2 });
           if (f.style?.id === 'cyber') spawnFxRing(this, m.x, m.y - m.size * 0.3, '#4ecf6a', 6);
@@ -47198,7 +47682,8 @@ class Game {
         }
         if (hitRoll.crit) applyCritFx(this, tgt.x, tgt.y);
         const col = tgt.playerSlot === 2 ? '#ffb0b8' : (tgt.isPlayer ? '#ff8080' : '#ffe680');
-        if (!tgt.blocking) {
+        // EX-029: player incoming numbers live in takeDamage (one source).
+        if (!tgt.blocking && !tgt.isPlayer && !tgt.playerSlot) {
           this.floater(tgt.x, tgt.y - 115, (counter ? t('combat.counter') + ' ' : '') + '-' + dmg, col, 16);
         }
         this.burst(tgt.bodyX, tgt.bodyY, col, 7);
@@ -47206,7 +47691,9 @@ class Game {
           this.hitReadT = 0.45;
           this.hitReadDmg = dmg;
         }
-        applyHitConfirmFx(this, hx, hy, spec, counter ? { counter: true } : null);
+        applyHitConfirmFx(this, hx, hy, spec, {
+          counter: !!counter, heavy: hitRoll.dmg >= 18, crit: hitRoll.crit,
+        });
         if (spec.kind === 'weapon') bumpWeaponComboWindow(f, 0.1);
         if (spec.kind === 'weapon' && !isThrowWeapon(f.weapon.id) && spec.moveIdx < 2) {
           f._weaponComboHits = (f._weaponComboHits || 0) + 1;
@@ -47227,8 +47714,6 @@ class Game {
         f.energy = clamp(f.energy + 9, 0, 100);
         applyHitStop(this, spec, { crit: hitRoll.crit, combo: this.combo, heavy: hitRoll.dmg >= 18 });
         if (counter) this.freezeT = Math.max(this.freezeT, 0.014);
-        this.shake(spec.dmg > 20 ? 4 : 3, 0.12);
-        if ((f.isPlayer || f.playerSlot) && save.haptics !== false) haptic(5);
         try { AudioSys.sfxAt(weaponHitSfx(f.weapon, hitRoll.dmg), tgt.x); } catch (_) {}
         hit = true;
       }
@@ -47245,6 +47730,8 @@ class Game {
     try { if (typeof updateAimTutorial === 'function') updateAimTutorial(this, dt); } catch (_) {}
     if (this.playerHurtCd > 0) this.playerHurtCd -= dt;
     if (this.hitReadT > 0) this.hitReadT -= dt;
+    if (this.openerGraceT > 0) this.openerGraceT -= dt;
+    if (this.lastHitChipT > 0) this.lastHitChipT -= dt;
     let ketsJustFinished = false;
     if (this.ketsbamChargeT > 0) {
       if (this.over || !this.player?.alive) {
@@ -47318,7 +47805,9 @@ class Game {
     if (this.mode === 'adventure') this.updateKetsbam(dt);
     if (!ketsJustFinished) this.t += dt;
     if (this.hint > 0) this.hint -= dt;
-    if (this._juiceTeach && !this._juiceTaught && !this.over) {
+    if (typeof updateFirstPunchTeach === 'function') {
+      try { updateFirstPunchTeach(this); } catch (_) {}
+    } else if (this._juiceTeach && !this._juiceTaught && !this.over) {
       const landed = (this.combo || 0) > 0 || (this.maxCombo || 0) > 0 || (this.kills || 0) > 0;
       if (landed) {
         this._juiceTaught = true;
@@ -47648,7 +48137,12 @@ class Game {
         if (pt.y > this.ground && pt.vy > 0) { pt.y = this.ground; pt.vy *= -0.4; }
       }
     }
-    this.particles = this.particles.filter(p => p.life > 0);
+    const keep = [];
+    for (const p of this.particles) {
+      if (p.life > 0) keep.push(p);
+      else if (typeof releaseFxParticle === 'function') releaseFxParticle(p);
+    }
+    this.particles = keep;
     for (const fl of this.floaters) {
       fl.life -= dt;
       fl.y -= (fl.vy || 40) * dt;
@@ -47663,7 +48157,12 @@ class Game {
   trimFxCaps() {
     const cap = fxCaps();
     const drop = (arr, max) => {
-      if (arr.length > max) arr.splice(0, arr.length - max);
+      if (arr.length > max) {
+        const gone = arr.splice(0, arr.length - max);
+        if (arr === this.particles && typeof releaseFxParticle === 'function') {
+          for (const p of gone) releaseFxParticle(p);
+        }
+      }
     };
     drop(this.particles, cap.particles);
     drop(this.floaters, cap.floaters);
@@ -47704,8 +48203,9 @@ class Game {
     opts = opts || {};
     const kind = opts.kind || 'square';
     const floorN = kind === 'spark' ? 1 : 2;
+    const spawnLite = typeof fxSpawnLite === 'function' && fxSpawnLite();
     if (motionReduced()) n = Math.max(floorN, Math.floor(n * 0.45));
-    else if (save.liteFx || Perf.tier >= 1) n = Math.max(kind === 'spark' ? 1 : 3, Math.floor(n * 0.65));
+    else if (save.liteFx || Perf.tier >= 1 || spawnLite) n = Math.max(kind === 'spark' ? 1 : 3, Math.floor(n * 0.55));
     if (Perf.tier >= 2) n = Math.max(floorN, Math.floor(n * 0.55));
     if (!perfFxBudgetAllow(this, Math.min(n, 4))) n = Math.max(floorN, Math.floor(n * 0.45));
     if (n <= 0 || perfFxRoom(this, 'particle') <= 0) return;
@@ -47718,16 +48218,20 @@ class Game {
     for (let i = 0; i < n; i++) {
       const a = rand(0, TAU);
       const sp = kind === 'spark' ? rand(20, 90) : rand(60, 320);
-      this.particles.push({
-        x, y,
-        vx: Math.cos(a) * sp,
-        vy: Math.sin(a) * sp - (kind === 'spark' ? 40 : 120),
-        life: kind === 'spark' ? rand(0.12, 0.28) : rand(0.3, 0.7),
-        color,
-        size: baseSize || rand(2, 5),
-        kind,
-        grav: kind === 'spark' ? 200 : 900,
-      });
+      const pt = (typeof allocFxParticle === 'function') ? allocFxParticle() : {
+        x: 0, y: 0, vx: 0, vy: 0, life: 0, maxLife: 0, color: '#fff', size: 2, kind: 'square', grav: 900,
+      };
+      pt.x = x;
+      pt.y = y;
+      pt.vx = Math.cos(a) * sp;
+      pt.vy = Math.sin(a) * sp - (kind === 'spark' ? 40 : 120);
+      pt.life = kind === 'spark' ? rand(0.12, 0.28) : rand(0.3, 0.7);
+      pt.maxLife = pt.life;
+      pt.color = color;
+      pt.size = baseSize || rand(2, 5);
+      pt.kind = kind;
+      pt.grav = kind === 'spark' ? 200 : 900;
+      this.particles.push(pt);
     }
   }
   floater(x, y, txt, color, size, layer) {
@@ -48008,6 +48512,7 @@ class Game {
     if (this.mode === 'wall') this.drawWall(c);
     if (this.mode === 'coinrun') this.drawCoinRunLayer(c);
 
+    // Fighters always draw — skipFx / fxLite / spawnLite only throttle particles.
     this.drawCombatants(c);
 
     // projectielen
@@ -48215,7 +48720,10 @@ class Game {
       try { this.drawPartGateCue(c); } catch (_) {}
     }
 
-    try { this.drawHUD(c); } catch (_) {}
+    // EX-029: HUD leftovers must not abort draw — loop catch would wipe fighters.
+    try { this.drawHUD(c); } catch (hudErr) {
+      try { sfReportError('drawHUD', hudErr, errT('toast.fightHiccup', 'Hiccup — fight continues')); } catch (_) {}
+    }
 
     // banners — max 3 lanes, geen overlap
     try {
@@ -48236,7 +48744,8 @@ class Game {
     if (this.hint > 0 && !(typeof aimTutorialActive === 'function' && aimTutorialActive(this))) {
       c.globalAlpha = clamp(this.hint, 0, 1);
       let hintTxt = this.modeHintLine;
-      if (!hintTxt) {
+      const punchTeach = typeof firstPunchTeachPending === 'function' && firstPunchTeachPending(this);
+      if (!hintTxt && !punchTeach) {
         const dualOk = Input.dualMode && this.mode === 'versus';
         const touchPads = typeof useTouchFightPads === 'function' ? useTouchFightPads() : IS_TOUCH;
         if (dualOk && touchPads) {
@@ -48249,6 +48758,9 @@ class Game {
           hintTxt = t('hud.hintKb');
         }
       }
+      if (!hintTxt) {
+        c.globalAlpha = 1;
+      } else {
       c.font = '600 15px -apple-system, sans-serif';
       c.textAlign = 'center';
       const maxW = Math.min(W * 0.72, 500);
@@ -48277,6 +48789,7 @@ class Game {
         });
       }
       c.globalAlpha = 1;
+      }
     }
     try { if (typeof drawAimTutorial === 'function') drawAimTutorial(c, this); } catch (_) {}
   }
@@ -49366,6 +49879,25 @@ class Game {
         c.fillStyle = 'rgba(255,255,255,.62)';
         c.fillText(Math.ceil(this.ketsbamCd) + 's', bx + bw - 20, by + 48);
       }
+      if (this.mode === 'adventure' && (this.openerGraceT || 0) > 0.05) {
+        const gTxt = t('hud.openerGrace', { n: this.openerGraceT.toFixed(1) });
+        c.font = compact ? '800 10px sans-serif' : '800 11px sans-serif';
+        const tw = c.measureText(gTxt).width;
+        c.fillStyle = 'rgba(6,10,24,.72)';
+        this.rr(c, bx + bw / 2 - tw / 2 - 6, by + 1, tw + 12, 13, 6); c.fill();
+        c.textAlign = 'center';
+        fillHudText(c, gTxt, bx + bw / 2, by + 11, { fill: '#7cf5ff' });
+      }
+      if (this.mode === 'adventure' && (this.lastHitChipT || 0) > 0 && this.lastHitChipName) {
+        c.save();
+        c.globalAlpha = clamp(this.lastHitChipT, 0, 1);
+        c.font = compact ? '800 11px sans-serif' : '800 12px sans-serif';
+        c.textAlign = 'left';
+        fillHudText(c, t('hud.lastHit', { name: this.lastHitChipName }), bx, by + (compact ? 60 : 62), {
+          fill: '#ffb0b8',
+        });
+        c.restore();
+      }
     }
 
     c.textAlign = 'center';
@@ -50363,6 +50895,18 @@ class Game {
       c.strokeStyle = accent || '#fff';
       c.lineWidth = opts.dual ? 2 : 2.6;
       c.beginPath(); c.arc(0, 0, b.r + 3, 0, TAU); c.stroke();
+    }
+    if (!opts.dual && b.id === 'punch' && typeof firstPunchTeachShouldPulsePunch === 'function'
+        && firstPunchTeachShouldPulsePunch(this)) {
+      const calm = typeof motionReduced === 'function' && motionReduced();
+      const pulse = calm ? 0.55 : (0.42 + Math.sin((this.t || 0) * 6) * 0.38);
+      c.globalAlpha = pulse;
+      c.strokeStyle = '#ffd75e';
+      c.lineWidth = 3.2;
+      const extra = calm ? 5 : (5 + Math.sin((this.t || 0) * 6) * 2);
+      c.beginPath();
+      c.arc(0, 0, b.r + extra, 0, TAU);
+      c.stroke();
     }
     c.globalAlpha = 1;
     const jk = b.id === 'special'
@@ -55319,7 +55863,8 @@ const UI = {
       AudioSys.sfx('select');
       try { if (typeof haptic === 'function') haptic(10); } catch (_) {}
       const doll = document.getElementById('gearDollCanvas');
-      if (doll) {
+      if (typeof juiceEquipMenu === 'function') juiceEquipMenu(doll);
+      else if (doll) {
         try {
           doll.classList.remove('juice-flash');
           void doll.offsetWidth;
@@ -58325,7 +58870,17 @@ function startGame(mode, opts) {
   Input.dualMode = false;
   try { dismissTunnelOverlayIfStatic(); } catch (_) {}
   try { if (game) game._resultToken = (game._resultToken || 0) + 1; } catch (_) {}
+  // Pin W/H + canvas CSS to the visual viewport BEFORE spawn so landscape
+  // 844×390 does not inherit a portrait floor (fighters in a dead zone).
   try {
+    if (typeof forceGameResize === 'function') forceGameResize();
+    else if (typeof resize === 'function') resize();
+  } catch (_) {}
+  try {
+    try {
+      if (typeof prewarmFxPool === 'function') prewarmFxPool();
+      if (typeof speciesTop20Ranked === 'function') speciesTop20Ranked();
+    } catch (_) {}
     game = new Game(mode, opts);
   } catch (err) {
     sfReportError('start/' + mode, err);
@@ -58350,6 +58905,7 @@ function startGame(mode, opts) {
   try { AudioSys.setPaused(false); } catch (_) {}
   try { recordLastPlay(mode, opts); } catch (_) {}
   try { applyModeOnboarding(mode, game); } catch (_) {}
+  // First Avontuur: maybeStartAimTutorial no-ops while firstPunchPending (punch first).
   try { if (typeof maybeStartAimTutorial === 'function') maybeStartAimTutorial(game); } catch (_) {}
   try { UI.hideGambleRollFlash(); } catch (_) {}
   try { UI.show(null); } catch (_) { try { syncPlayLayer(); } catch (__) {} }
@@ -59149,7 +59705,7 @@ if (pauseVsSwap) {
     }), 2800);
   });
 }
-/** EX-023: first Avontuur is a punch, not island + gamble + FOMO. */
+/** EX-023 + MASTERGAME: first Avontuur is a punch, not island + gamble + FOMO + aim wall. */
 function firstPunchPending() {
   try {
     return !(typeof save !== 'undefined' && save && save.feltFirstPunch);
@@ -60071,6 +60627,12 @@ function bootGame() {
   } catch (_) {}
   window.__sfBooted = true;
   try {
+    if (typeof prewarmFxPool === 'function') prewarmFxPool();
+    if (typeof speciesTop20Ranked === 'function') {
+      setTimeout(() => { try { speciesTop20Ranked(); } catch (_) {} }, 0);
+    }
+  } catch (_) {}
+  try {
     if (typeof window.__sfDismissBootFailToast === 'function') window.__sfDismissBootFailToast();
   } catch (_) {}
   safeCall(runSplashIntro, 'splash');
@@ -60190,6 +60752,8 @@ function bootGame() {
     startGame, save, Game, UI, recoverToMenu, syncPlayLayer,
     resetAimTutorial: typeof resetAimTutorialFlag === 'function' ? resetAimTutorialFlag : null,
     aimTutorialSeen: typeof aimTutorialSeen === 'function' ? aimTutorialSeen : null,
+    firstPunchPending: typeof firstPunchPending === 'function' ? firstPunchPending : null,
+    resetFirstPunchTeach: typeof resetFirstPunchTeachFlag === 'function' ? resetFirstPunchTeachFlag : null,
     season: (typeof seasonSnapshot === 'function') ? {
       get id() { return currentSeasonId(); },
       get pref() { return currentSeasonPref(); },
@@ -60244,8 +60808,19 @@ function bootGame() {
     } : null,
     hudSafeLayout: typeof hudSafeLayout === 'function' ? hudSafeLayout : null,
     hudPhoneCompact: typeof hudPhoneCompact === 'function' ? hudPhoneCompact : null,
+    combatViewAlign: typeof combatViewAlign === 'function' ? combatViewAlign : null,
+    alignCombatPlayfield: typeof alignCombatPlayfield === 'function' ? alignCombatPlayfield : null,
     touchPhoneLandscape: typeof touchPhoneLandscape === 'function' ? touchPhoneLandscape : null,
     Input: typeof Input !== 'undefined' ? Input : null,
+    fx: {
+      lite: () => (typeof fxLite === 'function' ? fxLite() : false),
+      spawnLite: () => (typeof fxSpawnLite === 'function' ? fxSpawnLite() : false),
+      touch: () => (typeof fxTouchDevice === 'function' ? fxTouchDevice() : false),
+      caps: () => (typeof fxCaps === 'function' ? fxCaps() : null),
+      prewarm: (n) => (typeof prewarmFxPool === 'function' ? prewarmFxPool(n) : 0),
+      poolSize: () => (typeof fxPoolSize === 'function' ? fxPoolSize() : 0),
+      summary: () => (typeof perfFxSummary === 'function' ? perfFxSummary() : null),
+    },
     previewTop20Spawn: () => {
       try { AudioSys.init(); AudioSys.sfx('top20Spawn'); } catch (_) {}
       try { if (game && typeof game.shake === 'function') game.shake(4, 0.16); } catch (_) {}
