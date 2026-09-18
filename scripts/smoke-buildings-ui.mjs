@@ -91,6 +91,11 @@ must(css.includes('buildings-empty-start'), 'empty start CSS missing');
 must(ui.includes('doBuildingCollectAll') && ui.includes('data-buildings-collect-all'), 'collect-all affordance missing');
 must(ui.includes('buildingsPillTip') && ui.includes('paintBuildingsPillTip'), 'pill offline tip missing');
 must(/collectAllDone/.test(i18n) && /pillTipReady/.test(i18n), 'collect-all / pill-tip i18n missing');
+must(/collectAll: 'Collect \{n\}'/.test(i18n), 'EN collectAll missing');
+must(/collectAll: 'Ernte \{n\}'/.test(i18n), 'DE collectAll missing');
+must(/collectAll: 'Récolter \{n\}'/.test(i18n), 'FR collectAll missing');
+must(/collectAll: 'Recolectar \{n\}'/.test(i18n), 'ES collectAll missing');
+must((i18n.match(/collectAllAria:/g) || []).length >= 5, 'collectAllAria must exist in NL/EN/DE/FR/ES');
 must(css.includes('buildings-collect-all') && css.includes('buildings-pill-tip'), 'collect-all / pill-tip CSS missing');
 must(ui.includes('buildingDescModel'), 'UI must consume systems buildingDescModel');
 must(ui.includes('buildingWalletModel'), 'UI must consume systems buildingWalletModel');
@@ -284,6 +289,22 @@ async function runBrowser() {
       const collectAllBtn = document.querySelector('[data-buildings-collect-all], #btnBuildingsCollectAll');
       const wrapAll = document.getElementById('buildingsCollectAll');
       const collectAllShown = !!(wrapAll && !wrapAll.hidden && collectAllBtn);
+      const collectAllLang = {};
+      for (const lang of ['en', 'de', 'fr', 'es']) {
+        if (typeof setLang === 'function') setLang(lang);
+        if (typeof UI.renderBuildings === 'function') UI.renderBuildings();
+        const btn = document.querySelector('[data-buildings-collect-all]');
+        collectAllLang[lang] = ((btn && btn.innerText) || '').replace(/\s+/g, ' ').trim();
+      }
+      if (typeof setLang === 'function') setLang('nl');
+      if (typeof UI.renderBuildings === 'function') UI.renderBuildings();
+      const collectAllI18n = !!(
+        /Collect/i.test(collectAllLang.en)
+        && /Ernte/i.test(collectAllLang.de)
+        && /R[eé]colt/i.test(collectAllLang.fr)
+        && /Recolect/i.test(collectAllLang.es)
+        && !/Oogst|\balles\b/i.test([collectAllLang.en, collectAllLang.de, collectAllLang.fr, collectAllLang.es].join(' | '))
+      );
       const spark0 = (typeof buildingWallet === 'function') ? Number(buildingWallet('spark') || 0) : 0;
       const glue0 = (typeof buildingWallet === 'function') ? Number(buildingWallet('glue') || 0) : 0;
       if (typeof UI.doBuildingCollectAll === 'function') UI.doBuildingCollectAll();
@@ -353,7 +374,7 @@ async function runBrowser() {
           && emptyStartOn && emptyStartShort && emptyGone
           && hasAffordChips && toastShort && !enLeak && !deLeak
           && /Factor/i.test(enHead) && /Fabrik/i.test(deHead)
-          && collectAllShown && collectAllOk && hasOfflineTip && tipOn && walk390),
+          && collectAllShown && collectAllOk && collectAllI18n && hasOfflineTip && tipOn && walk390),
         ids,
         factoryIds,
         chips,
@@ -398,6 +419,8 @@ async function runBrowser() {
         deLeak,
         collectAllShown,
         collectAllOk,
+        collectAllI18n,
+        collectAllLang,
         hasOfflineTip,
         tipOn,
         walkEmpty,

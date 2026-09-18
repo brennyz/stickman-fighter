@@ -145,6 +145,7 @@ Schrijf **1–3 regels** per sessie: datum, d#, wat, versie.
 
 | Datum (UTC) | d# | Update |
 |-------------|-----|--------|
+| 2026-09-18 | — | **#312 final polish:** collect-all EN/DE/FR/ES + aria; smoke locale check; DONE checklist on draft. No new features. **v1.18.177 / SW 387**. |
 | 2026-09-18 | — | **#312 collect-all + pill tip:** optional Oogst-alles when 2+ ready; one-line 8u offline tip on pill long-press; 390px walkthrough build→collect→sheet. Draft. **v1.18.176 / SW 386**. |
 | 2026-09-18 | — | **#312 sheet/empty/i18n:** upgrade cost chips red/green + short `Lv` toast on 390px; one-line first-time stick_lighter Build hint; EN/DE cost/island/empty keys (no Dutch leak). Draft. **v1.18.175 / SW 385**. |
 | 2026-09-18 | — | **#312 P0:** hopper VOL + wallet `+N` on huge offline collect; 390px power/next shortened; collect lock so empty/double tap cannot open detail. Draft. **v1.18.174 / SW 384**. |

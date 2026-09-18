@@ -3247,7 +3247,7 @@
     font-size: 14px; font-weight: 800; text-align: left;
   }
   #buildingsScreen .buildings-collect-all small {
-    font-size: 11px; font-weight: 800; color: #7cfc8a; letter-spacing: .04em; text-transform: uppercase;
+    font-size: 11px; font-weight: 800; color: #7cfc8a; letter-spacing: .02em;
   }
   #buildingsScreen .buildings-pill-tip {
     position: absolute; z-index: 12; max-width: min(88vw, 280px);

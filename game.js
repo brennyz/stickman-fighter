@@ -323,9 +323,9 @@ const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const VERSION_UPDATE_SAVE_KEY = 'stickfighter_version_update_save_v1';
 const VERSION_UPDATE_FLAG_KEY = 'stickfighter_version_update_flag_v1';
 const SAVE_EXPORT_SCHEMA = 3;
-const APP_VERSION = '1.18.176';
+const APP_VERSION = '1.18.177';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 386;
+const SW_CACHE_REV = 387;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', petCoins: 0, dex: {}, summons: {}, pets: {}, activePet: null,
   eggPets: {}, activeEggPet: null, eggDaily: null,
   chestDaily: null, chestWeapons: {},
@@ -2572,6 +2572,7 @@ const I18N = {
       walletAria: 'Portemonnee',
       collectAll: 'Oogst {n}',
       collectAllSub: 'alles',
+      collectAllAria: 'Oogst {n} fabrieken',
       collectAllDone: '+{n} · {k} klaar',
       pillTip: 'Max {h}u offline · daarna VOL',
       pillTipReady: '{n} klaar · max {h}u offline',
@@ -2902,7 +2903,8 @@ const I18N = {
       upgradeOkShort: '{short} · Lv {lv}',
       walletAria: 'Wallet',
       collectAll: 'Collect {n}',
-      collectAllSub: 'all',
+      collectAllSub: 'all ready',
+      collectAllAria: 'Collect {n} factories',
       collectAllDone: '+{n} · {k} ready',
       pillTip: 'Max {h}h offline · then FULL',
       pillTipReady: '{n} ready · max {h}h offline',
@@ -3070,7 +3072,8 @@ const I18N = {
       upgradeOkShort: '{short} · Lv {lv}',
       walletAria: 'Beutel',
       collectAll: 'Ernte {n}',
-      collectAllSub: 'alle',
+      collectAllSub: 'alle bereit',
+      collectAllAria: '{n} Werke ernten',
       collectAllDone: '+{n} · {k} bereit',
       pillTip: 'Max {h}h offline · dann VOLL',
       pillTipReady: '{n} bereit · max {h}h offline',
@@ -3392,8 +3395,9 @@ const I18N = {
       emptyLocked: 'Joue l’Aventure — puis Allume-Bâton',
       upgradeOkShort: '{short} · Nv {lv}',
       walletAria: 'Portefeuille',
-      collectAll: 'Récolte {n}',
-      collectAllSub: 'tout',
+      collectAll: 'Récolter {n}',
+      collectAllSub: 'tout prêt',
+      collectAllAria: 'Récolter {n} usines',
       collectAllDone: '+{n} · {k} prêts',
       pillTip: 'Max {h}h hors ligne · puis PLEIN',
       pillTipReady: '{n} prêts · max {h}h hors ligne',
@@ -3696,8 +3700,9 @@ const I18N = {
       emptyLocked: 'Juega Aventura — luego Palo-Mechero',
       upgradeOkShort: '{short} · Nv {lv}',
       walletAria: 'Cartera',
-      collectAll: 'Cosecha {n}',
-      collectAllSub: 'todo',
+      collectAll: 'Recolectar {n}',
+      collectAllSub: 'todo listo',
+      collectAllAria: 'Recolectar {n} fábricas',
       collectAllDone: '+{n} · {k} listos',
       pillTip: 'Máx {h}h offline · luego LLENO',
       pillTipReady: '{n} listos · máx {h}h offline',
@@ -51910,8 +51915,10 @@ if (typeof UI === 'object' && UI) {
       return;
     }
     const n = ready.length;
+    const aria = buildingsTxt('buildings.collectAllAria', 'Oogst {n} fabrieken', { n });
     host.innerHTML =
-      '<button type="button" class="buildings-collect-all" data-buildings-collect-all="1" id="btnBuildingsCollectAll">'
+      '<button type="button" class="buildings-collect-all" data-buildings-collect-all="1" id="btnBuildingsCollectAll"'
+      + ' aria-label="' + buildingsEscape(aria) + '">'
       + '<span>' + buildingsEscape(buildingsTxt('buildings.collectAll', 'Oogst {n}', { n })) + '</span>'
       + '<small>' + buildingsEscape(buildingsTxt('buildings.collectAllSub', 'alles')) + '</small></button>';
   };

@@ -452,8 +452,10 @@ if (typeof UI === 'object' && UI) {
       return;
     }
     const n = ready.length;
+    const aria = buildingsTxt('buildings.collectAllAria', 'Oogst {n} fabrieken', { n });
     host.innerHTML =
-      '<button type="button" class="buildings-collect-all" data-buildings-collect-all="1" id="btnBuildingsCollectAll">'
+      '<button type="button" class="buildings-collect-all" data-buildings-collect-all="1" id="btnBuildingsCollectAll"'
+      + ' aria-label="' + buildingsEscape(aria) + '">'
       + '<span>' + buildingsEscape(buildingsTxt('buildings.collectAll', 'Oogst {n}', { n })) + '</span>'
       + '<small>' + buildingsEscape(buildingsTxt('buildings.collectAllSub', 'alles')) + '</small></button>';
   };

@@ -1079,6 +1079,13 @@
       "text": "Keep #312 draft. Next: (1) Multi-factory collect-all affordance if missing (optional one-tap when 2+ ready). (2) Offline accrual tooltip one line on pill long-press/info. (3) Final 390px walkthrough: build stick_lighter → collect → upgrade sheet. Re-smoke buildings-ui. No Versus, no main.",
       "status": "done-in-code",
       "updated": "2026-09-18"
+    },
+    {
+      "id": "w-20260918T130700",
+      "from": "user",
+      "text": "Lane is strong. Final pass on #312 draft then stop if only P3 left: (1) Collect-all i18n EN/DE/FR/ES. (2) Document DONE checklist on PR body. (3) No further features — polish only. No Versus, no main.",
+      "status": "in-progress",
+      "updated": "2026-09-18"
     }
   ],
   "agentRules": [
