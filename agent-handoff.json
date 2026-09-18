@@ -45,6 +45,10 @@
         "pr": 324,
         "title": "Tablet midband (SKIP — already in #314)",
         "skip": true
+      },
+      {
+        "pr": 359,
+        "title": "pause-sheet-clip (draft, no main)"
       }
     ]
   },
@@ -53,7 +57,7 @@
       "id": "w-20260918T182700",
       "from": "user",
       "text": "FIX — Stickman Fighter PAUSE menu bottom button clipped. Off main (include unmerged context if needed). Draft PR only. No Versus. speel.html. Phone pause sheet: bottom utility/action button cut off above Android nav (valt weg). Dex list tall so sheet overflows. Fix ~390x844 and short landscape: entire pause chrome including last button fully visible and >=44px tappable. Prefer scroll inside dex/stats box OR compact layout + safe-area bottom pad — don't hide Resume. Prove with screenshot + smoke if added. Sibling owns i18n (Resume->NL). This lane owns layout/clipping only. No main merge.",
-      "status": "in-progress",
+      "status": "done-in-code",
       "updated": "2026-09-18",
       "notes": "Layout/clipping only. Sibling i18n Resume->NL. Draft, no Versus, no main."
     },
@@ -1239,6 +1243,10 @@
   ],
   "sessionLog": [
     {
+      "at": "2026-09-18T18:48:14Z",
+      "summary": "Pause sheet clip: dex scrolls, Resume+Quit visible ≥44px on 390×844 + landscape. Draft #359. Layout only."
+    },
+    {
       "at": "2026-09-18T16:06:11Z",
       "summary": "MEGA-MERGE 20m drafts #333–#327 onto main. v1.18.190 / SW 400. Playtest swarm. SKIP #324. Leave #311."
     },
@@ -1333,10 +1341,6 @@
     {
       "at": "2026-09-18T12:31:56Z",
       "summary": "LANGUAGE: factory desc + nameShort, FOMO/HUD locale, export gear/fabriek i18n. Draft #317, geen main."
-    },
-    {
-      "at": "2026-09-18T12:30:17Z",
-      "summary": "LANGUAGE worker: layout-safe NL/EN/DE/FR/ES copy (factory desc, FOMO, HUD telegraphs). Draft, geen main."
     }
   ],
   "implementedFeaturesSummary": "d18 char select deel 1+2 (v1.11.1-2); Mats coinrun + shuriken mik/vliegers + anti-spam (v1.12.0); speel.html (v1.12.2+). Zie HANDOFF-ZOEKINDEX.md en improvement-d20-bag.json userFeatureLog.",

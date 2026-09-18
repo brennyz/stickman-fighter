@@ -87,6 +87,15 @@ async function openPauseWithTallDex(page) {
     }
     const fomo = document.getElementById('fomoRitual');
     if (fomo) { fomo.hidden = true; fomo.setAttribute('hidden', ''); }
+    const toast = document.getElementById('toastHost');
+    if (toast) {
+      toast.innerHTML = '';
+      toast.hidden = true;
+      toast.style.display = 'none';
+    }
+    document.querySelectorAll('.toast, #netStatus').forEach((el) => {
+      el.style.display = 'none';
+    });
     if (typeof UI === 'object' && UI && typeof UI.show === 'function') {
       try { UI.show('pauseScreen'); } catch (_) {}
     }
@@ -123,7 +132,7 @@ function measurePause(page) {
         r: Math.round(r.right),
       };
     };
-    const ids = ['pauseResume', 'pauseQuit', 'pauseTogMusic', 'pauseTogSfx', 'pausePetChip'];
+    const ids = ['pauseHead', 'pauseResume', 'pauseQuit', 'pauseTogMusic', 'pauseTogSfx', 'pausePetChip'];
     const chrome = {};
     for (const id of ids) chrome[id] = box(document.getElementById(id));
     const loot = document.getElementById('pauseRunLoot');
@@ -140,7 +149,7 @@ function measurePause(page) {
       const r = chrome[id];
       if (!r) { missing.push(id); continue; }
       if (r.y < -1 || r.b > vh + 1 || r.x < -2 || r.r > vw + 2) clipped.push({ id, ...r, vh, vw });
-      if (r.h < 44 || r.w < 44) small.push({ id, ...r });
+      if (id !== 'pauseHead' && (r.h < 44 || r.w < 44)) small.push({ id, ...r });
     }
     const resumeHidden = !chrome.pauseResume;
     return {
