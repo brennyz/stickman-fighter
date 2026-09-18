@@ -97,21 +97,33 @@ function perfHordeLoad() {
 }
 /** Mid-phone / compact viewport — tighter FX before Perf.tier has time to climb. */
 function fxTouchDevice() {
-  if (typeof window !== 'undefined' && window.__sfForceTouchFx) return true;
+  if (typeof window !== 'undefined') {
+    if (window.__sfForceTouchFx === true) return true;
+    if (window.__sfForceTouchFx === false) return false;
+  }
   if (typeof IS_TOUCH !== 'undefined' && IS_TOUCH) return true;
   if (typeof W === 'number' && W > 0 && W < 720) return true;
   return false;
 }
 
 /**
- * Spawn-hitch guard: liteFx, reduced-motion, Perf.tier, or first ~1.5s on mid phones.
+ * Spawn-hitch guard: liteFx, reduced-motion, Perf.tier, or touch whole fight.
  * Caps bursts / freeze only — never hides fighters.
  */
 function fxSpawnLite() {
   if (typeof save !== 'undefined' && save && save.liteFx) return true;
   if (typeof motionReduced === 'function' && motionReduced()) return true;
   if (typeof Perf !== 'undefined' && Perf.tier >= 1) return true;
-  if (fxTouchDevice() && typeof Perf !== 'undefined' && Perf.frames < 90) return true;
+  if (fxTouchDevice()) return true;
+  return false;
+}
+
+/** Skip juiceKillSnap / hitStop freeze hitch on Lite FX or touch. */
+function fxSkipFreeze() {
+  if (typeof motionReduced === 'function' && motionReduced()) return true;
+  if (typeof fxLite === 'function' && fxLite()) return true;
+  if (fxSpawnLite()) return true;
+  if (fxTouchDevice()) return true;
   return false;
 }
 
@@ -385,9 +397,9 @@ const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const VERSION_UPDATE_SAVE_KEY = 'stickfighter_version_update_save_v1';
 const VERSION_UPDATE_FLAG_KEY = 'stickfighter_version_update_flag_v1';
 const SAVE_EXPORT_SCHEMA = 3;
-const APP_VERSION = '1.18.190';
+const APP_VERSION = '1.18.191';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 400;
+const SW_CACHE_REV = 401;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', petCoins: 0, dex: {}, summons: {}, pets: {}, activePet: null,
   eggPets: {}, activeEggPet: null, eggDaily: null,
   chestDaily: null, chestWeapons: {},
@@ -17860,8 +17872,17 @@ function scaleKnockback(kb, dmg, opts) {
 function applyHitStop(game, spec, opts) {
   if (!game || motionReduced()) return;
   opts = opts || {};
+  const skipFreeze = (typeof fxSkipFreeze === 'function')
+    ? fxSkipFreeze()
+    : ((typeof fxLite === 'function' && fxLite())
+      || (typeof fxSpawnLite === 'function' && fxSpawnLite())
+      || (typeof fxTouchDevice === 'function' && fxTouchDevice()));
+  const addFreeze = (ms) => {
+    if (skipFreeze) return;
+    game.freezeT = Math.max(game.freezeT || 0, ms);
+  };
   if (opts.chip) {
-    game.freezeT = Math.max(game.freezeT, 0.018);
+    addFreeze(0.018);
     return;
   }
   if (opts.playerHurt) {
@@ -17872,7 +17893,7 @@ function applyHitStop(game, spec, opts) {
     let base = dmg >= 18 ? 0.018 : 0.01;
     if (opts.heavy) base += 0.004;
     if (game.mode === 'versus') base += 0.004;
-    game.freezeT = Math.max(game.freezeT, Math.min(base, 0.028));
+    addFreeze(Math.min(base, 0.028));
     if (opts.heavy || dmg >= 18) {
       try {
         const x = game.player ? game.player.x : (typeof W !== 'undefined' ? W * 0.5 : 0);
@@ -17889,7 +17910,7 @@ function applyHitStop(game, spec, opts) {
   if (opts.combo >= 10) base += 0.006;
   if (game.mode === 'versus') base += 0.006;
   base = Math.min(base, 0.072);
-  game.freezeT = Math.max(game.freezeT, base);
+  addFreeze(base);
   if (opts.crit || opts.heavy || (spec && spec.dmg >= 18)) {
     try {
       const x = game.player ? game.player.x : (typeof W !== 'undefined' ? W * 0.5 : 0);
@@ -33838,13 +33859,21 @@ function juiceDrawSquash(c, target) {
 }
 
 /**
- * Kill snap: one freeze + rate-limited shake/haptic so a horde does not camera-spam.
+ * Kill snap: one freeze (desktop) + rate-limited shake/haptic so a horde does not camera-spam.
+ * Lite FX / touch skip freeze hitch — haptic + KO text stay.
  * Caller still paints the single KO floater.
  */
 function juiceKillSnap(game, m) {
   if (!game) return;
   const elite = !!(m && (m.elite || m.bossCore || m.superBoss || m.satanBoss || m.colossal));
-  game.freezeT = Math.max(game.freezeT || 0, elite ? 0.075 : 0.058);
+  const skipFreeze = (typeof fxSkipFreeze === 'function')
+    ? fxSkipFreeze()
+    : ((typeof fxLite === 'function' && fxLite())
+      || (typeof fxSpawnLite === 'function' && fxSpawnLite())
+      || (typeof fxTouchDevice === 'function' && fxTouchDevice()));
+  if (!skipFreeze) {
+    game.freezeT = Math.max(game.freezeT || 0, elite ? 0.075 : 0.058);
+  }
   if (!juiceGapOk(game, '_juiceKillSnapAt', elite ? 60 : 90)) return;
   try { game.shake(elite ? 7 : 5, elite ? 0.22 : 0.16); } catch (_) {}
   try { if (typeof haptic === 'function') haptic(elite ? 16 : 12); } catch (_) {}
@@ -60815,6 +60844,7 @@ function bootGame() {
     fx: {
       lite: () => (typeof fxLite === 'function' ? fxLite() : false),
       spawnLite: () => (typeof fxSpawnLite === 'function' ? fxSpawnLite() : false),
+      skipFreeze: () => (typeof fxSkipFreeze === 'function' ? fxSkipFreeze() : false),
       touch: () => (typeof fxTouchDevice === 'function' ? fxTouchDevice() : false),
       caps: () => (typeof fxCaps === 'function' ? fxCaps() : null),
       prewarm: (n) => (typeof prewarmFxPool === 'function' ? prewarmFxPool(n) : 0),

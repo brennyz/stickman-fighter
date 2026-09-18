@@ -95,21 +95,33 @@ function perfHordeLoad() {
 }
 /** Mid-phone / compact viewport — tighter FX before Perf.tier has time to climb. */
 function fxTouchDevice() {
-  if (typeof window !== 'undefined' && window.__sfForceTouchFx) return true;
+  if (typeof window !== 'undefined') {
+    if (window.__sfForceTouchFx === true) return true;
+    if (window.__sfForceTouchFx === false) return false;
+  }
   if (typeof IS_TOUCH !== 'undefined' && IS_TOUCH) return true;
   if (typeof W === 'number' && W > 0 && W < 720) return true;
   return false;
 }
 
 /**
- * Spawn-hitch guard: liteFx, reduced-motion, Perf.tier, or first ~1.5s on mid phones.
+ * Spawn-hitch guard: liteFx, reduced-motion, Perf.tier, or touch whole fight.
  * Caps bursts / freeze only — never hides fighters.
  */
 function fxSpawnLite() {
   if (typeof save !== 'undefined' && save && save.liteFx) return true;
   if (typeof motionReduced === 'function' && motionReduced()) return true;
   if (typeof Perf !== 'undefined' && Perf.tier >= 1) return true;
-  if (fxTouchDevice() && typeof Perf !== 'undefined' && Perf.frames < 90) return true;
+  if (fxTouchDevice()) return true;
+  return false;
+}
+
+/** Skip juiceKillSnap / hitStop freeze hitch on Lite FX or touch. */
+function fxSkipFreeze() {
+  if (typeof motionReduced === 'function' && motionReduced()) return true;
+  if (typeof fxLite === 'function' && fxLite()) return true;
+  if (fxSpawnLite()) return true;
+  if (fxTouchDevice()) return true;
   return false;
 }
 

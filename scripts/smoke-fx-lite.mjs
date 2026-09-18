@@ -31,9 +31,11 @@ const fighterSrc = fs.readFileSync(path.join(root, 'src/entities/fighter.js'), '
 const monsterEnt = fs.readFileSync(path.join(root, 'src/entities/monster.js'), 'utf8');
 const versusSrc = fs.readFileSync(path.join(root, 'src/systems/versus.js'), 'utf8');
 const startSrc = fs.readFileSync(path.join(root, 'src/boot/start.js'), 'utf8');
+const juiceSrc = fs.readFileSync(path.join(root, 'src/systems/combat-juice.js'), 'utf8');
 const built = fs.readFileSync(path.join(root, 'game.js'), 'utf8');
 
 must(/function fxSpawnLite\(/.test(prelude), 'fxSpawnLite missing');
+must(/function fxSkipFreeze\(/.test(prelude), 'fxSkipFreeze missing');
 must(/function fxTouchDevice\(/.test(prelude), 'fxTouchDevice missing');
 must(/function prewarmFxPool\(/.test(prelude), 'prewarmFxPool missing');
 must(/function allocFxParticle\(/.test(prelude), 'allocFxParticle missing');
@@ -41,6 +43,7 @@ must(/function releaseFxParticle\(/.test(prelude), 'releaseFxParticle missing');
 must(/FX_POOL_PREWARM = 48/.test(prelude), 'prewarm size must stay 48');
 must(/save\.liteFx\) mul = 0\.42/.test(prelude), 'liteFx cap mul should be 0.42');
 must(/!fxSpawnLite\(\) && !fxTouchDevice\(\)/.test(prelude), 'unlimited FX budget must skip mid-phone/spawnLite');
+must(!/Perf\.frames\s*<\s*90/.test(prelude), 'spawnLite must stay on for touch whole fight (no 90-frame cutoff)');
 must(/function fxLite\(/.test(drawH), 'fxLite missing');
 must(/allocFxParticle/.test(gameSrc), 'burst must use particle pool');
 must(/releaseFxParticle/.test(gameSrc), 'dead particles must return to pool');
@@ -57,6 +60,9 @@ must(/this\.player\.draw\(c\)/.test(gameSrc), 'player must always draw');
 
 must(/fxSpawnLite/.test(monSrc), 'special intro must use spawnLite');
 must(/no freeze/.test(monSrc), 'lite spawn path must skip freeze hitch');
+must(/fxSkipFreeze/.test(monSrc) && /addFreeze/.test(monSrc), 'applyHitStop must gate freeze on Lite FX / touch');
+must(/fxSkipFreeze/.test(juiceSrc) || /fxLite\(\)|fxSpawnLite\(\)|fxTouchDevice\(\)/.test(juiceSrc),
+  'juiceKillSnap must gate freeze on Lite FX / touch');
 must(/prewarmFxPool/.test(startSrc), 'startGame must prewarm pool before first spawn');
 
 must(!/if\s*\(\s*fxLite\s*\(\s*\)\s*\)\s*return;/.test(fighterSrc), 'fighter.draw must not bail on fxLite');
@@ -66,6 +72,7 @@ must(/Versus/.test(prelude) && /untouched|retired|2P/.test(versusSrc + prelude),
 must(!/fxSpawnLite/.test(versusSrc), 'versus.js must stay out of this lane');
 
 must(/function fxSpawnLite\(/.test(built), 'built bundle missing fxSpawnLite');
+must(/function fxSkipFreeze\(/.test(built), 'built bundle missing fxSkipFreeze');
 must(/function prewarmFxPool\(/.test(built), 'built bundle missing prewarmFxPool');
 
 function makeEl(id) {
@@ -173,19 +180,26 @@ function run(src) {
 must(run('typeof fxCaps === "function"'), 'fxCaps not in scope');
 must(run('typeof fxLite === "function"'), 'fxLite not in scope');
 must(run('typeof fxSpawnLite === "function"'), 'fxSpawnLite not in scope');
+must(run('typeof fxSkipFreeze === "function"'), 'fxSkipFreeze not in scope');
 must(run('typeof prewarmFxPool === "function"'), 'prewarmFxPool not in scope');
 must(run('typeof allocFxParticle === "function"'), 'allocFxParticle not in scope');
 
 run('save.liteFx = false; save.reducedMotion = false; Perf.tier = 0; Perf.frames = 0; window.__sfForceTouchFx = true;');
 must(run('fxTouchDevice()'), 'force-touch hook must trip fxTouchDevice');
 must(run('fxSpawnLite()'), 'mid-phone first frames must be spawnLite');
+must(run('fxSkipFreeze()'), 'touch first frames must skip kill/hit freeze');
 const touchCaps = run('fxCaps()');
 must(touchCaps.particles <= 110, 'touch particle cap too high', touchCaps);
 must(touchCaps.particles >= 16, 'touch particle floor too low', touchCaps);
 
+run('Perf.frames = 200;');
+must(run('fxSpawnLite()'), 'touch devices must keep spawnLite after opener (~90 frames)');
+must(run('fxSkipFreeze()'), 'touch after opener must still skip freeze');
+
 run('window.__sfForceTouchFx = false; Perf.frames = 200; save.liteFx = true;');
 must(run('fxLite()'), 'liteFx must trip fxLite');
 must(run('fxSpawnLite()'), 'liteFx must trip spawnLite');
+must(run('fxSkipFreeze()'), 'liteFx must skip kill/hit freeze');
 const liteCaps = run('fxCaps()');
 must(liteCaps.particles <= 70, 'liteFx particle cap should be ≤70', liteCaps);
 must(liteCaps.particles >= 16, 'liteFx must keep a readable floor', liteCaps);
@@ -194,6 +208,8 @@ must(liteCaps.particles < touchCaps.particles || liteCaps.particles <= 60, 'lite
 run('save.liteFx = false; W = 1280; window.__sfForceTouchFx = false; Perf.tier = 0; Perf.frames = 200;');
 const deskCaps = run('fxCaps()');
 must(deskCaps.particles >= 80, 'wide viewport must keep a usable FX cap', deskCaps);
+must(!run('fxSpawnLite()'), 'desktop after opener must not stay spawnLite');
+must(!run('fxSkipFreeze()'), 'desktop after opener still allows freeze');
 
 const pooled = run('prewarmFxPool(48)');
 must(pooled >= 48, 'prewarm must fill 48', pooled);
@@ -218,6 +234,20 @@ run('if (typeof triggerSpecialEnemyIntro === "function") triggerSpecialEnemyIntr
 must(run('(game.freezeT || 0) <= __freezeBefore'), 'lite elite intro must not add freeze hitch');
 must(run('game.particles.length <= ' + liteCaps.particles), 'intro must respect cap', run('game.particles.length'));
 
+run('save.liteFx = true; window.__sfForceTouchFx = true; game.freezeT = 0;');
+must(run('fxSkipFreeze()'), 'lite+touch must skip freeze before kill snap');
+run('juiceKillSnap(game, { elite: true, bossCore: true });');
+must(run('(game.freezeT || 0) === 0'), 'juiceKillSnap must not freeze on Lite FX / touch');
+run('game.freezeT = 0; applyHitStop(game, { kind: "punch", dmg: 22 }, { heavy: true, crit: true });');
+must(run('(game.freezeT || 0) === 0'), 'applyHitStop must not freeze on Lite FX / touch');
+
+run('save.liteFx = false; save.reducedMotion = false; Perf.tier = 0; Perf.frames = 200; W = 1280; window.__sfForceTouchFx = false; game.freezeT = 0;');
+must(!run('fxSkipFreeze()'), 'desktop must allow freeze');
+run('juiceKillSnap(game, { elite: false });');
+must(run('(game.freezeT || 0) >= 0.05'), 'desktop juiceKillSnap still freezes');
+run('game.freezeT = 0; applyHitStop(game, { kind: "punch", dmg: 22 }, { heavy: true });');
+must(run('(game.freezeT || 0) >= 0.03'), 'desktop applyHitStop still freezes');
+
 must(run('typeof game.player.draw === "function"'), 'player.draw missing');
 
 console.log('SMOKE_OK fx-lite', {
@@ -226,4 +256,5 @@ console.log('SMOKE_OK fx-lite', {
   deskParticles: deskCaps.particles,
   burstN,
   pool: run('fxPoolSize()'),
+  skipFreeze: true,
 });
