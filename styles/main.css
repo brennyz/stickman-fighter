@@ -2108,8 +2108,11 @@
   #resultScreen.is-lose .run-loot-panel { max-height: min(22vh, 160px); }
   #resultScreen.is-lose .detail { font-size: 14px; }
   body:has(#resultScreen.active) #fomoRitual,
-  body:has(#resultScreen.active) #versionUpdateOverlay:not([hidden]) {
+  body:has(#resultScreen.active) #versionUpdateOverlay:not([hidden]),
+  body:has(#resultScreen.active) #sfSplash {
     display: none !important;
+    pointer-events: none !important;
+    visibility: hidden !important;
   }
   #resultScreen .bigres { font-family:'Bangers', cursive; font-size:min(14vw,68px); font-weight:400;
       letter-spacing:2px; margin:28px 0 6px; }

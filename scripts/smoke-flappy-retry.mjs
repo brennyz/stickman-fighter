@@ -42,9 +42,11 @@ must(/resultShowDelayMs\(true, 'wall'\)/.test(game) && /resultShowDelayMs\(true,
   'wall/coinrun must use fast retry delay');
 must(/result\.onceMore/.test(ui) && /is-retry-first/.test(ui), 'showResult must paint onceMore + retry-first');
 must(/hideFomoRitual/.test(ui) && /showResult/.test(ui), 'result must hide FOMO');
+must(/dismissSplashOverlay/.test(ui), 'result must dismiss splash so taps hit retry-safe');
 must(/id="resCtaDock"/.test(html) && /id="resRetrySafe"/.test(html), 'result dock / tap-safe missing');
 must(/result-retry-safe/.test(css) && /min-height:\s*84px/.test(css), 'huge 390px CTA / safe zone CSS missing');
 must(/body:has\(#resultScreen\.active\) #fomoRitual/.test(css), 'FOMO must hide on result');
+must(/body:has\(#resultScreen\.active\) #sfSplash/.test(css), 'splash must not steal result taps');
 must(/onceMore: 'Nog één keer'/.test(i18n) && /onceMore: 'One more go'/.test(i18n),
   'onceMore NL/EN missing');
 must(/onceMore: 'Noch einmal'/.test(i18n) && /onceMore: 'Encore une fois'/.test(i18n) && /onceMore: 'Una más'/.test(i18n),
@@ -86,7 +88,12 @@ async function run() {
 
     const layout = await page.evaluate(() => {
       try {
-        document.getElementById('sfSplash')?.setAttribute('hidden', '');
+        const splash = document.getElementById('sfSplash');
+        if (splash) {
+          splash.classList.add('is-done');
+          splash.setAttribute('hidden', '');
+          splash.style.pointerEvents = 'none';
+        }
         document.getElementById('fomoRitual')?.setAttribute('hidden', '');
       } catch (_) {}
       UI.showResult(false, {

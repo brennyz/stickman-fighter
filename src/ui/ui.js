@@ -5020,6 +5020,7 @@ const UI = {
     try { this.clearToasts(); } catch (_) {}
     try { this.hideFomoRitual(); } catch (_) {}
     try { if (typeof this.hideGambleRollFlash === 'function') this.hideGambleRollFlash(); } catch (_) {}
+    try { if (typeof dismissSplashOverlay === 'function') dismissSplashOverlay(); } catch (_) {}
     const title = document.getElementById('resTitle');
     if (!title) throw new Error('result DOM missing');
     const titleKey = data.titleKey || (data.mode === 'training'
