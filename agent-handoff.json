@@ -38,6 +38,10 @@
     "pendingUpload": [],
     "pendingMerge": [
       {
+        "pr": 355,
+        "title": "fix(play): pin dead player after death+rotate (playtest #336)"
+      },
+      {
         "pr": 311,
         "title": "playtest-harden-cycles"
       },
@@ -53,9 +57,9 @@
       "id": "w-20260918T164000",
       "from": "user",
       "text": "FIX BOT 30m — Stickman Fighter. Off LIVE main c9a29fc / v1.18.190. Draft PR only. No Versus. speel.html. Until ~19:10 Amsterdam. P1 from playtest #336: After DEATH, rotating portrait↔landscape makes the PLAYER body disappear (enemies may remain). Alive rotate is OK. Fix pinPlayfieldBodies / onResize to pin DEAD player pose onto visible floor after resize. Prove with smoke + screenshots death→rotate both ways. No main merge.",
-      "status": "in-progress",
+      "status": "done-in-code",
       "updated": "2026-09-18",
-      "notes": "Draft cursor/death-rotate-pin-7afb. pinDeadFighterPose + visible letterbox floor. smoke:death-rotate. v1.18.191 / SW 401. No main."
+      "notes": "Draft #355 cursor/death-rotate-pin-7afb. pinDeadFighterPose + visible letterbox floor. smoke:death-rotate both ways. v1.18.191 / SW 401. No main."
     },
     {
       "id": "w-20260918T155700",
@@ -1239,6 +1243,10 @@
   ],
   "sessionLog": [
     {
+      "at": "2026-09-18T16:48:22Z",
+      "summary": "P1 playtest #336: pin dead player pose on visible floor after portrait↔landscape rotate. Draft #355. No main."
+    },
+    {
       "at": "2026-09-18T16:06:11Z",
       "summary": "MEGA-MERGE 20m drafts #333–#327 onto main. v1.18.190 / SW 400. Playtest swarm. SKIP #324. Leave #311."
     },
@@ -1333,10 +1341,6 @@
     {
       "at": "2026-09-18T12:31:56Z",
       "summary": "LANGUAGE: factory desc + nameShort, FOMO/HUD locale, export gear/fabriek i18n. Draft #317, geen main."
-    },
-    {
-      "at": "2026-09-18T12:30:17Z",
-      "summary": "LANGUAGE worker: layout-safe NL/EN/DE/FR/ES copy (factory desc, FOMO, HUD telegraphs). Draft, geen main."
     }
   ],
   "implementedFeaturesSummary": "d18 char select deel 1+2 (v1.11.1-2); Mats coinrun + shuriken mik/vliegers + anti-spam (v1.12.0); speel.html (v1.12.2+). Zie HANDOFF-ZOEKINDEX.md en improvement-d20-bag.json userFeatureLog.",
