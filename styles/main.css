@@ -4054,9 +4054,11 @@
     background: rgba(0,0,0,.35); border: 1px solid rgba(255,255,255,.1);
     text-align: center;
   }
-  #buildingsWallet .buildings-wallet-name {
-    font-size: 9px; font-weight: 800; letter-spacing: .03em; color: #9db1e3;
-    text-transform: uppercase; overflow: hidden; text-overflow: ellipsis; max-width: 100%;
+  #buildingsWallet .buildings-wallet-name,
+  #buildingsWallet .buildings-wallet-lbl {
+    display: block; font-size: 10px; font-weight: 800; letter-spacing: .02em; color: #9db1e3;
+    text-transform: uppercase; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 100%;
+    visibility: visible; opacity: 1;
   }
   #buildingsWallet .buildings-wallet-amt { font-size: 15px; color: #e8f0ff; line-height: 1.1; }
   #buildingsWallet .buildings-wallet-hint { font-size: 9px; color: #7cfc8a; font-weight: 700; opacity: .9; }
@@ -5882,12 +5884,31 @@
       display: grid;
       grid-template-columns: repeat(3, minmax(0, 1fr));
       justify-content: stretch;
+      gap: 6px;
     }
-    #buildingsScreen .buildings-wallet-chip {
+    #buildingsScreen .buildings-wallet-chip,
+    #buildingsWallet .buildings-wallet-chip {
       width: 100%;
       min-width: 0;
       justify-content: space-between;
       padding: 6px 8px;
+    }
+    #buildingsScreen .buildings-wallet-lbl,
+    #buildingsWallet .buildings-wallet-lbl,
+    #buildingsWallet .buildings-wallet-name {
+      display: block;
+      font-size: 10px;
+      font-weight: 800;
+      line-height: 1.15;
+      letter-spacing: .02em;
+      color: #9db1e3;
+      text-transform: uppercase;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      max-width: 100%;
+      visibility: visible;
+      opacity: 1;
     }
     .island-info { padding: 10px 10px; }
     .island-info-chip { padding: 4px 8px; }

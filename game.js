@@ -385,9 +385,9 @@ const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const VERSION_UPDATE_SAVE_KEY = 'stickfighter_version_update_save_v1';
 const VERSION_UPDATE_FLAG_KEY = 'stickfighter_version_update_flag_v1';
 const SAVE_EXPORT_SCHEMA = 3;
-const APP_VERSION = '1.18.190';
+const APP_VERSION = '1.18.191';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 400;
+const SW_CACHE_REV = 401;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', petCoins: 0, dex: {}, summons: {}, pets: {}, activePet: null,
   eggPets: {}, activeEggPet: null, eggDaily: null,
   chestDaily: null, chestWeapons: {},
@@ -2786,18 +2786,6 @@ const I18N = {
       costPc: '{n} PC',
       costRes: '{n} {res}',
       islandFallback: 'eiland {n}',
-      lockedWorldNamed: 'Dicht — speel {name} (eiland {n}) vrij',
-      desc: {
-        produceLocked: 'Maakt {res} na vrij + bouw',
-        produceUnbuilt: 'Bouwen: daarna {res} ({n}/uur)',
-        produce: '{res}: {n}/uur · max {cap}',
-        powerOn: 'Kracht {rank}: {label} — {blurb}',
-        powerNone: 'Geen kracht tot gebouwd',
-        doesUnbuilt: '{res} · bouw om te starten',
-        does: '{res} {n}/uur · {power}',
-        nextPower: ' · kracht: {label}',
-        nextLv: 'Lv {n}: {res} {rate}/uur · {cap}{power}',
-      },
       power: {
         spark_kindle: { label: 'Vonk', blurb: 'Eerste melee per golf laat een sintel achter.' },
         kindle_trail: { label: 'Vonkspoor', blurb: 'Lopen strooit korte sintels.' },
@@ -2837,6 +2825,7 @@ const I18N = {
       echo_whistleSub: 'Echo · Finale-eiland',
       bamboo_boesa_boiler: { name: 'Bamboe-Boesa Ketel' }, echo_whistle_mill: { name: 'Echo-Fluitmolen' },
       res: { spark: 'Vonken', glue: 'Lijm', chip: 'Snippers', steam: 'Stoom', echo: 'Echo', embers: 'sintels', chips: 'chips', echoes: 'echo' },
+      resShort: { spark: 'Vonk', glue: 'Lijm', chip: 'Chip', steam: 'Stoom', echo: 'Echo' },
     },
     rarity: { common: 'Gewoon', uncommon: 'Ongewoon', rare: 'Zeldzaam', epic: 'Episch', legendary: 'Legendarisch', mythic: 'Mythisch', nightmare: 'Nachtmerrie', hell: 'Hel' },
     audio: {
@@ -3230,18 +3219,6 @@ const I18N = {
       costPc: '{n} PC',
       costRes: '{n} {res}',
       islandFallback: 'island {n}',
-      lockedWorldNamed: 'Locked — clear {name} (island {n})',
-      desc: {
-        produceLocked: 'Makes {res} after unlock + build',
-        produceUnbuilt: 'Build: then {res} ({n}/hr)',
-        produce: '{res}: {n}/hr · max {cap}',
-        powerOn: 'Power {rank}: {label} — {blurb}',
-        powerNone: 'No power until built',
-        doesUnbuilt: '{res} · build to start',
-        does: '{res} {n}/hr · {power}',
-        nextPower: ' · power: {label}',
-        nextLv: 'Lv {n}: {res} {rate}/hr · {cap}{power}',
-      },
       power: {
         spark_kindle: { label: 'Spark', blurb: 'First melee each wave leaves an ember.' },
         kindle_trail: { label: 'Trail', blurb: 'Walking drops brief ember crumbs.' },
@@ -3281,6 +3258,7 @@ const I18N = {
       echo_whistleSub: 'Echo · Final island',
       bamboo_boesa_boiler: { name: 'Bamboo-Boesa Boiler' }, echo_whistle_mill: { name: 'Echo-Whistle Mill' },
       res: { spark: 'Spark', glue: 'Glue', chip: 'Chip', steam: 'Steam', echo: 'Echo', embers: 'embers', chips: 'chips', echoes: 'echoes' },
+      resShort: { spark: 'Spark', glue: 'Glue', chip: 'Chip', steam: 'Steam', echo: 'Echo' },
     },
     rarity: { common: 'Common', uncommon: 'Uncommon', rare: 'Rare', epic: 'Epic', legendary: 'Legendary', mythic: 'Mythic', nightmare: 'Nightmare', hell: 'Hell' },
     audio: {
@@ -3440,18 +3418,6 @@ const I18N = {
       costPc: '{n} PC',
       costRes: '{n} {res}',
       islandFallback: 'Insel {n}',
-      lockedWorldNamed: 'Zu — spiel {name} (Insel {n}) frei',
-      desc: {
-        produceLocked: 'Macht {res} nach frei + Bau',
-        produceUnbuilt: 'Bauen: dann {res} ({n}/Std)',
-        produce: '{res}: {n}/Std · max {cap}',
-        powerOn: 'Kraft {rank}: {label} — {blurb}',
-        powerNone: 'Keine Kraft bis gebaut',
-        doesUnbuilt: '{res} · bauen zum Start',
-        does: '{res} {n}/Std · {power}',
-        nextPower: ' · Kraft: {label}',
-        nextLv: 'Lv {n}: {res} {rate}/Std · {cap}{power}',
-      },
       power: {
         spark_kindle: { label: 'Funke', blurb: 'Erster Nahkampf pro Welle hinterlässt Glut.' },
         kindle_trail: { label: 'Pfad', blurb: 'Laufen streut kurze Glutkrümel.' },
@@ -3491,6 +3457,7 @@ const I18N = {
       echo_whistleSub: 'Echo · Finalinsel',
       bamboo_boesa_boiler: { name: 'Bambus-Boesa-Kessel' }, echo_whistle_mill: { name: 'Echo-Pfeifenmühle' },
       res: { spark: 'Funken', glue: 'Leim', chip: 'Span', steam: 'Dampf', echo: 'Echo', embers: 'Glut', chips: 'Späne', echoes: 'Echos' },
+      resShort: { spark: 'Funke', glue: 'Leim', chip: 'Span', steam: 'Dampf', echo: 'Echo' },
     },
     modes: { adventure: 'Abenteuer', training: 'Training', wall: 'Mauer', versus: '2 Spieler', coinrun: 'Münzen' },
     pause: {
@@ -3878,18 +3845,6 @@ const I18N = {
       costPc: '{n} PC',
       costRes: '{n} {res}',
       islandFallback: 'île {n}',
-      lockedWorldNamed: 'Fermé — gagne {name} (île {n})',
-      desc: {
-        produceLocked: 'Fait {res} après débloc + construire',
-        produceUnbuilt: 'Construire : puis {res} ({n}/h)',
-        produce: '{res} : {n}/h · max {cap}',
-        powerOn: 'Pouvoir {rank} : {label} — {blurb}',
-        powerNone: 'Pas de pouvoir avant construction',
-        doesUnbuilt: '{res} · construire pour partir',
-        does: '{res} {n}/h · {power}',
-        nextPower: ' · pouvoir : {label}',
-        nextLv: 'Nv {n} : {res} {rate}/h · {cap}{power}',
-      },
       power: {
         spark_kindle: { label: 'Étincelle', blurb: 'Premier corps-à-corps de vague laisse une braise.' },
         kindle_trail: { label: 'Sillage', blurb: 'Marcher sème de brèves braises.' },
@@ -3929,6 +3884,7 @@ const I18N = {
       echo_whistleSub: 'Écho · île Finale',
       bamboo_boesa_boiler: { name: 'Chaudière Bambou-Boesa' }, echo_whistle_mill: { name: 'Moulin Echo-Sifflet' },
       res: { spark: 'étincelles', glue: 'colle', chip: 'copeau', steam: 'vapeur', echo: 'écho', embers: 'braises', chips: 'copeaux', echoes: 'échos' },
+      resShort: { spark: 'Étinc', glue: 'Colle', chip: 'Cope', steam: 'Vap', echo: 'Écho' },
     },
     modes: { adventure: 'Aventure', training: 'Entraînement', wall: 'Mur', versus: '2 joueurs', coinrun: 'Pièces' },
     pause: {
@@ -4319,18 +4275,6 @@ const I18N = {
       costPc: '{n} PC',
       costRes: '{n} {res}',
       islandFallback: 'isla {n}',
-      lockedWorldNamed: 'Cerrado — gana {name} (isla {n})',
-      desc: {
-        produceLocked: 'Hace {res} tras desbloqueo + construir',
-        produceUnbuilt: 'Construir: luego {res} ({n}/h)',
-        produce: '{res}: {n}/h · máx {cap}',
-        powerOn: 'Poder {rank}: {label} — {blurb}',
-        powerNone: 'Sin poder hasta construir',
-        doesUnbuilt: '{res} · construye para empezar',
-        does: '{res} {n}/h · {power}',
-        nextPower: ' · poder: {label}',
-        nextLv: 'Nv {n}: {res} {rate}/h · {cap}{power}',
-      },
       power: {
         spark_kindle: { label: 'Chispa', blurb: 'El primer melee de oleada deja brasa.' },
         kindle_trail: { label: 'Rastro', blurb: 'Andar suelta brasas breves.' },
@@ -4370,6 +4314,7 @@ const I18N = {
       echo_whistleSub: 'Eco · isla Final',
       bamboo_boesa_boiler: { name: 'Caldera Bambú-Boesa' }, echo_whistle_mill: { name: 'Molino Eco-Silbido' },
       res: { spark: 'chispas', glue: 'cola', chip: 'astilla', steam: 'vapor', echo: 'eco', embers: 'brasas', chips: 'astillas', echoes: 'ecos' },
+      resShort: { spark: 'Chispa', glue: 'Cola', chip: 'Astil', steam: 'Vapor', echo: 'Eco' },
     },
     modes: { adventure: 'Aventura', training: 'Entrenamiento', wall: 'Muro', versus: '2 jugadores', coinrun: 'Monedas' },
     pause: {
@@ -13614,6 +13559,20 @@ function buildingIslandName(world) {
   return buildingTxt('buildings.islandFallback', 'eiland {n}', { n });
 }
 
+/** Card does-line must stay ≤42 and skip rank/hopper lecture (smoke:buildings-ui doesShort). */
+function buildingClampDoesLine(line) {
+  let s = String(line == null ? '' : line).replace(/\s+/g, ' ').trim();
+  if (!s) return '';
+  s = s.replace(/Kracht rank|Power rank|hopper max/gi, '').replace(/\s+/g, ' ').trim();
+  if (s.length <= 42) return s;
+  const sep = s.lastIndexOf(' · ');
+  if (sep >= 8 && sep <= 42) return s.slice(0, sep).trim();
+  let cut = s.slice(0, 42);
+  const sp = cut.lastIndexOf(' ');
+  if (sp >= 10) cut = cut.slice(0, sp);
+  return cut.replace(/[·,\-–:]+$/g, '').trim();
+}
+
 function buildingWalletModel(st) {
   const s = ensureBuildingSave(st);
   if (s) buildingTickAll(s);
@@ -13713,7 +13672,7 @@ function buildingDescModel(id, st) {
       blurb: buildingPowerBlurb(currentPower),
     })
     : buildingTxt('buildings.desc.powerNone', 'Bouw voor kracht');
-  const doesLine = !tip.unlocked
+  const doesLineRaw = !tip.unlocked
     ? unlockLine
     : !tip.built
       ? buildingTxt('buildings.desc.doesUnbuilt', '{res} · bouw', { res: tip.resourceName })
@@ -13722,6 +13681,8 @@ function buildingDescModel(id, st) {
         n: tip.outputRate,
         power: currentPower ? buildingPowerLabel(currentPower) : '—',
       });
+  const doesLine = buildingClampDoesLine(doesLineRaw);
+  const doesShort = doesLine;
   let nextLine = '';
   if (tip.built && tip.level < tip.maxLevel) {
     const nextLv = tip.level + 1;
@@ -13759,6 +13720,7 @@ function buildingDescModel(id, st) {
     produceLine,
     powerLine,
     doesLine,
+    doesShort,
     unlockLine,
     nextLine,
     islandName,
@@ -13854,6 +13816,7 @@ try {
     globalThis.BUILDING_BY_ID = BUILDING_BY_ID;
     globalThis.buildingResourceIds = buildingResourceIds;
     globalThis.buildingDescModel = buildingDescModel;
+    globalThis.buildingClampDoesLine = buildingClampDoesLine;
     globalThis.buildingWalletModel = buildingWalletModel;
     globalThis.buildingArtSrc = buildingArtSrc;
     globalThis.buildingCostLabel = buildingCostLabel;
@@ -20604,6 +20567,26 @@ function buildingsI18nName(id) {
   }
   return id;
 }
+function buildingsI18nShort(id) {
+  if (typeof tOr === 'function') {
+    const s = tOr('buildings.' + id + '.nameShort', '');
+    if (s && s !== 'buildings.' + id + '.nameShort') return s;
+  }
+  if (typeof t === 'function') {
+    const nested = t('buildings.' + id + '.nameShort');
+    if (nested && nested !== 'buildings.' + id + '.nameShort') return nested;
+  }
+  return buildingsI18nName(id);
+}
+function buildingsUpgradeOkShort(id, lv) {
+  const short = buildingsI18nShort(id);
+  if (typeof tOr === 'function') return tOr('buildings.upgradeOkShort', '{short} · Lv {lv}', { short, lv });
+  if (typeof t === 'function') {
+    const s = t('buildings.upgradeOkShort', { short, lv });
+    if (s && s !== 'buildings.upgradeOkShort') return s;
+  }
+  return short + ' · Lv ' + lv;
+}
 function buildingsI18nSub(id) {
   if (typeof tOr === 'function') return tOr('buildings.' + id + '.blurb', tOr('buildings.' + id + 'Sub', ''));
   if (typeof t === 'function') {
@@ -20948,9 +20931,7 @@ const BuildingsStub = {
     return {
       ok: true,
       level: row.lv,
-      message: (typeof t === 'function')
-        ? t('buildings.upgradeOk', { name: buildingsI18nName(def.id), lv: row.lv })
-        : ('Lv ' + row.lv),
+      message: buildingsUpgradeOkShort(def.id, row.lv),
     };
   },
   hubStat() {
@@ -21066,9 +21047,7 @@ const BuildingsLiveSys = {
       ok,
       level: res && res.level,
       message: ok
-        ? ((typeof t === 'function')
-          ? t('buildings.upgradeOk', { name: buildingsI18nName(id), lv: res.level })
-          : ('Lv ' + (res && res.level)))
+        ? buildingsUpgradeOkShort(id, res && res.level)
         : ((typeof t === 'function')
           ? (res && res.reason === 'broke' ? t('buildings.upgradeNeed', { need: 1 }) : t('buildings.locked'))
           : 'no'),
@@ -56926,9 +56905,32 @@ function buildingsDesc(id, view) {
   return null;
 }
 
+function buildingsClampDoes(line) {
+  if (typeof buildingClampDoesLine === 'function') return buildingClampDoesLine(line);
+  let s = String(line == null ? '' : line).replace(/\s+/g, ' ').trim();
+  if (s.length <= 42 && !/Kracht rank|Power rank|hopper max/i.test(s)) return s;
+  s = s.replace(/Kracht rank|Power rank|hopper max/gi, '').replace(/\s+/g, ' ').trim();
+  if (s.length <= 42) return s;
+  const sep = s.lastIndexOf(' · ');
+  if (sep >= 8 && sep <= 42) return s.slice(0, sep).trim();
+  let cut = s.slice(0, 42);
+  const sp = cut.lastIndexOf(' ');
+  if (sp >= 10) cut = cut.slice(0, sp);
+  return cut.replace(/[·,\-–:]+$/g, '').trim();
+}
+
 function buildingsDoesLine(view) {
   const desc = buildingsDesc(view && view.id, view) || view || {};
-  return desc.doesLine || view.doesLine || view.sub || view.blurb || '';
+  return buildingsClampDoes(desc.doesShort || desc.doesLine || view.doesLine || view.sub || view.blurb || '');
+}
+
+function buildingsWalletChipLabel(row) {
+  const id = row && row.id;
+  if (id) {
+    const short = buildingsTxt('buildings.resShort.' + id, '');
+    if (short && short !== 'buildings.resShort.' + id) return short;
+  }
+  return (row && (row.label || row.name)) || id || '';
 }
 
 function buildingsWalletSnap() {
@@ -57540,14 +57542,13 @@ if (typeof UI === 'object' && UI) {
       const hintHtml = hint ? '<span class="' + hintCls + '">' + buildingsEscape(hint) + '</span>' : '';
       return '<span class="buildings-wallet-chip buildings-wallet-pill' + flash + (full ? ' is-full' : '') + '" data-res="' + buildingsEscape(row.id)
         + '" data-res-id="' + buildingsEscape(row.id) + '">'
-        + '<span class="buildings-wallet-lbl buildings-wallet-name">' + buildingsEscape(row.label) + '</span>'
+        + '<span class="buildings-wallet-lbl buildings-wallet-name">' + buildingsEscape(buildingsWalletChipLabel(row)) + '</span>'
         + '<span class="buildings-wallet-amt">' + buildingsEscape(buildingsFmtAmt(row.amount)) + '</span>'
         + hintHtml + '</span>';
     });
     walletEl.classList.add('buildings-wallet');
-    walletEl.innerHTML =
-      '<div class="buildings-wallet-pc-line">' + chips[0] + '</div>'
-      + '<div class="buildings-wallet-row">' + pills.join('') + '</div>';
+    walletEl.setAttribute('data-wallet-labeled', '1');
+    walletEl.innerHTML = chips[0] + pills.join('');
   };
 
   UI.renderBuildings = function renderBuildings(opts) {
@@ -57684,7 +57685,7 @@ if (typeof UI === 'object' && UI) {
 
   UI.buildingsEffectHtml = function buildingsEffectHtml(view) {
     const desc = buildingsDesc(view && view.id, view) || view || {};
-    const does = desc.doesLine || view.doesLine || '';
+    const does = buildingsClampDoes(desc.doesShort || desc.doesLine || view.doesLine || '');
     const bits = [];
     bits.push('<div class="buildings-effect" data-buildings-effect="' + buildingsEscape(view && view.id) + '">');
     bits.push('<div class="buildings-effect-kicker">' + buildingsEscape(buildingsTxt('buildings.whatItDoes', 'Wat doet dit?')) + '</div>');
@@ -57804,7 +57805,7 @@ if (typeof UI === 'object' && UI) {
       + '<div class="buildings-sheet-panel" role="dialog" aria-modal="true">'
       + '<h3>' + buildingsEscape(title) + '</h3>'
       + (desc.nextLine ? '<p class="buildings-sheet-now buildings-next">' + buildingsEscape(desc.nextLine) + '</p>'
-        : (desc.doesLine ? '<p class="buildings-sheet-now">' + buildingsEscape(desc.doesLine) + '</p>' : ''))
+        : (desc.doesLine ? '<p class="buildings-sheet-now">' + buildingsEscape(buildingsClampDoes(desc.doesLine)) + '</p>' : ''))
       + '<p class="buildings-upgrade-ask buildings-sheet-why">' + buildingsEscape(atMax
         ? buildingsTxt('buildings.upgradeMax', 'Max level')
         : ask) + '</p>'
@@ -57958,6 +57959,7 @@ if (typeof UI === 'object' && UI) {
       const lv = Math.max(1, Math.floor(Number((res && res.level) != null ? res.level : (after && after.level)) || 1));
       const short = buildingsShortName(id, after);
       const msg = buildingsTxt('buildings.upgradeOkShort', '{short} · Lv {lv}', { short, lv });
+      try { this.clearToasts(); } catch (_) {}
       try { this.toast(msg, 2000, { tone: 'ok' }); } catch (_) {}
       this.buildingsStep = 'harvest';
       if (this._buildingsSheetFrom === 'list') {

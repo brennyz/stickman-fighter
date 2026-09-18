@@ -31,6 +31,7 @@ rg -l "handoff|coinrun|projAimVelocity|charSelectScreen|ASSET-STYLE" .
 | **Landscape combat camera/canvas** | 1.18.190 | this branch | `alignCombatPlayfield` / `combatViewAlign` · `#game --vv-*` · resize-before-spawn · `smoke:landscape-combat`. Versus out. |
 | **Phone HUD keep-out (~390×844)** | 1.18.186 | main | `hudSafeLayout` / pause gutter · compact combat+wall/train · sheet bottoms · `smoke:hud-phone`. Versus out. |
 | **MOTION lived-in + Styles head** | 1.18.170 | #301 `cursor/equip-look-head-a6cb` | `src/render/live-fx.js` ready/flame/spark/cloth; `fighter.pose` idle; gear doll rAF. Versus out. |
+| **Factories MM-003 wallet/does** | 1.18.191 | this branch | 390 wallet labeled · does-line ≤42 · upgrade `Lv` toast · `smoke:buildings-ui` · Versus out |
 | **Buildings UX unclunk** | 1.18.177 | this branch | cards + collect-all i18n · pill 8u tip · sheet chips · empty start · `src/ui/buildings-ui.js` |
 | **Buildings UI harden** | 1.18.168 | this branch | list→detail · `#buildingsWallet` · collect once · `src/ui/buildings-ui.js` |
 | **Buildings powers + timed loot (4/4)** | 1.18.165 | this branch | binds #292 ids `stick_lighter`…`echo_whistle` · factories/wallet · `src/data/buildings-powers.js` |

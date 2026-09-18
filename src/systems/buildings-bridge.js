@@ -60,6 +60,26 @@ function buildingsI18nName(id) {
   }
   return id;
 }
+function buildingsI18nShort(id) {
+  if (typeof tOr === 'function') {
+    const s = tOr('buildings.' + id + '.nameShort', '');
+    if (s && s !== 'buildings.' + id + '.nameShort') return s;
+  }
+  if (typeof t === 'function') {
+    const nested = t('buildings.' + id + '.nameShort');
+    if (nested && nested !== 'buildings.' + id + '.nameShort') return nested;
+  }
+  return buildingsI18nName(id);
+}
+function buildingsUpgradeOkShort(id, lv) {
+  const short = buildingsI18nShort(id);
+  if (typeof tOr === 'function') return tOr('buildings.upgradeOkShort', '{short} · Lv {lv}', { short, lv });
+  if (typeof t === 'function') {
+    const s = t('buildings.upgradeOkShort', { short, lv });
+    if (s && s !== 'buildings.upgradeOkShort') return s;
+  }
+  return short + ' · Lv ' + lv;
+}
 function buildingsI18nSub(id) {
   if (typeof tOr === 'function') return tOr('buildings.' + id + '.blurb', tOr('buildings.' + id + 'Sub', ''));
   if (typeof t === 'function') {
@@ -404,9 +424,7 @@ const BuildingsStub = {
     return {
       ok: true,
       level: row.lv,
-      message: (typeof t === 'function')
-        ? t('buildings.upgradeOk', { name: buildingsI18nName(def.id), lv: row.lv })
-        : ('Lv ' + row.lv),
+      message: buildingsUpgradeOkShort(def.id, row.lv),
     };
   },
   hubStat() {
@@ -522,9 +540,7 @@ const BuildingsLiveSys = {
       ok,
       level: res && res.level,
       message: ok
-        ? ((typeof t === 'function')
-          ? t('buildings.upgradeOk', { name: buildingsI18nName(id), lv: res.level })
-          : ('Lv ' + (res && res.level)))
+        ? buildingsUpgradeOkShort(id, res && res.level)
         : ((typeof t === 'function')
           ? (res && res.reason === 'broke' ? t('buildings.upgradeNeed', { need: 1 }) : t('buildings.locked'))
           : 'no'),
