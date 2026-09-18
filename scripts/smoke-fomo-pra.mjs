@@ -81,6 +81,9 @@ if (!/body\.fomo-open #summonTut/.test(css)) {
 if (!/_syncFomoHubLock/.test(ui) || !/is-fomo/.test(ui)) {
   fail('EX-021: FOMO hub lock (_syncFomoHubLock / is-fomo) missing');
 }
+if (!/_shortLandscapeFomoPlayUnlock/.test(ui) || !/is-fomo-land-play/.test(ui)) {
+  fail('EX-021: short-landscape Avontuur unlock (_shortLandscapeFomoPlayUnlock) missing');
+}
 
 if (/fomo-ritual-sheet[\s\S]{0,220}max-height:\s*min\(78vh/.test(css)) {
   fail('EX-021: Vandaag sheet still 78vh — covers HOME on 390px');

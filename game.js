@@ -385,9 +385,9 @@ const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const VERSION_UPDATE_SAVE_KEY = 'stickfighter_version_update_save_v1';
 const VERSION_UPDATE_FLAG_KEY = 'stickfighter_version_update_flag_v1';
 const SAVE_EXPORT_SCHEMA = 3;
-const APP_VERSION = '1.18.190';
+const APP_VERSION = '1.18.191';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 400;
+const SW_CACHE_REV = 401;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', petCoins: 0, dex: {}, summons: {}, pets: {}, activePet: null,
   eggPets: {}, activeEggPet: null, eggDaily: null,
   chestDaily: null, chestWeapons: {},
@@ -53607,22 +53607,56 @@ const UI = {
     }
   },
 
+  /* P1 #338: 844×390 docks Vandaag left — painted Avontuur must stay live.
+     Portrait ~390 hub lock (inert + pointer-events:none) stays. */
+  _shortLandscapeFomoPlayUnlock() {
+    try {
+      return !!(window.matchMedia
+        && window.matchMedia('(orientation: landscape) and (max-height: 520px)').matches);
+    } catch (_) {
+      return false;
+    }
+  },
+
+  _ensureFomoHubLockViewport() {
+    if (this._fomoLockVpBound) return;
+    this._fomoLockVpBound = true;
+    const resync = () => {
+      try {
+        const el = document.getElementById('fomoRitual');
+        this._syncFomoHubLock(!!(el && !el.hidden));
+      } catch (_) {}
+    };
+    try {
+      const mq = window.matchMedia('(orientation: landscape) and (max-height: 520px)');
+      if (mq.addEventListener) mq.addEventListener('change', resync);
+      else if (mq.addListener) mq.addListener(resync);
+    } catch (_) {}
+  },
+
   _syncFomoHubLock(open) {
+    this._ensureFomoHubLockViewport();
     const on = !!open;
     const menu = document.getElementById('menuScreen');
     const el = document.getElementById('fomoRitual');
+    const landPlay = on && this._shortLandscapeFomoPlayUnlock();
     document.body.classList.toggle('is-fomo', on);
     document.body.classList.toggle('fomo-open', on);
     document.body.classList.toggle('fomo-ritual-open', on);
+    document.body.classList.toggle('fomo-land-play', landPlay);
     if (menu) {
       menu.classList.toggle('is-fomo', on);
+      menu.classList.toggle('is-fomo-land-play', landPlay);
       const chrome = menu.querySelector('.menu-chrome');
       const stage = menu.querySelector('.menu-stage');
-      [chrome, stage].forEach((node) => {
-        if (!node) return;
-        if (on) node.setAttribute('inert', '');
-        else node.removeAttribute('inert');
-      });
+      if (chrome) {
+        if (on && !landPlay) chrome.setAttribute('inert', '');
+        else chrome.removeAttribute('inert');
+      }
+      if (stage) {
+        if (on) stage.setAttribute('inert', '');
+        else stage.removeAttribute('inert');
+      }
     }
     if (el) el.setAttribute('aria-hidden', on ? 'false' : 'true');
     const hint = document.getElementById('menuHubHint');

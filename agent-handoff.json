@@ -50,6 +50,14 @@
   },
   "userWishlist": [
     {
+      "id": "w-20260918T164000",
+      "from": "user",
+      "text": "FIX BOT 30m — P1 from #338: landscape 844×390 Vandaag/FOMO open leaves Avontuur visible but inert. Short-landscape only: keep Avontuur (and play CTA) tappable OR auto-dismiss on Avontuur tap. Portrait 390 lock may stay. Prove smoke:landscape-begin. Draft only. No Versus. No main.",
+      "status": "in-progress",
+      "updated": "2026-09-18",
+      "notes": "Off main. Draft PR."
+    },
+    {
       "id": "w-20260918T155700",
       "from": "user",
       "text": "MEGA-MERGE Stickman 20m-session drafts to main. Brendon wants playtest swarm on a fixed build next. Priority: #333 invisible fighters, #325 landscape combat camera/floor, #334 examinator feel (keep pauseG), #329 landscape begin/HOME SPELEN + FOMO dock, #332 telegraph readability (keep #314 density), #331 landscape touch, #328 first-30s teach, #330 combat juice, #326 death-retry polish, #327 fxLite if mergeable. No Versus. speel.html. No force-push. Conflict: keep #333 drawCombatants+recover, #325 viewport/floor, #334 pauseG HUD, #329 two-col SPELEN + FOMO left dock, #323/#326 fat gold Nog één keer + restartAdventureInstant.",
