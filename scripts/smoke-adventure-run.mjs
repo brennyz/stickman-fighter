@@ -115,6 +115,21 @@ async function run() {
       lift: (typeof combatMeleeAimLift === 'function') ? combatMeleeAimLift(vp) : null,
       gate: (typeof combatPartGateWalkSec === 'function') ? combatPartGateWalkSec(vp) : null,
     };
+    const phoneCad = (typeof combatDensityProfile === 'function') ? combatDensityProfile(vp) : null;
+    const openerStrike = {
+      hold: (typeof combatOpenerHold === 'function') ? combatOpenerHold(0, vp) : null,
+      openIv: (typeof adventureSpawnCadence === 'function')
+        ? adventureSpawnCadence(2, true, false, 1.55, phoneCad, 0).interval : null,
+      wave2iv: (typeof adventureSpawnCadence === 'function')
+        ? adventureSpawnCadence(4, false, false, 1, phoneCad, 5).interval : null,
+      lateIv: (typeof adventureSpawnCadence === 'function')
+        ? adventureSpawnCadence(4, false, false, 1, phoneCad, 31).interval : null,
+      edge: (typeof combatSpawnEdgeX === 'function') ? combatSpawnEdgeX(1, vp) : null,
+      swipeOld42: (typeof combatJoySwipeAccepts === 'function')
+        ? combatJoySwipeAccepts(150, 700, 390, 844, vp) : null,
+      nearKick: (typeof combatPreferStrike === 'function')
+        ? !!(combatPreferStrike(230, 800, [{ id: 'kick', x: 268, y: 800, r: 24 }], { x: 64, y: 800 }, vp)) : null,
+    };
     const colossalProbe = {
       w: vp.w,
       h: vp.h,
@@ -209,6 +224,7 @@ async function run() {
       colossalProbe,
       enrageLootProbe: { hellWalk, lootFan },
       flyerGateProbe: flyerGate,
+      openerStrikeProbe: openerStrike,
       teleHudProbe: {
         n: hudMocks.length,
         shown: hudPick.length,
@@ -243,6 +259,12 @@ async function run() {
   if (!(fg.hover === 110 && fg.lift === 96 && fg.gate === 2.2)) {
     result.ok = false;
     result.errors = (result.errors || []).concat(['flyer-gate:phone ' + JSON.stringify(fg)]);
+  }
+  const op = result.openerStrikeProbe || {};
+  if (!(op.hold === 0.55 && op.openIv >= 0.70 && op.openIv <= 1.12 && op.wave2iv >= 0.70 && op.wave2iv <= 1.12
+    && op.lateIv > 0.50 && op.lateIv < 0.60 && op.edge === 408 && op.swipeOld42 === false && op.nearKick === true)) {
+    result.ok = false;
+    result.errors = (result.errors || []).concat(['opener-strike:phone ' + JSON.stringify(op)]);
   }
 
   await browser.close();
