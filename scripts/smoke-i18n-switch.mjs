@@ -116,6 +116,14 @@ async function run() {
       const tFin3 = typeof t === 'function' ? t('daily.finisher3.text') : '';
       const tDexApp = typeof t === 'function' ? t('ui.dexAppears', { lv: 5 }) : '';
       const tFomoCta = typeof t === 'function' ? t('fomo.ritualCtaSummon') : '';
+      const tLogEmpty = typeof t === 'function' ? t('ui.summonLogEmpty') : '';
+      const tPullEmpty = typeof t === 'function' ? t('ui.summonPullEmpty') : '';
+      const tNoPulls = typeof t === 'function' ? t('ui.summonNoPulls') : '';
+      const tGearEmpty = typeof t === 'function' ? t('gear.empty') : '';
+      const tFilterEmpty = typeof t === 'function' ? t('gear.filterEmpty') : '';
+      const tPetNone = typeof t === 'function' ? t('ui.petNone') : '';
+      const tToastPet = typeof t === 'function' ? t('toast.petNone') : '';
+      const tEggUnhatched = typeof t === 'function' ? t('ui.eggUnhatched') : '';
       let collectTitle = '';
       let collectGear = '';
       try {
@@ -141,6 +149,7 @@ async function run() {
         tErrRetry, tOpenMode, tDaily, tFightHiccup, tAchLv70, tAchZone,
         tPickRem, tKillRem, tRunRem, tPick3, tHelp0, tFirstMin, tPetTip, petSub,
         tSummonOpen, tSummonPull, tLootHead, tBanSummon, tSetSub, tAudio, tFin3, tDexApp, tFomoCta,
+        tLogEmpty, tPullEmpty, tNoPulls, tGearEmpty, tFilterEmpty, tPetNone, tToastPet, tEggUnhatched,
       };
     }
     const en = snap('en');
@@ -170,6 +179,10 @@ async function run() {
       && /Move · punch/.test(en.tFirstMin) && !/First minute:/.test(en.tFirstMin) && en.tFirstMin.length < 56
       && /Coin bonus/.test(en.tPetTip) && !/monster book|monsterboek/.test(en.tPetTip)
       && /Open chest/.test(en.tSummonPull + en.tSummonOpen)
+      && /No pulls/.test(en.tLogEmpty) && /Done/.test(en.tPullEmpty)
+      && /empty|Empty/.test(en.tGearEmpty) && /Nothing/.test(en.tFilterEmpty)
+      && /none/.test(en.tPetNone) && /No active pet/.test(en.tToastPet)
+      && /Not hatched/.test(en.tEggUnhatched)
       && en.playState === 'play' && /train/.test(en.playMode);
     const deOk = /Abenteuer/i.test(de.adv) && /Sammlung/i.test(de.collect)
       && /Waffen/i.test(de.weapons) && /Einstellungen/i.test(de.settings)
@@ -208,6 +221,11 @@ async function run() {
       && /Ton/.test(de.tSetSub) && !/Sound/.test(de.tSetSub)
       && /frei/.test(de.tDexApp) && !/Unlock/.test(de.tDexApp)
       && /Kisten/.test(de.tFomoCta) && !/Summon/i.test(de.tFomoCta)
+      && /Züge/.test(de.tLogEmpty + de.tNoPulls) && !/pulls/i.test(de.tLogEmpty + de.tNoPulls)
+      && de.tPullEmpty === 'Leer' && !/Done/.test(de.tPullEmpty)
+      && /Leer/.test(de.tGearEmpty) && /Nichts/.test(de.tFilterEmpty)
+      && /keine/.test(de.tPetNone) && /Kein aktives Pet/.test(de.tToastPet)
+      && /geschlüpft/.test(de.tEggUnhatched) && !/Not hatched|Nog niet/.test(de.tEggUnhatched)
       && de.playState === 'play' && /train/.test(de.playMode);
     const nlOk = /Avontuur/.test(nl.adv) && /Collectie/.test(nl.collect)
       && /Wapens/.test(nl.weapons) && /Instellingen/.test(nl.settings)
@@ -225,6 +243,9 @@ async function run() {
       && /Munten-bonus/.test(nl.tPetTip) && !/monsterboek/.test(nl.tPetTip)
       && /Open kist/.test(nl.tSummonPull + nl.tSummonOpen)
       && /monsterboek|arcade/.test(nl.petSub) && !/cosmetisch of assist/.test(nl.petSub)
+      && /trekkingen/.test(nl.tLogEmpty + nl.tNoPulls) && !/pulls/i.test(nl.tLogEmpty + nl.tNoPulls)
+      && /Leeg/.test(nl.tGearEmpty) && /Niets/.test(nl.tFilterEmpty)
+      && /geen/.test(nl.tPetNone) && /uitgekomen/.test(nl.tEggUnhatched)
       && nl.playState === 'play' && /train/.test(nl.playMode);
     const frOk = /Pas encore trouvé/.test(fr.tGearLock) && !EN_LOCK.test(fr.tGearLock)
       && /Aide saut/.test(fr.tPerk) && /Galet/.test(fr.tEgg) && !DUTCH_COPY.test(fr.tPerk + fr.tEgg + fr.tGearLock + fr.tPetSum)
@@ -255,6 +276,10 @@ async function run() {
       && /Ambiance/.test(fr.tAudio) && !/Mood|soundtrack/.test(fr.tAudio)
       && /coups finaux/.test(fr.tFin3) && !/finisher/i.test(fr.tFin3)
       && /coffre/.test(fr.tFomoCta) && !/Summon/i.test(fr.tFomoCta)
+      && /tirage/.test(fr.tLogEmpty + fr.tNoPulls) && !/pulls/i.test(fr.tLogEmpty + fr.tNoPulls)
+      && /Vide/.test(fr.tPullEmpty + fr.tGearEmpty) && /Rien/.test(fr.tFilterEmpty)
+      && /aucun/.test(fr.tPetNone) && /éclos/.test(fr.tEggUnhatched)
+      && !/No pulls|Done|Nothing in this filter|Not hatched/.test(fr.tLogEmpty + fr.tPullEmpty + fr.tFilterEmpty + fr.tEggUnhatched)
       && fr.playState === 'play' && /train/.test(fr.playMode);
     const esOk = /Aún no hallado/.test(es.tGearLock) && !EN_LOCK.test(es.tGearLock)
       && /Ayuda salto/.test(es.tPerk) && /Guijarro/.test(es.tEgg) && !DUTCH_COPY.test(es.tPerk + es.tEgg + es.tGearLock + es.tPetSum)
@@ -285,6 +310,10 @@ async function run() {
       && /Ambiente/.test(es.tAudio) && !/Mood/.test(es.tAudio)
       && /remates/.test(es.tFin3) && !/finisher/i.test(es.tFin3)
       && /cofre/.test(es.tFomoCta) && !/Summon/i.test(es.tFomoCta)
+      && /tiradas/.test(es.tLogEmpty + es.tNoPulls) && !/pulls/i.test(es.tLogEmpty + es.tNoPulls)
+      && /Vacío/.test(es.tPullEmpty + es.tGearEmpty) && /Nada/.test(es.tFilterEmpty)
+      && /ninguno/.test(es.tPetNone) && /eclosionado/.test(es.tEggUnhatched)
+      && !/No pulls|Done|Nothing in this filter|Not hatched/.test(es.tLogEmpty + es.tPullEmpty + es.tFilterEmpty + es.tEggUnhatched)
       && es.playState === 'play' && /train/.test(es.playMode);
     return { ok: !!(enOk && deOk && nlOk && frOk && esOk), en, de, nl, fr, es, enOk, deOk, nlOk, frOk, esOk };
   });

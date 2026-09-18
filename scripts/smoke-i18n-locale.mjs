@@ -412,6 +412,30 @@ if (/Kaufen oder im Monsterbuch zähmen/.test(deChrome + locales)) fail('DE petC
 if (/Dex-pets via monsterboek · Ei-pets via dagelijkse/.test(html)) fail('petScreenSub HTML still a wall');
 if (!/summonOpen: 'Ouvrir'/.test(locales)) fail('FR ui.summonOpen missing — EN Open chest leak');
 if (!/summonOpen: 'Abrir'/.test(locales)) fail('ES ui.summonOpen missing — EN Open chest leak');
+const deOverlayUi = locales.split('overlayI18nCatalog(CATALOG_DE')[1] || '';
+if (!/summonLogEmpty: 'Heute noch keine Züge/.test(deOverlayUi)) {
+  fail('DE overlay ui.summonLogEmpty missing — EN No pulls leak after overlay wipe');
+}
+if (!/summonPullEmpty: 'Leer'/.test(deOverlayUi)) {
+  fail('DE overlay ui.summonPullEmpty missing — EN Done leak after overlay wipe');
+}
+if (!/summonNoPulls: 'Heute noch keine Züge/.test(deOverlayUi)) {
+  fail('DE overlay ui.summonNoPulls missing');
+}
+if (!/summonLogEmpty: 'Pas encore de tirage/.test(locales)) fail('FR ui.summonLogEmpty missing');
+if (!/summonLogEmpty: 'Aún no hay tiradas/.test(locales)) fail('ES ui.summonLogEmpty missing');
+if (!/summonNoPulls: 'Pas encore de tirage/.test(locales)) fail('FR ui.summonNoPulls missing — EN pulls leak');
+if (!/summonNoPulls: 'Aún no hay tiradas/.test(locales)) fail('ES ui.summonNoPulls missing — EN pulls leak');
+if (/summonNoPulls: 'Nog geen pulls/.test(catalog)) fail('NL ui.summonNoPulls still English pulls');
+if (!/filterEmpty: 'Rien dans ce filtre'/.test(catalog)) fail('FR gear.filterEmpty missing');
+if (!/filterEmpty: 'Nada en este filtro'/.test(catalog)) fail('ES gear.filterEmpty missing');
+if (!/filterEmpty: 'Nichts in diesem Filter'/.test(deChrome)) fail('DE gear.filterEmpty missing');
+if (!/eggUnhatched: 'Pas encore éclos'/.test(locales)) fail('FR ui.eggUnhatched missing');
+if (!/eggUnhatched: 'Aún no eclosionado'/.test(locales)) fail('ES ui.eggUnhatched missing');
+if (!/eggUnhatched: 'Noch nicht geschlüpft'/.test(deOverlayUi + deChrome)) fail('DE ui.eggUnhatched missing');
+if (!/petNone: 'Pas de pet actif'/.test(locales)) fail('FR toast.petNone missing');
+if (!/petNone: 'Sin pet activo'/.test(locales)) fail('ES toast.petNone missing');
+if (!/petNone: 'Kein aktives Pet'/.test(locales)) fail('DE toast.petNone missing');
 if (/tOr\('ui\.summonOpen'/.test(ui)) fail('summon CTA still Dutch/EN tOr fallback');
 if (!/t\('ui\.summonPull'\)/.test(ui)) fail('summon CTA must use ui.summonPull');
 if (!/max-width: 430px/.test(css)) fail('430px overlap media missing');

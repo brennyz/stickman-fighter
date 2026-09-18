@@ -816,7 +816,7 @@ function seedNlGameStrings() {
     summonOpenAria: 'Open kist, {n} over',
     summonNoMore: 'Geen oproepen meer vandaag',
     summonOpening: 'Kist opent…',
-    summonNoPulls: 'Nog geen pulls vandaag.',
+    summonNoPulls: 'Nog geen trekkingen vandaag.',
     summonFail: 'Summon mislukt — probeer opnieuw',
     boss: 'BAAS',
     topHunter: 'Top jager',

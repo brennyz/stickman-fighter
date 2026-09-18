@@ -323,9 +323,9 @@ const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const VERSION_UPDATE_SAVE_KEY = 'stickfighter_version_update_save_v1';
 const VERSION_UPDATE_FLAG_KEY = 'stickfighter_version_update_flag_v1';
 const SAVE_EXPORT_SCHEMA = 3;
-const APP_VERSION = '1.18.185';
+const APP_VERSION = '1.18.186';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 395;
+const SW_CACHE_REV = 396;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', petCoins: 0, dex: {}, summons: {}, pets: {}, activePet: null,
   eggPets: {}, activeEggPet: null, eggDaily: null,
   chestDaily: null, chestWeapons: {},
@@ -21743,7 +21743,7 @@ function seedNlGameStrings() {
     summonOpenAria: 'Open kist, {n} over',
     summonNoMore: 'Geen oproepen meer vandaag',
     summonOpening: 'Kist opent…',
-    summonNoPulls: 'Nog geen pulls vandaag.',
+    summonNoPulls: 'Nog geen trekkingen vandaag.',
     summonFail: 'Summon mislukt — probeer opnieuw',
     boss: 'BAAS',
     topHunter: 'Top jager',
@@ -25394,6 +25394,7 @@ overlayI18nCatalog(CATALOG_FR, {
     summonGotoPets: 'Pets',
     summonGotoSub: 'Collection',
     summonLogEmpty: 'Pas encore de tirage.',
+    summonNoPulls: 'Pas encore de tirage.',
     summonHint: 'Tape le coffre',
     summonReveal: 'Tape le coffre — le butin apparaît',
     errSummonLoad: 'Coffres impossibles à charger',
@@ -26046,6 +26047,7 @@ overlayI18nCatalog(CATALOG_ES, {
     summonGotoPets: 'Pets',
     summonGotoSub: 'Colección',
     summonLogEmpty: 'Aún no hay tiradas.',
+    summonNoPulls: 'Aún no hay tiradas.',
     summonHint: 'Toca el cofre',
     summonReveal: 'Toca el cofre — aparece el botín',
     errSummonLoad: 'No se pudieron cargar los cofres',
@@ -26743,6 +26745,9 @@ overlayI18nCatalog(CATALOG_DE, {
     summonAriaEmpty: 'Keine Kisten mehr heute',
     summonLeftToday: '{n} übrig heute',
     summonDoneToday: 'leer für heute',
+    summonPullEmpty: 'Leer',
+    summonLogEmpty: 'Heute noch keine Züge.',
+    summonNoPulls: 'Heute noch keine Züge.',
     importPreview: 'Vorschau: {summary}{meta}. Laden 2× tippen.',
     importPreviewMeta: ' · v{app}',
     importInvalid: 'Ungültiger Save',

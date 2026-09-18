@@ -40,6 +40,13 @@
   },
   "userWishlist": [
     {
+      "id": "w-20260918T135600",
+      "from": "user",
+      "text": "Keep #317 until ~16:30 Amsterdam. Last leak sweep at 390: pets/summons/gear empty states only — copy keys, no layout. If clean, STOP and mark DONE on PR. Draft only, speel.html, no Versus, no main.",
+      "status": "open",
+      "updated": "2026-09-18"
+    },
+    {
       "id": "w-20260918T135100",
       "from": "user",
       "text": "Keep #317 until ~16:30. Sweep remaining locale leaks on lose/win/FOMO/settings at 390 (FR/ES/DE). One-line mission/toast leftovers only — no layout ownership (#318/#321). Smoke i18n-locale + i18n-switch. Draft only, speel.html, no Versus, no main.",
