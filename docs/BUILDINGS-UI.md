@@ -8,10 +8,11 @@ Mega-merge: **do not merge this branch to `main` alone.**
 ## What this PR ships
 
 - HOME hub tile (`data-hub="buildings"`) in the same 2-col style as Arcade / Collectie
-- `#buildingsScreen` **list → detail** for **5 factories** (Android portrait: list first; tap a row for detail)
-- `#buildingsWallet` chips for PC + spark / glue / chip / steam / echo
-- Per factory: short “wat doet dit?” copy from `buildingTooltipModel` (blurb + power rank)
-- Collect = one tap (`Oogsten`) with toast + wallet flash. Upgrade is a **separate step** (not mashed into collect)
+- `#buildingsScreen` **overview cards → detail → upgrade sheet** for **5 factories** (Android portrait: list first)
+- Sticky `#buildingsWallet` pills always show PC + spark / glue / chip / steam / echo (0 included)
+- Each card has a **does-line** from `buildingDescModel` (produce + power, no hardcoded factory copy)
+- Collect = one tap on the resource pill `[data-buildings-collect]` (overview and detail). Empty/locked pills open detail — no dead end
+- Upgrade is a **bottom sheet** (`#buildingsUpgradeSheet`), never mashed into collect. Broke/max/locked have a next step (cost hint, max copy, or **Naar Avontuur**)
 - Adapter `buildingsApi()` — prefers live `BUILDING_IDS` / `buildingCollect`; stub only if those symbols are missing
 
 Share / playtest URL stays **`speel.html`**. No Versus. Android-first (portrait list, detail under).
@@ -91,10 +92,10 @@ When `BUILDING_IDS` + `buildingCollect` are present, the HOME screen binds that 
 2. After Avontuur / Arcade / Collectie, tap **Fabrieken / Buildings**.
 3. Portrait starts on the **list** (5 factories: Stick-Lighter … Echo-Whistle Mill). Stick-Lighter is unlocked; others lock until that island is open.
 4. Wallet chips under the title always show **PC + Vonken / Lijm / Snippers / Stoom / Echo** (readable amounts, including 0).
-5. Tap a factory → **detail**: “Wat doet dit?” blurb + current/next power, hopper bar, **Oogsten** (primary). Upgrade is a second control that opens a confirm step — not a twin collect button.
-6. Oogsten once credits the factory resource (spark / glue / chip / steam / echo); toast `+N` and the matching wallet chip flashes. Empty hopper stays disabled.
-7. Upgrade… → confirm (pet coins + factory resources from `nextCost`). Unbuilt factories use **Bouwen…**. Locked factory: CTAs disabled, lock copy names the world.
-8. ← Overzicht or Back returns to the list; Back on the list returns to KIES JE PAD. Versus tile must stay gone.
+5. Tap a factory → **detail**: does-line + produce/power, hopper, **collect pill**. Upgrade… opens the sheet — not a twin collect button.
+6. One-tap pill credits spark / glue / chip / steam / echo; toast `+N` and the matching wallet pill flashes. Empty pill still opens detail (ETA / next step), never a dead disabled wall.
+7. Upgrade… → sheet with does/next + cost. Unbuilt uses **Bouwen…**. Not enough currency: sheet explains what’s missing + Sluiten. Locked factory: **Naar Avontuur** (no disabled dead CTA). Max: status line, harvest still runs.
+8. ← Overzicht or Back closes sheet → detail → list; Back on the list returns to KIES JE PAD. Versus tile must stay gone.
 
 Debug without adventure progress: in console
 `save.unlocked = 70; persist(); location.reload()` then all five unlock.

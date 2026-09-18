@@ -40,6 +40,13 @@
   },
   "userWishlist": [
     {
+      "id": "w-20260918T122300",
+      "from": "user",
+      "text": "WORKER lane: FACTORIES UX unclunky. Overview → detail → upgrade sheet must feel crisp on mobile: clear does-line, wallet, one-tap collect, no dead ends. Keep factory ids: stick_lighter, woodchip_glue, chipping_wood, bamboo_boesa, echo_whistle. No Versus. Draft PR only. speel.html.",
+      "status": "in-progress",
+      "updated": "2026-09-18"
+    },
+    {
       "id": "w-20260916T121500",
       "from": "user",
       "text": "Stickman Fighter MEGA-MERGE to main — Brendon said everything is klaar, merge NOW. Merge ALL open Stickman feature PRs into origin/main (resolve conflicts). Known batch #295–#309 plus any other open stickman-fighter PRs in this Grok wave. Skip it-academy. Order: languages/i18n → systems → UI → pixels/motion → polish. Feature-base PRs (e.g. #300) still land on main. No new features.",

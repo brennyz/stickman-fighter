@@ -1,5 +1,5 @@
 /* ======================== BUILDINGS HOME UI ======================== */
-/** List → detail → upgrade. Consumes systems #297 bind API when present:
+/** Overview → detail → upgrade sheet. Consumes systems bind API when present:
  *  buildingDescModel · buildingWalletModel · buildingArtSrc · buildingCostLabel
  *  Do not re-declare those models here. */
 
@@ -34,6 +34,11 @@ function buildingsDesc(id, view) {
     try { return buildingTooltipModel(id); } catch (_) {}
   }
   return null;
+}
+
+function buildingsDoesLine(view) {
+  const desc = buildingsDesc(view && view.id, view) || view || {};
+  return desc.doesLine || view.doesLine || view.sub || view.blurb || '';
 }
 
 function buildingsWalletSnap() {
@@ -124,13 +129,69 @@ function buildingsCostText(view) {
   return view.upgradeHint || '';
 }
 
+function buildingsIsUnbuilt(view) {
+  return !!(view && !view.locked && !(view.built || view.level >= 1));
+}
+
+function buildingsIsMax(view) {
+  return !!(view && !view.locked && !buildingsIsUnbuilt(view) && view.level >= view.maxLevel);
+}
+
+function buildingsBrokeHint(view) {
+  if (!view || view.locked || buildingsIsMax(view) || view.canUpgrade) return '';
+  const cost = view.nextCost || {};
+  const model = buildingsWalletSnap();
+  const missing = [];
+  const needPc = Math.max(0, Math.floor(Number(cost.petCoins) || 0) - model.petCoins);
+  if (needPc > 0) missing.push(needPc + ' PC');
+  const resBag = cost.resources && typeof cost.resources === 'object' ? cost.resources : {};
+  for (const [rid, n] of Object.entries(resBag)) {
+    const need = Math.max(0, Math.floor(Number(n) || 0));
+    const have = ((model.resources || []).find((r) => r.id === rid) || {}).amount || 0;
+    if (have < need) {
+      const label = (typeof buildingsResourceLabel === 'function') ? buildingsResourceLabel(rid) : rid;
+      missing.push((need - have) + ' ' + label);
+    }
+  }
+  if (!missing.length) return view.upgradeHint || buildingsCostText(view) || '';
+  return buildingsTxt('buildings.brokeHint', 'Mis {cost} — speel of oogst eerst', { cost: missing.join(' + ') });
+}
+
+function buildingsEta(view) {
+  if (!view || view.locked || view.pending >= view.capacity || !(view.nextMs > 0)) return '';
+  const t = (typeof buildingsFormatEta === 'function') ? buildingsFormatEta(view.nextMs) : '';
+  return t ? buildingsTxt('buildings.nextIn', 'Volgende over {t}', { t }) : '';
+}
+
+function buildingsPillHtml(view, opts) {
+  if (!view) return '';
+  const ready = !!view.canCollect;
+  const locked = !!view.locked;
+  const unbuilt = buildingsIsUnbuilt(view);
+  const cls = 'buildings-res-pill'
+    + (ready ? ' is-collect' : ' is-empty')
+    + (locked ? ' is-locked' : '')
+    + (unbuilt && !ready ? ' is-build' : '');
+  let label;
+  if (locked) label = buildingsTxt('buildings.pillLocked', 'Slot');
+  else if (unbuilt) label = buildingsTxt('buildings.pillBuild', 'Bouw');
+  else if (ready) label = buildingsTxt('buildings.pillReady', 'Oogst {n}', { n: view.pending });
+  else label = buildingsTxt('buildings.pillWait', '{n}/{cap}', { n: view.pending || 0, cap: view.capacity || 0 });
+  const idAttr = (opts && opts.id) ? ' id="' + buildingsEscape(opts.id) + '"' : '';
+  return '<button type="button" class="' + cls + '"' + idAttr
+    + ' data-buildings-collect="' + buildingsEscape(view.id) + '"'
+    + (ready ? '' : ' aria-disabled="true"')
+    + '><span class="buildings-res-n">' + buildingsEscape(label) + '</span>'
+    + '<small>' + buildingsEscape(view.resourceLabel || '') + '</small></button>';
+}
+
 if (typeof UI === 'object' && UI) {
   UI.buildingsTick = 0;
   UI.buildingsPane = 'list';
   UI.buildingsStep = 'harvest';
   UI.buildingsFlash = null;
   UI._buildingsDetailKey = '';
-  UI._buildingsRowBound = {};
+  UI._buildingsDelegates = false;
 
   UI.openBuildings = function openBuildings() {
     this.buildingsPane = 'list';
@@ -138,8 +199,8 @@ if (typeof UI === 'object' && UI) {
     this.buildingsStep = 'harvest';
     this.buildingsFlash = null;
     this._buildingsDetailKey = '';
-    this._buildingsRowBound = {};
     this.stopBuildingsTick();
+    this.ensureBuildingsDelegates();
     this.safeOpen('buildingsScreen', () => this.renderBuildings(), {
       msg: buildingsTxt('buildings.loadFail', 'Fabrieken laden mislukt'),
     });
@@ -164,6 +225,50 @@ if (typeof UI === 'object' && UI) {
       try { clearInterval(this.buildingsTick); } catch (_) {}
       this.buildingsTick = 0;
     }
+  };
+
+  UI.ensureBuildingsDelegates = function ensureBuildingsDelegates() {
+    if (this._buildingsDelegates) return;
+    this._buildingsDelegates = true;
+    const list = document.getElementById('buildingsList');
+    const detail = document.getElementById('buildingsDetail');
+    const handle = (e, fromDetail) => {
+      const pill = e.target && e.target.closest && e.target.closest('[data-buildings-collect]');
+      if (pill) {
+        const id = pill.getAttribute('data-buildings-collect');
+        if (pill.classList.contains('is-collect')) {
+          UI.doBuildingCollect(id);
+        } else if (fromDetail && pill.classList.contains('is-build')) {
+          UI.buildingsShowUpgradeStep();
+        } else {
+          UI.buildingsShowDetail(id);
+        }
+        return;
+      }
+      if (fromDetail) {
+        const back = e.target && e.target.closest && e.target.closest('#btnBuildingsOverview,[data-buildings-overview]');
+        if (back) { UI.buildingsShowList(); return; }
+        const up = e.target && e.target.closest && e.target.closest('#btnBuildingUpgrade');
+        if (up && !up.disabled) { UI.buildingsShowUpgradeStep(); return; }
+        const play = e.target && e.target.closest && e.target.closest('#btnBuildingPlayIsland');
+        if (play) { UI.buildingsGoAdventure(); return; }
+        return;
+      }
+      const card = e.target && e.target.closest && e.target.closest('[data-factory-id]');
+      if (!card || card.closest('#buildingsDetail')) return;
+      const id = card.getAttribute('data-factory-id');
+      if (id) {
+        if (typeof AudioSys !== 'undefined') { try { AudioSys.sfx('select'); } catch (_) {} }
+        UI.buildingsShowDetail(id);
+      }
+    };
+    const bind = (el, fn) => {
+      if (!el) return;
+      if (typeof bindPress === 'function') bindPress(el, fn);
+      else el.addEventListener('click', fn);
+    };
+    bind(list, (e) => handle(e, false));
+    bind(detail, (e) => handle(e, true));
   };
 
   UI.buildingsShowList = function buildingsShowList() {
@@ -213,31 +318,49 @@ if (typeof UI === 'object' && UI) {
     return false;
   };
 
+  UI.buildingsGoAdventure = function buildingsGoAdventure() {
+    this.stopBuildingsTick();
+    this.buildingsPane = 'list';
+    this.buildingsStep = 'harvest';
+    if (typeof this.safeOpen === 'function') {
+      this.safeOpen('levelScreen', () => this.renderLevels(), {
+        msg: buildingsTxt('ui.errLoadAdventure', 'Avontuur laden mislukt'),
+      });
+      return;
+    }
+    try { this.show('levelScreen'); this.renderLevels(); } catch (_) {}
+  };
+
   UI.paintBuildingsWallet = function paintBuildingsWallet(flashRes) {
     const walletEl = document.getElementById('buildingsWallet');
     if (!walletEl) return;
     const model = buildingsWalletSnap();
     const chips = [];
     chips.push(
-      '<span class="buildings-wallet-chip buildings-wallet-pc" data-res="petCoins">'
-      + '<span class="buildings-wallet-lbl">' + buildingsEscape(buildingsTxt('buildings.walletPc', 'PC')) + '</span>'
+      '<span class="buildings-wallet-chip buildings-wallet-pc buildings-wallet-pill" data-res="petCoins">'
+      + '<span class="buildings-wallet-lbl buildings-wallet-name">' + buildingsEscape(buildingsTxt('buildings.walletPc', 'PC')) + '</span>'
       + '<span class="buildings-wallet-amt">' + buildingsEscape(model.petCoins) + '</span></span>'
     );
-    for (const row of (model.resources || [])) {
+    const pills = (model.resources || []).map((row) => {
       const flash = flashRes && flashRes === row.id ? ' is-flash' : '';
-      chips.push(
-        '<span class="buildings-wallet-chip' + flash + '" data-res="' + buildingsEscape(row.id)
+      const rate = row.rate > 0
+        ? '<span class="buildings-wallet-hint">' + buildingsEscape(buildingsTxt('buildings.walletRate', '+{n}/u', { n: row.rate })) + '</span>'
+        : '';
+      return '<span class="buildings-wallet-chip buildings-wallet-pill' + flash + '" data-res="' + buildingsEscape(row.id)
         + '" data-res-id="' + buildingsEscape(row.id) + '">'
-        + '<span class="buildings-wallet-lbl">' + buildingsEscape(row.label) + '</span>'
-        + '<span class="buildings-wallet-amt">' + buildingsEscape(row.amount) + '</span></span>'
-      );
-    }
+        + '<span class="buildings-wallet-lbl buildings-wallet-name">' + buildingsEscape(row.label) + '</span>'
+        + '<span class="buildings-wallet-amt">' + buildingsEscape(row.amount) + '</span>'
+        + rate + '</span>';
+    });
     walletEl.classList.add('buildings-wallet');
-    walletEl.innerHTML = chips.join('');
+    walletEl.innerHTML =
+      '<div class="buildings-wallet-pc-line">' + chips[0] + '</div>'
+      + '<div class="buildings-wallet-row">' + pills.join('') + '</div>';
   };
 
   UI.renderBuildings = function renderBuildings(opts) {
     const quiet = !!(opts && opts.quiet);
+    this.ensureBuildingsDelegates();
     const list = document.getElementById('buildingsList');
     const detail = document.getElementById('buildingsDetail');
     const note = document.getElementById('buildingsApiNote');
@@ -247,15 +370,13 @@ if (typeof UI === 'object' && UI) {
     if (head) head.textContent = buildingsTxt('buildings.title', 'Fabrieken');
     if (sub) {
       sub.textContent = this.buildingsPane === 'detail'
-        ? buildingsTxt('buildings.detailSub', 'Tik Oogsten · upgrade is een aparte stap')
-        : buildingsTxt('buildings.sub', 'Tik een fabriek · oogst · upgrade');
+        ? buildingsTxt('buildings.detailSub', 'Oogst op de pil · upgrade opent het blad')
+        : buildingsTxt('buildings.sub', 'Tik een fabriek · oogst op de pil · upgrade');
     }
     if (note) {
       const live = typeof buildingsHasSystemsApi === 'function' && buildingsHasSystemsApi();
-      note.hidden = live;
-      note.textContent = live
-        ? buildingsTxt('buildings.liveNote', '')
-        : buildingsTxt('buildings.stubNote', '');
+      note.hidden = true;
+      note.textContent = live ? '' : '';
     }
     let flashRes = null;
     if (this.buildingsFlash && this.buildingsFlash.until > Date.now()) {
@@ -266,6 +387,7 @@ if (typeof UI === 'object' && UI) {
     this.paintBuildingsWallet(flashRes);
     const rows = (typeof buildingsList === 'function') ? buildingsList() : [];
     let sel = (typeof buildingsSelectedId === 'function') ? buildingsSelectedId() : (rows[0] && rows[0].id);
+    if (this.buildingsFocusId && rows.some((r) => r.id === this.buildingsFocusId)) sel = this.buildingsFocusId;
     if (!rows.some((r) => r.id === sel)) sel = rows[0] && rows[0].id;
     const pane = this.buildingsPane === 'detail' ? 'detail' : 'list';
     const viewName = this.buildingsStep === 'upgrade' ? 'upgrade' : pane;
@@ -275,15 +397,17 @@ if (typeof UI === 'object' && UI) {
       scr.setAttribute('data-buildings-view', viewName);
       scr.classList.toggle('buildings-pane-detail', pane === 'detail');
       scr.classList.toggle('buildings-pane-list', pane === 'list');
+      scr.classList.toggle('buildings-sheet-open', viewName === 'upgrade');
     }
     const overview = document.getElementById('buildingsOverview');
     const sheet = document.getElementById('buildingsUpgradeSheet');
-    if (overview) overview.hidden = pane !== 'list';
+    if (overview) overview.hidden = false;
     if (sheet) {
       sheet.hidden = viewName !== 'upgrade';
       sheet.setAttribute('aria-hidden', viewName === 'upgrade' ? 'false' : 'true');
+      sheet.classList.add('buildings-sheet', 'buildings-upgrade-sheet');
     }
-    if (list) this.paintBuildingsList(list, rows, sel);
+    if (list) this.paintBuildingsList(list, rows, sel, quiet);
     const view = rows.find((r) => r.id === sel) || rows[0];
     if (detail) {
       const key = (view && view.id || '') + ':' + (this.buildingsStep || 'harvest') + ':' + pane;
@@ -296,89 +420,81 @@ if (typeof UI === 'object' && UI) {
     }
   };
 
-  UI.paintBuildingsList = function paintBuildingsList(list, rows, sel) {
+  UI.paintBuildingsList = function paintBuildingsList(list, rows, sel, quiet) {
     const have = [...list.querySelectorAll('.buildings-row')].map((el) => el.getAttribute('data-factory-id'));
     const want = rows.map((r) => r.id);
     if (have.join('|') !== want.join('|')) {
       list.innerHTML = '';
-      this._buildingsRowBound = {};
       for (const view of rows) {
-        const btn = document.createElement('button');
-        btn.type = 'button';
-        btn.className = 'hub-tile buildings-row';
-        btn.setAttribute('data-factory-id', view.id);
-        btn.dataset.buildingId = view.id;
-        btn.dataset.factoryId = view.id;
-        list.appendChild(btn);
+        const card = document.createElement('article');
+        card.className = 'buildings-card buildings-row';
+        card.setAttribute('data-factory-id', view.id);
+        card.dataset.buildingId = view.id;
+        card.dataset.factoryId = view.id;
+        list.appendChild(card);
       }
     }
     for (const view of rows) {
-      const btn = list.querySelector('[data-factory-id="' + view.id + '"]');
-      if (!btn) continue;
-      btn.className = 'hub-tile buildings-row'
-        + (view.id === sel ? ' hub-tile-featured buildings-row-sel' : '')
-        + (view.locked ? ' buildings-row-locked' : '')
-        + (view.canCollect ? ' buildings-row-ready' : '');
-      btn.setAttribute('data-factory-id', view.id);
-      btn.dataset.buildingId = view.id;
-      btn.dataset.factoryId = view.id;
-      if (view.id === sel) {
-        btn.setAttribute('data-hub-badge', view.canCollect
-          ? buildingsTxt('buildings.collect', 'Oogsten')
+      const card = list.querySelector('[data-factory-id="' + view.id + '"]');
+      if (!card) continue;
+      card.className = 'buildings-card buildings-row'
+        + (view.id === sel ? ' buildings-row-sel is-sel' : '')
+        + (view.locked ? ' buildings-row-locked is-locked' : '')
+        + (view.canCollect ? ' buildings-row-ready is-ready' : '');
+      card.setAttribute('data-factory-id', view.id);
+      card.dataset.buildingId = view.id;
+      card.dataset.factoryId = view.id;
+      const does = buildingsDoesLine(view);
+      const lvBit = view.locked
+        ? buildingsTxt('buildings.locked', 'Op slot')
+        : (buildingsIsUnbuilt(view)
+          ? buildingsTxt('buildings.unbuilt', 'Nog niet gebouwd')
           : buildingsTxt('buildings.level', 'Lv {n}', { n: view.level }));
+      const nextHtml =
+        '<button type="button" class="buildings-card-hit" data-factory-open="' + buildingsEscape(view.id) + '">'
+        + '<span class="buildings-card-art hub-tile-ico">' + buildingsArtHtml(view) + '</span>'
+        + '<span class="buildings-card-body">'
+        + '<span class="buildings-card-name">' + buildingsEscape(view.name)
+        + ' <span class="buildings-card-lv">' + buildingsEscape(lvBit) + '</span></span>'
+        + '<span class="buildings-card-does">' + buildingsEscape(does) + '</span>'
+        + '</span></button>'
+        + buildingsPillHtml(view);
+      if (quiet && card.querySelector('.buildings-card-does')) {
+        const doesEl = card.querySelector('.buildings-card-does');
+        const lvEl = card.querySelector('.buildings-card-lv');
+        const pill = card.querySelector('[data-buildings-collect]');
+        if (doesEl) doesEl.textContent = does;
+        if (lvEl) lvEl.textContent = lvBit;
+        if (pill) {
+          const wrap = document.createElement('div');
+          wrap.innerHTML = buildingsPillHtml(view);
+          if (wrap.firstChild) pill.replaceWith(wrap.firstChild);
+        }
       } else {
-        btn.removeAttribute('data-hub-badge');
-      }
-      const lockBit = view.locked
-        ? buildingsEscape(view.lockHint || buildingsTxt('buildings.locked', 'Op slot'))
-        : buildingsTxt('buildings.level', 'Lv {n}', { n: view.level });
-      const desc = buildingsDesc(view.id, view) || view;
-      const does = desc.doesLine || view.sub || '';
-      const stock = view.locked
-        ? ''
-        : (view.pending + '/' + view.capacity + ' ' + buildingsEscape(view.resourceLabel));
-      btn.innerHTML =
-        '<span class="hub-tile-ico">' + buildingsArtHtml(view) + '</span>'
-        + '<span class="hub-tile-title">' + buildingsEscape(view.name) + '</span>'
-        + '<span class="hub-tile-sub">' + buildingsEscape(does) + '</span>'
-        + '<span class="hub-tile-stat">' + lockBit + (stock ? ' · ' + stock : '') + '</span>';
-      if (!this._buildingsRowBound[view.id]) {
-        this._buildingsRowBound[view.id] = true;
-        const id = view.id;
-        const open = () => {
-          if (typeof AudioSys !== 'undefined') { try { AudioSys.sfx('select'); } catch (_) {} }
-          UI.buildingsShowDetail(id);
-        };
-        if (typeof bindPress === 'function') bindPress(btn, open);
-        else btn.addEventListener('click', open);
+        card.innerHTML = nextHtml;
       }
     }
   };
 
   UI.buildingsEffectHtml = function buildingsEffectHtml(view) {
     const desc = buildingsDesc(view && view.id, view) || view || {};
+    const does = desc.doesLine || view.doesLine || '';
     const bits = [];
-    bits.push('<div class="buildings-effect" data-buildings-effect="' + buildingsEscape(view.id) + '">');
+    bits.push('<div class="buildings-effect" data-buildings-effect="' + buildingsEscape(view && view.id) + '">');
     bits.push('<div class="buildings-effect-kicker">' + buildingsEscape(buildingsTxt('buildings.whatItDoes', 'Wat doet dit?')) + '</div>');
-    if (desc.blurb) bits.push('<p class="buildings-effect-blurb">' + buildingsEscape(desc.blurb) + '</p>');
+    if (does) bits.push('<p class="buildings-effect-does buildings-card-does">' + buildingsEscape(does) + '</p>');
+    if (desc.blurb && desc.blurb !== does) {
+      bits.push('<p class="buildings-effect-blurb">' + buildingsEscape(desc.blurb) + '</p>');
+    }
     if (desc.produceLine) bits.push('<p class="buildings-effect-now">' + buildingsEscape(desc.produceLine) + '</p>');
     if (desc.powerLine) bits.push('<p class="buildings-effect-now">' + buildingsEscape(desc.powerLine) + '</p>');
-    else if (desc.doesLine) bits.push('<p class="buildings-effect-now">' + buildingsEscape(desc.doesLine) + '</p>');
     else if (desc.currentPowerLabel) {
       bits.push('<p class="buildings-effect-now">' + buildingsEscape(buildingsTxt(
         'buildings.powerNow', '{label} — {blurb}',
         { label: desc.currentPowerLabel, blurb: desc.currentPowerBlurb || '' }
       )) + '</p>');
-    } else if (!(desc.built || view.built || view.level >= 1)) {
-      bits.push('<p class="buildings-effect-now">' + buildingsEscape(buildingsTxt('buildings.powerNone', 'Bouw dit werk om de power te ontgrendelen')) + '</p>');
     }
     if (desc.nextLine) bits.push('<p class="buildings-effect-next">' + buildingsEscape(desc.nextLine) + '</p>');
-    else if (desc.nextPower) {
-      bits.push('<p class="buildings-effect-next">' + buildingsEscape(buildingsTxt(
-        'buildings.powerNext', 'Volgende @ rank {n}: {label}',
-        { n: desc.nextPower.rank, label: desc.nextPower.label || desc.nextPower.id }
-      )) + '</p>');
-    }
     bits.push('</div>');
     return bits.join('');
   };
@@ -393,73 +509,57 @@ if (typeof UI === 'object' && UI) {
     host.dataset.factoryId = view.id;
     host.setAttribute('data-factory-id', view.id);
     const locked = !!view.locked;
-    const unbuilt = !locked && !(view.built || view.level >= 1);
-    const step = this.buildingsStep === 'upgrade' ? 'upgrade' : 'harvest';
+    const unbuilt = buildingsIsUnbuilt(view);
+    const atMax = buildingsIsMax(view);
     const pct = view.capacity ? Math.min(100, Math.round((view.pending / view.capacity) * 100)) : 0;
-    const eta = (!locked && view.pending < view.capacity && view.nextMs > 0)
-      ? buildingsTxt('buildings.nextIn', 'Volgende over {t}', { t: (typeof buildingsFormatEta === 'function') ? buildingsFormatEta(view.nextMs) : '' })
-      : '';
-    const collectLbl = buildingsTxt('buildings.collect', 'Oogsten');
-    const collectSub = locked
-      ? (view.lockHint || '')
-      : (unbuilt
-        ? buildingsTxt('buildings.unbuilt', 'Nog niet gebouwd')
-        : (view.canCollect
-          ? buildingsTxt('buildings.collectSub', '{n} {res} klaar', { n: view.pending, res: view.resourceLabel })
-          : buildingsTxt('buildings.collectEmpty', 'Nog niks klaar')));
+    const eta = buildingsEta(view);
     const flash = (this.buildingsFlash && this.buildingsFlash.id === view.id && this.buildingsFlash.until > Date.now())
       ? ('<div class="buildings-collect-flash" role="status">+' + buildingsEscape(this.buildingsFlash.amount)
         + ' ' + buildingsEscape(this.buildingsFlash.resLabel || view.resourceLabel) + '</div>')
       : '';
     const costHint = buildingsCostText(view);
-    const upOpenLbl = unbuilt
-      ? buildingsTxt('buildings.buildOpen', 'Bouwen…')
-      : buildingsTxt('buildings.upgradeOpen', 'Upgrade…');
-    const upAsk = unbuilt
-      ? buildingsTxt('buildings.buildAsk', 'Bouw {name}?', { name: view.name })
-      : buildingsTxt('buildings.upgradeAsk', 'Upgrade naar Lv {next}?', { next: (view.level || 0) + 1 });
+    const broke = buildingsBrokeHint(view);
     const overviewLbl = buildingsTxt('buildings.overview', 'Overzicht');
-    let cta = '';
-    if (step === 'upgrade') {
-      cta =
-        '<div class="buildings-upgrade-step">'
-        + '<p class="buildings-upgrade-ask">' + buildingsEscape(upAsk) + '</p>'
-        + (costHint ? '<p class="buildings-upgrade-cost">' + buildingsEscape(costHint) + '</p>' : '')
-        + '<button type="button" class="btn mode-btn b-continue big-touch buildings-cta buildings-cta-upgrade" id="btnBuildingUpgradeConfirm"'
-        + (view.canUpgrade ? '' : ' disabled') + '>'
-        + '<span class="ico"><img src="assets/buttons/modes/upgrades.svg" alt="" width="28" height="28" decoding="async" draggable="false"></span>'
-        + '<div>' + buildingsEscape(buildingsTxt('buildings.upgradeConfirm', 'Bevestig'))
-        + '<small>' + buildingsEscape(costHint || view.upgradeHint || '') + '</small></div></button>'
-        + '<button type="button" class="btn mode-btn b-gray big-touch buildings-cta" id="btnBuildingUpgradeBack">'
-        + '<div>' + buildingsEscape(buildingsTxt('buildings.upgradeBack', 'Terug naar oogst')) + '</div></button>'
-        + '</div>';
+    let cta = '<div class="buildings-cta-stack buildings-cta-row">';
+    if (locked) {
+      cta +=
+        '<button type="button" class="btn mode-btn b-continue big-touch buildings-cta" id="btnBuildingPlayIsland">'
+        + '<span class="ico"><img src="assets/buttons/hub/adventure.svg" alt="" width="28" height="28" decoding="async" draggable="false"></span>'
+        + '<div>' + buildingsEscape(buildingsTxt('buildings.goAdventure', 'Naar Avontuur'))
+        + '<small>' + buildingsEscape(view.lockHint || buildingsTxt('buildings.nextPlay', 'Speel het eiland vrij')) + '</small></div></button>';
+    } else if (atMax) {
+      cta +=
+        '<p class="buildings-max-hint" id="btnBuildingUpgrade" data-buildings-max="1">'
+        + buildingsEscape(buildingsTxt('buildings.maxHint', 'Dit werk is klaar — oogst blijft lopen')) + '</p>';
     } else {
-      cta =
-        '<div class="buildings-cta-stack">'
-        + '<button type="button" class="btn mode-btn b-continue big-touch buildings-cta buildings-cta-collect" id="btnBuildingCollect"'
-        + (view.canCollect ? '' : ' disabled') + '>'
-        + '<span class="ico"><img src="assets/buttons/chrome/claim.svg" alt="" width="28" height="28" decoding="async" draggable="false"></span>'
-        + '<div>' + buildingsEscape(collectLbl) + '<small>' + buildingsEscape(collectSub) + '</small></div></button>'
-        + '<button type="button" class="btn mode-btn b-gray big-touch buildings-cta buildings-cta-upgrade" id="btnBuildingUpgrade"'
-        + ((locked || (!view.canUpgrade && !unbuilt && view.level >= view.maxLevel)) ? ' disabled' : '') + '>'
+      const upOpenLbl = unbuilt
+        ? buildingsTxt('buildings.buildOpen', 'Bouwen…')
+        : buildingsTxt('buildings.upgradeOpen', 'Upgrade…');
+      const upSub = view.canUpgrade
+        ? (costHint || view.upgradeHint || '')
+        : (broke || costHint || view.upgradeHint || '');
+      cta +=
+        '<button type="button" class="btn mode-btn b-gray big-touch buildings-cta buildings-cta-upgrade" id="btnBuildingUpgrade">'
         + '<span class="ico"><img src="assets/buttons/modes/upgrades.svg" alt="" width="28" height="28" decoding="async" draggable="false"></span>'
-        + '<div>' + buildingsEscape(upOpenLbl) + '<small>' + buildingsEscape(costHint || view.upgradeHint || '') + '</small></div></button>'
-        + '</div>';
+        + '<div>' + buildingsEscape(upOpenLbl) + '<small>' + buildingsEscape(upSub) + '</small></div></button>';
     }
+    cta += '</div>';
     host.innerHTML =
-      '<button type="button" class="buildings-overview-btn" id="btnBuildingsOverview">'
+      '<button type="button" class="buildings-overview-btn" id="btnBuildingsOverview" data-buildings-overview="1">'
       + buildingsEscape('← ' + overviewLbl) + '</button>'
       + '<div class="buildings-detail-art">' + buildingsArtHtml(view, 'buildings-art-img buildings-art-lg') + '</div>'
       + '<div class="buildings-detail-meta">'
       + '<div class="buildings-detail-name">' + buildingsEscape(view.name)
       + ' <span class="buildings-lv">' + buildingsEscape(unbuilt
         ? buildingsTxt('buildings.unbuilt', 'Nog niet gebouwd')
-        : buildingsTxt('buildings.level', 'Lv {n}', { n: view.level })) + '</span></div>'
-      + '<div class="buildings-detail-sub">' + buildingsEscape(view.sub) + '</div>'
+        : (locked
+          ? buildingsTxt('buildings.locked', 'Op slot')
+          : buildingsTxt('buildings.level', 'Lv {n}', { n: view.level }))) + '</span></div>'
       + this.buildingsEffectHtml(view)
       + (locked
         ? '<div class="buildings-lock">' + buildingsEscape(view.lockHint) + '</div>'
         : '<div class="buildings-stock">'
+          + buildingsPillHtml(view, { id: 'btnBuildingCollect' })
           + '<div class="buildings-stock-bar" role="progressbar" aria-valuenow="' + view.pending + '" aria-valuemax="' + view.capacity + '">'
           + '<span style="width:' + pct + '%"></span></div>'
           + '<div class="buildings-stock-lbl">'
@@ -469,22 +569,7 @@ if (typeof UI === 'object' && UI) {
       + flash
       + '</div>'
       + cta;
-    const overviewBtn = document.getElementById('btnBuildingsOverview');
-    const collectBtn = document.getElementById('btnBuildingCollect');
-    const upBtn = document.getElementById('btnBuildingUpgrade');
-    const upConfirm = document.getElementById('btnBuildingUpgradeConfirm');
-    const upBack = document.getElementById('btnBuildingUpgradeBack');
-    const bind = (el, fn) => {
-      if (!el) return;
-      if (typeof bindPress === 'function') bindPress(el, fn);
-      else el.addEventListener('click', fn);
-    };
-    bind(overviewBtn, () => UI.buildingsShowList());
-    bind(collectBtn, () => UI.doBuildingCollect(view.id));
-    bind(upBtn, () => UI.buildingsShowUpgradeStep());
-    bind(upConfirm, () => UI.doBuildingUpgrade(view.id));
-    bind(upBack, () => { UI.buildingsGoBack(); });
-    this.paintBuildingsUpgradeSheet(view, step === 'upgrade');
+    this.paintBuildingsUpgradeSheet(view, this.buildingsStep === 'upgrade');
   };
 
   UI.paintBuildingsUpgradeSheet = function paintBuildingsUpgradeSheet(view, open) {
@@ -492,37 +577,49 @@ if (typeof UI === 'object' && UI) {
     if (!sheet) return;
     if (!open || !view) {
       sheet.hidden = true;
+      sheet.setAttribute('aria-hidden', 'true');
       sheet.innerHTML = '';
       return;
     }
     const costHint = buildingsCostText(view);
-    const unbuilt = !(view.built || view.level >= 1);
+    const unbuilt = buildingsIsUnbuilt(view);
+    const atMax = buildingsIsMax(view);
+    const broke = buildingsBrokeHint(view);
+    const desc = buildingsDesc(view.id, view) || {};
     const ask = unbuilt
       ? buildingsTxt('buildings.buildAsk', 'Bouw {name}?', { name: view.name })
       : buildingsTxt('buildings.upgradeAsk', 'Upgrade naar Lv {next}?', { next: (view.level || 0) + 1 });
-    const desc = buildingsDesc(view.id, view) || {};
+    const canPay = !!view.canUpgrade && !atMax && !view.locked;
     sheet.hidden = false;
     sheet.setAttribute('aria-hidden', 'false');
+    sheet.classList.add('buildings-sheet', 'buildings-upgrade-sheet');
     sheet.innerHTML =
       '<button type="button" class="buildings-sheet-backdrop" data-buildings-sheet-close></button>'
       + '<div class="buildings-sheet-panel" role="dialog" aria-modal="true">'
       + '<h3>' + buildingsEscape(buildingsTxt('buildings.upgradeTitle', 'Upgrade {name}', { name: view.name })) + '</h3>'
-      + (desc.nextLine ? '<p class="buildings-upgrade-ask">' + buildingsEscape(desc.nextLine) + '</p>' : '')
-      + '<p class="buildings-upgrade-ask">' + buildingsEscape(ask) + '</p>'
-      + (costHint ? '<p class="buildings-upgrade-cost">' + buildingsEscape(costHint) + '</p>' : '')
-      + '<button type="button" class="btn mode-btn b-continue big-touch buildings-cta" id="btnBuildingUpgradeDo"'
-      + (view.canUpgrade ? '' : ' disabled') + '>'
-      + buildingsEscape(buildingsTxt('buildings.upgradeConfirm', 'Bevestig')) + '</button>'
+      + (desc.doesLine ? '<p class="buildings-sheet-now">' + buildingsEscape(desc.doesLine) + '</p>' : '')
+      + (desc.nextLine ? '<p class="buildings-sheet-now buildings-next">' + buildingsEscape(desc.nextLine) + '</p>' : '')
+      + '<p class="buildings-upgrade-ask buildings-sheet-why">' + buildingsEscape(atMax
+        ? buildingsTxt('buildings.upgradeMax', 'Max level')
+        : ask) + '</p>'
+      + (costHint ? '<p class="buildings-upgrade-cost buildings-sheet-cost">' + buildingsEscape(costHint) + '</p>' : '')
+      + (!canPay && broke ? '<p class="buildings-sheet-why">' + buildingsEscape(broke) + '</p>' : '')
+      + '<div class="buildings-sheet-actions buildings-cta-stack">'
+      + (atMax
+        ? ''
+        : ('<button type="button" class="btn mode-btn b-continue big-touch buildings-cta" id="btnBuildingUpgradeConfirm"'
+          + (canPay ? '' : ' disabled') + '>'
+          + buildingsEscape(buildingsTxt('buildings.upgradeConfirm', 'Bevestig')) + '</button>'))
       + '<button type="button" class="btn mode-btn b-gray big-touch buildings-cta" data-buildings-sheet-close>'
       + buildingsEscape(buildingsTxt('buildings.sheetClose', 'Sluiten')) + '</button>'
-      + '</div>';
+      + '</div></div>';
     const close = () => UI.buildingsGoBack();
     sheet.querySelectorAll('[data-buildings-sheet-close]').forEach((el) => {
       if (typeof bindPress === 'function') bindPress(el, close);
       else el.addEventListener('click', close);
     });
-    const doBtn = document.getElementById('btnBuildingUpgradeDo');
-    if (doBtn) {
+    const doBtn = document.getElementById('btnBuildingUpgradeConfirm');
+    if (doBtn && canPay) {
       if (typeof bindPress === 'function') bindPress(doBtn, () => UI.doBuildingUpgrade(view.id));
       else doBtn.addEventListener('click', () => UI.doBuildingUpgrade(view.id));
     }
@@ -532,26 +629,18 @@ if (typeof UI === 'object' && UI) {
     if (!host || !view) return;
     const bar = host.querySelector('.buildings-stock-bar span');
     const lbl = host.querySelector('.buildings-stock-lbl');
-    const collectBtn = document.getElementById('btnBuildingCollect');
+    const pill = host.querySelector('[data-buildings-collect]');
     const pct = view.capacity ? Math.min(100, Math.round((view.pending / view.capacity) * 100)) : 0;
     if (bar) bar.style.width = pct + '%';
     if (lbl) {
-      const eta = (!view.locked && view.pending < view.capacity && view.nextMs > 0)
-        ? buildingsTxt('buildings.nextIn', 'Volgende over {t}', { t: (typeof buildingsFormatEta === 'function') ? buildingsFormatEta(view.nextMs) : '' })
-        : '';
+      const eta = buildingsEta(view);
       lbl.textContent = buildingsTxt('buildings.stored', '{n}/{cap} opgeslagen', { n: view.pending, cap: view.capacity })
         + (eta ? ' · ' + eta : '');
     }
-    if (collectBtn) {
-      collectBtn.disabled = !view.canCollect;
-      const small = collectBtn.querySelector('small');
-      if (small) {
-        small.textContent = view.locked
-          ? (view.lockHint || '')
-          : (view.canCollect
-            ? buildingsTxt('buildings.collectSub', '{n} {res} klaar', { n: view.pending, res: view.resourceLabel })
-            : buildingsTxt('buildings.collectEmpty', 'Nog niks klaar'));
-      }
+    if (pill) {
+      const wrap = document.createElement('div');
+      wrap.innerHTML = buildingsPillHtml(view, { id: 'btnBuildingCollect' });
+      if (wrap.firstChild) pill.replaceWith(wrap.firstChild);
     }
     const effect = host.querySelector('[data-buildings-effect]');
     if (effect) {
@@ -559,6 +648,7 @@ if (typeof UI === 'object' && UI) {
       wrap.innerHTML = this.buildingsEffectHtml(view);
       if (wrap.firstChild) effect.replaceWith(wrap.firstChild);
     }
+    if (this.buildingsStep === 'upgrade') this.paintBuildingsUpgradeSheet(view, true);
   };
 
   UI.doBuildingCollect = function doBuildingCollect(id) {
@@ -582,6 +672,7 @@ if (typeof UI === 'object' && UI) {
       try {
         this.toast((res && res.message) || buildingsTxt('buildings.collectEmpty', 'Nog niks klaar'), 2200, { tone: 'warn' });
       } catch (_) {}
+      if (id) this.buildingsShowDetail(id);
     }
     this._buildingsDetailKey = '';
     this.renderBuildings();
@@ -595,8 +686,10 @@ if (typeof UI === 'object' && UI) {
       try { if (typeof AudioSys !== 'undefined') AudioSys.sfx('levelup'); } catch (_) {}
       try { this.toast(res.message || '', 2600, { tone: 'ok' }); } catch (_) {}
       this.buildingsStep = 'harvest';
+      this.buildingsView = 'detail';
+      this.buildingsPane = 'detail';
     } else {
-      try { this.toast((res && res.message) || '', 2200, { tone: 'warn' }); } catch (_) {}
+      try { this.toast((res && res.message) || buildingsBrokeHint(buildingsGet && buildingsGet(id)) || '', 2200, { tone: 'warn' }); } catch (_) {}
     }
     this._buildingsDetailKey = '';
     this.renderBuildings();

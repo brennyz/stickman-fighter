@@ -52,6 +52,8 @@ must(/buildings-cta/.test(css), 'missing collect/upgrade CTA CSS');
 must(/buildings-wallet-chip/.test(css), 'missing readable wallet chip CSS');
 must(/data-buildings-pane/.test(css) || /buildings-pane-detail/.test(css), 'list/detail pane CSS missing');
 must(/buildings-cta-stack/.test(css), 'collect/upgrade must stack, not mash in one grid');
+must(/buildings-res-pill/.test(css), 'resource collect pill CSS missing');
+must(/buildings-card-does/.test(css), 'does-line card CSS missing');
 must(!/\.screen\s*\{\s*display:\s*none\s*!important/.test(css), 'nuclear .screen hide forbidden');
 
 must(bridge.includes('BuildingsStub'), 'bridge must ship a stub');
@@ -73,6 +75,9 @@ must(ui.includes('buildingsShowUpgradeStep'), 'upgrade must be a separate step')
 must(ui.includes('paintBuildingsWallet'), 'wallet painter missing');
 must(ui.includes('whatItDoes') || ui.includes('buildingsEffectHtml'), 'power/effect copy missing');
 must(ui.includes('data-factory-id'), 'rows must bind data-factory-id');
+must(ui.includes('data-buildings-collect'), 'one-tap collect pill missing');
+must(ui.includes('doesLine') || ui.includes('buildingsDoesLine'), 'does-line missing');
+must(ui.includes('buildingsGoAdventure') || ui.includes('goAdventure'), 'locked factory must have adventure next-step');
 must(ui.includes('buildingDescModel'), 'UI must consume systems buildingDescModel');
 must(ui.includes('buildingWalletModel'), 'UI must consume systems buildingWalletModel');
 must(ui.includes('buildingArtSrc'), 'UI must consume systems buildingArtSrc');
@@ -146,16 +151,23 @@ async function runBrowser() {
       const echo = rows.find((r) => r.dataset.buildingId === 'echo_whistle');
       const lighterLocked = !!(lighter && lighter.classList.contains('buildings-row-locked'));
       const echoLocked = !!(echo && echo.classList.contains('buildings-row-locked'));
+      const overviewPills = list ? [...list.querySelectorAll('[data-buildings-collect]')] : [];
       const collect = document.getElementById('btnBuildingCollect');
       const upgrade = document.getElementById('btnBuildingUpgrade');
       const paneList = (scr && scr.getAttribute('data-buildings-pane')) === 'list';
       const factoryIds = list ? [...list.querySelectorAll('[data-factory-id]')].map((r) => r.getAttribute('data-factory-id')) : [];
       const wallet = document.getElementById('buildingsWallet');
       const chips = wallet ? [...wallet.querySelectorAll('[data-res]')].map((c) => c.getAttribute('data-res')) : [];
+      const doesLines = list ? [...list.querySelectorAll('.buildings-card-does')].map((el) => (el.textContent || '').trim()) : [];
       if (typeof UI.buildingsShowDetail === 'function') UI.buildingsShowDetail('stick_lighter');
       const paneDetail = (scr && scr.getAttribute('data-buildings-pane')) === 'detail';
       const effect = document.querySelector('[data-buildings-effect="stick_lighter"]');
       const overview = document.getElementById('btnBuildingsOverview');
+      const detailDoes = document.querySelector('#buildingsDetail .buildings-card-does, #buildingsDetail .buildings-effect-does');
+      const detailPill = document.querySelector('#buildingsDetail [data-buildings-collect]');
+      if (typeof UI.buildingsShowDetail === 'function') UI.buildingsShowDetail('echo_whistle');
+      const echoPlayLocked = !!document.getElementById('btnBuildingPlayIsland');
+      if (typeof UI.buildingsShowDetail === 'function') UI.buildingsShowDetail('stick_lighter');
       if (typeof save !== 'undefined') {
         save.unlocked = 70;
         if (typeof persist === 'function') persist();
@@ -178,6 +190,8 @@ async function runBrowser() {
         if (typeof persist === 'function') persist();
       }
       if (typeof UI.renderBuildings === 'function') UI.renderBuildings();
+      const collectAfter = document.getElementById('btnBuildingCollect');
+      const upgradeAfter = document.getElementById('btnBuildingUpgrade');
       const sparkBefore = (typeof buildingWallet === 'function') ? Number(buildingWallet('spark') || 0) : 0;
       if (typeof UI.doBuildingCollect === 'function') UI.doBuildingCollect('stick_lighter');
       const sparkAfter = (typeof buildingWallet === 'function') ? Number(buildingWallet('spark') || 0) : 0;
@@ -185,14 +199,18 @@ async function runBrowser() {
       const flash = !!document.querySelector('.buildings-collect-flash, .buildings-wallet-chip.is-flash');
       if (typeof UI.buildingsShowUpgradeStep === 'function') UI.buildingsShowUpgradeStep();
       const upgradeConfirm = document.getElementById('btnBuildingUpgradeConfirm');
-      const collectGoneOnUpgrade = !document.getElementById('btnBuildingCollect');
+      const collectStaysOnSheet = !!document.getElementById('btnBuildingCollect');
       const sheet = document.getElementById('buildingsUpgradeSheet');
       const sheetOpen = !!(sheet && !sheet.hidden);
+      const sheetClose = !!(sheet && sheet.querySelector('[data-buildings-sheet-close]'));
       const usesDesc = typeof buildingDescModel === 'function';
       const usesWallet = typeof buildingWalletModel === 'function';
       const usesArt = typeof buildingArtSrc === 'function';
+      if (typeof UI.buildingsShowDetail === 'function') UI.buildingsShowDetail('echo_whistle');
+      const echoPlay = document.getElementById('btnBuildingPlayIsland');
       if (typeof UI.buildingsShowList === 'function') UI.buildingsShowList();
       const backToList = (scr && scr.getAttribute('data-buildings-pane')) === 'list';
+      const hasDoes = doesLines.filter(Boolean).length >= 5;
       return {
         ok: !!(scr && scr.classList.contains('active')
           && ids.length === 5
@@ -201,14 +219,16 @@ async function runBrowser() {
           && !ids.includes('mill') && !ids.includes('forge')
           && !lighterLocked && echoLocked
           && !millCopy
-          && collect && upgrade
+          && (collectAfter || collect) && (upgradeAfter || upgrade)
           && paneList && paneDetail
           && effect && overview
           && chips.includes('spark') && chips.includes('echo') && chips.includes('petCoins')
+          && chips.includes('glue') && chips.includes('chip') && chips.includes('steam')
           && !mashed
-          && collected && flash && upgradeConfirm && collectGoneOnUpgrade && backToList
-          && sheet && sheetOpen && usesArt
-          && echoOpen
+          && collected && flash && upgradeConfirm && collectStaysOnSheet && backToList
+          && sheet && sheetOpen && sheetClose && usesArt && usesDesc && usesWallet
+          && overviewPills.length === 5 && hasDoes && detailDoes && detailPill
+          && echoPlayLocked && echoOpen
           && versusGone
           && apiLive),
         ids,
@@ -226,12 +246,18 @@ async function runBrowser() {
         collected,
         flash,
         upgradeConfirm: !!upgradeConfirm,
-        collectGoneOnUpgrade,
+        collectStaysOnSheet,
         backToList,
         sheetOpen,
+        sheetClose,
         usesDesc,
         usesWallet,
         usesArt,
+        overviewPills: overviewPills.length,
+        hasDoes,
+        detailDoes: !!(detailDoes && (detailDoes.textContent || '').trim()),
+        echoPlayLocked,
+        echoPlay: !!echoPlay,
         head: (document.getElementById('buildingsScreenHead') || {}).textContent || '',
       };
     } catch (e) {
