@@ -1174,6 +1174,10 @@ function seedNlFromRuntime() {
     filterOwned: 'Van jou',
     filterSearch: 'Zoek in {n}…',
     filterEmpty: 'Niets in deze filter',
+    filterClear: 'Wis filter',
+    emptyOwned: 'Nog geen uitrusting. Vind drops in Avontuur.',
+    emptyOwnedCta: 'Naar avontuur',
+    emptySlotHint: 'Leeg slot — speel Avontuur om iets te vinden.',
     filterRarityAll: 'Alle',
     filterCount: '{shown}/{total} in {slot}',
     filterAria: 'Filter',
@@ -1241,6 +1245,10 @@ const CATALOG_EN = {
     filterOwned: 'Owned',
     filterSearch: 'Search {n}…',
     filterEmpty: 'Nothing in this filter',
+    filterClear: 'Clear filter',
+    emptyOwned: 'No gear yet. Find drops in Adventure.',
+    emptyOwnedCta: 'Go to Adventure',
+    emptySlotHint: 'Empty slot — play Adventure to find something.',
     filterRarityAll: 'All',
     filterCount: '{shown}/{total} in {slot}',
     filterAria: 'Filter',
@@ -1433,6 +1441,11 @@ const CATALOG_EN = {
   gear: {
     slot: { head: 'Head', chest: 'Chest', hands: 'Hands', legs: 'Legs', back: 'Back' },
     lockSlot: 'Wrong slot',
+    filterEmpty: 'Nothing in this filter',
+    filterClear: 'Clear filter',
+    emptyOwned: 'No gear yet. Find drops in Adventure.',
+    emptyOwnedCta: 'Go to Adventure',
+    emptySlotHint: 'Empty slot — play Adventure to find something.',
   },
 
   banner: {
@@ -2478,6 +2491,13 @@ const CATALOG_DE = {
 };
 
 const CATALOG_FR = {
+  gear: {
+    filterEmpty: 'Rien dans ce filtre',
+    filterClear: 'Effacer le filtre',
+    emptyOwned: 'Pas encore d’équipement. Trouve des drops en aventure.',
+    emptyOwnedCta: 'Vers l’aventure',
+    emptySlotHint: 'Emplacement vide — joue l’aventure pour en trouver.',
+  },
   ach: {
     first_win: { name: 'Première victoire', desc: 'Gagne ton premier niveau' },
     lv10: { name: 'Ninja en croissance', desc: 'Atteins combattant Lv 10' },
@@ -2587,6 +2607,13 @@ const CATALOG_FR = {
 };
 
 const CATALOG_ES = {
+  gear: {
+    filterEmpty: 'Nada en este filtro',
+    filterClear: 'Borrar filtro',
+    emptyOwned: 'Aún no hay equipo. Encuentra drops en Aventura.',
+    emptyOwnedCta: 'Ir a Aventura',
+    emptySlotHint: 'Hueco vacío — juega Aventura para encontrar algo.',
+  },
   ach: {
     first_win: { name: 'Primer triunfo', desc: 'Gana tu primer nivel' },
     lv10: { name: 'Ninja en crecimiento', desc: 'Alcanza luchador Lv 10' },

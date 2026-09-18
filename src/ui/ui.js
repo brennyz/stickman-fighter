@@ -8,6 +8,26 @@ function levelScreenActive() {
   return !!(el && el.classList.contains('active'));
 }
 
+function juiceGearOwnedCount(items) {
+  if (!items || !items.length) return 0;
+  let n = 0;
+  for (const it of items) {
+    try {
+      if (typeof gearOwned === 'function' && gearOwned(it)) n += 1;
+    } catch (_) {}
+  }
+  return n;
+}
+
+function juiceOpenAdventure() {
+  try { UI.goMenu(); } catch (_) {}
+  const adv = document.getElementById('btnAdventure');
+  if (adv) {
+    try { adv.click(); return; } catch (_) {}
+  }
+  try { UI.safeOpen('levelScreen', () => UI.renderLevels()); } catch (_) {}
+}
+
 function appendItemUpgradeButton(el, cat, id, rerender) {
   if (!itemUpgradeEligible(cat, id) || !itemCanUpgrade(cat, id)) return;
   const cost = itemUpgradeCost(cat, id);
@@ -1512,7 +1532,7 @@ const UI = {
       return;
     }
     const item = { text, ms: spec.ms, tone: spec.tone };
-    if (this._toastEls.length >= 2) {
+    if (this._toastEls.length >= 1) {
       this._toastQ.push(item);
       if (this._toastQ.length > 4) this._toastQ.shift();
       return;
@@ -1562,22 +1582,33 @@ const UI = {
   },
 
   _dismissToast(el) {
-    if (!el) return;
+    if (!el || el._toastGone) return;
+    el._toastGone = true;
     if (el._toastHide) {
       try { clearTimeout(el._toastHide); } catch (_) {}
       el._toastHide = null;
     }
-    try { el.remove(); } catch (_) {
-      try { if (el.parentNode) el.parentNode.removeChild(el); } catch (__) {}
+    const finish = () => {
+      try { el.remove(); } catch (_) {
+        try { if (el.parentNode) el.parentNode.removeChild(el); } catch (__) {}
+      }
+      this._toastEls = (this._toastEls || []).filter((x) => x !== el);
+      this._flushToastQ();
+    };
+    let skipAnim = false;
+    try { skipAnim = typeof motionReduced === 'function' && motionReduced(); } catch (_) {}
+    if (skipAnim || el.classList.contains('toast-out')) {
+      finish();
+      return;
     }
-    this._toastEls = (this._toastEls || []).filter((x) => x !== el);
-    this._flushToastQ();
+    try { el.classList.add('toast-out'); } catch (_) {}
+    setTimeout(finish, 180);
   },
 
   _flushToastQ() {
     this._toastQ = this._toastQ || [];
     this._toastEls = this._toastEls || [];
-    while (this._toastEls.length < 2 && this._toastQ.length) {
+    while (this._toastEls.length < 1 && this._toastQ.length) {
       this._mountToast(this._toastQ.shift());
     }
   },
@@ -2087,10 +2118,12 @@ const UI = {
       let left = 0;
       try { left = typeof chestSummonsLeft === 'function' ? chestSummonsLeft() : 0; } catch (_) {}
       summonTile.classList.toggle('has-summons', left > 0);
+      summonTile.classList.toggle('hub-tile-ready', left > 0);
       summonTile.setAttribute('aria-label', left > 0
         ? `${tOr('menu.summons', 'Summons')} · ${t('ui.summonLeftToday', { n: left })}`
         : `${tOr('menu.summons', 'Summons')} · ${t('ui.summonDoneToday')}`);
     }
+    try { this.syncHubJuiceTiles(); } catch (_) {}
     document.getElementById('togMusic')?.classList.toggle('off', !save.music);
     document.getElementById('togSfx')?.classList.toggle('off', !save.sfx);
     const verLine = document.getElementById('menuVerLine');
@@ -2166,9 +2199,40 @@ const UI = {
     }
   },
 
+  syncHubJuiceTiles() {
+    const gearHome = document.getElementById('btnGearHome');
+    const filled = typeof gearEquippedCount === 'function' ? gearEquippedCount() : 0;
+    if (gearHome) {
+      gearHome.classList.toggle('hub-tile-empty', filled <= 0);
+      const sub = gearHome.querySelector('.hub-tile-sub');
+      if (sub) {
+        sub.textContent = filled <= 0
+          ? tOr('hub.gearSubEmpty', 'Leeg · vind in avontuur')
+          : tOr('hub.gearSub', '5 slots · look vs stats');
+      }
+    }
+    const bld = document.getElementById('btnBuildings');
+    if (bld) {
+      let ready = 0;
+      try {
+        const rows = typeof buildingsList === 'function' ? buildingsList() : [];
+        ready = rows.filter((r) => r && r.canCollect).length;
+      } catch (_) { ready = 0; }
+      bld.classList.toggle('hub-tile-ready', ready > 0);
+    }
+    const up = document.getElementById('btnUpgradesHome');
+    if (up) {
+      let n = 0;
+      try { n = typeof countAllUpgradesReady === 'function' ? countAllUpgradesReady() : 0; } catch (_) {}
+      up.classList.toggle('hub-tile-ready', n > 0);
+    }
+  },
+
   hideFomoRitual() {
     const el = document.getElementById('fomoRitual');
-    if (el) el.hidden = true;
+    if (!el) return;
+    try { el.classList.remove('is-open'); } catch (_) {}
+    el.hidden = true;
   },
 
   showFomoRitual(force) {
@@ -2179,6 +2243,7 @@ const UI = {
       el.hidden = true;
       return;
     }
+    try { this.clearToasts(); } catch (_) {}
     const rows = document.getElementById('fomoRitualRows');
     const title = document.getElementById('fomoRitualTitle');
     const reset = document.getElementById('fomoRitualReset');
@@ -2231,6 +2296,11 @@ const UI = {
     const dismiss = document.getElementById('fomoRitualDismiss');
     if (dismiss) dismiss.setAttribute('aria-label', tOr('fomo.ritualDismiss', 'Sluiten'));
     el.hidden = false;
+    try {
+      el.classList.remove('is-open');
+      void el.offsetWidth;
+      el.classList.add('is-open');
+    } catch (_) {}
   },
 
   runFomoRitualCta() {
@@ -4330,6 +4400,15 @@ const UI = {
         return false;
       }
       AudioSys.sfx('select');
+      try { if (typeof haptic === 'function') haptic(10); } catch (_) {}
+      const doll = document.getElementById('gearDollCanvas');
+      if (doll) {
+        try {
+          doll.classList.remove('juice-flash');
+          void doll.offsetWidth;
+          doll.classList.add('juice-flash');
+        } catch (_) {}
+      }
       UI.toast(tOr('toast.gearEquipped', '{name} aangedaan', { name: gearItemName(item) }), 1400, { tone: 'ok' });
       return true;
     };
@@ -4338,6 +4417,7 @@ const UI = {
       if (typeof gearUnequipSlot === 'function') gearUnequipSlot(sid);
       else unequipGear(sid);
       AudioSys.sfx('select');
+      try { if (typeof haptic === 'function') haptic(6); } catch (_) {}
       UI.toast(tOr('toast.gearUnequipped', '{name} uitgedaan', { name: gearItemName(item) }), 1200);
     };
     const keepPickerScroll = () => {
@@ -4466,7 +4546,15 @@ const UI = {
     const picked = (typeof contractGearItem === 'function' && rawPicked) ? contractGearItem(rawPicked) : rawPicked;
     if (detail) {
       if (!picked) {
-        detail.innerHTML = `<div class="gear-detail-sub">${esc(tOr('gear.pickHint', 'Tik een item om aan of uit te doen.'))}</div>`;
+        const ownedN = typeof juiceGearOwnedCount === 'function'
+          ? juiceGearOwnedCount(items)
+          : items.filter((it) => {
+            try { return typeof gearOwned === 'function' && gearOwned(it); } catch (_) { return false; }
+          }).length;
+        const hint = ownedN <= 0
+          ? tOr('gear.emptySlotHint', 'Leeg slot — speel Avontuur om iets te vinden.')
+          : tOr('gear.pickHint', 'Tik een item om aan of uit te doen.');
+        detail.innerHTML = `<div class="gear-detail-sub">${esc(hint)}</div>`;
       } else {
         const unlock = gearUnlockState(picked, pickSlot);
         const tip = unlock.model || (typeof gearTooltipModel === 'function' ? gearTooltipModel(picked) : null);
@@ -4597,8 +4685,46 @@ const UI = {
       const frag = document.createDocumentFragment();
       if (!shown.length) {
         const empty = document.createElement('div');
-        empty.className = 'gear-filter-empty';
-        empty.textContent = tOr('gear.filterEmpty', 'Niets in deze filter');
+        empty.className = 'gear-filter-empty juice-empty';
+        const ownedN = juiceGearOwnedCount(items);
+        const filtered = this.gearFilter !== 'all' || this.gearRarity !== 'all' || !!(this.gearFilterQ || '').trim();
+        const copy = document.createElement('p');
+        copy.className = 'juice-empty-copy';
+        if (!filtered && ownedN <= 0) {
+          copy.textContent = tOr('gear.emptyOwned', 'Nog geen uitrusting. Vind drops in Avontuur.');
+          empty.appendChild(copy);
+          const cta = document.createElement('button');
+          cta.type = 'button';
+          cta.className = 'btn mode-btn b-adventure big-touch gear-empty-cta';
+          cta.textContent = tOr('gear.emptyOwnedCta', 'Naar avontuur');
+          bindPress(cta, () => {
+            safeUiAction(() => juiceOpenAdventure(), 'gearEmptyAdv', tOr('gear.errSlot', 'Slot pick failed'));
+          });
+          empty.appendChild(cta);
+        } else if (filtered) {
+          copy.textContent = tOr('gear.filterEmpty', 'Niets in deze filter');
+          empty.appendChild(copy);
+          const cta = document.createElement('button');
+          cta.type = 'button';
+          cta.className = 'btn mode-btn b-gray big-touch gear-empty-cta';
+          cta.textContent = tOr('gear.filterClear', 'Wis filter');
+          bindPress(cta, () => {
+            safeUiAction(() => {
+              this.gearFilter = 'all';
+              this.gearRarity = 'all';
+              this.gearFilterQ = '';
+              const q = document.getElementById('gearFilterQ');
+              if (q) q.value = '';
+              this._gearPickerScroll = 0;
+              AudioSys.sfx('select');
+              this.renderGear({ pickerOnly: true });
+            }, 'gearFilterClear', 'Filter mislukt');
+          });
+          empty.appendChild(cta);
+        } else {
+          copy.textContent = tOr('gear.filterEmpty', 'Niets in deze filter');
+          empty.appendChild(copy);
+        }
         frag.appendChild(empty);
       }
       for (const it of shown) {

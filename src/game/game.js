@@ -1471,6 +1471,10 @@ class Game {
         const lbl = typeof gearLabel === 'function' ? gearLabel(gdef) : gdef.name;
         this.floater(p.x, p.y - 100, t('combat.pickupGear', { name: lbl }), col, 15);
         if (fresh) {
+          try { haptic(14); } catch (_) {}
+          try {
+            if (typeof applyHitConfirmFx === 'function') applyHitConfirmFx(this, p.x, p.y - 36, { kind: 'special' });
+          } catch (_) {}
           try { UI.toast(t('toast.gearDrop', { name: lbl, slot: gearSlotLabel(gdef.slot) }), 3600, { tone: 'ok' }); } catch (_) {}
         }
         break;

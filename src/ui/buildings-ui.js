@@ -563,6 +563,7 @@ if (typeof UI === 'object' && UI) {
 
   UI.doBuildingCollect = function doBuildingCollect(id) {
     if (typeof AudioSys !== 'undefined') { try { AudioSys.init(); AudioSys.sfx('claim'); } catch (_) { try { AudioSys.sfx('select'); } catch (__) {} } }
+    try { if (typeof haptic === 'function') haptic(10); } catch (_) {}
     const res = (typeof buildingsCollect === 'function') ? buildingsCollect(id) : { ok: false };
     if (res && res.ok) {
       const label = (typeof buildingsResourceLabel === 'function')
