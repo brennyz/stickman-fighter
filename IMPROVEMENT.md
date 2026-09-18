@@ -1,3 +1,4 @@
+| 2026-09-18 | **PLAYTEST LEAD #342** | TF-001 merge-first (sticky vlieger tip fixed on draft). TF-002/003 P1 bots 6/5. Density unchanged. Draft. Niet main. |
 | 2026-09-18 | **PLAYTEST LEAD #341** | Landscape combat PASS (camera/floor/pads). LC-001/002 P2 hop asymmetry — no bot. Draft. Niet main. |
 | 2026-09-18 | **PLAYTEST LEAD #339 PERF** | PERF-01–06 ingested. Bots 3–4: spawnLite on touch whole fight; gate juiceKillSnap + hitStop freeze. Draft. Niet main. |
 | 2026-09-18 | **PLAYTEST LEAD #340 land** | MM-010/011/012 briefs: 844 doll-only · 0 pet cards · Open kist clip. Bots 10/14/15. Skip tablet-834. Draft. Niet main. |

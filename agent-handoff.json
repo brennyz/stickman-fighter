@@ -1279,6 +1279,10 @@
   ],
   "sessionLog": [
     {
+      "at": "2026-09-18T16:49:45Z",
+      "summary": "Ingested #342: TF-001 merge-first; TF-002/003 P1 bots; density unchanged."
+    },
+    {
       "at": "2026-09-18T16:48:45Z",
       "summary": "Ingested #341: landscape combat PASS. LC-001/002 hop asymmetry P2 — no bot."
     },
@@ -1373,10 +1377,6 @@
     {
       "at": "2026-09-18T12:50:36Z",
       "summary": "examiner P0 factories/gear-lock + DE button overflow start"
-    },
-    {
-      "at": "2026-09-18T12:49:49Z",
-      "summary": "Examiner #317 HUD/FOMO/settings locale + style/season 390px clamp. v1.18.175 / SW 385. Draft, geen main."
     }
   ],
   "implementedFeaturesSummary": "d18 char select deel 1+2 (v1.11.1-2); Mats coinrun + shuriken mik/vliegers + anti-spam (v1.12.0); speel.html (v1.12.2+). Zie HANDOFF-ZOEKINDEX.md en improvement-d20-bag.json userFeatureLog.",

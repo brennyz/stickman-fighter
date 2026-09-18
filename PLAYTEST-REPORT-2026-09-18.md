@@ -60,9 +60,9 @@ Status: `open` · `pass` · `fixed-on-draft` · `DELEGATED` · `out`
 | **PERF-01** | open · **#339** | fxLite | `fxSpawnLite` = `liteFx \|\| reduced \|\| tier≥1 \|\| (touch && frames<90)`. Smooth opener stays **tier 0** → guard dies at frame 90. Next elite: **26 particles + freezeT 0.10s** (`triggerSpecialEnemyIntro`). Wave-1 still 4 / 0. | #339 |
 | **PERF-02** | open · **#339** | fxLite | Same cliff. Colossal / super-boss: **48 particles + freezeT 0.22s** + shake 16/0.55s. Satan/Tide skip freeze only while spawnLite still on. Same bot as PERF-01. | #339 |
 | **PERF-03** | open · **#339** | juice | `juiceKillSnap` sets `freezeT` **before** shake rate-limit. Lite FX on: common **0.058s** · elite **0.075s**. Horde clear = stacked hitches. Shake limited; freeze not. | #339 |
-| **TF-001** | **fixed-on-draft #342** | telegraph | Lose tip stole sticky `vlieger` from a prior bat chip. **Do not restage.** Land #342. | #342 |
-| **TF-002** | open | telegraph | Hop/fly have no wind-up. L1 deaths are contact; body is the pipe. | #342 |
-| **TF-003** | open | telegraph | CHARGE world ring washes out on day sky; HUD bar does the work. | #342 |
+| **TF-001** | **fixed-on-draft #342 · MERGE FIRST** | telegraph | Bubbel kill said `vlieger →` — `lastFailTele` leftover from a bat + steal of any alive flyer. Draft writes cue from **this** attacker only. Hop contact → empty cue. **Do not restage. Prioritize merge #342** (v1.18.191 / SW 401 on that branch). | #342 |
+| **TF-002** | open · **#342** | telegraph | Hop/fly set no `telegraphT`. L1 deaths 2–5s standing still are contact (Moerasly / Kleiply / Kikkervis / Flapper). No HUD bar. Body is the pipe. Visual hop squash / dive ring only — **density unchanged**. | #342 |
+| **TF-003** | open · **#342** | telegraph | CHARGE HUD PASS (`CHARGE — uit de weg!` + 0.5). World ring = thin dark circle + faint yellow dash on day sky. Thicker/darker outline; **no wind-time change**. | #342 |
 | **J-001** | open | juice | First Avontuur kill: `toast.dexDiscover` **and** `banner.newDex` stack on the KO snap. | #344 |
 | **MM-001** | open · **#340** | gear / EX-011 | 390 one-page catalog **3668–4285 px** (~4–5 viewports). Doll + 5 slots + 14 filter chips + 27 locked rows. Filters are mid-page (`#gearSheetTools` 248 px), not a sheet. Tablet 834 still **3843 px** / no 900 dual-pane. Slot tap = chip wall (`Alles27 Look15`). | #340 |
 | **MM-002** | open · **#340** | pets | 390 chrome stack ≈530 px (wallet + hero + triple “Dag-ei klaar” + 84 px crack). Dex list top ≈716 — **below the fold**. Detail CTAs y≈931. Softens on 834 (5 cards visible). | #340 |
@@ -86,6 +86,9 @@ Status: `open` · `pass` · `fixed-on-draft` · `DELEGATED` · `out`
 | F30-fomo | open | FOMO | `fomoRitualPending` true after punch; auto-sheet flaky unless `#menuScreen.active`. |
 | LC-001 | open · **low** | landscape-combat | Mid-jump rotate *to* 844×390 snaps Y to new floor (old Y would be below `H`). Hop cancelled. Necessary. **No bot.** |
 | LC-002 | open · **low** | landscape-combat | Landscape → portrait while airborne **keeps** the hop (still on canvas). Inverse of LC-001; looks correct. **No bot.** |
+| TF-004 | open · #342 | telegraph | LIVE `swim` → CHARGE leftover stamp. Draft stops it; shark still tags charge. Not seen in L1. |
+| TF-005 | open · #342 | telegraph | SLAM/SCHIET/VUUR/INKT not reached in L1 window (code+smoke only). |
+| TF-006 | open · #342 | death-retry | Heat lecture after ~7 L1 fails — same as DR-heat. |
 | PERF-04 | open · #339 | juice | `applyHitStop` only early-outs on `motionReduced()`. Punch freeze **0.034s** with Lite FX still on. Gate with PERF-03. |
 | PERF-05 | open · #339 | fxLite | After 90 frames tier 0: spawnLite **and** `fxLite()` both false. Touch cap still 100. Auto Lite hint waits for **tier 2 + 120 frames** (after the hitch). |
 | EX-012 | DELEGATED #314 | HUD | First-minute hint + stars + wave tight on 390. |
@@ -101,6 +104,25 @@ Status: `open` · `pass` · `fixed-on-draft` · `DELEGATED` · `out`
 | LH-dock | P3 · #338 | Landscape HOME meta-dock under 390 fold — play tile above fold |
 | LH-copy | P3 · #338 | “Naar / oproepen” wrap · NL “power-ups” on mission row |
 | LC-pads | P3 · #341 | Phone-land pads sit on the 44px floor (no slack). iPad 3×2 jump-left is documented out of #331. |
+
+### #342 telegraph (canonical)
+
+Source: `docs/PLAYTEST-TELEGRAPH-6.md`. Draft branch `cursor/playtest-telegraphs-51fa` = **v1.18.191 / SW 401**. Density from LIVE `c9a29fc` — **do not retune**.
+
+| Viewport | Scale | Max alive | Interval × | Batch | Gap |
+|----------|------:|----------:|-----------:|------:|----:|
+| Desk 1280 | 1.00 | 78 | 1.00 | 3 | 32 |
+| 390 | **0.50** | **12** | **1.55** | **1** | **64** |
+| 844 land | 0.751 | 14 | 1.55 | 1 | 64 |
+
+| ID | Status | Action |
+|----|--------|--------|
+| **TF-001** | **fixed on #342** | **MERGE FIRST** when Brendon says «merge main». Do not clone. |
+| TF-002 | open P1 | Bot **6** — hop/fly wind (visual only) |
+| TF-003 | open P1 | Bot **5** — CHARGE ring contrast (no wind-time change) |
+| TF-004…006 | P2 | Leave (swim stamp already in #342 · L1 didn't reach slam · heat = DR-heat) |
+
+CHARGE HUD PASS. Fat gold retry PASS. Chips 5–7 from full HP — unfair feel was **wrong vlieger label + untelegraphed contact**, not a one-shot.
 
 ### #341 landscape combat (canonical) — PASS · no bot
 
@@ -194,7 +216,7 @@ Older EX-001…032 stay on `EXAMINATOR.md`. Do not re-file.
 | **#339** | mid-phone perf | **#327 opener PASS** (4 sparks / 0 freeze). **PERF-01/02 P1** 90-frame cliff. **PERF-03/04** freeze ignores Lite. Plan: spawnLite on touch **whole fight**; gate `juiceKillSnap` + `applyHitStop`. PERF-05 P2 · PERF-06 P3. |
 | **#340** | meta menus | **MM-001–005 P1 ingested** (gear scroll, pets fold, factories smoke, 2.2s blank, FOMO cover). Landscape 010–012 P1. Skip tablet-834 as new owner. Open times 14–37 ms — clunk is chrome/scroll, not JS. |
 | **#341** | landscape combat | **PASS — no P0/P1.** Camera/floor/pads hold. 844 start ground 312 · player (211,312) · letterbox 0 · punch+jump 44px fire. Mid-fight rotate still on floor. Cyber lv13 visible. **LC-001/002 P2 low — no bot.** |
-| **#342** | telegraph | **TF-001 fixed here (land).** TF-002/003 open P1. Density unchanged. |
+| **#342** | telegraph | **TF-001 FIXED on draft — MERGE FIRST** (wrong `vlieger` tip). TF-002/003 open P1 (hop wind · CHARGE ring). Density **unchanged** (0.50 / 12 / ×1.55 / batch 1 / gap 64). No full-HP one-shot. |
 | **#343** | first-30s | **PASS.** P2 lang / Continue / FOMO flake. |
 | **#344** | juice | Soft PASS. **J-001 P1** first-kill chrome. |
 
@@ -214,6 +236,7 @@ Older EX-001…032 stay on `EXAMINATOR.md`. Do not re-file.
 | 18:46 | — | **#340 MM-010/011/012** | 844 gear doll-only · 0 pet cards · Open kist clipped. Wave-3 bots 14–15. Skip tablet-834. |
 | 18:47 | — | **#339 PERF-01–06** | 90-frame spawnLite cliff · juice/hitStop ignore Lite. Bots 3–4: keep spawnLite on touch; gate freezes. |
 | 18:48 | — | **#341 PASS** | Landscape combat camera/floor/pads. LC-001/002 hop asymmetry P2 — no bot. |
+| 18:49 | — | **#342 TF** | TF-001 merge-first. TF-002/003 P1 bots 6/5. Density report-only. |
 
 Lead evidence: `/opt/cursor/artifacts/playtest_adventure_390_and_844_first_pass.mp4`
 

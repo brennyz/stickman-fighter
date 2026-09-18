@@ -6,7 +6,17 @@
 Board: `PLAYTEST-REPORT-2026-09-18.md`.  
 Each bot = **one 30-min slice**. Branch `cursor/<lane>-9e0e`. Smoke + 390 or 844 proof. Then STOP.
 
-**Land-don't-restage:** #342 **TF-001** (sticky flyer lose-tip) is already fixed on that draft. Merge candidate. Do not clone.
+## MERGE FIRST — #342 TF-001 (not a new bot)
+
+**When Brendon says «merge main», land `#342` / `cursor/playtest-telegraphs-51fa` first.**
+
+Sticky lose-tip: Bubbel (hop slime) said `vlieger →` because `lastFailTele` kept a bat chip and `ensureAdventureFailTele` stole any alive flyer. Draft writes `lastFailTele` from **this** attacker only. Hop contact → empty cue. Also stops swim→CHARGE stamp (TF-004).
+
+- Do **not** clone on a new branch.
+- Do **not** retune density (0.50 / 12 / ×1.55 / batch 1 / gap 64).
+- Prove after merge: slime after flyer leftover → tip is `Nog één keer · {name}` with **no** `vlieger`. `npm run smoke:telegraph-read` + `smoke:combat-density`.
+
+Open P1s on this lane stay bots **5** (TF-003) and **6** (TF-002).
 
 ---
 
@@ -136,29 +146,29 @@ Horde wave-clear = stacked 58ms hitches. Punch + kill on the same beat stacks PE
 
 ## Bot 5 — TF-003 CHARGE ring contrast (telegraph)
 
-**Source:** #342.  
+**Source:** #342 · `desk-charge-hud.webp`.  
 **Files:** telegraph ring draw · `docs/COMBAT-TELEGRAPH.md`.  
-**Do not:** change #314 density 0.50 / interval / batch. Do not restage TF-001.
+**Do not:** change #314 density / interval / batch / gap. Do not change wind floors (0.32 desk / 0.38 phone). Do not restage TF-001 (merge #342).
 
-**Bug:** CHARGE HUD (`CHARGE — uit de weg!`) is readable. World ring washes out on day sky (`landweg`).
+**Bug:** HUD PASS (`CHARGE — uit de weg!` + 0.5 chip). World ring is a thin dark circle + faint yellow dash on day `landweg`. Contract wants high-contrast ring + arrow. Cyber/night may be fine.
 
-**Fix:** Darker plate / thicker stroke / 1.22× compact ring already exists — raise contrast on light themes only (`landweg` / `veld`).
+**Fix:** Thicker / darker outline on light themes only. **No wind-time change.**
 
-**Prove:** L1 390 day stage — ring visible without HUD. `npm run smoke:telegraph-read`.
+**Prove:** L1 day stage — ring readable without HUD. `npm run smoke:telegraph-read` + `smoke:combat-density` (numbers unchanged).
 
 ---
 
 ## Bot 6 — TF-002 hop/fly wind (telegraph)
 
-**Source:** #342.  
-**Files:** flyer hop / dive telegraph · HUD kind.  
-**Do not:** retune horde size. Do not steal TF-001 from #342.
+**Source:** #342 · L1 default deaths (Moerasly / Kleiply / Kikkervis / Flapper).  
+**Files:** hop + fly AI (`telegraphT` never set) · optional dive ring.  
+**Do not:** retune horde size / 0.50 floor. Do not steal TF-001 from #342 (wrong `vlieger` label is already fixed there).
 
-**Bug:** Hop/fly have no wind-up. L1 deaths are contact; the body is the pipe. CHARGE/SLAM already have rings.
+**Bug:** Neither hop nor fly sets `telegraphT`. HUD bar never appears. Standing still 2–5s → contact chips 5–7 (not a one-shot). On 390 the slime is small on a bright sky — first deaths feel random. “Body is the pipe” only if you see them.
 
-**Fix:** Short hop squash or dive ring (phone floor ≥0.38s). Optional HUD `vlieger` only for **this** attack (TF-001 already stops leftover stamps).
+**Fix:** Visual only — hop squash and/or fly dive ring (phone floor ≥0.38s). Empty fail cue on hop contact is correct after TF-001.
 
-**Prove:** L1 flyer/hop on 390 — readable cue before contact. Density table unchanged.
+**Prove:** L1 390 — readable cue before contact. Density table unchanged. `smoke:combat-density` green.
 
 ---
 
@@ -306,4 +316,4 @@ Horde wave-clear = stacked 58ms hitches. Punch + kill on the same beat stacks PE
 
 ## Merge note (not this PR)
 
-If Brendon says **«merge main»** later, suggested order: **#342 TF-001** first, then fix-bot drafts 1→7 (fight), then 8→10 (meta). Versus stays retired. Share URL stays `speel.html`.
+**«merge main» order:** **#342 TF-001 first** (already coded), then fix-bot drafts 1→7 (fight), then 8→15 (meta). Versus stays retired. Share URL stays `speel.html`. Density stays #314.
