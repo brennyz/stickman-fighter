@@ -25,7 +25,8 @@ rg -l "handoff|coinrun|projAimVelocity|charSelectScreen|ASSET-STYLE" .
 | **First-30s punch teach** | 1.18.190 | main | `src/systems/first-punch-teach.js` · skip island/gamble/FOMO until first punch · `smoke:first30-teach`. Versus out. |
 | **Death-retry fat gold CTA** | 1.18.190 | main | `#323` + `#326` `restartAdventureInstant` · `#resRetrySafe` · fat gold Nog één keer · `smoke:flappy-retry`. Versus out. |
 | **Mid-phone fxLite / spawn hitch** | 1.18.190 | main | `fxSpawnLite` · particle pool · `docs/FX-LITE.md` · fighters always draw · Versus out |
-| **Combat juice hit/kill/equip** | 1.18.190 | this branch | `src/systems/combat-juice.js` · `applyHitConfirmFx` haptic+shake · KO snap rate-limit · doll punch · `docs/COMBAT-JUICE.md` · Versus out |
+| **Playtest juice / hit-feel (7/9)** | 1.18.190 | this branch | Draft only: `docs/PLAYTEST-JUICE-FEEL.md` · LIVE `c9a29fc` · first-kill toast+banner vs KO · Versus out · no main |
+| **Combat juice hit/kill/equip** | 1.18.190 | main #330 | `src/systems/combat-juice.js` · `applyHitConfirmFx` haptic+shake · KO snap rate-limit · doll punch · `docs/COMBAT-JUICE.md` · Versus out |
 | **Phone landscape pads (~844×390)** | 1.18.190 | this branch | `touchPhoneLandscape` · 1P jump/punch/swipe · `docs/LANDSCAPE-TOUCH.md` · `smoke:landscape-touch`. #321 pause gutter kept. Versus out. |
 | **Mobile combat density** | 1.18.186 | main | `src/systems/combat-density.js` · `buildLevel` / spawn cadence · `docs/COMBAT-DENSITY.md` · Versus out |
 | **Landscape combat camera/canvas** | 1.18.190 | this branch | `alignCombatPlayfield` / `combatViewAlign` · `#game --vv-*` · resize-before-spawn · `smoke:landscape-combat`. Versus out. |
