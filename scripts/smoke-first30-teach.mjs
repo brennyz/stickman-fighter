@@ -36,6 +36,8 @@ if (!/firstPunchTeachShouldPulsePunch/.test(game)) fail('punch button must pulse
 if (!/startFirstPunchAdventure/.test(start)) fail('first Avontuur helper missing');
 if (!/g\._juiceTeach = true/.test(missions)) fail('onboarding must still teach by doing');
 if (!/firstPunchPending/.test(missions)) fail('pause onboard must honor firstPunchPending');
+if (!/function islandPickPending/.test(missions)) fail('island Continue helper missing');
+if (!/function fomoRitualWouldBlockPlay/.test(missions)) fail('FOMO block-play skip missing');
 if (/g\.hint = 8/.test(missions)) fail('first-minute 8s wall must stay off');
 if (!/data-hub="adventure"/.test(html)) fail('HOME Avontuur tile missing');
 if (/data-hub="versus"/.test(html)) fail('Versus must stay retired');

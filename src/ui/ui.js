@@ -1386,6 +1386,9 @@ const UI = {
           if (!this.advIslandPick) this.advIslandPick = currentAdvIsland();
           try { applyIslandOnboarding(); } catch (_) {}
         }
+        if (id === 'menuScreen') {
+          try { this.maybeAutoShowFomoRitual(!!this._fomoRitualForce); } catch (_) {}
+        }
       } else if (game?.mode === 'versus') {
         try { this.refreshPauseSubtitle(); } catch (_) {}
       }
@@ -2366,13 +2369,7 @@ const UI = {
           persist();
         }
       }
-      if (typeof fomoRitualHubReady === 'function' && !fomoRitualHubReady()) this.hideFomoRitual();
-      else if (this._fomoRitualHide) this.hideFomoRitual();
-      else if (this._fomoRitualForce || (typeof fomoRitualPending === 'function' && fomoRitualPending())) {
-        this.showFomoRitual(!!this._fomoRitualForce);
-      } else {
-        this.hideFomoRitual();
-      }
+      this.maybeAutoShowFomoRitual(!!this._fomoRitualForce);
     } catch (_) {}
     } catch (err) {
       sfReportError('renderMenu', err, errT('ui.errMenuRefresh', 'Could not refresh menu'));
@@ -2467,6 +2464,43 @@ const UI = {
     this._syncFomoHubLock(false);
   },
 
+  /** HOME return: open Vandaag once menu is .active, or skip if sheet would block play. */
+  maybeAutoShowFomoRitual(force) {
+    force = !!force || !!this._fomoRitualForce;
+    try {
+      if (typeof fomoRitualHubReady === 'function' && !fomoRitualHubReady()) {
+        this.hideFomoRitual();
+        return false;
+      }
+    } catch (_) {}
+    if (!force && this._fomoRitualHide) {
+      this.hideFomoRitual();
+      return false;
+    }
+    const pending = force
+      || !!this._fomoRitualWanted
+      || (typeof fomoRitualPending === 'function' && fomoRitualPending());
+    if (!pending) {
+      this.hideFomoRitual();
+      return false;
+    }
+    const menu = document.getElementById('menuScreen');
+    if (!menu || !menu.classList.contains('active')) {
+      this._fomoRitualWanted = true;
+      this.hideFomoRitual();
+      return false;
+    }
+    if (!force && typeof fomoRitualWouldBlockPlay === 'function' && fomoRitualWouldBlockPlay()) {
+      this._fomoRitualHide = true;
+      this._fomoRitualWanted = false;
+      this.hideFomoRitual();
+      return false;
+    }
+    this._fomoRitualWanted = false;
+    this.showFomoRitual(force);
+    return true;
+  },
+
   showFomoRitual(force) {
     try { this.clearToasts(); } catch (_) {}
     const el = document.getElementById('fomoRitual');
@@ -2480,6 +2514,7 @@ const UI = {
     };
     const menu = document.getElementById('menuScreen');
     if (!menu || !menu.classList.contains('active')) {
+      this._fomoRitualWanted = true;
       hideQuiet();
       return;
     }

@@ -65,6 +65,12 @@ if (!/\bfomo:/.test(storage) || !/lastDayBonusDate/.test(storage)) {
 if (!/showFomoRitual/.test(ui) || !/lastOpenDate/.test(ui)) {
   fail('F1 renderMenu ritual / lastOpenDate missing');
 }
+if (!/maybeAutoShowFomoRitual/.test(ui) || !/fomoRitualWouldBlockPlay/.test(missions)) {
+  fail('FOMO HOME flush / landscape skip helpers missing');
+}
+if (!/function islandPickPending/.test(missions)) {
+  fail('islandPickPending missing — Continue must not skip island forever');
+}
 if (!/hideFomoRitual\(\)/.test(ui) || !/fomo-open/.test(ui)) {
   fail('FOMO hide / fomo-open class missing — sheet can overlap summon');
 }
