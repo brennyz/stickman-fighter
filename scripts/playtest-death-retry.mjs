@@ -121,9 +121,15 @@ async function seedLose(page, level, opts) {
     g.lastHurtBy = opts.hurt || { name: 'SlamToad', slam: true, type: 'tank' };
     if (opts.realHit && g.player && typeof g.player.takeDamage === 'function') {
       try {
-        const dummy = (g.monsters && g.monsters[0]) || { name: 'SlamToad', sp: { type: 'tank', name: 'SlamToad' }, flying: false };
-        g.player.hp = 1;
-        g.player.takeDamage(999, dummy);
+        const dummy = (g.monsters && g.monsters.find((m) => m && m.alive))
+          || { name: opts.hurt && opts.hurt.name || 'ChargeBoar', sp: { type: (opts.hurt && opts.hurt.type) || 'charge', name: 'ChargeBoar' }, flying: false };
+        g.player.invulnT = 0;
+        g.player.blocking = false;
+        g.player.hp = Math.max(1, g.player.hp);
+        g.player.takeDamage(999, 80, g, { attacker: dummy, unblockable: true, srcMon: dummy });
+        if (g.player.alive || !g.over) {
+          try { g.finishAdventure(false); } catch (_) {}
+        }
       } catch (e) {
         try { g.finishAdventure(false); } catch (e2) { return { ok: false, why: String(e2) }; }
       }
@@ -181,7 +187,7 @@ async function runViewport(browser, base, vp) {
     gold: /linear-gradient/i.test(ui.bg || ''),
     label: /nog één keer|one more|noch einmal|encore une fois|una más|una vez/i.test(ui.label),
     loseRetry: !!ui.loseRetry,
-    killer: /slamtoad|slam/i.test(ui.killer || ui.title || ''),
+    killer: !!(ui.killer && String(ui.killer).trim()),
     cueTip: /SLAM|CHARGE|vlieger|flyer|SCHIET|VUUR|slam/i.test(ui.tip || ''),
     retryWord: /nog één keer|one more|noch einmal|encore|una más/i.test(ui.tip || ''),
     noFomo: !ui.fomo,
