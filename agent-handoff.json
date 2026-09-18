@@ -43,7 +43,7 @@
       "id": "w-20260918T135100",
       "from": "user",
       "text": "Keep #317 until ~16:30. Sweep remaining locale leaks on lose/win/FOMO/settings at 390 (FR/ES/DE). One-line mission/toast leftovers only — no layout ownership (#318/#321). Smoke i18n-locale + i18n-switch. Draft only, speel.html, no Versus, no main.",
-      "status": "open",
+      "status": "done-in-code",
       "updated": "2026-09-18"
     },
     {
@@ -1129,6 +1129,10 @@
   ],
   "sessionLog": [
     {
+      "at": "2026-09-18T13:56:05Z",
+      "summary": "Examiner #317: lose/win/FOMO/settings FR/ES/DE leaks (run/SUMMON/Unlock/Skip/Sound). v1.18.185 / SW 395. Draft, no main."
+    },
+    {
       "at": "2026-09-18T13:49:12Z",
       "summary": "Examiner #317 P0 overlap: HUD wrap + short firstMinute + FR/ES summon CTA Ouvrir/Abrir. v1.18.184 / SW 394. Draft, no main."
     },
@@ -1223,10 +1227,6 @@
     {
       "at": "2026-09-14T19:47:05Z",
       "summary": "Mega-merge #293 fast-forwarded to origin/main. Listed PRs landed minus #279. v1.18.166 / SW 376."
-    },
-    {
-      "at": "2026-09-14T19:45:31Z",
-      "summary": "Mega-merge coverage green except pre-existing main spiral-orb/dex smokes. Stack SHA on cursor/mega-merge-stack-f6c0; skip #279."
     }
   ],
   "implementedFeaturesSummary": "d18 char select deel 1+2 (v1.11.1-2); Mats coinrun + shuriken mik/vliegers + anti-spam (v1.12.0); speel.html (v1.12.2+). Zie HANDOFF-ZOEKINDEX.md en improvement-d20-bag.json userFeatureLog.",
