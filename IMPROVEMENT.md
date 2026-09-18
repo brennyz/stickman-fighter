@@ -1,3 +1,4 @@
+| 2026-09-18 | **#340 MM-004/012 summons** | Name on stage in <1s (`#summonStageName` + card ≤800ms). Landscape 844×390: gold Open kist stays fully on-screen. Versus out. Draft, no main. **v1.18.190 / SW 400**. |
 | 2026-09-18 | **MEGA-MERGE leftover #318+#322 → main** | #318 chrome only (`--ui-rail`, toast-under-title, is-fomo/`_syncFomoHubLock`). Keep #321 `hudSafeLayout` + #323 `restartAdventureInstant`/`#resRetrySafe`. Then #322 Vandaag 40/48vh + HOME toast dock. SKIP #324. Leave #311 (conflicts). **v1.18.189 / SW 399**. speel.html. |
 | 2026-09-18 | **MEGA-MERGE examinator sprint → main** | Landed #317 i18n, #323 Flappy retry, #320 Examinator, #314 density+tablet 834, #321 HUD, #312 factories, #315 gear UX, #313 summons, #319 pets, #316 juice. SKIP #324. Leftover: #318 layout, #322 FOMO, #311 harden. **v1.18.188 / SW 398**. speel.html. |
 | 2026-09-18 | **MEGA-MERGE #321** | Phone HUD keep-out (`hudSafeLayout` / pause gutter) onto main. Density stays #314. Retry stays #323. |
@@ -166,6 +167,7 @@ Schrijf **1–3 regels** per sessie: datum, d#, wat, versie.
 
 | Datum (UTC) | d# | Update |
 |-------------|-----|--------|
+| 2026-09-18 | — | **#340 MM-004/012:** summon name on stage <1s; 844×390 Open kist fully visible. Draft, no Versus, no main. **v1.18.190 / SW 400**. |
 | 2026-09-18 | — | **Leftover stack:** #318 UI chrome + #322 FOMO 390px onto main. Keep #321 HUD + #323 retry. SKIP #324. Leave #311 (not clean). Smokes menu/hud-phone/flappy-retry/adventure OK. **v1.18.189 / SW 399**. speel.html. |
 | 2026-09-18 | — | **MEGA-MERGE continue:** #315 gear + #313 summons + #319 pets + #316 juice onto main. Keep #323 retry + #321 HUD + #314 density. SKIP #318 this pass (HUD/retry/gear-sheet conflicts). Leftover #318 #322 #311. **v1.18.188 / SW 398**. |
 | 2026-09-18 | **MEGA-MERGE #312** | Factories overview→detail→upgrade onto main. Keep factory ids + #317 nameShort. |

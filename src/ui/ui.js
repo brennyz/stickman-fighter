@@ -2714,6 +2714,18 @@ const UI = {
           : tOr('ui.summonHint', 'Tik kist om te openen');
         hint.style.display = (!this._chestPullBusy && empty) ? '' : 'none';
       }
+      if (!this._chestPullBusy) {
+        try {
+          const stageName = document.getElementById('summonStageName');
+          if (stageName) {
+            stageName.hidden = true;
+            stageName.classList.remove('is-on');
+            stageName.textContent = '';
+          }
+          const revealIdle = document.getElementById('summonReveal');
+          if (revealIdle) revealIdle.classList.remove('is-name-ready');
+        } catch (_) {}
+      }
       const skipHint = document.getElementById('summonSkipHint');
       if (skipHint) {
         skipHint.hidden = !skipReady;
@@ -2771,6 +2783,10 @@ const UI = {
   },
 
   clearSummonRevealTimers() {
+    if (this._summonNameTimer) {
+      clearTimeout(this._summonNameTimer);
+      this._summonNameTimer = null;
+    }
     if (this._summonCardTimer) {
       clearTimeout(this._summonCardTimer);
       this._summonCardTimer = null;
@@ -2789,7 +2805,15 @@ const UI = {
     } catch (_) {}
     try {
       const reveal = document.getElementById('summonReveal');
-      if (reveal) reveal.classList.remove('is-card-show', 'is-shake');
+      if (reveal) reveal.classList.remove('is-card-show', 'is-shake', 'is-name-ready');
+    } catch (_) {}
+    try {
+      const stageName = document.getElementById('summonStageName');
+      if (stageName) {
+        stageName.hidden = true;
+        stageName.classList.remove('is-on');
+        stageName.textContent = '';
+      }
     } catch (_) {}
     try {
       const vid = document.getElementById('summonVideo');
@@ -2953,6 +2977,8 @@ const UI = {
       title = (res && res.name) || 'Summon';
     }
     nameEl.textContent = (typeof chestResultTitle === 'function') ? chestResultTitle(res) : title;
+    const stageName = document.getElementById('summonStageName');
+    if (stageName) stageName.textContent = nameEl.textContent || '';
     if (rarEl) {
       rarEl.textContent = typeof rarityLabel === 'function' ? rarityLabel(rarId) : rarId;
       const col = rar.color || '#9db1e3';
@@ -2969,9 +2995,23 @@ const UI = {
     if (card) card.setAttribute('aria-hidden', 'true');
   },
 
+  showSummonStageName() {
+    const reveal = document.getElementById('summonReveal');
+    const stageName = document.getElementById('summonStageName');
+    if (reveal) reveal.classList.add('is-name-ready');
+    if (stageName) {
+      if (!stageName.textContent && this._summonPendingName) {
+        stageName.textContent = this._summonPendingName;
+      }
+      stageName.hidden = !stageName.textContent;
+      stageName.classList.toggle('is-on', !!stageName.textContent);
+    }
+  },
+
   showSummonCenterCard() {
     const reveal = document.getElementById('summonReveal');
     const card = document.getElementById('summonCenterCard');
+    try { this.showSummonStageName(); } catch (_) {}
     if (reveal) reveal.classList.add('is-card-show');
     if (card) card.setAttribute('aria-hidden', 'false');
     this._summonSkipReady = true;
@@ -3001,6 +3041,7 @@ const UI = {
     this._chestPullLeftSnap = null;
     this._summonSkipReady = false;
     this._summonPendingMsg = null;
+    this._summonPendingName = null;
     try {
       const skip = document.getElementById('summonSkipHint');
       if (skip) skip.hidden = true;
@@ -3010,12 +3051,15 @@ const UI = {
   },
 
   /**
-   * Play summon reveal video; always schedule center-card for last 2s.
-   * No video file → CSS arena fallback (no 404 spam after first fail).
+   * Play summon reveal video. Name lands on stage in <1s (MM-004);
+   * card follows by SUMMON_NAME_MAX_MS. No video → CSS arena fallback.
    */
   runSummonRevealTimeline(res) {
     this.clearSummonRevealTimers();
     this._summonSkipReady = false;
+    this._summonPendingName = (typeof chestResultTitle === 'function')
+      ? chestResultTitle(res)
+      : ((res && res.name) || '');
     try {
       const skip = document.getElementById('summonSkipHint');
       if (skip) skip.hidden = true;
@@ -3035,7 +3079,7 @@ const UI = {
       if (pullKind) reveal.dataset.kind = pullKind;
       else delete reveal.dataset.kind;
       reveal.classList.toggle('is-nice', !!(res && res.nice));
-      reveal.classList.remove('is-card-show', 'is-shake');
+      reveal.classList.remove('is-card-show', 'is-shake', 'is-name-ready');
       if (!skipLong) {
         void reveal.offsetWidth;
         reveal.classList.add('is-shake');
@@ -3045,9 +3089,18 @@ const UI = {
     try { if (typeof playSummonBgm === 'function') playSummonBgm(rarId); } catch (_) {}
 
     const startTimers = (totalMs) => {
+      const nameAt = typeof summonRevealNameDelayMs === 'function'
+        ? summonRevealNameDelayMs()
+        : (skipLong ? 0 : 280);
       const cardAt = typeof summonRevealCardDelayMs === 'function'
         ? summonRevealCardDelayMs(totalMs)
-        : (skipLong ? 0 : Math.max(0, (totalMs || SUMMON_REVEAL_TOTAL_MS) - SUMMON_CARD_LAST_MS));
+        : (skipLong ? 0 : Math.min(
+          (typeof SUMMON_NAME_MAX_MS === 'number') ? SUMMON_NAME_MAX_MS : 800,
+          Math.max(0, (totalMs || SUMMON_REVEAL_TOTAL_MS) - SUMMON_CARD_LAST_MS)
+        ));
+      this._summonNameTimer = setTimeout(() => {
+        try { this.showSummonStageName(); } catch (_) {}
+      }, nameAt);
       this._summonCardTimer = setTimeout(() => {
         try { this.showSummonCenterCard(); } catch (_) {}
       }, cardAt);
@@ -3199,6 +3252,7 @@ const UI = {
         this._chestPullBusy = false;
         this._chestPullLeftSnap = null;
         this._summonPendingMsg = null;
+        this._summonPendingName = null;
         this._summonPullLock = false;
         this._summonLastError = (res && res.reason === 'empty')
           ? tOr('ui.summonNoMore', 'Geen summons meer vandaag')
@@ -3230,6 +3284,7 @@ const UI = {
       this._chestPullBusy = false;
       this._summonPullLock = false;
       this._summonPendingMsg = null;
+      this._summonPendingName = null;
       this._summonLastError = tOr('ui.summonFail', 'Summon mislukt — probeer opnieuw');
       this.clearSummonRevealTimers();
       sfReportError('doChestPull', err, errT('ui.summonFail', 'Summon failed — try again'));

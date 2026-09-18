@@ -50,6 +50,14 @@
   },
   "userWishlist": [
     {
+      "id": "w-20260918T164246",
+      "from": "user",
+      "text": "FIX BOT 30m — Stickman. Off main. Draft only. Until ~19:10 Amsterdam. From #340 MM-004/012: Summons pull ~2.2s blank card; landscape Open kist clipped. Show result name on stage in <1s; keep primary CTA fully visible on 844×390. No Versus. No main.",
+      "status": "in-progress",
+      "updated": "2026-09-18",
+      "notes": "Lane: summons / EX-010. MM-004 name-on-stage <1s + MM-012 844×390 Open kist visible."
+    },
+    {
       "id": "w-20260918T141700",
       "from": "user",
       "text": "MEGA-MERGE Stickman Fighter examinator sprint to main. Brendon said «merge main». Merge examinator-sprint draft PRs into main in order: #317 i18n, #323 Flappy retry, #320 Examinator, #314 density + #321 HUD, SKIP #324 if #314 has tablet midband, #312 factories, #315 gear, #313 summons, #319 pets, #316 juice, #318 UI layout, #322 FOMO Vandaag, optionally #311 harden. Share URL speel.html. Versus retired. No secrets. No force-push.",

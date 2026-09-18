@@ -1475,6 +1475,9 @@
     width: min(58%, 220px);
     max-width: calc(100% - 16px);
     max-height: calc(100% - 16px);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
     overflow: hidden;
     transform: translate(-50%, -50%) scale(.86);
     opacity: 0;
@@ -1577,6 +1580,35 @@
   .summon-center-card[data-kind="egg"] .summon-card-canvas {
     border-radius: 50% 50% 42% 42%;
   }
+  .summon-stage-name {
+    position: absolute;
+    left: 50%;
+    top: 10px;
+    transform: translateX(-50%);
+    z-index: 7;
+    max-width: calc(100% - 16px);
+    padding: 5px 12px;
+    border-radius: 999px;
+    font-size: clamp(13px, 3.4vw, 18px);
+    font-weight: 900;
+    color: #fff8e8;
+    background: rgba(6, 8, 14, .72);
+    border: 1px solid rgba(255, 215, 94, .5);
+    box-shadow: 0 4px 14px rgba(0,0,0,.4);
+    text-shadow: 0 1px 0 #000;
+    pointer-events: none;
+    letter-spacing: .02em;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    opacity: 0;
+    line-height: 1.2;
+  }
+  .summon-reveal.is-name-ready .summon-stage-name,
+  .summon-stage-name.is-on {
+    opacity: 1;
+  }
+  .summon-stage-name[hidden] { display: none; }
   .summon-card-name {
     font-size: clamp(14px, 3.8vw, 18px);
     font-weight: 900;
@@ -1587,6 +1619,7 @@
     display: -webkit-box;
     -webkit-line-clamp: 2;
     -webkit-box-orient: vertical;
+    flex: 0 0 auto;
   }
   .summon-card-rar {
     display: inline-block;
@@ -5810,6 +5843,76 @@
     body:has(#resultScreen.active) #toastHost {
       top: max(72px, calc(env(safe-area-inset-top, 0px) + 64px));
       bottom: auto;
+    }
+
+    /* MM-012: gold Open kist stays fully on 844×390 — no rail-scroll clip. */
+    #summonScreen.summon-screen.screen {
+      overflow: hidden;
+      padding-top: max(8px, env(safe-area-inset-top));
+      padding-bottom: max(8px, env(safe-area-inset-bottom));
+    }
+    #summonScreen.summon-screen.screen:has(.sub-home-bar) {
+      padding-bottom: max(8px, env(safe-area-inset-bottom));
+      scroll-padding-bottom: 8px;
+    }
+    #summonScreen .summon-head-row { margin-bottom: 0; }
+    #summonScreen .summon-head-row .head { font-size: clamp(18px, 4.4vw, 24px); margin: 4px 0; }
+    #summonScreen .back-btn { margin-bottom: 2px; min-height: 40px; }
+    #summonScreen .summon-rail {
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      flex: 1 1 auto;
+      min-height: 0;
+      width: min(94vw, 720px);
+      padding-bottom: 0;
+    }
+    #summonScreen .summon-glance { padding: 0; gap: 2px; }
+    #summonScreen .summon-odds,
+    #summonScreen .summon-tut,
+    #summonScreen .summon-goto-row,
+    #summonScreen .summon-log-wrap,
+    #summonScreen .summon-reveal-text.is-idle {
+      display: none;
+    }
+    #summonScreen .summon-stage {
+      max-height: min(42vh, 160px);
+      aspect-ratio: 16 / 9;
+      flex: 1 1 auto;
+      min-height: 96px;
+    }
+    #summonScreen .summon-actions {
+      flex: 0 0 auto;
+      position: relative;
+      z-index: 6;
+      overflow: visible;
+      margin: 0;
+      width: 100%;
+    }
+    #summonScreen .summon-pull-btn,
+    #summonScreen .summon-actions .btn,
+    #summonScreen .summon-actions .btn > div {
+      overflow: visible;
+      text-overflow: unset;
+      max-width: none;
+    }
+    #summonScreen .summon-pull-btn,
+    #summonScreen .summon-actions .summon-pull-btn {
+      min-height: 48px;
+      height: auto;
+      font-size: 16px;
+      box-shadow: 0 3px 0 #7a4a10, 0 6px 12px rgba(0,0,0,.3);
+      width: 100%;
+    }
+    #summonScreen .summon-pull-btn > div {
+      white-space: nowrap;
+      overflow: visible;
+    }
+    #summonScreen .summon-cancel-row { margin: 0; }
+    #summonScreen .summon-card-canvas {
+      width: 64px;
+      height: 64px;
     }
   }
 

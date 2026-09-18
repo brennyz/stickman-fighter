@@ -17,9 +17,10 @@ const CHEST_PULL_LOG_MAX = 5;
 /** UI shows newest-first; keep this ≤ store cap so the strip stays quiet on 390px. */
 const SUMMON_LOG_SHOW = 4;
 const CHEST_SKILL_MAX = 48;
-/** Reveal timeline: snappy Android clip (~2.0s); card last ~0.8s. Tap skips after card. */
+/** Reveal timeline: name on stage <1s (MM-004); card stays through the last beat. */
 const SUMMON_REVEAL_TOTAL_MS = 2000;
-const SUMMON_CARD_LAST_MS = 800;
+const SUMMON_NAME_MAX_MS = 800;
+const SUMMON_CARD_LAST_MS = 1200;
 /** Reduced-motion / Lite FX / low-end: skip video/lid/shake — card lands immediately. */
 const SUMMON_REVEAL_REDUCED_MS = 400;
 const SUMMON_VIDEO_SRC = 'assets/summon/reveal.mp4';
@@ -721,10 +722,18 @@ function summonRevealTotalMs() {
   return summonRevealShouldSkip() ? SUMMON_REVEAL_REDUCED_MS : SUMMON_REVEAL_TOTAL_MS;
 }
 
+function summonRevealNameDelayMs() {
+  if (summonRevealShouldSkip()) return 0;
+  const cap = (typeof SUMMON_NAME_MAX_MS === 'number') ? SUMMON_NAME_MAX_MS : 800;
+  return Math.min(280, Math.max(0, cap));
+}
+
 function summonRevealCardDelayMs(totalMs) {
   if (summonRevealShouldSkip()) return 0;
   const total = Math.max(SUMMON_CARD_LAST_MS + 400, Number(totalMs) || SUMMON_REVEAL_TOTAL_MS);
-  return Math.max(0, total - SUMMON_CARD_LAST_MS);
+  const raw = Math.max(0, total - SUMMON_CARD_LAST_MS);
+  const cap = (typeof SUMMON_NAME_MAX_MS === 'number') ? SUMMON_NAME_MAX_MS : 800;
+  return Math.min(raw, cap);
 }
 
 function summonTutSeen() {

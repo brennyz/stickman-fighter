@@ -48,6 +48,16 @@ must(/is-shake\[data-rarity="common"\]/.test(cssSrc) && /is-card-show\[data-rari
   'rarity juice must be scoped to shake/card-show, not idle');
 must(/\.summon-stage:not\(\.is-empty\):not\(\.is-error\) \.summon-stage-hint/.test(cssSrc),
   'idle stage hint must hide so Open kist is the one primary');
+must(/summon-stage-name/.test(cssSrc) && /is-name-ready/.test(cssSrc),
+  'stage name pill CSS missing for MM-004');
+must(/MM-012/.test(cssSrc) && /max-height: 420px/.test(cssSrc),
+  'landscape 844×390 Open kist keep-in-view CSS missing');
+const chestSrc = fs.readFileSync(path.join(root, 'src/data/chest-summons.js'), 'utf8');
+const nameMax = chestSrc.match(/SUMMON_NAME_MAX_MS\s*=\s*(\d+)/);
+must(nameMax && Number(nameMax[1]) <= 800, 'summon name must land in ≤800ms: ' + (nameMax && nameMax[1]));
+must(/function summonRevealNameDelayMs/.test(chestSrc), 'missing summonRevealNameDelayMs');
+const htmlSrc = fs.readFileSync(path.join(root, 'index.html'), 'utf8');
+must(/id="summonStageName"/.test(htmlSrc), 'missing #summonStageName on stage');
 
 async function run() {
   let server = null;
@@ -83,6 +93,9 @@ async function run() {
         fullH: rect ? Math.round(rect.height) : 0,
         hasPull: !!document.getElementById('btnChestPull'),
         hasSkip: !!document.getElementById('summonSkipHint'),
+        hasStageName: !!document.getElementById('summonStageName'),
+        nameDelayFn: typeof summonRevealNameDelayMs === 'function',
+        nameMaxMs: (typeof SUMMON_NAME_MAX_MS === 'number') ? SUMMON_NAME_MAX_MS : 0,
         hasGlance: !!document.getElementById('summonGlance'),
         glanceOdds: (document.getElementById('summonOdds') || {}).textContent || '',
         pipOn: document.querySelectorAll('#summonPips .summon-pip.is-on').length,
@@ -130,6 +143,8 @@ async function run() {
     must(openSnap.pipAll === 10 && openSnap.pipOn === 10, 'expected 10/10 pips, got ' + JSON.stringify(openSnap));
     must(openSnap.hasPull, 'missing btnChestPull');
     must(openSnap.hasSkip, 'missing summonSkipHint');
+    must(openSnap.hasStageName && openSnap.nameDelayFn && openSnap.nameMaxMs > 0 && openSnap.nameMaxMs <= 800,
+      'stage name <1s helpers missing: ' + JSON.stringify(openSnap));
     must(openSnap.logHelper, 'missing chestPullLogLine');
     must(openSnap.logJunk && !/weapon_unlock|junk/i.test(openSnap.logJunk),
       'log line still raw: ' + openSnap.logJunk);
@@ -374,6 +389,14 @@ async function run() {
       await new Promise((r) => setTimeout(r, 700));
       const vidEarly = document.getElementById('summonVideo');
       const stageEarly = document.getElementById('summonStage');
+      const nameEarlyEl = document.getElementById('summonStageName');
+      const nameEarly = nameEarlyEl ? {
+        text: (nameEarlyEl.textContent || '').trim(),
+        hidden: !!nameEarlyEl.hidden,
+        on: nameEarlyEl.classList.contains('is-on'),
+        op: parseFloat(getComputedStyle(nameEarlyEl).opacity),
+        ready: document.getElementById('summonReveal')?.classList.contains('is-name-ready'),
+      } : null;
       const playEarly = vidEarly ? {
         display: getComputedStyle(vidEarly).display,
         paused: vidEarly.paused,
@@ -442,6 +465,7 @@ async function run() {
         toastAfter,
         toastBefore,
         playEarly,
+        nameEarly,
         cropEarly,
         endText: (document.getElementById('summonRevealText') || {}).textContent || '',
         skipReady: !!(screen && screen.classList.contains('is-skip-ready')),
@@ -464,6 +488,8 @@ async function run() {
     must(!pullSnap.isPlaying, 'is-playing flipped during pull');
     must(pullSnap.cardShow, 'center card not shown after reveal window');
     must(pullSnap.cardName.length > 0, 'empty center card name');
+    must(pullSnap.nameEarly && pullSnap.nameEarly.text.length > 0 && pullSnap.nameEarly.ready && pullSnap.nameEarly.on && pullSnap.nameEarly.op > 0.5,
+      'result name must be on stage in <1s: ' + JSON.stringify(pullSnap.nameEarly));
     must(pullSnap.skipReady, 'expected is-skip-ready after card lands');
     must(pullSnap.cardKind.length > 0, 'card missing data-kind: ' + JSON.stringify(pullSnap));
     must(pullSnap.kindBadge.length > 0, 'kind badge empty after pull');
@@ -674,6 +700,50 @@ async function run() {
       'desktop primary not one gold CTA: ' + JSON.stringify(desk));
     must(desk.raysOp <= 0.02, 'desktop idle juice should be off: ' + JSON.stringify(desk));
     await page.screenshot({ path: path.join(outDir, 'summon-idle-desktop.png') });
+
+    await page.setViewport({ width: 844, height: 390, isMobile: true, hasTouch: true, isLandscape: true, deviceScaleFactor: 2 });
+    const land = await page.evaluate(() => {
+      if (typeof save !== 'undefined') {
+        save.reducedMotion = false;
+        save.liteFx = false;
+      }
+      try { if (typeof syncA11yClasses === 'function') syncA11yClasses(); } catch (_) {}
+      UI.finishSummonReveal();
+      UI.goMenu();
+      UI.openSummonHub();
+      UI.renderSummon();
+      const btn = document.getElementById('btnChestPull');
+      if (!btn) return { missing: true };
+      const r = btn.getBoundingClientRect();
+      const vw = window.innerWidth;
+      const vh = window.innerHeight;
+      const cs = getComputedStyle(btn);
+      const label = (btn.textContent || '').replace(/\s+/g, ' ').trim();
+      const inner = btn.querySelector('div');
+      const clip = inner ? (inner.scrollWidth > inner.clientWidth + 2) : false;
+      const fully = r.top >= -1 && r.left >= -1 && r.bottom <= vh + 1 && r.right <= vw + 1
+        && r.width >= 80 && r.height >= 44;
+      return {
+        vw, vh,
+        top: Math.round(r.top),
+        bottom: Math.round(r.bottom),
+        left: Math.round(r.left),
+        right: Math.round(r.right),
+        w: Math.round(r.width),
+        h: Math.round(r.height),
+        label,
+        clip,
+        overflow: cs.overflow,
+        fully,
+        gold: /255,\s*215,\s*94|ffd75e|232,\s*168,\s*32|e8a820/i.test(cs.backgroundImage + cs.backgroundColor),
+      };
+    });
+    must(!land.missing, 'landscape Open kist missing');
+    must(land.vw === 844 && land.vh === 390, 'expected 844×390: ' + JSON.stringify(land));
+    must(land.fully && !land.clip && /kist|chest|kiste|coffre|cofre/i.test(land.label),
+      'Open kist clipped on 844×390: ' + JSON.stringify(land));
+    must(land.gold && land.h >= 44, 'landscape primary not gold/tappable: ' + JSON.stringify(land));
+    await page.screenshot({ path: path.join(outDir, 'summon-idle-land844.png') });
     await page.setViewport({ width: 390, height: 844 });
 
     const playSnap = await page.evaluate(() => {
