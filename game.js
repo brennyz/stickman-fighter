@@ -1144,8 +1144,15 @@ function hitConfirmColor(kind) {
 }
 
 function applyHitConfirmFx(game, x, y, spec, opts) {
-  if (!game || motionReduced()) return;
+  if (!game) return;
   opts = opts || {};
+  const now = (typeof performance !== 'undefined' && performance.now) ? performance.now() : Date.now();
+  const last = game._hitConfirmAt || 0;
+  const minGap = opts.counter ? 45 : 95;
+  if (!opts.force && (now - last) < minGap) return;
+  game._hitConfirmAt = now;
+  // Reduced-motion: skip particle pulse; flash + damage/KO floater stay readable.
+  if (motionReduced()) return;
   const kind = spec && spec.kind ? spec.kind : 'punch';
   let col = hitConfirmColor(kind);
   if (kind === 'weapon' && spec.move) col = weaponMoveFxColor(spec.move);
@@ -2365,16 +2372,18 @@ const I18N = {
       arcadeTitle: 'Arcade', arcadeSub: 'Snelle sessies · save blijft hier',
       collectTitle: 'Collectie', collectSub: 'Kist · wapens · pets · stijl',
       gear: 'Uitrusting', gearSub: '5 slots · look vs stats',
+      gear: 'Uitrusting', gearSub: '5 slots · look vs stats', gearSubEmpty: 'Starter · vind drops in avontuur',
       training: 'Training', trainingSub: '1v1 · RabbitRobot · oefenen',
       wall: 'Muur Slopen', wallSub: '60 sec · combo = sneller',
       mats: 'Muntjes', matsSub: '45 sec · munten → pet coins',
       weapons: 'Wapens', weaponsSub: '26 wapens · summon ascends',
       pets: 'Pets', petsSub: 'Tem · koop · dag-ei',
+      pets: 'Pets', petsSub: 'Muntjes · dex temmen · ei arcade', petsSubEmpty: 'Nog geen pet · tem in avontuur',
       style: 'Stijl', styleSub: 'Bandana & outfit unlocks',
-      gear: 'Uitrusting', gearSub: '5 slots · pantser & cosmetics',
+      gear: 'Uitrusting', gearSub: '5 slots · pantser & cosmetics', gearSubEmpty: 'Starter · vind drops in avontuur',
       skills: 'Skills', skillsSub: 'Energy specials · Spiral Orb · Wave Cannon',
       upgrades: 'Upgrades', upgradesSub: 'Shards · techniek uitrusten',
-      dex: 'Monsterboek', dexSub: '{n} soorten · rariteit = HP · boerderij · zoo · zee · woud · crypte · schroot · vorst',
+      dex: 'Monsterboek', dexSub: '{n} soorten · rariteit = HP · boerderij · zoo · zee · woud · crypte · schroot · vorst', dexSubEmpty: 'Leeg boek · versla iets in avontuur',
       buildings: 'Fabrieken', buildingsSub: 'Werken · oogst · upgrade',
       modes3: '3 snelle modi', fightersLocal: '20 vechters · lokaal', vsRecord: '{w}/{m} gewonnen',
       statTrain: '{n}× training', statWall: 'muur {n}', statMats: '{n} munten',
@@ -2398,7 +2407,15 @@ const I18N = {
       advWin: 'GEWONNEN!', advLose: 'VERLOREN', trainWin: 'KAMPIOEN!', trainLose: 'ROBOT WINT...',
       advLoseKeep: 'XP en buit van deze ronde blijven',
       wavesStart: 'begin',
+      lossSelfHp: 'Jij viel — {prog}',
+      lossSelfOrb: 'Jij miste de orbs — {prog}',
       xp: '+{xp} XP verdiend · nu Lv {lvl} ({cur}/{need} XP)' },
+    juice: {
+      strikeNudge: 'Tik slaan',
+      strikeNudgeKb: 'Druk J',
+      againSub: 'direct terug',
+      nextSub: 'volgende',
+    },
     settings: {
       title: 'Instellingen', sub: 'Geluid & HUD — save gaat automatisch mee',
       lang: 'Taal', music: 'Muziek', sfx: 'Effecten', shake: 'Schermschok', haptics: 'Trillen',
@@ -2799,16 +2816,18 @@ const I18N = {
       arcadeTitle: 'Arcade', arcadeSub: 'Quick sessions · save stays here',
       collectTitle: 'Collection', collectSub: 'Chest · weapons · pets · style',
       gear: 'Gear', gearSub: '5 slots · look vs stats',
+      gear: 'Gear', gearSub: '5 slots · look vs stats', gearSubEmpty: 'Starter · find drops in Adventure',
       training: 'Training', trainingSub: '1v1 · RabbitRobot · practice',
       wall: 'Wall Smash', wallSub: '60 sec · combo = faster',
       mats: 'Coins', matsSub: '45 sec · coins → pet coins',
       weapons: 'Weapons', weaponsSub: '26 weapons · summon ascends',
       pets: 'Pets', petsSub: 'Tame · buy · daily egg',
+      pets: 'Pets', petsSub: 'Coins · dex tame · egg arcade', petsSubEmpty: 'No pet yet · tame in Adventure',
       style: 'Style', styleSub: 'Bandana & outfit unlocks',
-      gear: 'Loadout', gearSub: '5 slots · armour & cosmetics',
+      gear: 'Loadout', gearSub: '5 slots · armour & cosmetics', gearSubEmpty: 'Starter · find drops in Adventure',
       skills: 'Skills', skillsSub: 'Energy specials · Spiral Orb · Wave Cannon',
       upgrades: 'Upgrades', upgradesSub: 'Shards · equip a technique',
-      dex: 'Monster book', dexSub: '{n} species · rarity = HP · farm · zoo · sea · woods · crypt · scrap · frost',
+      dex: 'Monster book', dexSub: '{n} species · rarity = HP · farm · zoo · sea · woods · crypt · scrap · frost', dexSubEmpty: 'Empty book · beat one in Adventure',
       buildings: 'Factories', buildingsSub: 'Works · collect · upgrade',
       modes3: '3 quick modes', fightersLocal: '20 fighters · local', vsRecord: '{w}/{m} won',
       statTrain: '{n} train', statWall: 'wall {n}', statMats: '{n} coins',
@@ -2832,7 +2851,15 @@ const I18N = {
       advWin: 'VICTORY!', advLose: 'YOU LOSE', trainWin: 'CHAMPION!', trainLose: 'ROBOT WINS...',
       advLoseKeep: 'XP and loot from this run stay',
       wavesStart: 'start',
+      lossSelfHp: 'You went down — {prog}',
+      lossSelfOrb: 'You missed the orbs — {prog}',
       xp: '+{xp} XP earned · now Lv {lvl} ({cur}/{need} XP)' },
+    juice: {
+      strikeNudge: 'Tap strike',
+      strikeNudgeKb: 'Press J',
+      againSub: 'jump back in',
+      nextSub: 'next',
+    },
     settings: {
       title: 'Settings', sub: 'Sound & HUD — save stays with you automatically',
       lang: 'Language', music: 'Music', sfx: 'Effects', shake: 'Screen shake', haptics: 'Haptics',
@@ -3239,12 +3266,15 @@ const I18N = {
       mats: 'Münzen', matsSub: '45 Sek · Münzen → Pet-Coins',
       weapons: 'Waffen', weaponsSub: '26 Waffen · Kisten',
       pets: 'Pets', petsSub: 'Zähmen · kaufen · Tages-Ei',
+      gear: 'Ausrüstung', gearSub: 'Slots · Look', gearSubEmpty: 'Starter · Drops im Abenteuer',
+      pets: 'Pets', petsSub: 'Münzen · Dex zähmen', petsSubEmpty: 'Noch kein Pet · im Abenteuer zähmen',
       style: 'Stil', styleSub: 'Outfit-Freischaltungen',
-      gear: 'Ausrüstung', gearSub: '5 Slots · Rüstung & Kosmetik',
+      gear: 'Ausrüstung', gearSub: '5 Slots · Rüstung & Kosmetik', gearSubEmpty: 'Starter · Drops im Abenteuer',
       skills: 'Skills', skillsSub: 'Energie-Spezials · Spiral Orb · Wave Cannon',
       upgrades: 'Upgrades', upgradesSub: 'Splitter · Technik ausrüsten',
       dex: 'Monsterbuch', dexSub: '{n} Arten · Seltenheit = HP · Farm · Zoo · Meer · Wald · Krypta · Schrott · Frost',
       buildings: 'Fabriken', buildingsSub: 'Werke · ernten · aufwerten',
+      dex: 'Monsterbuch', dexSub: '{n} Arten · Seltenheit = HP · Farm · Zoo · Meer · Wald · Krypta · Schrott · Frost', dexSubEmpty: 'Leeres Buch · im Abenteuer besiegen',
       modes3: '3 schnelle Modi', fightersLocal: '20 Kämpfer · lokal', vsRecord: '{w}/{m} Siege',
       statTrain: '{n}× Training', statWall: 'Mauer {n}', statMats: '{n} Münzen',
       loadFail: 'Hub laden fehlgeschlagen',
@@ -3405,7 +3435,15 @@ const I18N = {
       advWin: 'GEWONNEN!', advLose: 'VERLOREN', trainWin: 'MEISTER!', trainLose: 'ROBOT GEWINNT…',
       advLoseKeep: 'XP und Beute von diesem Lauf bleiben',
       wavesStart: 'Start',
+      lossSelfHp: 'Du bist gefallen — {prog}',
+      lossSelfOrb: 'Du hast die Orbs verpasst — {prog}',
       xp: '+{xp} XP · jetzt Lv {lvl} ({cur}/{need} XP)' },
+    juice: {
+      strikeNudge: 'Tippe Schlag',
+      strikeNudgeKb: 'Drücke J',
+      againSub: 'sofort zurück',
+      nextSub: 'weiter',
+    },
     settings: {
       title: 'Einstellungen', sub: 'Ton & HUD — Save läuft automatisch mit',
       lang: 'Sprache', music: 'Musik', sfx: 'Effekte', shake: 'Bildschirmshake', haptics: 'Vibration',
@@ -3661,17 +3699,20 @@ const I18N = {
       arcadeTitle: 'Arcade', arcadeSub: 'Sessions rapides · sauvegarde ici',
       collectTitle: 'Collection', collectSub: 'Coffre · armes · pets · style',
       gear: 'Équipement', gearSub: 'Slots · look',
+      gear: 'Équipement', gearSub: 'Slots · look', gearSubEmpty: 'Départ · drops en aventure',
       training: 'Entraînement', trainingSub: '1v1 · RabbitRobot · pratique',
       wall: 'Mur', wallSub: '60 s · combo = plus vite',
       mats: 'Pièces', matsSub: '45 s · pièces → pet coins',
       weapons: 'Armes', weaponsSub: '26 armes · invocations',
       pets: 'Pets', petsSub: 'Apprivoiser · acheter · œuf',
+      pets: 'Pets', petsSub: 'Pièces · dex · œufs', petsSubEmpty: 'Pas encore de pet · apprivoise en aventure',
       style: 'Style', styleSub: 'Déblocages tenues',
-      gear: 'Équipement', gearSub: '5 emplacements · armure & cosmétique',
+      gear: 'Équipement', gearSub: '5 emplacements · armure & cosmétique', gearSubEmpty: 'Départ · drops en aventure',
       skills: 'Skills', skillsSub: 'Spéciaux énergie · Spiral Orb · Wave Cannon',
       upgrades: 'Améliorations', upgradesSub: 'Éclats · équiper une technique',
       dex: 'Bestiaire', dexSub: '{n} espèces · rareté = PV · ferme · zoo · mer · bois · crypte · ferraille · gel',
       buildings: 'Usines', buildingsSub: 'Ateliers · récolte · améliorer',
+      dex: 'Bestiaire', dexSub: '{n} espèces · rareté = PV · ferme · zoo · mer · bois · crypte · ferraille · gel', dexSubEmpty: 'Bestiaire vide · bats-en un en aventure',
       modes3: '3 modes rapides', fightersLocal: '20 combattants · local', vsRecord: '{w}/{m} victoires',
       statTrain: '{n}× entraînement', statWall: 'mur {n}', statMats: '{n} pièces',
       loadFail: 'Hub introuvable',
@@ -3832,7 +3873,15 @@ const I18N = {
       advWin: 'VICTOIRE !', advLose: 'DÉFAITE', trainWin: 'CHAMPION !', trainLose: 'LE ROBOT GAGNE…',
       advLoseKeep: 'XP et butin de cette partie restent',
       wavesStart: 'début',
+      lossSelfHp: 'Tu es tombé — {prog}',
+      lossSelfOrb: 'Tu as manqué les orbes — {prog}',
       xp: '+{xp} XP · Lv {lvl} ({cur}/{need} XP)' },
+    juice: {
+      strikeNudge: 'Tape frappe',
+      strikeNudgeKb: 'Appuie sur J',
+      againSub: 'tout de suite',
+      nextSub: 'suivant',
+    },
     settings: {
       title: 'Options', sub: 'Son & HUD — la save suit automatiquement',
       lang: 'Langue', music: 'Musique', sfx: 'Effets', shake: 'Secousse écran', haptics: 'Vibration',
@@ -4092,16 +4141,18 @@ const I18N = {
       arcadeTitle: 'Arcade', arcadeSub: 'Sesiones rápidas · partida aquí',
       collectTitle: 'Colección', collectSub: 'Cofre · armas · pets · estilo',
       gear: 'Equipo', gearSub: 'Slots · look',
+      gear: 'Equipo', gearSub: 'Slots · look', gearSubEmpty: 'Inicial · drops en Aventura',
       training: 'Entrenamiento', trainingSub: '1v1 · RabbitRobot · practicar',
       wall: 'Muro', wallSub: '60 s · combo = más rápido',
       mats: 'Monedas', matsSub: '45 s · monedas → pet coins',
       weapons: 'Armas', weaponsSub: '26 armas · invocaciones',
       pets: 'Pets', petsSub: 'Domar · comprar · huevo',
+      pets: 'Pets', petsSub: 'Monedas · dex · huevos', petsSubEmpty: 'Aún no hay pet · doma en Aventura',
       style: 'Estilo', styleSub: 'Desbloqueos de outfit',
-      gear: 'Equipo', gearSub: '5 huecos · armadura y cosméticos',
+      gear: 'Equipo', gearSub: '5 huecos · armadura y cosméticos', gearSubEmpty: 'Inicial · drops en Aventura',
       skills: 'Skills', skillsSub: 'Especiales energía · Spiral Orb · Wave Cannon',
       upgrades: 'Mejoras', upgradesSub: 'Fragmentos · equipar técnica',
-      dex: 'Bestiario', dexSub: '{n} especies · rareza = HP · granja · zoo · mar · bosque · cripta · chatarra · escarcha',
+      dex: 'Bestiario', dexSub: '{n} especies · rareza = HP · granja · zoo · mar · bosque · cripta · chatarra · escarcha', dexSubEmpty: 'Libro vacío · vence uno en Aventura',
       buildings: 'Fábricas', buildingsSub: 'Obras · cosecha · mejora',
       modes3: '3 modos rápidos', fightersLocal: '20 luchadores · local', vsRecord: '{w}/{m} ganados',
       statTrain: '{n}× entrenamiento', statWall: 'muro {n}', statMats: '{n} monedas',
@@ -4263,7 +4314,15 @@ const I18N = {
       advWin: '¡VICTORIA!', advLose: 'DERROTA', trainWin: '¡CAMPEÓN!', trainLose: 'EL ROBOT GANA…',
       advLoseKeep: 'XP y botín de esta partida se quedan',
       wavesStart: 'inicio',
+      lossSelfHp: 'Caíste — {prog}',
+      lossSelfOrb: 'Perdiste las orbes — {prog}',
       xp: '+{xp} XP · Lv {lvl} ({cur}/{need} XP)' },
+    juice: {
+      strikeNudge: 'Toca golpear',
+      strikeNudgeKb: 'Pulsa J',
+      againSub: 'ahora mismo',
+      nextSub: 'siguiente',
+    },
     settings: {
       title: 'Opciones', sub: 'Sonido y HUD — el save va automático',
       lang: 'Idioma', music: 'Música', sfx: 'Efectos', shake: 'Sacudida pantalla', haptics: 'Vibración',
@@ -5003,6 +5062,7 @@ function applyLangStaticScreens() {
     installScreen: t('back.menu'),
   });
   UI.syncBackLabels();
+  try { if (UI.syncHubJuiceTiles) UI.syncHubJuiceTiles(); } catch (_) {}
 }
 
 function renderLangSwitchBar(bar) {
@@ -5402,10 +5462,24 @@ function fomoRitualEggVisible() {
   return !!(save && save.stats && (save.stats.advWins || 0) >= 1);
 }
 
+function juiceFirstPlayPending() {
+  try {
+    if (typeof save === 'undefined' || !save) return true;
+    if (save.lastPlay) return false;
+    if ((save.lvl || 1) > 1) return false;
+    if (typeof onboardingProgress === 'function' && onboardingProgress().seen > 0) return false;
+    if (save.stats && (save.stats.advWins || 0) > 0) return false;
+  } catch (_) {}
+  return true;
+}
+
 function fomoRitualHubReady() {
   try {
     const splash = document.getElementById('sfSplash');
     if (splash && !splash.classList.contains('is-done')) return false;
+  } catch (_) {}
+  try {
+    if (juiceFirstPlayPending()) return false;
   } catch (_) {}
   return true;
 }
@@ -7303,6 +7377,32 @@ function restartAdventureInstant(dataOrN, diff, gamble) {
   startGame('adventure', { level, difficulty, gamble: g, instantRetry: true });
 }
 
+/** #316 delay helper (700 lose / 900 win). Complementary — do not replace
+ *  #323 `resultShowDelayMs` / `RESULT_SHOW_LOSE_MS` or #314 phone 675ms. */
+function juiceResultDelayMs(win) {
+  try {
+    if (typeof motionReduced === 'function' && motionReduced()) return win ? 280 : 200;
+  } catch (_) {}
+  return win ? 900 : 700;
+}
+
+/** #316 dice-skip retry via existing startGame({ gamble: null }).
+ *  #323 owns `restartAdventureInstant` + `#resRetrySafe`. Do not clone those names. */
+function juiceRetryAdventure(level, difficulty) {
+  const cap = (typeof MAX_LEVEL === 'number' && MAX_LEVEL > 0) ? MAX_LEVEL : 99;
+  const lv = Math.max(1, Math.min(cap, Number(level) || 1));
+  let diff = difficulty;
+  try {
+    if (!diff && typeof currentAdvDiff === 'function') diff = currentAdvDiff();
+    if (diff && typeof setAdvDiff === 'function' && typeof advDiffAvailable === 'function' && advDiffAvailable(diff)) {
+      setAdvDiff(diff);
+    }
+  } catch (_) {}
+  pendingAdvLevel = lv;
+  lastGambleRoll = null;
+  startGame('adventure', { level: lv, gamble: null, difficulty: diff });
+}
+
 /** Veilig resultaat na gevecht — voorkomt ReferenceError + zwart scherm. */
 function scheduleGameResult(gameRef, delayMs, showFn) {
   if (!gameRef || typeof showFn !== 'function') return;
@@ -8122,8 +8222,8 @@ function applyModeOnboarding(mode, g) {
   if (mode === 'adventure' || mode === 'training') save.tipsSeen.energy = 1;
   if (mode === 'coinrun') save.tipsSeen.hint_coinrun = 1;
   persist();
-  g.modeHintLine = modeFirstMinuteLine(mode);
-  g.hint = 8;
+  // Teach by doing — short strike nudge in combat, not an 8s first-minute wall.
+  g._juiceTeach = true;
 }
 
 /** Eén regel op gok-scherm — geen toast. */
@@ -8156,41 +8256,9 @@ function welcomeToastOnHub() {
 function maybeWelcomeToast() {
   ensureTipsSeen();
   if (save.tipsSeen.welcome) return;
-  const prog = onboardingProgress();
-  if (prog.seen > 0 || save.lvl > 1 || save.missionsIntroSeen) {
-    save.tipsSeen.welcome = 1;
-    persist();
-    return;
-  }
-  let tries = 0;
-  const tick = () => {
-    if (save.tipsSeen.welcome) return;
-    if (onboardingProgress().seen > 0 || save.lvl > 1) {
-      save.tipsSeen.welcome = 1;
-      persist();
-      return;
-    }
-    if (welcomeToastOnHub()) {
-      save.tipsSeen.welcome = 1;
-      persist();
-      try { userToast(t('toast.welcome'), 2200); } catch (_) {}
-      return;
-    }
-    tries++;
-    let onSplash = false;
-    try {
-      const splash = document.getElementById('sfSplash');
-      onSplash = !!(splash && !splash.classList.contains('is-done'));
-    } catch (_) {}
-    // Still on title/splash — wait for HOME. Left hub already — don't follow.
-    if (onSplash && tries < 24) {
-      setTimeout(tick, 350);
-      return;
-    }
-    save.tipsSeen.welcome = 1;
-    persist();
-  };
-  setTimeout(tick, 400);
+  // Flappy-class: SPELEN is the CTA. No welcome wall on first HOME.
+  save.tipsSeen.welcome = 1;
+  persist();
 }
 
 /** Level-pacing v1.14.3: iets rustiger — +15% vroeg, oplopend tot +50% vanaf ~Lv 18. */
@@ -22180,6 +22248,8 @@ function seedNlGameStrings() {
     failTeleFire: 'VUUR',
     lossBlockTip: 'Tip: blokkeer · mik omhoog op vliegers · {prog}',
     lossOrbTip: 'Tip: pak groene orbs · vul SUPER vóór baas · {prog}',
+    lossSelfHp: 'Jij viel — {prog}',
+    lossSelfOrb: 'Jij miste de orbs — {prog}',
     lossGambleTip: 'Eerste nederlaag: vóór elk level kun je dobbelen — bondgenoot helpt tussen golven.',
     heatRising: 'Hitte {n}/{max} — bij 9 gevaar, bij 10 Satan',
     heatDanger: 'GEVAAR! Hitte rood — nog 1 verlies en Satan komt',
@@ -22258,7 +22328,7 @@ function seedNlGameStrings() {
   });
   if (!I18N.nl.combat) I18N.nl.combat = {};
   Object.assign(I18N.nl.combat, {
-    counter: 'COUNTER!', crit: 'CRIT!', streak3: 'REEKS ×3', streak5: 'IN VUUR!',
+    counter: 'COUNTER!', crit: 'CRIT!', ko: 'KO', streak3: 'REEKS ×3', streak5: 'IN VUUR!',
     streak8: 'RAZEND!', streak12: 'NIET TE STOPPEN!', streakHold: 'REEKS ×{n} vast!',
     combo3: 'Combo ×3 — door!', combo5: 'Combo ×5 — netjes!', combo8: 'Combo ×8 — pro!',
     combo10: 'Combo ×10 — meester!', comboN: 'COMBO ×{n}!',
@@ -23348,6 +23418,7 @@ function seedNlFromRuntime() {
   if (!I18N.nl.gear) I18N.nl.gear = {};
   Object.assign(I18N.nl.gear, {
     hubStat: '{n}/5',
+    hubStatEmpty: 'starter · 0 drops',
     summarySlots: '<b>{n}</b>/5',
     pillVanity: 'SIER',
     pillStat: 'STAT',
@@ -23398,6 +23469,7 @@ function seedNlFromRuntime() {
     filterOwned: 'Van jou',
     filterSearch: 'Zoek in {n}…',
     filterEmpty: 'Niets in deze filter — tik Wis filters',
+    filterEmpty: 'Niets in deze filter',
     filterRarityAll: 'Alle',
     filterCount: '{shown}/{total} in {slot}',
     filterAria: 'Filter',
@@ -23447,6 +23519,7 @@ const CATALOG_EN = {
   },
   gear: {
     hubStat: '{n}/5',
+    hubStatEmpty: 'starter · 0 drops',
     summarySlots: '<b>{n}</b>/5',
     pillVanity: 'LOOK',
     pillStat: 'STAT',
@@ -23498,6 +23571,7 @@ const CATALOG_EN = {
     filterOwned: 'Owned',
     filterSearch: 'Search {n}…',
     filterEmpty: 'Nothing in this filter — tap Clear filters',
+    filterEmpty: 'Nothing in this filter',
     filterRarityAll: 'All',
     filterCount: '{shown}/{total} in {slot}',
     filterAria: 'Filter',
@@ -23634,6 +23708,8 @@ const CATALOG_EN = {
     failTeleFire: 'FIRE',
     lossBlockTip: 'Tip: block · aim up at flyers · {prog}',
     lossOrbTip: 'Tip: grab green orbs · fill SUPER before boss · {prog}',
+    lossSelfHp: 'You went down — {prog}',
+    lossSelfOrb: 'You missed the orbs — {prog}',
     lossGambleTip: 'First loss: before each level you can gamble — ally helps between waves.',
     heatRising: 'Heat {n}/{max} — danger at 9, Satan at 10',
     heatDanger: 'DANGER! Heat red — one more loss and Satan appears',
@@ -23701,6 +23777,8 @@ const CATALOG_EN = {
     petCoinsLine: '+{n} pet coins',
     gearLine: 'Gear: {name}',
   },
+
+    filterEmpty: 'Nothing in this filter',
 
   banner: {
     levelStart: 'LEVEL {n}',
@@ -23929,6 +24007,12 @@ const CATALOG_EN = {
     streakReward3: '+1 summon',
     streakReward7: '+egg or summons',
     streakReward14: '+120 XP',
+  },
+  juice: {
+    strikeNudge: 'Tap strike',
+    strikeNudgeKb: 'Press J',
+    againSub: 'jump back in',
+    nextSub: 'next',
   },
   missionsUi: {
     flowDone: '✓ Day done',
@@ -24598,7 +24682,7 @@ const CATALOG_EN = {
     'Loading / splash strip',
   ] },
   combat: {
-    counter: 'COUNTER!', crit: 'CRIT!', streak3: 'STREAK ×3', streak5: 'ON FIRE!',
+    counter: 'COUNTER!', crit: 'CRIT!', ko: 'KO', streak3: 'STREAK ×3', streak5: 'ON FIRE!',
     streak8: 'RAMPAGE!', streak12: 'UNSTOPPABLE!', streakHold: 'STREAK ×{n} locked!',
     combo3: 'Combo ×3 — keep going!', combo5: 'Combo ×5 — nice!', combo8: 'Combo ×8 — pro!',
     combo10: 'Combo ×10 — master!', comboN: 'COMBO ×{n}!',
@@ -24869,6 +24953,13 @@ const CATALOG_DE = {
 };
 
 const CATALOG_FR = {
+  gear: {
+    filterEmpty: 'Rien dans ce filtre',
+    filterClear: 'Effacer le filtre',
+    emptyOwned: 'Pas encore de drops. Trouve de l’équipement en aventure.',
+    emptyOwnedCta: 'Vers l’aventure',
+    emptySlotHint: 'Look de départ — joue l’aventure pour des drops.',
+  },
   ach: {
     first_win: { name: 'Première victoire', desc: 'Gagne ton premier niveau' },
     lv10: { name: 'Ninja en croissance', desc: 'Atteins combattant Lv 10' },
@@ -25002,6 +25093,13 @@ const CATALOG_FR = {
 };
 
 const CATALOG_ES = {
+  gear: {
+    filterEmpty: 'Nada en este filtro',
+    filterClear: 'Borrar filtro',
+    emptyOwned: 'Aún no hay drops. Encuentra equipo en Aventura.',
+    emptyOwnedCta: 'Ir a Aventura',
+    emptySlotHint: 'Look inicial — juega Aventura para encontrar drops.',
+  },
   ach: {
     first_win: { name: 'Primer triunfo', desc: 'Gana tu primer nivel' },
     lv10: { name: 'Ninja en crecimiento', desc: 'Alcanza luchador Lv 10' },
@@ -25408,6 +25506,8 @@ const CATALOG_DE_CHROME = {
     failTeleFire: 'FEUER',
     lossBlockTip: 'Tipp: blocken · nach oben zielen auf Flieger · {prog}',
     lossOrbTip: 'Tipp: grüne Orbs · SUPER vor dem Boss füllen · {prog}',
+    lossSelfHp: 'Du bist gefallen — {prog}',
+    lossSelfOrb: 'Du hast die Orbs verpasst — {prog}',
     lossGambleTip: 'Erste Niederlage: vor jedem Level würfeln — Verbündeter hilft zwischen Wellen.',
     heatRising: 'Hitze {n}/{max} — Gefahr bei 9, Satan bei 10',
     heatDanger: 'GEFAHR! Hitze rot — noch 1 Verlust und Satan kommt',
@@ -25783,7 +25883,7 @@ const CATALOG_DE_CHROME = {
     spotlightPlayBtn: '{mode} spielen →',
   },
   combat: {
-    counter: 'COUNTER!', crit: 'CRIT!', streak3: 'STREAK ×3', streak5: 'ON FIRE!',
+    counter: 'COUNTER!', crit: 'CRIT!', ko: 'KO', streak3: 'STREAK ×3', streak5: 'ON FIRE!',
     streak8: 'RAMPAGE!', streak12: 'UNSTOPPABLE!', streakHold: 'STREAK ×{n} fest!',
     combo3: 'Combo ×3 — weiter!', combo5: 'Combo ×5 — schön!', combo8: 'Combo ×8 — pro!',
     combo10: 'Combo ×10 — Meister!', comboN: 'COMBO ×{n}!',
@@ -26360,6 +26460,7 @@ const CATALOG_DE_CHROME = {
     errBackupSync: 'Backup-Abgleich fehlgeschlagen',
   },
   gear: {
+    hubStatEmpty: 'Starter · 0 Drops',
     filterAll: 'Alles',
     filterOwned: 'Deins',
     filterLook: 'Look',
@@ -26391,6 +26492,7 @@ const CATALOG_DE_CHROME = {
     huntBtn: 'Zum Abenteuer',
     unequipAll: 'Alles ablegen',
     unequipAllConfirm: 'Nochmal tippen',
+    filterEmpty: 'Nichts in diesem Filter',
     lockedLine: 'Gesperrt · {why}',
     equip: 'Anlegen',
     unequip: 'Ablegen',
@@ -26479,6 +26581,8 @@ overlayI18nCatalog(CATALOG_FR, {
     failTeleFire: 'FEU',
     lossBlockTip: 'Astuce : bloque · vise en haut les voiliers · {prog}',
     lossOrbTip: 'Astuce : prends les orbes verts · remplis SUPER avant le boss · {prog}',
+    lossSelfHp: 'Tu es tombé — {prog}',
+    lossSelfOrb: 'Tu as manqué les orbes — {prog}',
     lossGambleTip: '1re défaite : avant chaque niveau tu peux parier — un allié aide entre les vagues.',
     heatRising: 'Chaleur {n}/{max} — danger à 9, Satan à 10',
     heatDanger: 'DANGER ! Chaleur rouge — encore 1 défaite et Satan arrive',
@@ -26857,6 +26961,7 @@ overlayI18nCatalog(CATALOG_FR, {
     summonReveal: 'Tape le coffre — le butin apparaît',
     errSummonLoad: 'Coffres impossibles à charger',
     errSummonOpen: 'Coffres impossibles à ouvrir',
+    gearSubEmpty: 'Départ · drops en aventure',
     dexAllBiomes: 'Tous les biomes',
     dexBiome: { farm: 'Ferme', zoo: 'Zoo', sea: 'Mer', wild: 'Bois', crypt: 'Crypte', scrap: 'Ferraille', frost: 'Givre', classic: 'Classique', secret: 'Secret' },
     petCoinTip: '<b>Bonus pièces</b> : 2 or = 1 PC',
@@ -27039,7 +27144,7 @@ overlayI18nCatalog(CATALOG_FR, {
     'Accents pixel du HUD combo',
   ] },
   combat: {
-    counter: 'COUNTER !', crit: 'CRIT !', streak3: 'STREAK ×3', streak5: 'ON FIRE !',
+    counter: 'COUNTER !', crit: 'CRIT !', ko: 'KO', streak3: 'STREAK ×3', streak5: 'ON FIRE !',
     streak8: 'RAMPAGE !', streak12: 'UNSTOPPABLE !', streakHold: 'STREAK ×{n} tenu !',
     combo3: 'Combo ×3 — continue !', combo5: 'Combo ×5 — joli !', combo8: 'Combo ×8 — pro !',
     combo10: 'Combo ×10 — maître !', comboN: 'COMBO ×{n} !',
@@ -27247,6 +27352,8 @@ overlayI18nCatalog(CATALOG_ES, {
     failTeleFire: 'FUEGO',
     lossBlockTip: 'Consejo: bloquea · apunta arriba a los voladores · {prog}',
     lossOrbTip: 'Consejo: coge orbes verdes · llena SUPER antes del jefe · {prog}',
+    lossSelfHp: 'Caíste — {prog}',
+    lossSelfOrb: 'Perdiste las orbes — {prog}',
     lossGambleTip: 'Primera derrota: antes de cada nivel puedes apostar — un aliado ayuda entre oleadas.',
     heatRising: 'Calor {n}/{max} — peligro en 9, Satan en 10',
     heatDanger: '¡PELIGRO! Calor rojo — 1 derrota más y llega Satan',
@@ -27625,6 +27732,7 @@ overlayI18nCatalog(CATALOG_ES, {
     summonReveal: 'Toca el cofre — aparece el botín',
     errSummonLoad: 'No se pudieron cargar los cofres',
     errSummonOpen: 'No se pudieron abrir los cofres',
+    gearSubEmpty: 'Inicial · drops en Aventura',
     dexAllBiomes: 'Todos los biomas',
     dexBiome: { farm: 'Granja', zoo: 'Zoo', sea: 'Mar', wild: 'Bosque', crypt: 'Cripta', scrap: 'Chatarra', frost: 'Escarcha', classic: 'Clásico', secret: 'Secreto' },
     petCoinTip: '<b>Bonus monedas</b>: 2 oro = 1 PC',
@@ -27807,7 +27915,7 @@ overlayI18nCatalog(CATALOG_ES, {
     'Acentos pixel del HUD combo',
   ] },
   combat: {
-    counter: '¡COUNTER!', crit: '¡CRIT!', streak3: 'STREAK ×3', streak5: '¡ON FIRE!',
+    counter: '¡COUNTER!', crit: '¡CRIT!', ko: 'KO', streak3: 'STREAK ×3', streak5: '¡ON FIRE!',
     streak8: '¡RAMPAGE!', streak12: '¡UNSTOPPABLE!', streakHold: '¡STREAK ×{n} fija!',
     combo3: 'Combo ×3 — ¡sigue!', combo5: 'Combo ×5 — ¡bien!', combo8: 'Combo ×8 — ¡pro!',
     combo10: 'Combo ×10 — ¡maestro!', comboN: '¡COMBO ×{n}!',
@@ -28034,6 +28142,8 @@ overlayI18nCatalog(CATALOG_DE, {
     failTeleFire: 'FEUER',
     lossBlockTip: 'Tipp: blocken · nach oben auf Flieger zielen · {prog}',
     lossOrbTip: 'Tipp: grüne Kugeln · SUPER vor dem Boss füllen · {prog}',
+    lossSelfHp: 'Du bist gefallen — {prog}',
+    lossSelfOrb: 'Du hast die Orbs verpasst — {prog}',
     lossGambleTip: 'Erste Niederlage: vor jedem Level kannst du würfeln — Verbündeter hilft zwischen Wellen.',
     heatRising: 'Hitze {n}/{max} — Gefahr bei 9, Satan bei 10',
     heatDanger: 'GEFAHR! Hitze rot — noch 1 Verlust und Satan kommt',
@@ -28383,6 +28493,7 @@ overlayI18nCatalog(CATALOG_DE, {
     continueLastMode: 'Letzter Modus',
     gearHead: 'Ausrüstung',
     gearSub: 'Slot wählen. Stück tippen: anlegen oder ablegen.',
+    gearSubEmpty: 'Starter · Drops im Abenteuer',
     dexAllBiomes: 'Alle Biome',
     dexBiome: { farm: 'Farm', zoo: 'Zoo', sea: 'Meer', wild: 'Wald', crypt: 'Krypta', scrap: 'Schrott', frost: 'Frost', classic: 'Klassisch', secret: 'Geheim' },
     petCoinTip: '<b>Münzen-Bonus</b>: 2 Gold = 1 PC',
@@ -28535,7 +28646,7 @@ overlayI18nCatalog(CATALOG_DE, {
     'Combo-HUD Pixelakzente',
   ] },
   combat: {
-    counter: 'COUNTER!', crit: 'CRIT!', streak3: 'STREAK ×3', streak5: 'ON FIRE!',
+    counter: 'COUNTER!', crit: 'CRIT!', ko: 'KO', streak3: 'STREAK ×3', streak5: 'ON FIRE!',
     streak8: 'RAMPAGE!', streak12: 'UNSTOPPABLE!', streakHold: 'STREAK ×{n} fest!',
     combo3: 'Combo ×3 — weiter!', combo5: 'Combo ×5 — sauber!', combo8: 'Combo ×8 — pro!',
     combo10: 'Combo ×10 — Meister!', comboN: 'COMBO ×{n}!',
@@ -38421,7 +38532,7 @@ class Fighter {
       AudioSys.sfxAt(this.isPlayer ? 'hurt' : 'hit', this.x);
     }
     if (this.isPlayer && game) {
-      game.floater(this.x, this.y - 118, '-' + dmg, '#ff8080', 15);
+      game.floater(this.x, this.y - 118, '-' + dmg, '#ff6b6b', 18);
     }
     if ((this.isPlayer || this.playerSlot) && game && save.haptics !== false) {
       haptic(dmg >= 18 ? 16 : 8);
@@ -39116,8 +39227,13 @@ class Monster {
     const kb = scaleKnockback(kbx, dmg, { crit: opts.crit, kind: opts.kind });
     this.x += Math.sign(kb || 1) * clamp(Math.abs(kb) * 0.038, 5, 26);
     if (!opts.quiet) {
-      game.floater(this.x, this.y - this.size - 14, '-' + dmg, '#ffe680', 15);
-      game.burst(this.x, this.y, this.sp.c1, dmg >= 18 ? 9 : 6);
+      const dead = this.hp <= 0;
+      if (!dead) {
+        game.floater(this.x, this.y - this.size - 14, '-' + dmg, '#ffe680', 15);
+        if (!motionReduced()) game.burst(this.x, this.y, this.sp.c1, dmg >= 18 ? 9 : 6);
+      } else if (!motionReduced()) {
+        game.burst(this.x, this.y, this.sp.c1, fxLite() ? 4 : 6);
+      }
     }
     if (opts.crit) spawnFxRing(game, this.x, this.y - this.size * 0.4, '#ffd75e', fxLite() ? 5 : 8);
     if (this.hp <= 0) {
@@ -39149,7 +39265,7 @@ class Monster {
     if (!this.alive) {
       const k = this.deadT / 0.6;
       c.globalAlpha = 1 - k;
-      c.scale(1 + k * 0.6, Math.max(0.05, 1 - k));
+      if (!motionReduced()) c.scale(1 + k * 0.6, Math.max(0.05, 1 - k));
     }
     // schaduw
     if (!this.flying && !this.swimming) {
@@ -44863,6 +44979,11 @@ class Game {
     const sp = m.sp || {};
     const rar = rarityOf(sp.rarity);
     const killRingR = m.superBoss ? 18 : (m.elite ? 14 : (m.giant ? 12 : 9));
+    try {
+      const ko = (typeof tOr === 'function') ? tOr('combat.ko', 'KO') : 'KO';
+      const big = !!(m.elite || m.bossCore || m.superBoss || (rar.order || 0) >= 3);
+      this.floater(m.x, m.y - m.size - 28, ko, big ? (rar.color || '#ffd75e') : '#e8f0ff', big ? 20 : 18, 'fx');
+    } catch (_) {}
     try { spawnFxRing(this, m.x, m.y - m.size * 0.32, rar.color, killRingR); } catch (_) {}
     if (!fxLite() && m.elite && !motionReduced()) {
       try { this.burst(m.x, m.y - m.size * 0.2, '#fff', 4, { kind: 'spark', size: 2.2 }); } catch (_) {}
@@ -44921,10 +45042,6 @@ class Game {
     const bossMul = m.colossal ? COLOSSAL_XP_MUL : (m.bossCore ? 1.25 : 1);
     const xp = Math.round((sp.xp || 8) * lvlScale * rarMul * (m.elite ? 2 : 1) * giantMul * bossMul);
     try { this.grantXP(xp); } catch (_) {}
-    try { this.floater(m.x, m.y - m.size - 30, `+${xp} XP`, rar.color, 16); } catch (_) {}
-    if ((rar.order || 0) >= 3) {
-      try { this.floater(m.x, m.y - m.size - 50, String(rar.name || 'EPIC').toUpperCase(), rar.color, 13); } catch (_) {}
-    }
     if (this.player) {
       this.player.energy = clamp((this.player.energy || 0) + 12 + (rar.order || 0) * 2, 0, 100);
     }
@@ -45280,6 +45397,10 @@ class Game {
         const lbl = typeof gearLabel === 'function' ? gearLabel(gdef) : gdef.name;
         this.floater(p.x, p.y - 100, t('combat.pickupGear', { name: lbl }), col, 15);
         if (fresh) {
+          try { haptic(14); } catch (_) {}
+          try {
+            if (typeof applyHitConfirmFx === 'function') applyHitConfirmFx(this, p.x, p.y - 36, { kind: 'special' });
+          } catch (_) {}
           try { UI.toast(t('toast.gearDrop', { name: lbl, slot: gearSlotLabel(gdef.slot) }), 3600, { tone: 'ok' }); } catch (_) {}
         }
         break;
@@ -45770,7 +45891,7 @@ class Game {
     let tip = t('result.vsRematchTip');
     if (this.matchFatality) tip = t('result.vsFatalityRematchTip');
     else if (close) tip = t('result.vsCloseRematchTip');
-    scheduleGameResult(this, 1200, () => UI.showResult(p1Win, {
+    scheduleGameResult(this, juiceResultDelayMs(p1Win), () => UI.showResult(p1Win, {
       titleKey: p1Win ? 'result.vsP1Win' : 'result.vsP2Win',
       title: p1Win ? t('result.vsP1Win') : t('result.vsP2Win'),
       detail: `${vsRosterName(this.p1Pick) || 'P1'} vs ${vsRosterName(this.p2Pick) || 'P2'} · ${this.roundsP1}-${this.roundsP2}` +
@@ -46748,6 +46869,19 @@ class Game {
     if (this.mode === 'adventure') this.updateKetsbam(dt);
     if (!ketsJustFinished) this.t += dt;
     if (this.hint > 0) this.hint -= dt;
+    if (this._juiceTeach && !this._juiceTaught && !this.over) {
+      const landed = (this.combo || 0) > 0 || (this.maxCombo || 0) > 0 || (this.kills || 0) > 0;
+      if (landed) {
+        this._juiceTaught = true;
+      } else if (this.t >= 3 && this.t < 30 && this.hint <= 0) {
+        this._juiceTaught = true;
+        const touch = typeof useTouchFightPads === 'function' ? useTouchFightPads() : (typeof IS_TOUCH !== 'undefined' && IS_TOUCH);
+        this.modeHintLine = typeof tOr === 'function'
+          ? tOr(touch ? 'juice.strikeNudge' : 'juice.strikeNudgeKb', touch ? 'Tik slaan' : 'Druk J')
+          : (touch ? 'Tik slaan' : 'Druk J');
+        this.hint = 2.6;
+      }
+    }
     this.shakeT = Math.max(0, this.shakeT - dt);
     if (this.bossPhase2Flash > 0) this.bossPhase2Flash -= dt;
 
@@ -50005,6 +50139,105 @@ function levelScreenActive() {
   return !!(el && el.classList.contains('active'));
 }
 
+function juiceGearOwnedCount(items) {
+  if (!items || !items.length) return 0;
+  let n = 0;
+  for (const it of items) {
+    try {
+      if (typeof gearOwned === 'function' && gearOwned(it)) n += 1;
+    } catch (_) {}
+  }
+  return n;
+}
+
+function juiceGearNeedsAdventure() {
+  const list = (typeof GEAR_ITEMS !== 'undefined' && Array.isArray(GEAR_ITEMS)) ? GEAR_ITEMS : [];
+  for (const it of list) {
+    if (!it || it.starter) continue;
+    try {
+      if (typeof gearOwned === 'function' && gearOwned(it)) return false;
+    } catch (_) {}
+  }
+  return true;
+}
+
+function juicePetsNeedTame() {
+  try { return typeof petTamedCount === 'function' && petTamedCount() <= 0; } catch (_) { return true; }
+}
+
+function juiceDexNeedDiscover() {
+  try { return typeof dexCount === 'function' && dexCount() <= 0; } catch (_) { return true; }
+}
+
+function juiceEggsNeedHatch() {
+  try { return typeof eggOwnedCount === 'function' && eggOwnedCount() <= 0; } catch (_) { return true; }
+}
+
+/** #316 juice result paint — complementary classes only.
+ *  Lose CTA ownership: #323 (`restartAdventureInstant`, `#resRetrySafe`, `result.onceMore`,
+ *  `.result-cta-primary` / `#resCtaDock`) and #314 (`#resultScreen.lose-retry`).
+ *  Win dock chrome: #318 (`#resultScreen.is-win.is-adventure`).
+ *  This lane never clones those IDs. Merge: keep sibling lose/win dock; keep juice-* if both land. */
+function juicePaintResultCtas(win, data) {
+  data = data || {};
+  const again = document.getElementById('resAgain');
+  const nextBtn = document.getElementById('resNext');
+  const menuBtn = document.getElementById('resMenu');
+  const showNext = !!(win && data.mode === 'adventure' && data.level < MAX_LEVEL);
+  if (nextBtn) {
+    nextBtn.style.display = showNext ? 'flex' : 'none';
+    nextBtn.classList.toggle('juice-cta-primary', showNext);
+    nextBtn.classList.toggle('juice-cta-quiet', !showNext);
+    const label = nextBtn.querySelector('div');
+    if (label) {
+      label.innerHTML = t('result.next') + '<small>' + tOr('juice.nextSub', 'volgende') + '</small>';
+    }
+  }
+  if (again) {
+    again.classList.toggle('juice-cta-primary', !showNext);
+    again.classList.toggle('juice-cta-quiet', showNext);
+    /* #323 owns retry label (result.onceMore / #resRetrySafe). Juice only paints classes. */
+  }
+  if (menuBtn) {
+    menuBtn.classList.add('juice-cta-home');
+    menuBtn.classList.remove('juice-cta-primary');
+    const label = menuBtn.querySelector('div');
+    if (label) {
+      label.textContent = (typeof hubForPlayMode === 'function' && hubForPlayMode(data.mode) === 'arcade')
+        ? t('result.menuArcade')
+        : t('result.menu');
+    }
+  }
+}
+
+function juiceOpenAdventure() {
+  try { UI.goMenu(); } catch (_) {}
+  const adv = document.getElementById('btnAdventure');
+  if (adv) {
+    try { adv.click(); return; } catch (_) {}
+  }
+  try { UI.safeOpen('levelScreen', () => UI.renderLevels()); } catch (_) {}
+}
+
+function appendJuiceEmptyCta(parent, copy, ctaLabel) {
+  if (!parent) return;
+  const intro = document.createElement('div');
+  intro.className = 'juice-empty juice-empty-owned';
+  const p = document.createElement('p');
+  p.className = 'juice-empty-copy';
+  p.textContent = copy;
+  intro.appendChild(p);
+  const cta = document.createElement('button');
+  cta.type = 'button';
+  cta.className = 'btn mode-btn b-adventure big-touch gear-empty-cta';
+  cta.textContent = ctaLabel;
+  bindPress(cta, () => {
+    safeUiAction(() => juiceOpenAdventure(), 'juiceEmptyAdv', tOr('gear.errSlot', 'Slot pick failed'));
+  });
+  intro.appendChild(cta);
+  parent.appendChild(intro);
+}
+
 function appendItemUpgradeButton(el, cat, id, rerender) {
   if (!itemUpgradeEligible(cat, id) || !itemCanUpgrade(cat, id)) return;
   const cost = itemUpgradeCost(cat, id);
@@ -50892,6 +51125,9 @@ function hubTileStatLine(hub) {
       }
     }
     case 'gear': {
+      if (typeof juiceGearNeedsAdventure === 'function' && juiceGearNeedsAdventure()) {
+        return tOr('gear.hubStatEmpty', 'starter · 0 drops');
+      }
       const n = typeof gearEquippedCount === 'function' ? gearEquippedCount() : 0;
       return typeof tOr === 'function' ? tOr('gear.hubStat', '{n}/5', { n }) : (n + '/5');
     }
@@ -51523,7 +51759,7 @@ const UI = {
       return;
     }
     const item = { text, ms: spec.ms, tone: spec.tone };
-    if (this._toastEls.length >= 2) {
+    if (this._toastEls.length >= 1) {
       this._toastQ.push(item);
       if (this._toastQ.length > 4) this._toastQ.shift();
       return;
@@ -51573,22 +51809,33 @@ const UI = {
   },
 
   _dismissToast(el) {
-    if (!el) return;
+    if (!el || el._toastGone) return;
+    el._toastGone = true;
     if (el._toastHide) {
       try { clearTimeout(el._toastHide); } catch (_) {}
       el._toastHide = null;
     }
-    try { el.remove(); } catch (_) {
-      try { if (el.parentNode) el.parentNode.removeChild(el); } catch (__) {}
+    const finish = () => {
+      try { el.remove(); } catch (_) {
+        try { if (el.parentNode) el.parentNode.removeChild(el); } catch (__) {}
+      }
+      this._toastEls = (this._toastEls || []).filter((x) => x !== el);
+      this._flushToastQ();
+    };
+    let skipAnim = false;
+    try { skipAnim = typeof motionReduced === 'function' && motionReduced(); } catch (_) {}
+    if (skipAnim || el.classList.contains('toast-out')) {
+      finish();
+      return;
     }
-    this._toastEls = (this._toastEls || []).filter((x) => x !== el);
-    this._flushToastQ();
+    try { el.classList.add('toast-out'); } catch (_) {}
+    setTimeout(finish, 180);
   },
 
   _flushToastQ() {
     this._toastQ = this._toastQ || [];
     this._toastEls = this._toastEls || [];
-    while (this._toastEls.length < 2 && this._toastQ.length) {
+    while (this._toastEls.length < 1 && this._toastQ.length) {
       this._mountToast(this._toastQ.shift());
     }
   },
@@ -52013,9 +52260,9 @@ const UI = {
       const stylesN = STYLES.filter(s => styleUnlocked(s)).length;
       setStat('hubStatStyle', t('ui.hubStatOutfits', { n: stylesN, total: STYLES.length }));
       const gearN = typeof gearEquippedCount === 'function' ? gearEquippedCount() : 0;
-      setStat('hubStatGear', typeof tOr === 'function'
-        ? tOr('gear.hubStat', '{n}/5', { n: gearN })
-        : (gearN + '/5'));
+      setStat('hubStatGear', juiceGearNeedsAdventure()
+        ? tOr('gear.hubStatEmpty', 'starter · 0 drops')
+        : (typeof tOr === 'function' ? tOr('gear.hubStat', '{n}/5', { n: gearN }) : (gearN + '/5')));
       const skillsN = skillUnlockedCount();
       const activeSk = skillById(save.skill || 'spiral_orb');
       const activeSp = equippedSuper();
@@ -52113,6 +52360,7 @@ const UI = {
     try { summonLeft = typeof chestSummonsLeft === 'function' ? chestSummonsLeft() : 0; } catch (_) {}
     document.querySelectorAll('#btnSummons, #btnCollectSummons').forEach((summonTile) => {
       summonTile.classList.toggle('has-summons', summonLeft > 0);
+      summonTile.classList.toggle('hub-tile-ready', summonLeft > 0);
       summonTile.setAttribute('aria-label', summonLeft > 0
         ? `${tOr('menu.summons', 'Summons')} · ${t('ui.summonLeftToday', { n: summonLeft })}`
         : `${tOr('menu.summons', 'Summons')} · ${t('ui.summonDoneToday')}`);
@@ -52192,13 +52440,66 @@ const UI = {
     }
   },
 
+  syncHubJuiceTiles() {
+    const needsAdv = juiceGearNeedsAdventure();
+    const emptyLine = tOr('hub.gearSubEmpty', 'Starter · vind drops in avontuur');
+    const filledLine = tOr('hub.gearSub', '5 slots · look vs stats');
+    for (const id of ['btnGearHome', 'btnGear']) {
+      const tile = document.getElementById(id);
+      if (!tile) continue;
+      tile.classList.toggle('hub-tile-empty', needsAdv);
+      const sub = tile.querySelector('.hub-tile-sub');
+      if (sub) sub.textContent = needsAdv ? emptyLine : filledLine;
+    }
+    const bld = document.getElementById('btnBuildings');
+    if (bld) {
+      let ready = 0;
+      try {
+        const rows = typeof buildingsList === 'function' ? buildingsList() : [];
+        ready = rows.filter((r) => r && r.canCollect).length;
+      } catch (_) { ready = 0; }
+      bld.classList.toggle('hub-tile-ready', ready > 0);
+    }
+    const up = document.getElementById('btnUpgradesHome');
+    if (up) {
+      let n = 0;
+      try { n = typeof countAllUpgradesReady === 'function' ? countAllUpgradesReady() : 0; } catch (_) {}
+      up.classList.toggle('hub-tile-ready', n > 0);
+    }
+    const petsEmpty = juicePetsNeedTame();
+    const petsTile = document.getElementById('btnPets');
+    if (petsTile) {
+      petsTile.classList.toggle('hub-tile-empty', petsEmpty);
+      const sub = petsTile.querySelector('.hub-tile-sub');
+      if (sub) {
+        sub.textContent = petsEmpty
+          ? tOr('hub.petsSubEmpty', 'Nog geen pet · tem in avontuur')
+          : tOr('hub.petsSub', 'Muntjes · dex temmen · ei arcade');
+      }
+    }
+    const dexEmpty = juiceDexNeedDiscover();
+    const dexTile = document.getElementById('btnDex');
+    if (dexTile) {
+      dexTile.classList.toggle('hub-tile-empty', dexEmpty);
+      const sub = dexTile.querySelector('.hub-tile-sub');
+      if (sub) {
+        const n = (typeof SPECIES_ORDER !== 'undefined' && SPECIES_ORDER) ? SPECIES_ORDER.length : 0;
+        sub.textContent = dexEmpty
+          ? tOr('hub.dexSubEmpty', 'Leeg boek · versla iets in avontuur')
+          : tOr('hub.dexSub', '{n} soorten · rariteit = HP', { n });
+      }
+    }
+  },
+
   hideFomoRitual() {
     const el = document.getElementById('fomoRitual');
     if (el) el.hidden = true;
+    try { el && el.classList.remove('is-open'); } catch (_) {}
     try { document.body.classList.remove('fomo-open'); } catch (_) {}
   },
 
   showFomoRitual(force) {
+    try { this.clearToasts(); } catch (_) {}
     const el = document.getElementById('fomoRitual');
     if (!el) return;
     const menu = document.getElementById('menuScreen');
@@ -52217,6 +52518,7 @@ const UI = {
       try { document.body.classList.remove('fomo-open'); } catch (_) {}
       return;
     }
+    try { this.clearToasts(); } catch (_) {}
     const rows = document.getElementById('fomoRitualRows');
     const title = document.getElementById('fomoRitualTitle');
     const reset = document.getElementById('fomoRitualReset');
@@ -52285,6 +52587,11 @@ const UI = {
     try {
       const tut = document.getElementById('summonTut');
       if (tut) tut.hidden = true;
+    } catch (_) {}
+    try {
+      el.classList.remove('is-open');
+      void el.offsetWidth;
+      el.classList.add('is-open');
     } catch (_) {}
   },
 
@@ -54054,6 +54361,11 @@ const UI = {
   },
 
   renderDex() {
+    const dexEmpty = juiceDexNeedDiscover();
+    for (const id of ['dexFilterBar', 'dexBiomeFilterBar', 'dexTypeFilterBar', 'dexSortBar']) {
+      const bar = document.getElementById(id);
+      if (bar) bar.style.display = dexEmpty ? 'none' : '';
+    }
     const sumEl = document.getElementById('dexSummary');
     if (sumEl) {
       const totalHp = dexHpBonus();
@@ -54074,6 +54386,12 @@ const UI = {
           }).join('')}</div>`
         : '';
       sumEl.style.display = 'block';
+      if (dexEmpty) {
+        sumEl.innerHTML = t('ui.dexSummary', {
+          n: `<b>0</b>`, total: `<b>${SPECIES_ORDER.length}</b>`,
+          kills: `<b>${kills}</b>`, hp: `<b>${totalHp}</b>`, tiers: `<b>0</b>`,
+        });
+      } else {
       const biomeTot = typeof dexBiomeTotals === 'function' ? dexBiomeTotals() : {};
       const biomeChips = ['farm', 'zoo', 'sea', 'wild', 'crypt', 'scrap', 'frost'].map((b) => {
         const tot = biomeTot[b] || 0;
@@ -54093,6 +54411,7 @@ const UI = {
         (biomeChips ? `<div style="margin-top:4px;line-height:1.7">${biomeChips}</div>` : '') +
         cosmeticHtml +
         dexNextAchievementHtml();
+      }
     }
     const bindFilterBar = (host, attr, stateKey, mkButtons, renderFn) => {
       if (!host) return;
@@ -54156,6 +54475,13 @@ const UI = {
     const list = document.getElementById('dexList');
     if (!list) return;
     list.innerHTML = '';
+    if (juiceDexNeedDiscover()) {
+      appendJuiceEmptyCta(
+        list,
+        tOr('dex.emptyOwned', 'Nog niemand in het boek. Versla monsters in Avontuur.'),
+        tOr('dex.emptyOwnedCta', 'Naar avontuur')
+      );
+    }
     const filter = this.dexRarityFilter || 'all';
     const typeFilter = this.dexTypeFilter || 'all';
     const biomeFilter = this.dexBiomeFilter || 'all';
@@ -54388,6 +54714,15 @@ const UI = {
         return false;
       }
       AudioSys.sfx('select');
+      try { if (typeof haptic === 'function') haptic(10); } catch (_) {}
+      const doll = document.getElementById('gearDollCanvas');
+      if (doll) {
+        try {
+          doll.classList.remove('juice-flash');
+          void doll.offsetWidth;
+          doll.classList.add('juice-flash');
+        } catch (_) {}
+      }
       UI.toast(tOr('toast.gearEquipped', '{name} aangedaan', { name: gearItemName(item) }), 1400, { tone: 'ok' });
       return true;
     };
@@ -54396,6 +54731,7 @@ const UI = {
       if (typeof gearUnequipSlot === 'function') gearUnequipSlot(sid);
       else unequipGear(sid);
       AudioSys.sfx('select');
+      try { if (typeof haptic === 'function') haptic(6); } catch (_) {}
       UI.toast(tOr('toast.gearUnequipped', '{name} uitgedaan', { name: gearItemName(item) }), 1200);
     };
     const keepPickerScroll = () => {
@@ -54584,7 +54920,15 @@ const UI = {
     if (detail) {
       detail.classList.remove('is-equipped', 'is-locked');
       if (!picked) {
-        detail.innerHTML = `<div class="gear-detail-sub">${esc(tOr('gear.pickHint', 'Tik een item om aan of uit te doen.'))}</div>`;
+        const ownedN = typeof juiceGearOwnedCount === 'function'
+          ? juiceGearOwnedCount(items)
+          : items.filter((it) => {
+            try { return typeof gearOwned === 'function' && gearOwned(it); } catch (_) { return false; }
+          }).length;
+        const hint = ownedN <= 0
+          ? tOr('gear.emptySlotHint', 'Leeg slot — speel Avontuur om iets te vinden.')
+          : tOr('gear.pickHint', 'Tik een item om aan of uit te doen.');
+        detail.innerHTML = `<div class="gear-detail-sub">${esc(hint)}</div>`;
       } else {
         const unlock = gearUnlockState(picked, pickSlot);
         const tip = unlock.model || (typeof gearTooltipModel === 'function' ? gearTooltipModel(picked) : null);
@@ -54764,10 +55108,51 @@ const UI = {
       const keepScroll = this._gearPickerScroll || picker.scrollTop || 0;
       picker.innerHTML = '';
       const frag = document.createDocumentFragment();
-      if (!shown.length) {
+      const ownedN = juiceGearOwnedCount(items);
+      if (juiceGearNeedsAdventure()) {
+        const intro = document.createElement('div');
+        intro.className = 'gear-filter-empty juice-empty juice-empty-owned';
+        const copy = document.createElement('p');
+        copy.className = 'juice-empty-copy';
+        copy.textContent = tOr('gear.emptyOwned', 'Nog geen uitrusting. Vind drops in Avontuur.');
+        intro.appendChild(copy);
+        const cta = document.createElement('button');
+        cta.type = 'button';
+        cta.className = 'btn mode-btn b-adventure big-touch gear-empty-cta';
+        cta.textContent = tOr('gear.emptyOwnedCta', 'Naar avontuur');
+        bindPress(cta, () => {
+          safeUiAction(() => juiceOpenAdventure(), 'gearEmptyAdv', tOr('gear.errSlot', 'Slot pick failed'));
+        });
+        intro.appendChild(cta);
+        frag.appendChild(intro);
+      }
+      if (!shown.length && ownedN > 0) {
         const empty = document.createElement('div');
-        empty.className = 'gear-filter-empty';
-        empty.textContent = tOr('gear.filterEmpty', 'Niets in deze filter');
+        empty.className = 'gear-filter-empty juice-empty';
+        const filtered = this.gearFilter !== 'all' || this.gearRarity !== 'all' || !!(this.gearFilterQ || '').trim();
+        const copy = document.createElement('p');
+        copy.className = 'juice-empty-copy';
+        copy.textContent = tOr('gear.filterEmpty', 'Niets in deze filter');
+        empty.appendChild(copy);
+        if (filtered) {
+          const cta = document.createElement('button');
+          cta.type = 'button';
+          cta.className = 'btn mode-btn b-gray big-touch gear-empty-cta';
+          cta.textContent = tOr('gear.filterClear', 'Wis filter');
+          bindPress(cta, () => {
+            safeUiAction(() => {
+              this.gearFilter = 'all';
+              this.gearRarity = 'all';
+              this.gearFilterQ = '';
+              const q = document.getElementById('gearFilterQ');
+              if (q) q.value = '';
+              this._gearPickerScroll = 0;
+              AudioSys.sfx('select');
+              this.renderGear({ pickerOnly: true });
+            }, 'gearFilterClear', 'Filter mislukt');
+          });
+          empty.appendChild(cta);
+        }
         frag.appendChild(empty);
       }
       for (const it of shown) {
@@ -55323,6 +55708,7 @@ const UI = {
       screen.classList.toggle('is-adventure', data.mode === 'adventure');
       screen.classList.toggle('is-retry-first', retryFirst);
     }
+    try { if (typeof juicePaintResultCtas === 'function') juicePaintResultCtas(win, data); } catch (_) {}
     state = 'result';
     scheduleResize();
     document.getElementById('pauseBtn')?.classList.remove('show');
@@ -56332,6 +56718,7 @@ if (typeof UI === 'object' && UI) {
     const before = (typeof buildingsGet === 'function') ? buildingsGet(id) : null;
     const cap = before && before.capacity ? before.capacity : 0;
     const wasFull = buildingsHopperFull(before);
+    try { if (typeof haptic === 'function') haptic(10); } catch (_) {}
     const res = (typeof buildingsCollect === 'function') ? buildingsCollect(id) : { ok: false };
     const amount = Math.max(0, Math.floor(Number(res && res.amount) || 0));
     const ok = !!(res && res.ok && amount > 0);
@@ -56916,7 +57303,7 @@ if (typeof UI === 'object' && UI) {
       empty.className = 'pets-empty';
       const tamed = (typeof petTamedCount === 'function') ? petTamedCount() : 0;
       const title = (this.petFilter === 'tamed' && !tamed)
-        ? petsTxt('pets.emptyFirst', 'Tame via kills or buy with PC')
+        ? petsTxt('pets.emptyOwned', 'Tame via kills or buy with PC')
         : petsTxt('pets.emptyFilter', 'Nothing in this filter');
       empty.innerHTML = '<p class="pets-empty-copy">' + petsEscape(title) + '</p>';
       const btn = document.createElement('button');
@@ -58202,7 +58589,9 @@ bindPress(document.getElementById('resNext'), () => {
   if (!d || d.mode !== 'adventure' || !d.win) return;
   AudioSys.sfx('select');
   try { if (game) game._resultToken = (game._resultToken || 0) + 1; } catch (_) {}
-  gokGooiStartLevel(Math.min(MAX_LEVEL, d.level + 1));
+  const nextLv = Math.min(MAX_LEVEL, (d.level || 1) + 1);
+  if (typeof juiceRetryAdventure === 'function') juiceRetryAdventure(nextLv, d.difficulty);
+  else startGame('adventure', { level: nextLv, gamble: null, difficulty: d.difficulty });
 });
 bindPress(document.getElementById('resMenu'), (e) => {
   try { if (e && e.stopPropagation) e.stopPropagation(); } catch (_) {}

@@ -890,7 +890,9 @@ bindPress(document.getElementById('resNext'), () => {
   if (!d || d.mode !== 'adventure' || !d.win) return;
   AudioSys.sfx('select');
   try { if (game) game._resultToken = (game._resultToken || 0) + 1; } catch (_) {}
-  gokGooiStartLevel(Math.min(MAX_LEVEL, d.level + 1));
+  const nextLv = Math.min(MAX_LEVEL, (d.level || 1) + 1);
+  if (typeof juiceRetryAdventure === 'function') juiceRetryAdventure(nextLv, d.difficulty);
+  else startGame('adventure', { level: nextLv, gamble: null, difficulty: d.difficulty });
 });
 bindPress(document.getElementById('resMenu'), (e) => {
   try { if (e && e.stopPropagation) e.stopPropagation(); } catch (_) {}

@@ -108,6 +108,8 @@ function seedNlGameStrings() {
     failTeleFire: 'VUUR',
     lossBlockTip: 'Tip: blokkeer · mik omhoog op vliegers · {prog}',
     lossOrbTip: 'Tip: pak groene orbs · vul SUPER vóór baas · {prog}',
+    lossSelfHp: 'Jij viel — {prog}',
+    lossSelfOrb: 'Jij miste de orbs — {prog}',
     lossGambleTip: 'Eerste nederlaag: vóór elk level kun je dobbelen — bondgenoot helpt tussen golven.',
     heatRising: 'Hitte {n}/{max} — bij 9 gevaar, bij 10 Satan',
     heatDanger: 'GEVAAR! Hitte rood — nog 1 verlies en Satan komt',
@@ -186,7 +188,7 @@ function seedNlGameStrings() {
   });
   if (!I18N.nl.combat) I18N.nl.combat = {};
   Object.assign(I18N.nl.combat, {
-    counter: 'COUNTER!', crit: 'CRIT!', streak3: 'REEKS ×3', streak5: 'IN VUUR!',
+    counter: 'COUNTER!', crit: 'CRIT!', ko: 'KO', streak3: 'REEKS ×3', streak5: 'IN VUUR!',
     streak8: 'RAZEND!', streak12: 'NIET TE STOPPEN!', streakHold: 'REEKS ×{n} vast!',
     combo3: 'Combo ×3 — door!', combo5: 'Combo ×5 — netjes!', combo8: 'Combo ×8 — pro!',
     combo10: 'Combo ×10 — meester!', comboN: 'COMBO ×{n}!',
@@ -1276,6 +1278,7 @@ function seedNlFromRuntime() {
   if (!I18N.nl.gear) I18N.nl.gear = {};
   Object.assign(I18N.nl.gear, {
     hubStat: '{n}/5',
+    hubStatEmpty: 'starter · 0 drops',
     summarySlots: '<b>{n}</b>/5',
     pillVanity: 'SIER',
     pillStat: 'STAT',
@@ -1326,6 +1329,7 @@ function seedNlFromRuntime() {
     filterOwned: 'Van jou',
     filterSearch: 'Zoek in {n}…',
     filterEmpty: 'Niets in deze filter — tik Wis filters',
+    filterEmpty: 'Niets in deze filter',
     filterRarityAll: 'Alle',
     filterCount: '{shown}/{total} in {slot}',
     filterAria: 'Filter',
@@ -1375,6 +1379,7 @@ const CATALOG_EN = {
   },
   gear: {
     hubStat: '{n}/5',
+    hubStatEmpty: 'starter · 0 drops',
     summarySlots: '<b>{n}</b>/5',
     pillVanity: 'LOOK',
     pillStat: 'STAT',
@@ -1426,6 +1431,7 @@ const CATALOG_EN = {
     filterOwned: 'Owned',
     filterSearch: 'Search {n}…',
     filterEmpty: 'Nothing in this filter — tap Clear filters',
+    filterEmpty: 'Nothing in this filter',
     filterRarityAll: 'All',
     filterCount: '{shown}/{total} in {slot}',
     filterAria: 'Filter',
@@ -1562,6 +1568,8 @@ const CATALOG_EN = {
     failTeleFire: 'FIRE',
     lossBlockTip: 'Tip: block · aim up at flyers · {prog}',
     lossOrbTip: 'Tip: grab green orbs · fill SUPER before boss · {prog}',
+    lossSelfHp: 'You went down — {prog}',
+    lossSelfOrb: 'You missed the orbs — {prog}',
     lossGambleTip: 'First loss: before each level you can gamble — ally helps between waves.',
     heatRising: 'Heat {n}/{max} — danger at 9, Satan at 10',
     heatDanger: 'DANGER! Heat red — one more loss and Satan appears',
@@ -1629,6 +1637,8 @@ const CATALOG_EN = {
     petCoinsLine: '+{n} pet coins',
     gearLine: 'Gear: {name}',
   },
+
+    filterEmpty: 'Nothing in this filter',
 
   banner: {
     levelStart: 'LEVEL {n}',
@@ -1857,6 +1867,12 @@ const CATALOG_EN = {
     streakReward3: '+1 summon',
     streakReward7: '+egg or summons',
     streakReward14: '+120 XP',
+  },
+  juice: {
+    strikeNudge: 'Tap strike',
+    strikeNudgeKb: 'Press J',
+    againSub: 'jump back in',
+    nextSub: 'next',
   },
   missionsUi: {
     flowDone: '✓ Day done',
@@ -2526,7 +2542,7 @@ const CATALOG_EN = {
     'Loading / splash strip',
   ] },
   combat: {
-    counter: 'COUNTER!', crit: 'CRIT!', streak3: 'STREAK ×3', streak5: 'ON FIRE!',
+    counter: 'COUNTER!', crit: 'CRIT!', ko: 'KO', streak3: 'STREAK ×3', streak5: 'ON FIRE!',
     streak8: 'RAMPAGE!', streak12: 'UNSTOPPABLE!', streakHold: 'STREAK ×{n} locked!',
     combo3: 'Combo ×3 — keep going!', combo5: 'Combo ×5 — nice!', combo8: 'Combo ×8 — pro!',
     combo10: 'Combo ×10 — master!', comboN: 'COMBO ×{n}!',
@@ -2797,6 +2813,13 @@ const CATALOG_DE = {
 };
 
 const CATALOG_FR = {
+  gear: {
+    filterEmpty: 'Rien dans ce filtre',
+    filterClear: 'Effacer le filtre',
+    emptyOwned: 'Pas encore de drops. Trouve de l’équipement en aventure.',
+    emptyOwnedCta: 'Vers l’aventure',
+    emptySlotHint: 'Look de départ — joue l’aventure pour des drops.',
+  },
   ach: {
     first_win: { name: 'Première victoire', desc: 'Gagne ton premier niveau' },
     lv10: { name: 'Ninja en croissance', desc: 'Atteins combattant Lv 10' },
@@ -2930,6 +2953,13 @@ const CATALOG_FR = {
 };
 
 const CATALOG_ES = {
+  gear: {
+    filterEmpty: 'Nada en este filtro',
+    filterClear: 'Borrar filtro',
+    emptyOwned: 'Aún no hay drops. Encuentra equipo en Aventura.',
+    emptyOwnedCta: 'Ir a Aventura',
+    emptySlotHint: 'Look inicial — juega Aventura para encontrar drops.',
+  },
   ach: {
     first_win: { name: 'Primer triunfo', desc: 'Gana tu primer nivel' },
     lv10: { name: 'Ninja en crecimiento', desc: 'Alcanza luchador Lv 10' },

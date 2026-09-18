@@ -67,6 +67,8 @@ async function run() {
     for (const id of discover) if (SPECIES[id]) save.dex[id] = 2;
 
     if (typeof applyI18n === 'function') applyI18n();
+    else if (typeof applyLang === 'function') applyLang();
+    if (typeof UI !== 'undefined' && UI.syncHubJuiceTiles) UI.syncHubJuiceTiles();
     UI.dexBiomeFilter = 'all';
     UI.renderDex();
     const bar = document.getElementById('dexBiomeFilterBar');

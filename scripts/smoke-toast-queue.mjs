@@ -26,6 +26,8 @@ must(/_toastQ/.test(ui) && /_mountToast/.test(ui), 'UI toast queue helpers missi
 must(/_flushToastQ/.test(ui), 'toast flush missing');
 must(/sf-boot-fail/.test(ui), 'queue must not wipe Android/PWA boot-fail refresh toast');
 must(/_toastQ\.length > 4/.test(ui), 'toast queue must cap flood');
+must(/_toastEls\.length >= 1/.test(ui), 'Android toast must show one at a time');
+must(/toast-out/.test(ui) && /toast-out/.test(css), 'toast exit animation missing');
 must(/levelScreen/.test(missions) && /welcome/.test(missions), 'welcome toast must skip island screen');
 must(!/host\.innerHTML = ''/.test(ui.match(/if \(id === 'levelScreen'\)[\s\S]{0,400}/)?.[0] || ''),
   'opening island must not wipe the toast host');

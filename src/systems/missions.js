@@ -180,10 +180,24 @@ function fomoRitualEggVisible() {
   return !!(save && save.stats && (save.stats.advWins || 0) >= 1);
 }
 
+function juiceFirstPlayPending() {
+  try {
+    if (typeof save === 'undefined' || !save) return true;
+    if (save.lastPlay) return false;
+    if ((save.lvl || 1) > 1) return false;
+    if (typeof onboardingProgress === 'function' && onboardingProgress().seen > 0) return false;
+    if (save.stats && (save.stats.advWins || 0) > 0) return false;
+  } catch (_) {}
+  return true;
+}
+
 function fomoRitualHubReady() {
   try {
     const splash = document.getElementById('sfSplash');
     if (splash && !splash.classList.contains('is-done')) return false;
+  } catch (_) {}
+  try {
+    if (juiceFirstPlayPending()) return false;
   } catch (_) {}
   return true;
 }
@@ -2081,6 +2095,32 @@ function restartAdventureInstant(dataOrN, diff, gamble) {
   startGame('adventure', { level, difficulty, gamble: g, instantRetry: true });
 }
 
+/** #316 delay helper (700 lose / 900 win). Complementary — do not replace
+ *  #323 `resultShowDelayMs` / `RESULT_SHOW_LOSE_MS` or #314 phone 675ms. */
+function juiceResultDelayMs(win) {
+  try {
+    if (typeof motionReduced === 'function' && motionReduced()) return win ? 280 : 200;
+  } catch (_) {}
+  return win ? 900 : 700;
+}
+
+/** #316 dice-skip retry via existing startGame({ gamble: null }).
+ *  #323 owns `restartAdventureInstant` + `#resRetrySafe`. Do not clone those names. */
+function juiceRetryAdventure(level, difficulty) {
+  const cap = (typeof MAX_LEVEL === 'number' && MAX_LEVEL > 0) ? MAX_LEVEL : 99;
+  const lv = Math.max(1, Math.min(cap, Number(level) || 1));
+  let diff = difficulty;
+  try {
+    if (!diff && typeof currentAdvDiff === 'function') diff = currentAdvDiff();
+    if (diff && typeof setAdvDiff === 'function' && typeof advDiffAvailable === 'function' && advDiffAvailable(diff)) {
+      setAdvDiff(diff);
+    }
+  } catch (_) {}
+  pendingAdvLevel = lv;
+  lastGambleRoll = null;
+  startGame('adventure', { level: lv, gamble: null, difficulty: diff });
+}
+
 /** Veilig resultaat na gevecht — voorkomt ReferenceError + zwart scherm. */
 function scheduleGameResult(gameRef, delayMs, showFn) {
   if (!gameRef || typeof showFn !== 'function') return;
@@ -2900,8 +2940,8 @@ function applyModeOnboarding(mode, g) {
   if (mode === 'adventure' || mode === 'training') save.tipsSeen.energy = 1;
   if (mode === 'coinrun') save.tipsSeen.hint_coinrun = 1;
   persist();
-  g.modeHintLine = modeFirstMinuteLine(mode);
-  g.hint = 8;
+  // Teach by doing — short strike nudge in combat, not an 8s first-minute wall.
+  g._juiceTeach = true;
 }
 
 /** Eén regel op gok-scherm — geen toast. */
@@ -2934,41 +2974,9 @@ function welcomeToastOnHub() {
 function maybeWelcomeToast() {
   ensureTipsSeen();
   if (save.tipsSeen.welcome) return;
-  const prog = onboardingProgress();
-  if (prog.seen > 0 || save.lvl > 1 || save.missionsIntroSeen) {
-    save.tipsSeen.welcome = 1;
-    persist();
-    return;
-  }
-  let tries = 0;
-  const tick = () => {
-    if (save.tipsSeen.welcome) return;
-    if (onboardingProgress().seen > 0 || save.lvl > 1) {
-      save.tipsSeen.welcome = 1;
-      persist();
-      return;
-    }
-    if (welcomeToastOnHub()) {
-      save.tipsSeen.welcome = 1;
-      persist();
-      try { userToast(t('toast.welcome'), 2200); } catch (_) {}
-      return;
-    }
-    tries++;
-    let onSplash = false;
-    try {
-      const splash = document.getElementById('sfSplash');
-      onSplash = !!(splash && !splash.classList.contains('is-done'));
-    } catch (_) {}
-    // Still on title/splash — wait for HOME. Left hub already — don't follow.
-    if (onSplash && tries < 24) {
-      setTimeout(tick, 350);
-      return;
-    }
-    save.tipsSeen.welcome = 1;
-    persist();
-  };
-  setTimeout(tick, 400);
+  // Flappy-class: SPELEN is the CTA. No welcome wall on first HOME.
+  save.tipsSeen.welcome = 1;
+  persist();
 }
 
 /** Level-pacing v1.14.3: iets rustiger — +15% vroeg, oplopend tot +50% vanaf ~Lv 18. */

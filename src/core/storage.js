@@ -826,8 +826,15 @@ function hitConfirmColor(kind) {
 }
 
 function applyHitConfirmFx(game, x, y, spec, opts) {
-  if (!game || motionReduced()) return;
+  if (!game) return;
   opts = opts || {};
+  const now = (typeof performance !== 'undefined' && performance.now) ? performance.now() : Date.now();
+  const last = game._hitConfirmAt || 0;
+  const minGap = opts.counter ? 45 : 95;
+  if (!opts.force && (now - last) < minGap) return;
+  game._hitConfirmAt = now;
+  // Reduced-motion: skip particle pulse; flash + damage/KO floater stay readable.
+  if (motionReduced()) return;
   const kind = spec && spec.kind ? spec.kind : 'punch';
   let col = hitConfirmColor(kind);
   if (kind === 'weapon' && spec.move) col = weaponMoveFxColor(spec.move);

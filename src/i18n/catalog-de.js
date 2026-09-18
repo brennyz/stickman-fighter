@@ -72,6 +72,8 @@ const CATALOG_DE_CHROME = {
     failTeleFire: 'FEUER',
     lossBlockTip: 'Tipp: blocken · nach oben zielen auf Flieger · {prog}',
     lossOrbTip: 'Tipp: grüne Orbs · SUPER vor dem Boss füllen · {prog}',
+    lossSelfHp: 'Du bist gefallen — {prog}',
+    lossSelfOrb: 'Du hast die Orbs verpasst — {prog}',
     lossGambleTip: 'Erste Niederlage: vor jedem Level würfeln — Verbündeter hilft zwischen Wellen.',
     heatRising: 'Hitze {n}/{max} — Gefahr bei 9, Satan bei 10',
     heatDanger: 'GEFAHR! Hitze rot — noch 1 Verlust und Satan kommt',
@@ -447,7 +449,7 @@ const CATALOG_DE_CHROME = {
     spotlightPlayBtn: '{mode} spielen →',
   },
   combat: {
-    counter: 'COUNTER!', crit: 'CRIT!', streak3: 'STREAK ×3', streak5: 'ON FIRE!',
+    counter: 'COUNTER!', crit: 'CRIT!', ko: 'KO', streak3: 'STREAK ×3', streak5: 'ON FIRE!',
     streak8: 'RAMPAGE!', streak12: 'UNSTOPPABLE!', streakHold: 'STREAK ×{n} fest!',
     combo3: 'Combo ×3 — weiter!', combo5: 'Combo ×5 — schön!', combo8: 'Combo ×8 — pro!',
     combo10: 'Combo ×10 — Meister!', comboN: 'COMBO ×{n}!',
@@ -1024,6 +1026,7 @@ const CATALOG_DE_CHROME = {
     errBackupSync: 'Backup-Abgleich fehlgeschlagen',
   },
   gear: {
+    hubStatEmpty: 'Starter · 0 Drops',
     filterAll: 'Alles',
     filterOwned: 'Deins',
     filterLook: 'Look',
@@ -1055,6 +1058,7 @@ const CATALOG_DE_CHROME = {
     huntBtn: 'Zum Abenteuer',
     unequipAll: 'Alles ablegen',
     unequipAllConfirm: 'Nochmal tippen',
+    filterEmpty: 'Nichts in diesem Filter',
     lockedLine: 'Gesperrt · {why}',
     equip: 'Anlegen',
     unequip: 'Ablegen',

@@ -8,6 +8,105 @@ function levelScreenActive() {
   return !!(el && el.classList.contains('active'));
 }
 
+function juiceGearOwnedCount(items) {
+  if (!items || !items.length) return 0;
+  let n = 0;
+  for (const it of items) {
+    try {
+      if (typeof gearOwned === 'function' && gearOwned(it)) n += 1;
+    } catch (_) {}
+  }
+  return n;
+}
+
+function juiceGearNeedsAdventure() {
+  const list = (typeof GEAR_ITEMS !== 'undefined' && Array.isArray(GEAR_ITEMS)) ? GEAR_ITEMS : [];
+  for (const it of list) {
+    if (!it || it.starter) continue;
+    try {
+      if (typeof gearOwned === 'function' && gearOwned(it)) return false;
+    } catch (_) {}
+  }
+  return true;
+}
+
+function juicePetsNeedTame() {
+  try { return typeof petTamedCount === 'function' && petTamedCount() <= 0; } catch (_) { return true; }
+}
+
+function juiceDexNeedDiscover() {
+  try { return typeof dexCount === 'function' && dexCount() <= 0; } catch (_) { return true; }
+}
+
+function juiceEggsNeedHatch() {
+  try { return typeof eggOwnedCount === 'function' && eggOwnedCount() <= 0; } catch (_) { return true; }
+}
+
+/** #316 juice result paint — complementary classes only.
+ *  Lose CTA ownership: #323 (`restartAdventureInstant`, `#resRetrySafe`, `result.onceMore`,
+ *  `.result-cta-primary` / `#resCtaDock`) and #314 (`#resultScreen.lose-retry`).
+ *  Win dock chrome: #318 (`#resultScreen.is-win.is-adventure`).
+ *  This lane never clones those IDs. Merge: keep sibling lose/win dock; keep juice-* if both land. */
+function juicePaintResultCtas(win, data) {
+  data = data || {};
+  const again = document.getElementById('resAgain');
+  const nextBtn = document.getElementById('resNext');
+  const menuBtn = document.getElementById('resMenu');
+  const showNext = !!(win && data.mode === 'adventure' && data.level < MAX_LEVEL);
+  if (nextBtn) {
+    nextBtn.style.display = showNext ? 'flex' : 'none';
+    nextBtn.classList.toggle('juice-cta-primary', showNext);
+    nextBtn.classList.toggle('juice-cta-quiet', !showNext);
+    const label = nextBtn.querySelector('div');
+    if (label) {
+      label.innerHTML = t('result.next') + '<small>' + tOr('juice.nextSub', 'volgende') + '</small>';
+    }
+  }
+  if (again) {
+    again.classList.toggle('juice-cta-primary', !showNext);
+    again.classList.toggle('juice-cta-quiet', showNext);
+    /* #323 owns retry label (result.onceMore / #resRetrySafe). Juice only paints classes. */
+  }
+  if (menuBtn) {
+    menuBtn.classList.add('juice-cta-home');
+    menuBtn.classList.remove('juice-cta-primary');
+    const label = menuBtn.querySelector('div');
+    if (label) {
+      label.textContent = (typeof hubForPlayMode === 'function' && hubForPlayMode(data.mode) === 'arcade')
+        ? t('result.menuArcade')
+        : t('result.menu');
+    }
+  }
+}
+
+function juiceOpenAdventure() {
+  try { UI.goMenu(); } catch (_) {}
+  const adv = document.getElementById('btnAdventure');
+  if (adv) {
+    try { adv.click(); return; } catch (_) {}
+  }
+  try { UI.safeOpen('levelScreen', () => UI.renderLevels()); } catch (_) {}
+}
+
+function appendJuiceEmptyCta(parent, copy, ctaLabel) {
+  if (!parent) return;
+  const intro = document.createElement('div');
+  intro.className = 'juice-empty juice-empty-owned';
+  const p = document.createElement('p');
+  p.className = 'juice-empty-copy';
+  p.textContent = copy;
+  intro.appendChild(p);
+  const cta = document.createElement('button');
+  cta.type = 'button';
+  cta.className = 'btn mode-btn b-adventure big-touch gear-empty-cta';
+  cta.textContent = ctaLabel;
+  bindPress(cta, () => {
+    safeUiAction(() => juiceOpenAdventure(), 'juiceEmptyAdv', tOr('gear.errSlot', 'Slot pick failed'));
+  });
+  intro.appendChild(cta);
+  parent.appendChild(intro);
+}
+
 function appendItemUpgradeButton(el, cat, id, rerender) {
   if (!itemUpgradeEligible(cat, id) || !itemCanUpgrade(cat, id)) return;
   const cost = itemUpgradeCost(cat, id);
@@ -895,6 +994,9 @@ function hubTileStatLine(hub) {
       }
     }
     case 'gear': {
+      if (typeof juiceGearNeedsAdventure === 'function' && juiceGearNeedsAdventure()) {
+        return tOr('gear.hubStatEmpty', 'starter · 0 drops');
+      }
       const n = typeof gearEquippedCount === 'function' ? gearEquippedCount() : 0;
       return typeof tOr === 'function' ? tOr('gear.hubStat', '{n}/5', { n }) : (n + '/5');
     }
@@ -1526,7 +1628,7 @@ const UI = {
       return;
     }
     const item = { text, ms: spec.ms, tone: spec.tone };
-    if (this._toastEls.length >= 2) {
+    if (this._toastEls.length >= 1) {
       this._toastQ.push(item);
       if (this._toastQ.length > 4) this._toastQ.shift();
       return;
@@ -1576,22 +1678,33 @@ const UI = {
   },
 
   _dismissToast(el) {
-    if (!el) return;
+    if (!el || el._toastGone) return;
+    el._toastGone = true;
     if (el._toastHide) {
       try { clearTimeout(el._toastHide); } catch (_) {}
       el._toastHide = null;
     }
-    try { el.remove(); } catch (_) {
-      try { if (el.parentNode) el.parentNode.removeChild(el); } catch (__) {}
+    const finish = () => {
+      try { el.remove(); } catch (_) {
+        try { if (el.parentNode) el.parentNode.removeChild(el); } catch (__) {}
+      }
+      this._toastEls = (this._toastEls || []).filter((x) => x !== el);
+      this._flushToastQ();
+    };
+    let skipAnim = false;
+    try { skipAnim = typeof motionReduced === 'function' && motionReduced(); } catch (_) {}
+    if (skipAnim || el.classList.contains('toast-out')) {
+      finish();
+      return;
     }
-    this._toastEls = (this._toastEls || []).filter((x) => x !== el);
-    this._flushToastQ();
+    try { el.classList.add('toast-out'); } catch (_) {}
+    setTimeout(finish, 180);
   },
 
   _flushToastQ() {
     this._toastQ = this._toastQ || [];
     this._toastEls = this._toastEls || [];
-    while (this._toastEls.length < 2 && this._toastQ.length) {
+    while (this._toastEls.length < 1 && this._toastQ.length) {
       this._mountToast(this._toastQ.shift());
     }
   },
@@ -2016,9 +2129,9 @@ const UI = {
       const stylesN = STYLES.filter(s => styleUnlocked(s)).length;
       setStat('hubStatStyle', t('ui.hubStatOutfits', { n: stylesN, total: STYLES.length }));
       const gearN = typeof gearEquippedCount === 'function' ? gearEquippedCount() : 0;
-      setStat('hubStatGear', typeof tOr === 'function'
-        ? tOr('gear.hubStat', '{n}/5', { n: gearN })
-        : (gearN + '/5'));
+      setStat('hubStatGear', juiceGearNeedsAdventure()
+        ? tOr('gear.hubStatEmpty', 'starter · 0 drops')
+        : (typeof tOr === 'function' ? tOr('gear.hubStat', '{n}/5', { n: gearN }) : (gearN + '/5')));
       const skillsN = skillUnlockedCount();
       const activeSk = skillById(save.skill || 'spiral_orb');
       const activeSp = equippedSuper();
@@ -2116,6 +2229,7 @@ const UI = {
     try { summonLeft = typeof chestSummonsLeft === 'function' ? chestSummonsLeft() : 0; } catch (_) {}
     document.querySelectorAll('#btnSummons, #btnCollectSummons').forEach((summonTile) => {
       summonTile.classList.toggle('has-summons', summonLeft > 0);
+      summonTile.classList.toggle('hub-tile-ready', summonLeft > 0);
       summonTile.setAttribute('aria-label', summonLeft > 0
         ? `${tOr('menu.summons', 'Summons')} · ${t('ui.summonLeftToday', { n: summonLeft })}`
         : `${tOr('menu.summons', 'Summons')} · ${t('ui.summonDoneToday')}`);
@@ -2195,13 +2309,66 @@ const UI = {
     }
   },
 
+  syncHubJuiceTiles() {
+    const needsAdv = juiceGearNeedsAdventure();
+    const emptyLine = tOr('hub.gearSubEmpty', 'Starter · vind drops in avontuur');
+    const filledLine = tOr('hub.gearSub', '5 slots · look vs stats');
+    for (const id of ['btnGearHome', 'btnGear']) {
+      const tile = document.getElementById(id);
+      if (!tile) continue;
+      tile.classList.toggle('hub-tile-empty', needsAdv);
+      const sub = tile.querySelector('.hub-tile-sub');
+      if (sub) sub.textContent = needsAdv ? emptyLine : filledLine;
+    }
+    const bld = document.getElementById('btnBuildings');
+    if (bld) {
+      let ready = 0;
+      try {
+        const rows = typeof buildingsList === 'function' ? buildingsList() : [];
+        ready = rows.filter((r) => r && r.canCollect).length;
+      } catch (_) { ready = 0; }
+      bld.classList.toggle('hub-tile-ready', ready > 0);
+    }
+    const up = document.getElementById('btnUpgradesHome');
+    if (up) {
+      let n = 0;
+      try { n = typeof countAllUpgradesReady === 'function' ? countAllUpgradesReady() : 0; } catch (_) {}
+      up.classList.toggle('hub-tile-ready', n > 0);
+    }
+    const petsEmpty = juicePetsNeedTame();
+    const petsTile = document.getElementById('btnPets');
+    if (petsTile) {
+      petsTile.classList.toggle('hub-tile-empty', petsEmpty);
+      const sub = petsTile.querySelector('.hub-tile-sub');
+      if (sub) {
+        sub.textContent = petsEmpty
+          ? tOr('hub.petsSubEmpty', 'Nog geen pet · tem in avontuur')
+          : tOr('hub.petsSub', 'Muntjes · dex temmen · ei arcade');
+      }
+    }
+    const dexEmpty = juiceDexNeedDiscover();
+    const dexTile = document.getElementById('btnDex');
+    if (dexTile) {
+      dexTile.classList.toggle('hub-tile-empty', dexEmpty);
+      const sub = dexTile.querySelector('.hub-tile-sub');
+      if (sub) {
+        const n = (typeof SPECIES_ORDER !== 'undefined' && SPECIES_ORDER) ? SPECIES_ORDER.length : 0;
+        sub.textContent = dexEmpty
+          ? tOr('hub.dexSubEmpty', 'Leeg boek · versla iets in avontuur')
+          : tOr('hub.dexSub', '{n} soorten · rariteit = HP', { n });
+      }
+    }
+  },
+
   hideFomoRitual() {
     const el = document.getElementById('fomoRitual');
     if (el) el.hidden = true;
+    try { el && el.classList.remove('is-open'); } catch (_) {}
     try { document.body.classList.remove('fomo-open'); } catch (_) {}
   },
 
   showFomoRitual(force) {
+    try { this.clearToasts(); } catch (_) {}
     const el = document.getElementById('fomoRitual');
     if (!el) return;
     const menu = document.getElementById('menuScreen');
@@ -2220,6 +2387,7 @@ const UI = {
       try { document.body.classList.remove('fomo-open'); } catch (_) {}
       return;
     }
+    try { this.clearToasts(); } catch (_) {}
     const rows = document.getElementById('fomoRitualRows');
     const title = document.getElementById('fomoRitualTitle');
     const reset = document.getElementById('fomoRitualReset');
@@ -2288,6 +2456,11 @@ const UI = {
     try {
       const tut = document.getElementById('summonTut');
       if (tut) tut.hidden = true;
+    } catch (_) {}
+    try {
+      el.classList.remove('is-open');
+      void el.offsetWidth;
+      el.classList.add('is-open');
     } catch (_) {}
   },
 
@@ -4057,6 +4230,11 @@ const UI = {
   },
 
   renderDex() {
+    const dexEmpty = juiceDexNeedDiscover();
+    for (const id of ['dexFilterBar', 'dexBiomeFilterBar', 'dexTypeFilterBar', 'dexSortBar']) {
+      const bar = document.getElementById(id);
+      if (bar) bar.style.display = dexEmpty ? 'none' : '';
+    }
     const sumEl = document.getElementById('dexSummary');
     if (sumEl) {
       const totalHp = dexHpBonus();
@@ -4077,6 +4255,12 @@ const UI = {
           }).join('')}</div>`
         : '';
       sumEl.style.display = 'block';
+      if (dexEmpty) {
+        sumEl.innerHTML = t('ui.dexSummary', {
+          n: `<b>0</b>`, total: `<b>${SPECIES_ORDER.length}</b>`,
+          kills: `<b>${kills}</b>`, hp: `<b>${totalHp}</b>`, tiers: `<b>0</b>`,
+        });
+      } else {
       const biomeTot = typeof dexBiomeTotals === 'function' ? dexBiomeTotals() : {};
       const biomeChips = ['farm', 'zoo', 'sea', 'wild', 'crypt', 'scrap', 'frost'].map((b) => {
         const tot = biomeTot[b] || 0;
@@ -4096,6 +4280,7 @@ const UI = {
         (biomeChips ? `<div style="margin-top:4px;line-height:1.7">${biomeChips}</div>` : '') +
         cosmeticHtml +
         dexNextAchievementHtml();
+      }
     }
     const bindFilterBar = (host, attr, stateKey, mkButtons, renderFn) => {
       if (!host) return;
@@ -4159,6 +4344,13 @@ const UI = {
     const list = document.getElementById('dexList');
     if (!list) return;
     list.innerHTML = '';
+    if (juiceDexNeedDiscover()) {
+      appendJuiceEmptyCta(
+        list,
+        tOr('dex.emptyOwned', 'Nog niemand in het boek. Versla monsters in Avontuur.'),
+        tOr('dex.emptyOwnedCta', 'Naar avontuur')
+      );
+    }
     const filter = this.dexRarityFilter || 'all';
     const typeFilter = this.dexTypeFilter || 'all';
     const biomeFilter = this.dexBiomeFilter || 'all';
@@ -4391,6 +4583,15 @@ const UI = {
         return false;
       }
       AudioSys.sfx('select');
+      try { if (typeof haptic === 'function') haptic(10); } catch (_) {}
+      const doll = document.getElementById('gearDollCanvas');
+      if (doll) {
+        try {
+          doll.classList.remove('juice-flash');
+          void doll.offsetWidth;
+          doll.classList.add('juice-flash');
+        } catch (_) {}
+      }
       UI.toast(tOr('toast.gearEquipped', '{name} aangedaan', { name: gearItemName(item) }), 1400, { tone: 'ok' });
       return true;
     };
@@ -4399,6 +4600,7 @@ const UI = {
       if (typeof gearUnequipSlot === 'function') gearUnequipSlot(sid);
       else unequipGear(sid);
       AudioSys.sfx('select');
+      try { if (typeof haptic === 'function') haptic(6); } catch (_) {}
       UI.toast(tOr('toast.gearUnequipped', '{name} uitgedaan', { name: gearItemName(item) }), 1200);
     };
     const keepPickerScroll = () => {
@@ -4587,7 +4789,15 @@ const UI = {
     if (detail) {
       detail.classList.remove('is-equipped', 'is-locked');
       if (!picked) {
-        detail.innerHTML = `<div class="gear-detail-sub">${esc(tOr('gear.pickHint', 'Tik een item om aan of uit te doen.'))}</div>`;
+        const ownedN = typeof juiceGearOwnedCount === 'function'
+          ? juiceGearOwnedCount(items)
+          : items.filter((it) => {
+            try { return typeof gearOwned === 'function' && gearOwned(it); } catch (_) { return false; }
+          }).length;
+        const hint = ownedN <= 0
+          ? tOr('gear.emptySlotHint', 'Leeg slot — speel Avontuur om iets te vinden.')
+          : tOr('gear.pickHint', 'Tik een item om aan of uit te doen.');
+        detail.innerHTML = `<div class="gear-detail-sub">${esc(hint)}</div>`;
       } else {
         const unlock = gearUnlockState(picked, pickSlot);
         const tip = unlock.model || (typeof gearTooltipModel === 'function' ? gearTooltipModel(picked) : null);
@@ -4767,10 +4977,51 @@ const UI = {
       const keepScroll = this._gearPickerScroll || picker.scrollTop || 0;
       picker.innerHTML = '';
       const frag = document.createDocumentFragment();
-      if (!shown.length) {
+      const ownedN = juiceGearOwnedCount(items);
+      if (juiceGearNeedsAdventure()) {
+        const intro = document.createElement('div');
+        intro.className = 'gear-filter-empty juice-empty juice-empty-owned';
+        const copy = document.createElement('p');
+        copy.className = 'juice-empty-copy';
+        copy.textContent = tOr('gear.emptyOwned', 'Nog geen uitrusting. Vind drops in Avontuur.');
+        intro.appendChild(copy);
+        const cta = document.createElement('button');
+        cta.type = 'button';
+        cta.className = 'btn mode-btn b-adventure big-touch gear-empty-cta';
+        cta.textContent = tOr('gear.emptyOwnedCta', 'Naar avontuur');
+        bindPress(cta, () => {
+          safeUiAction(() => juiceOpenAdventure(), 'gearEmptyAdv', tOr('gear.errSlot', 'Slot pick failed'));
+        });
+        intro.appendChild(cta);
+        frag.appendChild(intro);
+      }
+      if (!shown.length && ownedN > 0) {
         const empty = document.createElement('div');
-        empty.className = 'gear-filter-empty';
-        empty.textContent = tOr('gear.filterEmpty', 'Niets in deze filter');
+        empty.className = 'gear-filter-empty juice-empty';
+        const filtered = this.gearFilter !== 'all' || this.gearRarity !== 'all' || !!(this.gearFilterQ || '').trim();
+        const copy = document.createElement('p');
+        copy.className = 'juice-empty-copy';
+        copy.textContent = tOr('gear.filterEmpty', 'Niets in deze filter');
+        empty.appendChild(copy);
+        if (filtered) {
+          const cta = document.createElement('button');
+          cta.type = 'button';
+          cta.className = 'btn mode-btn b-gray big-touch gear-empty-cta';
+          cta.textContent = tOr('gear.filterClear', 'Wis filter');
+          bindPress(cta, () => {
+            safeUiAction(() => {
+              this.gearFilter = 'all';
+              this.gearRarity = 'all';
+              this.gearFilterQ = '';
+              const q = document.getElementById('gearFilterQ');
+              if (q) q.value = '';
+              this._gearPickerScroll = 0;
+              AudioSys.sfx('select');
+              this.renderGear({ pickerOnly: true });
+            }, 'gearFilterClear', 'Filter mislukt');
+          });
+          empty.appendChild(cta);
+        }
         frag.appendChild(empty);
       }
       for (const it of shown) {
@@ -5326,6 +5577,7 @@ const UI = {
       screen.classList.toggle('is-adventure', data.mode === 'adventure');
       screen.classList.toggle('is-retry-first', retryFirst);
     }
+    try { if (typeof juicePaintResultCtas === 'function') juicePaintResultCtas(win, data); } catch (_) {}
     state = 'result';
     scheduleResize();
     document.getElementById('pauseBtn')?.classList.remove('show');

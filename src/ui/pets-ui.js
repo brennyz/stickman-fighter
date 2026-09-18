@@ -475,7 +475,7 @@ if (typeof UI === 'object' && UI) {
       empty.className = 'pets-empty';
       const tamed = (typeof petTamedCount === 'function') ? petTamedCount() : 0;
       const title = (this.petFilter === 'tamed' && !tamed)
-        ? petsTxt('pets.emptyFirst', 'Tame via kills or buy with PC')
+        ? petsTxt('pets.emptyOwned', 'Tame via kills or buy with PC')
         : petsTxt('pets.emptyFilter', 'Nothing in this filter');
       empty.innerHTML = '<p class="pets-empty-copy">' + petsEscape(title) + '</p>';
       const btn = document.createElement('button');

@@ -978,6 +978,7 @@ if (typeof UI === 'object' && UI) {
     const before = (typeof buildingsGet === 'function') ? buildingsGet(id) : null;
     const cap = before && before.capacity ? before.capacity : 0;
     const wasFull = buildingsHopperFull(before);
+    try { if (typeof haptic === 'function') haptic(10); } catch (_) {}
     const res = (typeof buildingsCollect === 'function') ? buildingsCollect(id) : { ok: false };
     const amount = Math.max(0, Math.floor(Number(res && res.amount) || 0));
     const ok = !!(res && res.ok && amount > 0);
