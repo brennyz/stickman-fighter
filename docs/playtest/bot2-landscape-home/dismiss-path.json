@@ -1,0 +1,277 @@
+{
+  "bot": "2/9 extra",
+  "focus": "FOMO × dismiss → Avontuur tap @ 844×390",
+  "at": "2026-09-18T16:18:18.309Z",
+  "verdict": "PASS",
+  "p0": 0,
+  "p1": 0,
+  "issues": [],
+  "local": {
+    "label": "local",
+    "issues": [],
+    "open": {
+      "vw": 844,
+      "vh": 390,
+      "app": "1.18.190",
+      "sw": 400,
+      "menu": true,
+      "fomoOpen": true,
+      "chromeInert": true,
+      "playInert": true,
+      "play": {
+        "top": 16,
+        "left": 244,
+        "right": 796,
+        "bottom": 76,
+        "w": 552,
+        "h": 60,
+        "visibility": "visible",
+        "pointerEvents": "none",
+        "painted": true
+      },
+      "dismiss": {
+        "top": 49,
+        "left": 146,
+        "right": 194,
+        "bottom": 97,
+        "w": 48,
+        "h": 48,
+        "visibility": "visible",
+        "pointerEvents": "auto",
+        "painted": true
+      },
+      "playing": false,
+      "level": false,
+      "shot": "local-dismiss-1-fomo-open.png"
+    },
+    "afterX": {
+      "vw": 844,
+      "vh": 390,
+      "app": "1.18.190",
+      "sw": 400,
+      "menu": true,
+      "fomoOpen": false,
+      "chromeInert": false,
+      "playInert": false,
+      "play": {
+        "top": 10,
+        "left": 244,
+        "right": 796,
+        "bottom": 70,
+        "w": 552,
+        "h": 60,
+        "visibility": "visible",
+        "pointerEvents": "auto",
+        "painted": true
+      },
+      "dismiss": {
+        "top": 0,
+        "left": 0,
+        "right": 0,
+        "bottom": 0,
+        "w": 0,
+        "h": 0,
+        "visibility": "visible",
+        "pointerEvents": "auto",
+        "painted": true
+      },
+      "playing": false,
+      "level": false,
+      "shot": "local-dismiss-2-after-x.png",
+      "xTap": {
+        "ok": true,
+        "sel": "fomoRitualDismiss",
+        "box": {
+          "x": 170,
+          "y": 42,
+          "w": 48,
+          "h": 48,
+          "left": 146,
+          "top": 26
+        }
+      }
+    },
+    "afterAdv": {
+      "vw": 844,
+      "vh": 390,
+      "app": "1.18.190",
+      "sw": 400,
+      "menu": false,
+      "fomoOpen": false,
+      "chromeInert": false,
+      "playInert": false,
+      "play": {
+        "top": 0,
+        "left": 0,
+        "right": 0,
+        "bottom": 0,
+        "w": 0,
+        "h": 0,
+        "visibility": "visible",
+        "pointerEvents": "auto",
+        "painted": false
+      },
+      "dismiss": {
+        "top": 0,
+        "left": 0,
+        "right": 0,
+        "bottom": 0,
+        "w": 0,
+        "h": 0,
+        "visibility": "visible",
+        "pointerEvents": "auto",
+        "painted": true
+      },
+      "playing": true,
+      "level": false,
+      "shot": "local-dismiss-3-avontuur-tap.png",
+      "advTap": {
+        "ok": true,
+        "sel": "btnAdventure",
+        "box": {
+          "x": 519.7578125,
+          "y": 32,
+          "w": 552,
+          "h": 60,
+          "left": 244,
+          "top": 10
+        }
+      },
+      "started": true
+    }
+  },
+  "live": {
+    "label": "live",
+    "issues": [],
+    "open": {
+      "vw": 844,
+      "vh": 390,
+      "app": "1.18.190",
+      "sw": 400,
+      "menu": true,
+      "fomoOpen": true,
+      "chromeInert": true,
+      "playInert": true,
+      "play": {
+        "top": 20,
+        "left": 244,
+        "right": 796,
+        "bottom": 80,
+        "w": 552,
+        "h": 60,
+        "visibility": "visible",
+        "pointerEvents": "none",
+        "painted": true
+      },
+      "dismiss": {
+        "top": 50,
+        "left": 146,
+        "right": 194,
+        "bottom": 98,
+        "w": 48,
+        "h": 48,
+        "visibility": "visible",
+        "pointerEvents": "auto",
+        "painted": true
+      },
+      "playing": false,
+      "level": false,
+      "shot": "live-dismiss-1-fomo-open.png"
+    },
+    "afterX": {
+      "vw": 844,
+      "vh": 390,
+      "app": "1.18.190",
+      "sw": 400,
+      "menu": true,
+      "fomoOpen": false,
+      "chromeInert": false,
+      "playInert": false,
+      "play": {
+        "top": 10,
+        "left": 244,
+        "right": 796,
+        "bottom": 70,
+        "w": 552,
+        "h": 60,
+        "visibility": "visible",
+        "pointerEvents": "auto",
+        "painted": true
+      },
+      "dismiss": {
+        "top": 0,
+        "left": 0,
+        "right": 0,
+        "bottom": 0,
+        "w": 0,
+        "h": 0,
+        "visibility": "visible",
+        "pointerEvents": "auto",
+        "painted": true
+      },
+      "playing": false,
+      "level": false,
+      "shot": "live-dismiss-2-after-x.png",
+      "xTap": {
+        "ok": true,
+        "sel": "fomoRitualDismiss",
+        "box": {
+          "x": 170,
+          "y": 42,
+          "w": 48,
+          "h": 48,
+          "left": 146,
+          "top": 26
+        }
+      }
+    },
+    "afterAdv": {
+      "vw": 844,
+      "vh": 390,
+      "app": "1.18.190",
+      "sw": 400,
+      "menu": false,
+      "fomoOpen": false,
+      "chromeInert": false,
+      "playInert": false,
+      "play": {
+        "top": 0,
+        "left": 0,
+        "right": 0,
+        "bottom": 0,
+        "w": 0,
+        "h": 0,
+        "visibility": "visible",
+        "pointerEvents": "auto",
+        "painted": false
+      },
+      "dismiss": {
+        "top": 0,
+        "left": 0,
+        "right": 0,
+        "bottom": 0,
+        "w": 0,
+        "h": 0,
+        "visibility": "visible",
+        "pointerEvents": "auto",
+        "painted": true
+      },
+      "playing": true,
+      "level": false,
+      "shot": "live-dismiss-3-avontuur-tap.png",
+      "advTap": {
+        "ok": true,
+        "sel": "btnAdventure",
+        "box": {
+          "x": 519.7578125,
+          "y": 32,
+          "w": 552,
+          "h": 60,
+          "left": 244,
+          "top": 10
+        }
+      },
+      "started": true
+    }
+  }
+}
