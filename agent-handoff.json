@@ -50,6 +50,14 @@
   },
   "userWishlist": [
     {
+      "id": "w-20260918T164246",
+      "from": "user",
+      "text": "FIX BOT 30m — From #340 MM-010/001: Gear on 390 and especially 844×390 — doll-only first paint / huge scroll. Make slots+primary actions on first screen (bottom-sheet or compact layout). Off main. Draft only. Until ~19:10 Amsterdam. No Versus. No main.",
+      "status": "done-in-code",
+      "updated": "2026-09-18",
+      "notes": "Lane: gear first-fold compact/sheet. Do not touch Versus or merge main."
+    },
+    {
       "id": "w-20260918T155700",
       "from": "user",
       "text": "MEGA-MERGE Stickman 20m-session drafts to main. Brendon wants playtest swarm on a fixed build next. Priority: #333 invisible fighters, #325 landscape combat camera/floor, #334 examinator feel (keep pauseG), #329 landscape begin/HOME SPELEN + FOMO dock, #332 telegraph readability (keep #314 density), #331 landscape touch, #328 first-30s teach, #330 combat juice, #326 death-retry polish, #327 fxLite if mergeable. No Versus. speel.html. No force-push. Conflict: keep #333 drawCombatants+recover, #325 viewport/floor, #334 pauseG HUD, #329 two-col SPELEN + FOMO left dock, #323/#326 fat gold Nog één keer + restartAdventureInstant.",
@@ -1231,6 +1239,10 @@
   ],
   "sessionLog": [
     {
+      "at": "2026-09-18T16:56:47Z",
+      "summary": "MM-010 Gear first-fold: 390 + 844×390 slots+hunt/unequip on first paint. Draft #348. No Versus, no main."
+    },
+    {
       "at": "2026-09-18T16:06:11Z",
       "summary": "MEGA-MERGE 20m drafts #333–#327 onto main. v1.18.190 / SW 400. Playtest swarm. SKIP #324. Leave #311."
     },
@@ -1325,10 +1337,6 @@
     {
       "at": "2026-09-18T12:31:56Z",
       "summary": "LANGUAGE: factory desc + nameShort, FOMO/HUD locale, export gear/fabriek i18n. Draft #317, geen main."
-    },
-    {
-      "at": "2026-09-18T12:30:17Z",
-      "summary": "LANGUAGE worker: layout-safe NL/EN/DE/FR/ES copy (factory desc, FOMO, HUD telegraphs). Draft, geen main."
     }
   ],
   "implementedFeaturesSummary": "d18 char select deel 1+2 (v1.11.1-2); Mats coinrun + shuriken mik/vliegers + anti-spam (v1.12.0); speel.html (v1.12.2+). Zie HANDOFF-ZOEKINDEX.md en improvement-d20-bag.json userFeatureLog.",
