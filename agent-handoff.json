@@ -50,6 +50,14 @@
   },
   "userWishlist": [
     {
+      "id": "w-20260918T160800",
+      "from": "user",
+      "text": "PLAYTEST LEAD — Stickman Fighter 30-min swarm. Pin LIVE main c9a29fc / v1.18.190 / SW 400. Share speel.html. Deadline ~18:36 Europe/Amsterdam. Draft PR only — create PLAYTEST-REPORT-2026-09-18.md with P0–P3 board. No Versus. No merge main. Playtest Adventure (390 portrait + 844 landscape). Collect/rank issues; leave lanes for sibling playtesters. Keep report updated with EX-ids, repro, severity, suggested owner lane. At end: IMPROVEMENT-PLAN.md with prioritized 30-min fix tasks for 5–15 bots. Focus: visibility, landscape, first 30s, death-retry, fair telegraphs, feel.",
+      "status": "in-progress",
+      "updated": "2026-09-18",
+      "notes": "Playtest lead. Docs only. Draft PR. No gameplay fixes. No Versus. No main."
+    },
+    {
       "id": "w-20260918T155700",
       "from": "user",
       "text": "MEGA-MERGE Stickman 20m-session drafts to main. Brendon wants playtest swarm on a fixed build next. Priority: #333 invisible fighters, #325 landscape combat camera/floor, #334 examinator feel (keep pauseG), #329 landscape begin/HOME SPELEN + FOMO dock, #332 telegraph readability (keep #314 density), #331 landscape touch, #328 first-30s teach, #330 combat juice, #326 death-retry polish, #327 fxLite if mergeable. No Versus. speel.html. No force-push. Conflict: keep #333 drawCombatants+recover, #325 viewport/floor, #334 pauseG HUD, #329 two-col SPELEN + FOMO left dock, #323/#326 fat gold Nog één keer + restartAdventureInstant.",
