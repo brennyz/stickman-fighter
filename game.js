@@ -7,11 +7,15 @@
    Modi: Avontuur, Training, Versus 2P, Muur, Mats (coinrun).
    Audio (sfx + bgm) is procedureel via Web Audio — rechtenvrij.
    d20 c4 d5: horde FX scaling, pause perf strip helpers.
+   Mid-phone fxLite: particle pool + spawn hitch guard. Fighters always draw.
    ========================================================================= */
 
 const TAU = Math.PI * 2;
 const BANNER_LANES = 3;
 const FX_CAP = { particles: 140, floaters: 28, projectiles: 48, banners: BANNER_LANES, afterimages: 12 };
+const FX_POOL_PREWARM = 48;
+const FX_POOL_MAX = 160;
+const _fxParticlePool = [];
 const Perf = {
   tier: 0,
   emaMs: 16.7,
@@ -91,14 +95,69 @@ function perfHordeLoad() {
   else if (alive >= 10) mul = 0.9;
   return { alive, mul };
 }
+/** Mid-phone / compact viewport — tighter FX before Perf.tier has time to climb. */
+function fxTouchDevice() {
+  if (typeof window !== 'undefined' && window.__sfForceTouchFx) return true;
+  if (typeof IS_TOUCH !== 'undefined' && IS_TOUCH) return true;
+  if (typeof W === 'number' && W > 0 && W < 720) return true;
+  return false;
+}
+
+/**
+ * Spawn-hitch guard: liteFx, reduced-motion, Perf.tier, or first ~1.5s on mid phones.
+ * Caps bursts / freeze only — never hides fighters.
+ */
+function fxSpawnLite() {
+  if (typeof save !== 'undefined' && save && save.liteFx) return true;
+  if (typeof motionReduced === 'function' && motionReduced()) return true;
+  if (typeof Perf !== 'undefined' && Perf.tier >= 1) return true;
+  if (fxTouchDevice() && typeof Perf !== 'undefined' && Perf.frames < 90) return true;
+  return false;
+}
+
+function allocFxParticle() {
+  const p = _fxParticlePool.pop();
+  if (p) {
+    p.x = 0; p.y = 0; p.vx = 0; p.vy = 0;
+    p.life = 0; p.maxLife = 0; p.color = '#fff';
+    p.size = 2; p.kind = 'square'; p.grav = 900;
+    return p;
+  }
+  return { x: 0, y: 0, vx: 0, vy: 0, life: 0, maxLife: 0, color: '#fff', size: 2, kind: 'square', grav: 900 };
+}
+
+function releaseFxParticle(p) {
+  if (!p || _fxParticlePool.length >= FX_POOL_MAX) return;
+  _fxParticlePool.push(p);
+}
+
+function prewarmFxPool(n) {
+  const want = n == null ? FX_POOL_PREWARM : n;
+  const need = Math.max(0, want - _fxParticlePool.length);
+  for (let i = 0; i < need; i++) {
+    _fxParticlePool.push({
+      x: 0, y: 0, vx: 0, vy: 0, life: 0, maxLife: 0,
+      color: '#fff', size: 2, kind: 'square', grav: 900,
+    });
+  }
+  return _fxParticlePool.length;
+}
+
+function fxPoolSize() {
+  return _fxParticlePool.length;
+}
+
 function fxCaps() {
   let mul = 1;
-  if (save.liteFx) mul = 0.55;
+  if (save.liteFx) mul = 0.42;
   else if (Perf.tier >= 2) mul = 0.42;
-  else if (Perf.tier >= 1) mul = 0.68;
+  else if (Perf.tier >= 1) mul = 0.62;
+  else if (fxTouchDevice()) mul = 0.72;
   if (motionReduced()) mul *= 0.62;
   mul *= perfHordeLoad().mul;
-  const floor = { particles: 24, floaters: 8, projectiles: 16, banners: 2, afterimages: 4 };
+  const floor = (fxTouchDevice() || save.liteFx)
+    ? { particles: 16, floaters: 6, projectiles: 12, banners: 2, afterimages: 3 }
+    : { particles: 24, floaters: 8, projectiles: 16, banners: 2, afterimages: 4 };
   const out = {};
   for (const k of Object.keys(FX_CAP)) {
     out[k] = Math.max(floor[k] || 2, Math.floor(FX_CAP[k] * mul));
@@ -123,10 +182,13 @@ function perfFxRoom(g, type) {
 function perfFxBudgetAllow(g, cost) {
   cost = cost || 1;
   if (!g) return true;
-  if (!save.liteFx && Perf.tier < 1 && perfHordeLoad().mul >= 0.95) return true;
-  let maxPerFrame = save.liteFx ? 5 : (Perf.tier >= 2 ? 9 : 14);
+  // Mid phones / first-second spawn must not get an unlimited FX dump.
+  if (!save.liteFx && Perf.tier < 1 && perfHordeLoad().mul >= 0.95
+    && !fxSpawnLite() && !fxTouchDevice()) return true;
+  let maxPerFrame = save.liteFx ? 4 : (Perf.tier >= 2 ? 8 : (fxTouchDevice() ? 10 : 14));
+  if (fxSpawnLite()) maxPerFrame = Math.min(maxPerFrame, 6);
   const horde = perfHordeLoad();
-  if (horde.mul < 1) maxPerFrame = Math.max(4, Math.floor(maxPerFrame * horde.mul));
+  if (horde.mul < 1) maxPerFrame = Math.max(3, Math.floor(maxPerFrame * horde.mul));
   if (g._fxBudgetFrame !== Perf.frames) {
     g._fxBudgetFrame = Perf.frames;
     g._fxBudgetUsed = 0;
@@ -323,9 +385,9 @@ const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const VERSION_UPDATE_SAVE_KEY = 'stickfighter_version_update_save_v1';
 const VERSION_UPDATE_FLAG_KEY = 'stickfighter_version_update_flag_v1';
 const SAVE_EXPORT_SCHEMA = 3;
-const APP_VERSION = '1.18.189';
+const APP_VERSION = '1.18.190';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 399;
+const SW_CACHE_REV = 400;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', petCoins: 0, dex: {}, summons: {}, pets: {}, activePet: null,
   eggPets: {}, activeEggPet: null, eggDaily: null,
   chestDaily: null, chestWeapons: {},
@@ -18215,12 +18277,15 @@ function triggerSpecialEnemyIntro(game, monster, kind) {
   }
 
   const x = monster.x, y = monster.y - (monster.size || 40) * 0.4;
-  const burstN = motionReduced() || fxLite()
-    ? 8
+  const spawnLite = (typeof fxSpawnLite === 'function' && fxSpawnLite())
+    || (typeof fxLite === 'function' && fxLite())
+    || motionReduced();
+  const burstN = spawnLite
+    ? (firstOfWave && (tier === 'superBoss' || colossal) ? 6 : 4)
     : (firstOfWave ? (tier === 'superBoss' || colossal ? 34 : (bigBoss ? 26 : 18)) : 8);
   try {
     game.burst(x, y, col, burstN);
-    if (firstOfWave) {
+    if (firstOfWave && !spawnLite) {
       game.burst(x, y, '#fff', Math.ceil(burstN * 0.35));
       spawnFxRing(game, x, y, col, tier === 'superBoss' || colossal ? 26 : (bigBoss ? 20 : 14));
       if (tier !== 'elite') spawnFxRing(game, x, y - 20, '#fff', bigBoss ? 14 : 10);
@@ -18230,6 +18295,13 @@ function triggerSpecialEnemyIntro(game, monster, kind) {
       game.shake(shakeAmt, shakeDur);
       game.freezeT = Math.max(game.freezeT || 0, colossal ? 0.22 : (tier === 'superBoss' ? 0.18 : (bigBoss ? 0.14 : 0.1)));
       haptic(colossal ? 36 : (tier === 'superBoss' ? 28 : (bigBoss ? 22 : 16)));
+    } else if (firstOfWave && spawnLite) {
+      // One ring + small shake — no freeze (that hitch is the mid-phone stutter).
+      if (typeof spawnFxRing === 'function') spawnFxRing(game, x, y, col, colossal ? 14 : 8);
+      if (colossal || tier === 'superBoss') {
+        try { game.shake(colossal ? 8 : 6, 0.22); } catch (_) {}
+        haptic(colossal ? 22 : 16);
+      }
     }
   } catch (_) {}
 }
@@ -18444,12 +18516,14 @@ function triggerTideBattleIntro(game, monster) {
   const x = monster.x;
   const y = monster.y - (monster.size || 40) * 0.4;
   try {
-    game.burst(x, y, '#4a9fff', motionReduced() || fxLite() ? 10 : 26);
-    game.burst(x, y, '#ffd75e', 12);
-    spawnFxRing(game, x, y, '#4a9fff', 24);
-    game.shake(14, 0.45);
-    game.freezeT = Math.max(game.freezeT || 0, 0.18);
-    haptic(30);
+    const spawnLite = (typeof fxSpawnLite === 'function' && fxSpawnLite())
+      || motionReduced() || (typeof fxLite === 'function' && fxLite());
+    game.burst(x, y, '#4a9fff', spawnLite ? 6 : 26);
+    if (!spawnLite) game.burst(x, y, '#ffd75e', 12);
+    spawnFxRing(game, x, y, '#4a9fff', spawnLite ? 12 : 24);
+    game.shake(spawnLite ? 8 : 14, spawnLite ? 0.22 : 0.45);
+    if (!spawnLite) game.freezeT = Math.max(game.freezeT || 0, 0.18);
+    haptic(spawnLite ? 18 : 30);
   } catch (_) {}
 }
 
@@ -18818,13 +18892,15 @@ function triggerSatanIntro(game, monster) {
   const x = monster.x;
   const y = monster.y - (monster.size || 40) * 0.4;
   try {
-    game.burst(x, y, '#ff3040', motionReduced() || fxLite() ? 12 : 30);
-    game.burst(x, y, '#ffd75e', 14);
-    spawnFxRing(game, x, y, '#ff3040', 26);
-    spawnFxRing(game, x, y - 18, '#1a0a10', 14);
-    game.shake(16, 0.5);
-    game.freezeT = Math.max(game.freezeT || 0, 0.2);
-    haptic(34);
+    const spawnLite = (typeof fxSpawnLite === 'function' && fxSpawnLite())
+      || motionReduced() || (typeof fxLite === 'function' && fxLite());
+    game.burst(x, y, '#ff3040', spawnLite ? 6 : 30);
+    if (!spawnLite) game.burst(x, y, '#ffd75e', 14);
+    spawnFxRing(game, x, y, '#ff3040', spawnLite ? 12 : 26);
+    if (!spawnLite) spawnFxRing(game, x, y - 18, '#1a0a10', 14);
+    game.shake(spawnLite ? 8 : 16, spawnLite ? 0.24 : 0.5);
+    if (!spawnLite) game.freezeT = Math.max(game.freezeT || 0, 0.2);
+    haptic(spawnLite ? 20 : 34);
   } catch (_) {}
 }
 
@@ -35350,7 +35426,8 @@ function ensureParticleRoom(game, slots) {
   for (let i = 0; i < game.particles.length && need > 0; ) {
     const p = game.particles[i];
     if (p.kind === 'ring') { i++; continue; }
-    game.particles.splice(i, 1);
+    const gone = game.particles.splice(i, 1)[0];
+    if (typeof releaseFxParticle === 'function') releaseFxParticle(gone);
     need--;
     room++;
   }
@@ -35381,13 +35458,16 @@ function spawnFxRing(game, x, y, color, baseR) {
   const lite = fxLite();
   const life = lite ? 0.22 : 0.34;
   const size = (baseR || 12) * (lite ? 0.62 : 1);
-  game.particles.push({
-    x, y, vx: 0, vy: 0, life, maxLife: life,
-    color: color || '#7cf5ff',
-    size,
-    kind: 'ring',
-    grav: 0,
-  });
+  const pt = (typeof allocFxParticle === 'function') ? allocFxParticle() : {
+    x: 0, y: 0, vx: 0, vy: 0, life: 0, maxLife: 0, color: '#fff', size: 2, kind: 'square', grav: 900,
+  };
+  pt.x = x; pt.y = y; pt.vx = 0; pt.vy = 0;
+  pt.life = life; pt.maxLife = life;
+  pt.color = color || '#7cf5ff';
+  pt.size = size;
+  pt.kind = 'ring';
+  pt.grav = 0;
+  game.particles.push(pt);
 }
 
 /**
@@ -35417,18 +35497,20 @@ function spawnCompanionSparkles(game, x, y, color, opts) {
     if (perfFxRoom(game, 'particle') <= 0) break;
     const a = (i / stars) * TAU + Math.random() * 0.5;
     const sp = 35 + Math.random() * (big ? 70 : 45);
-    game.particles.push({
-      x: x + Math.cos(a) * 6,
-      y: y + Math.sin(a) * 4,
-      vx: Math.cos(a) * sp,
-      vy: Math.sin(a) * sp * 0.7 - 55,
-      life: 0.32 + Math.random() * 0.22,
-      maxLife: 0.55,
-      color: i % 2 ? col2 : col,
-      size: (big ? 3.2 : 2.6) + Math.random() * 2.2,
-      kind: 'star',
-      grav: 90,
-    });
+    const star = (typeof allocFxParticle === 'function') ? allocFxParticle() : {
+      x: 0, y: 0, vx: 0, vy: 0, life: 0, maxLife: 0, color: '#fff', size: 2, kind: 'square', grav: 900,
+    };
+    star.x = x + Math.cos(a) * 6;
+    star.y = y + Math.sin(a) * 4;
+    star.vx = Math.cos(a) * sp;
+    star.vy = Math.sin(a) * sp * 0.7 - 55;
+    star.life = 0.32 + Math.random() * 0.22;
+    star.maxLife = 0.55;
+    star.color = i % 2 ? col2 : col;
+    star.size = (big ? 3.2 : 2.6) + Math.random() * 2.2;
+    star.kind = 'star';
+    star.grav = 90;
+    game.particles.push(star);
   }
 }
 
@@ -44078,6 +44160,7 @@ class Game {
     this.minX = 40; this.maxX = W - 40;
     this.shakeT = 0; this.shakeMag = 0; this.freezeT = 0;
     this.particles = []; this.floaters = []; this.projectiles = []; this.banners = [];
+    try { if (typeof prewarmFxPool === 'function') prewarmFxPool(); } catch (_) {}
     this.monsters = [];
     this.inputLocked = false;
     this.playerHurtCd = 0;
@@ -47285,7 +47368,12 @@ class Game {
         if (pt.y > this.ground && pt.vy > 0) { pt.y = this.ground; pt.vy *= -0.4; }
       }
     }
-    this.particles = this.particles.filter(p => p.life > 0);
+    const keep = [];
+    for (const p of this.particles) {
+      if (p.life > 0) keep.push(p);
+      else if (typeof releaseFxParticle === 'function') releaseFxParticle(p);
+    }
+    this.particles = keep;
     for (const fl of this.floaters) {
       fl.life -= dt;
       fl.y -= (fl.vy || 40) * dt;
@@ -47300,7 +47388,12 @@ class Game {
   trimFxCaps() {
     const cap = fxCaps();
     const drop = (arr, max) => {
-      if (arr.length > max) arr.splice(0, arr.length - max);
+      if (arr.length > max) {
+        const gone = arr.splice(0, arr.length - max);
+        if (arr === this.particles && typeof releaseFxParticle === 'function') {
+          for (const p of gone) releaseFxParticle(p);
+        }
+      }
     };
     drop(this.particles, cap.particles);
     drop(this.floaters, cap.floaters);
@@ -47341,8 +47434,9 @@ class Game {
     opts = opts || {};
     const kind = opts.kind || 'square';
     const floorN = kind === 'spark' ? 1 : 2;
+    const spawnLite = typeof fxSpawnLite === 'function' && fxSpawnLite();
     if (motionReduced()) n = Math.max(floorN, Math.floor(n * 0.45));
-    else if (save.liteFx || Perf.tier >= 1) n = Math.max(kind === 'spark' ? 1 : 3, Math.floor(n * 0.65));
+    else if (save.liteFx || Perf.tier >= 1 || spawnLite) n = Math.max(kind === 'spark' ? 1 : 3, Math.floor(n * 0.55));
     if (Perf.tier >= 2) n = Math.max(floorN, Math.floor(n * 0.55));
     if (!perfFxBudgetAllow(this, Math.min(n, 4))) n = Math.max(floorN, Math.floor(n * 0.45));
     if (n <= 0 || perfFxRoom(this, 'particle') <= 0) return;
@@ -47355,16 +47449,20 @@ class Game {
     for (let i = 0; i < n; i++) {
       const a = rand(0, TAU);
       const sp = kind === 'spark' ? rand(20, 90) : rand(60, 320);
-      this.particles.push({
-        x, y,
-        vx: Math.cos(a) * sp,
-        vy: Math.sin(a) * sp - (kind === 'spark' ? 40 : 120),
-        life: kind === 'spark' ? rand(0.12, 0.28) : rand(0.3, 0.7),
-        color,
-        size: baseSize || rand(2, 5),
-        kind,
-        grav: kind === 'spark' ? 200 : 900,
-      });
+      const pt = (typeof allocFxParticle === 'function') ? allocFxParticle() : {
+        x: 0, y: 0, vx: 0, vy: 0, life: 0, maxLife: 0, color: '#fff', size: 2, kind: 'square', grav: 900,
+      };
+      pt.x = x;
+      pt.y = y;
+      pt.vx = Math.cos(a) * sp;
+      pt.vy = Math.sin(a) * sp - (kind === 'spark' ? 40 : 120);
+      pt.life = kind === 'spark' ? rand(0.12, 0.28) : rand(0.3, 0.7);
+      pt.maxLife = pt.life;
+      pt.color = color;
+      pt.size = baseSize || rand(2, 5);
+      pt.kind = kind;
+      pt.grav = kind === 'spark' ? 200 : 900;
+      this.particles.push(pt);
     }
   }
   floater(x, y, txt, color, size, layer) {
@@ -47607,6 +47705,7 @@ class Game {
 
     if (this.mode === 'adventure') this.drawApproachingWave(c);
     if (this.mode === 'adventure') this.drawTravelSpeedLines(c);
+    // Fighters always draw — skipFx / fxLite / spawnLite only throttle particles.
     for (const m of this.monsters) m.draw(c);
     if (this.robot) this.robot.draw(c);
     if (this.p2) this.p2.draw(c);
@@ -57930,6 +58029,10 @@ function startGame(mode, opts) {
   try { dismissTunnelOverlayIfStatic(); } catch (_) {}
   try { if (game) game._resultToken = (game._resultToken || 0) + 1; } catch (_) {}
   try {
+    try {
+      if (typeof prewarmFxPool === 'function') prewarmFxPool();
+      if (typeof speciesTop20Ranked === 'function') speciesTop20Ranked();
+    } catch (_) {}
     game = new Game(mode, opts);
   } catch (err) {
     sfReportError('start/' + mode, err);
@@ -59671,6 +59774,12 @@ function bootGame() {
   } catch (_) {}
   window.__sfBooted = true;
   try {
+    if (typeof prewarmFxPool === 'function') prewarmFxPool();
+    if (typeof speciesTop20Ranked === 'function') {
+      setTimeout(() => { try { speciesTop20Ranked(); } catch (_) {} }, 0);
+    }
+  } catch (_) {}
+  try {
     if (typeof window.__sfDismissBootFailToast === 'function') window.__sfDismissBootFailToast();
   } catch (_) {}
   safeCall(runSplashIntro, 'splash');
@@ -59842,6 +59951,15 @@ function bootGame() {
     } : null,
     hudSafeLayout: typeof hudSafeLayout === 'function' ? hudSafeLayout : null,
     hudPhoneCompact: typeof hudPhoneCompact === 'function' ? hudPhoneCompact : null,
+    fx: {
+      lite: () => (typeof fxLite === 'function' ? fxLite() : false),
+      spawnLite: () => (typeof fxSpawnLite === 'function' ? fxSpawnLite() : false),
+      touch: () => (typeof fxTouchDevice === 'function' ? fxTouchDevice() : false),
+      caps: () => (typeof fxCaps === 'function' ? fxCaps() : null),
+      prewarm: (n) => (typeof prewarmFxPool === 'function' ? prewarmFxPool(n) : 0),
+      poolSize: () => (typeof fxPoolSize === 'function' ? fxPoolSize() : 0),
+      summary: () => (typeof perfFxSummary === 'function' ? perfFxSummary() : null),
+    },
     previewTop20Spawn: () => {
       try { AudioSys.init(); AudioSys.sfx('top20Spawn'); } catch (_) {}
       try { if (game && typeof game.shake === 'function') game.shake(4, 0.16); } catch (_) {}

@@ -24,6 +24,10 @@ function startGame(mode, opts) {
   try { dismissTunnelOverlayIfStatic(); } catch (_) {}
   try { if (game) game._resultToken = (game._resultToken || 0) + 1; } catch (_) {}
   try {
+    try {
+      if (typeof prewarmFxPool === 'function') prewarmFxPool();
+      if (typeof speciesTop20Ranked === 'function') speciesTop20Ranked();
+    } catch (_) {}
     game = new Game(mode, opts);
   } catch (err) {
     sfReportError('start/' + mode, err);

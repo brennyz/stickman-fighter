@@ -536,7 +536,8 @@ function ensureParticleRoom(game, slots) {
   for (let i = 0; i < game.particles.length && need > 0; ) {
     const p = game.particles[i];
     if (p.kind === 'ring') { i++; continue; }
-    game.particles.splice(i, 1);
+    const gone = game.particles.splice(i, 1)[0];
+    if (typeof releaseFxParticle === 'function') releaseFxParticle(gone);
     need--;
     room++;
   }
@@ -567,13 +568,16 @@ function spawnFxRing(game, x, y, color, baseR) {
   const lite = fxLite();
   const life = lite ? 0.22 : 0.34;
   const size = (baseR || 12) * (lite ? 0.62 : 1);
-  game.particles.push({
-    x, y, vx: 0, vy: 0, life, maxLife: life,
-    color: color || '#7cf5ff',
-    size,
-    kind: 'ring',
-    grav: 0,
-  });
+  const pt = (typeof allocFxParticle === 'function') ? allocFxParticle() : {
+    x: 0, y: 0, vx: 0, vy: 0, life: 0, maxLife: 0, color: '#fff', size: 2, kind: 'square', grav: 900,
+  };
+  pt.x = x; pt.y = y; pt.vx = 0; pt.vy = 0;
+  pt.life = life; pt.maxLife = life;
+  pt.color = color || '#7cf5ff';
+  pt.size = size;
+  pt.kind = 'ring';
+  pt.grav = 0;
+  game.particles.push(pt);
 }
 
 /**
@@ -603,18 +607,20 @@ function spawnCompanionSparkles(game, x, y, color, opts) {
     if (perfFxRoom(game, 'particle') <= 0) break;
     const a = (i / stars) * TAU + Math.random() * 0.5;
     const sp = 35 + Math.random() * (big ? 70 : 45);
-    game.particles.push({
-      x: x + Math.cos(a) * 6,
-      y: y + Math.sin(a) * 4,
-      vx: Math.cos(a) * sp,
-      vy: Math.sin(a) * sp * 0.7 - 55,
-      life: 0.32 + Math.random() * 0.22,
-      maxLife: 0.55,
-      color: i % 2 ? col2 : col,
-      size: (big ? 3.2 : 2.6) + Math.random() * 2.2,
-      kind: 'star',
-      grav: 90,
-    });
+    const star = (typeof allocFxParticle === 'function') ? allocFxParticle() : {
+      x: 0, y: 0, vx: 0, vy: 0, life: 0, maxLife: 0, color: '#fff', size: 2, kind: 'square', grav: 900,
+    };
+    star.x = x + Math.cos(a) * 6;
+    star.y = y + Math.sin(a) * 4;
+    star.vx = Math.cos(a) * sp;
+    star.vy = Math.sin(a) * sp * 0.7 - 55;
+    star.life = 0.32 + Math.random() * 0.22;
+    star.maxLife = 0.55;
+    star.color = i % 2 ? col2 : col;
+    star.size = (big ? 3.2 : 2.6) + Math.random() * 2.2;
+    star.kind = 'star';
+    star.grav = 90;
+    game.particles.push(star);
   }
 }
 

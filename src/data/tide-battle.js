@@ -147,12 +147,14 @@ function triggerTideBattleIntro(game, monster) {
   const x = monster.x;
   const y = monster.y - (monster.size || 40) * 0.4;
   try {
-    game.burst(x, y, '#4a9fff', motionReduced() || fxLite() ? 10 : 26);
-    game.burst(x, y, '#ffd75e', 12);
-    spawnFxRing(game, x, y, '#4a9fff', 24);
-    game.shake(14, 0.45);
-    game.freezeT = Math.max(game.freezeT || 0, 0.18);
-    haptic(30);
+    const spawnLite = (typeof fxSpawnLite === 'function' && fxSpawnLite())
+      || motionReduced() || (typeof fxLite === 'function' && fxLite());
+    game.burst(x, y, '#4a9fff', spawnLite ? 6 : 26);
+    if (!spawnLite) game.burst(x, y, '#ffd75e', 12);
+    spawnFxRing(game, x, y, '#4a9fff', spawnLite ? 12 : 24);
+    game.shake(spawnLite ? 8 : 14, spawnLite ? 0.22 : 0.45);
+    if (!spawnLite) game.freezeT = Math.max(game.freezeT || 0, 0.18);
+    haptic(spawnLite ? 18 : 30);
   } catch (_) {}
 }
 
