@@ -22,14 +22,14 @@
     "shareUrl": "https://brennyz.github.io/stickman-fighter/speel.html",
     "note": "MEGA-MERGE examinator sprint LIVE. Landed #317 #323 #320 #314 #321 #312 #315 #313 #319 #316. SKIP #324. Leftover #318 #322 #311. v1.18.188 / SW 398. speel.html. Pages ~1–3 min then Verse versie.",
     "updated": "2026-09-18T14:52:00Z",
-    "localMainHead": "5a421fffaef182aa4ceca49bc1ba3f28927d1bde",
-    "remoteMainHead": "5a421fffaef182aa4ceca49bc1ba3f28927d1bde"
+    "localMainHead": "62b3859b3d97ccc66475560a7d40da9e1ddec30a",
+    "remoteMainHead": "62b3859b3d97ccc66475560a7d40da9e1ddec30a"
   },
   "githubSync": {
     "policy": "Trigger van de user: «merge main» = commit (als nodig) + push origin/main. Daarna GitHub Pages (~1–3 min) → speel.html is LIVE. Niet stil pushen. Houd pendingUpload bij tot origin/main gelijk is.",
     "pcEqualsMain": true,
-    "localHead": "5a421fffaef182aa4ceca49bc1ba3f28927d1bde",
-    "remoteMainHead": "5a421fffaef182aa4ceca49bc1ba3f28927d1bde",
+    "localHead": "62b3859b3d97ccc66475560a7d40da9e1ddec30a",
+    "remoteMainHead": "62b3859b3d97ccc66475560a7d40da9e1ddec30a",
     "ahead": 0,
     "behind": 0,
     "dirty": false,
@@ -1184,6 +1184,10 @@
   ],
   "sessionLog": [
     {
+      "at": "2026-09-18T14:50:07Z",
+      "summary": "MEGA-MERGE continue LIVE: #315 #313 #319 #316 on main. Leftover #318 #322 #311. SKIP #324. v1.18.188 / SW 398."
+    },
+    {
       "at": "2026-09-18T14:34:57Z",
       "summary": "MEGA-MERGE examinator sprint partial LIVE: #317 #323 #320 #314 #321 #312 on main. SKIP #324. Leftover #315 #313 #319 #316 #318 #322 #311."
     },
@@ -1278,10 +1282,6 @@
     {
       "at": "2026-09-16T12:31:58Z",
       "summary": "MEGA-MERGE LIVE origin/main a18fc9e: #295–#309. v1.18.172 / SW 382. speel.html na Pages."
-    },
-    {
-      "at": "2026-09-14T20:20:40Z",
-      "summary": "Boot-hotfix LIVE op origin/main: game.js parseerde niet (gotoW + SEASON_ART_SLOTS). v1.18.167 / SW 377. Verse versie na Pages."
     }
   ],
   "implementedFeaturesSummary": "d18 char select deel 1+2 (v1.11.1-2); Mats coinrun + shuriken mik/vliegers + anti-spam (v1.12.0); speel.html (v1.12.2+). Zie HANDOFF-ZOEKINDEX.md en improvement-d20-bag.json userFeatureLog.",
