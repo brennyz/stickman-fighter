@@ -1060,10 +1060,11 @@ function alignCombatPlayfield(g) {
   const snapFighter = (f) => {
     if (!f) return;
     f.x = (typeof clampFighterX === 'function') ? clampFighterX(f, g, f.x) : _alignCombatBodyX(f.x, 40);
-    const airborne = f.onGround === false && (f.vy || 0) < -20 && f.y < nextGround - 8;
-    if (!airborne || f.y > nextGround || f.y > H - 2 || f.y < 8) {
+    const dead = !(f.hp > 0);
+    const airborne = !dead && f.onGround === false && (f.vy || 0) < -20 && f.y < nextGround - 8;
+    if (dead || !airborne || f.y > nextGround || f.y > H - 2 || f.y < 8) {
       f.y = nextGround;
-      if ((f.vy || 0) > 0) f.vy = 0;
+      if (dead || (f.vy || 0) > 0) f.vy = 0;
       f.onGround = true;
     } else {
       _alignCombatKeepAbove(f, prevGround, nextGround, 0);

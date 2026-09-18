@@ -24,6 +24,8 @@ const fighterSrc = fs.readFileSync(path.join(root, 'src/entities/fighter.js'), '
 
 if (!/function\s+resetFightCanvas\s*\(/.test(canvasSrc)) fail('resetFightCanvas missing');
 if (!/function\s+pinPlayfieldBodies\s*\(/.test(canvasSrc)) fail('pinPlayfieldBodies missing');
+if (!/function\s+pinDeadFighterPose\s*\(/.test(canvasSrc)) fail('pinDeadFighterPose missing');
+if (!/fighterIsDead\(f\)/.test(canvasSrc)) fail('pinPlayfieldBodies must special-case dead pose');
 if (!/function\s+fighterCombatStroke\s*\(/.test(canvasSrc)) fail('fighterCombatStroke missing');
 if (!/function\s+drawFighterFallback\s*\(/.test(canvasSrc)) fail('drawFighterFallback missing');
 if (!/drawCombatants\s*\(c\)/.test(gameSrc)) fail('Game.drawCombatants missing');
