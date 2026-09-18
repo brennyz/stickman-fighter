@@ -145,6 +145,7 @@ Schrijf **1–3 regels** per sessie: datum, d#, wat, versie.
 
 | Datum (UTC) | d# | Update |
 |-------------|-----|--------|
+| 2026-09-18 | — | **#314 lane DONE:** minute-1+ sustain clamp 0.62–1.05 + compact wave-gap ×0.56; result CTA left to #323 (1600/1400 untouched). P3 leftovers only. **v1.18.180 / SW 390**. Draft. |
 | 2026-09-18 | — | **#314 P0 combat feel:** compact first-30s spawn clamp 0.70–1.12s + hold 0.55 + edge 18; punch/kick prefer-strike vs joy (swipe 34%×62%). Contract in `docs/COMBAT-DENSITY.md`. **v1.18.179 / SW 389**. Draft. |
 | 2026-09-18 | — | **#314 EX-5/6:** short-landscape flyer hover+aim lift; compact part-gate 2.2s (desktop 3.35). **v1.18.178 / SW 388**. Draft. |
 | 2026-09-18 | — | **#314 EX-4:** multi telegraph HUD — 2 stacked bars on 390 (soonest first); short landscape 1 +N. **v1.18.177 / SW 387**. Draft. |

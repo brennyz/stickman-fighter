@@ -127,14 +127,18 @@ function adventureMaxAliveNow(profile) {
 const COMBAT_OPEN_SEC = 30;
 const COMBAT_OPEN_MIN = 0.70;
 const COMBAT_OPEN_MAX = 1.12;
+const COMBAT_SUSTAIN_MIN = 0.62;
+const COMBAT_SUSTAIN_MAX = 1.05;
 const COMBAT_OPEN_HOLD_COMPACT = 0.55;
 const COMBAT_OPEN_HOLD_DESK = 1.2;
 const COMBAT_SPAWN_EDGE_COMPACT = 18;
 const COMBAT_SPAWN_EDGE_DESK = 40;
 
 /**
- * First 30s on compact: clamp stacked muls so wave 1 is not 2.6s empty
- * and wave 2 is not a 0.52s dump. Desktop intervals stay raw.
+ * Compact spawn interval clamp. Desktop stays raw.
+ * First 30s: 0.70–1.12 (opener empty-then-spike).
+ * After 30s / minute 1+: 0.62–1.05 so later waves are not a 0.38s dump
+ * after a 2s hole (wavePause + raw cadence).
  */
 function combatSmoothOpenInterval(raw, elapsedSec, profile) {
   const n = Number(raw);
@@ -142,8 +146,23 @@ function combatSmoothOpenInterval(raw, elapsedSec, profile) {
   profile = asCombatProfile(profile);
   if (!profile.compact) return n;
   const t = Number(elapsedSec);
-  if (!(t < COMBAT_OPEN_SEC)) return n;
-  return combatDensityClamp(n, COMBAT_OPEN_MIN, COMBAT_OPEN_MAX);
+  if (!Number.isFinite(t)) return n;
+  if (t < COMBAT_OPEN_SEC) return combatDensityClamp(n, COMBAT_OPEN_MIN, COMBAT_OPEN_MAX);
+  return combatDensityClamp(n, COMBAT_SUSTAIN_MIN, COMBAT_SUSTAIN_MAX);
+}
+
+/**
+ * Compact between-wave hole. Desktop unchanged.
+ * Win-clear fanfare (base ≥ 2.3) stays — that is not a combat spike.
+ * Result CTA delay is #323 — do not use this for showResult.
+ */
+function combatWaveGapSec(base, elapsedSec, profile) {
+  const n = Number(base);
+  if (!(n > 0)) return n;
+  profile = asCombatProfile(profile);
+  if (!profile.compact) return n;
+  if (n >= 2.3) return n;
+  return combatDensityClamp(n * 0.56, 0.82, 1.25);
 }
 
 /** Compact first-30s wave hold. Desktop / after 30s stay 1.2s. */

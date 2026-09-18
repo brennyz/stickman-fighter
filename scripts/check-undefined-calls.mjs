@@ -37,6 +37,7 @@ const REGRESSION_MUST_DEFINE = [
   'combatTelegraphHudSlots', 'combatPickTelegraphHuds', 'adventureTelegraphHuds',
   'combatFlyerHover', 'combatFlyerBob', 'combatMeleeAimLift', 'combatPartGateWalkSec',
   'combatSmoothOpenInterval', 'combatOpenerHold', 'combatSpawnEdgeX', 'combatPreferStrike',
+  'combatWaveGapSec',
 ];
 
 /** Consts / values that must appear in the bundle (not only functions). */

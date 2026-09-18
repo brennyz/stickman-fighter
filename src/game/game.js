@@ -846,7 +846,9 @@ class Game {
             }
           } catch (_) {}
         } else {
-          this.wavePause = nextIsBoss ? 2.15 : 1.55;
+          let gap = nextIsBoss ? 2.15 : 1.55;
+          if (typeof combatWaveGapSec === 'function') gap = combatWaveGapSec(gap, this.t);
+          this.wavePause = gap;
           this.wavePauseTotal = this.wavePause;
         }
         const waveHeal = Math.max(4, Math.round(this.player.maxhp * 0.06));

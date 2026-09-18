@@ -33,6 +33,7 @@ must(manifest.includes('src/systems/combat-density.js'), 'manifest missing comba
 must(/function combatDensityProfile\(/.test(densSrc), 'combatDensityProfile missing');
 must(/function adventureSpawnCadence\(/.test(densSrc), 'adventureSpawnCadence missing');
 must(/function combatSmoothOpenInterval\(/.test(densSrc), 'combatSmoothOpenInterval missing');
+must(/function combatWaveGapSec\(/.test(densSrc), 'combatWaveGapSec missing');
 must(/function combatPreferStrike\(/.test(densSrc), 'combatPreferStrike missing');
 must(/function scaleAdventurePerWave\(/.test(densSrc), 'scaleAdventurePerWave missing');
 must(/COMBAT_DENSITY_MIN = 0\.60/.test(densSrc), 'phone floor must stay 0.60 (still a horde)');
@@ -76,6 +77,10 @@ must(/combatPartGateWalkSec\(/.test(fs.readFileSync(path.join(root, 'src/game/ga
 must(/combatSmoothOpenInterval\(/.test(gameSrc), 'nextWave / spawn must clamp compact opener');
 must(/combatOpenerHold\(/.test(gameSrc), 'initAdventure must use compact opener hold');
 must(/combatSpawnEdgeX\(/.test(gameSrc), 'spawn must use combatSpawnEdgeX');
+must(/combatWaveGapSec\(/.test(gameSrc), 'between-wave pause must use combatWaveGapSec');
+must(/scheduleGameResult\(this, win \? 1600 : 1400/.test(gameSrc),
+  '#314 must leave Adventure result delay to #323 (keep 1600/1400)');
+must(!/function showResult\(/.test(gameSrc), '#314 must not own showResult');
 must(/combatPreferStrike\(/.test(fs.readFileSync(path.join(root, 'src/systems/input.js'), 'utf8')),
   'onDown must prefer punch/kick near the joy pad');
 must(/claimTouchStrike\(/.test(fs.readFileSync(path.join(root, 'src/systems/input.js'), 'utf8')),
@@ -213,7 +218,17 @@ must(Math.abs(deskOpen.interval - (0.78 * 1.55 * 1.55)) < 1e-9, 'desktop opener 
 const phoneSpike = iso.adventureSpawnCadence(4, false, false, 1, phone, 5);
 must(phoneSpike.interval >= 0.70 && phoneSpike.interval <= 1.12, 'first 30s wave-2 dump clamped', phoneSpike);
 const phoneLate = iso.adventureSpawnCadence(4, false, false, 1, phone, 31);
-must(Math.abs(phoneLate.interval - (0.38 * 1.38)) < 1e-9, 'after 30s compact cadence is raw ×1.38', phoneLate);
+must(phoneLate.interval >= 0.62 && phoneLate.interval <= 1.05, 'after 30s compact sustain 0.62–1.05 (no 0.38 dump)', phoneLate);
+const phoneMin1 = iso.adventureSpawnCadence(30, false, false, 1, phone, 65);
+must(phoneMin1.interval >= 0.62 && phoneMin1.interval <= 1.05, 'minute 1+ long-queue dump clamped', phoneMin1);
+must(iso.adventureSpawnCadence(30, false, false, 1, desk, 65).interval === 0.38 * 0.72,
+  'desktop minute 1+ cadence stays raw');
+must(iso.combatWaveGapSec(1.55, 65, desk) === 1.55, 'desktop wave gap 1.55');
+must(iso.combatWaveGapSec(1.55, 65, phone) < 1.55 && iso.combatWaveGapSec(1.55, 65, phone) >= 0.82,
+  'phone between-wave hole shorter after minute 1');
+must(iso.combatWaveGapSec(2.35, 65, phone) === 2.35, 'phone win-clear fanfare unscaled');
+must(iso.combatSmoothOpenInterval(0.38 * 0.72 * 1.38, 65, phone) === 0.62,
+  'phone minute-1 spike floor 0.62');
 must(iso.combatOpenerHold(0, desk) === 1.2, 'desktop start hold 1.2');
 must(iso.combatOpenerHold(0, phone) === 0.55, 'phone first-30s hold 0.55');
 must(iso.combatOpenerHold(31, phone) === 1.2, 'phone after 30s hold back to 1.2');
@@ -456,6 +471,9 @@ must(ctx.combatPartGateWalkSec({ w: 1280, h: 800 }) === 3.35, 'vm desktop gate 3
 must(typeof ctx.combatSmoothOpenInterval === 'function', 'combatSmoothOpenInterval not in vm');
 must(ctx.combatSmoothOpenInterval(2.58, 0, { w: 390, h: 844 }) <= 1.12, 'vm phone opener clamp');
 must(ctx.combatSmoothOpenInterval(2.58, 0, { w: 1280, h: 800 }) === 2.58, 'vm desktop opener raw');
+must(ctx.combatSmoothOpenInterval(0.37, 65, { w: 390, h: 844 }) === 0.62, 'vm phone minute-1 floor');
+must(ctx.combatWaveGapSec(1.55, 65, { w: 390, h: 844 }) < 1.55, 'vm phone wave gap shorter');
+must(ctx.combatWaveGapSec(1.55, 65, { w: 1280, h: 800 }) === 1.55, 'vm desktop wave gap raw');
 must(ctx.combatOpenerHold(0, { w: 390, h: 844 }) === 0.55, 'vm phone hold 0.55');
 must(ctx.combatSpawnEdgeX(1, { w: 390, h: 844 }) === 408, 'vm phone edge 408');
 must(ctx.combatPreferStrike(230, 800, [{ id: 'kick', x: 268, y: 800, r: 24 }], { x: 64, y: 800 }, { w: 390, h: 844 }),
@@ -511,8 +529,11 @@ console.log('OPENER_STRIKE_390', {
   deskOpen: ctx.adventureSpawnCadence(2, true, false, 1.55, { w: 1280, h: 800 }, 0).interval,
   phoneHold: ctx.combatOpenerHold(0, { w: 390, h: 844 }),
   phoneEdge: ctx.combatSpawnEdgeX(1, { w: 390, h: 844 }),
+  min1Iv: ctx.adventureSpawnCadence(30, false, false, 1, { w: 390, h: 844 }, 65).interval,
+  waveGap: ctx.combatWaveGapSec(1.55, 65, { w: 390, h: 844 }),
   swipe34: ctx.combatJoySwipeAccepts(80, 700, 390, 844, { w: 390, h: 844 }),
   swipeOld42: ctx.combatJoySwipeAccepts(150, 700, 390, 844, { w: 390, h: 844 }),
+  resultDelayUntouched: /scheduleGameResult\(this, win \? 1600 : 1400/.test(gameSrc),
 });
 
 console.log('SMOKE_OK combat-density');

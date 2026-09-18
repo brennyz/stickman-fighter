@@ -13,26 +13,32 @@ This is the **final viewport contract** for this lane. Phone gets a fair strip. 
 | Scale / horde | **1.00** — do not gut PC | Floor **0.60** — still a horde, not a pile-on |
 | Max alive | **78** mouse / **54** touch | **~17** portrait (slots × layers, live cap) |
 | Spawn batch / gap | Batch **3** · gap **32** | Batch **1** · gap **56** |
-| Interval mul | **1.00** | **1.38** (after first 30s) |
+| Interval mul | **1.00** | **1.38** then clamp (see opener / sustain) |
 | Wave **count** | Unchanged | **Same count** (stage length / XP) |
 | HP / damage | Unchanged | Unchanged |
 | Versus / Training / Wall / Coinrun | Untouched | Untouched |
 
 Wide screens (`W ≥ 960`) always get scale `1.00`. Phone floor `0.60` means level 12 ≈ 15/wave vs 24 on desktop — still a horde, not 36 bodies in 390px. Early openers stay soft-capped (level 1 = 2 then 4).
 
-## First 30s opener (P0)
+## First 30s opener + minute-1+ sustain (P0)
 
-Density muls stacked into **empty then spike** on 390px: wave 1 interval ≈ 2.58s (two walkers), wave 2 ≈ 0.52s (four dump).
+Density muls stacked into **empty then spike** on 390px: wave 1 interval ≈ 2.58s, wave 2 ≈ 0.52s. After the 30s opener, raw ×1.38 still dumped (~0.38s) after a ~2.2s wave-pause hole.
 
-| Piece | Desktop | Phone first 30s | Phone after 30s |
-|-------|---------|-----------------|-----------------|
-| Spawn interval | Raw (opener 0.78×1.55×spawnMul) | Clamp **0.70–1.12s** | Raw × 1.38 |
+| Piece | Desktop | Phone first 30s | Phone after 30s / minute 1+ |
+|-------|---------|-----------------|------------------------------|
+| Spawn interval | Raw | Clamp **0.70–1.12s** | Sustain **0.62–1.05s** |
 | Start hold `betweenT` | **1.2s** | **0.55s** | 1.2s |
-| First `spawnTimer` | 0.45 × intervalMul | Same clamp 0.70–1.12 | Raw |
+| Between-wave `wavePause` | 1.55 / boss 2.15 | Same compact scale | **×0.56** (floor 0.82, cap 1.25) |
+| Win-clear fanfare | 2.35 | **Unscaled** (not a combat spike) | Unscaled |
+| First `spawnTimer` | 0.45 × intervalMul | Clamp 0.70–1.12 | Sustain 0.62–1.05 |
 | Spawn edge | `W+40` / `-40` | `W+18` / `-18` | Same compact edge |
 | Batch | Opener single-file | Opener single-file | Single-file |
 
-Helpers: `combatSmoothOpenInterval`, `combatOpenerHold`, `combatSpawnEdgeX`. Desktop never enters the clamp.
+Helpers: `combatSmoothOpenInterval`, `combatWaveGapSec`, `combatOpenerHold`, `combatSpawnEdgeX`. Desktop never enters the clamp.
+
+## Death result CTA — leave #323 alone
+
+#323 owns Flappy-feel retry (`Nog één keer` in ~700ms). This lane does **not** change `scheduleGameResult(win ? 1600 : 1400)`, `showResult`, result CSS, or rematch routing. Combat-only.
 
 ## Touch punch / kick vs joy (P0)
 
@@ -104,6 +110,17 @@ Measured `buildLevel` budgets (same wave **count**, fewer bodies on phone):
 
 `npm run smoke:adventure` on a 390×844 Chrome window still clears level 1 (spawnQ 2 then 4). `smoke:wave12` still advances 1→2. Training / Versus unchanged.
 
-## Remaining
+## Lane status — DONE (P3 leftovers only)
 
-Lane EX list is closed. This P0 is opener pacing + strike-vs-joy + this contract. Re-check after play: `npm run smoke:combat-density && npm run smoke:adventure`.
+Combat P0/P1 on this lane is **done**. Desktop 1.0 unchanged. Versus out.
+
+**P3 leftovers** (not this PR):
+
+| Item | Owner |
+|------|--------|
+| Death result CTA timing / `Nog één keer` | **#323** — do not touch here |
+| Tablet 834 portrait mid-band (not compact clamp) | later polish |
+| Satan / tide duel cadence | special-duel path, not density spawn |
+| Hell 20+ many-minute juice (feel, not counts) | later |
+
+Re-check: `npm run smoke:combat-density && npm run smoke:adventure`.

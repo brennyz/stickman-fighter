@@ -1003,6 +1003,7 @@ function bootGame() {
       maxAlive: adventureMaxAliveNow,
       cadence: adventureSpawnCadence,
       smoothOpen: combatSmoothOpenInterval,
+      waveGap: combatWaveGapSec,
       openerHold: combatOpenerHold,
       spawnEdgeX: combatSpawnEdgeX,
       preferStrike: combatPreferStrike,

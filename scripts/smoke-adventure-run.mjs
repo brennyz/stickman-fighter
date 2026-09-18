@@ -124,6 +124,9 @@ async function run() {
         ? adventureSpawnCadence(4, false, false, 1, phoneCad, 5).interval : null,
       lateIv: (typeof adventureSpawnCadence === 'function')
         ? adventureSpawnCadence(4, false, false, 1, phoneCad, 31).interval : null,
+      min1Iv: (typeof adventureSpawnCadence === 'function')
+        ? adventureSpawnCadence(30, false, false, 1, phoneCad, 65).interval : null,
+      waveGap: (typeof combatWaveGapSec === 'function') ? combatWaveGapSec(1.55, 65, vp) : null,
       edge: (typeof combatSpawnEdgeX === 'function') ? combatSpawnEdgeX(1, vp) : null,
       swipeOld42: (typeof combatJoySwipeAccepts === 'function')
         ? combatJoySwipeAccepts(150, 700, 390, 844, vp) : null,
@@ -262,7 +265,9 @@ async function run() {
   }
   const op = result.openerStrikeProbe || {};
   if (!(op.hold === 0.55 && op.openIv >= 0.70 && op.openIv <= 1.12 && op.wave2iv >= 0.70 && op.wave2iv <= 1.12
-    && op.lateIv > 0.50 && op.lateIv < 0.60 && op.edge === 408 && op.swipeOld42 === false && op.nearKick === true)) {
+    && op.lateIv >= 0.62 && op.lateIv <= 1.05 && op.min1Iv >= 0.62 && op.min1Iv <= 1.05
+    && op.waveGap < 1.55 && op.waveGap >= 0.82
+    && op.edge === 408 && op.swipeOld42 === false && op.nearKick === true)) {
     result.ok = false;
     result.errors = (result.errors || []).concat(['opener-strike:phone ' + JSON.stringify(op)]);
   }
