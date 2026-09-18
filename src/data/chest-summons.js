@@ -13,11 +13,15 @@ const CHEST_DAILY_LEFT_CAP = 12;
 const CHEST_NICE_CHANCE = 0.14;
 /** Op non-jackpot: kans op mid-tier unlock i.p.v. alleen coins/junk. */
 const CHEST_GOOD_CHANCE = 0.30;
-const CHEST_PULL_LOG_MAX = 12;
+const CHEST_PULL_LOG_MAX = 5;
+/** UI shows newest-first; keep this ≤ store cap so the strip stays quiet on 390px. */
+const SUMMON_LOG_SHOW = 4;
 const CHEST_SKILL_MAX = 48;
-/** Reveal timeline: short Android clip (~2.4s); card last ~0.9s. */
-const SUMMON_REVEAL_TOTAL_MS = 2400;
-const SUMMON_CARD_LAST_MS = 900;
+/** Reveal timeline: snappy Android clip (~2.0s); card last ~0.8s. Tap skips after card. */
+const SUMMON_REVEAL_TOTAL_MS = 2000;
+const SUMMON_CARD_LAST_MS = 800;
+/** Reduced-motion / Lite FX / low-end: skip video/lid/shake — card lands immediately. */
+const SUMMON_REVEAL_REDUCED_MS = 400;
 const SUMMON_VIDEO_SRC = 'assets/summon/reveal.mp4';
 let _summonVideoOk = null;
 
@@ -32,6 +36,7 @@ function summonVideoUrl() {
 /** Warm the mp4 while the hub is open so pull isn't racing a cold download. */
 function ensureSummonVideoPreloaded() {
   try {
+    if (typeof summonRevealShouldSkip === 'function' && summonRevealShouldSkip()) return;
     const vid = document.getElementById('summonVideo');
     if (!vid) return;
     vid.muted = true;
@@ -391,7 +396,7 @@ function openChestSummon(kind) {
       kind: rollKind,
       type: result.type,
       nice: result.nice,
-      id: result.weaponId || result.petId || result.eggId || null,
+      id: result.weaponId || result.petId || result.eggId || result.gearId || null,
       rarity: result.rarity || null,
     });
     save.stats = save.stats || {};
@@ -463,6 +468,143 @@ function sanitizeChestWeapons(raw) {
   return clean;
 }
 
+/** Display-only glance. Does not change rolls (F2 pity stays off). */
+function chestGlanceState() {
+  const d = typeof ensureChestDaily === 'function' ? ensureChestDaily() : null;
+  const left = typeof chestSummonsLeft === 'function' ? chestSummonsLeft() : 0;
+  const pulls = (d && Array.isArray(d.pulls)) ? d.pulls : [];
+  let dudRun = 0;
+  for (let i = pulls.length - 1; i >= 0; i--) {
+    const typ = pulls[i] && pulls[i].type;
+    if (typ === 'coins' || typ === 'xp' || typ === 'junk') dudRun++;
+    else break;
+  }
+  const used = pulls.length;
+  const pipMax = Math.max(
+    CHEST_DAILY_TOTAL,
+    Math.min(CHEST_DAILY_LEFT_CAP, Math.max(left, left + used))
+  );
+  return {
+    left,
+    total: CHEST_DAILY_TOTAL,
+    pipMax,
+    nicePct: Math.round((CHEST_NICE_CHANCE || 0) * 100),
+    midPct: Math.round((CHEST_GOOD_CHANCE || 0) * 100),
+    pity: false,
+    niceToday: pulls.some((p) => p && p.nice),
+    dudRun,
+    empty: left <= 0,
+  };
+}
+
+function chestResultName(res) {
+  if (!res) return '';
+  if (res.name) return String(res.name);
+  if (res.weaponId && typeof weaponById === 'function') {
+    const w = weaponById(res.weaponId);
+    if (w) return (typeof weaponLabel === 'function') ? weaponLabel(w.id) : w.name;
+  }
+  if (res.petId && typeof petDef === 'function') {
+    const def = petDef(res.petId);
+    const sp = def && typeof SPECIES !== 'undefined' ? SPECIES[def.speciesId] : null;
+    if (sp && sp.name) return sp.name;
+  }
+  return res.gearId || res.eggId || res.weaponId || res.petId || '';
+}
+
+function chestResultTitle(res) {
+  if (!res || !res.ok) {
+    return (typeof tOr === 'function')
+      ? tOr('ui.summonFail', 'Summon mislukt — probeer opnieuw')
+      : 'Summon mislukt — probeer opnieuw';
+  }
+  const name = chestResultName(res);
+  if (res.type === 'weapon_unlock' || res.type === 'weapon_ascend' || res.type === 'pet_unlock') {
+    return name || (res.type === 'pet_unlock' ? 'Pet' : 'Wapen');
+  }
+  if (res.type === 'egg') {
+    if (name && typeof tOr === 'function') return tOr('ui.summonEggNamed', 'Ei · {name}', { name });
+    if (name) return 'Ei · ' + name;
+    return (typeof tOr === 'function') ? tOr('ui.summonEgg', 'Ei') : 'Ei';
+  }
+  if (res.type === 'coins') {
+    return (typeof tOr === 'function')
+      ? tOr('ui.summonCoins', '+{n} pet coins', { n: res.amount || 0 })
+      : ('+' + (res.amount || 0) + ' pet coins');
+  }
+  if (res.type === 'xp') {
+    return (typeof tOr === 'function')
+      ? tOr('ui.summonXp', '+{n} XP', { n: res.amount || 0 })
+      : ('+' + (res.amount || 0) + ' XP');
+  }
+  if (res.type === 'gear') return name || ((typeof tOr === 'function') ? tOr('ui.summonGear', 'Gear') : 'Gear');
+  return res.label || ((typeof tOr === 'function') ? tOr('ui.summonJunk', 'Niks bijzonders…') : 'Niks bijzonders…');
+}
+
+function chestPullKindName(p) {
+  if (!p) return '';
+  if (p.id && p.kind === 'weapon' && typeof weaponById === 'function') {
+    const w = weaponById(p.id);
+    if (w) return (typeof weaponLabel === 'function') ? weaponLabel(w.id) : w.name;
+  }
+  if (p.id && p.kind === 'pet' && typeof petDef === 'function') {
+    const def = petDef(p.id);
+    const sp = def && typeof SPECIES !== 'undefined' ? SPECIES[def.speciesId] : null;
+    if (sp && sp.name) return sp.name;
+  }
+  if (p.id && (p.type === 'egg' || String(p.id).indexOf('egg_') === 0) && typeof eggDef === 'function') {
+    const egg = eggDef(p.id);
+    if (egg && egg.name) return egg.name;
+  }
+  if (p.id && p.type === 'gear' && typeof gearLabel === 'function') {
+    try { return gearLabel({ id: p.id, name: p.id }) || p.id; } catch (_) { return p.id; }
+  }
+  if (p.id && (p.type === 'egg' || p.kind === 'pet')) return p.id;
+  return p.id || '';
+}
+
+/** One readable line for today's pull log — never raw type ids. */
+/** Newest-first view for the on-screen log (capped). */
+function chestPullLogNewest(limit) {
+  const n = Math.max(1, Math.min(
+    (typeof SUMMON_LOG_SHOW === 'number') ? SUMMON_LOG_SHOW : 4,
+    Number(limit) || ((typeof SUMMON_LOG_SHOW === 'number') ? SUMMON_LOG_SHOW : 4)
+  ));
+  const pulls = (typeof save !== 'undefined' && save && save.chestDaily && Array.isArray(save.chestDaily.pulls))
+    ? save.chestDaily.pulls
+    : [];
+  return pulls.slice().reverse().slice(0, n);
+}
+
+function chestPullLogLine(p) {
+  if (!p || typeof p !== 'object') {
+    return (typeof tOr === 'function') ? tOr('ui.summonLogJunk', 'Schroot') : 'Schroot';
+  }
+  const rar = p.rarity && typeof rarityLabel === 'function' ? rarityLabel(p.rarity) : (p.rarity || '');
+  const name = chestPullKindName(p);
+  const type = typeof p.type === 'string' ? p.type : '';
+  const mark = p.nice ? '✦ ' : '';
+  if (type === 'weapon_unlock' || type === 'weapon_ascend') {
+    return mark + (name || ((typeof tOr === 'function') ? tOr('ui.summonKindWeapon', 'Wapen') : 'Wapen'))
+      + (rar ? ' · ' + rar : '');
+  }
+  if (type === 'pet_unlock') {
+    return mark + (name || ((typeof tOr === 'function') ? tOr('ui.summonKindPet', 'Pet') : 'Pet'))
+      + (rar ? ' · ' + rar : '');
+  }
+  if (type === 'egg') {
+    const egg = (typeof tOr === 'function') ? tOr('ui.summonEgg', 'Ei') : 'Ei';
+    return mark + (name ? egg + ' · ' + name : egg) + (rar ? ' · ' + rar : '');
+  }
+  if (type === 'coins') return (typeof tOr === 'function') ? tOr('ui.summonLogCoins', 'Pet coins') : 'Pet coins';
+  if (type === 'xp') return (typeof tOr === 'function') ? tOr('ui.summonLogXp', 'XP') : 'XP';
+  if (type === 'gear') {
+    return mark + (name || ((typeof tOr === 'function') ? tOr('ui.summonGear', 'Gear') : 'Gear'))
+      + (rar ? ' · ' + rar : '');
+  }
+  return (typeof tOr === 'function') ? tOr('ui.summonLogJunk', 'Schroot') : 'Schroot';
+}
+
 function chestResultToast(res) {
   if (!res || !res.ok) {
     if (res && res.reason === 'empty') {
@@ -500,7 +642,108 @@ function chestResultRarityId(res) {
   return 'common';
 }
 
+/** Display kind for card chrome / log chips — not a roll input. */
+function chestPullKindId(p) {
+  if (!p) return 'junk';
+  const type = typeof p.type === 'string' ? p.type : '';
+  if (type === 'weapon_unlock' || type === 'weapon_ascend' || p.weaponId) return 'weapon';
+  if (type === 'egg') return 'egg';
+  if (type === 'pet_unlock' || p.petId) return 'pet';
+  if (type === 'coins') return 'coins';
+  if (type === 'xp') return 'xp';
+  if (type === 'gear') return 'gear';
+  return 'junk';
+}
+
+function chestKindLabel(kind) {
+  const map = {
+    weapon: ['ui.summonKindWeapon', 'Wapen'],
+    egg: ['ui.summonEgg', 'Ei'],
+    pet: ['ui.summonKindPet', 'Pet'],
+    coins: ['ui.summonLogCoins', 'Pet coins'],
+    xp: ['ui.summonLogXp', 'XP'],
+    gear: ['ui.summonGear', 'Gear'],
+    junk: ['ui.summonLogJunk', 'Schroot'],
+  };
+  const pair = map[kind] || map.junk;
+  return (typeof tOr === 'function') ? tOr(pair[0], pair[1]) : pair[1];
+}
+
+/** Low-end / data-saver heuristic — EX-010 still felt clunky when only motionReduced skipped. */
+function summonRevealLowEnd() {
+  try {
+    if (typeof Perf !== 'undefined' && Perf && Number(Perf.tier) >= 2) return true;
+    if (typeof navigator !== 'undefined') {
+      const mem = Number(navigator.deviceMemory);
+      if (mem && mem <= 2) return true;
+      const conn = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
+      if (conn && conn.saveData) return true;
+    }
+  } catch (_) {}
+  return false;
+}
+
+/** Skip 2s mp4 + lid/shake on reduced-motion, Lite FX, or low-end. */
+function summonRevealShouldSkip() {
+  try {
+    if (typeof motionReduced === 'function' && motionReduced()) return true;
+    if (typeof save !== 'undefined' && save && save.liteFx) return true;
+    if (typeof fxLite === 'function' && fxLite()) return true;
+    if (summonRevealLowEnd()) return true;
+  } catch (_) {}
+  return false;
+}
+
+/** FOMO sheet is on-screen — tip must stay hidden so the two don't fight. */
+function summonFomoSheetOpen() {
+  try {
+    if (typeof document === 'undefined') return false;
+    if (document.body && document.body.classList.contains('fomo-open')) return true;
+    const el = document.getElementById('fomoRitual');
+    return !!(el && !el.hidden);
+  } catch (_) { return false; }
+}
+
+function summonTutShouldShow(busy) {
+  if (busy) return false;
+  try {
+    if (typeof summonTutSeen === 'function' && summonTutSeen()) return false;
+  } catch (_) { return false; }
+  try {
+    const screen = document.getElementById('summonScreen');
+    if (!screen || !screen.classList.contains('active')) return false;
+  } catch (_) { return false; }
+  if (summonFomoSheetOpen()) return false;
+  return true;
+}
+
+function summonRevealTotalMs() {
+  return summonRevealShouldSkip() ? SUMMON_REVEAL_REDUCED_MS : SUMMON_REVEAL_TOTAL_MS;
+}
+
 function summonRevealCardDelayMs(totalMs) {
+  if (summonRevealShouldSkip()) return 0;
   const total = Math.max(SUMMON_CARD_LAST_MS + 400, Number(totalMs) || SUMMON_REVEAL_TOTAL_MS);
   return Math.max(0, total - SUMMON_CARD_LAST_MS);
+}
+
+function summonTutSeen() {
+  try {
+    if (typeof save === 'undefined' || !save) return true;
+    if (!save.tipsSeen || typeof save.tipsSeen !== 'object' || Array.isArray(save.tipsSeen)) {
+      save.tipsSeen = {};
+    }
+    return !!save.tipsSeen.summonHub;
+  } catch (_) { return true; }
+}
+
+function dismissSummonTut() {
+  try {
+    if (typeof save === 'undefined' || !save) return;
+    if (!save.tipsSeen || typeof save.tipsSeen !== 'object' || Array.isArray(save.tipsSeen)) {
+      save.tipsSeen = {};
+    }
+    save.tipsSeen.summonHub = 1;
+    if (typeof persist === 'function') persist();
+  } catch (_) {}
 }

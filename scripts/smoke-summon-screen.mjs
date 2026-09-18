@@ -41,6 +41,14 @@ function must(cond, msg) {
   }
 }
 
+const cssSrc = fs.readFileSync(path.join(root, 'styles/main.css'), 'utf8');
+must(/#summonScreen \.summon-pull-btn/.test(cssSrc) && /#ffd75e/.test(cssSrc),
+  'gold primary must beat menu-tile unify');
+must(/is-shake\[data-rarity="common"\]/.test(cssSrc) && /is-card-show\[data-rarity="common"\]/.test(cssSrc),
+  'rarity juice must be scoped to shake/card-show, not idle');
+must(/\.summon-stage:not\(\.is-empty\):not\(\.is-error\) \.summon-stage-hint/.test(cssSrc),
+  'idle stage hint must hide so Open kist is the one primary');
+
 async function run() {
   let server = null;
   try { server = await ensureSmokeServer(8787); } catch (_) {}
@@ -74,6 +82,37 @@ async function run() {
         fullW: rect ? Math.round(rect.width) : 0,
         fullH: rect ? Math.round(rect.height) : 0,
         hasPull: !!document.getElementById('btnChestPull'),
+        hasSkip: !!document.getElementById('summonSkipHint'),
+        hasGlance: !!document.getElementById('summonGlance'),
+        glanceOdds: (document.getElementById('summonOdds') || {}).textContent || '',
+        pipOn: document.querySelectorAll('#summonPips .summon-pip.is-on').length,
+        pipAll: document.querySelectorAll('#summonPips .summon-pip').length,
+        glanceFn: typeof chestGlanceState === 'function',
+        logHelper: typeof chestPullLogLine === 'function',
+        logJunk: (typeof chestPullLogLine === 'function')
+          ? chestPullLogLine({ kind: 'weapon', type: 'junk', nice: false })
+          : '',
+        logEgg: (typeof chestPullLogLine === 'function')
+          ? chestPullLogLine({ kind: 'pet', type: 'egg', id: 'egg_cloud', rarity: 'uncommon' })
+          : '',
+        kindFn: typeof chestPullKindId === 'function',
+        kindWeapon: (typeof chestPullKindId === 'function') ? chestPullKindId({ type: 'weapon_unlock' }) : '',
+        kindEgg: (typeof chestPullKindId === 'function') ? chestPullKindId({ type: 'egg' }) : '',
+        kindBadge: !!document.getElementById('summonCardKind'),
+        homeTile: !!document.getElementById('btnSummons'),
+        collectTile: !!document.getElementById('btnCollectSummons'),
+        collectHub: !!document.querySelector('[data-hub-panel="collect"] [data-hub="summon"]'),
+        weaponsJump: !!document.getElementById('btnWeaponsGotoSummon'),
+        petsJump: !!document.getElementById('btnPetsGotoSummon'),
+        skipFn: typeof summonRevealShouldSkip === 'function',
+        tutShowFn: typeof summonTutShouldShow === 'function',
+        fomoTipFn: typeof summonFomoSheetOpen === 'function',
+        hasCancel: !!document.getElementById('btnSummonCancel'),
+        hasLogHead: !!document.getElementById('summonLogHead'),
+        noX10: !document.getElementById('btnChestPull10') && !document.querySelector('[data-pull="x10"]'),
+        logCap: (typeof SUMMON_LOG_SHOW === 'number') ? SUMMON_LOG_SHOW : 0,
+        storeCap: (typeof CHEST_PULL_LOG_MAX === 'number') ? CHEST_PULL_LOG_MAX : 0,
+        logNewestFn: typeof chestPullLogNewest === 'function',
       };
     });
     must(openSnap.summonActive, 'summonScreen not active: ' + JSON.stringify(openSnap.active));
@@ -84,9 +123,168 @@ async function run() {
     must(openSnap.where && openSnap.centerCard, 'missing where-strip or center card');
     must(openSnap.left === 10, 'expected 10 summons, got ' + openSnap.left);
     
+    must(openSnap.hasGlance && openSnap.glanceFn, 'missing summon glance strip / chestGlanceState');
+    must(/14%/.test(openSnap.glanceOdds) && /30%/.test(openSnap.glanceOdds),
+      'odds not one-glance: ' + openSnap.glanceOdds);
+    must(/pity/i.test(openSnap.glanceOdds), 'pity status missing from glance: ' + openSnap.glanceOdds);
+    must(openSnap.pipAll === 10 && openSnap.pipOn === 10, 'expected 10/10 pips, got ' + JSON.stringify(openSnap));
     must(openSnap.hasPull, 'missing btnChestPull');
+    must(openSnap.hasSkip, 'missing summonSkipHint');
+    must(openSnap.logHelper, 'missing chestPullLogLine');
+    must(openSnap.logJunk && !/weapon_unlock|junk/i.test(openSnap.logJunk),
+      'log line still raw: ' + openSnap.logJunk);
+    must(openSnap.logEgg && /wolkje/i.test(openSnap.logEgg) && !/egg_cloud/.test(openSnap.logEgg),
+      'egg log should use display name: ' + openSnap.logEgg);
+    must(openSnap.kindFn && openSnap.kindWeapon === 'weapon' && openSnap.kindEgg === 'egg',
+      'egg vs weapon kind helper missing: ' + JSON.stringify(openSnap));
+    must(openSnap.kindBadge, 'missing #summonCardKind');
+    must(openSnap.homeTile && openSnap.collectTile && openSnap.collectHub,
+      'HOME/Collectie summons entry missing: ' + JSON.stringify(openSnap));
+    must(openSnap.weaponsJump && openSnap.petsJump, 'weapon/pet Kist jumps missing');
+    must(openSnap.skipFn, 'missing summonRevealShouldSkip');
+    must(openSnap.tutShowFn && openSnap.fomoTipFn, 'missing tip-vs-FOMO helpers');
+    must(openSnap.hasCancel && openSnap.noX10, 'expected Stop, no x10 batch: ' + JSON.stringify(openSnap));
+    must(openSnap.hasLogHead && openSnap.logNewestFn && openSnap.logCap === 4 && openSnap.storeCap === 5,
+      'log cap / newest helper missing: ' + JSON.stringify(openSnap));
+
+    const tipSnap = await page.evaluate(() => {
+      const tip = document.getElementById('summonTut');
+      const line = document.getElementById('summonTutLine');
+      const x = document.getElementById('btnSummonTutDismiss');
+      return {
+        visible: !!(tip && !tip.hidden),
+        line: (line && line.textContent) || '',
+        dismissH: x ? Math.round(x.getBoundingClientRect().height) : 0,
+        seenFn: typeof summonTutSeen === 'function' && !summonTutSeen(),
+      };
+    });
+    must(tipSnap.visible && tipSnap.seenFn && /kist/i.test(tipSnap.line),
+      'first-time summon tip missing: ' + JSON.stringify(tipSnap));
+    must(tipSnap.dismissH >= 44, 'tip dismiss tap target < 44px: ' + tipSnap.dismissH);
+
+    const locSnap = await page.evaluate(() => {
+      const DUTCH = /Nieuwste|Volgende|geen pity|Open kist|Tik kist|Tik de kist|Wapens|Morgen weer|Buit landt|Tip sluiten/;
+      const chrome = () => {
+        if (typeof UI !== 'undefined' && UI.renderSummon) UI.renderSummon();
+        return {
+          lang: (typeof getLang === 'function') ? getLang() : (save && save.lang),
+          logHead: (document.getElementById('summonLogHead') || {}).textContent || '',
+          cancel: (document.getElementById('btnSummonCancel') || {}).textContent || '',
+          odds: (document.getElementById('summonOdds') || {}).textContent || '',
+          pull: ((document.getElementById('btnChestPull') || {}).textContent || '').replace(/\s+/g, ' ').trim(),
+          gotoW: (document.getElementById('btnSummonGotoWeapons') || {}).textContent || '',
+          tip: (document.getElementById('summonTutLine') || {}).textContent || '',
+          newest: t('ui.summonLogNewest'),
+          next: t('ui.summonNextProgress', { left: 3, total: 10 }),
+          tut: t('ui.summonTut'),
+        };
+      };
+      setLang('en');
+      const en = chrome();
+      setLang('de');
+      const de = chrome();
+      setLang('fr');
+      const fr = { newest: t('ui.summonLogNewest'), cancel: t('ui.summonCancel'), next: t('ui.summonNextProgress', { left: 3, total: 10 }) };
+      setLang('es');
+      const es = { newest: t('ui.summonLogNewest'), cancel: t('ui.summonCancel'), next: t('ui.summonNextProgress', { left: 3, total: 10 }) };
+      setLang('nl');
+      chrome();
+      return { en, de, fr, es, vw: window.innerWidth };
+    });
+    must(locSnap.vw === 390, 'expected 390px viewport, got ' + locSnap.vw);
+    must(/Newest/i.test(locSnap.en.newest) && /Next · 3\/10/.test(locSnap.en.next) && /Tap the chest/.test(locSnap.en.tut),
+      'EN summon chrome missing: ' + JSON.stringify(locSnap.en));
+    must(/Open chest/i.test(locSnap.en.pull) && /Weapons/i.test(locSnap.en.gotoW) && /no pity/i.test(locSnap.en.odds),
+      'EN DOM still not translated: ' + JSON.stringify(locSnap.en));
+    must(!/Nieuwste|Volgende|geen pity|Open kist|Wapens/.test(JSON.stringify(locSnap.en)),
+      'EN still has Dutch leftovers: ' + JSON.stringify(locSnap.en));
+    must(/Neueste/i.test(locSnap.de.newest) && /Weiter · 3\/10/.test(locSnap.de.next) && /Kiste tippen/.test(locSnap.de.tut),
+      'DE summon chrome missing: ' + JSON.stringify(locSnap.de));
+    must(/Kiste öffnen/i.test(locSnap.de.pull) && /Waffen/i.test(locSnap.de.gotoW) && /kein Pity/i.test(locSnap.de.odds),
+      'DE DOM still not translated: ' + JSON.stringify(locSnap.de));
+    must(/Abbrechen/.test(locSnap.de.cancel) && !/Nieuwste|Volgende|geen pity|Open kist/.test(JSON.stringify(locSnap.de)),
+      'DE still has Dutch leftovers: ' + JSON.stringify(locSnap.de));
+    must(/Plus récent/.test(locSnap.fr.newest) && /Arrêter/.test(locSnap.fr.cancel) && /Suivant/.test(locSnap.fr.next),
+      'FR keys missing: ' + JSON.stringify(locSnap.fr));
+    must(/Más reciente/.test(locSnap.es.newest) && /Parar/.test(locSnap.es.cancel) && /Siguiente/.test(locSnap.es.next),
+      'ES keys missing: ' + JSON.stringify(locSnap.es));
+
+    const dismissed = await page.evaluate(() => {
+      if (typeof dismissSummonTut === 'function') dismissSummonTut();
+      UI.renderSummon();
+      const tip = document.getElementById('summonTut');
+      return { hidden: !!(tip && tip.hidden), seen: typeof summonTutSeen === 'function' && summonTutSeen() };
+    });
+    must(dismissed.hidden && dismissed.seen, 'tip dismiss did not persist: ' + JSON.stringify(dismissed));
     const btnTxt = await page.evaluate(() => (document.getElementById('btnChestPull') || {}).textContent || '');
     must(/open kist/i.test(btnTxt), 'expected Open kist CTA, got: ' + btnTxt);
+    const chrome = await page.evaluate(() => {
+      const sub = document.getElementById('summonScreenSub');
+      const where = document.getElementById('summonWhereStrip');
+      const home = document.querySelector('#summonScreen > .sub-home-bar');
+      const goto = document.querySelector('.summon-goto-row');
+      const fatGoto = !!(goto && goto.querySelector('.btn.mode-btn'));
+      const cs = (el) => {
+        if (!el) return null;
+        const s = getComputedStyle(el);
+        return { display: s.display, vis: s.visibility, w: Math.round(el.getBoundingClientRect().width) };
+      };
+      return {
+        sub: cs(sub),
+        where: cs(where),
+        home: cs(home),
+        fatGoto,
+        gotoText: goto ? (goto.textContent || '').replace(/\s+/g, ' ').trim() : '',
+        gotoMinH: goto ? Math.min(...[...goto.querySelectorAll('.summon-goto-link')].map((b) => Math.round(b.getBoundingClientRect().height))) : 0,
+        pullH: (() => {
+          const b = document.getElementById('btnChestPull');
+          return b ? Math.round(b.getBoundingClientRect().height) : 0;
+        })(),
+        vw: window.innerWidth,
+      };
+    });
+    must(chrome.vw <= 400, 'expected phone viewport, got ' + chrome.vw);
+    must(chrome.sub && chrome.sub.display === 'none', 'subtitle should hide on phone: ' + JSON.stringify(chrome.sub));
+    must(chrome.where && (chrome.where.display === 'none' || chrome.where.w <= 2),
+      'where-strip should be visually hidden: ' + JSON.stringify(chrome.where));
+    must(chrome.home && chrome.home.display === 'none', 'home bar should hide on summon: ' + JSON.stringify(chrome.home));
+    must(!chrome.fatGoto, 'collection jumps must be text links, not fat mode buttons');
+    must(/wapens/i.test(chrome.gotoText) && /pets/i.test(chrome.gotoText),
+      'expected Wapens · Pets links, got: ' + chrome.gotoText);
+    must(chrome.gotoMinH >= 44, 'goto tap targets < 44px: ' + JSON.stringify(chrome));
+    must(chrome.pullH >= 44, 'pull CTA tap target < 44px: ' + chrome.pullH);
+
+    const hier = await page.evaluate(() => {
+      const btn = document.getElementById('btnChestPull');
+      const rays = document.getElementById('summonRarityRays');
+      const fx = document.getElementById('summonRarityFx');
+      const hint = document.getElementById('summonStageHint');
+      const screen = document.getElementById('summonScreen');
+      const bs = btn ? getComputedStyle(btn) : null;
+      const gold = bs ? (bs.backgroundImage + bs.backgroundColor) : '';
+      return {
+        pullH: btn ? Math.round(btn.getBoundingClientRect().height) : 0,
+        gold: /255,\s*215,\s*94|ffd75e|232,\s*168,\s*32|e8a820|201,\s*122,\s*32|c97a20/i.test(gold),
+        ink: bs ? bs.color : '',
+        raysOp: rays ? parseFloat(getComputedStyle(rays).opacity) : -1,
+        fxOp: fx ? parseFloat(getComputedStyle(fx).opacity) : -1,
+        hintDisp: hint ? getComputedStyle(hint).display : null,
+        ready: !!(screen && screen.classList.contains('is-ready')),
+        fatBtns: document.querySelectorAll('#summonScreen .summon-actions .summon-pull-btn').length,
+      };
+    });
+    must(hier.ready && hier.fatBtns === 1, 'expected one ready primary: ' + JSON.stringify(hier));
+    must(hier.pullH >= 64 && hier.gold, 'primary not huge gold on 390px: ' + JSON.stringify(hier));
+    must(hier.raysOp <= 0.02 && hier.fxOp <= 0.02, 'idle rarity juice should be off: ' + JSON.stringify(hier));
+    must(hier.hintDisp === 'none', 'idle stage hint should hide: ' + JSON.stringify(hier));
+
+    await page.evaluate(() => {
+      const splash = document.getElementById('sfSplash');
+      if (splash) { splash.hidden = true; splash.style.display = 'none'; }
+      const fomo = document.getElementById('fomoRitual');
+      if (fomo) fomo.hidden = true;
+    });
+    await page.screenshot({ path: path.join(outDir, 'summon-idle-phone.png') });
     const polish = await page.evaluate(() => {
       const css = [...document.styleSheets].flatMap(s => {
         try { return [...s.cssRules].map(r => r.cssText); } catch (_) { return []; }
@@ -104,13 +302,69 @@ async function run() {
 
     must(openSnap.fullW >= 360 && openSnap.fullH >= 700, 'summon screen not fullscreen-ish: ' + JSON.stringify(openSnap));
 
+    const emptySnap = await page.evaluate(() => {
+      const d = ensureChestDaily();
+      const prev = d.left;
+      d.left = 0;
+      UI._chestPullBusy = false;
+      UI._summonSkipReady = false;
+      UI.renderSummon();
+      const btn = document.getElementById('btnChestPull');
+      const stage = document.getElementById('summonStage');
+      const snap = {
+        disabled: !!(btn && btn.disabled),
+        emptyStage: !!(stage && stage.classList.contains('is-empty')),
+        pipOn: document.querySelectorAll('#summonPips .summon-pip.is-on').length,
+        quota: (document.getElementById('summonQuota') || {}).textContent || '',
+      };
+      d.left = prev;
+      UI.renderSummon();
+      return snap;
+    });
+    must(emptySnap.disabled && emptySnap.emptyStage && emptySnap.pipOn === 0,
+      'empty state missing: ' + JSON.stringify(emptySnap));
+
+    const logSnap = await page.evaluate(() => {
+      const d = ensureChestDaily();
+      const prev = (d.pulls || []).slice();
+      d.pulls = [
+        { type: 'junk', kind: 'weapon' },
+        { type: 'coins', amount: 4 },
+        { type: 'egg', id: 'egg_cloud', rarity: 'uncommon' },
+        { type: 'weapon_unlock', id: 'knuppel', rarity: 'rare' },
+        { type: 'pet_unlock', id: 'slymo', rarity: 'epic', nice: true },
+        { type: 'xp', amount: 20 },
+      ];
+      UI.renderSummon();
+      const chips = [...document.querySelectorAll('#summonLog .summon-log-chip')];
+      const newest = chips[0];
+      const snap = {
+        n: chips.length,
+        first: newest ? newest.textContent : '',
+        newestMark: !!(newest && newest.classList.contains('is-newest')),
+        head: (document.getElementById('summonLogHead') || {}).textContent || '',
+        helperN: (typeof chestPullLogNewest === 'function') ? chestPullLogNewest(4).length : -1,
+        helperFirst: (typeof chestPullLogNewest === 'function' && chestPullLogNewest(4)[0])
+          ? chestPullLogNewest(4)[0].type : '',
+      };
+      d.pulls = prev;
+      UI.renderSummon();
+      return snap;
+    });
+    must(logSnap.n === 4, 'log should cap at 4 newest: ' + JSON.stringify(logSnap));
+    must(logSnap.helperFirst === 'xp' && logSnap.newestMark,
+      'newest-first missing: ' + JSON.stringify(logSnap));
+    must(/nieuw/i.test(logSnap.head), 'log head should say newest: ' + logSnap.head);
+
     const pullStart = await page.evaluate(() => {
       const before = chestSummonsLeft();
+      UI.doChestPull('random');
+      UI.doChestPull('random');
       UI.doChestPull('random');
       return { before, afterPull: chestSummonsLeft() };
     });
     must(pullStart.afterPull === pullStart.before - 1,
-      'counter did not drop on pull: ' + JSON.stringify(pullStart));
+      'duplicate tap spam changed leftover: ' + JSON.stringify(pullStart));
 
     const pullSnap = await page.evaluate(async (before) => {
       const toastBefore = (document.getElementById('toastHost') || {}).textContent || '';
@@ -190,6 +444,18 @@ async function run() {
         playEarly,
         cropEarly,
         endText: (document.getElementById('summonRevealText') || {}).textContent || '',
+        skipReady: !!(screen && screen.classList.contains('is-skip-ready')),
+        logRaw: ((document.getElementById('summonLog') || {}).textContent || ''),
+        cardKind: card ? (card.getAttribute('data-kind') || '') : '',
+        kindBadge: (document.getElementById('summonCardKind') || {}).textContent || '',
+        cancelVis: (() => {
+          const b = document.getElementById('btnSummonCancel');
+          if (!b) return false;
+          const r = b.getBoundingClientRect();
+          return !b.hidden && r.width >= 44 && r.height >= 44;
+        })(),
+        logChipN: document.querySelectorAll('#summonLog .summon-log-chip').length,
+        newestChip: !!document.querySelector('#summonLog .summon-log-chip.is-newest'),
       };
     }, pullStart.before);
     must(pullSnap.after === pullStart.afterPull,
@@ -198,6 +464,16 @@ async function run() {
     must(!pullSnap.isPlaying, 'is-playing flipped during pull');
     must(pullSnap.cardShow, 'center card not shown after reveal window');
     must(pullSnap.cardName.length > 0, 'empty center card name');
+    must(pullSnap.skipReady, 'expected is-skip-ready after card lands');
+    must(pullSnap.cardKind.length > 0, 'card missing data-kind: ' + JSON.stringify(pullSnap));
+    must(pullSnap.kindBadge.length > 0, 'kind badge empty after pull');
+    must(pullSnap.cancelVis, 'Stop cancel not visible during pull: ' + JSON.stringify(pullSnap));
+    must(pullSnap.logChipN >= 1 && pullSnap.logChipN <= 4 && pullSnap.newestChip,
+      'pull log should be newest-first and capped: ' + JSON.stringify(pullSnap));
+    must(!/weapon_unlock|pet_unlock|weapon_ascend/.test(pullSnap.logRaw),
+      'pull log still raw type ids: ' + pullSnap.logRaw);
+    must(!/egg_/.test(pullSnap.logRaw), 'egg log still uses raw id: ' + pullSnap.logRaw);
+    await page.screenshot({ path: path.join(outDir, 'summon-card-phone.png') });
     if (pullSnap.cardCenter) {
       must(pullSnap.cardCenter.dx <= 12, 'reward card not horizontally centered: ' + JSON.stringify(pullSnap.cardCenter));
       must(pullSnap.cardCenter.dy <= 18, 'reward card not vertically centered: ' + JSON.stringify(pullSnap.cardCenter));
@@ -219,6 +495,186 @@ async function run() {
       must(pullSnap.playEarly.t > 0.05, 'mp4 did not advance currentTime: ' + JSON.stringify(pullSnap.playEarly));
       must(!pullSnap.playEarly.paused, 'mp4 still paused after pull: ' + JSON.stringify(pullSnap.playEarly));
     }
+
+    const reducedSnap = await page.evaluate(async () => {
+      if (typeof save !== 'undefined') save.reducedMotion = true;
+      try { if (typeof syncA11yClasses === 'function') syncA11yClasses(); } catch (_) {}
+      UI._summonGuardUntil = 0;
+      UI._summonPullLock = false;
+      UI.finishSummonReveal();
+      UI.doChestPull('random');
+      await new Promise((r) => setTimeout(r, 50));
+      const reveal = document.getElementById('summonReveal');
+      const screen = document.getElementById('summonScreen');
+      const vid = document.getElementById('summonVideo');
+      return {
+        cardShow: !!(reveal && reveal.classList.contains('is-card-show')),
+        skipReady: !!(screen && screen.classList.contains('is-skip-ready')),
+        shake: !!(reveal && reveal.classList.contains('is-shake')),
+        hasVideo: !!(screen && screen.classList.contains('has-video')),
+        vidDisplay: vid ? getComputedStyle(vid).display : null,
+        kind: (document.getElementById('summonCenterCard') || {}).getAttribute
+          ? document.getElementById('summonCenterCard').getAttribute('data-kind')
+          : '',
+        bodyRm: document.body.classList.contains('reduced-motion'),
+      };
+    });
+    must(reducedSnap.cardShow && reducedSnap.skipReady,
+      'reduced-motion should land card immediately: ' + JSON.stringify(reducedSnap));
+    must(!reducedSnap.shake, 'reduced-motion should skip chest shake: ' + JSON.stringify(reducedSnap));
+    must(!reducedSnap.hasVideo && reducedSnap.vidDisplay !== 'block',
+      'reduced-motion should skip reveal video: ' + JSON.stringify(reducedSnap));
+
+    const liteSnap = await page.evaluate(async () => {
+      if (typeof save !== 'undefined') {
+        save.reducedMotion = false;
+        save.liteFx = true;
+      }
+      try { if (typeof syncA11yClasses === 'function') syncA11yClasses(); } catch (_) {}
+      UI._summonGuardUntil = 0;
+      UI._summonPullLock = false;
+      UI.finishSummonReveal();
+      UI.doChestPull('random');
+      await new Promise((r) => setTimeout(r, 50));
+      const reveal = document.getElementById('summonReveal');
+      const screen = document.getElementById('summonScreen');
+      const vid = document.getElementById('summonVideo');
+      return {
+        shouldSkip: typeof summonRevealShouldSkip === 'function' && summonRevealShouldSkip(),
+        cardShow: !!(reveal && reveal.classList.contains('is-card-show')),
+        skipReady: !!(screen && screen.classList.contains('is-skip-ready')),
+        shake: !!(reveal && reveal.classList.contains('is-shake')),
+        hasVideo: !!(screen && screen.classList.contains('has-video')),
+        vidDisplay: vid ? getComputedStyle(vid).display : null,
+        bodyLite: document.body.classList.contains('lite-fx'),
+      };
+    });
+    must(liteSnap.shouldSkip && liteSnap.bodyLite, 'liteFx should trip summon skip: ' + JSON.stringify(liteSnap));
+    must(liteSnap.cardShow && liteSnap.skipReady,
+      'liteFx should land card immediately: ' + JSON.stringify(liteSnap));
+    must(!liteSnap.shake, 'liteFx should skip chest shake: ' + JSON.stringify(liteSnap));
+    must(!liteSnap.hasVideo && liteSnap.vidDisplay !== 'block',
+      'liteFx should skip reveal video: ' + JSON.stringify(liteSnap));
+
+    const navSnap = await page.evaluate(() => {
+      UI.finishSummonReveal();
+      UI.goMenu();
+      UI.openModeHub('collect');
+      const tile = document.getElementById('btnCollectSummons');
+      const panel = document.querySelector('[data-hub-panel="collect"]');
+      const home = document.getElementById('btnSummons');
+      return {
+        collectActive: !!(document.getElementById('modeHubScreen') && document.getElementById('modeHubScreen').classList.contains('active')),
+        panelVisible: !!(panel && !panel.hidden),
+        tile: !!(tile && tile.dataset.hub === 'summon'),
+        featured: !!(tile && tile.classList.contains('hub-tile-featured')),
+        home: !!(home && home.dataset.hub === 'summon'),
+      };
+    });
+    must(navSnap.collectActive && navSnap.panelVisible && navSnap.tile && navSnap.featured,
+      'Collectie missing one clear Summons entry: ' + JSON.stringify(navSnap));
+    must(navSnap.home, 'HOME Summons tile missing after collect hub');
+
+    const fomoSnap = await page.evaluate(() => {
+      UI.goMenu();
+      document.getElementById('menuScreen')?.classList.add('active');
+      UI._fomoRitualHide = false;
+      UI._fomoRitualForce = true;
+      UI.showFomoRitual(true);
+      const onMenu = {
+        open: !document.getElementById('fomoRitual')?.hidden,
+        body: document.body.classList.contains('fomo-open'),
+      };
+      UI.openSummonHub();
+      const fomo = document.getElementById('fomoRitual');
+      const summon = document.getElementById('summonScreen');
+      let overlap = false;
+      if (fomo && !fomo.hidden && summon && summon.classList.contains('active')) {
+        const a = fomo.getBoundingClientRect();
+        const b = summon.getBoundingClientRect();
+        overlap = a.width > 2 && a.height > 2 && !(a.right < b.left || a.left > b.right || a.bottom < b.top || a.top > b.bottom);
+      }
+      return {
+        onMenu,
+        hiddenOnSummon: !!(fomo && fomo.hidden),
+        summonActive: !!(summon && summon.classList.contains('active')),
+        bodyOpen: document.body.classList.contains('fomo-open'),
+        overlap,
+        fomoDisp: fomo ? getComputedStyle(fomo).display : null,
+      };
+    });
+    must(fomoSnap.onMenu.open && fomoSnap.onMenu.body, 'FOMO sheet should open on HOME: ' + JSON.stringify(fomoSnap));
+    must(fomoSnap.hiddenOnSummon && fomoSnap.summonActive && !fomoSnap.bodyOpen && !fomoSnap.overlap,
+      'FOMO must not overlap summon chrome: ' + JSON.stringify(fomoSnap));
+
+    const tipVsFomo = await page.evaluate(() => {
+      if (typeof save !== 'undefined') {
+        if (!save.tipsSeen || typeof save.tipsSeen !== 'object') save.tipsSeen = {};
+        save.tipsSeen.summonHub = 0;
+      }
+      UI.goMenu();
+      document.getElementById('menuScreen')?.classList.add('active');
+      UI._fomoRitualHide = false;
+      UI._fomoRitualForce = true;
+      UI.showFomoRitual(true);
+      try { UI.renderSummon(); } catch (_) {}
+      const tip = document.getElementById('summonTut');
+      const fomo = document.getElementById('fomoRitual');
+      const onFomo = {
+        fomoOpen: !!(fomo && !fomo.hidden),
+        body: document.body.classList.contains('fomo-open'),
+        sheetFn: typeof summonFomoSheetOpen === 'function' && summonFomoSheetOpen(),
+        tipHidden: !!(tip && tip.hidden),
+        tipDisp: tip ? getComputedStyle(tip).display : null,
+        showFn: typeof summonTutShouldShow === 'function' && summonTutShouldShow(false),
+      };
+      UI.openSummonHub();
+      const after = {
+        fomoHidden: !!(fomo && fomo.hidden),
+        body: document.body.classList.contains('fomo-open'),
+        tipVisible: !!(tip && !tip.hidden),
+        tipDisp: tip ? getComputedStyle(tip).display : null,
+        showFn: typeof summonTutShouldShow === 'function' && summonTutShouldShow(false),
+      };
+      return { onFomo, after };
+    });
+    must(tipVsFomo.onFomo.fomoOpen && tipVsFomo.onFomo.body && tipVsFomo.onFomo.sheetFn,
+      'FOMO should be open for tip-vs-sheet check: ' + JSON.stringify(tipVsFomo));
+    must(tipVsFomo.onFomo.tipHidden && tipVsFomo.onFomo.tipDisp === 'none' && !tipVsFomo.onFomo.showFn,
+      'summon tip must not fight FOMO sheet: ' + JSON.stringify(tipVsFomo));
+    must(tipVsFomo.after.fomoHidden && !tipVsFomo.after.body && tipVsFomo.after.tipVisible && tipVsFomo.after.showFn,
+      'tip may show on summon after FOMO closes: ' + JSON.stringify(tipVsFomo));
+
+    await page.setViewport({ width: 1280, height: 800 });
+    const desk = await page.evaluate(() => {
+      if (typeof save !== 'undefined') {
+        save.reducedMotion = false;
+        save.liteFx = false;
+      }
+      try { if (typeof syncA11yClasses === 'function') syncA11yClasses(); } catch (_) {}
+      UI.finishSummonReveal();
+      UI.goMenu();
+      UI.openSummonHub();
+      UI.renderSummon();
+      const btn = document.getElementById('btnChestPull');
+      const rays = document.getElementById('summonRarityRays');
+      const bs = btn ? getComputedStyle(btn) : null;
+      const gold = bs ? (bs.backgroundImage + bs.backgroundColor) : '';
+      return {
+        vw: window.innerWidth,
+        pullH: btn ? Math.round(btn.getBoundingClientRect().height) : 0,
+        gold: /255,\s*215,\s*94|ffd75e|232,\s*168,\s*32|e8a820|201,\s*122,\s*32|c97a20/i.test(gold),
+        raysOp: rays ? parseFloat(getComputedStyle(rays).opacity) : -1,
+        ready: !!document.getElementById('summonScreen')?.classList.contains('is-ready'),
+        fatBtns: document.querySelectorAll('#summonScreen .summon-actions .summon-pull-btn').length,
+      };
+    });
+    must(desk.vw === 1280, 'expected desktop PWA viewport, got ' + desk.vw);
+    must(desk.ready && desk.fatBtns === 1 && desk.pullH >= 64 && desk.gold,
+      'desktop primary not one gold CTA: ' + JSON.stringify(desk));
+    must(desk.raysOp <= 0.02, 'desktop idle juice should be off: ' + JSON.stringify(desk));
+    await page.screenshot({ path: path.join(outDir, 'summon-idle-desktop.png') });
+    await page.setViewport({ width: 390, height: 844 });
 
     const playSnap = await page.evaluate(() => {
       UI.goMenu();

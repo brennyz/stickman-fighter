@@ -218,7 +218,24 @@ bindPress(document.getElementById('btnChestPull'), () => {
   AudioSys.init();
   UI.doChestPull('random');
 });
+bindPress(document.getElementById('btnSummonCancel'), () => {
+  if (!UI._chestPullBusy) return;
+  AudioSys.init();
+  AudioSys.sfx('select');
+  UI.finishSummonReveal();
+});
+bindPress(document.getElementById('btnSummonTutDismiss'), () => {
+  AudioSys.init();
+  AudioSys.sfx('select');
+  if (typeof dismissSummonTut === 'function') dismissSummonTut();
+  try { UI.renderSummon(); } catch (_) {}
+});
 bindPress(document.getElementById('summonStage'), () => {
+  if (UI._chestPullBusy && UI._summonSkipReady) {
+    AudioSys.init();
+    UI.finishSummonReveal();
+    return;
+  }
   const stage = document.getElementById('summonStage');
   if (!stage || !stage.classList.contains('is-pullable')) return;
   if (UI._chestPullBusy) return;
@@ -227,6 +244,12 @@ bindPress(document.getElementById('summonStage'), () => {
 });
 document.getElementById('summonStage')?.addEventListener('keydown', (ev) => {
   if (ev.key !== 'Enter' && ev.key !== ' ') return;
+  if (UI._chestPullBusy && UI._summonSkipReady) {
+    ev.preventDefault();
+    AudioSys.init();
+    UI.finishSummonReveal();
+    return;
+  }
   const stage = document.getElementById('summonStage');
   if (!stage || !stage.classList.contains('is-pullable')) return;
   ev.preventDefault();
@@ -247,6 +270,13 @@ bindPress(document.getElementById('btnSummonGotoPets'), () => {
   UI._chestPullBusy = false;
   openCollectionScreen('petScreen', () => UI.renderPets());
 });
+function openSummonFromCollect() {
+  AudioSys.init(); AudioSys.sfx('select');
+  if (state === 'play' && game) return;
+  UI.openSummonHub();
+}
+bindPress(document.getElementById('btnWeaponsGotoSummon'), openSummonFromCollect);
+bindPress(document.getElementById('btnPetsGotoSummon'), openSummonFromCollect);
 bindPress(document.getElementById('btnBuildings'), () => {
   AudioSys.init(); AudioSys.sfx('select');
   if (typeof UI !== 'undefined' && UI.openBuildings) UI.openBuildings();

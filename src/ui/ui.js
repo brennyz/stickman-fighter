@@ -1234,6 +1234,9 @@ const UI = {
           return;
         }
         target.classList.add('active');
+        if (id !== 'menuScreen') {
+          try { this.hideFomoRitual(); } catch (_) {}
+        }
       }
       for (const s of this.screens) {
         if (id && s === id) continue;
@@ -1370,6 +1373,7 @@ const UI = {
       if (active === 'summonScreen') {
         this.clearSummonRevealTimers();
         this._chestPullBusy = false;
+        this._summonSkipReady = false;
         this.renderMenu();
         this.show('menuScreen');
         return;
@@ -1626,6 +1630,7 @@ const UI = {
       try { this.clearSummonRevealTimers(); } catch (_) {}
       try { this.stopBuildingsTick(); } catch (_) {}
       this._chestPullBusy = false;
+      this._summonSkipReady = false;
       try { Input.releaseAll(); } catch (_) {}
       Input.dualMode = false;
       Input.layout(W, H);
@@ -2014,6 +2019,17 @@ const UI = {
         ? t('ui.hubStatSkills', { n: skillsN, total: SKILLS.length, skill: skillLabel(activeSk), super: superLabel(activeSp) })
         : t('ui.hubStatSkillsEmpty', { n: SKILLS.length }));
       setStat('hubStatDex', t('ui.hubStatDexLine', { n: dexCount(), total: SPECIES_ORDER.length }));
+      let collectSummonLeft = 0;
+      try { collectSummonLeft = typeof chestSummonsLeft === 'function' ? chestSummonsLeft() : 0; } catch (_) {}
+      setStat('hubStatCollectSummons', collectSummonLeft > 0
+        ? t('ui.hubStatSummonLeft', { n: collectSummonLeft })
+        : t('ui.hubStatSummonEmpty'));
+      const collectSummon = document.getElementById('btnCollectSummons');
+      if (collectSummon) {
+        collectSummon.classList.add('hub-tile-featured');
+        collectSummon.classList.toggle('has-summons', collectSummonLeft > 0);
+        collectSummon.setAttribute('data-hub-badge', tOr('ui.summonGotoChest', 'Kist'));
+      }
       const bLv = (typeof countBuildingLevels === 'function') ? countBuildingLevels() : 0;
       const readyB = (typeof BUILDING_IDS !== 'undefined' && typeof buildingCanCollect === 'function')
         ? BUILDING_IDS.filter((id) => { try { return buildingCanCollect(id); } catch (_) { return false; } }).length
@@ -2067,7 +2083,7 @@ const UI = {
         }
       } else cont.style.display = 'none';
     }
-    document.querySelectorAll('[data-hub]').forEach((el) => {
+    document.querySelectorAll('#menuScreen [data-hub]').forEach((el) => {
       const featured = featHub ? el.dataset.hub === featHub : el.dataset.hub === 'adventure';
       el.classList.toggle('hub-tile-featured', featured);
       if (featured) {
@@ -2082,15 +2098,14 @@ const UI = {
       // hubTileStatLine may include SVG_COIN_ICON <img> — must be HTML, not textContent
       el.innerHTML = hubTileStatLine(el.dataset.hubStat);
     });
-    const summonTile = document.getElementById('btnSummons');
-    if (summonTile) {
-      let left = 0;
-      try { left = typeof chestSummonsLeft === 'function' ? chestSummonsLeft() : 0; } catch (_) {}
-      summonTile.classList.toggle('has-summons', left > 0);
-      summonTile.setAttribute('aria-label', left > 0
-        ? `${tOr('menu.summons', 'Summons')} · ${t('ui.summonLeftToday', { n: left })}`
+    let summonLeft = 0;
+    try { summonLeft = typeof chestSummonsLeft === 'function' ? chestSummonsLeft() : 0; } catch (_) {}
+    document.querySelectorAll('#btnSummons, #btnCollectSummons').forEach((summonTile) => {
+      summonTile.classList.toggle('has-summons', summonLeft > 0);
+      summonTile.setAttribute('aria-label', summonLeft > 0
+        ? `${tOr('menu.summons', 'Summons')} · ${t('ui.summonLeftToday', { n: summonLeft })}`
         : `${tOr('menu.summons', 'Summons')} · ${t('ui.summonDoneToday')}`);
-    }
+    });
     document.getElementById('togMusic')?.classList.toggle('off', !save.music);
     document.getElementById('togSfx')?.classList.toggle('off', !save.sfx);
     const verLine = document.getElementById('menuVerLine');
@@ -2169,14 +2184,26 @@ const UI = {
   hideFomoRitual() {
     const el = document.getElementById('fomoRitual');
     if (el) el.hidden = true;
+    try { document.body.classList.remove('fomo-open'); } catch (_) {}
   },
 
   showFomoRitual(force) {
     const el = document.getElementById('fomoRitual');
     if (!el) return;
-    if (!force && this._fomoRitualHide) { el.hidden = true; return; }
+    const menu = document.getElementById('menuScreen');
+    if (!menu || !menu.classList.contains('active')) {
+      el.hidden = true;
+      try { document.body.classList.remove('fomo-open'); } catch (_) {}
+      return;
+    }
+    if (!force && this._fomoRitualHide) {
+      el.hidden = true;
+      try { document.body.classList.remove('fomo-open'); } catch (_) {}
+      return;
+    }
     if (!force && typeof fomoRitualPending === 'function' && !fomoRitualPending()) {
       el.hidden = true;
+      try { document.body.classList.remove('fomo-open'); } catch (_) {}
       return;
     }
     const rows = document.getElementById('fomoRitualRows');
@@ -2231,6 +2258,11 @@ const UI = {
     const dismiss = document.getElementById('fomoRitualDismiss');
     if (dismiss) dismiss.setAttribute('aria-label', tOr('fomo.ritualDismiss', 'Sluiten'));
     el.hidden = false;
+    try { document.body.classList.add('fomo-open'); } catch (_) {}
+    try {
+      const tut = document.getElementById('summonTut');
+      if (tut) tut.hidden = true;
+    } catch (_) {}
   },
 
   runFomoRitualCta() {
@@ -2265,55 +2297,163 @@ const UI = {
       }
       if (typeof state !== 'undefined' && state === 'play' && !game) state = 'menu';
       ensureChestDaily();
-      const left = typeof chestSummonsLeft === 'function' ? chestSummonsLeft() : 0;
+      const glance = (typeof chestGlanceState === 'function')
+        ? chestGlanceState()
+        : { left: (typeof chestSummonsLeft === 'function' ? chestSummonsLeft() : 0), total: CHEST_DAILY_TOTAL, pipMax: CHEST_DAILY_TOTAL, nicePct: 14, midPct: 30, pity: false, empty: false };
+      const left = glance.left;
+      const empty = !!glance.empty || left <= 0;
+      const err = !!this._summonLastError;
+      const skipReadyEarly = !!this._summonSkipReady && !!this._chestPullBusy;
+      const screenEl = document.getElementById('summonScreen');
+      if (screenEl) {
+        screenEl.classList.toggle('is-empty', empty && !skipReadyEarly);
+        screenEl.classList.toggle('is-error', err && !skipReadyEarly);
+        screenEl.classList.toggle('is-ready', left > 0 && !this._chestPullBusy);
+      }
+      const glanceEl = document.getElementById('summonGlance');
+      if (glanceEl) {
+        glanceEl.classList.toggle('is-empty', empty);
+        glanceEl.classList.toggle('is-error', err);
+      }
+      const pips = document.getElementById('summonPips');
+      if (pips) {
+        pips.textContent = '';
+        const n = Math.max(1, Math.min(12, glance.pipMax || glance.total || 10));
+        for (let i = 0; i < n; i++) {
+          const pip = document.createElement('i');
+          pip.className = 'summon-pip' + (i < left ? ' is-on' : '');
+          pips.appendChild(pip);
+        }
+      }
       const quota = document.getElementById('summonQuota');
       if (quota) {
-        quota.textContent = t('ui.summonQuota', { left, total: CHEST_DAILY_TOTAL });
+        quota.textContent = empty
+          ? tOr('ui.summonDoneToday', 'op voor vandaag')
+          : tOr('ui.summonQuotaShort', '{left}/{total}', { left, total: glance.total || CHEST_DAILY_TOTAL });
+        quota.classList.toggle('is-empty', empty);
       }
+      const odds = document.getElementById('summonOdds');
+      if (odds) {
+        odds.textContent = tOr('ui.summonGlanceOdds', '✦{nice}% · mid {mid}% · geen pity', {
+          nice: glance.nicePct,
+          mid: glance.midPct,
+        });
+      }
+      const skipReady = !!this._summonSkipReady && !!this._chestPullBusy;
       const pullBtn = document.getElementById('btnChestPull');
       const pullLbl = document.getElementById('chestPullLbl');
-      if (pullLbl) pullLbl.textContent = left > 0 ? t('ui.summonPullLeft', { n: left }) : t('ui.summonPullEmpty');
+      if (pullLbl) {
+        pullLbl.textContent = skipReady
+          ? (left > 0
+            ? t('ui.summonNextProgress', { left, total: glance.total || CHEST_DAILY_TOTAL })
+            : t('ui.summonPullEmpty'))
+          : (empty ? tOr('ui.summonEmptyHint', 'Morgen weer') : t('ui.summonPullLeft', { n: left }));
+      }
       if (pullBtn) {
-        pullBtn.disabled = left <= 0 || !!this._chestPullBusy;
+        pullBtn.disabled = skipReady ? false : (empty || !!this._chestPullBusy);
         const titleEl = pullBtn.querySelector('div');
         if (titleEl) {
           const small = titleEl.querySelector('small');
           titleEl.textContent = '';
-          titleEl.appendChild(document.createTextNode(t('ui.summonPull')));
+          titleEl.appendChild(document.createTextNode(
+            skipReady
+              ? (left > 0
+                ? t('ui.summonNextProgress', { left, total: glance.total || CHEST_DAILY_TOTAL })
+                : t('ui.summonOpen'))
+              : t('ui.summonPull')
+          ));
           if (small) titleEl.appendChild(small);
         }
-        pullBtn.setAttribute('aria-label', left > 0
-          ? t('ui.summonAriaPull', { n: left })
-          : t('ui.summonAriaEmpty'));
+        pullBtn.setAttribute('aria-label', skipReady
+          ? (left > 0
+            ? t('ui.summonNextProgress', { left, total: glance.total || CHEST_DAILY_TOTAL })
+            : t('ui.summonAriaEmpty'))
+          : (left > 0 ? t('ui.summonAriaPull', { n: left }) : t('ui.summonAriaEmpty')));
       }
+      const cancelBtn = document.getElementById('btnSummonCancel');
+      if (cancelBtn) {
+        cancelBtn.textContent = t('ui.summonCancel');
+        cancelBtn.hidden = !this._chestPullBusy;
+        cancelBtn.setAttribute('aria-label', t('ui.summonCancel'));
+      }
+      const tut = document.getElementById('summonTut');
+      const tutLine = document.getElementById('summonTutLine');
+      const tutX = document.getElementById('btnSummonTutDismiss');
+      const showTut = typeof summonTutShouldShow === 'function'
+        ? summonTutShouldShow(!!this._chestPullBusy)
+        : (!this._chestPullBusy
+          && typeof summonTutSeen === 'function' && !summonTutSeen()
+          && !(document.body && document.body.classList.contains('fomo-open')));
+      if (tutLine) tutLine.textContent = t('ui.summonTut');
+      if (tutX) tutX.setAttribute('aria-label', t('ui.summonTutDismiss'));
+      if (tut) tut.hidden = !showTut;
       const stage = document.getElementById('summonStage');
       if (stage) {
         const canPull = left > 0 && !this._chestPullBusy;
-        stage.classList.toggle('is-pullable', canPull);
-        stage.setAttribute('aria-disabled', canPull ? 'false' : 'true');
-        stage.setAttribute('aria-label', canPull
-          ? t('ui.summonAriaPull', { n: left })
-          : (left <= 0 ? t('ui.summonAriaEmpty') : t('ui.summonAriaBusy')));
-        stage.tabIndex = canPull ? 0 : -1;
+        stage.classList.toggle('is-pullable', canPull || skipReady);
+        stage.classList.toggle('is-empty', empty && !skipReady);
+        stage.classList.toggle('is-error', err && !skipReady);
+        stage.setAttribute('aria-disabled', (canPull || skipReady) ? 'false' : 'true');
+        stage.setAttribute('aria-label', skipReady
+          ? tOr('ui.summonSkip', 'Tik om verder')
+          : (canPull
+            ? t('ui.summonAriaPull', { n: left })
+            : (left <= 0 ? t('ui.summonAriaEmpty') : t('ui.summonAriaBusy'))));
+        stage.tabIndex = (canPull || skipReady) ? 0 : -1;
       }
       const hint = document.getElementById('summonStageHint');
       if (hint) {
-        hint.textContent = t('ui.summonHint');
-        hint.style.display = (left > 0 && !this._chestPullBusy) ? '' : 'none';
+        hint.textContent = empty
+          ? tOr('ui.summonEmptyHint', 'Morgen weer')
+          : tOr('ui.summonHint', 'Tik kist om te openen');
+        hint.style.display = (!this._chestPullBusy && empty) ? '' : 'none';
+      }
+      const skipHint = document.getElementById('summonSkipHint');
+      if (skipHint) {
+        skipHint.hidden = !skipReady;
+        skipHint.textContent = tOr('ui.summonSkip', 'Tik om verder');
+      }
+      const revealText = document.getElementById('summonRevealText');
+      if (revealText && !this._chestPullBusy) {
+        revealText.classList.toggle('is-idle', !empty && !err);
+        revealText.classList.toggle('is-empty', empty && !err);
+        revealText.classList.toggle('is-error', err);
+        if (err) revealText.textContent = this._summonLastError;
+        else if (empty) revealText.textContent = tOr('ui.summonNoMore', 'Geen summons meer vandaag');
+        else revealText.textContent = '';
       }
 
       const logEl = document.getElementById('summonLog');
+      const logHead = document.getElementById('summonLogHead');
       if (logEl) {
-        const pulls = (save.chestDaily && Array.isArray(save.chestDaily.pulls))
-          ? save.chestDaily.pulls.slice().reverse() : [];
+        const cap = (typeof SUMMON_LOG_SHOW === 'number') ? SUMMON_LOG_SHOW : 4;
+        const pulls = (typeof chestPullLogNewest === 'function')
+          ? chestPullLogNewest(cap)
+          : ((save.chestDaily && Array.isArray(save.chestDaily.pulls))
+            ? save.chestDaily.pulls.slice().reverse().slice(0, cap) : []);
+        logEl.textContent = '';
+        if (logHead) {
+          logHead.textContent = t('ui.summonLogNewest');
+          logHead.hidden = !pulls.length;
+        }
         if (!pulls.length) {
-          logEl.textContent = t('ui.summonLogEmpty');
+          const empty = document.createElement('div');
+          empty.className = 'summon-log-empty';
+          empty.textContent = t('ui.summonLogEmpty');
+          logEl.appendChild(empty);
         } else {
-          logEl.innerHTML = pulls.slice(0, 8).map((p) => {
-            const tag = p.nice ? '✦' : '·';
-            const rar = p.rarity ? ` ${p.rarity}` : '';
-            return `<div>${tag} ${p.kind} ${p.type || ''}${rar}</div>`;
-          }).join('');
+          pulls.forEach((p, i) => {
+            const chip = document.createElement('div');
+            const kind = (typeof chestPullKindId === 'function') ? chestPullKindId(p) : '';
+            chip.className = 'summon-log-chip' + (i === 0 ? ' is-newest' : '')
+              + (p.nice ? ' is-nice' : '') + (kind ? ' is-' + kind : '');
+            if (kind) chip.setAttribute('data-kind', kind);
+            if (i === 0) chip.setAttribute('data-newest', '1');
+            chip.textContent = (typeof chestPullLogLine === 'function')
+              ? chestPullLogLine(p)
+              : ((p.nice ? '✦ ' : '') + (p.kind || ''));
+            logEl.appendChild(chip);
+          });
         }
       }
       try { syncPlayLayer(); } catch (_) {}
@@ -2338,7 +2478,12 @@ const UI = {
       if (screen) {
         screen.classList.remove('is-pulling');
         screen.classList.remove('has-video');
+        screen.classList.remove('is-skip-ready');
       }
+    } catch (_) {}
+    try {
+      const reveal = document.getElementById('summonReveal');
+      if (reveal) reveal.classList.remove('is-card-show', 'is-shake');
     } catch (_) {}
     try {
       const vid = document.getElementById('summonVideo');
@@ -2367,7 +2512,11 @@ const UI = {
       if (state === 'pause' || state === 'result') state = 'menu';
       this.clearSummonRevealTimers();
       this._chestPullBusy = false;
+      this._summonSkipReady = false;
+      this._summonLastError = '';
+      this._summonPullLock = false;
       this._chestPullLeftSnap = null;
+      try { this.hideFomoRitual(); } catch (_) {}
       try { if (typeof _summonVideoOk !== 'undefined') _summonVideoOk = null; } catch (_) {}
       this.safeOpen('summonScreen', () => {
         this.renderSummon();
@@ -2384,8 +2533,18 @@ const UI = {
     const nameEl = document.getElementById('summonCardName');
     const rarEl = document.getElementById('summonCardRar');
     const skEl = document.getElementById('summonCardSkill');
+    const kindEl = document.getElementById('summonCardKind');
     const card = document.getElementById('summonCenterCard');
     if (!cv || !nameEl) return;
+    const kind = (typeof chestPullKindId === 'function') ? chestPullKindId(res) : '';
+    if (card) {
+      if (kind) card.setAttribute('data-kind', kind);
+      else card.removeAttribute('data-kind');
+    }
+    if (kindEl) {
+      kindEl.textContent = kind && typeof chestKindLabel === 'function' ? chestKindLabel(kind) : '';
+      kindEl.style.display = kindEl.textContent ? '' : 'none';
+    }
     const cc = cv.getContext('2d');
     const W = cv.width || 160;
     const H = cv.height || 160;
@@ -2487,10 +2646,15 @@ const UI = {
     } catch (_) {
       title = (res && res.name) || 'Summon';
     }
-    nameEl.textContent = title;
+    nameEl.textContent = (typeof chestResultTitle === 'function') ? chestResultTitle(res) : title;
     if (rarEl) {
       rarEl.textContent = typeof rarityLabel === 'function' ? rarityLabel(rarId) : rarId;
-      rarEl.style.color = rar.color || '#9db1e3';
+      const col = rar.color || '#9db1e3';
+      rarEl.style.background = col;
+      rarEl.style.color = (rarId === 'legendary' || rarId === 'uncommon' || rarId === 'mythic')
+        ? '#0a0d14'
+        : '#0a0d14';
+      rarEl.style.boxShadow = '0 0 0 1px rgba(0,0,0,.35)';
     }
     if (skEl) {
       skEl.textContent = skill || '';
@@ -2504,12 +2668,39 @@ const UI = {
     const card = document.getElementById('summonCenterCard');
     if (reveal) reveal.classList.add('is-card-show');
     if (card) card.setAttribute('aria-hidden', 'false');
+    this._summonSkipReady = true;
+    try {
+      const sc = document.getElementById('summonScreen');
+      if (sc) sc.classList.add('is-skip-ready');
+    } catch (_) {}
+    try {
+      const skip = document.getElementById('summonSkipHint');
+      if (skip) {
+        skip.hidden = false;
+        skip.textContent = tOr('ui.summonSkip', 'Tik om verder');
+      }
+    } catch (_) {}
     // Spoil only when the card lands — never via toast earlier
     try {
       const text = document.getElementById('summonRevealText');
       const msg = this._summonPendingMsg;
       if (text && msg) text.textContent = msg;
     } catch (_) {}
+    try { this.renderSummon(); } catch (_) {}
+  },
+
+  finishSummonReveal() {
+    this.clearSummonRevealTimers();
+    this._chestPullBusy = false;
+    this._chestPullLeftSnap = null;
+    this._summonSkipReady = false;
+    this._summonPendingMsg = null;
+    try {
+      const skip = document.getElementById('summonSkipHint');
+      if (skip) skip.hidden = true;
+    } catch (_) {}
+    try { if (typeof endSummonBgm === 'function') endSummonBgm(); } catch (_) {}
+    try { this.renderSummon(); } catch (_) {}
   },
 
   /**
@@ -2518,18 +2709,31 @@ const UI = {
    */
   runSummonRevealTimeline(res) {
     this.clearSummonRevealTimers();
+    this._summonSkipReady = false;
+    try {
+      const skip = document.getElementById('summonSkipHint');
+      if (skip) skip.hidden = true;
+    } catch (_) {}
     const screen = document.getElementById('summonScreen');
     const reveal = document.getElementById('summonReveal');
     const fallback = document.getElementById('summonStageFallback');
     const vid = document.getElementById('summonVideo');
     const rarId = typeof chestResultRarityId === 'function' ? chestResultRarityId(res) : 'common';
+    const skipLong = typeof summonRevealShouldSkip === 'function'
+      ? summonRevealShouldSkip()
+      : (typeof motionReduced === 'function' && motionReduced());
     if (screen) screen.classList.add('is-pulling');
     if (reveal) {
       reveal.dataset.rarity = rarId;
+      const pullKind = (typeof chestPullKindId === 'function') ? chestPullKindId(res) : '';
+      if (pullKind) reveal.dataset.kind = pullKind;
+      else delete reveal.dataset.kind;
       reveal.classList.toggle('is-nice', !!(res && res.nice));
       reveal.classList.remove('is-card-show', 'is-shake');
-      void reveal.offsetWidth;
-      reveal.classList.add('is-shake');
+      if (!skipLong) {
+        void reveal.offsetWidth;
+        reveal.classList.add('is-shake');
+      }
     }
     this.paintSummonCenterCard(res);
     try { if (typeof playSummonBgm === 'function') playSummonBgm(rarId); } catch (_) {}
@@ -2537,22 +2741,12 @@ const UI = {
     const startTimers = (totalMs) => {
       const cardAt = typeof summonRevealCardDelayMs === 'function'
         ? summonRevealCardDelayMs(totalMs)
-        : Math.max(0, (totalMs || SUMMON_REVEAL_TOTAL_MS) - SUMMON_CARD_LAST_MS);
+        : (skipLong ? 0 : Math.max(0, (totalMs || SUMMON_REVEAL_TOTAL_MS) - SUMMON_CARD_LAST_MS));
       this._summonCardTimer = setTimeout(() => {
         try { this.showSummonCenterCard(); } catch (_) {}
       }, cardAt);
       this._summonDoneTimer = setTimeout(() => {
-        this._chestPullBusy = false;
-        this._chestPullLeftSnap = null;
-        try {
-          const sc = document.getElementById('summonScreen');
-          if (sc) {
-            sc.classList.remove('is-pulling');
-            sc.classList.remove('has-video');
-          }
-        } catch (_) {}
-        try { if (typeof endSummonBgm === 'function') endSummonBgm(); } catch (_) {}
-        try { this.renderSummon(); } catch (_) {}
+        try { this.finishSummonReveal(); } catch (_) {}
       }, totalMs || SUMMON_REVEAL_TOTAL_MS);
     };
 
@@ -2566,6 +2760,13 @@ const UI = {
       }
       if (fallback) fallback.style.display = '';
     };
+
+    if (skipLong) {
+      useFallback();
+      const reducedMs = (typeof SUMMON_REVEAL_REDUCED_MS === 'number') ? SUMMON_REVEAL_REDUCED_MS : 400;
+      startTimers(reducedMs);
+      return;
+    }
 
     startTimers(SUMMON_REVEAL_TOTAL_MS);
 
@@ -2650,7 +2851,19 @@ const UI = {
 
   doChestPull(kind) {
     try {
-      if (this._chestPullBusy) return;
+      const now = Date.now();
+      if (this._summonPullLock || now < (this._summonGuardUntil || 0)) return;
+      if (this._chestPullBusy && this._summonSkipReady) {
+        const leftNow = typeof chestSummonsLeft === 'function' ? chestSummonsLeft() : 0;
+        this._summonPullLock = true;
+        this._summonGuardUntil = now + 380;
+        this.finishSummonReveal();
+        this._summonPullLock = false;
+        if (leftNow <= 0) return;
+      } else if (this._chestPullBusy) return;
+      this._summonPullLock = true;
+      this._summonGuardUntil = now + 380;
+      this._summonLastError = '';
       if (state === 'play' && game) {
         UI.toast(t('toast.notDuringCombat'), 2000, { tone: 'warn' });
         return;
@@ -2680,22 +2893,38 @@ const UI = {
         this._chestPullBusy = false;
         this._chestPullLeftSnap = null;
         this._summonPendingMsg = null;
+        this._summonPullLock = false;
+        this._summonLastError = (res && res.reason === 'empty')
+          ? tOr('ui.summonNoMore', 'Geen summons meer vandaag')
+          : msg;
         try {
           const sc = document.getElementById('summonScreen');
           if (sc) sc.classList.remove('is-pulling');
         } catch (_) {}
-        try { UI.toast(msg, 2200); } catch (_) {}
+        if (res && res.reason === 'empty') {
+          if (!this._summonEmptyToast) {
+            this._summonEmptyToast = true;
+            try { UI.toast(this._summonLastError, 2200, { tone: 'warn' }); } catch (_) {}
+          }
+        } else {
+          try { UI.toast(msg, 2200, { tone: 'warn' }); } catch (_) {}
+        }
         try { this.renderSummon(); } catch (_) {}
         try { this.renderMenu(); } catch (_) {}
         return;
       }
 
+      this._summonEmptyToast = false;
+      try { if (typeof dismissSummonTut === 'function') dismissSummonTut(); } catch (_) {}
       this.runSummonRevealTimeline(res);
+      this._summonPullLock = false;
       try { this.renderMenu(); } catch (_) {}
       try { syncPlayLayer(); } catch (_) {}
     } catch (err) {
       this._chestPullBusy = false;
+      this._summonPullLock = false;
       this._summonPendingMsg = null;
+      this._summonLastError = tOr('ui.summonFail', 'Summon mislukt — probeer opnieuw');
       this.clearSummonRevealTimers();
       sfReportError('doChestPull', err, errT('ui.summonFail', 'Summon failed — try again'));
       try { ensureVisibleScreen(); } catch (_) {}
