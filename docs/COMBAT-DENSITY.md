@@ -22,9 +22,10 @@ Scale **spawn counts**, **spacing**, and **simultaneous threats** by playfield s
 | Desktop 1280×800 (mouse) | **1.00** | **78** | 1.00 | 3 | 32 |
 | Desktop 1280×800 (touch laptop) | **1.00** | **54** | 1.00 | 3 | 32 |
 | iPad landscape ≥960 | **1.00** | 54 (touch) | 1.00 | 3 | 32 |
-| iPad portrait 834×1194 | ~0.81 | ~42 | 1.12 | 2 | 42 |
-| Phone landscape 844×390 | ~0.75 | ~33 | 1.38 | 1 | 56 |
+| iPad portrait 834×1194 | 0.806 | 42 | 1.12 | 2 | 42 |
+| Phone landscape 844×390 | 0.751 | 33 | 1.38 | 1 | 56 |
 | Phone portrait 390×844 | **0.60** | **17** | 1.38 | 1 | 56 |
+| Android small 360×800 | **0.60** | 15 | 1.38 | 1 | 56 |
 
 Wide screens (`W ≥ 960`) always get scale `1.00` — desktop difficulty is unchanged.
 
@@ -49,3 +50,13 @@ npm run smoke:combat-density
 ```
 
 The smoke prints the table above, asserts desktop scale/cadence == legacy, asserts phone < desktop on mid-level spawn budget, and greps Versus off the density path.
+
+Measured `buildLevel` budgets (same wave **count**, fewer bodies on phone):
+
+| Level | Desktop spawn bodies | Phone 390×844 | Waves |
+|-------|---------------------:|--------------:|------:|
+| 1 (opener) | 2 + 4 | 2 + 4 (unchanged) | 2 |
+| 12 Normal | 112 | 67 | 4 |
+| 20 Hell 3.0 | 219 | 136 | still a horde |
+
+`npm run smoke:adventure` on a 390×844 Chrome window still clears level 1 (spawnQ 2 then 4). `smoke:wave12` still advances 1→2. Training / touch buttons unchanged.
