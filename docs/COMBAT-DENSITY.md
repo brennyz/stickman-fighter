@@ -36,6 +36,21 @@ Density muls stacked into **empty then spike** on 390px: wave 1 interval ≈ 2.5
 
 Helpers: `combatSmoothOpenInterval`, `combatWaveGapSec`, `combatOpenerHold`, `combatSpawnEdgeX`. Desktop never enters the clamp.
 
+## Tablet mid-band 834px (follow-up)
+
+iPad portrait 834×1194 is **not** compact (scale 0.806, batch **2**, gap 42). Raw opener ≈ 2.10s then wave-2 ≈ 0.43s; minute 1+ long-queue ≈ **0.31s** with batch 2. Milder clamp than phone — still a pair, not a dump.
+
+| Piece | Desktop | Tablet 834 | Phone 390 |
+|-------|---------|------------|-----------|
+| First 30s interval | raw | **0.66–1.22s** | 0.70–1.12s |
+| After 30s / minute 1+ | raw | **0.55–1.15s** | 0.62–1.05s |
+| Start hold | 1.2s | **0.80s** | 0.55s |
+| Wave gap | 1.55 | **×0.72** (~1.12s) | ×0.56 (~0.87s) |
+| Spawn edge | W+40 | **W+28** | W+18 |
+| Swipe / prefer-strike | no | **no** (phone-only) | yes |
+
+Wide `W ≥ 960` stays 1.0. Versus out.
+
 ## Death result CTA — leave #323 alone
 
 #323 owns Flappy-feel retry (`Nog één keer` in ~700ms). This lane does **not** change `scheduleGameResult(win ? 1600 : 1400)`, `showResult`, result CSS, or rematch routing. Combat-only.
@@ -119,7 +134,7 @@ Combat P0/P1 on this lane is **done**. Desktop 1.0 unchanged. Versus out.
 | Item | Owner |
 |------|--------|
 | Death result CTA timing / `Nog één keer` | **#323** — do not touch here |
-| Tablet 834 portrait mid-band (not compact clamp) | later polish |
+| Tablet 834 portrait mid-band | follow-up draft (this branch) |
 | Satan / tide duel cadence | special-duel path, not density spawn |
 | Hell 20+ many-minute juice (feel, not counts) | later |
 
