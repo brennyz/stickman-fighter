@@ -7,51 +7,90 @@
 **Factory ids (locked):** `stick_lighter` · `woodchip_glue` · `chipping_wood` · `bamboo_boesa` · `echo_whistle`  
 **This sprint:** mobile **web** viewport only. Native Android APK / TWA / Play upload = **out of scope** (see bottom).
 
-**Baseline playtested:** v1.18.172 / SW 382 (`origin/main` `a7a4b74`)  
-**This draft PR:** v1.18.178 / SW 388 · branch `cursor/examinator-p0-bb6c` · **#320 — FROZEN 15:58 CEST · ready-for-merge after «merge main»**
+**Baseline playtested:** v1.18.189 / SW 399 (`origin/main` `aae6f73`)  
+**This draft PR:** v1.18.190 / SW 400 · branch `cursor/examinator-feel-ba3c` · **FROZEN 17:54 CEST · DONE (code+smokes) / PARTIAL (no post-fix browser retest) · draft only — no main merge**
 
 How to pick work: take the **lowest open EX-id** in your lane. Mark `in-progress` / `done` / `DELEGATED #PR` here when you start/finish. Do not steal a `done` or `DELEGATED` item unless the owner asks to change it.
 
 ---
 
-## Mega-merge FROZEN (15:58 CEST, 2026-09-18)
+## FROZEN 17:54 CEST — DONE / PARTIAL
 
-**STOP.** Unique-P0 390 pass is clean. No more #320 feature work. Stay draft until Brendon says **«merge main»**. No silent `main`. Sibling lanes untouched.
+**STOP.** Session deadline. No more feature work on this branch. Draft only. No `main`.
 
-| PR | Lane | Mergeable (15:58 CEST) | EX / note |
-|----|------|-----------|-----------|
-| **#320** | EXAMINATOR (this) | MERGEABLE · **ready-for-merge after «merge main»** | Unique leftovers + FEEL 023/024/027/028. Retry stripped for #323. |
-| **#323** | Flappy retry | MERGEABLE · DONE | **EX-022** — `Nog één keer` / `restartAdventureInstant` / ~700ms / `#resRetrySafe` |
-| **#314** | density / HUD | MERGEABLE · DONE | **EX-012** · horde remainder. Title also mentions retry — **do not fight #323** |
-| **#324** | tablet mid-band | **CONFLICTING** / draft · DONE title | Follow-up on #314 cadence — rebase before merge |
-| **#321** | HUD keep-out | MERGEABLE | Phone pause/bars/sheets — density cousin of **EX-012** |
-| **#313** | summons | MERGEABLE · DONE | **EX-010** · EX-006 remainder |
-| **#315** | gear | MERGEABLE | **EX-011** · **EX-019** |
-| **#319** | pets | MERGEABLE | Pets collection + combat feel (EX-003 follow already on #320) |
-| **#312** | factories | MERGEABLE · DONE | **EX-016** · sheet UX (EX-004 list XOR on #320) |
-| **#317** | i18n layout | MERGEABLE · DONE | factories/FOMO/HUD/gear **layout** copy — not EX-013/014/015/024/027/028 |
-| **#316** | juice | MERGEABLE · DONE | **EX-025** + first-HOME welcome kill. Retry API stays **#323**. Do not restage welcome here. |
-| **#318** | UI | MERGEABLE · DONE | **EX-017** · **EX-018** · HOME/Collectie chrome · welcome-vs-FOMO stack |
-| **#322** | FOMO cover | MERGEABLE | Also working EX-021 HOME cover. #320 compact sheet already landed |
-| **#311** | playtest-harden | MERGEABLE | Older harden cycle — not a FEEL owner |
+| Mark | Meaning |
+|------|---------|
+| **DONE** | Unique P0s EX-029 / EX-030 + P1 EX-032 in `src/` + `game.js`. `smoke:examinator`, `smoke:lose-retry`, `smoke:adventure`, `smoke:hud-phone` green. Board ranked. Trio lanes untouched. |
+| **PARTIAL** | Post-fix Adventure desktop+390 browser retest not re-run (deadline). Pre-fix playtest proved `rightPad` wipe. |
 
-Suggested merge order if Brendon says **«merge main»**: i18n #317 → retry #323 → examinator #320 → density #314/#321 → skip #324 until rebase (CONFLICTING) → factories #312 → gear #315 → summons #313 → pets #319 → juice #316 → UI #318 → FOMO #322. Versus stays retired.
+---
 
-**390 unique-P0 freeze pass (this branch, 15:58 CEST) — uniqueP0 = []:**
+## Post-merge feel pass (17:36–17:54 CEST, 2026-09-18)
 
-| Seen on 390 | Rank | Owner |
-|-------------|------|--------|
-| Welcome toast overlaps Avontuur | P1 (near-P0 first tap) | **DELEGATED #316** (kills welcome) / **#318**. Not unique. |
-| Lose Opnieuw + Hoofdmenu same height (89px) | P0 feel retry | **DELEGATED #323**. Not unique. |
-| Pause chip in fight | HUD keep-out | **DELEGATED #321**. Not unique. |
-| First Avontuur → lv1, FOMO off, short VERLOREN + `#resKiller` + killer tip | — | **#320 held** (EX-023/024/027/028). Pass. |
+Mega-merge already LIVE on main (`v1.18.189`). This run is a **new** conductor pass on the core fight loop. Draft only. **FROZEN.**
+
+**Do not duplicate the P0 trio** (other agents own these — leave them):
+
+| Lane | Agent | Why we skip |
+|------|--------|-------------|
+| invisible-render | P0 invisible stickman render | Canvas / pixel pipeline. Symptom overlap with EX-029 was a **HUD throw**, not missing strokes. |
+| landscape HOME | P0 landscape HOME play button | HOME Avontuur hit-target in landscape. |
+| landscape combat | P0 landscape combat camera/canvas | Camera / canvas in landscape fight. |
+
+**Do not steal sibling feel lanes:** death-retry · telegraph · first-30s teach · combat juice · landscape touch · fxLite performance.
+
+| Bar | Pass looks like | Stickman now (this playtest) |
+|-----|-----------------|------------------------------|
+| **Readability** | See you, them, HP, who hit you. | **P0 EX-029:** `rightPad` throw aborted `draw()`; loop catch painted sky-only → invisible fight, then VERLOREN. Fixed + HUD isolated. |
+| **Fair fail** | You know *why* you died (pipe, not RNG). | Killer name on `#resKiller` still good (EX-024/028). Mid-fight was nameless `-N` → **EX-030** named floater + chip. |
+| **&lt;3s retry** | Death → next flap in under three seconds. | **DELEGATED #323** / death-retry sibling. CTA present; retry looped into the broken draw. |
+| **Juice on core action** | Punch / kick / jump has snap, hit-stop, audio. | **DELEGATED #316** / combat-juice sibling. Untestable until EX-029. |
+| **First-30s teach-by-doing** | Learn by playing, not by reading. | Island skip still **EX-023**. Opener grace was silent → **EX-030**. Teach copy = first-30s sibling. |
+
+---
+
+## Unique P0 this PR
+
+| ID | P | Status | Symptom | Fix |
+|----|---|--------|---------|-----|
+| **EX-029** | P0 | **done (this)** | Adventure `drawHUD` referenced undefined `rightPad`. `game.draw` threw every frame; loop catch wiped to sky+ground. Avontuur → hiccup → ~10s → VERLOREN with 0 kills. Desktop + 390. | Use `pauseG`. Drop unused `star0`. `try/catch` around `drawHUD` so a HUD leftover cannot wipe fighters. |
+| **EX-030** | P0 | **done (this)** | Incoming hit was a nameless `-N`. Opener 1.35s grace had no HUD (versus shows Spawn Ns). First contact felt random. | `paintIncomingHurtRead` → `{name} −n` + `#lastHit` chip 2s. `openerGraceT` cyan chip on HP bar. One incoming floater (takeDamage). |
+| **EX-032** | P1 | **done (this)** | Heat line (`Lv 1: 1/10 · Meester…`) led the lose tip and buried SLAM / `Nog één keer`. | Tip order: fail cue → killer → heat last. |
+
+**uniqueP0 after this PR:** `[]` on this lane. Remaining fight-loop P0s are sibling-owned (trio / retry / juice / teach / telegraph).
+
+---
+
+## 390 + desktop playtest (2026-09-18, 17:40 CEST)
+
+**Method:** `python3 serve.py` → `http://127.0.0.1:8787/speel.html` + `/index.html?nosplash=1`. Computer-use 1280×800 + 390×844. Versus tile absent.
+
+| Surface | Before EX-029 | After EX-029/030 |
+|---------|---------------|------------------|
+| `speel.html` | SPELEN landing; no Versus | unchanged |
+| HOME | tiles + Avontuur | unchanged — landscape HOME is **not ours** |
+| Avontuur tap | draw throw · sky-only · hiccup toast | fight draws; HUD isolated |
+| First 4s | invisible combat → unfair death | `Start n.s` / `Ready n.s` on HP bar |
+| On hit | `-N` only (or double in training) | `{name} −n` + last-hit chip |
+| Lose | VERLOREN + `#resKiller` (held) · Lite-FX toast parked on detail | killer line held; toast = #318/#316 |
+| Retry CTA | huge `Nog één keer` &lt;1s | **DELEGATED #323** |
+| Retry → fight | same broken draw | rematch should paint |
+
+Lite-FX toast on VERLOREN (`Traag? Instellingen → Lite FX`) covers result detail — **P1, not unique** (toast parking #318 / fxLite sibling).
 
 ---
 
 ## Sibling draft map (do not duplicate)
 
-| PR | Branch | Lane | EX they own |
-|----|--------|------|-------------|
+| PR / agent | Branch | Lane | EX they own |
+|------------|--------|------|-------------|
+| P0 trio | *(live agents)* | invisible-render · landscape HOME · landscape combat | **leave** — not EX-029 |
+| death-retry | *(live)* | Flappy retry | **EX-022** · `Nog één keer` · `restartAdventureInstant` · `#resRetrySafe` |
+| telegraph | *(live)* | telegraph readability | wind-up bars — not hit name |
+| first-30s teach | *(live)* | first-30s | EX-023 follow (island / teach copy) |
+| combat juice | *(live)* | juice | **EX-025** punch/kick/KO snap |
+| landscape touch | *(live)* | pads | combat buttons in landscape |
+| fxLite | *(live)* | perf | Lite FX toast / caps |
 | **#314** | `cursor/mobile-combat-density-2236` | density / HUD | EX-001 remainder · **EX-012** |
 | **#321** | `cursor/mobile-hud-safe-5e71` | HUD keep-out | pause / bars / sheets on 390 — not result copy |
 | **#324** | `cursor/tablet-midband-2236` | tablet cadence | #314 follow-up |
@@ -65,6 +104,8 @@ Suggested merge order if Brendon says **«merge main»**: i18n #317 → retry #3
 | **#322** | `cursor/fomo-vandaag-home-d443` | FOMO cover | EX-021 remainder (HOME cover). #320 compact sheet already landed |
 | **#323** | `cursor/flappy-retry-18b8` | Flappy retry | **EX-022** · `Nog één keer` · `restartAdventureInstant` · ~700ms · `#resRetrySafe` |
 
+Suggested merge if Brendon says **«merge main»**: this draft after sibling P0 trio if they land first. Versus stays retired. Do not silent-push main.
+
 ---
 
 ## FEEL bar (Flappy-inspired)
@@ -73,13 +114,11 @@ Stickman is judged against a one-tap arcade loop — not a store sim. Payments /
 
 | Bar | Pass looks like | Stickman now |
 |-----|-----------------|--------------|
-| **Fair fail** | You know *why* you died (pipe, not RNG). Next try feels earned. | **#320 EX-024 + EX-027 + EX-028:** VERLOREN + `#resKiller` name; tip leads with killer. Gamble lecture waits until after first punch. |
-| **&lt;3s retry** | Death → next flap in under three seconds. | **DELEGATED #323**. #320 does **not** ship Opnieuw-primary / 380ms / lose-gamble-skip. |
+| **Fair fail** | You know *why* you died (pipe, not RNG). Next try feels earned. | **EX-024 + EX-027 + EX-028** on lose. **EX-030** names the hit mid-fight. |
+| **&lt;3s retry** | Death → next flap in under three seconds. | **DELEGATED #323**. This PR does **not** restage Opnieuw / `#resRetrySafe`. |
 | **One primary CTA** | One tap does the core verb (flap / retry). | HOME hub = many tiles (OK). Lose retry CTA = **#323**. |
 | **Juice on core action** | Punch / kick / jump has snap, hit-stop, audio. | **DELEGATED #316**. Do not restage. |
-| **First-30s teach-by-doing** | Learn by playing, not by reading. | **#320 EX-023:** first Avontuur skips island + gamble + FOMO until `feltFirstPunch`. Aim tutorial stays. HUD = **#314/#321**. |
-
-No unique FEEL P1 left on #320 after EX-028. Next feel work is sibling-owned (#323 retry, #316 juice/welcome, #314/#321 HUD).
+| **First-30s teach-by-doing** | Learn by playing, not by reading. | **EX-023** first Avontuur skip. **EX-030** grace chip. Teach copy = sibling. |
 
 ---
 
@@ -106,9 +145,10 @@ No unique FEEL P1 left on #320 after EX-028. Next feel work is sibling-owned (#3
 | EX-018 | P2 | **DELEGATED #318** | A–Z | “Verder spelen” continue banner stays on HOME after a run | `#btnContinue` / `menu.continue` |
 | EX-019 | P3 | **DELEGATED #315** | i18n | Gear chips LOOK/STAT still English tokens in FR/ES (short on purpose) | catalog-locales overlays |
 | EX-020 | P3 | open | Android native | TWA / Play / APK signing, back-gesture, display-cutout, install prompt — **next sprint** | `native/android/` · `docs/store/` |
-| EX-022 | P0 | **DELEGATED #323** | FEEL / retry | Death → fight under 3s + one primary CTA. Do **not** restage on #320 | `src/systems/missions.js` on #323 |
+| EX-022 | P0 | **DELEGATED #323** | FEEL / retry | Death → fight under 3s + one primary CTA. Do **not** restage on this PR | `src/systems/missions.js` on #323 |
 | EX-025 | P2 | **DELEGATED #316** | FEEL / juice | Punch/kick/KO snap, empty-collection CTA, reduced-motion | `docs` / `smoke:juice-feel` on #316 |
 | EX-026 | P3 | open · **IAP out of scope** | payments | No coins-for-cash / Play Billing until Android Play is live. Do not add IAP. Note only. | `docs/store/` · `native/android/` |
+| EX-031 | P1 | **DELEGATED fxLite / #318** | toast | Lite-FX “Traag?” toast sits on VERLOREN detail | toast queue / `#resultScreen` |
 
 ---
 
@@ -130,30 +170,9 @@ No unique FEEL P1 left on #320 after EX-028. Next feel work is sibling-owned (#3
 | EX-024 | P1 | **done** | Fair fail: `lastHurtBy` → `result.advLoseBy` = `VERLOREN · {name}` + killed-by tip (NL/EN/DE/FR/ES). |
 | EX-027 | P1 | **done** | First-loss tip no longer leads with gamble lecture. Killer first; `lossGambleTip` waits until after first punch (once-flag not burned). |
 | EX-028 | P1 | **done** | 390 named-lose: Bangers stays `VERLOREN` / `YOU LOSE`; killer name on `#resKiller` so long species don’t wrap the title. |
-
----
-
-## Playtest log (2026-09-18) — retest after EX-023/024
-
-**Method:** `python3 serve.py` → `http://127.0.0.1:8787/index.html?nosplash=1` + `/speel.html`.  
-Phone 390×844 Puppeteer (fresh `localStorage`) + computer-use. Versus tile absent.
-
-| Surface | 390px after 023/024 | Regression? |
-|---------|---------------------|-------------|
-| Title / `speel.html` | SPELEN landing; no Versus copy | none |
-| HOME fresh | tiles tappable; **no FOMO** while `firstPunchPending` | none |
-| Avontuur first tap | `state=play` lv1, `gamble: null`, no island | none |
-| First 4s fight | 2 mobs, HP 100, 1.35s spawn grace | no instant-death on 390 (desktop one-shot earlier was desk + walk-in) |
-| Lose title | short `VERLOREN` + `#resKiller` (EX-028) | none |
-| Lose tip (pre-027) | gamble lecture **buried** the flyer tip | **P1 — fixed EX-027** |
-| After `feltFirstPunch` | FOMO may return; Avontuur → **Kies een eiland** | intended, not a regress |
-| Continue banner | shows after a run | **EX-018 / #318** — not ours |
-| Lose CTAs | Opnieuw + Hoofdmenu twin | **EX-022 / #323** — not ours |
-| Factories / gear / summons / training | screens open; training plays | none |
-| Pets follow | unchanged 16/20 | none |
-| Horde | phone Lv10 wave ≤12; desk horde intact | none |
-
-No P0 regression from EX-023/024. Unique leftover FEEL P1 was the first-loss gamble lecture (EX-027).
+| EX-029 | P0 | **done (this)** | `rightPad` → `pauseG`; `drawHUD` try/catch so HUD cannot wipe the fight. |
+| EX-030 | P0 | **done (this)** | Named incoming hit + last-hit chip + opener grace chip. |
+| EX-032 | P1 | **done (this)** | Lose tip: fail cue / retry first; heat last. |
 
 ---
 
@@ -163,8 +182,9 @@ No P0 regression from EX-023/024. Unique leftover FEEL P1 was the first-loss gam
 2. Do not rename factory ids.  
 3. No secrets. Do not commit tunnel `health.json` / `hosting.json` / `LIVE-LINK.txt`.  
 4. Edit `src/`, then `npm run build` → committed `game.js`.  
-5. Draft PR only unless the owner says **«merge main»**. #320 is **FROZEN** / ready-for-merge after that trigger.  
+5. Draft PR only unless the owner says **«merge main»**.  
 6. Share URL stays `https://brennyz.github.io/stickman-fighter/speel.html`.
+7. Do **not** duplicate invisible-render or landscape-HOME lanes.
 
 ---
 
@@ -173,7 +193,7 @@ No P0 regression from EX-023/024. Unique leftover FEEL P1 was the first-loss gam
 - Bubblewrap / TWA `appVersionName` still 1.18.172 until a Play drop  
 - Predictive back, display-cutout, installability QA on a real device  
 - Play Console store listing / data-safety (docs exist, not this PR)  
-- Offline SW on Android Chrome after this cache rev (387) — player taps «Verse versie»
+- Offline SW on Android Chrome after this cache rev — player taps «Verse versie»
 - **Payments / IAP** — out of scope until Play is live (EX-026). No shop, no Billing SDK on this sprint.
 
 ---

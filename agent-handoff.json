@@ -1195,6 +1195,14 @@
       "status": "done-in-code",
       "updated": "2026-09-18",
       "notes": "Draft #325 cursor/landscape-combat-camera-6526. v1.18.190 / SW 400. Camera/canvas/CSS only. No main."
+    },
+    {
+      "id": "w-20260918T153600",
+      "from": "user",
+      "text": "MASTERGAME EXAMINATOR — Stickman Fighter (brennyz/stickman-fighter). Off latest main. Draft PR. No Versus. speel.html. Session until ~17:54 Europe/Amsterdam. You lead mastergame feel (not the invisible/landscape P0 trio). Playtest Adventure desktop+390. Rank P0–P3 on core fight loop (readability, fair fail, <3s retry, juice, first 30s). Fix top unique P0s you own. Write/update EXAMINATOR.md with board. Do NOT duplicate invisible-render or landscape-HOME lanes. Draft only, no main merge.",
+      "status": "done-in-code",
+      "updated": "2026-09-18",
+      "notes": "FROZEN 17:54 CEST. DONE unique P0 EX-029/030 + EX-032. PARTIAL no post-fix browser retest. Draft only, no main."
     }
   ],
   "agentRules": [

@@ -662,7 +662,10 @@ class Fighter {
       AudioSys.sfxAt(this.isPlayer ? 'hurt' : 'hit', this.x);
     }
     if (this.isPlayer && game) {
-      game.floater(this.x, this.y - 118, '-' + dmg, '#ff6b6b', 18);
+      const hitTxt = (typeof paintIncomingHurtRead === 'function')
+        ? paintIncomingHurtRead(game, dmg)
+        : ('-' + dmg);
+      game.floater(this.x, this.y - 118, hitTxt, '#ff6b6b', 18);
     }
     if ((this.isPlayer || this.playerSlot) && game && save.haptics !== false) {
       haptic(dmg >= 18 ? 16 : 8);

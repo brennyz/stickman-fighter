@@ -496,10 +496,13 @@ const CATALOG_DE_CHROME = {
     trainTipDefault: 'Tipp: Laser springen · volle Energy → Spiral Orb',
     energyNotFull: 'Energy {have}/{need} — treffen zum Füllen',
     protected: 'Sicher!', iframe: 'Sicher!',
+    hurtBy: '{name} −{n}',
     blockChip: 'ABWEHR −{n}', parry: 'PARRY!', miss: 'DANEBEN!',
   },
   hud: {
     super: 'SUPER', masterShort: 'MEISTER +20%', masterSword: 'DAWNBLADE {n}s',
+    openerGrace: 'Start {n}s',
+    lastHit: '{name}',
     levelWave: 'Level {n} — Welle {wv}/{total}', islandWeapon: '{name} · Waffe ≤ Lv {cap}',
     part: 'Teil {cur}/3', waveLine: 'Welle {n}/{total}', wavesTotal: '{total} Wellen',
     nextWave: 'Nächste Welle', eggPet: 'Ei · {name}', petActive: 'Pet · {name}',
