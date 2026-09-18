@@ -88,6 +88,11 @@ must(ui.includes('emptyStart') && ui.includes('buildings-empty-start'), 'first-t
 must(/costPc/.test(i18n) && /islandFallback/.test(i18n) && /emptyStartCost/.test(i18n), 'buildings cost/empty i18n keys missing');
 must(css.includes('buildings-cost-chip') && css.includes('is-short') && css.includes('is-ok'), 'afford chip CSS missing');
 must(css.includes('buildings-empty-start'), 'empty start CSS missing');
+must(/data-buildings-empty-open[\s\S]{0,220}buildingsShowUpgradeStep/.test(ui),
+  'empty-start must open the build sheet (skip detail)');
+must(/is-upgrade/.test(ui) && /is-upgrade/.test(css), 'upgrade-as-primary pill missing');
+must(/pillUpgrade/.test(i18n), 'pillUpgrade i18n missing');
+must(/_buildingsSheetFrom/.test(ui), 'sheet must remember list vs detail origin');
 must(ui.includes('doBuildingCollectAll') && ui.includes('data-buildings-collect-all'), 'collect-all affordance missing');
 must(ui.includes('buildingsPillTip') && ui.includes('paintBuildingsPillTip'), 'pill offline tip missing');
 must(/collectAllDone/.test(i18n) && /pillTipReady/.test(i18n), 'collect-all / pill-tip i18n missing');

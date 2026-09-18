@@ -323,9 +323,9 @@ const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const VERSION_UPDATE_SAVE_KEY = 'stickfighter_version_update_save_v1';
 const VERSION_UPDATE_FLAG_KEY = 'stickfighter_version_update_flag_v1';
 const SAVE_EXPORT_SCHEMA = 3;
-const APP_VERSION = '1.18.177';
+const APP_VERSION = '1.18.178';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 387;
+const SW_CACHE_REV = 388;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', petCoins: 0, dex: {}, summons: {}, pets: {}, activePet: null,
   eggPets: {}, activeEggPet: null, eggDaily: null,
   chestDaily: null, chestWeapons: {},
@@ -2517,7 +2517,7 @@ const I18N = {
     },
     buildings: {
       title: 'Fabrieken',
-      sub: 'Tik een fabriek · oogst op de pil · upgrade',
+      sub: 'Tik de pil — oogst of bouw',
       hubStatReady: '{n} klaar om te oogsten', hubStatIdle: '5 werken',
       hubStatLocked: '{n}/{total} open',
       level: 'Lv {n}', locked: 'Op slot',
@@ -2532,7 +2532,7 @@ const I18N = {
       liveNote: 'Live systems-API',
       loadFail: 'Fabrieken laden mislukt',
       overview: 'Overzicht',
-      detailSub: 'Oogst op de pil · upgrade opent het blad',
+      detailSub: 'Pil = oogst of bouw · blad = bevestig',
       whatItDoes: 'Wat doet dit?',
       powerNow: '{label} — {blurb}',
       powerNext: 'Volgende @ rank {n}: {label}',
@@ -2552,6 +2552,7 @@ const I18N = {
       pillFull: 'Vol {n}',
       pillLocked: 'Slot',
       pillBuild: 'Bouw',
+      pillUpgrade: 'Upgrade',
       goAdventure: 'Naar Avontuur',
       nextPlay: 'Speel {name} vrij',
       maxHint: 'Dit werk is klaar — oogst blijft lopen',
@@ -2849,7 +2850,7 @@ const I18N = {
     },
     buildings: {
       title: 'Factories',
-      sub: 'Tap a factory · collect on the pill · upgrade',
+      sub: 'Tap the pill — collect or build',
       hubStatReady: '{n} ready to collect', hubStatIdle: '5 factories',
       hubStatLocked: '{n}/{total} open',
       level: 'Lv {n}', locked: 'Locked',
@@ -2864,7 +2865,7 @@ const I18N = {
       liveNote: 'Live systems API',
       loadFail: 'Could not load factories',
       overview: 'Overview',
-      detailSub: 'Collect on the pill · upgrade opens the sheet',
+      detailSub: 'Pill = collect or build · sheet = confirm',
       whatItDoes: 'What does this do?',
       powerNow: '{label} — {blurb}',
       powerNext: 'Next @ rank {n}: {label}',
@@ -2884,6 +2885,7 @@ const I18N = {
       pillFull: 'Full {n}',
       pillLocked: 'Locked',
       pillBuild: 'Build',
+      pillUpgrade: 'Upgrade',
       goAdventure: 'Go to Adventure',
       nextPlay: 'Clear {name}',
       maxHint: 'This factory is maxed — collect still runs',
@@ -3018,7 +3020,7 @@ const I18N = {
     },
     buildings: {
       title: 'Fabriken',
-      sub: 'Werk antippen · auf der Pille ernten · upgrade',
+      sub: 'Pille tippen — ernten oder bauen',
       hubStatReady: '{n} bereit zum Ernten', hubStatIdle: '5 Werke',
       hubStatLocked: '{n}/{total} offen',
       level: 'Lv {n}', locked: 'Gesperrt',
@@ -3033,7 +3035,7 @@ const I18N = {
       liveNote: 'Live Systems-API',
       loadFail: 'Fabriken laden fehlgeschlagen',
       overview: 'Übersicht',
-      detailSub: 'Auf der Pille ernten · Upgrade öffnet das Blatt',
+      detailSub: 'Pille = ernten oder bauen · Blatt = bestätigen',
       whatItDoes: 'Was macht das?',
       powerNow: '{label} — {blurb}',
       powerNext: 'Als Nächstes @ Rang {n}: {label}',
@@ -3053,6 +3055,7 @@ const I18N = {
       pillFull: 'Voll {n}',
       pillLocked: 'Sperre',
       pillBuild: 'Bauen',
+      pillUpgrade: 'Upgrade',
       goAdventure: 'Zum Abenteuer',
       nextPlay: '{name} freispielen',
       maxHint: 'Max erreicht — Ernte läuft weiter',
@@ -3342,7 +3345,7 @@ const I18N = {
     },
     buildings: {
       title: 'Usines',
-      sub: 'Touche une usine · récolte sur la pastille · upgrade',
+      sub: 'Touche la pastille — récolte ou construis',
       hubStatReady: '{n} prêtes à récolter', hubStatIdle: '5 usines',
       hubStatLocked: '{n}/{total} ouvertes',
       level: 'Nv {n}', locked: 'Verrouillé',
@@ -3357,7 +3360,7 @@ const I18N = {
       liveNote: 'API systems live',
       loadFail: 'Usines introuvables',
       overview: 'Aperçu',
-      detailSub: 'Récolte sur la pastille · l’upgrade ouvre la fiche',
+      detailSub: 'Pastille = récolte ou construire · fiche = confirmer',
       whatItDoes: 'Ça fait quoi ?',
       powerNow: '{label} — {blurb}',
       powerNext: 'Ensuite @ rang {n} : {label}',
@@ -3377,6 +3380,7 @@ const I18N = {
       pillFull: 'Plein {n}',
       pillLocked: 'Verrou',
       pillBuild: 'Bâtir',
+      pillUpgrade: 'Améliorer',
       goAdventure: 'Vers l’Aventure',
       nextPlay: 'Libère {name}',
       maxHint: 'Niveau max — la récolte continue',
@@ -3647,7 +3651,7 @@ const I18N = {
     },
     buildings: {
       title: 'Fábricas',
-      sub: 'Toca una fábrica · recolecta en la pastilla · mejora',
+      sub: 'Toca la pastilla — cosecha o construye',
       hubStatReady: '{n} listas para recolectar', hubStatIdle: '5 obras',
       hubStatLocked: '{n}/{total} abiertas',
       level: 'Nv {n}', locked: 'Bloqueado',
@@ -3662,7 +3666,7 @@ const I18N = {
       liveNote: 'API de systems en vivo',
       loadFail: 'No se pudieron cargar las fábricas',
       overview: 'Resumen',
-      detailSub: 'Recolecta en la pastilla · mejorar abre la hoja',
+      detailSub: 'Pastilla = cosecha o construir · hoja = confirmar',
       whatItDoes: '¿Qué hace esto?',
       powerNow: '{label} — {blurb}',
       powerNext: 'Siguiente @ rango {n}: {label}',
@@ -3682,6 +3686,7 @@ const I18N = {
       pillFull: 'Lleno {n}',
       pillLocked: 'Bloqueo',
       pillBuild: 'Construir',
+      pillUpgrade: 'Mejorar',
       goAdventure: 'A Aventura',
       nextPlay: 'Libera {name}',
       maxHint: 'Nivel máx. — la cosecha sigue',
@@ -51744,16 +51749,22 @@ function buildingsPillHtml(view, opts) {
   const locked = !!view.locked;
   const unbuilt = buildingsIsUnbuilt(view);
   const full = buildingsHopperFull(view);
+  const canUp = !locked && !unbuilt && !ready && !!view.canUpgrade;
+  const flashing = !!(typeof UI === 'object' && UI && UI.buildingsFlash
+    && UI.buildingsFlash.id === view.id && UI.buildingsFlash.until > Date.now());
   const cls = 'buildings-res-pill'
     + (ready ? ' is-collect' : ' is-empty')
     + (locked ? ' is-locked' : '')
     + (unbuilt && !ready ? ' is-build' : '')
-    + (full ? ' is-full' : '');
+    + (canUp ? ' is-upgrade' : '')
+    + (full ? ' is-full' : '')
+    + (flashing ? ' is-flash' : '');
   let label;
   if (locked) label = buildingsTxt('buildings.pillLocked', 'Slot');
   else if (unbuilt) label = buildingsTxt('buildings.pillBuild', 'Bouw');
   else if (full) label = buildingsTxt('buildings.pillFull', 'Vol {n}', { n: buildingsFmtAmt(view.pending) });
   else if (ready) label = buildingsTxt('buildings.pillReady', 'Oogst {n}', { n: buildingsFmtAmt(view.pending) });
+  else if (canUp) label = buildingsTxt('buildings.pillUpgrade', 'Upgrade');
   else label = buildingsTxt('buildings.pillWait', '{n}/{cap}', { n: view.pending || 0, cap: view.capacity || 0 });
   const idAttr = (opts && opts.id) ? ' id="' + buildingsEscape(opts.id) + '"' : '';
   const tip = buildingsPillTip(view);
@@ -51781,9 +51792,11 @@ if (typeof UI === 'object' && UI) {
     this.buildingsStep = 'harvest';
     this.buildingsFlash = null;
     this._buildingsDetailKey = '';
+    this._buildingsSheetFrom = 'list';
     this.stopBuildingsTick();
     this.ensureBuildingsDelegates();
     this.ensureBuildingsPillInfo();
+    try { this.clearToasts(); } catch (_) {}
     this.safeOpen('buildingsScreen', () => this.renderBuildings(), {
       msg: buildingsTxt('buildings.loadFail', 'Fabrieken laden mislukt'),
     });
@@ -51819,7 +51832,7 @@ if (typeof UI === 'object' && UI) {
       const emptyBtn = e.target && e.target.closest && e.target.closest('[data-buildings-empty-open]');
       if (emptyBtn) {
         const startId = emptyBtn.getAttribute('data-buildings-empty-open');
-        if (startId) UI.buildingsShowDetail(startId);
+        if (startId) UI.buildingsShowUpgradeStep(startId);
         return;
       }
       const allBtn = e.target && e.target.closest && e.target.closest('[data-buildings-collect-all]');
@@ -51835,9 +51848,11 @@ if (typeof UI === 'object' && UI) {
         if (buildingsCollectLocked(id)) return;
         if (pill.classList.contains('is-collect')) {
           UI.doBuildingCollect(id);
-        } else if (fromDetail && pill.classList.contains('is-build')) {
-          UI.buildingsShowUpgradeStep();
-        } else if (pill.classList.contains('is-locked') || pill.classList.contains('is-build')) {
+        } else if (pill.classList.contains('is-build') || pill.classList.contains('is-upgrade')) {
+          UI.buildingsShowUpgradeStep(id);
+        } else if (pill.classList.contains('is-locked')) {
+          UI.buildingsShowDetail(id);
+        } else {
           UI.buildingsShowDetail(id);
         }
         return;
@@ -51976,10 +51991,16 @@ if (typeof UI === 'object' && UI) {
       const box = anchor && anchor.getBoundingClientRect ? anchor.getBoundingClientRect() : null;
       const host = (tip.offsetParent || document.getElementById('buildingsScreen') || document.body).getBoundingClientRect();
       if (box) {
-        const left = Math.max(8, Math.min(box.left - host.left, host.width - 200));
-        const top = Math.max(8, box.top - host.top - 36);
+        const tipW = Math.min(tip.offsetWidth || 200, host.width - 16);
+        const tipH = tip.offsetHeight || 32;
+        let left = box.left - host.left;
+        left = Math.max(8, Math.min(left, host.width - tipW - 8));
+        let top = box.top - host.top - tipH - 8;
+        if (top < 8) top = box.bottom - host.top + 8;
+        top = Math.max(8, Math.min(top, host.height - tipH - 8));
         tip.style.left = left + 'px';
         tip.style.top = top + 'px';
+        tip.style.maxWidth = Math.min(280, host.width - 16) + 'px';
       }
     } catch (_) {}
     if (this._buildingsPillTipHide) {
@@ -51988,7 +52009,7 @@ if (typeof UI === 'object' && UI) {
     this._buildingsPillTipHide = setTimeout(() => {
       tip.classList.remove('is-on');
       tip.hidden = true;
-    }, 2200);
+    }, 1600);
   };
 
   UI.buildingsShowList = function buildingsShowList() {
@@ -52010,7 +52031,12 @@ if (typeof UI === 'object' && UI) {
     this.renderBuildings();
   };
 
-  UI.buildingsShowUpgradeStep = function buildingsShowUpgradeStep() {
+  UI.buildingsShowUpgradeStep = function buildingsShowUpgradeStep(id) {
+    if (id) {
+      if (typeof buildingsSelect === 'function') buildingsSelect(id);
+      this.buildingsFocusId = id;
+    }
+    this._buildingsSheetFrom = this.buildingsPane === 'detail' ? 'detail' : 'list';
     this.buildingsStep = 'upgrade';
     this.buildingsView = 'upgrade';
     this._buildingsDetailKey = '';
@@ -52019,14 +52045,18 @@ if (typeof UI === 'object' && UI) {
 
   UI.openBuildingDetail = function openBuildingDetail(id) { return this.buildingsShowDetail(id); };
   UI.openBuildingUpgrade = function openBuildingUpgrade(id) {
-    if (id && typeof buildingsSelect === 'function') buildingsSelect(id);
-    return this.buildingsShowUpgradeStep();
+    return this.buildingsShowUpgradeStep(id);
   };
 
   UI.buildingsGoBack = function buildingsGoBack() {
     if (this.buildingsStep === 'upgrade' || this.buildingsView === 'upgrade') {
       this.buildingsStep = 'harvest';
+      if (this._buildingsSheetFrom === 'list') {
+        this.buildingsShowList();
+        return true;
+      }
       this.buildingsView = 'detail';
+      this.buildingsPane = 'detail';
       this._buildingsDetailKey = '';
       this.renderBuildings();
       return true;
@@ -52108,8 +52138,8 @@ if (typeof UI === 'object' && UI) {
     if (head) head.textContent = buildingsTxt('buildings.title', 'Fabrieken');
     if (sub) {
       sub.textContent = this.buildingsPane === 'detail'
-        ? buildingsTxt('buildings.detailSub', 'Oogst op de pil · upgrade opent het blad')
-        : buildingsTxt('buildings.sub', 'Tik een fabriek · oogst op de pil · upgrade');
+        ? buildingsTxt('buildings.detailSub', 'Pil = oogst of bouw · blad = bevestig')
+        : buildingsTxt('buildings.sub', 'Tik de pil — oogst of bouw');
     }
     if (note) {
       const live = typeof buildingsHasSystemsApi === 'function' && buildingsHasSystemsApi();
@@ -52196,21 +52226,27 @@ if (typeof UI === 'object' && UI) {
         : (buildingsIsUnbuilt(view)
           ? buildingsTxt('buildings.unbuilt', 'Nog niet gebouwd')
           : buildingsTxt('buildings.level', 'Lv {n}', { n: view.level }));
+      const short = buildingsShortName(view.id, view);
+      card.classList.toggle('is-primary-collect', !!view.canCollect);
+      card.classList.toggle('is-primary-build', buildingsIsUnbuilt(view) && !view.locked);
+      card.classList.toggle('is-primary-upgrade', !view.locked && !buildingsIsUnbuilt(view) && !view.canCollect && !!view.canUpgrade);
       const nextHtml =
         '<button type="button" class="buildings-card-hit" data-factory-open="' + buildingsEscape(view.id) + '">'
         + '<span class="buildings-card-art hub-tile-ico">' + buildingsArtHtml(view) + '</span>'
         + '<span class="buildings-card-body">'
-        + '<span class="buildings-card-name">' + buildingsEscape(view.name)
-        + ' <span class="buildings-card-lv">' + buildingsEscape(lvBit) + '</span></span>'
+        + '<span class="buildings-card-kicker">' + buildingsEscape(lvBit) + '</span>'
+        + '<span class="buildings-card-name">' + buildingsEscape(short) + '</span>'
         + '<span class="buildings-card-does">' + buildingsEscape(does) + '</span>'
         + '</span></button>'
         + buildingsPillHtml(view);
       if (quiet && card.querySelector('.buildings-card-does')) {
         const doesEl = card.querySelector('.buildings-card-does');
-        const lvEl = card.querySelector('.buildings-card-lv');
+        const kickEl = card.querySelector('.buildings-card-kicker');
+        const nameEl = card.querySelector('.buildings-card-name');
         const pill = card.querySelector('[data-buildings-collect]');
         if (doesEl) doesEl.textContent = does;
-        if (lvEl) lvEl.textContent = lvBit;
+        if (kickEl) kickEl.textContent = lvBit;
+        if (nameEl) nameEl.textContent = short;
         if (pill) {
           const wrap = document.createElement('div');
           wrap.innerHTML = buildingsPillHtml(view);
@@ -52492,8 +52528,13 @@ if (typeof UI === 'object' && UI) {
       const msg = buildingsTxt('buildings.upgradeOkShort', '{short} · Lv {lv}', { short, lv });
       try { this.toast(msg, 2000, { tone: 'ok' }); } catch (_) {}
       this.buildingsStep = 'harvest';
-      this.buildingsView = 'detail';
-      this.buildingsPane = 'detail';
+      if (this._buildingsSheetFrom === 'list') {
+        this.buildingsView = 'list';
+        this.buildingsPane = 'list';
+      } else {
+        this.buildingsView = 'detail';
+        this.buildingsPane = 'detail';
+      }
     } else {
       try { this.toast((res && res.message) || buildingsBrokeHint(buildingsGet && buildingsGet(id)) || '', 2200, { tone: 'warn' }); } catch (_) {}
     }

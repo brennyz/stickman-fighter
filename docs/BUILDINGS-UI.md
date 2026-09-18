@@ -11,7 +11,7 @@ Mega-merge: **do not merge this branch to `main` alone.**
 - `#buildingsScreen` **overview cards → detail → upgrade sheet** for **5 factories** (Android portrait: list first)
 - Sticky `#buildingsWallet` pills always show PC + spark / glue / chip / steam / echo (0 included)
 - Each card has a **does-line** from `buildingDescModel` (produce + power, no hardcoded factory copy)
-- Collect = one tap on the resource pill `[data-buildings-collect]` (overview and detail). Empty/locked pills open detail — no dead end
+- Collect = one tap on the resource pill `[data-buildings-collect]` (overview and detail). **Bouw / Upgrade** on the pill opens the sheet (skip detail). Empty-start banner also opens the build sheet. Card body = more info only.
 - Upgrade is a **bottom sheet** (`#buildingsUpgradeSheet`), never mashed into collect. Broke/max/locked have a next step (cost hint, max copy, or **Naar Avontuur**)
 - Adapter `buildingsApi()` — prefers live `BUILDING_IDS` / `buildingCollect`; stub only if those symbols are missing
 
