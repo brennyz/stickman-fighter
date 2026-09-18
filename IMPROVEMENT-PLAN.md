@@ -35,7 +35,15 @@ Bots 1–7 are the fight loop. Bots 8–10 are the first meta slice (#340 MM-004
 | **12** | MM-002 | P1 | pets | First screen = list, not triple-egg chrome |
 | **13** | MM-003 | P1 | factories / EX-016 | Label 390 wallet + pass `smoke:buildings-ui` |
 
-Do not start P2s (MM-006…009, F30-*, DR-*) until 1–13 are claimed. Skip tablet-834 as a new owner.
+**Wave 3 (launch with 10 / 12 / 8 — #340 landscape leftovers):**
+
+| Bot | ID | P | Lane | One-liner |
+|-----|----|---|------|-----------|
+| **10** | MM-010 | P1 | gear | 844 first paint shows slots, not doll-only |
+| **14** | MM-011 | P1 | pets | 844: ≥1 dex card on the fold (not 0) |
+| **15** | MM-012 | P1 | summons | 844: `Open kist` fully on-screen |
+
+**SKIP tablet-834** as a new owner (5 gear slots + 5 pet cards + on-screen CTA already). Do not start P2s until 1–15 are claimed.
 
 ---
 
@@ -179,15 +187,15 @@ Keep portrait `inert` lock.
 
 ## Bot 10 — MM-010 gear landscape first paint (gear)
 
-**Source:** #340 extra pass. **MM-001 scroll is bot 11** — do not steal the 4k catalog rewrite.  
+**Source:** #340 extra `land844` · `land844-vet-20-gear.png`. **MM-001 4k page is bot 11.**  
 **Files:** `src/ui/ui.js` `renderGear` · `#gearScreen`.  
-**Do not:** tablet-834 dual-pane (`min-width: 900` — skip as new owner). Do not restage equip API.
+**Do not:** tablet-834 dual-pane (`min-width: 900` / `grid = none` — **skip as new owner**; 834 already shows 5 slots). Do not restage equip API.
 
-**Bug:** 844×390 first paint = **doll only**. Slots start y≈594. Scroll still **3804 px**. Dual-pane CSS needs 900 px so 834 and 844 stay one column.
+**Bug:** 844×390 `clientH` 390. First paint = **doll only**. `#gearDollCanvas` measured y=−958 after scroll; first slot `head` y=**594**. ScrollH **3804**. Layout `none`. Slot tap → `#gearSheetTools` chip wall (`Alles27 Look15…`), **no item rows** on screen.
 
-**Fix:** On short landscape (`max-height: 520px`), slot row / sheet in the **first viewport** (scroll the doll, not the slots).
+**Fix:** Short landscape (`max-height: 520px`): slot row in the **first viewport** (scroll the doll, not the slots). Optional: slot tap opens the same bottom sheet as bot 11 if that lands first — coordinate, don't fork two pickers.
 
-**Prove:** 844×390 Uitrusting → ≥1 slot visible without scroll. `npm run smoke:gear-screen`.
+**Prove:** 844×390 Uitrusting → `head` (or any slot) y &lt; 390 without scroll. `npm run smoke:gear-screen`.
 
 ---
 
@@ -209,7 +217,7 @@ Keep portrait `inert` lock.
 
 **Source:** #340. Unique leftover vs examinator EX-003 (combat follow — do not retest).  
 **Files:** pets screen chrome · `src/ui` pets render.  
-**Do not:** restage combat pet lerp. Landscape 0-cards = MM-011 (same lane if time).
+**Do not:** restage combat pet lerp. Landscape 0-cards = **bot 14 (MM-011)** — chrome collapse here helps both; don't fork two pets layouts.
 
 **Bug:** Chrome to y≈530: title + Kist + wallet + hero + next-goal + 84 px `Dag-ei openen`. **Dex list not on first screen** (first card top ≈716). `Dag-ei klaar` said **three times**. Detail CTA y≈931–950 — “detail” shot looks like the list. Egg chip 74×36 is P2 MM-008. Tablet 834 already shows 5 cards.
 
@@ -233,6 +241,34 @@ Keep portrait `inert` lock.
 
 ---
 
+## Bot 14 — MM-011 landscape pets fold (pets)
+
+**Source:** #340 extra `land844.screens.pets` · `land844-vet-30-pets.png`.  
+**Files:** pets screen chrome · short-landscape CSS.  
+**Do not:** tablet-834 (already **5 cards** on fold). Do not restage combat follow. Coordinate with bot 12 (390 chrome) — one collapse should help both.
+
+**Bug:** 844×390: `cardsOnFold: 0` / 12. ScrollH **2311**. Stack: wallet y=233 · `#petsHero` y=293 h=110 **bottom 403** (hero clipped past 390) · `#petsNext` 411 · `#eggCrackBtn` 465 · `#petTabBar` 523. List never reaches the fold. Detail `Uitzetten` y=964.
+
+**Fix:** On `(orientation: landscape) and (max-height: 520px)`, collapse hero/egg to one row so **≥1 dex card** (or the equipped pet) is on the first 390 px.
+
+**Prove:** 844×390 Pets → `cardsOnFold ≥ 1`. `npm run smoke:pets-ui`.
+
+---
+
+## Bot 15 — MM-012 landscape Open kist clip (summons)
+
+**Source:** #340 extra `land844.screens.summons` · `land844-vet-40-summons.png`.  
+**Files:** `#btnChestPull` · `.summon-stage` · `max-height: 420px` landscape CSS.  
+**Do not:** restage 390 2.2s blank (bot 8). Do not rebuild video. Skip tablet-834 (CTA on-screen, stage ratio 3.1).
+
+**Bug:** 844×390: `#btnChestPull` y=326 h=100 **bottom 426** — clips **36 px** under the 390 fold. Stage 133 px (ratio 1.3). ScrollH 390 (page “fits”; the gold CTA does not). Pull ~1.6 s here.
+
+**Fix:** `min()` the stage on short landscape so the gold `Open kist` sits fully above `env(safe-area-inset-bottom)` with ≥44 px height.
+
+**Prove:** 844×390 Oproepen → `#btnChestPull.bottom ≤ 390` and the label `Open kist` is unclipped. `npm run smoke:summon`.
+
+---
+
 ## Do not launch (this wave)
 
 | Item | Why |
@@ -242,7 +278,7 @@ Keep portrait `inert` lock.
 | EX-033 / DR-* | Retry **PASS**; delay contract / heat pile are P2 |
 | F30-* | First-30s **PASS**; lang/Continue/FOMO flake are P2 |
 | MM-006…009 | P2 from #340 (toast park, `Alles27`, egg 74×36, pity copy) |
-| MM-011/012 | P1 leftovers after bots 12 / 8 (0 pet cards land · Open kist clip) |
+| Tablet-834 owner | SKIP — confirms MM-001 1-col; clears MM-002/003 first-paint |
 | EX-020 / IAP / Versus | Out of scope |
 | #324 tablet midband | SKIP (already in #314) |
 | #311 harden | Conflicts — leave |

@@ -69,9 +69,9 @@ Status: `open` · `pass` · `fixed-on-draft` · `DELEGATED` · `out`
 | **MM-003** | open · **#340** | factories / EX-016 | 390 wallet = unlabeled dots (`PC 0` + five `0`s). Lock lines wrap `(eiland n)`. Upgrade sheet repeats “Mis 20 PC” / full factory name. **LIVE `smoke:buildings-ui` fails** (`doesShort`, `toastShort`). Labeled on 834/844 — phone-only. | #340 |
 | **MM-004** | open · **#340** | summons / EX-010 | Pull **2208 ms**; stage is a dark card in rings; name only in the log (`Schroot`). Tut strip still on first open. Stage/CTA ratio 2.2. | #340 |
 | **MM-005** | open · **#340** | FOMO / #322 | Veteran HOME: Vandaag covers Fabrieken / Uitrusting / Pets / Oproepen (`getBoundingClientRect` empty). Only “Naar oproepen”. Landscape left-dock keeps tiles (#329). | #340 |
-| **MM-010** | open | gear | 844×390 first paint = doll only (slots y≈594). | #340 |
-| **MM-011** | open | pets | 844×390: 0 dex cards on the fold. | #340 |
-| **MM-012** | open | summons | 844×390: gold `Open kist` clipped. | #340 |
+| **MM-010** | open · **#340 land** | gear | 844×390 first paint = **doll only**. Slot `head` y=**594** (fold is 390). ScrollH **3804**. Layout `none` (dual-pane needs 900). Slot tap → chip wall, **no rows**. Skip tablet-834 (5 slots already on first paint). | #340 |
+| **MM-011** | open · **#340 land** | pets | 844×390: **0 / 12** cards on fold. Chrome: wallet y=233 · hero y=293 (clipped, bottom 403) · egg y=465 · tabs y=523. ScrollH **2311**. Tablet 834 already **5 cards** — skip as new owner. | #340 |
+| **MM-012** | open · **#340 land** | summons | 844×390: `#btnChestPull` y=326 h=100 **bottom 426** (clips 36 px under 390). Stage 133 px, ratio 1.3. Pull ~1.6 s (MM-004 timing is 390). Skip tablet-834 (CTA on-screen, ratio 3.1). | #340 |
 
 ### P2
 
@@ -133,6 +133,16 @@ Source: `docs/PLAYTEST-META-MENUS-390.md` on `cursor/playtest-meta-menus-a006`. 
 
 P2 from same PR (do not steal P1 bots): MM-006 factory toast parks on back; MM-007 filter label jam (`Alles27`); MM-008 egg chip 74×36; MM-009 pity copy.
 
+### #340 MM-010/011/012 (844×390 — skip tablet-834)
+
+Source: extra pass `docs/playtest-meta-390/extra-report.json`. Veteran only. 834 confirms MM-001 (still 1 col) and **clears** MM-002/003 first-paint — **not a new owner**.
+
+| ID | 844×390 | Bot | Do not |
+|----|---------|-----|--------|
+| MM-010 | doll only · slots y=594 · scroll 3804 · tap = chips, no rows | **10** | 834 dual-pane / 900 grid |
+| MM-011 | **0** cards on fold · hero clipped · scroll 2311 | **14** | 834 (5 cards already) |
+| MM-012 | `Open kist` bottom 426 > 390 · stage ratio 1.3 | **15** | 834 CTA (on-screen) · 390 pull timing (bot 8) |
+
 Older EX-001…032 stay on `EXAMINATOR.md`. Do not re-file.
 
 ---
@@ -164,6 +174,7 @@ Older EX-001…032 stay on `EXAMINATOR.md`. Do not re-file.
 | 18:40 | — | Ingest #336–#344 · **FREEZE** | Board + 10-bot plan |
 | 18:42 | — | **#340 deepen MM-001–005** | Gear 4k scroll · pets fold · factories smoke fail · summon 2.2s blank · FOMO cover. Wave-2 bots 11–13. |
 | 18:44 | — | **#338 deepen EX-036** | Landscape HOME visibility PASS. P1: FOMO `inert` + `pointer-events:none` blocks Avontuur while sheet open. × recover PASS. |
+| 18:46 | — | **#340 MM-010/011/012** | 844 gear doll-only · 0 pet cards · Open kist clipped. Wave-3 bots 14–15. Skip tablet-834. |
 
 Lead evidence: `/opt/cursor/artifacts/playtest_adventure_390_and_844_first_pass.mp4`
 
@@ -187,4 +198,4 @@ Lead evidence: `/opt/cursor/artifacts/playtest_adventure_390_and_844_first_pass.
 1. One lane per bot. Lowest open ID in your lane. Do not steal a `fixed-on-draft`.
 2. Adventure only. 390×844 and/or 844×390. No Versus. No IAP. No `main`.
 3. Prove with a smoke or a 30-second rotate/die path. Then STOP.
-4. Launch list = `IMPROVEMENT-PLAN.md` bots 1–10, then wave-2 **11–13** (#340 MM-001–003).
+4. Launch list = `IMPROVEMENT-PLAN.md` bots 1–10, wave-2 **11–13**, wave-3 **14–15** (MM-011/012). Skip tablet-834.
