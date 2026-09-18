@@ -154,6 +154,7 @@ Schrijf **1–3 regels** per sessie: datum, d#, wat, versie.
 
 | Datum (UTC) | d# | Update |
 |-------------|-----|--------|
+| 2026-09-18 | — | LANGUAGE examiner **#317 DONE**: pets/summons/gear empty states (DE overlay wipe → EN pulls/Done; FR/ES summonNoPulls; NL trekkingen). Copy only, geen layout. Draft, geen main. **v1.18.186 / SW 396**. |
 | 2026-09-18 | — | LANGUAGE examiner #317: lose/win/FOMO/settings FR/ES/DE leaks (run→partie, SUMMON→Coffre/Kiste, Unlock/Skip/Sound, settings chrome). Draft, geen main. **v1.18.185 / SW 395**. |
 | 2026-09-18 | — | LANGUAGE examiner #317 P0 overlap: HUD wrap + korte firstMinute + FR/ES summon CTA (geen Open chest). Draft, geen main. **v1.18.184 / SW 394**. |
 | 2026-09-18 | — | LANGUAGE examiner #317 sprint DONE (P3): Tips Funde/Orbes. Draft, geen main. **v1.18.182 / SW 392**. |
