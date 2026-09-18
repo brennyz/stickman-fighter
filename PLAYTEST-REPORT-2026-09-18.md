@@ -1,7 +1,7 @@
 # PLAYTEST REPORT — 2026-09-18 · FROZEN
 
 **Role:** Playtest lead. Rank only. Do **not** own every fix.  
-**Status:** **FROZEN 18:40 CEST.** Deadline ~18:36 passed. No more playtest. No gameplay on this PR.  
+**Status:** **FROZEN 18:51 CEST.** Deadline passed. Plan locked to **10 bots + MERGE #342**. No gameplay on this PR.  
 **Pin:** LIVE `main` `c9a29fc` · **v1.18.190** · **SW 400**  
 **Share:** https://brennyz.github.io/stickman-fighter/speel.html  
 **Draft only. No Versus. No merge main.**
@@ -24,7 +24,7 @@ Fix bots launch from **`IMPROVEMENT-PLAN.md`** (10 lanes). This file is the boar
 | First 30s | `Tik slaan` on rematch | #343 PASS | P2 Continue / FOMO flake |
 | Death-retry | Fat gold &lt;3s, rematch paints | **#337 PASS** ~720ms · rematch &lt;70ms | P2 heat/dice — **no bot** |
 | Fair telegraph | CHARGE HUD readable | #342 CHARGE PASS | **P1 TF-002/003** · TF-001 fixed on #342 |
-| Feel | Punch snap + named floater | #344 soft PASS | **P1** first-kill toast+banner |
+| Feel | Punch snap + named floater | **#344 PASS soft** | **P1 J-001** toast+banner on first KO |
 | Perf | (lead: no hitch on L1) | #339 P1 after ~90 frames | **PERF-01…03** |
 | Meta menus | (not lead-owned) | **#340 ingested** | **MM-001–005 P1** + landscape 010–012 |
 
@@ -63,7 +63,7 @@ Status: `open` · `pass` · `fixed-on-draft` · `DELEGATED` · `out`
 | **TF-001** | **fixed-on-draft #342 · MERGE FIRST** | telegraph | Bubbel kill said `vlieger →` — `lastFailTele` leftover from a bat + steal of any alive flyer. Draft writes cue from **this** attacker only. Hop contact → empty cue. **Do not restage. Prioritize merge #342** (v1.18.191 / SW 401 on that branch). | #342 |
 | **TF-002** | open · **#342** | telegraph | Hop/fly set no `telegraphT`. L1 deaths 2–5s standing still are contact (Moerasly / Kleiply / Kikkervis / Flapper). No HUD bar. Body is the pipe. Visual hop squash / dive ring only — **density unchanged**. | #342 |
 | **TF-003** | open · **#342** | telegraph | CHARGE HUD PASS (`CHARGE — uit de weg!` + 0.5). World ring = thin dark circle + faint yellow dash on day sky. Thicker/darker outline; **no wind-time change**. | #342 |
-| **J-001** | open | juice | First Avontuur kill: `toast.dexDiscover` **and** `banner.newDex` stack on the KO snap. | #344 |
+| **J-001** | open · **#344** | juice | First Avontuur kill (`kipophol`): KO floater only (good) **plus** toast `Gewoon: Kip op Hol ontdekt! +3 HP` (3200ms) **plus** banners `LEVEL 1` + `Nieuw Gewoon: … +3 max HP` (2.0s). Hits themselves toast-free. Later kills clean. **Drop toast XOR banner.** | #344 |
 | **MM-001** | open · **#340** | gear / EX-011 | 390 one-page catalog **3668–4285 px** (~4–5 viewports). Doll + 5 slots + 14 filter chips + 27 locked rows. Filters are mid-page (`#gearSheetTools` 248 px), not a sheet. Tablet 834 still **3843 px** / no 900 dual-pane. Slot tap = chip wall (`Alles27 Look15`). | #340 |
 | **MM-002** | open · **#340** | pets | 390 chrome stack ≈530 px (wallet + hero + triple “Dag-ei klaar” + 84 px crack). Dex list top ≈716 — **below the fold**. Detail CTAs y≈931. Softens on 834 (5 cards visible). | #340 |
 | **MM-003** | open · **#340** | factories / EX-016 | 390 wallet = unlabeled dots (`PC 0` + five `0`s). Lock lines wrap `(eiland n)`. Upgrade sheet repeats “Mis 20 PC” / full factory name. **LIVE `smoke:buildings-ui` fails** (`doesShort`, `toastShort`). Labeled on 834/844 — phone-only. | #340 |
@@ -104,6 +104,23 @@ Status: `open` · `pass` · `fixed-on-draft` · `DELEGATED` · `out`
 | LH-dock | P3 · #338 | Landscape HOME meta-dock under 390 fold — play tile above fold |
 | LH-copy | P3 · #338 | “Naar / oproepen” wrap · NL “power-ups” on mission row |
 | LC-pads | P3 · #341 | Phone-land pads sit on the 44px floor (no slack). iPad 3×2 jump-left is documented out of #331. |
+
+### #344 juice (canonical)
+
+Source: `docs/PLAYTEST-JUICE-FEEL.md`. `smoke:juice-feel` **SMOKE_OK**. #330 already on main.
+
+| Check | Result |
+|-------|--------|
+| Punch / kick | PASS soft — floater + squash + confirm; hit-stop ~34ms easy to miss |
+| KO | PASS — one `KO` floater, no `+XP`, freeze 58ms, shake 0.16s |
+| Hits toast? | PASS — 12-hit flurry added none |
+| First-kill chrome | **P1 J-001** — toast + `banner.newDex` + `LEVEL 1` on the same KO |
+| Reduced-motion | PASS — shake/squash off; KO text + freeze stay |
+| Versus | PASS — tile absent |
+
+**Bot 7:** keep KO + freeze; drop **either** `toast.dexDiscover` **or** `banner.newDex` on first discover. Do not add a third layer. Pet-tame / gear-drop same pattern — not observed.
+
+P2 leave: Training no KO snap (robot ≠ `onMonsterKilled`). P3: `Beschermd!` stack.
 
 ### #337 death-retry (canonical) — PASS · no bot
 
@@ -235,7 +252,7 @@ Older EX-001…032 stay on `EXAMINATOR.md`. Do not re-file.
 | **#341** | landscape combat | **PASS — no P0/P1.** Camera/floor/pads hold. 844 start ground 312 · player (211,312) · letterbox 0 · punch+jump 44px fire. Mid-fight rotate still on floor. Cyber lv13 visible. **LC-001/002 P2 low — no bot.** |
 | **#342** | telegraph | **TF-001 FIXED on draft — MERGE FIRST** (wrong `vlieger` tip). TF-002/003 open P1 (hop wind · CHARGE ring). Density **unchanged** (0.50 / 12 / ×1.55 / batch 1 / gap 64). No full-HP one-shot. |
 | **#343** | first-30s | **PASS.** P2 lang / Continue / FOMO flake. |
-| **#344** | juice | Soft PASS. **J-001 P1** first-kill chrome. |
+| **#344** | juice | **PASS soft** (punch/KO/RM). **J-001 P1** first-kill toast+banner on KO. Training has no KO snap (P2, no bot). |
 
 ---
 
@@ -255,6 +272,7 @@ Older EX-001…032 stay on `EXAMINATOR.md`. Do not re-file.
 | 18:48 | — | **#341 PASS** | Landscape combat camera/floor/pads. LC-001/002 hop asymmetry P2 — no bot. |
 | 18:49 | — | **#342 TF** | TF-001 merge-first. TF-002/003 P1 bots 6/5. Density report-only. |
 | 18:50 | — | **#337 PASS** | Death-retry ~720ms fat gold. P2 heat/dice — no bot. |
+| 18:51 | — | **#344 juice** | PASS soft. J-001 first-kill chrome. Plan frozen to **10 bots**. |
 
 Lead evidence: `/opt/cursor/artifacts/playtest_adventure_390_and_844_first_pass.mp4`
 

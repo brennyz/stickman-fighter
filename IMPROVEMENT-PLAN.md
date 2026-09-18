@@ -1,7 +1,9 @@
-# IMPROVEMENT PLAN — 10 fix-bot lanes · 2026-09-18
+# IMPROVEMENT PLAN — 10 fix-bot lanes · FROZEN
 
-**FROZEN 18:40 CEST.** Pin LIVE `c9a29fc` / **v1.18.190** / **SW 400**.  
+**FROZEN 18:51 CEST.** Pin LIVE `c9a29fc` / **v1.18.190** / **SW 400**.  
 **Share:** `speel.html`. **Draft PRs only. No Versus. No merge main** until Brendon says «merge main».
+
+**Launch only bots 1–10 + MERGE #342.** Waves 11–15 stay briefed below but are **after** this freeze.
 
 Board: `PLAYTEST-REPORT-2026-09-18.md`.  
 Each bot = **one 30-min slice**. Branch `cursor/<lane>-9e0e`. Smoke + 390 or 844 proof. Then STOP.
@@ -35,7 +37,9 @@ Open P1s on this lane stay bots **5** (TF-003) and **6** (TF-002).
 | **9** | MM-005 | P1 | FOMO | Portrait sheet must not cover meta tiles |
 | **10** | MM-010 | P1 | gear | 844 first paint shows slots, not doll-only |
 
-Bots 1–7 are the fight loop. Bots 8–10 are the first meta slice (#340 MM-004/005/010).
+**This freeze = the ten rows above.** Bots 1–7 fight loop · 8–10 first meta (#340 MM-004/005/010).
+
+Waves 11–15 (MM-001–003 + MM-011/012) are **queued, not this freeze.**
 
 **Wave 2 (launch next — #340 MM-001–003, now fully briefed):**
 
@@ -174,15 +178,22 @@ Horde wave-clear = stacked 58ms hitches. Punch + kill on the same beat stacks PE
 
 ## Bot 7 — J-001 first-kill chrome (juice)
 
-**Source:** #344.  
-**Files:** dex discover toast / `banner.newDex` · `onMonsterKilled`.  
-**Do not:** remove KO floater / freeze. Do not touch retry.
+**Source:** #344 · `docs/PLAYTEST-JUICE-FEEL.md`. Adjacent #330 (already on main).  
+**Files:** `_onMonsterKilledInner` · `banner.newDex` · `toast.dexDiscover`.  
+**Do not:** remove KO floater / freeze / haptic. Do not touch retry. Do not restage aim-tutorial or telegraphs. Training KO snap is P2 — leave.
 
-**Bug:** First Avontuur kill fires `toast.dexDiscover` **and** `banner.newDex` on top of the KO snap. Later kills are clean.
+**Juice PASS (soft):** punch floater + squash; KO = one `KO` floater, no `+XP`, `freezeT=0.058`, `shakeT=0.16`. Hits do not toast. RM: shake/squash off, KO+freeze stay.
 
-**Fix:** Keep KO + freeze. Drop **either** the toast **or** the banner on first discover (one chrome, not two).
+**Bug:** First Avontuur kill (`kipophol`) same frame as KO:
 
-**Prove:** Fresh-ish save, first unique kill — one line of chrome, KO readable. `npm run smoke:juice-feel`.
+- toast 3200ms: `Gewoon: Kip op Hol ontdekt! +3 HP`
+- banners: `LEVEL 1` + `Nieuw Gewoon: Kip op Hol! +3 max HP` (2.0s)
+
+Later kills are clean. First kill is the one new players feel.
+
+**Fix:** Keep KO + freeze. Drop **either** the toast **or** `banner.newDex` on first discover (toast-queue already exists — do not add a third layer).
+
+**Prove:** First unique kill — KO readable, **one** chrome line. `npm run smoke:juice-feel`.
 
 ---
 

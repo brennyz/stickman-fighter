@@ -1,3 +1,4 @@
+| 2026-09-18 | **PLAYTEST LEAD #344** | Juice PASS soft. J-001 first-kill toast XOR banner. Plan frozen to 10 bots. Draft. Niet main. |
 | 2026-09-18 | **PLAYTEST LEAD #337** | Death-retry PASS (~720ms fat gold). P2 heat pile + dice lecture — no bot. Draft. Niet main. |
 | 2026-09-18 | **PLAYTEST LEAD #342** | TF-001 merge-first (sticky vlieger tip fixed on draft). TF-002/003 P1 bots 6/5. Density unchanged. Draft. Niet main. |
 | 2026-09-18 | **PLAYTEST LEAD #341** | Landscape combat PASS (camera/floor/pads). LC-001/002 P2 hop asymmetry — no bot. Draft. Niet main. |

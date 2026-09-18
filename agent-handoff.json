@@ -1279,6 +1279,10 @@
   ],
   "sessionLog": [
     {
+      "at": "2026-09-18T16:51:40Z",
+      "summary": "Ingested #344 juice PASS soft. J-001 first-kill toast XOR banner. Plan frozen to 10 bots."
+    },
+    {
       "at": "2026-09-18T16:50:30Z",
       "summary": "Ingested #337: death-retry PASS. P2 heat/dice low — no bot."
     },
@@ -1373,10 +1377,6 @@
     {
       "at": "2026-09-18T12:55:44Z",
       "summary": "examiner P0 season beats + style tips + result copy start"
-    },
-    {
-      "at": "2026-09-18T12:54:59Z",
-      "summary": "Examiner #317 factory powers/detail + gear lock toasts + DE nameShort. v1.18.176 / SW 386. Draft, geen main."
     }
   ],
   "implementedFeaturesSummary": "d18 char select deel 1+2 (v1.11.1-2); Mats coinrun + shuriken mik/vliegers + anti-spam (v1.12.0); speel.html (v1.12.2+). Zie HANDOFF-ZOEKINDEX.md en improvement-d20-bag.json userFeatureLog.",
