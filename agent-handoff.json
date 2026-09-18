@@ -1184,6 +1184,10 @@
   ],
   "sessionLog": [
     {
+      "at": "2026-09-18T15:55:08Z",
+      "summary": "EXAMINATOR FROZEN 17:54: DONE EX-029/030/032 in #334 draft. PARTIAL no post-fix browser retest. No main."
+    },
+    {
       "at": "2026-09-18T15:01:24Z",
       "summary": "Leftover stack: #318 UI chrome + #322 FOMO 390px on main. Keep #321 HUD + #323 retry. SKIP #324. Leave #311."
     },
@@ -1278,10 +1282,6 @@
     {
       "at": "2026-09-18T12:30:17Z",
       "summary": "LANGUAGE worker: layout-safe NL/EN/DE/FR/ES copy (factory desc, FOMO, HUD telegraphs). Draft, geen main."
-    },
-    {
-      "at": "2026-09-16T12:33:04Z",
-      "summary": "Mega-merge leftover GitHub PRs #297 #300 #302 #307 #308 #309 closed — content already on origin/main 0044b2e (v1.18.172 / SW 382). Pages live."
     }
   ],
   "implementedFeaturesSummary": "d18 char select deel 1+2 (v1.11.1-2); Mats coinrun + shuriken mik/vliegers + anti-spam (v1.12.0); speel.html (v1.12.2+). Zie HANDOFF-ZOEKINDEX.md en improvement-d20-bag.json userFeatureLog.",
