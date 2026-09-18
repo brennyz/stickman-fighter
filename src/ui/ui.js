@@ -30,6 +30,18 @@ function juiceGearNeedsAdventure() {
   return true;
 }
 
+function juicePetsNeedTame() {
+  try { return typeof petTamedCount === 'function' && petTamedCount() <= 0; } catch (_) { return true; }
+}
+
+function juiceDexNeedDiscover() {
+  try { return typeof dexCount === 'function' && dexCount() <= 0; } catch (_) { return true; }
+}
+
+function juiceEggsNeedHatch() {
+  try { return typeof eggOwnedCount === 'function' && eggOwnedCount() <= 0; } catch (_) { return true; }
+}
+
 function juiceOpenAdventure() {
   try { UI.goMenu(); } catch (_) {}
   const adv = document.getElementById('btnAdventure');
@@ -37,6 +49,25 @@ function juiceOpenAdventure() {
     try { adv.click(); return; } catch (_) {}
   }
   try { UI.safeOpen('levelScreen', () => UI.renderLevels()); } catch (_) {}
+}
+
+function appendJuiceEmptyCta(parent, copy, ctaLabel) {
+  if (!parent) return;
+  const intro = document.createElement('div');
+  intro.className = 'juice-empty juice-empty-owned';
+  const p = document.createElement('p');
+  p.className = 'juice-empty-copy';
+  p.textContent = copy;
+  intro.appendChild(p);
+  const cta = document.createElement('button');
+  cta.type = 'button';
+  cta.className = 'btn mode-btn b-adventure big-touch gear-empty-cta';
+  cta.textContent = ctaLabel;
+  bindPress(cta, () => {
+    safeUiAction(() => juiceOpenAdventure(), 'juiceEmptyAdv', tOr('gear.errSlot', 'Slot pick failed'));
+  });
+  intro.appendChild(cta);
+  parent.appendChild(intro);
 }
 
 function appendItemUpgradeButton(el, cat, id, rerender) {
@@ -2236,6 +2267,29 @@ const UI = {
       try { n = typeof countAllUpgradesReady === 'function' ? countAllUpgradesReady() : 0; } catch (_) {}
       up.classList.toggle('hub-tile-ready', n > 0);
     }
+    const petsEmpty = juicePetsNeedTame();
+    const petsTile = document.getElementById('btnPets');
+    if (petsTile) {
+      petsTile.classList.toggle('hub-tile-empty', petsEmpty);
+      const sub = petsTile.querySelector('.hub-tile-sub');
+      if (sub) {
+        sub.textContent = petsEmpty
+          ? tOr('hub.petsSubEmpty', 'Nog geen pet · tem in avontuur')
+          : tOr('hub.petsSub', 'Muntjes · dex temmen · ei arcade');
+      }
+    }
+    const dexEmpty = juiceDexNeedDiscover();
+    const dexTile = document.getElementById('btnDex');
+    if (dexTile) {
+      dexTile.classList.toggle('hub-tile-empty', dexEmpty);
+      const sub = dexTile.querySelector('.hub-tile-sub');
+      if (sub) {
+        const n = (typeof SPECIES_ORDER !== 'undefined' && SPECIES_ORDER) ? SPECIES_ORDER.length : 0;
+        sub.textContent = dexEmpty
+          ? tOr('hub.dexSubEmpty', 'Leeg boek · versla iets in avontuur')
+          : tOr('hub.dexSub', '{n} soorten · rariteit = HP', { n });
+      }
+    }
   },
 
   hideFomoRitual() {
@@ -3978,6 +4032,13 @@ const UI = {
     const list = document.getElementById('dexList');
     if (!list) return;
     list.innerHTML = '';
+    if (juiceDexNeedDiscover()) {
+      appendJuiceEmptyCta(
+        list,
+        tOr('dex.emptyOwned', 'Nog niemand in het boek. Versla monsters in Avontuur.'),
+        tOr('dex.emptyOwnedCta', 'Naar avontuur')
+      );
+    }
     const filter = this.dexRarityFilter || 'all';
     const typeFilter = this.dexTypeFilter || 'all';
     const biomeFilter = this.dexBiomeFilter || 'all';
@@ -4095,6 +4156,13 @@ const UI = {
     const list = document.getElementById('petList');
     if (!list) return;
     list.innerHTML = '';
+    if (juicePetsNeedTame()) {
+      appendJuiceEmptyCta(
+        list,
+        tOr('pets.emptyOwned', 'Nog geen huisdier. Tem via kills in Avontuur.'),
+        tOr('pets.emptyOwnedCta', 'Naar avontuur')
+      );
+    }
     for (const def of PET_ROSTER) {
       const sp = SPECIES[def.speciesId];
       if (!sp) continue;
@@ -4227,6 +4295,13 @@ const UI = {
     const list = document.getElementById('eggList');
     if (!list) return;
     list.innerHTML = '';
+    if (juiceEggsNeedHatch()) {
+      appendJuiceEmptyCta(
+        list,
+        tOr('pets.emptyEgg', 'Nog geen ei-pet. Open het dag-ei of speel Avontuur.'),
+        tOr('pets.emptyEggCta', 'Naar avontuur')
+      );
+    }
     for (const def of EGG_ROSTER) {
       const rar = rarityOf(def.rarity);
       const owned = isEggOwned(def.id);

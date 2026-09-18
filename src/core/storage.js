@@ -5,9 +5,9 @@ const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const VERSION_UPDATE_SAVE_KEY = 'stickfighter_version_update_save_v1';
 const VERSION_UPDATE_FLAG_KEY = 'stickfighter_version_update_flag_v1';
 const SAVE_EXPORT_SCHEMA = 3;
-const APP_VERSION = '1.18.173';
+const APP_VERSION = '1.18.174';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 383;
+const SW_CACHE_REV = 384;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', petCoins: 0, dex: {}, summons: {}, pets: {}, activePet: null,
   eggPets: {}, activeEggPet: null, eggDaily: null,
   chestDaily: null, chestWeapons: {},
@@ -824,8 +824,15 @@ function hitConfirmColor(kind) {
 }
 
 function applyHitConfirmFx(game, x, y, spec, opts) {
-  if (!game || motionReduced()) return;
+  if (!game) return;
   opts = opts || {};
+  const now = (typeof performance !== 'undefined' && performance.now) ? performance.now() : Date.now();
+  const last = game._hitConfirmAt || 0;
+  const minGap = opts.counter ? 45 : 95;
+  if (!opts.force && (now - last) < minGap) return;
+  game._hitConfirmAt = now;
+  // Reduced-motion: skip particle pulse; flash + damage/KO floater stay readable.
+  if (motionReduced()) return;
   const kind = spec && spec.kind ? spec.kind : 'punch';
   let col = hitConfirmColor(kind);
   if (kind === 'weapon' && spec.move) col = weaponMoveFxColor(spec.move);

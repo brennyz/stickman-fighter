@@ -174,7 +174,7 @@ function seedNlGameStrings() {
   });
   if (!I18N.nl.combat) I18N.nl.combat = {};
   Object.assign(I18N.nl.combat, {
-    counter: 'COUNTER!', crit: 'CRIT!', streak3: 'REEKS ×3', streak5: 'IN VUUR!',
+    counter: 'COUNTER!', crit: 'CRIT!', ko: 'KO', streak3: 'REEKS ×3', streak5: 'IN VUUR!',
     streak8: 'RAZEND!', streak12: 'NIET TE STOPPEN!', streakHold: 'REEKS ×{n} vast!',
     combo3: 'Combo ×3 — door!', combo5: 'Combo ×5 — netjes!', combo8: 'Combo ×8 — pro!',
     combo10: 'Combo ×10 — meester!', comboN: 'COMBO ×{n}!',
@@ -2242,7 +2242,7 @@ const CATALOG_EN = {
     'Loading / splash strip',
   ] },
   combat: {
-    counter: 'COUNTER!', crit: 'CRIT!', streak3: 'STREAK ×3', streak5: 'ON FIRE!',
+    counter: 'COUNTER!', crit: 'CRIT!', ko: 'KO', streak3: 'STREAK ×3', streak5: 'ON FIRE!',
     streak8: 'RAMPAGE!', streak12: 'UNSTOPPABLE!', streakHold: 'STREAK ×{n} locked!',
     combo3: 'Combo ×3 — keep going!', combo5: 'Combo ×5 — nice!', combo8: 'Combo ×8 — pro!',
     combo10: 'Combo ×10 — master!', comboN: 'COMBO ×{n}!',

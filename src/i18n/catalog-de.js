@@ -386,7 +386,7 @@ const CATALOG_DE_CHROME = {
     spotlightPlayBtn: '{mode} spielen →',
   },
   combat: {
-    counter: 'COUNTER!', crit: 'CRIT!', streak3: 'STREAK ×3', streak5: 'ON FIRE!',
+    counter: 'COUNTER!', crit: 'CRIT!', ko: 'KO', streak3: 'STREAK ×3', streak5: 'ON FIRE!',
     streak8: 'RAMPAGE!', streak12: 'UNSTOPPABLE!', streakHold: 'STREAK ×{n} fest!',
     combo3: 'Combo ×3 — weiter!', combo5: 'Combo ×5 — schön!', combo8: 'Combo ×8 — pro!',
     combo10: 'Combo ×10 — Meister!', comboN: 'COMBO ×{n}!',

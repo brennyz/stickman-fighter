@@ -314,8 +314,13 @@ class Monster {
     const kb = scaleKnockback(kbx, dmg, { crit: opts.crit, kind: opts.kind });
     this.x += Math.sign(kb || 1) * clamp(Math.abs(kb) * 0.038, 5, 26);
     if (!opts.quiet) {
-      game.floater(this.x, this.y - this.size - 14, '-' + dmg, '#ffe680', 15);
-      game.burst(this.x, this.y, this.sp.c1, dmg >= 18 ? 9 : 6);
+      const dead = this.hp <= 0;
+      if (!dead) {
+        game.floater(this.x, this.y - this.size - 14, '-' + dmg, '#ffe680', 15);
+        if (!motionReduced()) game.burst(this.x, this.y, this.sp.c1, dmg >= 18 ? 9 : 6);
+      } else if (!motionReduced()) {
+        game.burst(this.x, this.y, this.sp.c1, fxLite() ? 4 : 6);
+      }
     }
     if (opts.crit) spawnFxRing(game, this.x, this.y - this.size * 0.4, '#ffd75e', fxLite() ? 5 : 8);
     if (this.hp <= 0) {
@@ -347,7 +352,7 @@ class Monster {
     if (!this.alive) {
       const k = this.deadT / 0.6;
       c.globalAlpha = 1 - k;
-      c.scale(1 + k * 0.6, Math.max(0.05, 1 - k));
+      if (!motionReduced()) c.scale(1 + k * 0.6, Math.max(0.05, 1 - k));
     }
     // schaduw
     if (!this.flying && !this.swimming) {

@@ -1061,6 +1061,11 @@ class Game {
     const sp = m.sp || {};
     const rar = rarityOf(sp.rarity);
     const killRingR = m.superBoss ? 18 : (m.elite ? 14 : (m.giant ? 12 : 9));
+    try {
+      const ko = (typeof tOr === 'function') ? tOr('combat.ko', 'KO') : 'KO';
+      const big = !!(m.elite || m.bossCore || m.superBoss || (rar.order || 0) >= 3);
+      this.floater(m.x, m.y - m.size - 28, ko, big ? (rar.color || '#ffd75e') : '#e8f0ff', big ? 20 : 18, 'fx');
+    } catch (_) {}
     try { spawnFxRing(this, m.x, m.y - m.size * 0.32, rar.color, killRingR); } catch (_) {}
     if (!fxLite() && m.elite && !motionReduced()) {
       try { this.burst(m.x, m.y - m.size * 0.2, '#fff', 4, { kind: 'spark', size: 2.2 }); } catch (_) {}
@@ -1119,10 +1124,6 @@ class Game {
     const bossMul = m.colossal ? COLOSSAL_XP_MUL : (m.bossCore ? 1.25 : 1);
     const xp = Math.round((sp.xp || 8) * lvlScale * rarMul * (m.elite ? 2 : 1) * giantMul * bossMul);
     try { this.grantXP(xp); } catch (_) {}
-    try { this.floater(m.x, m.y - m.size - 30, `+${xp} XP`, rar.color, 16); } catch (_) {}
-    if ((rar.order || 0) >= 3) {
-      try { this.floater(m.x, m.y - m.size - 50, String(rar.name || 'EPIC').toUpperCase(), rar.color, 13); } catch (_) {}
-    }
     if (this.player) {
       this.player.energy = clamp((this.player.energy || 0) + 12 + (rar.order || 0) * 2, 0, 100);
     }

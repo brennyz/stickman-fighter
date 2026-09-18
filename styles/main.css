@@ -851,6 +851,29 @@
   body.reduced-motion .hub-tile.hub-tile-ready:not(.has-summons) {
     animation: none;
     border-color: rgba(124, 252, 138, .7);
+    box-shadow: 0 3px 0 rgba(0,0,0,.26), 0 0 0 2px rgba(124, 252, 138, .28);
+  }
+  body.reduced-motion .hub-tile.hub-tile-empty {
+    animation: none;
+    border-color: rgba(157, 177, 227, .72);
+  }
+  .juice-empty-owned {
+    padding: 16px 12px; text-align: center; margin: 0 0 10px;
+    color: var(--menu-ink); font-size: 14px; font-weight: 700;
+    background: var(--menu-tile-solid);
+    border: 1px dashed var(--menu-edge);
+    border-radius: 14px;
+  }
+  .juice-empty-owned .juice-empty-copy {
+    margin: 0 0 12px; color: var(--menu-ink); line-height: 1.4;
+  }
+  .juice-empty-owned .gear-empty-cta {
+    width: 100%; justify-content: center; margin: 0;
+  }
+  body.reduced-motion .juice-empty-owned,
+  body.reduced-motion .gear-doll-canvas.juice-flash,
+  body.reduced-motion .toast-bump {
+    animation: none;
   }
 
   /* —— Summons hub (arcade, wide rail, stage-first) —— */
@@ -2123,7 +2146,10 @@
   @keyframes toastIn { from { opacity:0; transform:translateY(-10px); } to { opacity:1; transform:none; } }
   @keyframes toastOut { to { opacity:0; transform:translateY(-8px); } }
   @keyframes toastBump { 0% { transform:scale(1); } 40% { transform:scale(1.03); } 100% { transform:scale(1); } }
-  body.reduced-motion .toast-out { animation: none; opacity: 0; }
+  body.reduced-motion .toast,
+  body.reduced-motion .toast-bump,
+  body.reduced-motion .toast-out { animation: none; }
+  body.reduced-motion .toast-out { opacity: 0; }
 
   #menuScreen #fomoRitual {
     position: fixed; inset: 0; z-index: 30; display: flex; align-items: flex-end; justify-content: center;

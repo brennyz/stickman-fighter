@@ -323,9 +323,9 @@ const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const VERSION_UPDATE_SAVE_KEY = 'stickfighter_version_update_save_v1';
 const VERSION_UPDATE_FLAG_KEY = 'stickfighter_version_update_flag_v1';
 const SAVE_EXPORT_SCHEMA = 3;
-const APP_VERSION = '1.18.173';
+const APP_VERSION = '1.18.174';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 383;
+const SW_CACHE_REV = 384;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', petCoins: 0, dex: {}, summons: {}, pets: {}, activePet: null,
   eggPets: {}, activeEggPet: null, eggDaily: null,
   chestDaily: null, chestWeapons: {},
@@ -1142,8 +1142,15 @@ function hitConfirmColor(kind) {
 }
 
 function applyHitConfirmFx(game, x, y, spec, opts) {
-  if (!game || motionReduced()) return;
+  if (!game) return;
   opts = opts || {};
+  const now = (typeof performance !== 'undefined' && performance.now) ? performance.now() : Date.now();
+  const last = game._hitConfirmAt || 0;
+  const minGap = opts.counter ? 45 : 95;
+  if (!opts.force && (now - last) < minGap) return;
+  game._hitConfirmAt = now;
+  // Reduced-motion: skip particle pulse; flash + damage/KO floater stay readable.
+  if (motionReduced()) return;
   const kind = spec && spec.kind ? spec.kind : 'punch';
   let col = hitConfirmColor(kind);
   if (kind === 'weapon' && spec.move) col = weaponMoveFxColor(spec.move);
@@ -2340,12 +2347,12 @@ const I18N = {
       wall: 'Muur Slopen', wallSub: '60 sec · combo = sneller',
       mats: 'Muntjes', matsSub: '45 sec · munten → pet coins',
       weapons: 'Wapens', weaponsSub: '26 wapens · summon ascends',
-      pets: 'Pets', petsSub: 'Muntjes · dex temmen · ei arcade',
+      pets: 'Pets', petsSub: 'Muntjes · dex temmen · ei arcade', petsSubEmpty: 'Nog geen pet · tem in avontuur',
       style: 'Stijl', styleSub: 'Bandana & outfit unlocks',
       gear: 'Uitrusting', gearSub: '5 slots · pantser & cosmetics', gearSubEmpty: 'Starter · vind drops in avontuur',
       skills: 'Skills', skillsSub: 'Energy specials · Spiral Orb · Wave Cannon',
       upgrades: 'Upgrades', upgradesSub: 'Shards · techniek uitrusten',
-      dex: 'Monsterboek', dexSub: '{n} soorten · rariteit = HP · boerderij · zoo · zee · woud · crypte · schroot · vorst',
+      dex: 'Monsterboek', dexSub: '{n} soorten · rariteit = HP · boerderij · zoo · zee · woud · crypte · schroot · vorst', dexSubEmpty: 'Leeg boek · versla iets in avontuur',
       buildings: 'Fabrieken', buildingsSub: 'Werken · oogst · upgrade',
       modes3: '3 snelle modi', fightersLocal: '20 vechters · lokaal', vsRecord: '{w}/{m} gewonnen',
       statTrain: '{n}× training', statWall: 'muur {n}', statMats: '{n} munten',
@@ -2496,8 +2503,14 @@ const I18N = {
       streakReward14: '+120 XP',
     },
     pets: { title: 'Pets · Metgezels', sub: 'Dex-pets via monsterboek · Ei-pets via dagelijkse arcade-pull',
-      crackEgg: 'Dag-ei openen', crackEggSub: 'Gratis arcade-pull' },
-    dex: { title: 'Monsterboek', sub: '{n} soorten · rariteit = HP · boerderij / zoo / zee / woud / crypte / schroot / vorst · 4 rariteiten = Kristallijn' },
+      crackEgg: 'Dag-ei openen', crackEggSub: 'Gratis arcade-pull',
+      emptyOwned: 'Nog geen huisdier. Tem via kills in Avontuur.',
+      emptyOwnedCta: 'Naar avontuur',
+      emptyEgg: 'Nog geen ei-pet. Open het dag-ei of speel Avontuur.',
+      emptyEggCta: 'Naar avontuur' },
+    dex: { title: 'Monsterboek', sub: '{n} soorten · rariteit = HP · boerderij / zoo / zee / woud / crypte / schroot / vorst · 4 rariteiten = Kristallijn',
+      emptyOwned: 'Nog niemand in het boek. Versla monsters in Avontuur.',
+      emptyOwnedCta: 'Naar avontuur' },
     help: { title: 'Tips & besturing' },
     gear: {
       title: 'Uitrusting', sub: '5 slots · pantser & cosmetics · level + tijd-gate',
@@ -2629,12 +2642,12 @@ const I18N = {
       wall: 'Wall Smash', wallSub: '60 sec · combo = faster',
       mats: 'Coins', matsSub: '45 sec · coins → pet coins',
       weapons: 'Weapons', weaponsSub: '26 weapons · summon ascends',
-      pets: 'Pets', petsSub: 'Coins · dex tame · egg arcade',
+      pets: 'Pets', petsSub: 'Coins · dex tame · egg arcade', petsSubEmpty: 'No pet yet · tame in Adventure',
       style: 'Style', styleSub: 'Bandana & outfit unlocks',
       gear: 'Loadout', gearSub: '5 slots · armour & cosmetics', gearSubEmpty: 'Starter · find drops in Adventure',
       skills: 'Skills', skillsSub: 'Energy specials · Spiral Orb · Wave Cannon',
       upgrades: 'Upgrades', upgradesSub: 'Shards · equip a technique',
-      dex: 'Monster book', dexSub: '{n} species · rarity = HP · farm · zoo · sea · woods · crypt · scrap · frost',
+      dex: 'Monster book', dexSub: '{n} species · rarity = HP · farm · zoo · sea · woods · crypt · scrap · frost', dexSubEmpty: 'Empty book · beat one in Adventure',
       buildings: 'Factories', buildingsSub: 'Works · collect · upgrade',
       modes3: '3 quick modes', fightersLocal: '20 fighters · local', vsRecord: '{w}/{m} won',
       statTrain: '{n} train', statWall: 'wall {n}', statMats: '{n} coins',
@@ -2785,8 +2798,14 @@ const I18N = {
       streakReward14: '+120 XP',
     },
     pets: { title: 'Pets · Companions', sub: 'Dex pets via monster book · Egg pets via daily arcade pull',
-      crackEgg: 'Open daily egg', crackEggSub: 'Free arcade pull' },
-    dex: { title: 'Monster book', sub: '{n} species · rarity = HP · farm / zoo / sea / woods / crypt / scrap / frost · 4 rarities = Crystalline' },
+      crackEgg: 'Open daily egg', crackEggSub: 'Free arcade pull',
+      emptyOwned: 'No pet yet. Tame one with kills in Adventure.',
+      emptyOwnedCta: 'Go to Adventure',
+      emptyEgg: 'No egg pet yet. Crack the daily egg or play Adventure.',
+      emptyEggCta: 'Go to Adventure' },
+    dex: { title: 'Monster book', sub: '{n} species · rarity = HP · farm / zoo / sea / woods / crypt / scrap / frost · 4 rarities = Crystalline',
+      emptyOwned: 'Book is empty. Beat monsters in Adventure.',
+      emptyOwnedCta: 'Go to Adventure' },
     help: { title: 'Tips & controls' },
     gear: {
       title: 'Loadout', sub: '5 slots · armour & cosmetics · level + time gate',
@@ -2919,12 +2938,12 @@ const I18N = {
       wall: 'Mauer', wallSub: '60 Sek · Combo = schneller',
       mats: 'Münzen', matsSub: '45 Sek · Münzen → Pet-Coins',
       weapons: 'Waffen', weaponsSub: '26 Waffen · Summons',
-      pets: 'Pets', petsSub: 'Münzen · Dex zähmen',
+      pets: 'Pets', petsSub: 'Münzen · Dex zähmen', petsSubEmpty: 'Noch kein Pet · im Abenteuer zähmen',
       style: 'Stil', styleSub: 'Outfit-Freischaltungen',
       gear: 'Ausrüstung', gearSub: '5 Slots · Rüstung & Kosmetik', gearSubEmpty: 'Starter · Drops im Abenteuer',
       skills: 'Skills', skillsSub: 'Energie-Spezials · Spiral Orb · Wave Cannon',
       upgrades: 'Upgrades', upgradesSub: 'Splitter · Technik ausrüsten',
-      dex: 'Monsterbuch', dexSub: '{n} Arten · Seltenheit = HP · Farm · Zoo · Meer · Wald · Krypta · Schrott · Frost',
+      dex: 'Monsterbuch', dexSub: '{n} Arten · Seltenheit = HP · Farm · Zoo · Meer · Wald · Krypta · Schrott · Frost', dexSubEmpty: 'Leeres Buch · im Abenteuer besiegen',
       buildings: 'Fabriken', buildingsSub: 'Werke · ernten · upgrade',
       modes3: '3 schnelle Modi', fightersLocal: '20 Kämpfer · lokal', vsRecord: '{w}/{m} Siege',
       statTrain: '{n}× Training', statWall: 'Mauer {n}', statMats: '{n} Münzen',
@@ -3123,8 +3142,14 @@ const I18N = {
       rowEggReady: 'Tages-Ei bereit', rowEggDone: 'Tages-Ei schon offen',
       streakReward3: '+1 Beschwörung', streakReward7: '+Ei oder Beschwörungen', streakReward14: '+120 XP',
     },
-    pets: { title: 'Pets · Begleiter', sub: 'Dex-Pets & Ei-Pets', crackEgg: 'Tages-Ei öffnen', crackEggSub: 'Kostenloser Arcade-Zug' },
-    dex: { title: 'Monsterbuch', sub: '{n} Arten · Seltenheit = HP · Farm / Zoo / Meer / Wald / Krypta / Schrott / Frost' },
+    pets: { title: 'Pets · Begleiter', sub: 'Dex-Pets & Ei-Pets', crackEgg: 'Tages-Ei öffnen', crackEggSub: 'Kostenloser Arcade-Zug',
+      emptyOwned: 'Noch kein Pet. Zähme eins im Abenteuer.',
+      emptyOwnedCta: 'Zum Abenteuer',
+      emptyEgg: 'Noch kein Ei-Pet. Öffne das Tages-Ei oder spiel Abenteuer.',
+      emptyEggCta: 'Zum Abenteuer' },
+    dex: { title: 'Monsterbuch', sub: '{n} Arten · Seltenheit = HP · Farm / Zoo / Meer / Wald / Krypta / Schrott / Frost',
+      emptyOwned: 'Buch ist leer. Besiege Monster im Abenteuer.',
+      emptyOwnedCta: 'Zum Abenteuer' },
     help: { title: 'Tipps & Steuerung' },
     gear: {
       title: 'Ausrüstung', sub: '5 Slots · Rüstung & Kosmetik · Level + Zeit-Gate',
@@ -3200,12 +3225,12 @@ const I18N = {
       wall: 'Mur', wallSub: '60 s · combo = plus vite',
       mats: 'Pièces', matsSub: '45 s · pièces → pet coins',
       weapons: 'Armes', weaponsSub: '26 armes · invocations',
-      pets: 'Pets', petsSub: 'Pièces · dex · œufs',
+      pets: 'Pets', petsSub: 'Pièces · dex · œufs', petsSubEmpty: 'Pas encore de pet · apprivoise en aventure',
       style: 'Style', styleSub: 'Déblocages tenues',
       gear: 'Équipement', gearSub: '5 emplacements · armure & cosmétique', gearSubEmpty: 'Départ · drops en aventure',
       skills: 'Skills', skillsSub: 'Spéciaux énergie · Spiral Orb · Wave Cannon',
       upgrades: 'Améliorations', upgradesSub: 'Éclats · équiper une technique',
-      dex: 'Bestiaire', dexSub: '{n} espèces · rareté = PV · ferme · zoo · mer · bois · crypte · ferraille · gel',
+      dex: 'Bestiaire', dexSub: '{n} espèces · rareté = PV · ferme · zoo · mer · bois · crypte · ferraille · gel', dexSubEmpty: 'Bestiaire vide · bats-en un en aventure',
       buildings: 'Usines', buildingsSub: 'Ateliers · récolte · upgrade',
       modes3: '3 modes rapides', fightersLocal: '20 combattants · local', vsRecord: '{w}/{m} victoires',
       statTrain: '{n}× entraînement', statWall: 'mur {n}', statMats: '{n} pièces',
@@ -3391,8 +3416,14 @@ const I18N = {
       streakReward7: '+œuf ou summons',
       streakReward14: '+120 XP',
     },
-    pets: { title: 'Pets · Compagnons', sub: 'Pets dex & œufs arcade', crackEgg: 'Ouvrir l\'œuf du jour', crackEggSub: 'Tir gratuit' },
-    dex: { title: 'Bestiaire', sub: '{n} espèces · rareté = PV · ferme / zoo / mer / bois / crypte / ferraille / gel' },
+    pets: { title: 'Pets · Compagnons', sub: 'Pets dex & œufs arcade', crackEgg: 'Ouvrir l\'œuf du jour', crackEggSub: 'Tir gratuit',
+      emptyOwned: 'Pas encore de pet. Apprivoise-en un en aventure.',
+      emptyOwnedCta: 'Vers l’aventure',
+      emptyEgg: 'Pas encore d’œuf. Ouvre l’œuf du jour ou joue l’aventure.',
+      emptyEggCta: 'Vers l’aventure' },
+    dex: { title: 'Bestiaire', sub: '{n} espèces · rareté = PV · ferme / zoo / mer / bois / crypte / ferraille / gel',
+      emptyOwned: 'Bestiaire vide. Bats des monstres en aventure.',
+      emptyOwnedCta: 'Vers l’aventure' },
     help: { title: 'Astuces & contrôles' },
     gear: {
       title: 'Équipement', sub: '5 emplacements · armure & cosmétique · niveau + temps',
@@ -3460,12 +3491,12 @@ const I18N = {
       wall: 'Muro', wallSub: '60 s · combo = más rápido',
       mats: 'Monedas', matsSub: '45 s · monedas → pet coins',
       weapons: 'Armas', weaponsSub: '26 armas · invocaciones',
-      pets: 'Pets', petsSub: 'Monedas · dex · huevos',
+      pets: 'Pets', petsSub: 'Monedas · dex · huevos', petsSubEmpty: 'Aún no hay pet · doma en Aventura',
       style: 'Estilo', styleSub: 'Desbloqueos de outfit',
       gear: 'Equipo', gearSub: '5 huecos · armadura y cosméticos', gearSubEmpty: 'Inicial · drops en Aventura',
       skills: 'Skills', skillsSub: 'Especiales energía · Spiral Orb · Wave Cannon',
       upgrades: 'Mejoras', upgradesSub: 'Fragmentos · equipar técnica',
-      dex: 'Bestiario', dexSub: '{n} especies · rareza = HP · granja · zoo · mar · bosque · cripta · chatarra · escarcha',
+      dex: 'Bestiario', dexSub: '{n} especies · rareza = HP · granja · zoo · mar · bosque · cripta · chatarra · escarcha', dexSubEmpty: 'Libro vacío · vence uno en Aventura',
       buildings: 'Fábricas', buildingsSub: 'Obras · cosecha · mejora',
       modes3: '3 modos rápidos', fightersLocal: '20 luchadores · local', vsRecord: '{w}/{m} ganados',
       statTrain: '{n}× entrenamiento', statWall: 'muro {n}', statMats: '{n} monedas',
@@ -3651,8 +3682,14 @@ const I18N = {
       streakReward7: '+huevo o summons',
       streakReward14: '+120 XP',
     },
-    pets: { title: 'Pets · Compañeros', sub: 'Pets dex y huevos arcade', crackEgg: 'Abrir huevo diario', crackEggSub: 'Tirada gratis' },
-    dex: { title: 'Bestiario', sub: '{n} especies · rareza = HP · granja / zoo / mar / bosque / cripta / chatarra / escarcha' },
+    pets: { title: 'Pets · Compañeros', sub: 'Pets dex y huevos arcade', crackEgg: 'Abrir huevo diario', crackEggSub: 'Tirada gratis',
+      emptyOwned: 'Aún no hay pet. Dómalo en Aventura.',
+      emptyOwnedCta: 'Ir a Aventura',
+      emptyEgg: 'Aún no hay huevo. Abre el huevo diario o juega Aventura.',
+      emptyEggCta: 'Ir a Aventura' },
+    dex: { title: 'Bestiario', sub: '{n} especies · rareza = HP · granja / zoo / mar / bosque / cripta / chatarra / escarcha',
+      emptyOwned: 'Libro vacío. Vence monstruos en Aventura.',
+      emptyOwnedCta: 'Ir a Aventura' },
     help: { title: 'Consejos y controles' },
     gear: {
       title: 'Equipo', sub: '5 huecos · armadura y cosméticos · nivel + tiempo',
@@ -20729,7 +20766,7 @@ function seedNlGameStrings() {
   });
   if (!I18N.nl.combat) I18N.nl.combat = {};
   Object.assign(I18N.nl.combat, {
-    counter: 'COUNTER!', crit: 'CRIT!', streak3: 'REEKS ×3', streak5: 'IN VUUR!',
+    counter: 'COUNTER!', crit: 'CRIT!', ko: 'KO', streak3: 'REEKS ×3', streak5: 'IN VUUR!',
     streak8: 'RAZEND!', streak12: 'NIET TE STOPPEN!', streakHold: 'REEKS ×{n} vast!',
     combo3: 'Combo ×3 — door!', combo5: 'Combo ×5 — netjes!', combo8: 'Combo ×8 — pro!',
     combo10: 'Combo ×10 — meester!', comboN: 'COMBO ×{n}!',
@@ -22797,7 +22834,7 @@ const CATALOG_EN = {
     'Loading / splash strip',
   ] },
   combat: {
-    counter: 'COUNTER!', crit: 'CRIT!', streak3: 'STREAK ×3', streak5: 'ON FIRE!',
+    counter: 'COUNTER!', crit: 'CRIT!', ko: 'KO', streak3: 'STREAK ×3', streak5: 'ON FIRE!',
     streak8: 'RAMPAGE!', streak12: 'UNSTOPPABLE!', streakHold: 'STREAK ×{n} locked!',
     combo3: 'Combo ×3 — keep going!', combo5: 'Combo ×5 — nice!', combo8: 'Combo ×8 — pro!',
     combo10: 'Combo ×10 — master!', comboN: 'COMBO ×{n}!',
@@ -23840,7 +23877,7 @@ const CATALOG_DE_CHROME = {
     spotlightPlayBtn: '{mode} spielen →',
   },
   combat: {
-    counter: 'COUNTER!', crit: 'CRIT!', streak3: 'STREAK ×3', streak5: 'ON FIRE!',
+    counter: 'COUNTER!', crit: 'CRIT!', ko: 'KO', streak3: 'STREAK ×3', streak5: 'ON FIRE!',
     streak8: 'RAMPAGE!', streak12: 'UNSTOPPABLE!', streakHold: 'STREAK ×{n} fest!',
     combo3: 'Combo ×3 — weiter!', combo5: 'Combo ×5 — schön!', combo8: 'Combo ×8 — pro!',
     combo10: 'Combo ×10 — Meister!', comboN: 'COMBO ×{n}!',
@@ -24779,7 +24816,7 @@ overlayI18nCatalog(CATALOG_FR, {
     'Accents pixel du HUD combo',
   ] },
   combat: {
-    counter: 'COUNTER !', crit: 'CRIT !', streak3: 'STREAK ×3', streak5: 'ON FIRE !',
+    counter: 'COUNTER !', crit: 'CRIT !', ko: 'KO', streak3: 'STREAK ×3', streak5: 'ON FIRE !',
     streak8: 'RAMPAGE !', streak12: 'UNSTOPPABLE !', streakHold: 'STREAK ×{n} tenu !',
     combo3: 'Combo ×3 — continue !', combo5: 'Combo ×5 — joli !', combo8: 'Combo ×8 — pro !',
     combo10: 'Combo ×10 — maître !', comboN: 'COMBO ×{n} !',
@@ -25297,7 +25334,7 @@ overlayI18nCatalog(CATALOG_ES, {
     'Acentos pixel del HUD combo',
   ] },
   combat: {
-    counter: '¡COUNTER!', crit: '¡CRIT!', streak3: 'STREAK ×3', streak5: '¡ON FIRE!',
+    counter: '¡COUNTER!', crit: '¡CRIT!', ko: 'KO', streak3: 'STREAK ×3', streak5: '¡ON FIRE!',
     streak8: '¡RAMPAGE!', streak12: '¡UNSTOPPABLE!', streakHold: '¡STREAK ×{n} fija!',
     combo3: 'Combo ×3 — ¡sigue!', combo5: 'Combo ×5 — ¡bien!', combo8: 'Combo ×8 — ¡pro!',
     combo10: 'Combo ×10 — ¡maestro!', comboN: '¡COMBO ×{n}!',
@@ -25829,7 +25866,7 @@ overlayI18nCatalog(CATALOG_DE, {
     'Combo-HUD Pixelakzente',
   ] },
   combat: {
-    counter: 'COUNTER!', crit: 'CRIT!', streak3: 'STREAK ×3', streak5: 'ON FIRE!',
+    counter: 'COUNTER!', crit: 'CRIT!', ko: 'KO', streak3: 'STREAK ×3', streak5: 'ON FIRE!',
     streak8: 'RAMPAGE!', streak12: 'UNSTOPPABLE!', streakHold: 'STREAK ×{n} fest!',
     combo3: 'Combo ×3 — weiter!', combo5: 'Combo ×5 — sauber!', combo8: 'Combo ×8 — pro!',
     combo10: 'Combo ×10 — Meister!', comboN: 'COMBO ×{n}!',
@@ -34968,7 +35005,7 @@ class Fighter {
       AudioSys.sfxAt(this.isPlayer ? 'hurt' : 'hit', this.x);
     }
     if (this.isPlayer && game) {
-      game.floater(this.x, this.y - 118, '-' + dmg, '#ff8080', 15);
+      game.floater(this.x, this.y - 118, '-' + dmg, '#ff6b6b', 18);
     }
     if ((this.isPlayer || this.playerSlot) && game && save.haptics !== false) {
       haptic(dmg >= 18 ? 16 : 8);
@@ -35618,8 +35655,13 @@ class Monster {
     const kb = scaleKnockback(kbx, dmg, { crit: opts.crit, kind: opts.kind });
     this.x += Math.sign(kb || 1) * clamp(Math.abs(kb) * 0.038, 5, 26);
     if (!opts.quiet) {
-      game.floater(this.x, this.y - this.size - 14, '-' + dmg, '#ffe680', 15);
-      game.burst(this.x, this.y, this.sp.c1, dmg >= 18 ? 9 : 6);
+      const dead = this.hp <= 0;
+      if (!dead) {
+        game.floater(this.x, this.y - this.size - 14, '-' + dmg, '#ffe680', 15);
+        if (!motionReduced()) game.burst(this.x, this.y, this.sp.c1, dmg >= 18 ? 9 : 6);
+      } else if (!motionReduced()) {
+        game.burst(this.x, this.y, this.sp.c1, fxLite() ? 4 : 6);
+      }
     }
     if (opts.crit) spawnFxRing(game, this.x, this.y - this.size * 0.4, '#ffd75e', fxLite() ? 5 : 8);
     if (this.hp <= 0) {
@@ -35651,7 +35693,7 @@ class Monster {
     if (!this.alive) {
       const k = this.deadT / 0.6;
       c.globalAlpha = 1 - k;
-      c.scale(1 + k * 0.6, Math.max(0.05, 1 - k));
+      if (!motionReduced()) c.scale(1 + k * 0.6, Math.max(0.05, 1 - k));
     }
     // schaduw
     if (!this.flying && !this.swimming) {
@@ -41052,6 +41094,11 @@ class Game {
     const sp = m.sp || {};
     const rar = rarityOf(sp.rarity);
     const killRingR = m.superBoss ? 18 : (m.elite ? 14 : (m.giant ? 12 : 9));
+    try {
+      const ko = (typeof tOr === 'function') ? tOr('combat.ko', 'KO') : 'KO';
+      const big = !!(m.elite || m.bossCore || m.superBoss || (rar.order || 0) >= 3);
+      this.floater(m.x, m.y - m.size - 28, ko, big ? (rar.color || '#ffd75e') : '#e8f0ff', big ? 20 : 18, 'fx');
+    } catch (_) {}
     try { spawnFxRing(this, m.x, m.y - m.size * 0.32, rar.color, killRingR); } catch (_) {}
     if (!fxLite() && m.elite && !motionReduced()) {
       try { this.burst(m.x, m.y - m.size * 0.2, '#fff', 4, { kind: 'spark', size: 2.2 }); } catch (_) {}
@@ -41110,10 +41157,6 @@ class Game {
     const bossMul = m.colossal ? COLOSSAL_XP_MUL : (m.bossCore ? 1.25 : 1);
     const xp = Math.round((sp.xp || 8) * lvlScale * rarMul * (m.elite ? 2 : 1) * giantMul * bossMul);
     try { this.grantXP(xp); } catch (_) {}
-    try { this.floater(m.x, m.y - m.size - 30, `+${xp} XP`, rar.color, 16); } catch (_) {}
-    if ((rar.order || 0) >= 3) {
-      try { this.floater(m.x, m.y - m.size - 50, String(rar.name || 'EPIC').toUpperCase(), rar.color, 13); } catch (_) {}
-    }
     if (this.player) {
       this.player.energy = clamp((this.player.energy || 0) + 12 + (rar.order || 0) * 2, 0, 100);
     }
@@ -46171,6 +46214,18 @@ function juiceGearNeedsAdventure() {
   return true;
 }
 
+function juicePetsNeedTame() {
+  try { return typeof petTamedCount === 'function' && petTamedCount() <= 0; } catch (_) { return true; }
+}
+
+function juiceDexNeedDiscover() {
+  try { return typeof dexCount === 'function' && dexCount() <= 0; } catch (_) { return true; }
+}
+
+function juiceEggsNeedHatch() {
+  try { return typeof eggOwnedCount === 'function' && eggOwnedCount() <= 0; } catch (_) { return true; }
+}
+
 function juiceOpenAdventure() {
   try { UI.goMenu(); } catch (_) {}
   const adv = document.getElementById('btnAdventure');
@@ -46178,6 +46233,25 @@ function juiceOpenAdventure() {
     try { adv.click(); return; } catch (_) {}
   }
   try { UI.safeOpen('levelScreen', () => UI.renderLevels()); } catch (_) {}
+}
+
+function appendJuiceEmptyCta(parent, copy, ctaLabel) {
+  if (!parent) return;
+  const intro = document.createElement('div');
+  intro.className = 'juice-empty juice-empty-owned';
+  const p = document.createElement('p');
+  p.className = 'juice-empty-copy';
+  p.textContent = copy;
+  intro.appendChild(p);
+  const cta = document.createElement('button');
+  cta.type = 'button';
+  cta.className = 'btn mode-btn b-adventure big-touch gear-empty-cta';
+  cta.textContent = ctaLabel;
+  bindPress(cta, () => {
+    safeUiAction(() => juiceOpenAdventure(), 'juiceEmptyAdv', tOr('gear.errSlot', 'Slot pick failed'));
+  });
+  intro.appendChild(cta);
+  parent.appendChild(intro);
 }
 
 function appendItemUpgradeButton(el, cat, id, rerender) {
@@ -48377,6 +48451,29 @@ const UI = {
       try { n = typeof countAllUpgradesReady === 'function' ? countAllUpgradesReady() : 0; } catch (_) {}
       up.classList.toggle('hub-tile-ready', n > 0);
     }
+    const petsEmpty = juicePetsNeedTame();
+    const petsTile = document.getElementById('btnPets');
+    if (petsTile) {
+      petsTile.classList.toggle('hub-tile-empty', petsEmpty);
+      const sub = petsTile.querySelector('.hub-tile-sub');
+      if (sub) {
+        sub.textContent = petsEmpty
+          ? tOr('hub.petsSubEmpty', 'Nog geen pet · tem in avontuur')
+          : tOr('hub.petsSub', 'Muntjes · dex temmen · ei arcade');
+      }
+    }
+    const dexEmpty = juiceDexNeedDiscover();
+    const dexTile = document.getElementById('btnDex');
+    if (dexTile) {
+      dexTile.classList.toggle('hub-tile-empty', dexEmpty);
+      const sub = dexTile.querySelector('.hub-tile-sub');
+      if (sub) {
+        const n = (typeof SPECIES_ORDER !== 'undefined' && SPECIES_ORDER) ? SPECIES_ORDER.length : 0;
+        sub.textContent = dexEmpty
+          ? tOr('hub.dexSubEmpty', 'Leeg boek · versla iets in avontuur')
+          : tOr('hub.dexSub', '{n} soorten · rariteit = HP', { n });
+      }
+    }
   },
 
   hideFomoRitual() {
@@ -50119,6 +50216,13 @@ const UI = {
     const list = document.getElementById('dexList');
     if (!list) return;
     list.innerHTML = '';
+    if (juiceDexNeedDiscover()) {
+      appendJuiceEmptyCta(
+        list,
+        tOr('dex.emptyOwned', 'Nog niemand in het boek. Versla monsters in Avontuur.'),
+        tOr('dex.emptyOwnedCta', 'Naar avontuur')
+      );
+    }
     const filter = this.dexRarityFilter || 'all';
     const typeFilter = this.dexTypeFilter || 'all';
     const biomeFilter = this.dexBiomeFilter || 'all';
@@ -50236,6 +50340,13 @@ const UI = {
     const list = document.getElementById('petList');
     if (!list) return;
     list.innerHTML = '';
+    if (juicePetsNeedTame()) {
+      appendJuiceEmptyCta(
+        list,
+        tOr('pets.emptyOwned', 'Nog geen huisdier. Tem via kills in Avontuur.'),
+        tOr('pets.emptyOwnedCta', 'Naar avontuur')
+      );
+    }
     for (const def of PET_ROSTER) {
       const sp = SPECIES[def.speciesId];
       if (!sp) continue;
@@ -50368,6 +50479,13 @@ const UI = {
     const list = document.getElementById('eggList');
     if (!list) return;
     list.innerHTML = '';
+    if (juiceEggsNeedHatch()) {
+      appendJuiceEmptyCta(
+        list,
+        tOr('pets.emptyEgg', 'Nog geen ei-pet. Open het dag-ei of speel Avontuur.'),
+        tOr('pets.emptyEggCta', 'Naar avontuur')
+      );
+    }
     for (const def of EGG_ROSTER) {
       const rar = rarityOf(def.rarity);
       const owned = isEggOwned(def.id);

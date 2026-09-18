@@ -145,6 +145,7 @@ Schrijf **1–3 regels** per sessie: datum, d#, wat, versie.
 
 | Datum (UTC) | d# | Update |
 |-------------|-----|--------|
+| 2026-09-18 | — | **Juice P0 #316** combat KO + rate-limit hit, pets/boek empty-CTA (niet “klaar” met 0), reduced-motion skip pulse/exit, floaters blijven. **v1.18.174 / SW 384**. Draft, niet main. |
 | 2026-09-18 | — | **Juice/feel A–Z** na mega-merge: één toast + exit, HOME ready/empty, gear empty-CTA, FOMO-sheet, pickup/equip/collect haptic. Android-first, geen Versus. **v1.18.173 / SW 383**. Draft, niet main. |
 | 2026-09-16 | — | **MEGA-MERGE → main** Grok wave #295–#309 (i18n → systems → UI → pixels → polish). Feature-base PRs (#297/#300/#307/#309) cherry-picked. **v1.18.172 / SW 382**. speel.html na Pages. |
 | 2026-09-16 | — | Gear UI ↔ #295 equip-API: sheets via gearSlotInventory, tap via gearEquipItem(id,{expectSlot}), states ok/vanity-ok/already-equipped/locked/not-owned/wrong-slot/unknown. DOM/schema 1 ongewijzigd. v1.18.171 / SW 381. Draft, niet main. |

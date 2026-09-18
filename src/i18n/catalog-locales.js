@@ -409,7 +409,7 @@ overlayI18nCatalog(CATALOG_FR, {
     'Accents pixel du HUD combo',
   ] },
   combat: {
-    counter: 'COUNTER !', crit: 'CRIT !', streak3: 'STREAK ×3', streak5: 'ON FIRE !',
+    counter: 'COUNTER !', crit: 'CRIT !', ko: 'KO', streak3: 'STREAK ×3', streak5: 'ON FIRE !',
     streak8: 'RAMPAGE !', streak12: 'UNSTOPPABLE !', streakHold: 'STREAK ×{n} tenu !',
     combo3: 'Combo ×3 — continue !', combo5: 'Combo ×5 — joli !', combo8: 'Combo ×8 — pro !',
     combo10: 'Combo ×10 — maître !', comboN: 'COMBO ×{n} !',
@@ -927,7 +927,7 @@ overlayI18nCatalog(CATALOG_ES, {
     'Acentos pixel del HUD combo',
   ] },
   combat: {
-    counter: '¡COUNTER!', crit: '¡CRIT!', streak3: 'STREAK ×3', streak5: '¡ON FIRE!',
+    counter: '¡COUNTER!', crit: '¡CRIT!', ko: 'KO', streak3: 'STREAK ×3', streak5: '¡ON FIRE!',
     streak8: '¡RAMPAGE!', streak12: '¡UNSTOPPABLE!', streakHold: '¡STREAK ×{n} fija!',
     combo3: 'Combo ×3 — ¡sigue!', combo5: 'Combo ×5 — ¡bien!', combo8: 'Combo ×8 — ¡pro!',
     combo10: 'Combo ×10 — ¡maestro!', comboN: '¡COMBO ×{n}!',
@@ -1459,7 +1459,7 @@ overlayI18nCatalog(CATALOG_DE, {
     'Combo-HUD Pixelakzente',
   ] },
   combat: {
-    counter: 'COUNTER!', crit: 'CRIT!', streak3: 'STREAK ×3', streak5: 'ON FIRE!',
+    counter: 'COUNTER!', crit: 'CRIT!', ko: 'KO', streak3: 'STREAK ×3', streak5: 'ON FIRE!',
     streak8: 'RAMPAGE!', streak12: 'UNSTOPPABLE!', streakHold: 'STREAK ×{n} fest!',
     combo3: 'Combo ×3 — weiter!', combo5: 'Combo ×5 — sauber!', combo8: 'Combo ×8 — pro!',
     combo10: 'Combo ×10 — Meister!', comboN: 'COMBO ×{n}!',
