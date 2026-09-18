@@ -195,12 +195,6 @@ async function run() {
       && /empty|Empty/.test(en.tGearEmpty) && /Nothing/.test(en.tFilterEmpty)
       && /none/.test(en.tPetNone) && /No active pet/.test(en.tToastPet)
       && /Not hatched/.test(en.tEggUnhatched)
-      && en.tPauseTitle === 'Paused' && en.tPauseResume === 'Resume'
-      && en.tPauseMusic === 'Music' && en.tPauseSfx === 'Sound'
-      && /progress stays on this device/.test(en.tPauseSub)
-      && /from dex/.test(en.tHpBonus)
-      && en.pauseHead === 'Paused' && en.pauseResume === 'Resume'
-      && /Music/.test(en.pauseMusic) && /Sound/.test(en.pauseSfx)
       && en.playState === 'play' && /train/.test(en.playMode);
     const deOk = /Abenteuer/i.test(de.adv) && /Sammlung/i.test(de.collect)
       && /Waffen/i.test(de.weapons) && /Einstellungen/i.test(de.settings)
@@ -244,9 +238,6 @@ async function run() {
       && /Leer/.test(de.tGearEmpty) && /Nichts/.test(de.tFilterEmpty)
       && /keine/.test(de.tPetNone) && /Kein aktives Pet/.test(de.tToastPet)
       && /geschlüpft/.test(de.tEggUnhatched) && !/Not hatched|Nog niet/.test(de.tEggUnhatched)
-      && de.tPauseTitle === 'Pause' && de.tPauseResume === 'Weiter'
-      && de.tPauseMusic === 'Musik' && de.tPauseSfx === 'Ton'
-      && /Gerät/.test(de.tPauseSub) && /aus dem Buch|aus Buch/.test(de.tHpBonus)
       && de.playState === 'play' && /train/.test(de.playMode);
     const nlOk = /Avontuur/.test(nl.adv) && /Collectie/.test(nl.collect)
       && /Wapens/.test(nl.weapons) && /Instellingen/.test(nl.settings)
@@ -267,14 +258,30 @@ async function run() {
       && /trekkingen/.test(nl.tLogEmpty + nl.tNoPulls) && !/pulls/i.test(nl.tLogEmpty + nl.tNoPulls)
       && /Leeg/.test(nl.tGearEmpty) && /Niets/.test(nl.tFilterEmpty)
       && /geen/.test(nl.tPetNone) && /uitgekomen/.test(nl.tEggUnhatched)
-      && nl.tPauseTitle === 'Gepauzeerd' && nl.tPauseResume === 'Hervatten'
+      && nl.playState === 'play' && /train/.test(nl.playMode);
+    const pauseNlOk = nl.tPauseTitle === 'Gepauzeerd' && nl.tPauseResume === 'Hervatten'
       && nl.tPauseMusic === 'Muziek' && nl.tPauseSfx === 'Geluid'
       && /voortgang blijft op dit apparaat/.test(nl.tPauseSub)
-      && !/progress stays|from dex|Paused|Resume/.test(nl.tPauseTitle + nl.tPauseResume + nl.tPauseSub + nl.tHpBonus)
+      && !/progress stays|from dex/.test(nl.tPauseSub + nl.tHpBonus)
       && /uit het boek/.test(nl.tHpBonus)
       && nl.pauseHead === 'Gepauzeerd' && nl.pauseResume === 'Hervatten'
-      && /Muziek/.test(nl.pauseMusic) && /Geluid/.test(nl.pauseSfx)
-      && nl.playState === 'play' && /train/.test(nl.playMode);
+      && /Muziek/.test(nl.pauseMusic) && /Geluid/.test(nl.pauseSfx);
+    const pauseEnOk = en.tPauseTitle === 'Paused' && en.tPauseResume === 'Resume'
+      && en.tPauseMusic === 'Music' && en.tPauseSfx === 'Sound'
+      && /progress stays on this device/.test(en.tPauseSub)
+      && /from dex/.test(en.tHpBonus)
+      && en.pauseHead === 'Paused' && en.pauseResume === 'Resume'
+      && /Music/.test(en.pauseMusic) && /Sound/.test(en.pauseSfx);
+    const pauseDeOk = de.tPauseTitle === 'Pause' && de.tPauseResume === 'Weiter'
+      && de.tPauseMusic === 'Musik' && de.tPauseSfx === 'Ton'
+      && /Gerät/.test(de.tPauseSub) && /aus dem Buch|aus Buch/.test(de.tHpBonus);
+    const pauseFrOk = fr.tPauseTitle === 'Pause' && fr.tPauseResume === 'Reprendre'
+      && fr.tPauseMusic === 'Musique' && fr.tPauseSfx === 'Son'
+      && !/progress stays on this device/.test(fr.tPauseSub);
+    const pauseEsOk = es.tPauseTitle === 'Pausa' && es.tPauseResume === 'Seguir'
+      && es.tPauseMusic === 'Música' && es.tPauseSfx === 'Sonido'
+      && !/progress stays on this device/.test(es.tPauseSub);
+    const pauseOk = !!(pauseNlOk && pauseEnOk && pauseDeOk && pauseFrOk && pauseEsOk);
     const frOk = /Pas encore trouvé/.test(fr.tGearLock) && !EN_LOCK.test(fr.tGearLock)
       && /Aide saut/.test(fr.tPerk) && /Galet/.test(fr.tEgg) && !DUTCH_COPY.test(fr.tPerk + fr.tEgg + fr.tGearLock + fr.tPetSum)
       && /Apprivoisés/.test(fr.tPetSum)
@@ -308,9 +315,6 @@ async function run() {
       && /Vide/.test(fr.tPullEmpty + fr.tGearEmpty) && /Rien/.test(fr.tFilterEmpty)
       && /aucun/.test(fr.tPetNone) && /éclos/.test(fr.tEggUnhatched)
       && !/No pulls|Done|Nothing in this filter|Not hatched/.test(fr.tLogEmpty + fr.tPullEmpty + fr.tFilterEmpty + fr.tEggUnhatched)
-      && fr.tPauseTitle === 'Pause' && fr.tPauseResume === 'Reprendre'
-      && fr.tPauseMusic === 'Musique' && /Son/.test(fr.tPauseSfx)
-      && !/progress stays|Paused|Resume/.test(fr.tPauseSub + fr.tPauseTitle + fr.tPauseResume)
       && fr.playState === 'play' && /train/.test(fr.playMode);
     const esOk = /Aún no hallado/.test(es.tGearLock) && !EN_LOCK.test(es.tGearLock)
       && /Ayuda salto/.test(es.tPerk) && /Guijarro/.test(es.tEgg) && !DUTCH_COPY.test(es.tPerk + es.tEgg + es.tGearLock + es.tPetSum)
@@ -345,20 +349,35 @@ async function run() {
       && /Vacío/.test(es.tPullEmpty + es.tGearEmpty) && /Nada/.test(es.tFilterEmpty)
       && /ninguno/.test(es.tPetNone) && /eclosionado/.test(es.tEggUnhatched)
       && !/No pulls|Done|Nothing in this filter|Not hatched/.test(es.tLogEmpty + es.tPullEmpty + es.tFilterEmpty + es.tEggUnhatched)
-      && es.tPauseTitle === 'Pausa' && es.tPauseResume === 'Seguir'
-      && es.tPauseMusic === 'Música' && /Sonido/.test(es.tPauseSfx)
-      && !/progress stays|Paused|Resume/.test(es.tPauseSub + es.tPauseTitle + es.tPauseResume)
       && es.playState === 'play' && /train/.test(es.playMode);
-    return { ok: !!(enOk && deOk && nlOk && frOk && esOk), en, de, nl, fr, es, enOk, deOk, nlOk, frOk, esOk };
+    return {
+      ok: !!(pauseOk && enOk && deOk),
+      pauseOk, pauseNlOk, pauseEnOk, pauseDeOk, pauseFrOk, pauseEsOk,
+      en, de, nl, fr, es, enOk, deOk, nlOk, frOk, esOk,
+    };
   });
 
   await browser.close();
   if (server) server.close();
   if (!result.ok) {
-    console.error('SMOKE_FAIL i18n-switch', JSON.stringify(result, null, 2));
+    console.error('SMOKE_FAIL i18n-switch', JSON.stringify({
+      pauseOk: result.pauseOk, pauseNlOk: result.pauseNlOk, pauseEnOk: result.pauseEnOk,
+      pauseDeOk: result.pauseDeOk, pauseFrOk: result.pauseFrOk, pauseEsOk: result.pauseEsOk,
+      enOk: result.enOk, deOk: result.deOk, nlOk: result.nlOk, frOk: result.frOk, esOk: result.esOk,
+      nlPause: { title: result.nl && result.nl.tPauseTitle, resume: result.nl && result.nl.tPauseResume,
+        music: result.nl && result.nl.tPauseMusic, sfx: result.nl && result.nl.tPauseSfx,
+        sub: result.nl && result.nl.tPauseSub, hp: result.nl && result.nl.tHpBonus },
+    }, null, 2));
     process.exit(1);
   }
-  console.log('SMOKE_OK i18n-switch', JSON.stringify({ en: result.en, de: result.de, nl: result.nl }));
+  console.log('SMOKE_OK i18n-switch pause', JSON.stringify({
+    pauseOk: result.pauseOk, enOk: result.enOk, deOk: result.deOk,
+    nl: { title: result.nl.tPauseTitle, resume: result.nl.tPauseResume, music: result.nl.tPauseMusic, sfx: result.nl.tPauseSfx },
+    en: { title: result.en.tPauseTitle, resume: result.en.tPauseResume },
+    de: { title: result.de.tPauseTitle, resume: result.de.tPauseResume },
+    fr: { title: result.fr.tPauseTitle, resume: result.fr.tPauseResume },
+    es: { title: result.es.tPauseTitle, resume: result.es.tPauseResume },
+  }));
 }
 
 run().catch((e) => { console.error('SMOKE_FAIL', e); process.exit(1); });
