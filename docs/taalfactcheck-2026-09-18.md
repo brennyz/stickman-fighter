@@ -42,4 +42,15 @@ Post-mega-merge (`v1.18.172`) audit, Z→A: **nl → fr → es → en → de**. 
 - FOMO CTA: `white-space: normal` (geen clip op DE/FR).
 - HUD telegraphs ingekort (geen KICK-over-HUD).
 
-Versie: **v1.18.173 / SW 383**. Draft PR, geen main-merge. Deel-URL `speel.html`.
+## Examiner P0 — pets + gear (zelfde draft)
+
+| locale | key / locatie | probleem | fix |
+|--------|---------------|----------|-----|
+| de/fr/es | `gear.lock*` / filter chrome | Alleen NL+EN → lock-regels in EN | Korte DE/FR/ES keys |
+| fr/es | `ui.pet*` / `ui.egg*` | Overlay `ui` miste pet/egg → EN fallback | Overlay-keys + korte tip |
+| * | `PET_ROSTER.perk` / `EGG_ROSTER.name` | Hardcoded NL in alle talen | `pets.perk.*` + `egg.name.*` / `egg.perk.*` |
+| * | pets right-column `{n} kills` | EN leftover | `ui.petKillsLeft` |
+| de | `gear.weaponAsideHint` | Te lang op ~390px | `Sammlung · kein 6. Slot` |
+| nl | `ui.petCoinTip` / `pets.sub` / egg hint | Overflow op 390px | Ingekort + card/toast clamp |
+
+Versie: **v1.18.174 / SW 384**. Draft PR, geen main-merge. Deel-URL `speel.html`.

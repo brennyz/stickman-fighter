@@ -1,3 +1,4 @@
+| 2026-09-18 | **i18n pets/gear** | Examiner #317: DE/FR/ES pets+gear chrome (geen EN lock/perk leak); egg names; petKillsLeft; 390px clamp/toast wrap. Versus ongemoeid. **v1.18.174 / SW v384**. Draft. |
 | 2026-09-18 | **i18n layout-safe** | Worker LANGUAGE: factory desc keys (geen NL-leak op EN/DE/FR/ES-kaarten); nameShort + 2-line clamp; FOMO summons→kist/coffre/cofre; HUD KICK/PUNCH gelokaliseerd; DE Ton; Versus ongemoeid. **v1.18.173 / SW v383**. Draft. |
 | 2026-09-16 | **i18n spotcheck** | Main-spotcheck: EN YOU LOSE (niet VERLOREN); DE Hallo/Ton/Münze; FR/ES install-titel; fomo+buildings al in #299. **v1.18.169 / SW v379**. |
 | 2026-09-16 | **i18n alle talen** | Post-#283 factcheck Z→A (nl→fr→es→en→de): FOMO/fabrieken/wapens FR/ES/DE; speel.html i18n + #stepsIos; Versus ongemoeid. **v1.18.168 / SW v378**. |
@@ -146,6 +147,7 @@ Schrijf **1–3 regels** per sessie: datum, d#, wat, versie.
 
 | Datum (UTC) | d# | Update |
 |-------------|-----|--------|
+| 2026-09-18 | — | LANGUAGE examiner #317: pets/gear DE/FR/ES keys (lock/perk/egg), petKillsLeft, 390px clamp. Draft, geen main. **v1.18.174 / SW 384**. |
 | 2026-09-18 | — | LANGUAGE worker: layout-safe NL/EN/DE/FR/ES copy — factory desc keys, nameShort cards, FOMO kist/coffre, HUD telegraphs, DE Ton. Versus ongemoeid. Draft, geen main. **v1.18.173 / SW 383**. |
 | 2026-09-16 | — | **MEGA-MERGE → main** Grok wave #295–#309 (i18n → systems → UI → pixels → polish). Feature-base PRs (#297/#300/#307/#309) cherry-picked. **v1.18.172 / SW 382**. speel.html na Pages. |
 | 2026-09-16 | — | Gear UI ↔ #295 equip-API: sheets via gearSlotInventory, tap via gearEquipItem(id,{expectSlot}), states ok/vanity-ok/already-equipped/locked/not-owned/wrong-slot/unknown. DOM/schema 1 ongewijzigd. v1.18.171 / SW 381. Draft, niet main. |

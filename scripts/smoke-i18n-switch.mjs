@@ -69,18 +69,32 @@ async function run() {
       const profileAria = (document.getElementById('menuProfileBar') || {}).getAttribute('aria-label') || '';
       const summons = (document.querySelector('.hub-tile-summon .hub-tile-title') || {}).textContent || '';
       const leftover = [adv, collect, weapons, settings, dexSum, dexTypes, eggBtn, exportHint, musicName, sfxName, profileAria].join(' ');
-      return { lang, adv, collect, help, weapons, settings, dexSum, dexTypes, eggBtn, exportHint, musicName, sfxName, profileAria, summons, tAdv, tHud, leftover };
+      const tGearLock = typeof t === 'function' ? t('gear.lockOwned') : '';
+      const tPetSum = typeof t === 'function' ? t('ui.petSummaryTamed', { tamed: 0, total: 12, active: 'x', wallet: 0 }) : '';
+      const tPerk = typeof t === 'function' ? t('pets.perk.pet_slymo') : '';
+      const tEgg = typeof t === 'function' ? t('egg.name.egg_pebble') : '';
+      const tKills = typeof t === 'function' ? t('ui.petKillsLeft', { n: 3 }) : '';
+      return {
+        lang, adv, collect, help, weapons, settings, dexSum, dexTypes, eggBtn, exportHint,
+        musicName, sfxName, profileAria, summons, tAdv, tHud, leftover,
+        tGearLock, tPetSum, tPerk, tEgg, tKills,
+      };
     }
     const en = snap('en');
     const de = snap('de');
     const nl = snap('nl');
+    const fr = snap('fr');
+    const es = snap('es');
+    const DUTCH_COPY = /Nog niet gevonden|Spring-assist|Kiezel|Temmen:|Getemd/;
+    const EN_LOCK = /Not found yet/;
     const enOk = /Adventure/i.test(en.adv) && /Collection/i.test(en.collect)
       && /Weapons/i.test(en.weapons) && /Settings|Options/i.test(en.settings)
       && /Tips/i.test(en.help) && !DUTCH.test(en.leftover)
       && /Wave/.test(en.tHud) && !/Golf/.test(en.tHud)
       && /Book|All types|All biomes/i.test(en.dexSum + ' ' + en.dexTypes)
       && /Music/i.test(en.musicName) && /Effect/i.test(en.sfxName)
-      && /Profile/i.test(en.profileAria);
+      && /Profile/i.test(en.profileAria)
+      && /Not found yet/.test(en.tGearLock) && /Hop assist/.test(en.tPerk) && /Pebble/.test(en.tEgg);
     const deOk = /Abenteuer/i.test(de.adv) && /Sammlung/i.test(de.collect)
       && /Waffen/i.test(de.weapons) && /Einstellungen/i.test(de.settings)
       && /Tipp/i.test(de.help) && !DUTCH.test(de.leftover)
@@ -88,12 +102,21 @@ async function run() {
       && /Buch|Alle Typen|Alle Biome/i.test(de.dexSum + ' ' + de.dexTypes)
       && /Musik/i.test(de.musicName) && /Effekt/i.test(de.sfxName)
       && /Profil/i.test(de.profileAria)
-      && /Beschwörung/i.test(de.summons);
+      && /Beschwörung/i.test(de.summons)
+      && /Noch nicht gefunden/.test(de.tGearLock) && !EN_LOCK.test(de.tGearLock)
+      && /Sprung-Assist/.test(de.tPerk) && /Kiesel/.test(de.tEgg) && !DUTCH_COPY.test(de.tPerk + de.tEgg + de.tGearLock);
     const nlOk = /Avontuur/.test(nl.adv) && /Collectie/.test(nl.collect)
       && /Wapens/.test(nl.weapons) && /Instellingen/.test(nl.settings)
       && /Tips/.test(nl.help) && /Boek|Alle types/.test(nl.dexSum + ' ' + nl.dexTypes)
-      && /Oproepen/.test(nl.summons);
-    return { ok: !!(enOk && deOk && nlOk), en, de, nl, enOk, deOk, nlOk };
+      && /Oproepen/.test(nl.summons)
+      && /Nog niet gevonden/.test(nl.tGearLock) && /Kiezel/.test(nl.tEgg);
+    const frOk = /Pas encore trouvé/.test(fr.tGearLock) && !EN_LOCK.test(fr.tGearLock)
+      && /Aide saut/.test(fr.tPerk) && /Galet/.test(fr.tEgg) && !DUTCH_COPY.test(fr.tPerk + fr.tEgg + fr.tGearLock + fr.tPetSum)
+      && /Apprivoisés/.test(fr.tPetSum);
+    const esOk = /Aún no hallado/.test(es.tGearLock) && !EN_LOCK.test(es.tGearLock)
+      && /Ayuda salto/.test(es.tPerk) && /Guijarro/.test(es.tEgg) && !DUTCH_COPY.test(es.tPerk + es.tEgg + es.tGearLock + es.tPetSum)
+      && /Domados/.test(es.tPetSum);
+    return { ok: !!(enOk && deOk && nlOk && frOk && esOk), en, de, nl, fr, es, enOk, deOk, nlOk, frOk, esOk };
   });
 
   await browser.close();

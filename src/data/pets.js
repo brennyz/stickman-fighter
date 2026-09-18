@@ -59,6 +59,13 @@ const PET_BY_SPECIES = Object.fromEntries(PET_ROSTER.map(p => [p.speciesId, p]))
 
 function petDef(id) { return PET_BY_ID[id] || null; }
 
+function petPerkLabel(def) {
+  if (!def) return '';
+  const key = 'pets.perk.' + def.id;
+  if (typeof tOr === 'function') return tOr(key, def.perk || '');
+  return def.perk || '';
+}
+
 function petKillNeed(speciesOrPetId) {
   const def = PET_BY_ID[speciesOrPetId] || PET_BY_SPECIES[speciesOrPetId];
   const sp = def ? SPECIES[def.speciesId] : SPECIES[speciesOrPetId];
@@ -157,6 +164,6 @@ function petProgressLine(speciesId) {
   const need = petKillNeed(speciesId);
   const cur = save.dex[speciesId] || 0;
   const coinHint = petCoinsBalance() > 0 ? ` · ${petCoinsBalance()}/${cost} PC` : '';
-  if (cur <= 0) return `Pet · ${need} kills${coinHint}`;
-  return `Pet · ${Math.min(cur, need)}/${need} kills${coinHint}`;
+  if (cur <= 0) return t('pet.killsNeed', { need }) + coinHint;
+  return t('pet.killsProgress', { cur: Math.min(cur, need), need }) + coinHint;
 }

@@ -241,4 +241,47 @@ if (/upgrade: 'Upgrade'/.test((i18n.split(/\n\s+de:\s+\{/)[1] || '').split(/\n\s
   fail('DE buildings.upgrade still leftover English Upgrade');
 }
 
-console.log('SMOKE_OK i18n-locale: Tips/VERLOREN + #273 coverage + #283 overlays + 2026-09-18 layout-safe copy');
+if (!/petKillsLeft:/.test(catalog + locales + deChrome)) fail('ui.petKillsLeft missing — hardcoded kills leak');
+if (!/function petPerkLabel/.test(fs.readFileSync(path.join(root, 'src/data/pets.js'), 'utf8'))) {
+  fail('pet perks must go through petPerkLabel');
+}
+if (!/function eggPetName/.test(fs.readFileSync(path.join(root, 'src/data/egg-pets.js'), 'utf8'))) {
+  fail('egg names must go through eggPetName');
+}
+if (/\`\$\{need - kills\} kills\`/.test(ui) || /\$\{need - kills\} kills/.test(ui)) {
+  fail('pets sheet still hardcodes "kills" in the right column');
+}
+if (/Pet · \$\{need\} kills/.test(fs.readFileSync(path.join(root, 'src/data/pets.js'), 'utf8'))) {
+  fail('petProgressLine still hardcodes Pet · N kills');
+}
+if (!/ui\.petKillsLeft/.test(ui)) fail('pets right column must use ui.petKillsLeft');
+if (!/petPerkLabel\(def\)/.test(ui)) fail('pets sheet must use petPerkLabel');
+if (!/eggPetName\(def\)/.test(ui) && !/eggPetName\(res\.def\)/.test(ui)) fail('egg sheet must use eggPetName');
+if (!/eggPerkLabel\(def\)/.test(ui)) fail('egg sheet must use eggPerkLabel');
+if (!/pet_slymo: 'Hop assist/.test(i18n)) fail('EN pets.perk.pet_slymo missing');
+if (!/pet_slymo: 'Sprung-Assist/.test(i18n)) fail('DE pets.perk.pet_slymo missing');
+if (!/pet_slymo: 'Aide saut/.test(i18n)) fail('FR pets.perk.pet_slymo missing');
+if (!/pet_slymo: 'Ayuda salto/.test(i18n)) fail('ES pets.perk.pet_slymo missing');
+if (!/egg_pebble: 'Pebble'/.test(catalog)) fail('EN egg.name.egg_pebble missing');
+if (!/egg_pebble: 'Kiesel'/.test(locales + deChrome)) fail('DE egg.name.egg_pebble missing');
+if (!/egg_pebble: 'Galet'/.test(locales)) fail('FR egg.name.egg_pebble missing');
+if (!/egg_pebble: 'Guijarro'/.test(locales)) fail('ES egg.name.egg_pebble missing');
+if (!/lockOwned: 'Pas encore trouvé'/.test(catalog)) fail('FR gear.lockOwned missing');
+if (!/lockOwned: 'Aún no hallado'/.test(catalog)) fail('ES gear.lockOwned missing');
+if (!/lockOwned: 'Noch nicht gefunden'/.test(deChrome)) fail('DE gear.lockOwned missing');
+if (!/lockAdv: 'Aventure Nv/.test(catalog)) fail('FR gear.lockAdv missing');
+if (!/lockAdv: 'Aventura Nv/.test(catalog)) fail('ES gear.lockAdv missing');
+if (!/lockAdv: 'Abenteuer Lv/.test(deChrome)) fail('DE gear.lockAdv missing');
+if (!/petSummaryTamed: 'Apprivoisés/.test(locales)) fail('FR ui.petSummaryTamed missing — EN leak');
+if (!/petSummaryTamed: 'Domados/.test(locales)) fail('ES ui.petSummaryTamed missing — EN leak');
+if (!/petSummaryTamed: 'Gezähmt/.test(locales + deChrome)) fail('DE ui.petSummaryTamed missing — EN leak');
+if (/Bleibt in Sammlung → Waffen/.test(deChrome + locales)) fail('DE weaponAsideHint still overflows on 390px');
+if (!/weaponAsideHint: 'Sammlung · kein 6. Slot'/.test(deChrome)) fail('DE weaponAsideHint must be short');
+if (/killsNeed: 'Pet · \{need\} kills'/.test(locales)) fail('FR/ES pet.killsNeed still leftover English kills');
+if (!/card-info/.test(css)) fail('card-info min-width missing (390px overlap)');
+if (!/-webkit-line-clamp: 2/.test(css) || !/\.card \.cname/.test(css)) fail('card name clamp missing');
+if (!/overflow-wrap:anywhere/.test(css.replace(/\s/g, '')) && !/overflow-wrap:\s*anywhere/.test(css)) {
+  fail('toast/card overflow-wrap missing for 390px');
+}
+
+console.log('SMOKE_OK i18n-locale: Tips/VERLOREN + #273 coverage + #283 overlays + 2026-09-18 pets/gear locale');

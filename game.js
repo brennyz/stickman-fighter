@@ -323,9 +323,9 @@ const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const VERSION_UPDATE_SAVE_KEY = 'stickfighter_version_update_save_v1';
 const VERSION_UPDATE_FLAG_KEY = 'stickfighter_version_update_flag_v1';
 const SAVE_EXPORT_SCHEMA = 3;
-const APP_VERSION = '1.18.173';
+const APP_VERSION = '1.18.174';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 383;
+const SW_CACHE_REV = 384;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', petCoins: 0, dex: {}, summons: {}, pets: {}, activePet: null,
   eggPets: {}, activeEggPet: null, eggDaily: null,
   chestDaily: null, chestWeapons: {},
@@ -2495,8 +2495,16 @@ const I18N = {
       streakReward7: '+ei of oproepen',
       streakReward14: '+120 XP',
     },
-    pets: { title: 'Pets · Metgezels', sub: 'Dex-pets via monsterboek · Ei-pets via dagelijkse arcade-pull',
-      crackEgg: 'Dag-ei openen', crackEggSub: 'Gratis arcade-pull' },
+    pets: { title: 'Pets · Metgezels', sub: 'Dex via monsterboek · ei via arcade-pull',
+      crackEgg: 'Dag-ei openen', crackEggSub: 'Gratis arcade-pull',
+      perk: {
+        pet_slymo: 'Spring-assist — extra schade', pet_bubbel: '+6 max HP · zachte assist',
+        pet_flapper: 'Snellere energy-regen', pet_stekelra: 'Charge-assist — stevige tik',
+        pet_spooki: '+4% crit-kans', pet_blikkert: 'Korte shield elke golf',
+        pet_vlamvos: '+4% loopsnelheid', pet_piepvleugel: 'Vlugge energy + dart-assist',
+        pet_rotsbonk: '+12 max HP · tank-assist', pet_nachtwolk: 'Spook-crit + energy drain',
+        pet_gloeidrake: 'Draken-assist — zwaarste tik', pet_stormvos: 'Storm-snelheid + combo-assist',
+      } },
     dex: { title: 'Monsterboek', sub: '{n} soorten · rariteit = HP · boerderij / zoo / zee / woud / crypte / schroot / vorst · 4 rariteiten = Kristallijn' },
     help: { title: 'Tips & besturing' },
     gear: {
@@ -2799,8 +2807,16 @@ const I18N = {
       streakReward7: '+egg or summons',
       streakReward14: '+120 XP',
     },
-    pets: { title: 'Pets · Companions', sub: 'Dex pets via monster book · Egg pets via daily arcade pull',
-      crackEgg: 'Open daily egg', crackEggSub: 'Free arcade pull' },
+    pets: { title: 'Pets · Companions', sub: 'Dex via monster book · eggs via arcade pull',
+      crackEgg: 'Open daily egg', crackEggSub: 'Free arcade pull',
+      perk: {
+        pet_slymo: 'Hop assist — extra damage', pet_bubbel: '+6 max HP · soft assist',
+        pet_flapper: 'Faster energy regen', pet_stekelra: 'Charge assist — hard tap',
+        pet_spooki: '+4% crit chance', pet_blikkert: 'Short shield each wave',
+        pet_vlamvos: '+4% run speed', pet_piepvleugel: 'Quick energy + dart assist',
+        pet_rotsbonk: '+12 max HP · tank assist', pet_nachtwolk: 'Ghost crit + energy drain',
+        pet_gloeidrake: 'Dragon assist — heaviest tap', pet_stormvos: 'Storm speed + combo assist',
+      } },
     dex: { title: 'Monster book', sub: '{n} species · rarity = HP · farm / zoo / sea / woods / crypt / scrap / frost · 4 rarities = Crystalline' },
     help: { title: 'Tips & controls' },
     gear: {
@@ -3168,7 +3184,15 @@ const I18N = {
       rowEggReady: 'Tages-Ei bereit', rowEggDone: 'Tages-Ei schon offen',
       streakReward3: '+1 Kiste', streakReward7: '+Ei oder Kisten', streakReward14: '+120 XP',
     },
-    pets: { title: 'Pets · Begleiter', sub: 'Dex-Pets & Ei-Pets', crackEgg: 'Tages-Ei öffnen', crackEggSub: 'Kostenloser Arcade-Zug' },
+    pets: { title: 'Pets · Begleiter', sub: 'Dex-Pets & Ei-Pets', crackEgg: 'Tages-Ei öffnen', crackEggSub: 'Kostenloser Arcade-Zug',
+      perk: {
+        pet_slymo: 'Sprung-Assist — Extra-Schaden', pet_bubbel: '+6 max HP · sanfter Assist',
+        pet_flapper: 'Schnellere Energy-Regen', pet_stekelra: 'Charge-Assist — harter Tick',
+        pet_spooki: '+4% Crit-Chance', pet_blikkert: 'Kurzer Schild jede Welle',
+        pet_vlamvos: '+4% Lauftempo', pet_piepvleugel: 'Schnelle Energy + Dart-Assist',
+        pet_rotsbonk: '+12 max HP · Tank-Assist', pet_nachtwolk: 'Geist-Crit + Energy-Drain',
+        pet_gloeidrake: 'Drachen-Assist — härtester Tick', pet_stormvos: 'Sturmtempo + Combo-Assist',
+      } },
     dex: { title: 'Monsterbuch', sub: '{n} Arten · Seltenheit = HP · Farm / Zoo / Meer / Wald / Krypta / Schrott / Frost' },
     help: { title: 'Tipps & Steuerung' },
     gear: {
@@ -3451,7 +3475,15 @@ const I18N = {
       streakReward7: '+œuf ou coffres',
       streakReward14: '+120 XP',
     },
-    pets: { title: 'Pets · Compagnons', sub: 'Pets dex & œufs arcade', crackEgg: 'Ouvrir l\'œuf du jour', crackEggSub: 'Tir gratuit' },
+    pets: { title: 'Pets · Compagnons', sub: 'Pets dex & œufs arcade', crackEgg: 'Ouvrir l\'œuf du jour', crackEggSub: 'Tir gratuit',
+      perk: {
+        pet_slymo: 'Aide saut — dégâts extra', pet_bubbel: '+6 PV max · aide douce',
+        pet_flapper: 'Regen énergie plus vite', pet_stekelra: 'Aide charge — tap dur',
+        pet_spooki: '+4 % crit', pet_blikkert: 'Bouclier court / vague',
+        pet_vlamvos: '+4 % vitesse', pet_piepvleugel: 'Énergie rapide + dard',
+        pet_rotsbonk: '+12 PV max · tank', pet_nachtwolk: 'Crit spectre + drain',
+        pet_gloeidrake: 'Aide dragon — tap lourd', pet_stormvos: 'Vitesse tempête + combo',
+      } },
     dex: { title: 'Bestiaire', sub: '{n} espèces · rareté = PV · ferme / zoo / mer / bois / crypte / ferraille / gel' },
     help: { title: 'Astuces & contrôles' },
     gear: {
@@ -3729,7 +3761,15 @@ const I18N = {
       streakReward7: '+huevo o cofres',
       streakReward14: '+120 XP',
     },
-    pets: { title: 'Pets · Compañeros', sub: 'Pets dex y huevos arcade', crackEgg: 'Abrir huevo diario', crackEggSub: 'Tirada gratis' },
+    pets: { title: 'Pets · Compañeros', sub: 'Pets dex y huevos arcade', crackEgg: 'Abrir huevo diario', crackEggSub: 'Tirada gratis',
+      perk: {
+        pet_slymo: 'Ayuda salto — daño extra', pet_bubbel: '+6 HP máx · ayuda suave',
+        pet_flapper: 'Regen energía más rápida', pet_stekelra: 'Ayuda carga — golpe duro',
+        pet_spooki: '+4% crítico', pet_blikkert: 'Escudo corto / ola',
+        pet_vlamvos: '+4% velocidad', pet_piepvleugel: 'Energía rápida + dardo',
+        pet_rotsbonk: '+12 HP máx · tanque', pet_nachtwolk: 'Crit fantasma + drenaje',
+        pet_gloeidrake: 'Ayuda dragón — golpe fuerte', pet_stormvos: 'Velocidad tormenta + combo',
+      } },
     dex: { title: 'Bestiario', sub: '{n} especies · rareza = HP · granja / zoo / mar / bosque / cripta / chatarra / escarcha' },
     help: { title: 'Consejos y controles' },
     gear: {
@@ -17842,6 +17882,13 @@ const PET_BY_SPECIES = Object.fromEntries(PET_ROSTER.map(p => [p.speciesId, p]))
 
 function petDef(id) { return PET_BY_ID[id] || null; }
 
+function petPerkLabel(def) {
+  if (!def) return '';
+  const key = 'pets.perk.' + def.id;
+  if (typeof tOr === 'function') return tOr(key, def.perk || '');
+  return def.perk || '';
+}
+
 function petKillNeed(speciesOrPetId) {
   const def = PET_BY_ID[speciesOrPetId] || PET_BY_SPECIES[speciesOrPetId];
   const sp = def ? SPECIES[def.speciesId] : SPECIES[speciesOrPetId];
@@ -17940,8 +17987,8 @@ function petProgressLine(speciesId) {
   const need = petKillNeed(speciesId);
   const cur = save.dex[speciesId] || 0;
   const coinHint = petCoinsBalance() > 0 ? ` · ${petCoinsBalance()}/${cost} PC` : '';
-  if (cur <= 0) return `Pet · ${need} kills${coinHint}`;
-  return `Pet · ${Math.min(cur, need)}/${need} kills${coinHint}`;
+  if (cur <= 0) return t('pet.killsNeed', { need }) + coinHint;
+  return t('pet.killsProgress', { cur: Math.min(cur, need), need }) + coinHint;
 }
 /* --- src/data/buildings-powers.js --- */
 /* Stickman Fighter — buildings powers + timed resources (4 of 4)
@@ -19808,6 +19855,18 @@ const EGG_BY_ID = Object.fromEntries(EGG_ROSTER.map(e => [e.id, e]));
 
 function eggDef(id) { return EGG_BY_ID[id] || null; }
 
+function eggPetName(def) {
+  if (!def) return '';
+  if (typeof tOr === 'function') return tOr('egg.name.' + def.id, def.name || def.id);
+  return def.name || def.id || '';
+}
+
+function eggPerkLabel(def) {
+  if (!def) return '';
+  if (typeof tOr === 'function') return tOr('egg.perk.' + def.id, def.perk || '');
+  return def.perk || '';
+}
+
 function isEggOwned(id) {
   return !!(save.eggPets && save.eggPets[id]);
 }
@@ -19908,7 +19967,7 @@ function eggProgressSummary() {
   return {
     owned,
     total: EGG_ROSTER.length,
-    activeName: active ? active.name : t('ui.petNone'),
+    activeName: active ? eggPetName(active) : t('ui.petNone'),
     daily: eggDailyStatusLine(),
   };
 }
@@ -21434,7 +21493,7 @@ function seedNlGameStrings() {
     hubStatSkills: '{n}/{total} · {skill} · {super}',
     hubStatSkillsEmpty: '{total} skills',
     hubStatDex: '{n}/{total} · +max HP',
-    petCoinTip: 'Speel <b>munten bonus</b> voor pet coins (2 gouden munten = 1 PC). Koop pets hier, of tem via kills in het monsterboek. Pets volgen je in avontuur & training.',
+    petCoinTip: 'Speel <b>munten bonus</b> (2 goud = 1 PC). Koop of tem via het monsterboek.',
     petSummaryTamed: 'Getemd <b>{tamed}/{total}</b> · actief <b>{active}</b> · <b>{wallet} pet coins</b>',
     petNone: 'geen',
     installSub: 'Lade · beginscherm',
@@ -21540,10 +21599,11 @@ function seedNlGameStrings() {
     upgradeShardsLine: '{skill} skill · {item} item shards',
     upgradeMaxHint: 'Standaard max Lv {std} · mythische/extreme max Lv {ext}',
     eggSummary: 'Verzameld {owned}/{total} · actief {active} · {daily}',
-    eggSummaryHint: 'Cosmetisch — geen combat-boost. 1 dag-ei + bonus-ei na je eerste avontuur-win vandaag.',
+    eggSummaryHint: 'Cosmetisch. 1 dag-ei + bonus na eerste avontuur-win.',
     petTamedAssist: 'Getemd · assist in avontuur',
     petBuyLine: 'Kopen: {cost} pet coins',
-    petTameLine: 'Temmen: {cur}/{need} kills · of {cost}',
+    petTameLine: 'Temmen: {cur}/{need} · of {cost}',
+    petKillsLeft: '{n} nog',
     petActive: 'actief',
     petEquip: 'uitrusten',
     styleSummary: 'Outfits {unlocked}/{total} · actief {name}',
@@ -21625,6 +21685,17 @@ function seedNlGameStrings() {
     dailyReady: 'Dag-ei klaar',
     advBonus: 'Bonus-ei: win 1× avontuur',
     tomorrow: 'Morgen weer ei',
+    name: {
+      egg_pebble: 'Kiezel', egg_moss: 'Mosbal', egg_candy: 'Snoep', egg_cloud: 'Wolkje',
+      egg_star: 'Sterretje', egg_flame: 'Vlammetje', egg_crystal: 'Kristal', egg_moon: 'Maanei',
+      egg_gold: 'Gouden', egg_neon: 'Neon', egg_rainbow: 'Regenboog', egg_prism: 'Prisma',
+    },
+    perk: {
+      egg_pebble: 'Zachte grijze gloed', egg_moss: 'Groene sprankels', egg_candy: 'Roze strepen',
+      egg_cloud: 'Zachte wolk-swirl', egg_star: 'Gouden sterren', egg_flame: 'Warme vlam-accent',
+      egg_crystal: 'Blauw kristal-shimmer', egg_moon: 'Maansikkel-gloed', egg_gold: 'Legendarische goudglans',
+      egg_neon: 'Neon-rand pulse', egg_rainbow: 'Mythisch regenboog-ei', egg_prism: 'Zeldzaam prisma-flits',
+    },
   });
   if (!I18N.nl.skill) I18N.nl.skill = {};
   Object.assign(I18N.nl.skill, {
@@ -22599,7 +22670,7 @@ const CATALOG_EN = {
     hubStatSkills: '{n}/{total} · {skill} · {super}',
     hubStatSkillsEmpty: '{total} specials',
     hubStatDex: '{n}/{total} · +max HP',
-    petCoinTip: 'Play <b>coin bonus</b> for pet coins (2 gold coins = 1 PC). Buy pets here, or tame via monster book kills. Pets follow you in adventure & training.',
+    petCoinTip: 'Play <b>coin bonus</b> (2 gold = 1 PC). Buy here or tame via the monster book.',
     petSummaryTamed: 'Tamed <b>{tamed}/{total}</b> · active <b>{active}</b> · <b>{wallet} pet coins</b>',
     petNone: 'none',
     installSub: 'Home screen',
@@ -22705,10 +22776,11 @@ const CATALOG_EN = {
     upgradeShardsLine: '{skill} skill · {item} item shards',
     upgradeMaxHint: 'Default max Lv {std} · mythic/extreme max Lv {ext}',
     eggSummary: 'Collected {owned}/{total} · active {active} · {daily}',
-    eggSummaryHint: 'Cosmetic — no combat boost. 1 daily egg + bonus egg after your first adventure win today.',
+    eggSummaryHint: 'Cosmetic. 1 daily egg + bonus after first adventure win.',
     petTamedAssist: 'Tamed · assist in adventure',
     petBuyLine: 'Buy: {cost} pet coins',
-    petTameLine: 'Tame: {cur}/{need} kills · or {cost}',
+    petTameLine: 'Tame: {cur}/{need} · or {cost}',
+    petKillsLeft: '{n} left',
     petActive: 'active',
     petEquip: 'equip',
     styleSummary: 'Outfits {unlocked}/{total} · active {name}',
@@ -22787,7 +22859,20 @@ const CATALOG_EN = {
     energyEmpty: 'Energy not full!', subst: 'Substitution!', dash: 'Dash!',
     shield: 'Shield!', parry: 'PARRY!', block: 'BLOCK!', miss: 'MISS!',
   },
-  egg: { dailyReady: 'Daily egg ready', advBonus: 'Bonus egg: win 1× adventure', tomorrow: 'Egg again tomorrow' },
+  egg: {
+    dailyReady: 'Daily egg ready', advBonus: 'Bonus egg: win 1× adventure', tomorrow: 'Egg again tomorrow',
+    name: {
+      egg_pebble: 'Pebble', egg_moss: 'Mossball', egg_candy: 'Candy', egg_cloud: 'Cloudlet',
+      egg_star: 'Starlet', egg_flame: 'Flamelet', egg_crystal: 'Crystal', egg_moon: 'Moon-egg',
+      egg_gold: 'Golden', egg_neon: 'Neon', egg_rainbow: 'Rainbow', egg_prism: 'Prism',
+    },
+    perk: {
+      egg_pebble: 'Soft grey glow', egg_moss: 'Green sparkles', egg_candy: 'Pink stripes',
+      egg_cloud: 'Soft cloud swirl', egg_star: 'Gold stars', egg_flame: 'Warm flame accent',
+      egg_crystal: 'Blue crystal shimmer', egg_moon: 'Crescent glow', egg_gold: 'Legendary gold sheen',
+      egg_neon: 'Neon-edge pulse', egg_rainbow: 'Mythic rainbow egg', egg_prism: 'Rare prism flash',
+    },
+  },
   skill: {
     spiral_orb: 'Spiral Orb', lightning_pierce: 'Lightning Pierce', void_gaze: 'Void Gaze',
     subst: 'Substitution', dash: 'Dash', energy_core: 'Energy',
@@ -23231,6 +23316,23 @@ const CATALOG_FR = {
     'Partager : menu → Lien — Chrome Android → Écran d\'accueil.',
     'Hors ligne : après 1× en ligne, cache HTML+JS — bannière sans réseau.',
   ] },
+  gear: {
+    hubStat: '{n}/5', summarySlots: '<b>{n}</b>/5',
+    pillVanity: 'LOOK', pillStat: 'STAT', pillLock: 'LOCK',
+    empty: 'Vide', pickHint: 'Tape un objet pour (dés)équiper.',
+    invKicker: '{slot}', weaponOpen: 'Armes',
+    lockedLine: 'Verrouillé · {why}', equip: 'Équiper', unequip: 'Retirer', wearing: 'sur toi',
+    vanityHint: 'Pas de stats — look seul', statHint: 'Bonus de combat',
+    lockLevel: 'Nv {n}', lockTrain: '{n}× entraîn.', lockDex: '{n} monstres',
+    lockTime: 'Dès {when}', lockTimeDate: 'Dès une date', lockDays: '{n} jours',
+    lockAdv: 'Aventure Nv {n}', lockDiff: 'Pas encore libre', lockOwned: 'Pas encore trouvé',
+    lockSlot: 'Mauvais slot', lockNoStats: 'Pas de stats tant que fermé',
+    filterAll: 'Tout', filterOwned: 'À toi', filterSearch: 'Cherche {n}…',
+    filterEmpty: 'Rien dans ce filtre', filterRarityAll: 'Tous',
+    filterCount: '{shown}/{total} · {slot}', filterAria: 'Filtre', rarityAria: 'Rareté',
+    catalogN: '{n} objets', weaponAside: 'Arme', weaponAsideHint: 'Collection · pas un 6e slot',
+    slot: { head: 'Tête', chest: 'Torse', hands: 'Mains', legs: 'Jambes', back: 'Dos' },
+  },
 };
 
 const CATALOG_ES = {
@@ -23340,6 +23442,23 @@ const CATALOG_ES = {
     'Compartir: menú → Enlace — Chrome Android → Añadir a inicio.',
     'Offline: tras 1× online cachea HTML+JS — banner sin red.',
   ] },
+  gear: {
+    hubStat: '{n}/5', summarySlots: '<b>{n}</b>/5',
+    pillVanity: 'LOOK', pillStat: 'STAT', pillLock: 'LOCK',
+    empty: 'Vacío', pickHint: 'Toca un objeto para (des)equipar.',
+    invKicker: '{slot}', weaponOpen: 'Armas',
+    lockedLine: 'Bloqueado · {why}', equip: 'Equipar', unequip: 'Quitar', wearing: 'puesto',
+    vanityHint: 'Sin stats — solo look', statHint: 'Bonus de combate',
+    lockLevel: 'Nv {n}', lockTrain: '{n}× entren.', lockDex: '{n} monstruos',
+    lockTime: 'Desde {when}', lockTimeDate: 'Desde fecha', lockDays: '{n} días',
+    lockAdv: 'Aventura Nv {n}', lockDiff: 'Aún no libre', lockOwned: 'Aún no hallado',
+    lockSlot: 'Hueco mal', lockNoStats: 'Sin stats hasta abrir',
+    filterAll: 'Todo', filterOwned: 'Tuyo', filterSearch: 'Busca {n}…',
+    filterEmpty: 'Nada en este filtro', filterRarityAll: 'Todos',
+    filterCount: '{shown}/{total} · {slot}', filterAria: 'Filtro', rarityAria: 'Rareza',
+    catalogN: '{n} objetos', weaponAside: 'Arma', weaponAsideHint: 'Colección · no es 6.º hueco',
+    slot: { head: 'Cabeza', chest: 'Pecho', hands: 'Manos', legs: 'Piernas', back: 'Espalda' },
+  },
 };
 
 function weaponLabel(w) {
@@ -23642,7 +23761,20 @@ const CATALOG_DE_CHROME = {
     energyEmpty: 'Energy nicht voll!', subst: 'Substitution!', dash: 'Dash!',
     shield: 'Schild!', parry: 'PARRY!', block: 'BLOCK!', miss: 'MISS!',
   },
-  egg: { dailyReady: 'Tages-Ei bereit', advBonus: 'Bonus-Ei: 1× Abenteuer gewinnen', tomorrow: 'Ei wieder morgen' },
+  egg: {
+    dailyReady: 'Tages-Ei bereit', advBonus: 'Bonus-Ei: 1× Abenteuer gewinnen', tomorrow: 'Ei wieder morgen',
+    name: {
+      egg_pebble: 'Kiesel', egg_moss: 'Moosball', egg_candy: 'Bonbon', egg_cloud: 'Wölkchen',
+      egg_star: 'Sternchen', egg_flame: 'Flämmchen', egg_crystal: 'Kristall', egg_moon: 'Mond-Ei',
+      egg_gold: 'Golden', egg_neon: 'Neon', egg_rainbow: 'Regenbogen', egg_prism: 'Prisma',
+    },
+    perk: {
+      egg_pebble: 'Weiches Grauglühen', egg_moss: 'Grüne Funken', egg_candy: 'Rosa Streifen',
+      egg_cloud: 'Weicher Wolkenwirbel', egg_star: 'Goldsterne', egg_flame: 'Warmer Flammenakzent',
+      egg_crystal: 'Blaues Kristallschimmer', egg_moon: 'Mondsichel-Glühen', egg_gold: 'Legendärer Goldglanz',
+      egg_neon: 'Neonrand-Puls', egg_rainbow: 'Mythisches Regenbogen-Ei', egg_prism: 'Seltener Prisma-Blitz',
+    },
+  },
   pet: {
     active: 'Pet · aktiv', tamed: 'Pet · gezähmt', buy: 'Pet · kaufen {cost} PC',
     killsNeed: 'Pet · {need} Kills', killsProgress: 'Pet · {cur}/{need} Kills',
@@ -24218,7 +24350,7 @@ const CATALOG_DE_CHROME = {
     hubStatStyle: '{n}/{total} Outfits',
     hubStatGear: '{n}/{total} Items',
     hubStatDex: '{n}/{total} · +max HP',
-    petCoinTip: 'Spiel <b>Münzen-Bonus</b> für Pet-Coins (2 Gold = 1 PC). Pets hier kaufen oder über Monsterbuch zähmen.',
+    petCoinTip: 'Spiel <b>Münzen-Bonus</b> (2 Gold = 1 PC). Kaufen oder im Monsterbuch zähmen.',
     petSummaryTamed: 'Gezähmt <b>{tamed}/{total}</b> · aktiv <b>{active}</b> · <b>{wallet} Pet-Coins</b>',
     petNone: 'keine',
     installSub: 'Ein Icon, wie eine echte App',
@@ -24328,10 +24460,11 @@ const CATALOG_DE_CHROME = {
     upgradeShardsLine: '{skill} Skill · {item} Item-Splitter',
     upgradeMaxHint: 'Standard max Lv {std} · mythisch/extrem max Lv {ext}',
     eggSummary: 'Gesammelt {owned}/{total} · aktiv {active} · {daily}',
-    eggSummaryHint: 'Kosmetik — kein Kampfbonus. 1 Tages-Ei + Bonus-Ei nach dem ersten Abenteuer-Sieg heute.',
+    eggSummaryHint: 'Kosmetik. 1 Tages-Ei + Bonus nach erstem Abenteuer-Sieg.',
     petTamedAssist: 'Gezähmt · Assist im Abenteuer',
     petBuyLine: 'Kaufen: {cost} Pet-Coins',
-    petTameLine: 'Zähmen: {cur}/{need} Kills · oder {cost}',
+    petTameLine: 'Zähmen: {cur}/{need} · oder {cost}',
+    petKillsLeft: '{n} noch',
     petActive: 'aktiv',
     petEquip: 'ausrüsten',
     styleSummary: 'Outfits {unlocked}/{total} · aktiv {name}',
@@ -24423,9 +24556,26 @@ const CATALOG_DE_CHROME = {
     equip: 'Anlegen',
     unequip: 'Ablegen',
     wearing: 'an',
+    vanityHint: 'Keine Stats — nur Look',
+    statHint: 'Mit Kampfbonus',
+    lockLevel: 'Lv {n}',
+    lockTrain: '{n}× Training',
+    lockDex: '{n} Monster',
+    lockTime: 'Ab {when}',
+    lockTimeDate: 'Ab Datum',
+    lockDays: '{n} Tage',
+    lockAdv: 'Abenteuer Lv {n}',
+    lockDiff: 'Noch nicht frei',
+    lockOwned: 'Noch nicht gefunden',
+    lockSlot: 'Falscher Slot',
+    lockNoStats: 'Keine Stats bis offen',
+    filterSearch: 'Suche {n}…',
+    filterEmpty: 'Nichts in diesem Filter',
+    filterRarityAll: 'Alle',
+    filterCount: '{shown}/{total} · {slot}',
     catalogN: '{n} Items',
     weaponAside: 'Waffe',
-    weaponAsideHint: 'Bleibt in Sammlung → Waffen — kein 6. Slot.',
+    weaponAsideHint: 'Sammlung · kein 6. Slot',
     rar: {
       common: 'gewöhnlich', uncommon: 'ungewöhnlich', rare: 'selten', epic: 'episch',
       legendary: 'legendär', mythic: 'mythisch', nightmare: 'Albtraum', hell: 'Hölle',
@@ -24795,7 +24945,7 @@ overlayI18nCatalog(CATALOG_FR, {
     gearSub: '5 emplacements · look vs stats · niveau et temps',
     summonHead: 'Coffres',
     summonSub: 'Coffre du jour · 10× · arme ou pet',
-    summonWhere: 'Menu → Summons · butin dans Collection',
+    summonWhere: 'Menu → Coffres · butin dans Collection',
     summonPull: 'Ouvrir',
     summonGotoWeapons: 'Armes',
     summonGotoPets: 'Pets',
@@ -24805,6 +24955,23 @@ overlayI18nCatalog(CATALOG_FR, {
     summonReveal: 'Tape le coffre — le butin apparaît',
     dexAllBiomes: 'Tous les biomes',
     dexBiome: { farm: 'Ferme', zoo: 'Zoo', sea: 'Mer', wild: 'Bois', crypt: 'Crypte', scrap: 'Ferraille', frost: 'Givre', classic: 'Classique', secret: 'Secret' },
+    petCoinTip: 'Joue <b>bonus pièces</b> (2 or = 1 PC). Achète ou apprivoise via le bestiaire.',
+    petSummaryTamed: 'Apprivoisés <b>{tamed}/{total}</b> · actif <b>{active}</b> · <b>{wallet} pet coins</b>',
+    petNone: 'aucun',
+    petTamedAssist: 'Apprivoisé · aide en aventure',
+    petBuyLine: 'Acheter : {cost} pet coins',
+    petTameLine: 'Apprivoiser : {cur}/{need} · ou {cost}',
+    petActive: 'actif',
+    petEquip: 'équiper',
+    petBuy: 'acheter',
+    petKillsLeft: '{n} K.O.',
+    eggSummary: 'Collecté {owned}/{total} · actif {active} · {daily}',
+    eggSummaryHint: 'Cosmétique. 1 œuf/jour + bonus après 1 victoire aventure.',
+    eggCosmetic: 'Compagnon cosmétique',
+    eggUnhatched: 'Pas encore éclos',
+    petLineActive: 'Pet · actif',
+    petLineTamed: 'Pet · apprivoisé',
+    petLineBuy: 'Pet · acheter {cost} PC',
   },
   fomo: {
     ritualTitle: 'Aujourd’hui',
@@ -24822,8 +24989,21 @@ overlayI18nCatalog(CATALOG_FR, {
     streakReward14: '+120 XP',
   },
   fighter: { energyEmpty: 'Énergie pas pleine !', subst: 'Substitution !', dash: 'Dash !', shield: 'Bouclier !', parry: 'PARRY !', block: 'BLOC !', miss: 'RATÉ !' },
-  egg: { dailyReady: 'Œuf du jour prêt', advBonus: 'Œuf bonus : gagne 1× aventure', tomorrow: 'Œuf demain' },
-  pet: { active: 'Pet · actif', tamed: 'Pet · apprivoisé', buy: 'Pet · acheter {cost} PC', killsNeed: 'Pet · {need} kills', killsProgress: 'Pet · {cur}/{need} kills' },
+  egg: {
+    dailyReady: 'Œuf du jour prêt', advBonus: 'Œuf bonus : gagne 1× aventure', tomorrow: 'Œuf demain',
+    name: {
+      egg_pebble: 'Galet', egg_moss: 'Mousse', egg_candy: 'Bonbon', egg_cloud: 'Nuage',
+      egg_star: 'Étoile', egg_flame: 'Flamme', egg_crystal: 'Cristal', egg_moon: 'Œuf-lune',
+      egg_gold: 'Doré', egg_neon: 'Néon', egg_rainbow: 'Arc-en-ciel', egg_prism: 'Prisme',
+    },
+    perk: {
+      egg_pebble: 'Lueur grise douce', egg_moss: 'Étincelles vertes', egg_candy: 'Rayures roses',
+      egg_cloud: 'Tourbillon nuage', egg_star: 'Étoiles d’or', egg_flame: 'Accent flamme',
+      egg_crystal: 'Shimmer cristal', egg_moon: 'Lueur de lune', egg_gold: 'Éclat d’or',
+      egg_neon: 'Pulse néon', egg_rainbow: 'Œuf arc-en-ciel', egg_prism: 'Flash prisme',
+    },
+  },
+  pet: { active: 'Pet · actif', tamed: 'Pet · apprivoisé', buy: 'Pet · acheter {cost} PC', killsNeed: 'Pet · {need} K.O.', killsProgress: 'Pet · {cur}/{need} K.O.' },
   menu: { tipList: [
     'Choisis une tuile — Aventure · Arcade · 2J · Collection',
     '5 îles — le boss Lv 10/20/30/40/50 ouvre la suivante',
@@ -25327,7 +25507,7 @@ overlayI18nCatalog(CATALOG_ES, {
     gearSub: '5 huecos · look vs stats · nivel y tiempo',
     summonHead: 'Cofres',
     summonSub: 'Cofre diario · 10× · arma o pet',
-    summonWhere: 'Menú → Summons · botín en Colección',
+    summonWhere: 'Menú → Cofres · botín en Colección',
     summonPull: 'Abrir',
     summonGotoWeapons: 'Armas',
     summonGotoPets: 'Pets',
@@ -25337,6 +25517,23 @@ overlayI18nCatalog(CATALOG_ES, {
     summonReveal: 'Toca el cofre — aparece el botín',
     dexAllBiomes: 'Todos los biomas',
     dexBiome: { farm: 'Granja', zoo: 'Zoo', sea: 'Mar', wild: 'Bosque', crypt: 'Cripta', scrap: 'Chatarra', frost: 'Escarcha', classic: 'Clásico', secret: 'Secreto' },
+    petCoinTip: 'Juega <b>bonus monedas</b> (2 oro = 1 PC). Compra o doma en el bestiario.',
+    petSummaryTamed: 'Domados <b>{tamed}/{total}</b> · activo <b>{active}</b> · <b>{wallet} pet coins</b>',
+    petNone: 'ninguno',
+    petTamedAssist: 'Domado · ayuda en aventura',
+    petBuyLine: 'Comprar: {cost} pet coins',
+    petTameLine: 'Domar: {cur}/{need} · o {cost}',
+    petActive: 'activo',
+    petEquip: 'equipar',
+    petBuy: 'comprar',
+    petKillsLeft: '{n} KO',
+    eggSummary: 'Coleccionado {owned}/{total} · activo {active} · {daily}',
+    eggSummaryHint: 'Cosmético. 1 huevo/día + bonus tras 1 victoria aventura.',
+    eggCosmetic: 'Compañero cosmético',
+    eggUnhatched: 'Aún no eclosionado',
+    petLineActive: 'Pet · activo',
+    petLineTamed: 'Pet · domado',
+    petLineBuy: 'Pet · comprar {cost} PC',
   },
   fomo: {
     ritualTitle: 'Hoy',
@@ -25354,8 +25551,21 @@ overlayI18nCatalog(CATALOG_ES, {
     streakReward14: '+120 XP',
   },
   fighter: { energyEmpty: '¡Energía incompleta!', subst: '¡Sustitución!', dash: '¡Dash!', shield: '¡Escudo!', parry: '¡PARRY!', block: '¡BLOQUEO!', miss: '¡FALLO!' },
-  egg: { dailyReady: 'Huevo diario listo', advBonus: 'Huevo extra: gana 1× aventura', tomorrow: 'Huevo otra vez mañana' },
-  pet: { active: 'Pet · activo', tamed: 'Pet · domado', buy: 'Pet · comprar {cost} PC', killsNeed: 'Pet · {need} kills', killsProgress: 'Pet · {cur}/{need} kills' },
+  egg: {
+    dailyReady: 'Huevo diario listo', advBonus: 'Huevo extra: gana 1× aventura', tomorrow: 'Huevo otra vez mañana',
+    name: {
+      egg_pebble: 'Guijarro', egg_moss: 'Musgo', egg_candy: 'Caramelo', egg_cloud: 'Nubecita',
+      egg_star: 'Estrellita', egg_flame: 'Llamita', egg_crystal: 'Cristal', egg_moon: 'Huevo-luna',
+      egg_gold: 'Dorado', egg_neon: 'Neón', egg_rainbow: 'Arcoíris', egg_prism: 'Prisma',
+    },
+    perk: {
+      egg_pebble: 'Brillo gris suave', egg_moss: 'Chispas verdes', egg_candy: 'Rayas rosas',
+      egg_cloud: 'Remolino de nube', egg_star: 'Estrellas de oro', egg_flame: 'Acento llama',
+      egg_crystal: 'Brillo cristal', egg_moon: 'Brillo de luna', egg_gold: 'Brillo de oro',
+      egg_neon: 'Pulso neón', egg_rainbow: 'Huevo arcoíris', egg_prism: 'Destello prisma',
+    },
+  },
+  pet: { active: 'Pet · activo', tamed: 'Pet · domado', buy: 'Pet · comprar {cost} PC', killsNeed: 'Pet · {need} KO', killsProgress: 'Pet · {cur}/{need} KO' },
   menu: { tipList: [
     'Elige una losa — Aventura · Arcade · 2J · Colección',
     '5 islas — el jefe Lv 10/20/30/40/50 abre la siguiente',
@@ -25868,6 +26078,23 @@ overlayI18nCatalog(CATALOG_DE, {
     gearSub: '5 Slots · Look vs Stats · Level und Zeit',
     dexAllBiomes: 'Alle Biome',
     dexBiome: { farm: 'Farm', zoo: 'Zoo', sea: 'Meer', wild: 'Wald', crypt: 'Krypta', scrap: 'Schrott', frost: 'Frost', classic: 'Klassisch', secret: 'Geheim' },
+    petCoinTip: 'Spiel <b>Münzen-Bonus</b> (2 Gold = 1 PC). Kaufen oder im Monsterbuch zähmen.',
+    petSummaryTamed: 'Gezähmt <b>{tamed}/{total}</b> · aktiv <b>{active}</b> · <b>{wallet} Pet-Coins</b>',
+    petNone: 'keine',
+    petTamedAssist: 'Gezähmt · Assist im Abenteuer',
+    petBuyLine: 'Kaufen: {cost} Pet-Coins',
+    petTameLine: 'Zähmen: {cur}/{need} · oder {cost}',
+    petActive: 'aktiv',
+    petEquip: 'ausrüsten',
+    petBuy: 'kaufen',
+    petKillsLeft: '{n} noch',
+    eggSummary: 'Gesammelt {owned}/{total} · aktiv {active} · {daily}',
+    eggSummaryHint: 'Kosmetik. 1 Tages-Ei + Bonus nach erstem Abenteuer-Sieg.',
+    eggCosmetic: 'Kosmetischer Begleiter',
+    eggUnhatched: 'Noch nicht geschlüpft',
+    petLineActive: 'Pet · aktiv',
+    petLineTamed: 'Pet · gezähmt',
+    petLineBuy: 'Pet · kaufen {cost} PC',
   },
   fomo: {
     ritualTitle: 'Heute',
@@ -25885,7 +26112,20 @@ overlayI18nCatalog(CATALOG_DE, {
     streakReward14: '+120 XP',
   },
   fighter: { energyEmpty: 'Energy nicht voll!', subst: 'Substitution!', dash: 'Dash!', shield: 'Schild!', parry: 'PARRY!', block: 'BLOCK!', miss: 'DANEBEN!' },
-  egg: { dailyReady: 'Tages-Ei bereit', advBonus: 'Bonus-Ei: 1× Abenteuer gewinnen', tomorrow: 'Ei morgen wieder' },
+  egg: {
+    dailyReady: 'Tages-Ei bereit', advBonus: 'Bonus-Ei: 1× Abenteuer gewinnen', tomorrow: 'Ei morgen wieder',
+    name: {
+      egg_pebble: 'Kiesel', egg_moss: 'Moosball', egg_candy: 'Bonbon', egg_cloud: 'Wölkchen',
+      egg_star: 'Sternchen', egg_flame: 'Flämmchen', egg_crystal: 'Kristall', egg_moon: 'Mond-Ei',
+      egg_gold: 'Golden', egg_neon: 'Neon', egg_rainbow: 'Regenbogen', egg_prism: 'Prisma',
+    },
+    perk: {
+      egg_pebble: 'Weiches Grauglühen', egg_moss: 'Grüne Funken', egg_candy: 'Rosa Streifen',
+      egg_cloud: 'Weicher Wolkenwirbel', egg_star: 'Goldsterne', egg_flame: 'Warmer Flammenakzent',
+      egg_crystal: 'Blaues Kristallschimmer', egg_moon: 'Mondsichel-Glühen', egg_gold: 'Legendärer Goldglanz',
+      egg_neon: 'Neonrand-Puls', egg_rainbow: 'Mythisches Regenbogen-Ei', egg_prism: 'Seltener Prisma-Blitz',
+    },
+  },
   pet: { active: 'Pet · aktiv', tamed: 'Pet · gezähmt', buy: 'Pet · kaufen {cost} PC', killsNeed: 'Pet · {need} Kills', killsProgress: 'Pet · {cur}/{need} Kills' },
   menu: { tipList: [
     'Wähle eine Kachel — Abenteuer · Arcade · 2P · Sammlung',
@@ -50269,6 +50509,7 @@ const UI = {
       }
       el.appendChild(cv);
       const info = document.createElement('div');
+      info.className = 'card-info';
       const badge = active ? ` <span class="rar-pill" style="color:#7cf5ff;border-color:#7cf5ff">${t('ui.petActive').toUpperCase()}</span>` : '';
       const upLv = tamed ? itemUpgradeLevel('pet', def.id) : 0;
       const upMax = tamed ? itemUpgradeMax('pet', def.id) : 0;
@@ -50279,7 +50520,7 @@ const UI = {
         ? ` <span class="rar-pill" style="color:#ffd75e;border-color:#ffd75e">${t('ui.weaponChestBadge')}</span>`
         : '';
       info.innerHTML = `<div class="cname">${sp.name} <span class="rar-pill" style="color:${rar.color};border-color:${rar.color}">${rarityLabel(sp.rarity)}</span>${badge}${chestPetBadge}${upBadge}</div>` +
-        `<div class="cinfo">${def.perk}</div>` +
+        `<div class="cinfo">${petPerkLabel(def)}</div>` +
         (chestPetSk ? `<div class="cinfo" style="opacity:.9;font-size:12px;margin-top:3px;color:#ffd75e">✦ ${chestPetSk}</div>` : '') +
         `<div class="cinfo" style="opacity:.78;font-size:12px;margin-top:3px">${tamed
           ? t('ui.petTamedAssist')
@@ -50297,7 +50538,7 @@ const UI = {
         right.innerHTML = `${t('ui.petBuy')}<br>${cost} ${SVG_COIN_ICON}`;
         right.style.color = '#ff9ad5';
       } else {
-        right.innerHTML = kills > 0 ? `${need - kills} kills` : `${cost} ${SVG_COIN_ICON}`;
+        right.innerHTML = kills > 0 ? t('ui.petKillsLeft', { n: need - kills }) : `${cost} ${SVG_COIN_ICON}`;
         right.style.opacity = '0.7';
       }
       el.appendChild(right);
@@ -50365,8 +50606,8 @@ const UI = {
             try { AudioSys.sfx('diceRoll'); } catch (_) {}
             const rar = rarityOf(res.def.rarity);
             UI.toast(res.duplicate
-              ? t('toast.eggDuplicateUi', { name: res.def.name })
-              : t('toast.eggHatch', { name: res.def.name, rarity: rarityLabel(res.def.rarity) }), 3600);
+              ? t('toast.eggDuplicateUi', { name: eggPetName(res.def) })
+              : t('toast.eggHatch', { name: eggPetName(res.def), rarity: rarityLabel(res.def.rarity) }), 3600);
             this.renderPets();
             this.renderMenu();
           }, 'crackDailyEgg', t('ui.errEggCrack'));
@@ -50390,9 +50631,10 @@ const UI = {
       drawEggPetArt(cc, def, 18, 1.1, 0, 0, !owned);
       el.appendChild(cv);
       const info = document.createElement('div');
+      info.className = 'card-info';
       const badge = active ? ` <span class="rar-pill" style="color:#ffd75e;border-color:#ffd75e">${t('ui.petActive').toUpperCase()}</span>` : '';
-      info.innerHTML = `<div class="cname">${def.name} <span class="rar-pill" style="color:${rar.color};border-color:${rar.color}">${rarityLabel(def.rarity)}</span>${badge}</div>` +
-        `<div class="cinfo">${def.perk}</div>` +
+      info.innerHTML = `<div class="cname">${eggPetName(def)} <span class="rar-pill" style="color:${rar.color};border-color:${rar.color}">${rarityLabel(def.rarity)}</span>${badge}</div>` +
+        `<div class="cinfo">${eggPerkLabel(def)}</div>` +
         `<div class="cinfo" style="opacity:.78;font-size:12px;margin-top:3px">${owned ? t('ui.eggCosmetic') : t('ui.eggUnhatched')}</div>`;
       el.appendChild(info);
       const right = document.createElement('div');
@@ -50413,7 +50655,7 @@ const UI = {
             } else {
               equipEggPet(def.id);
               AudioSys.sfx('select');
-              UI.toast(t('toast.eggFloat', { name: def.name }), 2200);
+              UI.toast(t('toast.eggFloat', { name: eggPetName(def) }), 2200);
             }
             this.renderPets();
           }, 'equipEggPet/' + def.id, t('ui.errEggPick'));

@@ -4040,6 +4040,7 @@ const UI = {
       }
       el.appendChild(cv);
       const info = document.createElement('div');
+      info.className = 'card-info';
       const badge = active ? ` <span class="rar-pill" style="color:#7cf5ff;border-color:#7cf5ff">${t('ui.petActive').toUpperCase()}</span>` : '';
       const upLv = tamed ? itemUpgradeLevel('pet', def.id) : 0;
       const upMax = tamed ? itemUpgradeMax('pet', def.id) : 0;
@@ -4050,7 +4051,7 @@ const UI = {
         ? ` <span class="rar-pill" style="color:#ffd75e;border-color:#ffd75e">${t('ui.weaponChestBadge')}</span>`
         : '';
       info.innerHTML = `<div class="cname">${sp.name} <span class="rar-pill" style="color:${rar.color};border-color:${rar.color}">${rarityLabel(sp.rarity)}</span>${badge}${chestPetBadge}${upBadge}</div>` +
-        `<div class="cinfo">${def.perk}</div>` +
+        `<div class="cinfo">${petPerkLabel(def)}</div>` +
         (chestPetSk ? `<div class="cinfo" style="opacity:.9;font-size:12px;margin-top:3px;color:#ffd75e">✦ ${chestPetSk}</div>` : '') +
         `<div class="cinfo" style="opacity:.78;font-size:12px;margin-top:3px">${tamed
           ? t('ui.petTamedAssist')
@@ -4068,7 +4069,7 @@ const UI = {
         right.innerHTML = `${t('ui.petBuy')}<br>${cost} ${SVG_COIN_ICON}`;
         right.style.color = '#ff9ad5';
       } else {
-        right.innerHTML = kills > 0 ? `${need - kills} kills` : `${cost} ${SVG_COIN_ICON}`;
+        right.innerHTML = kills > 0 ? t('ui.petKillsLeft', { n: need - kills }) : `${cost} ${SVG_COIN_ICON}`;
         right.style.opacity = '0.7';
       }
       el.appendChild(right);
@@ -4136,8 +4137,8 @@ const UI = {
             try { AudioSys.sfx('diceRoll'); } catch (_) {}
             const rar = rarityOf(res.def.rarity);
             UI.toast(res.duplicate
-              ? t('toast.eggDuplicateUi', { name: res.def.name })
-              : t('toast.eggHatch', { name: res.def.name, rarity: rarityLabel(res.def.rarity) }), 3600);
+              ? t('toast.eggDuplicateUi', { name: eggPetName(res.def) })
+              : t('toast.eggHatch', { name: eggPetName(res.def), rarity: rarityLabel(res.def.rarity) }), 3600);
             this.renderPets();
             this.renderMenu();
           }, 'crackDailyEgg', t('ui.errEggCrack'));
@@ -4161,9 +4162,10 @@ const UI = {
       drawEggPetArt(cc, def, 18, 1.1, 0, 0, !owned);
       el.appendChild(cv);
       const info = document.createElement('div');
+      info.className = 'card-info';
       const badge = active ? ` <span class="rar-pill" style="color:#ffd75e;border-color:#ffd75e">${t('ui.petActive').toUpperCase()}</span>` : '';
-      info.innerHTML = `<div class="cname">${def.name} <span class="rar-pill" style="color:${rar.color};border-color:${rar.color}">${rarityLabel(def.rarity)}</span>${badge}</div>` +
-        `<div class="cinfo">${def.perk}</div>` +
+      info.innerHTML = `<div class="cname">${eggPetName(def)} <span class="rar-pill" style="color:${rar.color};border-color:${rar.color}">${rarityLabel(def.rarity)}</span>${badge}</div>` +
+        `<div class="cinfo">${eggPerkLabel(def)}</div>` +
         `<div class="cinfo" style="opacity:.78;font-size:12px;margin-top:3px">${owned ? t('ui.eggCosmetic') : t('ui.eggUnhatched')}</div>`;
       el.appendChild(info);
       const right = document.createElement('div');
@@ -4184,7 +4186,7 @@ const UI = {
             } else {
               equipEggPet(def.id);
               AudioSys.sfx('select');
-              UI.toast(t('toast.eggFloat', { name: def.name }), 2200);
+              UI.toast(t('toast.eggFloat', { name: eggPetName(def) }), 2200);
             }
             this.renderPets();
           }, 'equipEggPet/' + def.id, t('ui.errEggPick'));
