@@ -70,6 +70,9 @@ function notePlayerHurtSource(game, src) {
 }
 
 function adventureLoseCopy(game) {
+  if (game && !game.lastHurtBy && typeof notePlayerHurtSource === 'function') {
+    try { notePlayerHurtSource(game, null); } catch (_) {}
+  }
   const h = game && game.lastHurtBy;
   const name = h && h.name;
   if (!name) return { titleKey: 'result.advLose', title: t('result.advLose') };
@@ -81,14 +84,82 @@ function adventureLoseCopy(game) {
   };
 }
 
+function trimResultTipPart(s) {
+  return String(s || '').replace(/(\s*·\s*)+$/g, '').trim();
+}
+
 function adventureKillTip(game, prog) {
   const h = game && game.lastHurtBy;
   if (!h || !h.name) return '';
-  const p = { name: h.name, prog };
-  if (h.fly) return t('result.killedByFlyer', p);
-  if (h.slam) return t('result.killedBySlam', p);
-  if (h.boss) return t('result.killedByBoss', p);
-  return t('result.killedBy', p);
+  const p = { name: h.name, prog: prog || '' };
+  let line = '';
+  if (h.fly) line = t('result.killedByFlyer', p);
+  else if (h.slam) line = t('result.killedBySlam', p);
+  else if (h.boss) line = t('result.killedByBoss', p);
+  else line = t('result.killedBy', p);
+  return trimResultTipPart(line);
+}
+
+/** Infer slam/flyer/charge from lastHurtBy flags when lastFailTele was never set. */
+function ensureAdventureFailTele(game) {
+  if (!game || game.lastFailTele) return;
+  const h = game.lastHurtBy;
+  if (h) {
+    if (h.slam) { game.lastFailTele = 'slam'; return; }
+    if (h.fly) { game.lastFailTele = 'flyer'; return; }
+    if (h.type === 'charge' || h.type === 'swim') { game.lastFailTele = 'charge'; return; }
+    if (h.type === 'shoot') { game.lastFailTele = 'shoot'; return; }
+    if (h.type === 'dragon') { game.lastFailTele = 'fire'; return; }
+  }
+  if (typeof notePlayerFailTele === 'function') {
+    try { notePlayerFailTele(game, {}); } catch (_) {}
+  }
+}
+
+/** Mega-merge feel: fail cue → Nog één keer first, then killer advice. Gamble waits. */
+function adventureLoseFeelTip(game, ctx) {
+  ctx = ctx || {};
+  const lv = ctx.lv != null ? ctx.lv : (game && game.level && game.level.n);
+  const diff = ctx.diff || (game && game.advDiff) || 'normal';
+  if (game && !game.lastHurtBy && typeof notePlayerHurtSource === 'function') {
+    try { notePlayerHurtSource(game, null); } catch (_) {}
+  }
+  ensureAdventureFailTele(game);
+  const waveTotal = (game && game.level && game.level.waves && game.level.waves.length) || 0;
+  const prog = game && game.waveIdx >= 0
+    ? t('result.wavesProg', { cur: game.waveIdx + 1, total: waveTotal })
+    : tOr('result.wavesStart', 'begin');
+  const retry = tOr('result.againRetry', 'Nog één keer');
+  const tele = (typeof combatFailRetryTip === 'function') ? combatFailRetryTip(game, '') : '';
+  const lead = trimResultTipPart(tele || retry);
+  const failsNow = (typeof advFailCount === 'function') ? advFailCount(lv, diff) : 0;
+  if (failsNow >= SATAN_FAIL_THRESHOLD && typeof shouldTriggerSatan === 'function' && shouldTriggerSatan(lv, diff)) {
+    return lead + ' · ' + t('result.heatSatanNext');
+  }
+  if (failsNow >= SATAN_DANGER_FAILS) {
+    return lead + ' · ' + t('result.heatDanger');
+  }
+  const named = adventureKillTip(game, '');
+  const genericKey = (game && game.player && game.player.hp <= 0) ? 'result.lossBlockTip' : 'result.lossOrbTip';
+  const generic = trimResultTipPart(t(genericKey, { prog: '' }));
+  const advice = named || generic;
+  let once = '';
+  if (!(typeof firstPunchPending === 'function' && firstPunchPending())) {
+    once = onceResultTip('adventure', 'loss', t('result.lossGambleTip'));
+  }
+  let heatTip = '';
+  try {
+    const heat = (typeof satanHeatForLevel === 'function') ? satanHeatForLevel(lv, diff) : null;
+    heatTip = (typeof satanHeatTip === 'function') ? (satanHeatTip(heat) || '') : '';
+  } catch (_) {}
+  const parts = [lead];
+  if (advice && advice !== lead && advice.indexOf(lead) < 0) parts.push(advice);
+  if (prog) parts.push(prog);
+  // First deaths: keep killer + fail cue readable on 390. Heat lecture waits.
+  const skipHeat = failsNow < 5 || (typeof firstPunchPending === 'function' && firstPunchPending());
+  if (heatTip && !skipHeat) parts.push(trimResultTipPart(heatTip));
+  if (once) parts.push(trimResultTipPart(once));
+  return parts.filter(Boolean).join(' · ');
 }
 
 /** Deferred UI (toast/banner) — negeer na menu-exit of nieuw gevecht. */
@@ -1180,39 +1251,10 @@ class Game {
         ? t('result.satanAfterClear')
         : (stars >= 3 ? t('result.perfectRun') : (stars > prevStars
         ? t('result.starImproved', { stars, prev: prevStars })
-        : t('result.pickupsHelp', { hint: starHintLine() })))) : (() => {
-        const failsNow = advFailCount(lv, diff);
-        const retry = tOr('result.againRetry', 'Nog één keer');
-        const tele = (typeof combatFailRetryTip === 'function') ? combatFailRetryTip(this, '') : '';
-        const waveTotal = (this.level && this.level.waves && this.level.waves.length) || 0;
-        const prog = this.waveIdx >= 0
-          ? t('result.wavesProg', { cur: this.waveIdx + 1, total: waveTotal })
-          : tOr('result.wavesStart', 'begin');
-        const lead = (tele || retry) + ' · ' + prog;
-        if (failsNow >= SATAN_FAIL_THRESHOLD && typeof shouldTriggerSatan === 'function' && shouldTriggerSatan(lv, diff)) {
-          return lead + ' · ' + t('result.heatSatanNext');
-        }
-        if (failsNow >= SATAN_DANGER_FAILS) {
-          return lead + ' · ' + t('result.heatDanger');
-        }
-        const named = typeof adventureKillTip === 'function' ? adventureKillTip(this, prog) : '';
-        const base = named || (this.player.hp <= 0
-          ? t('result.lossBlockTip', { prog })
-          : t('result.lossOrbTip', { prog }));
-        // EX-027: killer first. Skip gamble lecture until first punch (don't burn the once-flag).
-        let once = '';
-        if (!(typeof firstPunchPending === 'function' && firstPunchPending())) {
-          once = onceResultTip('adventure', 'loss', t('result.lossGambleTip'));
-        }
-        const core = once ? `${base} · ${once}` : base;
-        let heatTip = '';
-        try {
-          const heat = (typeof satanHeatForLevel === 'function') ? satanHeatForLevel(lv, diff) : null;
-          heatTip = (typeof satanHeatTip === 'function') ? (satanHeatTip(heat) || '') : '';
-        } catch (_) {}
-        // EX-032: fail cue / retry first. Heat never leads (it buried SLAM + Nog één keer).
-        return [lead, core, heatTip].filter(Boolean).join(' · ');
-      })(),
+        : t('result.pickupsHelp', { hint: starHintLine() }))))
+        : ((typeof adventureLoseFeelTip === 'function')
+          ? adventureLoseFeelTip(this, { lv: lv, diff: diff })
+          : tOr('result.againRetry', 'Nog één keer')),
     }));
   }
 
