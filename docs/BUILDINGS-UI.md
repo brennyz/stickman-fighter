@@ -97,8 +97,27 @@ When `BUILDING_IDS` + `buildingCollect` are present, the HOME screen binds that 
 7. First open (nothing built): one-line **empty start** — `Stok-Aansteker is open — tik Bouw (20 PC)` / EN `Lighter is open — tap Build (20 PC)`. Tap opens stick_lighter. No wall of text.
 8. Upgrade… → sheet with does/next + **red/green cost chips** (wallet covers = green, short = red). Confirm is `is-afford` / `is-broke`. Success toast is short (`Lighter · Lv 4`), not the full factory name. Unbuilt uses **Bouwen…**. Locked factory: **Naar Avontuur**. Max: status line, harvest still runs. EN/DE overlays use locale keys (`costPc`, `islandFallback`, `sheetClose`) — no Dutch leftovers.
 9. ← Overzicht or Back closes sheet → detail → list; Back on the list returns to KIES JE PAD. Versus tile must stay gone.
-10. When **2+ hoppers are ready**, a one-tap collect-all bar sits above the list (`#buildingsCollectAll`). NL `Oogst n / alles` · EN `Collect n / all ready` · DE `Ernte n / alle bereit` · FR `Récolter n / tout prêt` · ES `Recolectar n / todo listo`. Hidden at 0–1 ready.
-11. Long-press (or `title`) on a resource pill shows one line: `Max 8u offline · daarna VOL` (ready/full variants). Does not collect.
+10. When **2+ hoppers are ready**, a one-tap collect-all bar sits above the list (`#buildingsCollectAll`). One centered label: NL `Oogst n` · EN `Collect n` · DE `Ernte n` · FR `Récolter n` · ES `Recolectar n`. Hidden at 0–1 ready.
+11. Long-press (or `title`) on a resource pill shows one line: `Max 8u offline · daarna VOL` (ready/full variants). Does not collect. Tip stays above the pill (clamped).
+12. First-build sheet title is **Bouw {short}** / EN **Build {short}** with confirm **Bouw / Build**. Already-built sheet stays **Upgrade {short}** + **Bevestig / Confirm**.
+
+## near-DONE (#312) — P3 only until 16:30 UTC 2026-09-18
+
+P0–P2 shipped. Freeze new features. **Do not merge to main.**
+
+| Status | Item |
+|--------|------|
+| done | Overview cards → detail → upgrade sheet; factory ids frozen |
+| done | One-tap collect pill; hopper VOL; collect lock; wallet +N |
+| done | Empty-start + Bouw/Upgrade pill skip detail; `_buildingsSheetFrom` |
+| done | Cost chips red/green; short Lv toast; 390 walk |
+| done | Collect-all (2+) + EN/DE/FR/ES; 8h pill tip clamped |
+| done | openBuildings clears toasts (welcome vs title) |
+| P3 done | Collect-all single centered label (no “all ready” subtitle) |
+| P3 done | First-build sheet `buildTitle` + `pillBuild` (not Upgrade/Bevestig) |
+| leftover | Optional: more locale nits if a language-factcheck agent flags them |
+
+Share / playtest stays **`speel.html`**. No Versus. No `origin/main` until user says «merge main».
 
 Debug without adventure progress: in console
 `save.unlocked = 70; persist(); location.reload()` then all five unlock.

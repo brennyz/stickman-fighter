@@ -3230,7 +3230,10 @@
     border: 1px solid rgba(255,255,255,.16); border-bottom: 0;
     box-shadow: 0 -8px 28px rgba(0,0,0,.4);
   }
-  #buildingsScreen .buildings-sheet-panel h3 { margin: 0 0 8px; font-size: 18px; color: #f2efe6; }
+  #buildingsScreen .buildings-sheet-panel h3 {
+    margin: 0 0 8px; font-size: 18px; color: #f2efe6;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
   #buildingsScreen .buildings-sheet-now, #buildingsScreen .buildings-sheet-cost, #buildingsScreen .buildings-sheet-why {
     margin: 6px 0; font-size: 13px; font-weight: 600; color: #c8d0dc; line-height: 1.4;
   }
@@ -3259,15 +3262,13 @@
   #buildingsScreen .buildings-empty-start-wrap { width: 100%; }
   #buildingsScreen .buildings-collect-all-wrap { width: 100%; margin: 0 0 8px; }
   #buildingsScreen .buildings-collect-all {
-    display: flex; align-items: center; justify-content: space-between; gap: 8px;
+    display: flex; align-items: center; justify-content: center; gap: 8px;
     width: 100%; min-height: 40px; padding: 8px 12px;
     border-radius: 12px; border: 1px solid rgba(124,252,138,.45);
     background: rgba(20, 48, 28, .55); color: #e8f0ff;
-    font-size: 14px; font-weight: 800; text-align: left;
+    font-size: 14px; font-weight: 800; text-align: center;
   }
-  #buildingsScreen .buildings-collect-all small {
-    font-size: 11px; font-weight: 800; color: #7cfc8a; letter-spacing: .02em;
-  }
+  #buildingsScreen .buildings-collect-all small { display: none; }
   #buildingsScreen .buildings-pill-tip {
     position: absolute; z-index: 12; max-width: min(72vw, 240px);
     padding: 6px 10px; border-radius: 10px;

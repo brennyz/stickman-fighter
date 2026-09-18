@@ -145,6 +145,7 @@ Schrijf **1–3 regels** per sessie: datum, d#, wat, versie.
 
 | Datum (UTC) | d# | Update |
 |-------------|-----|--------|
+| 2026-09-18 | — | **#312 near-DONE P3:** collect-all one centered label; first-build sheet `buildTitle` + Bouw confirm; h3 ellipsis. Freeze features until 16:30. No main. **v1.18.179 / SW 389**. |
 | 2026-09-18 | — | **#312 fewer taps:** empty-start + Bouw/Upgrade pill open the sheet (skip detail); short card names + 1-line does; pill tip clamped; welcome cleared on open. **v1.18.178 / SW 388**. |
 | 2026-09-18 | — | **#312 final polish:** collect-all EN/DE/FR/ES + aria; smoke locale check; DONE checklist on draft. No new features. **v1.18.177 / SW 387**. |
 | 2026-09-18 | — | **#312 collect-all + pill tip:** optional Oogst-alles when 2+ ready; one-line 8u offline tip on pill long-press; 390px walkthrough build→collect→sheet. Draft. **v1.18.176 / SW 386**. |

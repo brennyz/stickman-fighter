@@ -101,6 +101,9 @@ must(/collectAll: 'Ernte \{n\}'/.test(i18n), 'DE collectAll missing');
 must(/collectAll: 'Récolter \{n\}'/.test(i18n), 'FR collectAll missing');
 must(/collectAll: 'Recolectar \{n\}'/.test(i18n), 'ES collectAll missing');
 must((i18n.match(/collectAllAria:/g) || []).length >= 5, 'collectAllAria must exist in NL/EN/DE/FR/ES');
+must((i18n.match(/buildTitle:/g) || []).length >= 5, 'buildTitle must exist in NL/EN/DE/FR/ES');
+must(/buildings\.buildTitle/.test(ui) && /pillBuild/.test(ui), 'unbuilt sheet must use buildTitle + pillBuild');
+must(/buildings-collect-all \{[\s\S]*?justify-content:\s*center/.test(css), 'collect-all must center the single label');
 must(css.includes('buildings-collect-all') && css.includes('buildings-pill-tip'), 'collect-all / pill-tip CSS missing');
 must(ui.includes('buildingDescModel'), 'UI must consume systems buildingDescModel');
 must(ui.includes('buildingWalletModel'), 'UI must consume systems buildingWalletModel');
@@ -308,7 +311,8 @@ async function runBrowser() {
         && /Ernte/i.test(collectAllLang.de)
         && /R[eé]colt/i.test(collectAllLang.fr)
         && /Recolect/i.test(collectAllLang.es)
-        && !/Oogst|\balles\b/i.test([collectAllLang.en, collectAllLang.de, collectAllLang.fr, collectAllLang.es].join(' | '))
+        && !/Oogst|\balles\b|all ready|alle bereit|tout prêt|todo listo/i.test(
+          [collectAllLang.en, collectAllLang.de, collectAllLang.fr, collectAllLang.es].join(' | '))
       );
       const spark0 = (typeof buildingWallet === 'function') ? Number(buildingWallet('spark') || 0) : 0;
       const glue0 = (typeof buildingWallet === 'function') ? Number(buildingWallet('glue') || 0) : 0;
@@ -335,6 +339,11 @@ async function runBrowser() {
       const walkEmpty = !!document.querySelector('[data-buildings-empty]');
       if (typeof UI.buildingsShowDetail === 'function') UI.buildingsShowDetail('stick_lighter');
       if (typeof UI.buildingsShowUpgradeStep === 'function') UI.buildingsShowUpgradeStep();
+      const firstSheet = document.getElementById('buildingsUpgradeSheet');
+      const firstTitle = ((firstSheet && firstSheet.querySelector('h3')) || {}).textContent || '';
+      const firstConfirm = ((document.getElementById('btnBuildingUpgradeConfirm')) || {}).textContent || '';
+      const firstBuildCopy = /^Bouw\b/.test(firstTitle.trim()) && /^Bouw\b/.test(firstConfirm.trim())
+        && !/^Upgrade\b/.test(firstTitle.trim());
       if (typeof UI.doBuildingUpgrade === 'function') UI.doBuildingUpgrade('stick_lighter');
       const walkBuilt = !!((typeof buildingsGet === 'function' ? buildingsGet('stick_lighter') : null) || {}).level;
       if (typeof save !== 'undefined') {
@@ -379,7 +388,8 @@ async function runBrowser() {
           && emptyStartOn && emptyStartShort && emptyGone
           && hasAffordChips && toastShort && !enLeak && !deLeak
           && /Factor/i.test(enHead) && /Fabrik/i.test(deHead)
-          && collectAllShown && collectAllOk && collectAllI18n && hasOfflineTip && tipOn && walk390),
+          && collectAllShown && collectAllOk && collectAllI18n && hasOfflineTip && tipOn && walk390
+          && firstBuildCopy),
         ids,
         factoryIds,
         chips,
@@ -433,6 +443,9 @@ async function runBrowser() {
         walkCollected,
         walkSheet,
         walk390,
+        firstBuildCopy,
+        firstTitle,
+        firstConfirm,
         head: (document.getElementById('buildingsScreenHead') || {}).textContent || '',
       };
     } catch (e) {

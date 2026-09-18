@@ -466,8 +466,7 @@ if (typeof UI === 'object' && UI) {
     host.innerHTML =
       '<button type="button" class="buildings-collect-all" data-buildings-collect-all="1" id="btnBuildingsCollectAll"'
       + ' aria-label="' + buildingsEscape(aria) + '">'
-      + '<span>' + buildingsEscape(buildingsTxt('buildings.collectAll', 'Oogst {n}', { n })) + '</span>'
-      + '<small>' + buildingsEscape(buildingsTxt('buildings.collectAllSub', 'alles')) + '</small></button>';
+      + '<span>' + buildingsEscape(buildingsTxt('buildings.collectAll', 'Oogst {n}', { n })) + '</span></button>';
   };
 
   UI.ensureBuildingsPillInfo = function ensureBuildingsPillInfo() {
@@ -895,6 +894,13 @@ if (typeof UI === 'object' && UI) {
       ? buildingsTxt('buildings.buildAsk', 'Bouw {name}?', { name: view.name })
       : buildingsTxt('buildings.upgradeAsk', 'Upgrade naar Lv {next}?', { next: (view.level || 0) + 1 });
     const canPay = !!view.canUpgrade && !atMax && !view.locked;
+    const short = buildingsShortName(view.id, view);
+    const title = unbuilt
+      ? buildingsTxt('buildings.buildTitle', 'Bouw {name}', { name: short })
+      : buildingsTxt('buildings.upgradeTitle', 'Upgrade {name}', { name: short });
+    const confirmLbl = unbuilt
+      ? buildingsTxt('buildings.pillBuild', 'Bouw')
+      : buildingsTxt('buildings.upgradeConfirm', 'Bevestig');
     const confirmCls = 'btn mode-btn big-touch buildings-cta'
       + (canPay ? ' b-continue is-afford' : ' b-gray is-broke');
     sheet.hidden = false;
@@ -903,7 +909,7 @@ if (typeof UI === 'object' && UI) {
     sheet.innerHTML =
       '<button type="button" class="buildings-sheet-backdrop" data-buildings-sheet-close></button>'
       + '<div class="buildings-sheet-panel" role="dialog" aria-modal="true">'
-      + '<h3>' + buildingsEscape(buildingsTxt('buildings.upgradeTitle', 'Upgrade {name}', { name: buildingsShortName(view.id, view) })) + '</h3>'
+      + '<h3>' + buildingsEscape(title) + '</h3>'
       + (desc.nextLine ? '<p class="buildings-sheet-now buildings-next">' + buildingsEscape(desc.nextLine) + '</p>'
         : (desc.doesLine ? '<p class="buildings-sheet-now">' + buildingsEscape(desc.doesLine) + '</p>' : ''))
       + '<p class="buildings-upgrade-ask buildings-sheet-why">' + buildingsEscape(atMax
@@ -916,7 +922,7 @@ if (typeof UI === 'object' && UI) {
         ? ''
         : ('<button type="button" class="' + confirmCls + '" id="btnBuildingUpgradeConfirm"'
           + (canPay ? '' : ' disabled') + '>'
-          + buildingsEscape(buildingsTxt('buildings.upgradeConfirm', 'Bevestig')) + '</button>'))
+          + buildingsEscape(confirmLbl) + '</button>'))
       + '<button type="button" class="btn mode-btn b-gray big-touch buildings-cta" data-buildings-sheet-close>'
       + buildingsEscape(buildingsTxt('buildings.sheetClose', 'Sluiten')) + '</button>'
       + '</div></div>';
