@@ -3,6 +3,7 @@
  * PLAYTEST BOT 1/9 — INVISIBLE / DRAW probe (Adventure only).
  * Portrait + landscape: spawn, hit, rotate, death. Screenshots + pixel samples.
  * Findings only — does not patch gameplay.
+ * Pixel "lit" scores are sky-biased on landweg; visual PNGs are canonical.
  */
 import { spawn } from 'child_process';
 import fs from 'fs';
@@ -17,12 +18,19 @@ if (!chrome) { console.error('PLAYTEST_FAIL no chrome'); process.exit(1); }
 
 async function getPuppeteer() {
   const cache = '/tmp/sf-adv-run';
+  const cached = path.join(cache, 'node_modules/puppeteer-core/lib/esm/puppeteer/puppeteer-core.js');
+  if (fs.existsSync(cached)) return import(cached);
   try { return await import('puppeteer-core'); } catch (_) {
+    const npmCli = '/home/ubuntu/.nvm/versions/node/v22.22.2/lib/node_modules/npm/bin/npm-cli.js';
+    const nodeBin = fs.existsSync('/exec-daemon/node') ? '/exec-daemon/node' : 'node';
     await new Promise((res, rej) => {
-      const p = spawn('npm', ['install', '--no-save', 'puppeteer-core@23'], { cwd: cache, stdio: 'inherit' });
+      const p = spawn(nodeBin, [npmCli, 'install', '--no-save', 'puppeteer-core@23'], {
+        cwd: cache,
+        stdio: 'inherit',
+      });
       p.on('exit', (c) => (c === 0 ? res() : rej(new Error('npm puppeteer-core'))));
     });
-    return import(path.join(cache, 'node_modules/puppeteer-core/lib/esm/puppeteer/puppeteer-core.js'));
+    return import(cached);
   }
 }
 
@@ -201,7 +209,12 @@ async function run() {
         save.tipsSeen.moveBarAim = true;
         save.tipsSeen.firstPunch = true;
       } } catch (_) {}
+      try {
+        const start = document.getElementById('sfTitleStart');
+        if (start) start.click();
+      } catch (_) {}
     });
+    await new Promise((r) => setTimeout(r, 250));
 
     const bootShot = await shot('00-speel-boot-portrait');
     const bootMeta = await page.evaluate(() => ({
@@ -214,8 +227,17 @@ async function run() {
 
     await page.evaluate(() => {
       startGame('adventure', { level: 1, gamble: null });
+      const g = game;
+      if (!g) return;
+      g.inputLocked = false;
+      try { if (typeof maybeStartAimTutorial === 'function') { /* already maybe-started */ } } catch (_) {}
+      for (let i = 0; i < 240 && (!g.monsters || !g.monsters.some((m) => m && m.alive)); i++) {
+        if (g.betweenT > 0) g.betweenT = Math.min(g.betweenT, 1 / 30);
+        try { g.update(1 / 30); } catch (_) {}
+      }
+      try { g.draw(typeof ctx !== 'undefined' ? ctx : document.getElementById('game').getContext('2d')); } catch (_) {}
     });
-    await new Promise((r) => setTimeout(r, 200));
+    await new Promise((r) => setTimeout(r, 80));
 
     let data = await probe('portrait-spawn');
     record('A-portrait-spawn', data, await shot('01-portrait-spawn'), {
@@ -314,6 +336,14 @@ async function run() {
 
     await page.evaluate(() => {
       startGame('adventure', { level: 1, gamble: null });
+      const g = game;
+      if (g) {
+        g.inputLocked = false;
+        for (let i = 0; i < 240 && (!g.monsters || !g.monsters.some((m) => m && m.alive)); i++) {
+          if (g.betweenT > 0) g.betweenT = Math.min(g.betweenT, 1 / 30);
+          try { g.update(1 / 30); } catch (_) {}
+        }
+      }
     });
     await setVp(844, 390);
     await page.evaluate(() => {
