@@ -102,6 +102,10 @@ if (!/advLoseBy: 'YOU LOSE · \{name\}'/.test(catalog)) fail('EN result.advLoseB
 if (!/killedByFlyer/.test(catalog)) fail('result.killedByFlyer missing');
 if (!/titleParams/.test(ui)) fail('showResult must pass titleParams for killer name');
 if (!/EX-027/.test(exam)) fail('EXAMINATOR.md must rank EX-027 first-loss tip');
+if (!/EX-028/.test(exam)) fail('EXAMINATOR.md must rank EX-028 killer line');
+const html = fs.readFileSync(path.join(root, 'index.html'), 'utf8');
+if (!/id="resKiller"/.test(html)) fail('index.html must have #resKiller');
+if (!/#resultScreen \.res-killer/.test(css)) fail('result killer line CSS missing');
 if (!/Skip gamble lecture until first punch/.test(game)) {
   fail('lose tip must skip gamble lecture until first punch');
 }
@@ -199,10 +203,13 @@ const feel = await feelPage.evaluate(() => {
     detail: 'feel', tip: 'jump',
   });
   const title = document.getElementById('resTitle');
+  const killer = document.getElementById('resKiller');
   return {
     pending,
     fomoOff,
     title: title ? title.textContent : '',
+    killer: killer ? killer.textContent : '',
+    killerOn: !!(killer && !killer.hidden),
     hasRetry: typeof retryLastFight === 'function',
     hasFirst: typeof startFirstPunchAdventure === 'function',
     hasHurt: typeof notePlayerHurtSource === 'function',
@@ -221,6 +228,7 @@ await feelPage.evaluate(() => {
 await feelPage.waitForFunction(() => typeof state !== 'undefined' && state === 'result', { timeout: 4000 });
 const feelLose = await feelPage.evaluate(() => ({
   title: document.getElementById('resTitle') && document.getElementById('resTitle').textContent,
+  killer: document.getElementById('resKiller') && document.getElementById('resKiller').textContent,
   tip: document.getElementById('resTip') && document.getElementById('resTip').textContent,
   pending: typeof firstPunchPending === 'function' && firstPunchPending(),
   name: game && game.lastHurtBy && game.lastHurtBy.name,
@@ -254,14 +262,19 @@ if (!feel.hasFirst) fail('startFirstPunchAdventure must exist');
 if (!feel.hasHurt) fail('notePlayerHurtSource must exist');
 if (feel.pending !== true) fail('fresh save must firstPunchPending');
 if (feel.fomoOff !== false) fail('FOMO must stay off until first punch, got ' + feel.fomoOff);
-if (!/Peepwing/.test(feel.title || '')) fail('lose title must name killer, got ' + feel.title);
+if (!/VERLOREN|YOU LOSE|DÉFAITE|DERROTA/.test(feel.title || '')) fail('lose title must stay short, got ' + feel.title);
+if (feel.title && /Peepwing/.test(feel.title)) fail('killer must not wrap inside Bangers title: ' + feel.title);
+if (!feel.killerOn || feel.killer !== 'Peepwing') fail('resKiller must show Peepwing, got ' + feel.killer);
 if (!phone.loseBy || !/Peepwing/.test(phone.loseBy)) fail('EN advLoseBy: ' + phone.loseBy);
 if (!phoneNl.loseBy || !/VERLOREN/.test(phoneNl.loseBy)) fail('NL advLoseBy: ' + phoneNl.loseBy);
 if (!phoneDe.loseBy || !/VERLOREN/.test(phoneDe.loseBy)) fail('DE advLoseBy: ' + phoneDe.loseBy);
 if (!phoneFr.loseBy || !/DÉFAITE/.test(phoneFr.loseBy)) fail('FR advLoseBy: ' + phoneFr.loseBy);
 if (!phoneEs.loseBy || !/DERROTA/.test(phoneEs.loseBy)) fail('ES advLoseBy: ' + phoneEs.loseBy);
-if (!feelLose.title || !feelLose.name || feelLose.title.indexOf(feelLose.name) < 0) {
-  fail('live lose title must name killer: ' + feelLose.title);
+if (!feelLose.name || (feelLose.killer || '') !== feelLose.name) {
+  fail('live lose #resKiller must name killer: ' + feelLose.killer + ' vs ' + feelLose.name);
+}
+if (feelLose.title && feelLose.name && feelLose.title.indexOf(feelLose.name) >= 0) {
+  fail('live lose Bangers title must stay short, got ' + feelLose.title);
 }
 if (/dobbelen|gamble|parier|würfeln|apostar/i.test(feelLose.tip || '')) {
   fail('first-punch lose tip must not lecture gamble: ' + feelLose.tip);

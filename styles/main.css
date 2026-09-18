@@ -2069,6 +2069,12 @@
       letter-spacing:2px; margin:28px 0 6px; }
   #resultScreen .win  { color:#7CFC8a; text-shadow:0 4px 0 #1f7a35, 0 0 24px rgba(90,255,120,.4); }
   #resultScreen .lose { color:#ff6b6b; text-shadow:0 4px 0 #8a2020, 0 0 24px rgba(255,80,80,.4); }
+  /* EX-028: killer sits under VERLOREN so 390 Bangers does not wrap the name. */
+  #resultScreen .res-killer {
+    font-weight: 900; font-size: clamp(16px, 4.8vw, 22px); line-height: 1.2;
+    color: #ffb4b4; letter-spacing: .03em; text-align: center;
+    margin: -2px 0 8px; max-width: min(92vw, 440px);
+  }
   #resultScreen .detail { font-size:16px; color:#bcd; margin:4px 0; text-align:center; max-width:520px; }
   .run-loot-panel { width:min(92vw,480px); margin:10px auto 6px; padding:10px 12px 8px;
     background:rgba(8,12,28,.72); border:1px solid rgba(124,245,255,.22); border-radius:14px;

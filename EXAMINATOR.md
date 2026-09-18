@@ -8,7 +8,7 @@
 **This sprint:** mobile **web** viewport only. Native Android APK / TWA / Play upload = **out of scope** (see bottom).
 
 **Baseline playtested:** v1.18.172 / SW 382 (`origin/main` `a7a4b74`)  
-**This draft PR:** v1.18.177 / SW 387 · branch `cursor/examinator-p0-bb6c` · **#320 — hold draft until ~16:30 Amsterdam — do not merge to main**
+**This draft PR:** v1.18.178 / SW 388 · branch `cursor/examinator-p0-bb6c` · **#320 — hold draft until ~16:30 Amsterdam — do not merge to main**
 
 How to pick work: take the **lowest open EX-id** in your lane. Mark `in-progress` / `done` / `DELEGATED #PR` here when you start/finish. Do not steal a `done` or `DELEGATED` item unless the owner asks to change it.
 
@@ -18,24 +18,33 @@ How to pick work: take the **lowest open EX-id** in your lane. Mark `in-progress
 
 All feature drafts stay **open / draft**. #320 stays draft until that window. No silent `main`.
 
-| PR | Lane | Mergeable | EX / note |
+| PR | Lane | Mergeable (15:51 CEST) | EX / note |
 |----|------|-----------|-----------|
-| **#320** | EXAMINATOR (this) | MERGEABLE | Unique leftovers + FEEL 023/024/027. Retry stripped for #323. |
+| **#320** | EXAMINATOR (this) | MERGEABLE | Unique leftovers + FEEL 023/024/027/028. Retry stripped for #323. |
 | **#323** | Flappy retry | MERGEABLE | **EX-022** — `Nog één keer` / `restartAdventureInstant` / ~700ms / `#resRetrySafe` |
 | **#314** | density / HUD | MERGEABLE | **EX-012** · horde remainder. Title also mentions retry — **do not fight #323** |
-| **#324** | tablet mid-band | draft | Follow-up on #314 cadence |
+| **#324** | tablet mid-band | UNKNOWN / draft | Follow-up on #314 cadence |
 | **#321** | HUD keep-out | MERGEABLE | Phone pause/bars/sheets — density cousin of **EX-012** |
-| **#313** | summons | MERGEABLE | **EX-010** · EX-006 remainder |
+| **#313** | summons | MERGEABLE · DONE | **EX-010** · EX-006 remainder |
 | **#315** | gear | MERGEABLE | **EX-011** · **EX-019** |
-| **#319** | pets | MERGEABLE | Pets collection screen (EX-003 follow already on #320) |
-| **#312** | factories | MERGEABLE | **EX-016** · sheet UX (EX-004 list XOR on #320) |
-| **#317** | i18n layout | MERGEABLE | factories/FOMO/HUD/gear **layout** copy — not EX-013/014/015 |
-| **#316** | juice | MERGEABLE | **EX-025**. Title also says retry / teach-by-doing — juice only here; retry = #323; first-30s = #320 |
-| **#318** | UI | MERGEABLE | **EX-017** · **EX-018** · HOME/Collectie chrome |
-| **#322** | FOMO cover | MERGEABLE | Also working EX-021 HOME cover. #320 already compact + pointer-events; **do not restage** |
+| **#319** | pets | MERGEABLE | Pets collection + combat feel (EX-003 follow already on #320) |
+| **#312** | factories | MERGEABLE · near-DONE | **EX-016** · sheet UX (EX-004 list XOR on #320) |
+| **#317** | i18n layout | MERGEABLE · DONE | factories/FOMO/HUD/gear **layout** copy — not EX-013/014/015/024/027/028 |
+| **#316** | juice | MERGEABLE | **EX-025** + first-HOME welcome kill. Retry API stays **#323**. Do not restage welcome here. |
+| **#318** | UI | MERGEABLE | **EX-017** · **EX-018** · HOME/Collectie chrome · welcome-vs-FOMO stack |
+| **#322** | FOMO cover | MERGEABLE | Also working EX-021 HOME cover. #320 compact sheet already landed |
 | **#311** | playtest-harden | MERGEABLE | Older harden cycle — not a FEEL owner |
 
-Suggested merge order if Brendon says **«merge main»** after 16:30: i18n #317 → systems/feel #323 + #320 → density #314/#321/#324 → factories #312 → gear #315 → summons #313 → pets #319 → juice #316 → UI #318 → FOMO #322. Versus stays retired.
+Suggested merge order if Brendon says **«merge main»** after 16:30: i18n #317 → retry #323 → examinator #320 → density #314/#321 then #324 (if mergeable) → factories #312 → gear #315 → summons #313 → pets #319 → juice #316 → UI #318 → FOMO #322. Versus stays retired.
+
+**390 sibling-retest (this branch, 15:51 CEST) — no new unique P0 to steal:**
+
+| Seen on 390 | Rank | Owner |
+|-------------|------|--------|
+| Welcome toast overlaps logo (22px) + Avontuur tile (16px) | P1 (near-P0 first tap) | **DELEGATED #316** (kills welcome) / **#318** (don’t stack on FOMO). Do not restage. |
+| Lose Opnieuw + Hoofdmenu same height (89px) | P0 feel retry | **DELEGATED #323** |
+| Pause chip visible in fight | HUD keep-out | **DELEGATED #321** |
+| Named lose `VERLOREN · {long name}` wraps in Bangers | P1 fair-fail | **#320 EX-028** (this PR) |
 
 ---
 
@@ -64,13 +73,13 @@ Stickman is judged against a one-tap arcade loop — not a store sim. Payments /
 
 | Bar | Pass looks like | Stickman now |
 |-----|-----------------|--------------|
-| **Fair fail** | You know *why* you died (pipe, not RNG). Next try feels earned. | **#320 EX-024 + EX-027:** VERLOREN · {killer}; tip leads with killer. Gamble lecture waits until after first punch. |
+| **Fair fail** | You know *why* you died (pipe, not RNG). Next try feels earned. | **#320 EX-024 + EX-027 + EX-028:** VERLOREN + `#resKiller` name; tip leads with killer. Gamble lecture waits until after first punch. |
 | **&lt;3s retry** | Death → next flap in under three seconds. | **DELEGATED #323**. #320 does **not** ship Opnieuw-primary / 380ms / lose-gamble-skip. |
 | **One primary CTA** | One tap does the core verb (flap / retry). | HOME hub = many tiles (OK). Lose retry CTA = **#323**. |
 | **Juice on core action** | Punch / kick / jump has snap, hit-stop, audio. | **DELEGATED #316**. Do not restage. |
 | **First-30s teach-by-doing** | Learn by playing, not by reading. | **#320 EX-023:** first Avontuur skips island + gamble + FOMO until `feltFirstPunch`. Aim tutorial stays. HUD = **#314/#321**. |
 
-No unique FEEL P1 left on #320 after EX-027. Next feel work is sibling-owned (#323 retry, #316 juice, #314 HUD).
+No unique FEEL P1 left on #320 after EX-028. Next feel work is sibling-owned (#323 retry, #316 juice/welcome, #314/#321 HUD).
 
 ---
 
@@ -120,6 +129,7 @@ No unique FEEL P1 left on #320 after EX-027. Next feel work is sibling-owned (#3
 | EX-023 | P1 | **done** | First-30s: `firstPunchPending()` until `save.feltFirstPunch`. First Avontuur → lv1, no island, `gamble: null`. FOMO off until first punch. |
 | EX-024 | P1 | **done** | Fair fail: `lastHurtBy` → `result.advLoseBy` = `VERLOREN · {name}` + killed-by tip (NL/EN/DE/FR/ES). |
 | EX-027 | P1 | **done** | First-loss tip no longer leads with gamble lecture. Killer first; `lossGambleTip` waits until after first punch (once-flag not burned). |
+| EX-028 | P1 | **done** | 390 named-lose: Bangers stays `VERLOREN` / `YOU LOSE`; killer name on `#resKiller` so long species don’t wrap the title. |
 
 ---
 

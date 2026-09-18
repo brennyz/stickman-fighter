@@ -5028,15 +5028,14 @@ const UI = {
       ? (win ? 'result.trainWin' : 'result.trainLose')
       : (win ? 'result.advWin' : 'result.advLose'));
     const killerName = data.titleParams && data.titleParams.name;
-    if (!win && killerName && (titleKey === 'result.advLose' || titleKey === 'result.advLoseBy')) {
-      titleKey = 'result.advLoseBy';
-    }
     const titleFallback = data.mode === 'training'
       ? (win ? tOr('result.trainWin', 'KAMPIOEN!') : tOr('result.trainLose', 'ROBOT WINT...'))
-      : (win ? tOr('result.advWin', 'GEWONNEN!') : (killerName
-        ? tOr('result.advLoseBy', 'VERLOREN · {name}', data.titleParams)
-        : tOr('result.advLose', 'VERLOREN')));
+      : (win ? tOr('result.advWin', 'GEWONNEN!') : tOr('result.advLose', 'VERLOREN'));
     // Never reuse a stale English title (ROBOT WINS / YOU LOST) when the UI is NL.
+    // EX-028: keep the Bangers word short; name the killer on #resKiller (390 wrap).
+    if (!win && killerName && (titleKey === 'result.advLose' || titleKey === 'result.advLoseBy')) {
+      titleKey = 'result.advLose';
+    }
     const painted = (typeof tOr === 'function')
       ? tOr(titleKey, titleFallback, data.titleParams || {})
       : titleFallback;
@@ -5044,6 +5043,16 @@ const UI = {
     data.titleKey = titleKey;
     data.title = painted;
     title.className = 'bigres ' + (win ? 'win' : 'lose');
+    const killerEl = document.getElementById('resKiller');
+    if (killerEl) {
+      if (!win && killerName && data.mode !== 'training') {
+        killerEl.hidden = false;
+        killerEl.textContent = killerName;
+      } else {
+        killerEl.hidden = true;
+        killerEl.textContent = '';
+      }
+    }
     const detailEl = document.getElementById('resDetail');
     if (detailEl) {
       let detail = data.detail || '';

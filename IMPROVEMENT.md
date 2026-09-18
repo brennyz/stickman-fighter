@@ -1,3 +1,4 @@
+| 2026-09-18 | **EXAMINATOR sib** | 390 after #314/#316/#318/#321: welcome-on-Avontuur = #316/#318 (not ours). Unique P1 EX-028 `#resKiller` under VERLOREN. Mega-merge order refreshed. **v1.18.178 / SW 388**. |
 | 2026-09-18 | **EXAMINATOR board** | 390 retest after 023/024: no P0 regress. Unique FEEL P1 EX-027 = killer tip first, skip gamble lecture until first punch. Board refreshed for 16:30 mega-merge hold. **v1.18.177 / SW 387**. |
 | 2026-09-18 | **EXAMINATOR FEEL** | #323 owns retry (EX-022 DELEGATED). #320 unique: EX-023 first-30s skip island/gamble/FOMO until first punch; EX-024 VERLOREN · killer. No IAP/Versus/main. **v1.18.176 / SW 386**. |
 | 2026-09-18 | **EXAMINATOR FEEL** | Flappy bar on board. Unique P0 EX-022: lose retry 380ms + one Opnieuw CTA, skip gamble. Juice=#316 HUD=#314. IAP note only. **v1.18.175 / SW 385**. |
