@@ -2551,7 +2551,7 @@ const CATALOG_DE = {
     trainwin: { text: 'Gewinne Training vs Robot', hint: 'Menü → Training vs RabbitRobot' },
     combo5: { text: 'Erreiche Combo ×5', hint: 'Abenteuer: schnelle Combos' },
     finisher3: { text: 'Lande 3 Waffen-Finisher', hint: '①+② treffen, dann Finisher ③' },
-    pick3: { text: 'Sammle 3 Power-ups', hint: 'Abenteuer: grüne/orange/blaue Kugeln' },
+    pick3: { text: 'Sammle 3 Funde', hint: 'Abenteuer: grüne/orange/blaue Kugeln' },
     boss1: { text: 'Besiege 1 Boss-Monster', hint: 'Abenteuer: Boss am Levelende' },
   },
   weapon: {
@@ -2662,7 +2662,7 @@ const CATALOG_FR = {
     trainwin: { text: 'Gagne entraînement vs Robot', hint: 'Menu → Entraînement vs RabbitRobot' },
     combo5: { text: 'Atteins combo ×5', hint: 'Aventure : combos rapides' },
     finisher3: { text: 'Place 3 finishers d’arme', hint: '①+② puis finisher ③' },
-    pick3: { text: 'Prends 3 power-ups', hint: 'Aventure : orbes vert/orange/bleu' },
+    pick3: { text: 'Prends 3 orbes', hint: 'Aventure : orbes vert/orange/bleu' },
     boss1: { text: 'Vaincs 1 boss', hint: 'Aventure : boss en fin de niveau' },
   },
   weapon: {
@@ -2790,7 +2790,7 @@ const CATALOG_ES = {
     trainwin: { text: 'Gana entrenamiento vs Robot', hint: 'Menú → Entrenamiento vs RabbitRobot' },
     combo5: { text: 'Alcanza combo ×5', hint: 'Aventura: combos rápidos' },
     finisher3: { text: 'Asesta 3 finishers de arma', hint: '①+② luego finisher ③' },
-    pick3: { text: 'Recoge 3 power-ups', hint: 'Aventura: orbes verde/naranja/azul' },
+    pick3: { text: 'Recoge 3 orbes', hint: 'Aventura: orbes verde/naranja/azul' },
     boss1: { text: 'Derrota 1 jefe', hint: 'Aventura: jefe al final del nivel' },
   },
   weapon: {

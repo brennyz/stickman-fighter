@@ -99,6 +99,10 @@ async function run() {
       const tFightHiccup = typeof t === 'function' ? t('toast.fightHiccup') : '';
       const tAchLv70 = typeof t === 'function' ? t('ach.lv70.name') : '';
       const tAchZone = typeof t === 'function' ? t('ach.zoneWeapons10.name') : '';
+      const tPickRem = typeof t === 'function' ? t('missionsUi.remainderPickupsN', { n: 3 }) : '';
+      const tKillRem = typeof t === 'function' ? t('missionsUi.remainderKillsN', { n: 3 }) : '';
+      const tRunRem = typeof t === 'function' ? t('missionsUi.remainderRun') : '';
+      const tPick3 = typeof t === 'function' ? t('daily.pick3.text') : '';
       let collectTitle = '';
       let collectGear = '';
       try {
@@ -122,6 +126,7 @@ async function run() {
         tPower, tProduce, tGearToast, tNameShort, collectTitle, collectGear, playState, playMode,
         tStyleLeaf, tStyleEnergy, tStyleVoid, tAdvLose, tTrainLose, tKeep, tSeasonBeat,
         tErrRetry, tOpenMode, tDaily, tFightHiccup, tAchLv70, tAchZone,
+        tPickRem, tKillRem, tRunRem, tPick3,
       };
     }
     const en = snap('en');
@@ -174,6 +179,9 @@ async function run() {
       && /Besiege 12/.test(de.tDaily) && /kämpf weiter/.test(de.tFightHiccup)
       && /Höllen-Legende/.test(de.tAchLv70) && /Zonen-Sammler/.test(de.tAchZone)
       && !/Hel-legende|Zone-verzamelaar/.test(de.tAchLv70 + de.tAchZone)
+      && /Funde/.test(de.tPickRem) && !/Pickup/i.test(de.tPickRem + de.tPick3)
+      && /Monster/.test(de.tKillRem) && !/\bKills?\b/.test(de.tKillRem)
+      && /Lauf/.test(de.tRunRem)
       && de.playState === 'play' && /train/.test(de.playMode);
     const nlOk = /Avontuur/.test(nl.adv) && /Collectie/.test(nl.collect)
       && /Wapens/.test(nl.weapons) && /Instellingen/.test(nl.settings)
@@ -205,6 +213,9 @@ async function run() {
       && /Vaincs 12/.test(fr.tDaily) && /Accroc/.test(fr.tFightHiccup)
       && /enfer/i.test(fr.tAchLv70) && /zone/i.test(fr.tAchZone)
       && !/Hel-legende|Zone-verzamelaar/.test(fr.tAchLv70 + fr.tAchZone)
+      && /orbes/.test(fr.tPickRem + fr.tPick3) && !/power-up|Pickup/i.test(fr.tPickRem + fr.tPick3)
+      && /monstres/.test(fr.tKillRem) && !/\bkills?\b/.test(fr.tKillRem)
+      && /partie/.test(fr.tRunRem) && !/\brun\b/.test(fr.tRunRem)
       && fr.playState === 'play' && /train/.test(fr.playMode);
     const esOk = /Aún no hallado/.test(es.tGearLock) && !EN_LOCK.test(es.tGearLock)
       && /Ayuda salto/.test(es.tPerk) && /Guijarro/.test(es.tEgg) && !DUTCH_COPY.test(es.tPerk + es.tEgg + es.tGearLock + es.tPetSum)
@@ -223,6 +234,9 @@ async function run() {
       && /Derrota 12/.test(es.tDaily) && /Fallo/.test(es.tFightHiccup)
       && /infierno/i.test(es.tAchLv70) && /zona/i.test(es.tAchZone)
       && !/Hel-legende|Zone-verzamelaar/.test(es.tAchLv70 + es.tAchZone)
+      && /orbes/.test(es.tPickRem + es.tPick3) && !/power-up|Pickup/i.test(es.tPickRem + es.tPick3)
+      && /monstruos/.test(es.tKillRem) && !/\bkills?\b/.test(es.tKillRem)
+      && /partida/.test(es.tRunRem) && !/\brun\b/.test(es.tRunRem)
       && es.playState === 'play' && /train/.test(es.playMode);
     return { ok: !!(enOk && deOk && nlOk && frOk && esOk), en, de, nl, fr, es, enOk, deOk, nlOk, frOk, esOk };
   });

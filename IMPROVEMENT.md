@@ -1,3 +1,4 @@
+| 2026-09-18 | **i18n mission loanwords** | Examiner #317: DE remainder Pickups→Funde; DE/FR/ES kills/run/power-ups in mission UI. Versus ongemoeid. **v1.18.181 / SW v391**. Draft. |
 | 2026-09-18 | **i18n ach/err leftovers** | Examiner #317: `achLabel` geen NL fallback; `lv70`/`zoneWeapons10` in EN/DE/FR/ES; laatste `Mislukt` → `errT`; import Error EN-technisch; flow-bar empty-sub geen raw key. Versus ongemoeid. **v1.18.180 / SW v390**. Draft. |
 | 2026-09-18 | **i18n errT/missions** | Examiner #317: mission-labels via `modes.*`; `errT` + locale keys i.p.v. Dutch `tOr`/`mislukt`; user-visible hiccups `toast.fightHiccup`. Versus ongemoeid. **v1.18.178 / SW v388**. Draft. |
 | 2026-09-18 | **i18n style/result** | Examiner #317: DE/FR/ES style tips (geen Leaf/energy/knockback mix); win/lose titels gelijk (DÉFAITE / LE ROBOT); advLoseKeep zonder EN run/loot; toast.resultHiccup. Versus ongemoeid. **v1.18.177 / SW v387**. Draft. |
@@ -152,7 +153,7 @@ Schrijf **1–3 regels** per sessie: datum, d#, wat, versie.
 
 | Datum (UTC) | d# | Update |
 |-------------|-----|--------|
-| 2026-09-18 | — | LANGUAGE examiner #317: ach lv70/zone + last Mislukt/errT + flow-bar raw-key skip. Draft, geen main. **v1.18.180 / SW 390**. |
+| 2026-09-18 | — | LANGUAGE examiner #317: DE Funde + FR/ES orbes/monstres/partie. Draft, geen main. **v1.18.181 / SW 391**. |
 | 2026-09-18 | — | LANGUAGE examiner #317: mission-labels + errT mislukt keys + fight hiccups. Draft, geen main. **v1.18.178 / SW 388**. |
 | 2026-09-18 | — | LANGUAGE examiner #317: style tips DE/FR/ES + result win/lose consistency + Dutch audit. Draft, geen main. **v1.18.177 / SW 387**. |
 | 2026-09-18 | — | LANGUAGE examiner #317: factory powers/detail + gear lock toasts + DE nameShort. Draft, geen main. **v1.18.176 / SW 386**. |

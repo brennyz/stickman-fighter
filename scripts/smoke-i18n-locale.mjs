@@ -366,6 +366,15 @@ if (!/lv70: \{ name: 'Légende de l.enfer'/.test(catalog)) fail('FR ach.lv70 mis
 if (!/lv70: \{ name: 'Leyenda del infierno'/.test(catalog)) fail('ES ach.lv70 missing');
 if (/tOr\('ui\.summonFail', 'Mislukt'\)/.test(ui)) fail('summonFail still Dutch Mislukt last-resort');
 if (/mk\(1, t\('missionsUi\.flowPlay'/.test(missions)) fail('flow bar still t() empty-sub → raw key leak');
+if (/remainderPickupsN: 'Noch \{n\} Pickups'/.test(locales + deChrome)) fail('DE remainder still Pickups');
+if (/remainderPickupsN: 'Noch \{n\} Funde'/.test(locales) === false) fail('DE remainderPickupsN must be Funde');
+if (/remainderKillsN: 'Encore \{n\} kills'/.test(locales)) fail('FR remainder still English kills');
+if (/remainderRun: 'Encore 1 run'/.test(locales)) fail('FR remainderRun still English run');
+if (/remainderKillsN: 'Faltan \{n\} kills'/.test(locales)) fail('ES remainder still English kills');
+if (/remainderRun: 'Falta 1 run'/.test(locales)) fail('ES remainderRun still English run');
+if (/text: 'Sammle 3 Power-ups'/.test(locales + catalog)) fail('DE daily.pick3 still Power-ups');
+if (/text: 'Prends 3 power-ups'/.test(locales + catalog)) fail('FR daily.pick3 still power-ups');
+if (/text: 'Recoge 3 power-ups'/.test(locales + catalog)) fail('ES daily.pick3 still power-ups');
 if (!/line\('missionsUi\.flowPlaySub'\)/.test(missions)) fail('flow bar must skip empty/raw-key subs');
 if (/Bestand lezen mislukt/.test(missions)) fail('import FileReader error still Dutch');
 if (!/function errT\(/.test(i18n)) fail('errT helper missing — Dutch last-resort leaks');

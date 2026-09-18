@@ -125,3 +125,17 @@ Technische `sfReportError(where, err)` zonder userMsg blijft console + gelokalis
 | DE/FR/ES | `missionsUi.flowPlaySub` `''` | `t()` ziet leeg als miss → raw key op flow-bar | `dailyFlowBarHtml` slaat lege/raw keys over |
 
 Versie: **v1.18.180 / SW 390**. Draft PR, geen main-merge. Deel-URL `speel.html`.
+
+## Examiner P0 — DE Pickups + mission EN loanwords (zelfde draft)
+
+| locale | key | was | fix |
+|--------|-----|-----|-----|
+| DE | `missionsUi.remainderPickups*` | Pickup(s) | Fund / Funde |
+| DE | `missionsUi.remainderKills*` | Kill(s) | Monster |
+| DE/FR/ES | `daily.pick3.text` | Power-ups / power-ups | Funde / orbes |
+| FR | `remainderKills*` / `remainderRun` | kill / run | monstre / partie |
+| ES | `remainderKills*` / `remainderRun` | kill / run | monstruo / partida |
+
+Combo blijft (HUD-term). Tips-scherm “Power-ups:” niet in deze sweep.
+
+Versie: **v1.18.181 / SW 391**. Draft PR, geen main-merge. Deel-URL `speel.html`.
