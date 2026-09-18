@@ -168,6 +168,7 @@ Schrijf **1–3 regels** per sessie: datum, d#, wat, versie.
 
 | Datum (UTC) | d# | Update |
 |-------------|-----|--------|
+| 2026-09-18 | — | **PLAYTEST 8/9 meta menus @ 390:** LIVE `c9a29fc` v1.18.190 / SW 400. No P0. P1 leftovers: gear 4k scroll (EX-011), pets chrome hides list, factory wallet/does (EX-016 + smoke fail), summon 2.2s blank card (EX-010), FOMO covers HOME tiles. Draft findings only, geen main. |
 | 2026-09-18 | **5** | Mid-phone fxLite: caps + particle pool + spawnLite (no freeze hitch). Fighters always draw. Draft, geen main. **v1.18.190 / SW 400**. speel.html. |
 | 2026-09-18 | — | **death→retry feel:** after mega-merge, restore 84px Nog één keer + `SLAM → retry` tip + `#resKiller`. Keep `restartAdventureInstant` / `#resRetrySafe`. No dock rebuild. **v1.18.190 / SW 400**. Draft. |
 | 2026-09-18 | — | **#325 DONE:** mid-fight rotate + cyber 844×390 letterbox=0. Pixel-visibility sibling. Draft, geen main. **v1.18.190 / SW 400**. |

@@ -1,0 +1,2302 @@
+{
+  "at": "2026-09-18T16:11:41.985Z",
+  "build": "c9a29fc v1.18.190 SW400",
+  "viewport": "390x844",
+  "versus": "retired",
+  "modes": {
+    "fresh": {
+      "mode": "fresh",
+      "seed": {
+        "ok": true,
+        "mode": "fresh",
+        "lvl": 1,
+        "pc": 0,
+        "pets": 0,
+        "gear": 5
+      },
+      "version": {
+        "app": "1.18.190",
+        "sw": 400,
+        "versus": false
+      },
+      "shots": {
+        "home": "docs/playtest-meta-390/fresh-00-home.png",
+        "factoriesList": "docs/playtest-meta-390/fresh-10-factories-list.png",
+        "factoriesDetail": "docs/playtest-meta-390/fresh-11-factories-detail.png",
+        "factoriesSheet": "docs/playtest-meta-390/fresh-12-factories-sheet.png",
+        "gear": "docs/playtest-meta-390/fresh-20-gear.png",
+        "gearSlot": "docs/playtest-meta-390/fresh-21-gear-slot.png",
+        "pets": "docs/playtest-meta-390/fresh-30-pets.png",
+        "petsDetail": "docs/playtest-meta-390/fresh-31-pets-detail.png",
+        "summons": "docs/playtest-meta-390/fresh-40-summons.png",
+        "summonsEmpty": "docs/playtest-meta-390/fresh-42-summons-empty.png"
+      },
+      "screens": {
+        "home": {
+          "scan": {
+            "active": true,
+            "scrollH": 1201,
+            "clientH": 844,
+            "scrollNeed": true,
+            "overflow": [
+              {
+                "id": "",
+                "left": 742,
+                "right": 1142,
+                "text": "brennyz.github.io/stickman-fighter/speel.html?v=400"
+              }
+            ],
+            "textClip": [],
+            "smallTap": [
+              {
+                "id": "togSfx",
+                "w": 34,
+                "h": 48,
+                "text": ""
+              },
+              {
+                "id": "btnGuvve",
+                "w": 34,
+                "h": 48,
+                "text": ""
+              },
+              {
+                "id": "btnSharePlay",
+                "w": 34,
+                "h": 48,
+                "text": ""
+              },
+              {
+                "id": "sfForceFresh",
+                "w": 34,
+                "h": 48,
+                "text": ""
+              }
+            ],
+            "vsTile": false
+          },
+          "tiles": [
+            {
+              "id": "btnBuildings",
+              "box": {
+                "id": "btnBuildings",
+                "cls": "hub-tile hub-tile-buildings",
+                "x": 16,
+                "y": 385,
+                "w": 173,
+                "h": 133,
+                "right": 189,
+                "bottom": 518,
+                "overflowX": false,
+                "overflowY": false,
+                "text": "Fabrieken Werken · oogst · upgrade 1/5 open",
+                "tapOk": true
+              },
+              "text": "Fabrieken Werken · oogst · upgrade 1/5 open"
+            },
+            {
+              "id": "btnGearHome",
+              "box": {
+                "id": "btnGearHome",
+                "cls": "hub-tile hub-tile-gear hub-tile-empty",
+                "x": 201,
+                "y": 385,
+                "w": 173,
+                "h": 133,
+                "right": 374,
+                "bottom": 518,
+                "overflowX": false,
+                "overflowY": false,
+                "text": "Uitrusting Starter · vind drops in avontuur starter · 0 drops",
+                "tapOk": true
+              },
+              "text": "Uitrusting Starter · vind drops in avontuur starter · 0 drops"
+            },
+            {
+              "id": "btnPetsHome",
+              "box": {
+                "id": "btnPetsHome",
+                "cls": "hub-tile hub-tile-pets",
+                "x": 16,
+                "y": 530,
+                "w": 173,
+                "h": 133,
+                "right": 189,
+                "bottom": 663,
+                "overflowX": false,
+                "overflowY": false,
+                "text": "Pets Tem · koop · dag-ei Dag-ei klaar",
+                "tapOk": true
+              },
+              "text": "Pets Tem · koop · dag-ei Dag-ei klaar"
+            },
+            {
+              "id": "btnSummons",
+              "box": {
+                "id": "btnSummons",
+                "cls": "hub-tile hub-tile-summon has-summons hub-tile-ready",
+                "x": 201,
+                "y": 530,
+                "w": 173,
+                "h": 133,
+                "right": 374,
+                "bottom": 663,
+                "overflowX": false,
+                "overflowY": false,
+                "text": "Oproepen 10× per dag · wapen of pet 10× vandaag",
+                "tapOk": true
+              },
+              "text": "Oproepen 10× per dag · wapen of pet 10× vandaag"
+            }
+          ]
+        },
+        "factories": {
+          "openMs": 35,
+          "scan": {
+            "active": true,
+            "scrollH": 939,
+            "clientH": 844,
+            "scrollNeed": true,
+            "overflow": [],
+            "textClip": [],
+            "smallTap": [],
+            "vsTile": false
+          },
+          "wallet": {
+            "id": "buildingsWallet",
+            "cls": "buildings-wallet statbar",
+            "x": 14,
+            "y": 137,
+            "w": 367,
+            "h": 63,
+            "right": 381,
+            "bottom": 201,
+            "overflowX": false,
+            "overflowY": false,
+            "text": "PC 0 VONKEN 0 LIJM 0 SNIPPERS 0 STOOM 0 ECHO 0",
+            "tapOk": true
+          },
+          "back": {
+            "id": "",
+            "cls": "btn back-btn",
+            "x": 26,
+            "y": 24,
+            "w": 123,
+            "h": 52,
+            "right": 149,
+            "bottom": 76,
+            "overflowX": false,
+            "overflowY": false,
+            "text": "Menu",
+            "tapOk": true
+          },
+          "cards": [
+            {
+              "id": "stick_lighter",
+              "box": {
+                "id": "",
+                "cls": "buildings-card buildings-row buildings-row-sel is-sel is-start is-primary-build",
+                "x": 18,
+                "y": 254,
+                "w": 359,
+                "h": 88,
+                "right": 377,
+                "bottom": 342,
+                "overflowX": false,
+                "overflowY": false,
+                "text": "NOG NIET GEBOUWD Aansteker Vonken · bouw om te starten Bouw VONKEN",
+                "tapOk": true
+              },
+              "name": "Aansteker",
+              "does": "Vonken · bouw om te starten"
+            },
+            {
+              "id": "woodchip_glue",
+              "box": {
+                "id": "",
+                "cls": "buildings-card buildings-row buildings-row-locked is-locked",
+                "x": 18,
+                "y": 350,
+                "w": 359,
+                "h": 88,
+                "right": 377,
+                "bottom": 438,
+                "overflowX": false,
+                "overflowY": false,
+                "text": "OP SLOT Hout-Lijm Dicht — speel Vuur-eiland (eiland 2) vrij Slot LIJM",
+                "tapOk": true
+              },
+              "name": "Hout-Lijm",
+              "does": "Dicht — speel Vuur-eiland (eiland 2) vrij"
+            },
+            {
+              "id": "chipping_wood",
+              "box": {
+                "id": "",
+                "cls": "buildings-card buildings-row buildings-row-locked is-locked",
+                "x": 18,
+                "y": 446,
+                "w": 359,
+                "h": 88,
+                "right": 377,
+                "bottom": 534,
+                "overflowX": false,
+                "overflowY": false,
+                "text": "OP SLOT Versnipper Dicht — speel Neon-eiland (eiland 3) vrij Slot SNIPPERS",
+                "tapOk": true
+              },
+              "name": "Versnipper",
+              "does": "Dicht — speel Neon-eiland (eiland 3) vrij"
+            },
+            {
+              "id": "bamboo_boesa",
+              "box": {
+                "id": "",
+                "cls": "buildings-card buildings-row buildings-row-locked is-locked",
+                "x": 18,
+                "y": 542,
+                "w": 359,
+                "h": 88,
+                "right": 377,
+                "bottom": 630,
+                "overflowX": false,
+                "overflowY": false,
+                "text": "OP SLOT Bamboe-Boesa Dicht — speel Tempel-eiland (eiland 4) vrij Slot STOOM",
+                "tapOk": true
+              },
+              "name": "Bamboe-Boesa",
+              "does": "Dicht — speel Tempel-eiland (eiland 4) vrij"
+            },
+            {
+              "id": "echo_whistle",
+              "box": {
+                "id": "",
+                "cls": "buildings-card buildings-row buildings-row-locked is-locked",
+                "x": 18,
+                "y": 638,
+                "w": 359,
+                "h": 88,
+                "right": 377,
+                "bottom": 726,
+                "overflowX": false,
+                "overflowY": false,
+                "text": "OP SLOT Echo-Fluit Dicht — speel Finale-eiland (eiland 5) vrij Slot ECHO",
+                "tapOk": true
+              },
+              "name": "Echo-Fluit",
+              "does": "Dicht — speel Finale-eiland (eiland 5) vrij"
+            }
+          ],
+          "pane": "detail",
+          "detail": {
+            "scan": {
+              "active": true,
+              "scrollH": 939,
+              "clientH": 844,
+              "scrollNeed": true,
+              "overflow": [],
+              "textClip": [],
+              "smallTap": [],
+              "vsTile": false
+            },
+            "name": "Stok-Aansteker Fabriek Nog niet gebouwd",
+            "blurb": "",
+            "powers": [],
+            "collect": {
+              "id": "btnBuildingCollect",
+              "cls": "buildings-res-pill is-empty is-build",
+              "x": 27,
+              "y": 459,
+              "w": 120,
+              "h": 48,
+              "right": 147,
+              "bottom": 507,
+              "overflowX": false,
+              "overflowY": false,
+              "text": "Bouw VONKEN",
+              "tapOk": true
+            },
+            "upgrade": {
+              "id": "btnBuildingUpgrade",
+              "cls": "btn mode-btn b-gray big-touch buildings-cta buildings-cta-upgrade",
+              "x": 27,
+              "y": 560,
+              "w": 341,
+              "h": 84,
+              "right": 368,
+              "bottom": 644,
+              "overflowX": false,
+              "overflowY": false,
+              "text": "Bouwen… Mis 20 PC — speel of oogst eerst",
+              "tapOk": true
+            }
+          },
+          "sheet": {
+            "open": true,
+            "panel": {
+              "id": "",
+              "cls": "buildings-sheet-panel",
+              "x": 12,
+              "y": 474,
+              "w": 367,
+              "h": 349,
+              "right": 378,
+              "bottom": 823,
+              "overflowX": false,
+              "overflowY": false,
+              "text": "Bouw Aansteker Lv 1: Vonken 8/uur · 64 · kracht: Vonk Bouw Stok-Aansteker Fabriek? 20 PC Mis 20 PC — speel of oogst eerst Bouw Sluiten",
+              "tapOk": true
+            },
+            "overflow": false,
+            "text": "Bouw Aansteker Lv 1: Vonken 8/uur · 64 · kracht: Vonk Bouw Stok-Aansteker Fabriek? 20 PC Mis 20 PC — speel of oogst eerst Bouw Sluiten"
+          }
+        },
+        "gear": {
+          "openMs": 30,
+          "scan": {
+            "active": true,
+            "scrollH": 4285,
+            "clientH": 844,
+            "scrollNeed": true,
+            "overflow": [],
+            "textClip": [],
+            "smallTap": [],
+            "vsTile": false
+          },
+          "doll": {
+            "id": "gearDollCanvas",
+            "cls": "gear-doll-canvas",
+            "x": 87,
+            "y": -885,
+            "w": 220,
+            "h": 179,
+            "right": 307,
+            "bottom": -705,
+            "overflowX": false,
+            "overflowY": false,
+            "text": "",
+            "tapOk": true
+          },
+          "hunt": {
+            "id": "gearHuntCta",
+            "cls": "gear-hunt-cta",
+            "x": 14,
+            "y": -1003,
+            "w": 367,
+            "h": 96,
+            "right": 381,
+            "bottom": -908,
+            "overflowX": false,
+            "overflowY": false,
+            "text": "Alleen start-look. Vind meer stukken in Avontuur. Naar Avontuur",
+            "tapOk": true
+          },
+          "unequip": {
+            "id": "gearUnequipAll",
+            "cls": "gear-unequip-all",
+            "x": 14,
+            "y": -43,
+            "w": 367,
+            "h": 44,
+            "right": 381,
+            "bottom": 1,
+            "overflowX": false,
+            "overflowY": false,
+            "text": "Alles uitdoen",
+            "tapOk": true
+          },
+          "slots": [
+            {
+              "slot": "head",
+              "box": {
+                "id": "",
+                "cls": "hub-tile gear-slot-card sel filled",
+                "x": 14,
+                "y": 631,
+                "w": 367,
+                "h": 66,
+                "right": 381,
+                "bottom": 697,
+                "overflowX": false,
+                "overflowY": false,
+                "text": "Hoofd Linnen wrap · Gewoon SIER",
+                "tapOk": true
+              },
+              "text": "Hoofd Linnen wrap · Gewoon SIER"
+            },
+            {
+              "slot": "chest",
+              "box": {
+                "id": "",
+                "cls": "hub-tile gear-slot-card filled",
+                "x": 14,
+                "y": 725,
+                "w": 367,
+                "h": 66,
+                "right": 381,
+                "bottom": 791,
+                "overflowX": false,
+                "overflowY": false,
+                "text": "Borst Gewoon shirt · Gewoon SIER",
+                "tapOk": true
+              },
+              "text": "Borst Gewoon shirt · Gewoon SIER"
+            },
+            {
+              "slot": "hands",
+              "box": {
+                "id": "",
+                "cls": "hub-tile gear-slot-card filled",
+                "x": 14,
+                "y": 819,
+                "w": 367,
+                "h": 66,
+                "right": 381,
+                "bottom": 885,
+                "overflowX": false,
+                "overflowY": false,
+                "text": "Handen Handwraps · Gewoon SIER",
+                "tapOk": true
+              },
+              "text": "Handen Handwraps · Gewoon SIER"
+            },
+            {
+              "slot": "legs",
+              "box": {
+                "id": "",
+                "cls": "hub-tile gear-slot-card filled",
+                "x": 14,
+                "y": 913,
+                "w": 367,
+                "h": 66,
+                "right": 381,
+                "bottom": 979,
+                "overflowX": false,
+                "overflowY": false,
+                "text": "Benen Beenwraps · Gewoon SIER",
+                "tapOk": true
+              },
+              "text": "Benen Beenwraps · Gewoon SIER"
+            },
+            {
+              "slot": "back",
+              "box": {
+                "id": "",
+                "cls": "hub-tile gear-slot-card filled",
+                "x": 14,
+                "y": 1007,
+                "w": 367,
+                "h": 66,
+                "right": 381,
+                "bottom": 1073,
+                "overflowX": false,
+                "overflowY": false,
+                "text": "Rug Stip-pin · Gewoon SIER",
+                "tapOk": true
+              },
+              "text": "Rug Stip-pin · Gewoon SIER"
+            }
+          ],
+          "chips": [
+            {
+              "text": "Alles27",
+              "box": {
+                "id": "",
+                "cls": "gear-filter-btn sel",
+                "x": 14,
+                "y": 1361,
+                "w": 69,
+                "h": 48,
+                "right": 83,
+                "bottom": 1409,
+                "overflowX": false,
+                "overflowY": false,
+                "text": "Alles27",
+                "tapOk": true
+              }
+            },
+            {
+              "text": "Look15",
+              "box": {
+                "id": "",
+                "cls": "gear-filter-btn",
+                "x": 89,
+                "y": 1361,
+                "w": 67,
+                "h": 48,
+                "right": 156,
+                "bottom": 1409,
+                "overflowX": false,
+                "overflowY": false,
+                "text": "Look15",
+                "tapOk": true
+              }
+            },
+            {
+              "text": "Stats12",
+              "box": {
+                "id": "",
+                "cls": "gear-filter-btn",
+                "x": 162,
+                "y": 1361,
+                "w": 69,
+                "h": 48,
+                "right": 231,
+                "bottom": 1409,
+                "overflowX": false,
+                "overflowY": false,
+                "text": "Stats12",
+                "tapOk": true
+              }
+            },
+            {
+              "text": "Slot26",
+              "box": {
+                "id": "",
+                "cls": "gear-filter-btn",
+                "x": 237,
+                "y": 1361,
+                "w": 63,
+                "h": 48,
+                "right": 300,
+                "bottom": 1409,
+                "overflowX": false,
+                "overflowY": false,
+                "text": "Slot26",
+                "tapOk": true
+              }
+            },
+            {
+              "text": "Van jou1",
+              "box": {
+                "id": "",
+                "cls": "gear-filter-btn",
+                "x": 306,
+                "y": 1361,
+                "w": 74,
+                "h": 48,
+                "right": 381,
+                "bottom": 1409,
+                "overflowX": false,
+                "overflowY": false,
+                "text": "Van jou1",
+                "tapOk": true
+              }
+            },
+            {
+              "text": "Alle",
+              "box": {
+                "id": "",
+                "cls": "gear-filter-btn sel",
+                "x": 14,
+                "y": 1417,
+                "w": 44,
+                "h": 48,
+                "right": 58,
+                "bottom": 1465,
+                "overflowX": false,
+                "overflowY": false,
+                "text": "Alle",
+                "tapOk": true
+              }
+            },
+            {
+              "text": "gewoon",
+              "box": {
+                "id": "",
+                "cls": "gear-filter-btn rar-common",
+                "x": 64,
+                "y": 1417,
+                "w": 62,
+                "h": 48,
+                "right": 126,
+                "bottom": 1465,
+                "overflowX": false,
+                "overflowY": false,
+                "text": "gewoon",
+                "tapOk": true
+              }
+            },
+            {
+              "text": "ongewoon",
+              "box": {
+                "id": "",
+                "cls": "gear-filter-btn rar-uncommon",
+                "x": 132,
+                "y": 1417,
+                "w": 75,
+                "h": 48,
+                "right": 206,
+                "bottom": 1465,
+                "overflowX": false,
+                "overflowY": false,
+                "text": "ongewoon",
+                "tapOk": true
+              }
+            },
+            {
+              "text": "zeldzaam",
+              "box": {
+                "id": "",
+                "cls": "gear-filter-btn rar-rare",
+                "x": 212,
+                "y": 1417,
+                "w": 69,
+                "h": 48,
+                "right": 281,
+                "bottom": 1465,
+                "overflowX": false,
+                "overflowY": false,
+                "text": "zeldzaam",
+                "tapOk": true
+              }
+            },
+            {
+              "text": "episch",
+              "box": {
+                "id": "",
+                "cls": "gear-filter-btn rar-epic",
+                "x": 287,
+                "y": 1417,
+                "w": 53,
+                "h": 48,
+                "right": 340,
+                "bottom": 1465,
+                "overflowX": false,
+                "overflowY": false,
+                "text": "episch",
+                "tapOk": true
+              }
+            },
+            {
+              "text": "legendarisch",
+              "box": {
+                "id": "",
+                "cls": "gear-filter-btn rar-legendary",
+                "x": 14,
+                "y": 1471,
+                "w": 87,
+                "h": 48,
+                "right": 101,
+                "bottom": 1519,
+                "overflowX": false,
+                "overflowY": false,
+                "text": "legendarisch",
+                "tapOk": true
+              }
+            },
+            {
+              "text": "mythisch",
+              "box": {
+                "id": "",
+                "cls": "gear-filter-btn rar-mythic",
+                "x": 107,
+                "y": 1471,
+                "w": 67,
+                "h": 48,
+                "right": 174,
+                "bottom": 1519,
+                "overflowX": false,
+                "overflowY": false,
+                "text": "mythisch",
+                "tapOk": true
+              }
+            },
+            {
+              "text": "nachtmerrie",
+              "box": {
+                "id": "",
+                "cls": "gear-filter-btn rar-nightmare",
+                "x": 180,
+                "y": 1471,
+                "w": 83,
+                "h": 48,
+                "right": 262,
+                "bottom": 1519,
+                "overflowX": false,
+                "overflowY": false,
+                "text": "nachtmerrie",
+                "tapOk": true
+              }
+            },
+            {
+              "text": "hel",
+              "box": {
+                "id": "",
+                "cls": "gear-filter-btn rar-hell",
+                "x": 268,
+                "y": 1471,
+                "w": 44,
+                "h": 48,
+                "right": 312,
+                "bottom": 1519,
+                "overflowX": false,
+                "overflowY": false,
+                "text": "hel",
+                "tapOk": true
+              }
+            }
+          ],
+          "pickerRows": 28,
+          "pickerH": 2492,
+          "filterDock": false,
+          "sheetTools": {
+            "id": "gearSheetTools",
+            "cls": "gear-sheet-tools",
+            "x": 14,
+            "y": 203,
+            "w": 367,
+            "h": 248,
+            "right": 381,
+            "bottom": 451,
+            "overflowX": false,
+            "overflowY": false,
+            "text": "Alles27 Look15 Stats12 Slot26 Van jou1 Alle gewoon ongewoon zeldzaam episch legendarisch mythisch nachtmerrie hel 27/27 in Hoofd",
+            "tapOk": true
+          },
+          "primaryBelowFold": false,
+          "afterSlot": {
+            "scan": {
+              "active": true,
+              "scrollH": 4285,
+              "clientH": 844,
+              "scrollNeed": true,
+              "overflow": [],
+              "textClip": [],
+              "smallTap": [],
+              "vsTile": false
+            },
+            "pickerRows": 28,
+            "rows": [
+              {
+                "text": "Nog geen uitrusting. Vind drops in Avontuur. Naar avontuur",
+                "h": 120,
+                "tapOk": true
+              },
+              {
+                "text": "Linnen wrap SIER gewoon Nu aan — tik om uit te doen Uitdoen",
+                "h": 64,
+                "tapOk": true
+              },
+              {
+                "text": "Hel-helm VAST hel Nog niet gevonden Nog niet gevonden",
+                "h": 64,
+                "tapOk": true
+              },
+              {
+                "text": "Zwavelhoorns VAST hel Nog niet gevonden Nog niet gevonden",
+                "h": 64,
+                "tapOk": true
+              },
+              {
+                "text": "Droommasker VAST nachtmerrie Nog niet gevonden Nog niet gevonden",
+                "h": 86,
+                "tapOk": true
+              },
+              {
+                "text": "Nachtmerrie-helm VAST nachtmerrie Nog niet gevonden Nog niet gevonden",
+                "h": 86,
+                "tapOk": true
+              },
+              {
+                "text": "Void-helm VAST mythisch Nog niet gevonden Nog niet gevonden",
+                "h": 64,
+                "tapOk": true
+              },
+              {
+                "text": "Gelukshelm VAST legendarisch Nog niet gevonden Nog niet gevonden",
+                "h": 86,
+                "tapOk": true
+              }
+            ],
+            "renderMs": 7,
+            "hint": "Tik een stuk om het aan of uit te doen. Op slot blijft zichtbaar.",
+            "count": "27/27 in Hoofd",
+            "huntCopy": "Alleen start-look. Vind meer stukken in Avontuur."
+          }
+        },
+        "pets": {
+          "openMs": 14,
+          "scan": {
+            "active": true,
+            "scrollH": 864,
+            "clientH": 844,
+            "scrollNeed": true,
+            "overflow": [],
+            "textClip": [],
+            "smallTap": [
+              {
+                "id": "pets-wallet-chip pets-wallet-egg is-ready",
+                "w": 74,
+                "h": 36,
+                "text": "EI klaar"
+              }
+            ],
+            "vsTile": false
+          },
+          "wallet": {
+            "id": "petsWallet",
+            "cls": "pets-wallet statbar",
+            "x": 14,
+            "y": 235,
+            "w": 367,
+            "h": 52,
+            "right": 381,
+            "bottom": 287,
+            "overflowX": false,
+            "overflowY": false,
+            "text": "PC 0 DEX 0/12 EI klaar",
+            "tapOk": true
+          },
+          "hero": {
+            "id": "petsHero",
+            "cls": "pets-hero",
+            "x": 14,
+            "y": 295,
+            "w": 367,
+            "h": 82,
+            "right": 381,
+            "bottom": 377,
+            "overflowX": false,
+            "overflowY": false,
+            "text": "Geen pet Dag-ei klaar",
+            "tapOk": true
+          },
+          "next": {
+            "id": "petsNext",
+            "cls": "pets-next statbar is-act",
+            "x": 14,
+            "y": 385,
+            "w": 367,
+            "h": 46,
+            "right": 381,
+            "bottom": 431,
+            "overflowX": false,
+            "overflowY": false,
+            "text": "Dag-ei klaar",
+            "tapOk": true
+          },
+          "crack": {
+            "id": "eggCrackBtn",
+            "cls": "btn mode-btn b-dex big-touch pets-crack-btn is-ready",
+            "x": 16,
+            "y": 437,
+            "w": 359,
+            "h": 84,
+            "right": 374,
+            "bottom": 522,
+            "overflowX": false,
+            "overflowY": false,
+            "text": "Dag-ei openen Gratis arcade-pull",
+            "tapOk": true
+          },
+          "tabs": {
+            "id": "petTabBar",
+            "cls": "dex-filter-bar pets-tab-bar",
+            "x": 14,
+            "y": 530,
+            "w": 362,
+            "h": 58,
+            "right": 376,
+            "bottom": 588,
+            "overflowX": false,
+            "overflowY": false,
+            "text": "Dex · 0/12 Ei · 0/12",
+            "tapOk": true
+          },
+          "filters": null,
+          "cards": [
+            {
+              "id": "pet_slymo",
+              "box": {
+                "id": "",
+                "cls": "card pets-card locked pets-card-sel",
+                "x": 14,
+                "y": 717,
+                "w": 367,
+                "h": 60,
+                "right": 381,
+                "bottom": 777,
+                "overflowX": false,
+                "overflowY": false,
+                "text": "",
+                "tapOk": true
+              },
+              "text": ""
+            },
+            {
+              "id": "pet_bubbel",
+              "box": {
+                "id": "",
+                "cls": "card pets-card locked",
+                "x": 14,
+                "y": 797,
+                "w": 367,
+                "h": 60,
+                "right": 381,
+                "bottom": 857,
+                "overflowX": false,
+                "overflowY": false,
+                "text": "",
+                "tapOk": true
+              },
+              "text": ""
+            },
+            {
+              "id": "pet_flapper",
+              "box": {
+                "id": "",
+                "cls": "card pets-card locked",
+                "x": 14,
+                "y": 877,
+                "w": 367,
+                "h": 60,
+                "right": 381,
+                "bottom": 937,
+                "overflowX": false,
+                "overflowY": false,
+                "text": "",
+                "tapOk": true
+              },
+              "text": ""
+            },
+            {
+              "id": "pet_stekelra",
+              "box": {
+                "id": "",
+                "cls": "card pets-card locked",
+                "x": 14,
+                "y": 957,
+                "w": 367,
+                "h": 60,
+                "right": 381,
+                "bottom": 1017,
+                "overflowX": false,
+                "overflowY": false,
+                "text": "",
+                "tapOk": true
+              },
+              "text": ""
+            },
+            {
+              "id": "pet_spooki",
+              "box": {
+                "id": "",
+                "cls": "card pets-card locked",
+                "x": 14,
+                "y": 1037,
+                "w": 367,
+                "h": 60,
+                "right": 381,
+                "bottom": 1097,
+                "overflowX": false,
+                "overflowY": false,
+                "text": "",
+                "tapOk": true
+              },
+              "text": ""
+            },
+            {
+              "id": "pet_blikkert",
+              "box": {
+                "id": "",
+                "cls": "card pets-card locked",
+                "x": 14,
+                "y": 1117,
+                "w": 367,
+                "h": 60,
+                "right": 381,
+                "bottom": 1177,
+                "overflowX": false,
+                "overflowY": false,
+                "text": "",
+                "tapOk": true
+              },
+              "text": ""
+            },
+            {
+              "id": "pet_vlamvos",
+              "box": {
+                "id": "",
+                "cls": "card pets-card locked",
+                "x": 14,
+                "y": 1197,
+                "w": 367,
+                "h": 60,
+                "right": 381,
+                "bottom": 1257,
+                "overflowX": false,
+                "overflowY": false,
+                "text": "",
+                "tapOk": true
+              },
+              "text": ""
+            },
+            {
+              "id": "pet_piepvleugel",
+              "box": {
+                "id": "",
+                "cls": "card pets-card locked",
+                "x": 14,
+                "y": 1277,
+                "w": 367,
+                "h": 60,
+                "right": 381,
+                "bottom": 1337,
+                "overflowX": false,
+                "overflowY": false,
+                "text": "",
+                "tapOk": true
+              },
+              "text": ""
+            }
+          ],
+          "cardCount": 12,
+          "pane": "detail",
+          "detail": {
+            "scan": {
+              "active": true,
+              "scrollH": 864,
+              "clientH": 844,
+              "scrollNeed": true,
+              "overflow": [],
+              "textClip": [],
+              "smallTap": [],
+              "vsTile": false
+            },
+            "text": "← Overzicht Slymo Gewoon WAT DOET DIT? Spring-assist — extra schade Assist · cooldown 4.6s 0/12 kills 0/12 kills · 18 PC",
+            "cta": [
+              {
+                "text": "← Overzicht",
+                "box": {
+                  "id": "",
+                  "cls": "pets-overview-btn",
+                  "x": 27,
+                  "y": 606,
+                  "w": 80,
+                  "h": 44,
+                  "right": 107,
+                  "bottom": 650,
+                  "overflowX": false,
+                  "overflowY": false,
+                  "text": "← Overzicht",
+                  "tapOk": true
+                }
+              },
+              {
+                "text": "0/12 kills · 18 PC",
+                "box": {
+                  "id": "",
+                  "cls": "btn mode-btn big-touch pets-cta",
+                  "x": 27,
+                  "y": 931,
+                  "w": 341,
+                  "h": 50,
+                  "right": 368,
+                  "bottom": 981,
+                  "overflowX": false,
+                  "overflowY": false,
+                  "text": "0/12 kills · 18 PC",
+                  "tapOk": true
+                }
+              }
+            ]
+          }
+        },
+        "summons": {
+          "openMs": 37,
+          "scan": {
+            "active": true,
+            "scrollH": 844,
+            "clientH": 844,
+            "scrollNeed": false,
+            "overflow": [],
+            "textClip": [],
+            "smallTap": [],
+            "vsTile": false
+          },
+          "stage": {
+            "id": "summonStage",
+            "cls": "summon-stage is-pullable",
+            "x": 28,
+            "y": 233,
+            "w": 334,
+            "h": 209,
+            "right": 362,
+            "bottom": 441,
+            "overflowX": true,
+            "overflowY": true,
+            "text": "",
+            "tapOk": true
+          },
+          "cta": {
+            "id": "btnChestPull",
+            "cls": "btn mode-btn big-touch summon-pull-btn",
+            "x": 28,
+            "y": 433,
+            "w": 334,
+            "h": 94,
+            "right": 362,
+            "bottom": 527,
+            "overflowX": false,
+            "overflowY": false,
+            "text": "Open kist 10 over",
+            "tapOk": true
+          },
+          "cancel": null,
+          "gotoW": {
+            "id": "btnSummonGotoWeapons",
+            "cls": "summon-goto-link",
+            "x": 100,
+            "y": 563,
+            "w": 88,
+            "h": 44,
+            "right": 188,
+            "bottom": 607,
+            "overflowX": false,
+            "overflowY": false,
+            "text": "Wapens",
+            "tapOk": true
+          },
+          "gotoP": {
+            "id": "btnSummonGotoPets",
+            "cls": "summon-goto-link",
+            "x": 202,
+            "y": 563,
+            "w": 88,
+            "h": 44,
+            "right": 290,
+            "bottom": 607,
+            "overflowX": false,
+            "overflowY": false,
+            "text": "Pets",
+            "tapOk": true
+          },
+          "quota": "10/10",
+          "odds": "✦14% · mid 30% · geen pity",
+          "where": "Buit landt in Collectie",
+          "whereHidden": true,
+          "stageVsCta": 2.2,
+          "ctaBelowFold": false,
+          "videoSrc": "assets/summon/reveal.mp4",
+          "empty": {
+            "quota": "10/10",
+            "cta": {
+              "id": "btnChestPull",
+              "cls": "btn mode-btn big-touch summon-pull-btn",
+              "x": 28,
+              "y": 433,
+              "w": 334,
+              "h": 94,
+              "right": 362,
+              "bottom": 527,
+              "overflowX": false,
+              "overflowY": false,
+              "text": "Open kist 10 over",
+              "tapOk": true
+            },
+            "ctaText": "Open kist 10 over",
+            "disabled": false,
+            "hint": ""
+          }
+        }
+      }
+    },
+    "veteran": {
+      "mode": "veteran",
+      "seed": {
+        "ok": true,
+        "mode": "veteran",
+        "lvl": 18,
+        "pc": 640,
+        "pets": 3,
+        "gear": 51
+      },
+      "version": {
+        "app": "1.18.190",
+        "sw": 400,
+        "versus": false
+      },
+      "shots": {
+        "home": "docs/playtest-meta-390/veteran-00-home.png",
+        "factoriesList": "docs/playtest-meta-390/veteran-10-factories-list.png",
+        "factoriesDetail": "docs/playtest-meta-390/veteran-11-factories-detail.png",
+        "factoriesSheet": "docs/playtest-meta-390/veteran-12-factories-sheet.png",
+        "gear": "docs/playtest-meta-390/veteran-20-gear.png",
+        "gearSlot": "docs/playtest-meta-390/veteran-21-gear-slot.png",
+        "pets": "docs/playtest-meta-390/veteran-30-pets.png",
+        "petsDetail": "docs/playtest-meta-390/veteran-31-pets-detail.png",
+        "summons": "docs/playtest-meta-390/veteran-40-summons.png",
+        "summonsPull": "docs/playtest-meta-390/veteran-41-summons-pull.png"
+      },
+      "screens": {
+        "home": {
+          "scan": {
+            "active": true,
+            "scrollH": 1179,
+            "clientH": 844,
+            "scrollNeed": true,
+            "overflow": [],
+            "textClip": [],
+            "smallTap": [
+              {
+                "id": "fomo-ritual-row is-ready",
+                "w": 338,
+                "h": 30,
+                "text": "Dag-ei klaar"
+              }
+            ],
+            "vsTile": false
+          },
+          "tiles": [
+            {
+              "id": "btnBuildings",
+              "box": null,
+              "text": ""
+            },
+            {
+              "id": "btnGearHome",
+              "box": null,
+              "text": ""
+            },
+            {
+              "id": "btnPetsHome",
+              "box": null,
+              "text": ""
+            },
+            {
+              "id": "btnSummons",
+              "box": null,
+              "text": ""
+            }
+          ]
+        },
+        "factories": {
+          "openMs": 18,
+          "scan": {
+            "active": true,
+            "scrollH": 944,
+            "clientH": 844,
+            "scrollNeed": true,
+            "overflow": [],
+            "textClip": [],
+            "smallTap": [],
+            "vsTile": false
+          },
+          "wallet": {
+            "id": "buildingsWallet",
+            "cls": "buildings-wallet statbar",
+            "x": 14,
+            "y": 140,
+            "w": 367,
+            "h": 68,
+            "right": 381,
+            "bottom": 208,
+            "overflowX": false,
+            "overflowY": false,
+            "text": "PC 640 VONKEN 24 +12/u LIJM 8 +7/u SNIPPERS 3 +10/u STOOM 0 ECHO 0",
+            "tapOk": true
+          },
+          "back": {
+            "id": "",
+            "cls": "btn back-btn",
+            "x": 26,
+            "y": 27,
+            "w": 123,
+            "h": 52,
+            "right": 149,
+            "bottom": 79,
+            "overflowX": false,
+            "overflowY": false,
+            "text": "Menu",
+            "tapOk": true
+          },
+          "cards": [
+            {
+              "id": "stick_lighter",
+              "box": {
+                "id": "",
+                "cls": "buildings-card buildings-row buildings-row-sel is-sel buildings-row-ready is-rea",
+                "x": 18,
+                "y": 218,
+                "w": 359,
+                "h": 88,
+                "right": 377,
+                "bottom": 306,
+                "overflowX": false,
+                "overflowY": false,
+                "text": "LV 3 Aansteker Vonken 12/uur · Vonkspoor Oogst 36 VONKEN",
+                "tapOk": true
+              },
+              "name": "Aansteker",
+              "does": "Vonken 12/uur · Vonkspoor"
+            },
+            {
+              "id": "woodchip_glue",
+              "box": {
+                "id": "",
+                "cls": "buildings-card buildings-row buildings-row-locked is-locked buildings-row-ready ",
+                "x": 18,
+                "y": 314,
+                "w": 359,
+                "h": 88,
+                "right": 377,
+                "bottom": 402,
+                "overflowX": false,
+                "overflowY": false,
+                "text": "OP SLOT Hout-Lijm Dicht — speel Vuur-eiland (eiland 2) vrij Slot LIJM",
+                "tapOk": true
+              },
+              "name": "Hout-Lijm",
+              "does": "Dicht — speel Vuur-eiland (eiland 2) vrij"
+            },
+            {
+              "id": "chipping_wood",
+              "box": {
+                "id": "",
+                "cls": "buildings-card buildings-row buildings-row-locked is-locked buildings-row-ready ",
+                "x": 18,
+                "y": 410,
+                "w": 359,
+                "h": 88,
+                "right": 377,
+                "bottom": 498,
+                "overflowX": false,
+                "overflowY": false,
+                "text": "OP SLOT Versnipper Dicht — speel Neon-eiland (eiland 3) vrij Slot SNIPPERS",
+                "tapOk": true
+              },
+              "name": "Versnipper",
+              "does": "Dicht — speel Neon-eiland (eiland 3) vrij"
+            },
+            {
+              "id": "bamboo_boesa",
+              "box": {
+                "id": "",
+                "cls": "buildings-card buildings-row buildings-row-locked is-locked",
+                "x": 18,
+                "y": 506,
+                "w": 359,
+                "h": 88,
+                "right": 377,
+                "bottom": 594,
+                "overflowX": false,
+                "overflowY": false,
+                "text": "OP SLOT Bamboe-Boesa Dicht — speel Tempel-eiland (eiland 4) vrij Slot STOOM",
+                "tapOk": true
+              },
+              "name": "Bamboe-Boesa",
+              "does": "Dicht — speel Tempel-eiland (eiland 4) vrij"
+            },
+            {
+              "id": "echo_whistle",
+              "box": {
+                "id": "",
+                "cls": "buildings-card buildings-row buildings-row-locked is-locked",
+                "x": 18,
+                "y": 602,
+                "w": 359,
+                "h": 88,
+                "right": 377,
+                "bottom": 690,
+                "overflowX": false,
+                "overflowY": false,
+                "text": "OP SLOT Echo-Fluit Dicht — speel Finale-eiland (eiland 5) vrij Slot ECHO",
+                "tapOk": true
+              },
+              "name": "Echo-Fluit",
+              "does": "Dicht — speel Finale-eiland (eiland 5) vrij"
+            }
+          ],
+          "pane": "detail",
+          "detail": {
+            "scan": {
+              "active": true,
+              "scrollH": 944,
+              "clientH": 844,
+              "scrollNeed": true,
+              "overflow": [],
+              "textClip": [],
+              "smallTap": [],
+              "vsTile": false
+            },
+            "name": "Stok-Aansteker Fabriek Lv 3",
+            "blurb": "",
+            "powers": [],
+            "collect": {
+              "id": "btnBuildingCollect",
+              "cls": "buildings-res-pill is-collect",
+              "x": 27,
+              "y": 464,
+              "w": 120,
+              "h": 48,
+              "right": 147,
+              "bottom": 512,
+              "overflowX": false,
+              "overflowY": false,
+              "text": "Oogst 36 VONKEN",
+              "tapOk": true
+            },
+            "upgrade": {
+              "id": "btnBuildingUpgrade",
+              "cls": "btn mode-btn b-gray big-touch buildings-cta buildings-cta-upgrade",
+              "x": 27,
+              "y": 565,
+              "w": 341,
+              "h": 84,
+              "right": 368,
+              "bottom": 649,
+              "overflowX": false,
+              "overflowY": false,
+              "text": "Opwaarderen… Mis 6 Vonken — speel of oogst eerst",
+              "tapOk": true
+            }
+          },
+          "sheet": {
+            "open": true,
+            "panel": {
+              "id": "",
+              "cls": "buildings-sheet-panel",
+              "x": 12,
+              "y": 473,
+              "w": 367,
+              "h": 349,
+              "right": 378,
+              "bottom": 822,
+              "overflowX": false,
+              "overflowY": false,
+              "text": "Aansteker opwaarderen Lv 4: Vonken 15/uur · 120 Opwaarderen naar Lv 4? 70 PC 30 Vonken Mis 6 Vonken — speel of oogst eerst Bevestig Sluiten",
+              "tapOk": true
+            },
+            "overflow": false,
+            "text": "Aansteker opwaarderen Lv 4: Vonken 15/uur · 120 Opwaarderen naar Lv 4? 70 PC 30 Vonken Mis 6 Vonken — speel of oogst eerst Bevestig Sluiten"
+          }
+        },
+        "gear": {
+          "openMs": 27,
+          "scan": {
+            "active": true,
+            "scrollH": 3668,
+            "clientH": 844,
+            "scrollNeed": true,
+            "overflow": [],
+            "textClip": [],
+            "smallTap": [],
+            "vsTile": false
+          },
+          "doll": {
+            "id": "gearDollCanvas",
+            "cls": "gear-doll-canvas",
+            "x": 87,
+            "y": -884,
+            "w": 220,
+            "h": 179,
+            "right": 307,
+            "bottom": -705,
+            "overflowX": false,
+            "overflowY": false,
+            "text": "",
+            "tapOk": true
+          },
+          "hunt": null,
+          "unequip": {
+            "id": "gearUnequipAll",
+            "cls": "gear-unequip-all",
+            "x": 14,
+            "y": -43,
+            "w": 367,
+            "h": 44,
+            "right": 381,
+            "bottom": 1,
+            "overflowX": false,
+            "overflowY": false,
+            "text": "Alles uitdoen",
+            "tapOk": true
+          },
+          "slots": [
+            {
+              "slot": "head",
+              "box": {
+                "id": "",
+                "cls": "hub-tile gear-slot-card sel filled",
+                "x": 14,
+                "y": 525,
+                "w": 367,
+                "h": 66,
+                "right": 381,
+                "bottom": 591,
+                "overflowX": false,
+                "overflowY": false,
+                "text": "Hoofd Linnen wrap · Gewoon SIER",
+                "tapOk": true
+              },
+              "text": "Hoofd Linnen wrap · Gewoon SIER"
+            },
+            {
+              "slot": "chest",
+              "box": {
+                "id": "",
+                "cls": "hub-tile gear-slot-card filled",
+                "x": 14,
+                "y": 619,
+                "w": 367,
+                "h": 66,
+                "right": 381,
+                "bottom": 685,
+                "overflowX": false,
+                "overflowY": false,
+                "text": "Borst Gewoon shirt · Gewoon SIER",
+                "tapOk": true
+              },
+              "text": "Borst Gewoon shirt · Gewoon SIER"
+            },
+            {
+              "slot": "hands",
+              "box": {
+                "id": "",
+                "cls": "hub-tile gear-slot-card filled",
+                "x": 14,
+                "y": 713,
+                "w": 367,
+                "h": 66,
+                "right": 381,
+                "bottom": 779,
+                "overflowX": false,
+                "overflowY": false,
+                "text": "Handen Handwraps · Gewoon SIER",
+                "tapOk": true
+              },
+              "text": "Handen Handwraps · Gewoon SIER"
+            },
+            {
+              "slot": "legs",
+              "box": {
+                "id": "",
+                "cls": "hub-tile gear-slot-card filled",
+                "x": 14,
+                "y": 807,
+                "w": 367,
+                "h": 66,
+                "right": 381,
+                "bottom": 873,
+                "overflowX": false,
+                "overflowY": false,
+                "text": "Benen Beenwraps · Gewoon SIER",
+                "tapOk": true
+              },
+              "text": "Benen Beenwraps · Gewoon SIER"
+            },
+            {
+              "slot": "back",
+              "box": {
+                "id": "",
+                "cls": "hub-tile gear-slot-card filled",
+                "x": 14,
+                "y": 901,
+                "w": 367,
+                "h": 66,
+                "right": 381,
+                "bottom": 967,
+                "overflowX": false,
+                "overflowY": false,
+                "text": "Rug Stip-pin · Gewoon SIER",
+                "tapOk": true
+              },
+              "text": "Rug Stip-pin · Gewoon SIER"
+            }
+          ],
+          "chips": [
+            {
+              "text": "Alles27",
+              "box": {
+                "id": "",
+                "cls": "gear-filter-btn sel",
+                "x": 14,
+                "y": 1255,
+                "w": 67,
+                "h": 48,
+                "right": 81,
+                "bottom": 1303,
+                "overflowX": false,
+                "overflowY": false,
+                "text": "Alles27",
+                "tapOk": true
+              }
+            },
+            {
+              "text": "Look15",
+              "box": {
+                "id": "",
+                "cls": "gear-filter-btn",
+                "x": 87,
+                "y": 1255,
+                "w": 66,
+                "h": 48,
+                "right": 153,
+                "bottom": 1303,
+                "overflowX": false,
+                "overflowY": false,
+                "text": "Look15",
+                "tapOk": true
+              }
+            },
+            {
+              "text": "Stats12",
+              "box": {
+                "id": "",
+                "cls": "gear-filter-btn",
+                "x": 159,
+                "y": 1255,
+                "w": 68,
+                "h": 48,
+                "right": 227,
+                "bottom": 1303,
+                "overflowX": false,
+                "overflowY": false,
+                "text": "Stats12",
+                "tapOk": true
+              }
+            },
+            {
+              "text": "Slot13",
+              "box": {
+                "id": "",
+                "cls": "gear-filter-btn",
+                "x": 233,
+                "y": 1255,
+                "w": 62,
+                "h": 48,
+                "right": 295,
+                "bottom": 1303,
+                "overflowX": false,
+                "overflowY": false,
+                "text": "Slot13",
+                "tapOk": true
+              }
+            },
+            {
+              "text": "Van jou27",
+              "box": {
+                "id": "",
+                "cls": "gear-filter-btn",
+                "x": 301,
+                "y": 1255,
+                "w": 80,
+                "h": 48,
+                "right": 381,
+                "bottom": 1303,
+                "overflowX": false,
+                "overflowY": false,
+                "text": "Van jou27",
+                "tapOk": true
+              }
+            },
+            {
+              "text": "Alle",
+              "box": {
+                "id": "",
+                "cls": "gear-filter-btn sel",
+                "x": 14,
+                "y": 1311,
+                "w": 44,
+                "h": 48,
+                "right": 58,
+                "bottom": 1359,
+                "overflowX": false,
+                "overflowY": false,
+                "text": "Alle",
+                "tapOk": true
+              }
+            },
+            {
+              "text": "gewoon",
+              "box": {
+                "id": "",
+                "cls": "gear-filter-btn rar-common",
+                "x": 64,
+                "y": 1311,
+                "w": 62,
+                "h": 48,
+                "right": 126,
+                "bottom": 1359,
+                "overflowX": false,
+                "overflowY": false,
+                "text": "gewoon",
+                "tapOk": true
+              }
+            },
+            {
+              "text": "ongewoon",
+              "box": {
+                "id": "",
+                "cls": "gear-filter-btn rar-uncommon",
+                "x": 132,
+                "y": 1311,
+                "w": 75,
+                "h": 48,
+                "right": 206,
+                "bottom": 1359,
+                "overflowX": false,
+                "overflowY": false,
+                "text": "ongewoon",
+                "tapOk": true
+              }
+            },
+            {
+              "text": "zeldzaam",
+              "box": {
+                "id": "",
+                "cls": "gear-filter-btn rar-rare",
+                "x": 212,
+                "y": 1311,
+                "w": 69,
+                "h": 48,
+                "right": 281,
+                "bottom": 1359,
+                "overflowX": false,
+                "overflowY": false,
+                "text": "zeldzaam",
+                "tapOk": true
+              }
+            },
+            {
+              "text": "episch",
+              "box": {
+                "id": "",
+                "cls": "gear-filter-btn rar-epic",
+                "x": 287,
+                "y": 1311,
+                "w": 53,
+                "h": 48,
+                "right": 340,
+                "bottom": 1359,
+                "overflowX": false,
+                "overflowY": false,
+                "text": "episch",
+                "tapOk": true
+              }
+            },
+            {
+              "text": "legendarisch",
+              "box": {
+                "id": "",
+                "cls": "gear-filter-btn rar-legendary",
+                "x": 14,
+                "y": 1365,
+                "w": 87,
+                "h": 48,
+                "right": 101,
+                "bottom": 1413,
+                "overflowX": false,
+                "overflowY": false,
+                "text": "legendarisch",
+                "tapOk": true
+              }
+            },
+            {
+              "text": "mythisch",
+              "box": {
+                "id": "",
+                "cls": "gear-filter-btn rar-mythic",
+                "x": 107,
+                "y": 1365,
+                "w": 67,
+                "h": 48,
+                "right": 174,
+                "bottom": 1413,
+                "overflowX": false,
+                "overflowY": false,
+                "text": "mythisch",
+                "tapOk": true
+              }
+            },
+            {
+              "text": "nachtmerrie",
+              "box": {
+                "id": "",
+                "cls": "gear-filter-btn rar-nightmare",
+                "x": 180,
+                "y": 1365,
+                "w": 83,
+                "h": 48,
+                "right": 262,
+                "bottom": 1413,
+                "overflowX": false,
+                "overflowY": false,
+                "text": "nachtmerrie",
+                "tapOk": true
+              }
+            },
+            {
+              "text": "hel",
+              "box": {
+                "id": "",
+                "cls": "gear-filter-btn rar-hell",
+                "x": 268,
+                "y": 1365,
+                "w": 44,
+                "h": 48,
+                "right": 312,
+                "bottom": 1413,
+                "overflowX": false,
+                "overflowY": false,
+                "text": "hel",
+                "tapOk": true
+              }
+            }
+          ],
+          "pickerRows": 27,
+          "pickerH": 1980,
+          "filterDock": false,
+          "sheetTools": {
+            "id": "gearSheetTools",
+            "cls": "gear-sheet-tools",
+            "x": 14,
+            "y": 203,
+            "w": 367,
+            "h": 248,
+            "right": 381,
+            "bottom": 451,
+            "overflowX": false,
+            "overflowY": false,
+            "text": "Alles27 Look15 Stats12 Slot13 Van jou27 Alle gewoon ongewoon zeldzaam episch legendarisch mythisch nachtmerrie hel 27/27 in Hoofd",
+            "tapOk": true
+          },
+          "primaryBelowFold": false,
+          "afterSlot": {
+            "scan": {
+              "active": true,
+              "scrollH": 3668,
+              "clientH": 844,
+              "scrollNeed": true,
+              "overflow": [],
+              "textClip": [],
+              "smallTap": [],
+              "vsTile": false
+            },
+            "pickerRows": 27,
+            "rows": [
+              {
+                "text": "Linnen wrap SIER gewoon Nu aan — tik om uit te doen Uitdoen",
+                "h": 64,
+                "tapOk": true
+              },
+              {
+                "text": "Hel-helm VAST hel Lv 65 Lv 65",
+                "h": 64,
+                "tapOk": true
+              },
+              {
+                "text": "Zwavelhoorns VAST hel Lv 63 Lv 63",
+                "h": 64,
+                "tapOk": true
+              },
+              {
+                "text": "Droommasker VAST nachtmerrie Lv 53 Lv 53",
+                "h": 64,
+                "tapOk": true
+              },
+              {
+                "text": "Nachtmerrie-helm VAST nachtmerrie Lv 55 Lv 55",
+                "h": 86,
+                "tapOk": true
+              },
+              {
+                "text": "Void-helm VAST mythisch Lv 48 Lv 48",
+                "h": 64,
+                "tapOk": true
+              },
+              {
+                "text": "Gelukshelm VAST legendarisch Lv 38 Lv 38",
+                "h": 64,
+                "tapOk": true
+              },
+              {
+                "text": "Kristalhelm VAST legendarisch Lv 42 Lv 42",
+                "h": 64,
+                "tapOk": true
+              }
+            ],
+            "renderMs": 7,
+            "hint": "Tik een stuk om het aan of uit te doen. Op slot blijft zichtbaar.",
+            "count": "27/27 in Hoofd",
+            "huntCopy": "Alleen start-look. Vind meer stukken in Avontuur."
+          }
+        },
+        "pets": {
+          "openMs": 18,
+          "scan": {
+            "active": true,
+            "scrollH": 864,
+            "clientH": 844,
+            "scrollNeed": true,
+            "overflow": [],
+            "textClip": [],
+            "smallTap": [
+              {
+                "id": "pets-wallet-chip pets-wallet-egg is-ready",
+                "w": 74,
+                "h": 36,
+                "text": "EI klaar"
+              }
+            ],
+            "vsTile": false
+          },
+          "wallet": {
+            "id": "petsWallet",
+            "cls": "pets-wallet statbar",
+            "x": 14,
+            "y": 235,
+            "w": 367,
+            "h": 52,
+            "right": 381,
+            "bottom": 287,
+            "overflowX": false,
+            "overflowY": false,
+            "text": "PC 640 DEX 3/12 EI klaar",
+            "tapOk": true
+          },
+          "hero": {
+            "id": "petsHero",
+            "cls": "pets-hero",
+            "x": 14,
+            "y": 295,
+            "w": 367,
+            "h": 82,
+            "right": 381,
+            "bottom": 377,
+            "overflowX": false,
+            "overflowY": false,
+            "text": "Slymo Spring-assist — extra schade Nu +3% schade",
+            "tapOk": true
+          },
+          "next": {
+            "id": "petsNext",
+            "cls": "pets-next statbar is-act",
+            "x": 14,
+            "y": 385,
+            "w": 367,
+            "h": 46,
+            "right": 381,
+            "bottom": 431,
+            "overflowX": false,
+            "overflowY": false,
+            "text": "Dag-ei klaar",
+            "tapOk": true
+          },
+          "crack": {
+            "id": "eggCrackBtn",
+            "cls": "btn mode-btn b-dex big-touch pets-crack-btn is-ready",
+            "x": 16,
+            "y": 437,
+            "w": 359,
+            "h": 84,
+            "right": 374,
+            "bottom": 521,
+            "overflowX": false,
+            "overflowY": false,
+            "text": "Dag-ei openen Gratis arcade-pull",
+            "tapOk": true
+          },
+          "tabs": {
+            "id": "petTabBar",
+            "cls": "dex-filter-bar pets-tab-bar",
+            "x": 14,
+            "y": 529,
+            "w": 362,
+            "h": 58,
+            "right": 376,
+            "bottom": 587,
+            "overflowX": false,
+            "overflowY": false,
+            "text": "Dex · 3/12 Ei · 0/12",
+            "tapOk": true
+          },
+          "filters": null,
+          "cards": [
+            {
+              "id": "pet_slymo",
+              "box": {
+                "id": "",
+                "cls": "card pets-card sel pets-card-sel",
+                "x": 14,
+                "y": 716,
+                "w": 367,
+                "h": 60,
+                "right": 381,
+                "bottom": 776,
+                "overflowX": false,
+                "overflowY": false,
+                "text": "",
+                "tapOk": true
+              },
+              "text": ""
+            },
+            {
+              "id": "pet_bubbel",
+              "box": {
+                "id": "",
+                "cls": "card pets-card",
+                "x": 14,
+                "y": 796,
+                "w": 367,
+                "h": 60,
+                "right": 381,
+                "bottom": 856,
+                "overflowX": false,
+                "overflowY": false,
+                "text": "",
+                "tapOk": true
+              },
+              "text": ""
+            },
+            {
+              "id": "pet_flapper",
+              "box": {
+                "id": "",
+                "cls": "card pets-card",
+                "x": 14,
+                "y": 876,
+                "w": 367,
+                "h": 60,
+                "right": 381,
+                "bottom": 936,
+                "overflowX": false,
+                "overflowY": false,
+                "text": "",
+                "tapOk": true
+              },
+              "text": ""
+            },
+            {
+              "id": "pet_stekelra",
+              "box": {
+                "id": "",
+                "cls": "card pets-card locked dex-available pets-card-ready",
+                "x": 14,
+                "y": 956,
+                "w": 367,
+                "h": 60,
+                "right": 381,
+                "bottom": 1016,
+                "overflowX": false,
+                "overflowY": false,
+                "text": "",
+                "tapOk": true
+              },
+              "text": ""
+            },
+            {
+              "id": "pet_spooki",
+              "box": {
+                "id": "",
+                "cls": "card pets-card locked dex-available pets-card-ready",
+                "x": 14,
+                "y": 1036,
+                "w": 367,
+                "h": 60,
+                "right": 381,
+                "bottom": 1096,
+                "overflowX": false,
+                "overflowY": false,
+                "text": "",
+                "tapOk": true
+              },
+              "text": ""
+            },
+            {
+              "id": "pet_blikkert",
+              "box": {
+                "id": "",
+                "cls": "card pets-card locked dex-available pets-card-ready",
+                "x": 14,
+                "y": 1116,
+                "w": 367,
+                "h": 60,
+                "right": 381,
+                "bottom": 1176,
+                "overflowX": false,
+                "overflowY": false,
+                "text": "",
+                "tapOk": true
+              },
+              "text": ""
+            },
+            {
+              "id": "pet_vlamvos",
+              "box": {
+                "id": "",
+                "cls": "card pets-card locked dex-available pets-card-ready",
+                "x": 14,
+                "y": 1196,
+                "w": 367,
+                "h": 60,
+                "right": 381,
+                "bottom": 1256,
+                "overflowX": false,
+                "overflowY": false,
+                "text": "",
+                "tapOk": true
+              },
+              "text": ""
+            },
+            {
+              "id": "pet_piepvleugel",
+              "box": {
+                "id": "",
+                "cls": "card pets-card locked dex-available pets-card-ready",
+                "x": 14,
+                "y": 1276,
+                "w": 367,
+                "h": 60,
+                "right": 381,
+                "bottom": 1336,
+                "overflowX": false,
+                "overflowY": false,
+                "text": "",
+                "tapOk": true
+              },
+              "text": ""
+            }
+          ],
+          "cardCount": 12,
+          "pane": "detail",
+          "detail": {
+            "scan": {
+              "active": true,
+              "scrollH": 864,
+              "clientH": 844,
+              "scrollNeed": true,
+              "overflow": [],
+              "textClip": [],
+              "smallTap": [],
+              "vsTile": false
+            },
+            "text": "← Overzicht Slymo Gewoon WAT DOET DIT? Spring-assist — extra schade Nu +3% schade Assist · cooldown 4.6s Getemd · assist in avontuur Uitzetten",
+            "cta": [
+              {
+                "text": "← Overzicht",
+                "box": {
+                  "id": "",
+                  "cls": "pets-overview-btn",
+                  "x": 27,
+                  "y": 606,
+                  "w": 80,
+                  "h": 44,
+                  "right": 107,
+                  "bottom": 650,
+                  "overflowX": false,
+                  "overflowY": false,
+                  "text": "← Overzicht",
+                  "tapOk": true
+                }
+              },
+              {
+                "text": "Uitzetten",
+                "box": {
+                  "id": "",
+                  "cls": "btn mode-btn big-touch pets-cta pets-cta-unequip",
+                  "x": 27,
+                  "y": 950,
+                  "w": 341,
+                  "h": 50,
+                  "right": 368,
+                  "bottom": 1000,
+                  "overflowX": false,
+                  "overflowY": false,
+                  "text": "Uitzetten",
+                  "tapOk": true
+                }
+              }
+            ]
+          }
+        },
+        "summons": {
+          "openMs": 23,
+          "scan": {
+            "active": true,
+            "scrollH": 844,
+            "clientH": 844,
+            "scrollNeed": false,
+            "overflow": [],
+            "textClip": [],
+            "smallTap": [],
+            "vsTile": false
+          },
+          "stage": {
+            "id": "summonStage",
+            "cls": "summon-stage is-pullable",
+            "x": 28,
+            "y": 233,
+            "w": 334,
+            "h": 209,
+            "right": 362,
+            "bottom": 441,
+            "overflowX": true,
+            "overflowY": true,
+            "text": "",
+            "tapOk": true
+          },
+          "cta": {
+            "id": "btnChestPull",
+            "cls": "btn mode-btn big-touch summon-pull-btn",
+            "x": 28,
+            "y": 433,
+            "w": 334,
+            "h": 94,
+            "right": 362,
+            "bottom": 527,
+            "overflowX": false,
+            "overflowY": false,
+            "text": "Open kist 10 over",
+            "tapOk": true
+          },
+          "cancel": null,
+          "gotoW": {
+            "id": "btnSummonGotoWeapons",
+            "cls": "summon-goto-link",
+            "x": 100,
+            "y": 563,
+            "w": 88,
+            "h": 44,
+            "right": 188,
+            "bottom": 607,
+            "overflowX": false,
+            "overflowY": false,
+            "text": "Wapens",
+            "tapOk": true
+          },
+          "gotoP": {
+            "id": "btnSummonGotoPets",
+            "cls": "summon-goto-link",
+            "x": 202,
+            "y": 563,
+            "w": 88,
+            "h": 44,
+            "right": 290,
+            "bottom": 607,
+            "overflowX": false,
+            "overflowY": false,
+            "text": "Pets",
+            "tapOk": true
+          },
+          "quota": "10/10",
+          "odds": "✦14% · mid 30% · geen pity",
+          "where": "Buit landt in Collectie",
+          "whereHidden": true,
+          "stageVsCta": 2.2,
+          "ctaBelowFold": false,
+          "videoSrc": "assets/summon/reveal.mp4",
+          "pull": {
+            "pullMs": 2208,
+            "pulling": false,
+            "cardShow": false,
+            "card": null,
+            "skip": "Tik om verder",
+            "reveal": ""
+          }
+        }
+      }
+    }
+  }
+}
