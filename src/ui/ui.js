@@ -2303,6 +2303,13 @@ const UI = {
       const left = glance.left;
       const empty = !!glance.empty || left <= 0;
       const err = !!this._summonLastError;
+      const skipReadyEarly = !!this._summonSkipReady && !!this._chestPullBusy;
+      const screenEl = document.getElementById('summonScreen');
+      if (screenEl) {
+        screenEl.classList.toggle('is-empty', empty && !skipReadyEarly);
+        screenEl.classList.toggle('is-error', err && !skipReadyEarly);
+        screenEl.classList.toggle('is-ready', left > 0 && !this._chestPullBusy);
+      }
       const glanceEl = document.getElementById('summonGlance');
       if (glanceEl) {
         glanceEl.classList.toggle('is-empty', empty);
@@ -2399,7 +2406,7 @@ const UI = {
         hint.textContent = empty
           ? tOr('ui.summonEmptyHint', 'Morgen weer')
           : tOr('ui.summonHint', 'Tik kist om te openen');
-        hint.style.display = (!this._chestPullBusy && (left > 0 || empty)) ? '' : 'none';
+        hint.style.display = (!this._chestPullBusy && empty) ? '' : 'none';
       }
       const skipHint = document.getElementById('summonSkipHint');
       if (skipHint) {

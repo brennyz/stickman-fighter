@@ -323,9 +323,9 @@ const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const VERSION_UPDATE_SAVE_KEY = 'stickfighter_version_update_save_v1';
 const VERSION_UPDATE_FLAG_KEY = 'stickfighter_version_update_flag_v1';
 const SAVE_EXPORT_SCHEMA = 3;
-const APP_VERSION = '1.18.178';
+const APP_VERSION = '1.18.179';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 388;
+const SW_CACHE_REV = 389;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', petCoins: 0, dex: {}, summons: {}, pets: {}, activePet: null,
   eggPets: {}, activeEggPet: null, eggDaily: null,
   chestDaily: null, chestWeapons: {},
@@ -48801,6 +48801,13 @@ const UI = {
       const left = glance.left;
       const empty = !!glance.empty || left <= 0;
       const err = !!this._summonLastError;
+      const skipReadyEarly = !!this._summonSkipReady && !!this._chestPullBusy;
+      const screenEl = document.getElementById('summonScreen');
+      if (screenEl) {
+        screenEl.classList.toggle('is-empty', empty && !skipReadyEarly);
+        screenEl.classList.toggle('is-error', err && !skipReadyEarly);
+        screenEl.classList.toggle('is-ready', left > 0 && !this._chestPullBusy);
+      }
       const glanceEl = document.getElementById('summonGlance');
       if (glanceEl) {
         glanceEl.classList.toggle('is-empty', empty);
@@ -48897,7 +48904,7 @@ const UI = {
         hint.textContent = empty
           ? tOr('ui.summonEmptyHint', 'Morgen weer')
           : tOr('ui.summonHint', 'Tik kist om te openen');
-        hint.style.display = (!this._chestPullBusy && (left > 0 || empty)) ? '' : 'none';
+        hint.style.display = (!this._chestPullBusy && empty) ? '' : 'none';
       }
       const skipHint = document.getElementById('summonSkipHint');
       if (skipHint) {

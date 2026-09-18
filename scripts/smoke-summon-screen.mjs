@@ -41,6 +41,14 @@ function must(cond, msg) {
   }
 }
 
+const cssSrc = fs.readFileSync(path.join(root, 'styles/main.css'), 'utf8');
+must(/#summonScreen \.summon-pull-btn/.test(cssSrc) && /#ffd75e/.test(cssSrc),
+  'gold primary must beat menu-tile unify');
+must(/is-shake\[data-rarity="common"\]/.test(cssSrc) && /is-card-show\[data-rarity="common"\]/.test(cssSrc),
+  'rarity juice must be scoped to shake/card-show, not idle');
+must(/\.summon-stage:not\(\.is-empty\):not\(\.is-error\) \.summon-stage-hint/.test(cssSrc),
+  'idle stage hint must hide so Open kist is the one primary');
+
 async function run() {
   let server = null;
   try { server = await ensureSmokeServer(8787); } catch (_) {}
@@ -245,6 +253,31 @@ async function run() {
       'expected Wapens · Pets links, got: ' + chrome.gotoText);
     must(chrome.gotoMinH >= 44, 'goto tap targets < 44px: ' + JSON.stringify(chrome));
     must(chrome.pullH >= 44, 'pull CTA tap target < 44px: ' + chrome.pullH);
+
+    const hier = await page.evaluate(() => {
+      const btn = document.getElementById('btnChestPull');
+      const rays = document.getElementById('summonRarityRays');
+      const fx = document.getElementById('summonRarityFx');
+      const hint = document.getElementById('summonStageHint');
+      const screen = document.getElementById('summonScreen');
+      const bs = btn ? getComputedStyle(btn) : null;
+      const gold = bs ? (bs.backgroundImage + bs.backgroundColor) : '';
+      return {
+        pullH: btn ? Math.round(btn.getBoundingClientRect().height) : 0,
+        gold: /255,\s*215,\s*94|ffd75e|232,\s*168,\s*32|e8a820|201,\s*122,\s*32|c97a20/i.test(gold),
+        ink: bs ? bs.color : '',
+        raysOp: rays ? parseFloat(getComputedStyle(rays).opacity) : -1,
+        fxOp: fx ? parseFloat(getComputedStyle(fx).opacity) : -1,
+        hintDisp: hint ? getComputedStyle(hint).display : null,
+        ready: !!(screen && screen.classList.contains('is-ready')),
+        fatBtns: document.querySelectorAll('#summonScreen .summon-actions .summon-pull-btn').length,
+      };
+    });
+    must(hier.ready && hier.fatBtns === 1, 'expected one ready primary: ' + JSON.stringify(hier));
+    must(hier.pullH >= 64 && hier.gold, 'primary not huge gold on 390px: ' + JSON.stringify(hier));
+    must(hier.raysOp <= 0.02 && hier.fxOp <= 0.02, 'idle rarity juice should be off: ' + JSON.stringify(hier));
+    must(hier.hintDisp === 'none', 'idle stage hint should hide: ' + JSON.stringify(hier));
+
     await page.evaluate(() => {
       const splash = document.getElementById('sfSplash');
       if (splash) { splash.hidden = true; splash.style.display = 'none'; }
@@ -611,6 +644,37 @@ async function run() {
       'summon tip must not fight FOMO sheet: ' + JSON.stringify(tipVsFomo));
     must(tipVsFomo.after.fomoHidden && !tipVsFomo.after.body && tipVsFomo.after.tipVisible && tipVsFomo.after.showFn,
       'tip may show on summon after FOMO closes: ' + JSON.stringify(tipVsFomo));
+
+    await page.setViewport({ width: 1280, height: 800 });
+    const desk = await page.evaluate(() => {
+      if (typeof save !== 'undefined') {
+        save.reducedMotion = false;
+        save.liteFx = false;
+      }
+      try { if (typeof syncA11yClasses === 'function') syncA11yClasses(); } catch (_) {}
+      UI.finishSummonReveal();
+      UI.goMenu();
+      UI.openSummonHub();
+      UI.renderSummon();
+      const btn = document.getElementById('btnChestPull');
+      const rays = document.getElementById('summonRarityRays');
+      const bs = btn ? getComputedStyle(btn) : null;
+      const gold = bs ? (bs.backgroundImage + bs.backgroundColor) : '';
+      return {
+        vw: window.innerWidth,
+        pullH: btn ? Math.round(btn.getBoundingClientRect().height) : 0,
+        gold: /255,\s*215,\s*94|ffd75e|232,\s*168,\s*32|e8a820|201,\s*122,\s*32|c97a20/i.test(gold),
+        raysOp: rays ? parseFloat(getComputedStyle(rays).opacity) : -1,
+        ready: !!document.getElementById('summonScreen')?.classList.contains('is-ready'),
+        fatBtns: document.querySelectorAll('#summonScreen .summon-actions .summon-pull-btn').length,
+      };
+    });
+    must(desk.vw === 1280, 'expected desktop PWA viewport, got ' + desk.vw);
+    must(desk.ready && desk.fatBtns === 1 && desk.pullH >= 64 && desk.gold,
+      'desktop primary not one gold CTA: ' + JSON.stringify(desk));
+    must(desk.raysOp <= 0.02, 'desktop idle juice should be off: ' + JSON.stringify(desk));
+    await page.screenshot({ path: path.join(outDir, 'summon-idle-desktop.png') });
+    await page.setViewport({ width: 390, height: 844 });
 
     const playSnap = await page.evaluate(() => {
       UI.goMenu();

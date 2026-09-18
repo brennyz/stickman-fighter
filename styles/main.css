@@ -854,12 +854,12 @@
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 5px;
+    gap: 4px;
     margin: 0;
-    padding: 8px 10px;
-    border-radius: 12px;
-    border: 1px solid rgba(255,215,94,.22);
-    background: #12182a;
+    padding: 2px 0 4px;
+    border-radius: 0;
+    border: none;
+    background: transparent;
   }
   .summon-pips {
     display: flex;
@@ -901,19 +901,26 @@
   }
   .summon-quota.is-empty { color: #9db1e3; }
   .summon-odds {
-    font-size: clamp(11px, 2.8vw, 13px);
-    font-weight: 800;
-    color: #e8f0ff;
+    font-size: clamp(10px, 2.5vw, 12px);
+    font-weight: 700;
+    color: #9db1e3;
     letter-spacing: .01em;
     line-height: 1.2;
     text-align: center;
+    opacity: .88;
+  }
+  .summon-glance.is-empty,
+  .summon-glance.is-error {
+    padding: 8px 10px;
+    border-radius: 12px;
   }
   .summon-glance.is-empty {
-    border-color: rgba(157,177,227,.22);
+    border: 1px solid rgba(157,177,227,.22);
     background: #10141f;
   }
   .summon-glance.is-error {
-    border-color: rgba(255,107,107,.45);
+    border: 1px solid rgba(255,107,107,.45);
+    background: #1a1216;
   }
   .summon-tut {
     width: 100%;
@@ -954,6 +961,7 @@
     outline-offset: 2px;
   }
   .summon-screen .subtitle {
+    display: none;
     font-size: var(--type-caption);
     opacity: .78;
     max-width: var(--ui-rail-wide);
@@ -993,10 +1001,11 @@
     bottom: max(8px, env(safe-area-inset-bottom));
     z-index: 6;
   }
-  .summon-pull-btn {
+  .summon-pull-btn,
+  #summonScreen .summon-pull-btn {
     width: 100%;
     min-width: 0;
-    min-height: 58px;
+    min-height: 72px;
     justify-content: center;
     background: linear-gradient(180deg, #ffd75e 0%, #e8a820 55%, #c97a20 100%);
     border: 2px solid rgba(255,255,255,.22);
@@ -1004,6 +1013,7 @@
     box-shadow: 0 6px 0 #7a4a10, 0 10px 22px rgba(0,0,0,.35);
     font-weight: 900;
     letter-spacing: .02em;
+    font-size: clamp(18px, 5.2vw, 22px);
   }
   .summon-pull-btn .ico { filter: none; }
   .summon-pull-btn div { color: #1a1208; }
@@ -1017,6 +1027,9 @@
   .summon-stage.is-pullable:focus-visible {
     outline: 2px solid rgba(255,215,94,.75);
     outline-offset: 3px;
+  }
+  .summon-stage:not(.is-empty):not(.is-error) .summon-stage-hint {
+    display: none;
   }
   .summon-stage-hint {
     position: absolute;
@@ -1294,48 +1307,64 @@
     opacity: .55;
     animation: summonRaysSpin 6s linear infinite;
   }
-  .summon-reveal[data-rarity="common"] .summon-rarity-rays { opacity: .12; filter: grayscale(.6); }
-  .summon-reveal[data-rarity="uncommon"] .summon-rarity-rays { opacity: .35; }
-  .summon-reveal[data-rarity="rare"] .summon-rarity-rays { opacity: .48; }
-  .summon-reveal[data-rarity="epic"] .summon-rarity-rays { opacity: .62; }
-  .summon-reveal[data-rarity="legendary"] .summon-rarity-rays,
-  .summon-reveal[data-rarity="mythic"] .summon-rarity-rays,
-  .summon-reveal.is-nice .summon-rarity-rays { opacity: .85; }
+  .summon-reveal.is-shake[data-rarity="common"] .summon-rarity-rays,
+  .summon-reveal.is-card-show[data-rarity="common"] .summon-rarity-rays { opacity: .12; filter: grayscale(.6); }
+  .summon-reveal.is-shake[data-rarity="uncommon"] .summon-rarity-rays,
+  .summon-reveal.is-card-show[data-rarity="uncommon"] .summon-rarity-rays { opacity: .35; }
+  .summon-reveal.is-shake[data-rarity="rare"] .summon-rarity-rays,
+  .summon-reveal.is-card-show[data-rarity="rare"] .summon-rarity-rays { opacity: .48; }
+  .summon-reveal.is-shake[data-rarity="epic"] .summon-rarity-rays,
+  .summon-reveal.is-card-show[data-rarity="epic"] .summon-rarity-rays { opacity: .62; }
+  .summon-reveal.is-shake[data-rarity="legendary"] .summon-rarity-rays,
+  .summon-reveal.is-card-show[data-rarity="legendary"] .summon-rarity-rays,
+  .summon-reveal.is-shake[data-rarity="mythic"] .summon-rarity-rays,
+  .summon-reveal.is-card-show[data-rarity="mythic"] .summon-rarity-rays,
+  .summon-reveal.is-shake.is-nice .summon-rarity-rays,
+  .summon-reveal.is-card-show.is-nice .summon-rarity-rays { opacity: .85; }
   @keyframes summonRaysSpin {
     to { transform: rotate(360deg); }
   }
   .summon-rarity-fx {
     pointer-events: none;
     position: absolute; inset: 0;
-    opacity: .22;
+    opacity: 0;
     background: radial-gradient(ellipse at center, rgba(157,177,227,.32), transparent 62%);
     transition: opacity .35s ease, background .35s ease;
     z-index: 2;
   }
-  .summon-reveal[data-rarity="common"] .summon-rarity-fx {
+  .summon-reveal.is-shake .summon-rarity-fx,
+  .summon-reveal.is-card-show .summon-rarity-fx { opacity: .22; }
+  .summon-reveal.is-shake[data-rarity="common"] .summon-rarity-fx,
+  .summon-reveal.is-card-show[data-rarity="common"] .summon-rarity-fx {
     opacity: .1; filter: grayscale(.55);
     background: radial-gradient(ellipse at center, rgba(157,177,227,.22), transparent 65%);
   }
-  .summon-reveal[data-rarity="uncommon"] .summon-rarity-fx {
+  .summon-reveal.is-shake[data-rarity="uncommon"] .summon-rarity-fx,
+  .summon-reveal.is-card-show[data-rarity="uncommon"] .summon-rarity-fx {
     opacity: .3;
     background: radial-gradient(ellipse at center, rgba(90,208,106,.38), transparent 62%);
   }
-  .summon-reveal[data-rarity="rare"] .summon-rarity-fx {
+  .summon-reveal.is-shake[data-rarity="rare"] .summon-rarity-fx,
+  .summon-reveal.is-card-show[data-rarity="rare"] .summon-rarity-fx {
     opacity: .4;
     background: radial-gradient(ellipse at center, rgba(74,159,255,.42), transparent 58%);
   }
-  .summon-reveal[data-rarity="epic"] .summon-rarity-fx {
+  .summon-reveal.is-shake[data-rarity="epic"] .summon-rarity-fx,
+  .summon-reveal.is-card-show[data-rarity="epic"] .summon-rarity-fx {
     opacity: .5;
     background: radial-gradient(ellipse at center, rgba(176,106,224,.5), transparent 56%);
   }
-  .summon-reveal[data-rarity="legendary"] .summon-rarity-fx,
-  .summon-reveal[data-rarity="mythic"] .summon-rarity-fx {
+  .summon-reveal.is-shake[data-rarity="legendary"] .summon-rarity-fx,
+  .summon-reveal.is-card-show[data-rarity="legendary"] .summon-rarity-fx,
+  .summon-reveal.is-shake[data-rarity="mythic"] .summon-rarity-fx,
+  .summon-reveal.is-card-show[data-rarity="mythic"] .summon-rarity-fx {
     opacity: .68;
     background:
       radial-gradient(ellipse at center, rgba(255,215,94,.55), transparent 52%),
       radial-gradient(ellipse at 30% 20%, rgba(255,255,255,.18), transparent 40%);
   }
-  .summon-reveal.is-nice .summon-rarity-fx { opacity: .78; }
+  .summon-reveal.is-shake.is-nice .summon-rarity-fx,
+  .summon-reveal.is-card-show.is-nice .summon-rarity-fx { opacity: .78; }
   .summon-stage-vignette {
     pointer-events: none;
     position: absolute; inset: 0; z-index: 2;
@@ -1560,14 +1589,14 @@
     padding: 10px 12px;
     min-height: 44px;
     min-width: 88px;
-    color: #7cf5ff;
+    color: #9db1e3;
     font: inherit;
-    font-size: clamp(13px, 3.2vw, 15px);
-    font-weight: 800;
+    font-size: clamp(12px, 3vw, 14px);
+    font-weight: 700;
     letter-spacing: .02em;
     cursor: pointer;
-    text-decoration: underline;
-    text-underline-offset: 3px;
+    text-decoration: none;
+    opacity: .78;
     touch-action: manipulation;
   }
   .summon-goto-link + .summon-goto-link::before {
@@ -1614,7 +1643,7 @@
     line-height: 1.3;
     color: #9db1e3;
   }
-  .summon-log-empty { width: 100%; text-align: center; opacity: .7; }
+  .summon-log-empty { display: none; }
   .summon-log-chip {
     display: block;
     padding: 6px 10px;
@@ -3152,6 +3181,28 @@
   .summon-pull-btn div { color: var(--menu-ink); }
   .summon-pull-btn small { color: var(--menu-ink-muted); font-weight: 600; }
   .summon-pull-btn:not(:disabled):active { box-shadow: 0 2px 0 rgba(0, 0, 0, 0.35); }
+  /* Summons: one gold primary must beat the later menu-tile unify. */
+  #summonScreen .summon-pull-btn {
+    min-height: 72px;
+    background: linear-gradient(180deg, #ffd75e 0%, #e8a820 55%, #c97a20 100%);
+    border: 2px solid rgba(255,255,255,.22);
+    color: #1a1208;
+    box-shadow: 0 6px 0 #7a4a10, 0 10px 22px rgba(0,0,0,.35);
+    font-weight: 900;
+  }
+  #summonScreen .summon-pull-btn div { color: #1a1208; }
+  #summonScreen .summon-pull-btn small { color: rgba(26,18,8,.72); font-weight: 800; }
+  #summonScreen .summon-pull-btn:not(:disabled):active {
+    transform: translateY(3px);
+    box-shadow: 0 3px 0 #7a4a10, 0 6px 14px rgba(0,0,0,.3);
+  }
+  #summonScreen .summon-pull-btn:disabled {
+    opacity: .45; filter: grayscale(.35); box-shadow: none;
+  }
+  @media (min-width: 900px) and (min-height: 700px) {
+    #summonScreen .summon-pull-btn { min-height: 80px; font-size: 22px; }
+    #summonScreen .summon-stage { max-height: min(52vh, 440px); }
+  }
   .mission-card,
   .mission-today-plan,
   .mission-ach-spotlight,
