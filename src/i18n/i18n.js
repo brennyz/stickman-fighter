@@ -217,6 +217,9 @@ const I18N = {
       equip: 'Uitrusten', equipped: 'Aan', empty: 'Leeg',
       wearing: 'aan',
       pillVanity: 'SIER', pillStat: 'STAT', pillLock: 'VAST',
+      huntCopy: 'Alleen start-look. Vind meer stukken in Avontuur.',
+      huntBtn: 'Naar Avontuur',
+      unequipAll: 'Alles uitdoen',
       slot: { head: 'Hoofd', chest: 'Borst', hands: 'Handen', legs: 'Benen', back: 'Rug' },
     },
     install: { title: 'Zet in app-lade', sub: 'Één icoon, zoals een echte app' },
@@ -597,6 +600,9 @@ const I18N = {
       equip: 'Equip', equipped: 'On', empty: 'Empty',
       wearing: 'on',
       pillVanity: 'LOOK', pillStat: 'STAT', pillLock: 'LOCK',
+      huntCopy: 'Starter look only. Find more pieces in Adventure.',
+      huntBtn: 'Go to Adventure',
+      unequipAll: 'Unequip all',
       slot: { head: 'Head', chest: 'Chest', hands: 'Hands', legs: 'Legs', back: 'Back' },
     },
     install: { title: 'Add as app', sub: 'One icon, like a real app' },
@@ -1107,6 +1113,9 @@ const I18N = {
       equip: 'Anlegen', equipped: 'An', empty: 'Leer',
       wearing: 'an',
       pillVanity: 'OPTIK', pillStat: 'STAT', pillLock: 'SPERRE',
+      huntCopy: 'Nur Start-Look. Mehr Stücke im Abenteuer finden.',
+      huntBtn: 'Zum Abenteuer',
+      unequipAll: 'Alles ablegen',
       slot: { head: 'Kopf', chest: 'Brust', hands: 'Hände', legs: 'Beine', back: 'Rücken' },
     },
     install: { title: 'Als App speichern', sub: 'Ein Icon, wie eine echte App' },
@@ -1491,6 +1500,9 @@ const I18N = {
       vanityHint: 'Pas de stats — look seul',
       wearing: 'sur toi',
       pillVanity: 'LOOK', pillStat: 'STAT', pillLock: 'VERROU',
+      huntCopy: 'Look de départ seulement. Trouve plus de pièces en Aventure.',
+      huntBtn: 'Aller en Aventure',
+      unequipAll: 'Tout enlever',
       slot: { head: 'Tête', chest: 'Torse', hands: 'Mains', legs: 'Jambes', back: 'Dos' },
     },
     install: { title: 'Ajouter comme app', sub: 'Une icône, comme une vraie app' },
@@ -1867,6 +1879,9 @@ const I18N = {
       equip: 'Equipar', equipped: 'Puesto', empty: 'Vacío',
       wearing: 'puesto',
       pillVanity: 'LOOK', pillStat: 'STAT', pillLock: 'BLOQ',
+      huntCopy: 'Solo look inicial. Encuentra más piezas en Aventura.',
+      huntBtn: 'Ir a Aventura',
+      unequipAll: 'Quitar todo',
       slot: { head: 'Cabeza', chest: 'Pecho', hands: 'Manos', legs: 'Piernas', back: 'Espalda' },
     },
     install: { title: 'Añadir como app', sub: 'Un icono, como una app real' },
@@ -2239,6 +2254,9 @@ function applyLangStaticScreens() {
   setText('styleScreenSub', 'ui.styleSub');
   setText('gearScreenHead', 'ui.gearHead');
   setText('gearScreenSub', 'ui.gearSub');
+  setText('gearHuntCopy', 'gear.huntCopy');
+  setText('btnGearHuntAdv', 'gear.huntBtn');
+  setText('gearUnequipAll', 'gear.unequipAll');
   setText('skillScreenHead', 'ui.skillSummaryHead');
   setText('skillScreenSub', 'ui.skillSub');
   setText('upgradeScreenHead', 'ui.skillHead');

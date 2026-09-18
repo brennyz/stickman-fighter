@@ -2543,6 +2543,9 @@ const I18N = {
       equip: 'Uitrusten', equipped: 'Aan', empty: 'Leeg',
       wearing: 'aan',
       pillVanity: 'SIER', pillStat: 'STAT', pillLock: 'VAST',
+      huntCopy: 'Alleen start-look. Vind meer stukken in Avontuur.',
+      huntBtn: 'Naar Avontuur',
+      unequipAll: 'Alles uitdoen',
       slot: { head: 'Hoofd', chest: 'Borst', hands: 'Handen', legs: 'Benen', back: 'Rug' },
     },
     install: { title: 'Zet in app-lade', sub: 'Één icoon, zoals een echte app' },
@@ -2923,6 +2926,9 @@ const I18N = {
       equip: 'Equip', equipped: 'On', empty: 'Empty',
       wearing: 'on',
       pillVanity: 'LOOK', pillStat: 'STAT', pillLock: 'LOCK',
+      huntCopy: 'Starter look only. Find more pieces in Adventure.',
+      huntBtn: 'Go to Adventure',
+      unequipAll: 'Unequip all',
       slot: { head: 'Head', chest: 'Chest', hands: 'Hands', legs: 'Legs', back: 'Back' },
     },
     install: { title: 'Add as app', sub: 'One icon, like a real app' },
@@ -3433,6 +3439,9 @@ const I18N = {
       equip: 'Anlegen', equipped: 'An', empty: 'Leer',
       wearing: 'an',
       pillVanity: 'OPTIK', pillStat: 'STAT', pillLock: 'SPERRE',
+      huntCopy: 'Nur Start-Look. Mehr Stücke im Abenteuer finden.',
+      huntBtn: 'Zum Abenteuer',
+      unequipAll: 'Alles ablegen',
       slot: { head: 'Kopf', chest: 'Brust', hands: 'Hände', legs: 'Beine', back: 'Rücken' },
     },
     install: { title: 'Als App speichern', sub: 'Ein Icon, wie eine echte App' },
@@ -3817,6 +3826,9 @@ const I18N = {
       vanityHint: 'Pas de stats — look seul',
       wearing: 'sur toi',
       pillVanity: 'LOOK', pillStat: 'STAT', pillLock: 'VERROU',
+      huntCopy: 'Look de départ seulement. Trouve plus de pièces en Aventure.',
+      huntBtn: 'Aller en Aventure',
+      unequipAll: 'Tout enlever',
       slot: { head: 'Tête', chest: 'Torse', hands: 'Mains', legs: 'Jambes', back: 'Dos' },
     },
     install: { title: 'Ajouter comme app', sub: 'Une icône, comme une vraie app' },
@@ -4193,6 +4205,9 @@ const I18N = {
       equip: 'Equipar', equipped: 'Puesto', empty: 'Vacío',
       wearing: 'puesto',
       pillVanity: 'LOOK', pillStat: 'STAT', pillLock: 'BLOQ',
+      huntCopy: 'Solo look inicial. Encuentra más piezas en Aventura.',
+      huntBtn: 'Ir a Aventura',
+      unequipAll: 'Quitar todo',
       slot: { head: 'Cabeza', chest: 'Pecho', hands: 'Manos', legs: 'Piernas', back: 'Espalda' },
     },
     install: { title: 'Añadir como app', sub: 'Un icono, como una app real' },
@@ -4565,6 +4580,9 @@ function applyLangStaticScreens() {
   setText('styleScreenSub', 'ui.styleSub');
   setText('gearScreenHead', 'ui.gearHead');
   setText('gearScreenSub', 'ui.gearSub');
+  setText('gearHuntCopy', 'gear.huntCopy');
+  setText('btnGearHuntAdv', 'gear.huntBtn');
+  setText('gearUnequipAll', 'gear.unequipAll');
   setText('skillScreenHead', 'ui.skillSummaryHead');
   setText('skillScreenSub', 'ui.skillSub');
   setText('upgradeScreenHead', 'ui.skillHead');
@@ -9553,15 +9571,17 @@ function grantStarterGear(s, now) {
   if (typeof DEFAULT_SAVE !== 'undefined' && st === DEFAULT_SAVE) return;
   const tNow = gearNowMs(now);
   const bag = ensureGearSave(st);
+  const justGranted = [];
   for (const item of GEAR_ITEMS) {
     if (!item.starter) continue;
     if (bag.owned[item.id]) continue;
     if (!gearItemLootable(item, st, tNow)) continue;
     bag.owned[item.id] = { at: tNow, src: 'starter' };
+    justGranted.push(item.id);
   }
   for (const slot of GEAR_SLOT_IDS) {
     if (bag.equipped[slot]) continue;
-    const pick = GEAR_ITEMS.find((it) => it.slot === slot && it.starter && bag.owned[it.id]);
+    const pick = GEAR_ITEMS.find((it) => it.slot === slot && it.starter && justGranted.indexOf(it.id) >= 0);
     if (pick) bag.equipped[slot] = pick.id;
   }
 }
@@ -21600,6 +21620,7 @@ function seedNlGameStrings() {
     styleUnlock: 'Nieuwe stijl: {name}!',
     gearEquipped: '{name} uitgerust',
     gearUnequipped: '{slot} leeg',
+    gearUnequipAll: 'Alles uitgedaan',
     summon: '✦ Summon! {name} is nu {rar} — schade ×{dmg}',
     tideBattle: 'Tide Battle! {name} verschijnt — versla de baas!',
     tideBattleWin: 'Tide Battle gewonnen! +{xp} XP · +{coins} pet coins',
@@ -21662,6 +21683,7 @@ function seedNlGameStrings() {
     styleEquipped: '{name} uitgerust',
     gearEquipped: '{name} aangedaan',
     gearUnequipped: '{name} uitgedaan',
+    gearUnequipAll: 'Alles uitgedaan',
     gearLocked: 'Nog op slot · {why}',
     skillUnlock: 'Nieuwe skill: {name}!',
     skillEquipped: '{name} uitgerust als special',
@@ -21995,7 +22017,7 @@ function seedNlGameStrings() {
     styleHead: 'Stijl',
     styleSub: 'Outfits met bonus — level, training, monsterboek · hover voor tooltip',
     gearHead: 'Uitrusting',
-    gearSub: 'Tik een slot · tik een item = aan of uit',
+    gearSub: 'Kies een slot. Tik een stuk: aandoen of uitdoen.',
     styleActive: 'Actief',
     stylePick: 'Tik om te kiezen',
     styleIslandGate: 'Avontuur-cap Lv {cap} · stijl vrij Lv {need}',
@@ -22578,8 +22600,29 @@ function seedNlFromRuntime() {
     pillStat: 'STAT',
     pillLock: 'VAST',
     empty: 'Leeg',
-    pickHint: 'Tik een item om aan of uit te doen.',
+    pickHint: 'Tik een stuk om aan of uit te doen.',
     invKicker: '{slot}',
+    invKickerOpen: '{slot}',
+    sheetHint: 'Tik een stuk om het aan of uit te doen. Op slot blijft zichtbaar.',
+    slotEmptyHint: 'Leeg — tik om te vullen',
+    slotOpen: 'open',
+    clearSlot: '{slot} leegmaken',
+    wearingNow: 'Nu aan — tik om uit te doen',
+    detailWear: 'Dit stuk aandoen',
+    detailRemove: 'Dit stuk uitdoen',
+    detailLocked: 'Nog op slot',
+    filterLook: 'Look',
+    filterStat: 'Stats',
+    filterLock: 'Slot',
+    filterClear: 'Wis filters',
+    kindLook: 'Alleen look',
+    kindStat: 'Met stats',
+    summaryLookOnly: '{n}/5 · alleen look',
+    summaryWithStats: '{n}/5 · {stat} met stats',
+    huntCopy: 'Alleen start-look. Vind meer stukken in Avontuur.',
+    huntBtn: 'Naar Avontuur',
+    unequipAll: 'Alles uitdoen',
+    unequipAllConfirm: 'Nog eens tikken',
     weaponOpen: 'Wapens',
     lockedLine: 'Op slot · {why}',
     equip: 'Aandoen',
@@ -22601,7 +22644,7 @@ function seedNlFromRuntime() {
     filterAll: 'Alles',
     filterOwned: 'Van jou',
     filterSearch: 'Zoek in {n}…',
-    filterEmpty: 'Niets in deze filter',
+    filterEmpty: 'Niets in deze filter — tik Wis filters',
     filterRarityAll: 'Alle',
     filterCount: '{shown}/{total} in {slot}',
     filterAria: 'Filter',
@@ -22646,8 +22689,29 @@ const CATALOG_EN = {
     pillLock: 'LOCK',
     empty: 'empty',
     wearing: 'on',
-    pickHint: 'Tap an item to equip or remove.',
+    pickHint: 'Tap a piece to put on or take off.',
     invKicker: '{slot}',
+    invKickerOpen: '{slot}',
+    sheetHint: 'Tap a piece to put it on or take it off. Locked pieces stay visible.',
+    slotEmptyHint: 'Empty — tap to fill',
+    slotOpen: 'open',
+    clearSlot: 'Clear {slot}',
+    wearingNow: 'On now — tap to take off',
+    detailWear: 'Put this on',
+    detailRemove: 'Take this off',
+    detailLocked: 'Still locked',
+    filterLook: 'Look',
+    filterStat: 'Stats',
+    filterLock: 'Lock',
+    filterClear: 'Clear filters',
+    kindLook: 'Look only',
+    kindStat: 'Has stats',
+    summaryLookOnly: '{n}/5 · look only',
+    summaryWithStats: '{n}/5 · {stat} with stats',
+    huntCopy: 'Starter look only. Find more pieces in Adventure.',
+    huntBtn: 'Go to Adventure',
+    unequipAll: 'Unequip all',
+    unequipAllConfirm: 'Tap again',
     weaponOpen: 'Weapons',
     lockedLine: 'Locked · {why}',
     equip: 'Equip',
@@ -22669,7 +22733,7 @@ const CATALOG_EN = {
     filterAll: 'All',
     filterOwned: 'Owned',
     filterSearch: 'Search {n}…',
-    filterEmpty: 'Nothing in this filter',
+    filterEmpty: 'Nothing in this filter — tap Clear filters',
     filterRarityAll: 'All',
     filterCount: '{shown}/{total} in {slot}',
     filterAria: 'Filter',
@@ -22996,6 +23060,7 @@ const CATALOG_EN = {
     styleUnlock: 'New style: {name}!',
     gearEquipped: '{name} equipped',
     gearUnequipped: '{slot} empty',
+    gearUnequipAll: 'Unequipped all',
     summon: '✦ Summon! {name} is now {rar} — damage ×{dmg}',
     tideBattle: 'Tide Battle! {name} appears — defeat the boss!',
     tideBattleWin: 'Tide Battle won! +{xp} XP · +{coins} pet coins',
@@ -23059,6 +23124,7 @@ const CATALOG_EN = {
     styleEquipped: '{name} equipped',
     gearEquipped: '{name} equipped',
     gearUnequipped: '{name} removed',
+    gearUnequipAll: 'Unequipped all',
     gearLocked: 'Still locked · {why}',
     skillUnlock: 'New skill: {name}!',
     skillEquipped: '{name} equipped as special',
@@ -23243,7 +23309,7 @@ const CATALOG_EN = {
     styleHead: 'Style',
     styleSub: 'Outfits with bonus — level, training, monster book · hover for tooltip',
     gearHead: 'Gear',
-    gearSub: 'Tap a slot · tap an item to equip or remove',
+    gearSub: 'Pick a slot. Tap a piece to put on or take off.',
     styleActive: 'Active',
     stylePick: 'Tap to equip',
     styleIslandGate: 'Adventure cap Lv {cap} · style unlock Lv {need}',
@@ -24756,6 +24822,7 @@ const CATALOG_DE_CHROME = {
     styleUnlock: 'Neuer Stil: {name}!',
     gearEquipped: '{name} ausgerüstet',
     gearUnequipped: '{name} abgelegt',
+    gearUnequipAll: 'Alles abgelegt',
     gearLocked: 'Noch gesperrt · {why}',
     gearDrop: '{slot}: {name}!',
     summon: '✦ Kiste! {name} ist jetzt {rar} — Schaden ×{dmg}',
@@ -25078,7 +25145,7 @@ const CATALOG_DE_CHROME = {
     styleHead: 'Stil',
     styleSub: 'Outfits mit Bonus — Level, Training, Monsterbuch · Hover für Tooltip',
     gearHead: 'Ausrüstung',
-    gearSub: '5 Slots · Look vs Stats · Level- und Zeitsperre',
+    gearSub: 'Slot wählen. Stück tippen: anlegen oder ablegen.',
     styleActive: 'Aktiv',
     stylePick: 'Tippen zum Ausrüsten',
     styleIslandGate: 'Abenteuer-Cap Lv {cap} · Stil frei Lv {need}',
@@ -25478,13 +25545,35 @@ const CATALOG_DE_CHROME = {
   gear: {
     filterAll: 'Alles',
     filterOwned: 'Deins',
+    filterLook: 'Look',
+    filterStat: 'Stats',
+    filterLock: 'Sperre',
+    filterClear: 'Filter weg',
     filterAria: 'Filter',
     rarityAria: 'Seltenheit',
     pillVanity: 'OPTIK',
     pillStat: 'STAT',
     pillLock: 'SPERRE',
     empty: 'Leer',
-    pickHint: 'Tippe einen Slot, dann ein Item.',
+    pickHint: 'Tippe ein Stück zum Anlegen oder Ablegen.',
+    invKicker: '{slot}',
+    invKickerOpen: '{slot}',
+    sheetHint: 'Tippe ein Stück zum Anlegen oder Ablegen. Gesperrte bleiben sichtbar.',
+    slotEmptyHint: 'Leer — tippen zum Füllen',
+    slotOpen: 'offen',
+    clearSlot: '{slot} leeren',
+    wearingNow: 'Jetzt an — tippen zum Ablegen',
+    detailWear: 'Dieses Stück anlegen',
+    detailRemove: 'Dieses Stück ablegen',
+    detailLocked: 'Noch gesperrt',
+    kindLook: 'Nur Look',
+    kindStat: 'Mit Stats',
+    summaryLookOnly: '{n}/5 · nur Look',
+    summaryWithStats: '{n}/5 · {stat} mit Stats',
+    huntCopy: 'Nur Start-Look. Mehr Stücke im Abenteuer finden.',
+    huntBtn: 'Zum Abenteuer',
+    unequipAll: 'Alles ablegen',
+    unequipAllConfirm: 'Nochmal tippen',
     lockedLine: 'Gesperrt · {why}',
     equip: 'Anlegen',
     unequip: 'Ablegen',
@@ -25509,6 +25598,7 @@ const CATALOG_DE_CHROME = {
     catalogN: '{n} Items',
     weaponAside: 'Waffe',
     weaponAsideHint: 'Sammlung · kein 6. Slot',
+    filterEmpty: 'Nichts in diesem Filter — tippe Filter weg',
     rar: {
       common: 'gewöhnlich', uncommon: 'ungewöhnlich', rare: 'selten', epic: 'episch',
       legendary: 'legendär', mythic: 'mythisch', nightmare: 'Albtraum', hell: 'Hölle',
@@ -25802,6 +25892,7 @@ overlayI18nCatalog(CATALOG_FR, {
     eggNone: 'Pas d’œuf-pet actif',
     eggFloat: '{name} flotte avec toi !',
     styleEquipped: '{name} équipé',
+    gearUnequipAll: 'Tout enlevé',
     skillUnlock: 'Nouvelle skill : {name} !',
     skillEquipped: '{name} équipé comme spécial',
     superEquipped: '{name} équipé comme super d’urgence',
@@ -25922,7 +26013,7 @@ overlayI18nCatalog(CATALOG_FR, {
     saveHealthPetCoins: ' · {n} pet coins',
     continueLastMode: 'Dernier mode',
     gearHead: 'Équipement',
-    gearSub: '5 emplacements · look vs stats · niveau et temps',
+    gearSub: 'Choisis un emplacement. Tape une pièce pour l’équiper ou l’enlever.',
     summonHead: 'Coffres',
     summonSub: 'Coffre du jour · 10× · arme ou pet',
     summonWhere: 'Menu → Coffres · butin dans Collection',
@@ -26198,6 +26289,37 @@ overlayI18nCatalog(CATALOG_FR, {
     vlamdraak: 'Drake-feu',
     schaduwvorst: 'Seigneur-ombre',
     voidkonijn: 'Lapin-vide',
+  },
+  gear: {
+    filterAll: 'Tout',
+    filterOwned: 'À toi',
+    filterLook: 'Look',
+    filterStat: 'Stats',
+    filterLock: 'Verrou',
+    filterClear: 'Effacer filtres',
+    filterEmpty: 'Rien dans ce filtre — tape Effacer filtres',
+    pickHint: 'Tape une pièce pour l’équiper ou l’enlever.',
+    invKickerOpen: '{slot}',
+    sheetHint: 'Tape une pièce pour l’équiper ou l’enlever. Les verrous restent visibles.',
+    slotEmptyHint: 'Vide — tape pour remplir',
+    slotOpen: 'ouvert',
+    clearSlot: 'Vider {slot}',
+    wearingNow: 'Porté — tape pour enlever',
+    detailWear: 'Équiper cette pièce',
+    detailRemove: 'Enlever cette pièce',
+    detailLocked: 'Encore verrouillé',
+    equip: 'Équiper',
+    unequip: 'Enlever',
+    wearing: 'sur toi',
+    empty: 'Vide',
+    kindLook: 'Look seulement',
+    kindStat: 'Avec stats',
+    summaryLookOnly: '{n}/5 · look seulement',
+    summaryWithStats: '{n}/5 · {stat} avec stats',
+    huntCopy: 'Look de départ seulement. Trouve plus de pièces en Aventure.',
+    huntBtn: 'Aller en Aventure',
+    unequipAll: 'Tout enlever',
+    unequipAllConfirm: 'Tape encore',
   },
 });
 
@@ -26481,6 +26603,7 @@ overlayI18nCatalog(CATALOG_ES, {
     eggNone: 'Sin huevo-pet activo',
     eggFloat: '¡{name} flota contigo!',
     styleEquipped: '{name} equipado',
+    gearUnequipAll: 'Todo quitado',
     skillUnlock: '¡Nueva skill: {name}!',
     skillEquipped: '{name} equipado como especial',
     superEquipped: '{name} equipado como super de urgencia',
@@ -26601,7 +26724,7 @@ overlayI18nCatalog(CATALOG_ES, {
     saveHealthPetCoins: ' · {n} pet coins',
     continueLastMode: 'Último modo',
     gearHead: 'Equipo',
-    gearSub: '5 huecos · look vs stats · nivel y tiempo',
+    gearSub: 'Elige un hueco. Toca una pieza para ponerla o quitarla.',
     summonHead: 'Cofres',
     summonSub: 'Cofre diario · 10× · arma o pet',
     summonWhere: 'Menú → Cofres · botín en Colección',
@@ -26877,6 +27000,37 @@ overlayI18nCatalog(CATALOG_ES, {
     vlamdraak: 'Dragónllama',
     schaduwvorst: 'Señorsombra',
     voidkonijn: 'Conejovacio',
+  },
+  gear: {
+    filterAll: 'Todo',
+    filterOwned: 'Tuyo',
+    filterLook: 'Look',
+    filterStat: 'Stats',
+    filterLock: 'Bloqueo',
+    filterClear: 'Quitar filtros',
+    filterEmpty: 'Nada en este filtro — toca Quitar filtros',
+    pickHint: 'Toca una pieza para ponerla o quitarla.',
+    invKickerOpen: '{slot}',
+    sheetHint: 'Toca una pieza para ponerla o quitarla. Los bloqueos siguen visibles.',
+    slotEmptyHint: 'Vacío — toca para llenar',
+    slotOpen: 'abierto',
+    clearSlot: 'Vaciar {slot}',
+    wearingNow: 'Puesto — toca para quitar',
+    detailWear: 'Poner esta pieza',
+    detailRemove: 'Quitar esta pieza',
+    detailLocked: 'Aún bloqueado',
+    equip: 'Equipar',
+    unequip: 'Quitar',
+    wearing: 'puesto',
+    empty: 'Vacío',
+    kindLook: 'Solo look',
+    kindStat: 'Con stats',
+    summaryLookOnly: '{n}/5 · solo look',
+    summaryWithStats: '{n}/5 · {stat} con stats',
+    huntCopy: 'Solo look inicial. Encuentra más piezas en Aventura.',
+    huntBtn: 'Ir a Aventura',
+    unequipAll: 'Quitar todo',
+    unequipAllConfirm: 'Toca otra vez',
   },
 });
 
@@ -27180,6 +27334,7 @@ overlayI18nCatalog(CATALOG_DE, {
     eggNone: 'Kein aktives Ei-Pet',
     eggFloat: '{name} schwebt jetzt mit!',
     styleEquipped: '{name} ausgerüstet',
+    gearUnequipAll: 'Alles abgelegt',
     skillUnlock: 'Neuer Skill: {name}!',
     skillEquipped: '{name} als Special ausgerüstet',
     superEquipped: '{name} als Notfall-Super ausgerüstet',
@@ -27295,7 +27450,7 @@ overlayI18nCatalog(CATALOG_DE, {
     charBig5Hint: 'Deine Kämpfer · schnell wählen',
     continueLastMode: 'Letzter Modus',
     gearHead: 'Ausrüstung',
-    gearSub: '5 Slots · Look vs Stats · Level und Zeit',
+    gearSub: 'Slot wählen. Stück tippen: anlegen oder ablegen.',
     dexAllBiomes: 'Alle Biome',
     dexBiome: { farm: 'Farm', zoo: 'Zoo', sea: 'Meer', wild: 'Wald', crypt: 'Krypta', scrap: 'Schrott', frost: 'Frost', classic: 'Klassisch', secret: 'Geheim' },
     petCoinTip: '<b>Münzen-Bonus</b>: 2 Gold = 1 PC',
@@ -33056,6 +33211,36 @@ function unequipGear(slotId) {
   }
   if (typeof save === 'object' && save) _dropFlatGearKeys(save);
   return { ok: true };
+}
+
+/** True when owned gear is only starter cosmetics — no adventure/world drops yet. */
+function gearIsStarterOnly(s) {
+  const st = s || (typeof save !== 'undefined' ? save : null);
+  const owned = st && st.gear && st.gear.owned;
+  if (!owned || typeof owned !== 'object') return true;
+  let any = false;
+  for (const id of Object.keys(owned)) {
+    if (!id || id === '__proto__' || id === 'constructor' || id === 'prototype') continue;
+    const rec = owned[id];
+    if (rec == null || rec === false) continue;
+    any = true;
+    const src = (rec && typeof rec === 'object') ? String(rec.src || '') : '';
+    if (src && src !== 'starter') return false;
+    const it = (typeof gearItemById === 'function') ? gearItemById(id) : null;
+    if (it && it.starter !== true) return false;
+  }
+  return true;
+}
+
+function unequipAllGear() {
+  let n = 0;
+  for (const sid of _gearSlotIds()) {
+    const eq = getEquippedGear();
+    if (!eq[sid]) continue;
+    unequipGear(sid);
+    n++;
+  }
+  return { ok: true, n };
 }
 
 function gearEquippedCount() {
@@ -52977,6 +53162,30 @@ const UI = {
     }
   },
 
+  _gearFilterCount(items, key) {
+    if (typeof gearFilterInventory === 'function') {
+      return gearFilterInventory(items, key, this.gearFilterQ, this.gearRarity).length;
+    }
+    if (typeof gearFilterItems === 'function') {
+      return gearFilterItems(items, key, this.gearFilterQ, this.gearRarity).length;
+    }
+    return (items || []).length;
+  },
+
+  _gearActionFor(unlock, equippedHere) {
+    const state = (unlock && unlock.state) || '';
+    if (equippedHere || state === 'already-equipped') {
+      return { key: 'unequip', label: tOr('gear.unequip', 'Uitdoen') };
+    }
+    if (unlock && unlock.unlocked) {
+      return { key: 'equip', label: tOr('gear.equip', 'Aandoen') };
+    }
+    if (state === 'not-owned') {
+      return { key: 'locked', label: tOr('gear.lockOwned', 'Nog niet gevonden') };
+    }
+    return { key: 'locked', label: (unlock && unlock.label) || tOr('gear.pillLock', 'LOCK') };
+  },
+
   renderGear(opts) {
     const pickerOnly = !!(opts && opts.pickerOnly);
     const esc = (s) => String(s == null ? '' : s)
@@ -53057,26 +53266,48 @@ const UI = {
       this._gearPickerScroll = p ? p.scrollTop : 0;
     };
 
+    const filled = slots.filter((s) => eq[s.id]).length;
+    const statN = slots.reduce((n, s) => {
+      const it = typeof gearItemById === 'function' ? gearItemById(eq[s.id]) : null;
+      return n + (it && gearHasStats(it) ? 1 : 0);
+    }, 0);
     const sumEl = document.getElementById('gearSummary');
     if (!pickerOnly && sumEl) {
-      const filled = slots.filter((s) => eq[s.id]).length;
-      const statN = slots.reduce((n, s) => {
-        const it = typeof gearItemById === 'function' ? gearItemById(eq[s.id]) : null;
-        return n + (it && gearHasStats(it) ? 1 : 0);
-      }, 0);
-      const catalogN = (typeof GEAR_ITEMS !== 'undefined' && Array.isArray(GEAR_ITEMS)) ? GEAR_ITEMS.length : items.length;
+      const line = statN
+        ? tOr('gear.summaryWithStats', '{n}/5 · {stat} met stats', { n: filled, stat: statN })
+        : tOr('gear.summaryLookOnly', '{n}/5 · alleen look', { n: filled });
       sumEl.innerHTML =
-        `<span class="gear-pill gear-pill-on">${tOr('gear.summarySlots', '<b>{n}</b>/5', { n: filled })}</span>` +
-        `<span class="gear-pill gear-pill-stat">${esc(tOr('gear.pillStat', 'STAT'))} ${statN}</span>` +
-        `<span class="gear-pill gear-pill-vanity">${esc(tOr('gear.pillVanity', 'LOOK'))} ${Math.max(0, filled - statN)}</span>` +
-        `<span class="gear-pill">${esc(tOr('gear.catalogN', '{n} items', { n: catalogN }))}</span>`;
+        `<span class="gear-pill gear-pill-on">${esc(line)}</span>` +
+        (statN
+          ? `<span class="gear-pill gear-pill-stat">${esc(tOr('gear.kindStat', 'Met stats'))}</span>`
+          : `<span class="gear-pill gear-pill-vanity">${esc(tOr('gear.kindLook', 'Alleen look'))}</span>`);
     }
     const legend = document.getElementById('gearLegend');
     if (!pickerOnly && legend) {
       legend.innerHTML =
-        `<span class="gear-pill gear-pill-vanity">${esc(tOr('gear.pillVanity', 'LOOK'))}</span>` +
-        `<span class="gear-pill gear-pill-stat">${esc(tOr('gear.pillStat', 'STAT'))}</span>` +
-        `<span class="gear-pill gear-pill-lock">${esc(tOr('gear.pillLock', 'LOCK'))}</span>`;
+        `<span class="gear-pill gear-pill-vanity">${esc(tOr('gear.kindLook', 'Alleen look'))}</span>` +
+        `<span class="gear-pill gear-pill-stat">${esc(tOr('gear.kindStat', 'Met stats'))}</span>`;
+    }
+
+    const hunt = document.getElementById('gearHuntCta');
+    const huntCopy = document.getElementById('gearHuntCopy');
+    const huntBtn = document.getElementById('btnGearHuntAdv');
+    const starterOnly = typeof gearIsStarterOnly === 'function' ? gearIsStarterOnly(save) : true;
+    if (!pickerOnly && hunt) {
+      hunt.hidden = !starterOnly;
+      if (huntCopy) huntCopy.textContent = tOr('gear.huntCopy', 'Starter look only. Find more pieces in Adventure.');
+      if (huntBtn) {
+        huntBtn.textContent = tOr('gear.huntBtn', 'Go to Adventure');
+        if (!huntBtn.dataset.sfGearHunt) {
+          huntBtn.dataset.sfGearHunt = '1';
+          bindPress(huntBtn, () => {
+            safeUiAction(() => {
+              AudioSys.sfx('select');
+              this.safeOpen('levelScreen', () => this.renderLevels());
+            }, 'gearHuntAdv', tOr('gear.errSlot', 'Slot pick failed'));
+          });
+        }
+      }
     }
 
     const slotIco = (typeof GEAR_SLOT_ICONS !== 'undefined' && GEAR_SLOT_ICONS) ? GEAR_SLOT_ICONS : {
@@ -53094,21 +53325,24 @@ const UI = {
         const rawItem = typeof gearItemById === 'function' ? gearItemById(eq[sid]) : null;
         const item = (typeof contractGearItem === 'function' && rawItem) ? contractGearItem(rawItem) : rawItem;
         const unlock = item && typeof gearUnlockState === 'function' ? gearUnlockState(item, sid) : { unlocked: true };
+        const row = document.createElement('div');
+        row.className = 'gear-slot-row';
+        row.setAttribute('role', 'listitem');
         const btn = document.createElement('button');
         btn.type = 'button';
         btn.className = 'hub-tile gear-slot-card'
           + (sid === pickSlot ? ' sel' : '')
           + (item && unlock.unlocked && gearHasStats(item) ? ' kind-stat' : '')
           + (item && !unlock.unlocked ? ' locked' : '')
-          + (!item ? ' empty' : '');
+          + (item ? ' filled' : ' empty');
         btn.setAttribute('data-gear-slot', sid);
         btn.setAttribute('data-slot', sid);
-        btn.setAttribute('role', 'listitem');
         btn.setAttribute('aria-pressed', sid === pickSlot ? 'true' : 'false');
+        btn.setAttribute('aria-current', sid === pickSlot ? 'true' : 'false');
         const tint = (item && item.look && item.look.tint) || (item && item.color) || slot.color || '#1c2940';
         const rar = item && item.rarity ? String(item.rarity) : '';
         const sub = !item
-          ? tOr('gear.empty', 'Leeg')
+          ? tOr('gear.slotEmptyHint', 'Leeg — tik om te vullen')
           : (!unlock.unlocked
             ? (unlock.label || tOr('gear.pillLock', 'LOCK'))
             : (gearItemName(item) + (rar ? ' · ' + tOr('rarity.' + rar, tOr('gear.rar.' + rar, rar)) : '')));
@@ -53120,7 +53354,7 @@ const UI = {
           `<span class="hub-tile-title gear-slot-title">${esc(gearSlotName(sid))}</span>` +
           `<span class="hub-tile-sub gear-slot-sub">${esc(sub)}</span>` +
           `</span>` +
-          `<span class="gear-slot-pills hub-tile-stat">${pillFor(item, unlock, { on: !!item })}</span>`;
+          `<span class="gear-slot-pills hub-tile-stat">${pillFor(item, unlock, { on: false })}</span>`;
         bindPress(btn, () => {
           safeUiAction(() => {
             this.gearSlotPick = sid;
@@ -53130,14 +53364,44 @@ const UI = {
             this.renderGear();
             const screen = document.getElementById('gearScreen');
             const inv = document.getElementById('gearInvSection');
-            if (screen && inv) {
+            if (screen && inv && window.matchMedia && !window.matchMedia('(min-width: 900px)').matches) {
               const sr = screen.getBoundingClientRect();
               const ir = inv.getBoundingClientRect();
               screen.scrollTop += (ir.top - sr.top) - 10;
             }
           }, 'gearSlot/' + sid, tOr('gear.errSlot', 'Slot pick failed'));
         });
-        slotList.appendChild(btn);
+        row.appendChild(btn);
+        slotList.appendChild(row);
+      }
+    }
+
+    const allOff = document.getElementById('gearUnequipAll');
+    if (!pickerOnly && allOff) {
+      allOff.hidden = filled < 1;
+      allOff.classList.remove('is-armed');
+      allOff.textContent = tOr('gear.unequipAll', 'Unequip all');
+      if (!allOff.dataset.sfGearAllOff) {
+        allOff.dataset.sfGearAllOff = '1';
+        let lastRun = 0;
+        const runAllOff = () => {
+          const now = Date.now();
+          if (now - lastRun < 80) return;
+          lastRun = now;
+          safeUiAction(() => {
+            const res = (typeof unequipAllGear === 'function')
+              ? unequipAllGear()
+              : { ok: true, n: (typeof listGearSlots === 'function' ? listGearSlots() : []).reduce((n, s) => {
+                if (typeof unequipGear === 'function') { unequipGear(s.id); return n + 1; }
+                return n;
+              }, 0) };
+            AudioSys.sfx('select');
+            UI.toast(tOr('toast.gearUnequipAll', 'Unequipped all', { n: (res && res.n) || 0 }), 1400);
+            this.renderGear();
+            this.renderMenu();
+          }, 'gearUnequipAll', tOr('gear.errSlot', 'Slot pick failed'));
+        };
+        allOff.addEventListener('click', runAllOff);
       }
     }
 
@@ -53170,30 +53434,61 @@ const UI = {
 
     const kicker = document.getElementById('gearInvKicker');
     if (kicker) {
-      kicker.textContent = tOr('gear.invKicker', '{slot}', { slot: gearSlotName(pickSlot) });
+      kicker.textContent = tOr('gear.invKickerOpen', '{slot}', { slot: gearSlotName(pickSlot) });
+    }
+    const hintEl = document.getElementById('gearSheetHint');
+    if (hintEl) {
+      hintEl.textContent = tOr('gear.sheetHint', 'Tik een stuk om het aan of uit te doen. Op slot blijft zichtbaar.');
     }
 
     const detail = document.getElementById('gearDetail');
     const rawPicked = typeof gearItemById === 'function' ? gearItemById(this.gearItemPick) : null;
     const picked = (typeof contractGearItem === 'function' && rawPicked) ? contractGearItem(rawPicked) : rawPicked;
     if (detail) {
+      detail.classList.remove('is-equipped', 'is-locked');
       if (!picked) {
         detail.innerHTML = `<div class="gear-detail-sub">${esc(tOr('gear.pickHint', 'Tik een item om aan of uit te doen.'))}</div>`;
       } else {
         const unlock = gearUnlockState(picked, pickSlot);
         const tip = unlock.model || (typeof gearTooltipModel === 'function' ? gearTooltipModel(picked) : null);
-        const equippedHere = eq[picked.slot] === picked.id || eq[picked.slotId] === picked.id;
+        const equippedHere = eq[picked.slot] === picked.id || eq[picked.slotId] === picked.id
+          || unlock.state === 'already-equipped';
         const kindPill = pillFor(picked, unlock, { on: equippedHere });
         const lockLine = unlock.unlocked
           ? ''
-          : `<div class="gear-detail-sub" style="color:#ffd75e;margin-top:4px">${esc(unlock.label || tOr('gear.pillLock', 'LOCK'))}</div>`;
+          : `<div class="gear-detail-lock">${esc(unlock.label || tOr('gear.pillLock', 'LOCK'))}</div>`;
         const bonus = unlock.unlocked
           ? (tip && tip.desc ? esc(tip.desc) + (tip.combatLine ? ' · ' + esc(tip.combatLine) : '') : esc(gearStatLine(picked)))
           : esc(tOr('gear.lockNoStats', 'Geen stats tot het slot open is'));
+        const action = this._gearActionFor(unlock, equippedHere);
+        let actionBtn = '';
+        if (action.key === 'unequip') {
+          actionBtn = `<button type="button" class="gear-detail-btn unequip" data-gear-act="unequip">${esc(tOr('gear.detailRemove', 'Dit stuk uitdoen'))}</button>`;
+          detail.classList.add('is-equipped');
+        } else if (action.key === 'equip') {
+          actionBtn = `<button type="button" class="gear-detail-btn equip" data-gear-act="equip">${esc(tOr('gear.detailWear', 'Dit stuk aandoen'))}</button>`;
+        } else {
+          actionBtn = `<button type="button" class="gear-detail-btn locked" data-gear-act="locked" disabled>${esc(tOr('gear.detailLocked', 'Nog op slot'))} · ${esc(action.label)}</button>`;
+          detail.classList.add('is-locked');
+        }
         detail.innerHTML =
           `<div class="gear-detail-title">${esc(gearItemName(picked))} ${kindPill}</div>` +
           `<div class="gear-detail-sub">${bonus}</div>` +
-          lockLine;
+          lockLine +
+          `<div class="gear-detail-actions">${actionBtn}</div>`;
+        const actBtn = detail.querySelector('[data-gear-act]');
+        if (actBtn && action.key !== 'locked') {
+          bindPress(actBtn, () => {
+            safeUiAction(() => {
+              this.gearItemPick = picked.id;
+              keepPickerScroll();
+              if (action.key === 'unequip') takeOff(picked);
+              else wearItem(picked);
+              this.renderGear();
+              this.renderMenu();
+            }, 'gearDetail/' + picked.id, 'Item kiezen mislukt');
+          });
+        }
       }
     }
 
@@ -53201,9 +53496,9 @@ const UI = {
     if (filterBar) {
       const labels = {
         all: tOr('gear.filterAll', 'Alles'),
-        look: tOr('gear.pillVanity', 'LOOK'),
-        stat: tOr('gear.pillStat', 'STAT'),
-        lock: tOr('gear.pillLock', 'LOCK'),
+        look: tOr('gear.filterLook', tOr('gear.pillVanity', 'LOOK')),
+        stat: tOr('gear.filterStat', tOr('gear.pillStat', 'STAT')),
+        lock: tOr('gear.filterLock', tOr('gear.pillLock', 'LOCK')),
         owned: tOr('gear.filterOwned', 'Van jou'),
       };
       if (!this._gearFilterBound) {
@@ -53215,7 +53510,7 @@ const UI = {
           chip.className = 'gear-filter-btn';
           chip.setAttribute('data-gear-filter', key);
           chip.setAttribute('role', 'tab');
-          chip.textContent = labels[key] || key;
+          chip.innerHTML = `<span class="gear-filter-label">${esc(labels[key] || key)}</span><span class="gear-filter-n" data-gear-filter-n="${esc(key)}"></span>`;
           bindPress(chip, () => {
             safeUiAction(() => {
               this.gearFilter = key;
@@ -53232,7 +53527,11 @@ const UI = {
         const key = chip.getAttribute('data-gear-filter');
         chip.classList.toggle('sel', key === this.gearFilter);
         chip.setAttribute('aria-selected', key === this.gearFilter ? 'true' : 'false');
-        chip.textContent = labels[key] || key;
+        const lab = chip.querySelector('.gear-filter-label');
+        if (lab) lab.textContent = labels[key] || key;
+        else chip.textContent = labels[key] || key;
+        const nEl = chip.querySelector('[data-gear-filter-n]');
+        if (nEl) nEl.textContent = String(this._gearFilterCount(items, key));
       }
     }
 
@@ -53301,6 +53600,27 @@ const UI = {
         slot: gearSlotName(pickSlot),
       });
     }
+    const clearEl = document.getElementById('gearFilterClear');
+    if (clearEl) {
+      const filtered = this.gearFilter !== 'all' || this.gearRarity !== 'all' || !!(this.gearFilterQ && String(this.gearFilterQ).trim());
+      clearEl.hidden = !filtered;
+      clearEl.textContent = tOr('gear.filterClear', 'Wis filters');
+      if (!clearEl.dataset.sfGearClear) {
+        clearEl.dataset.sfGearClear = '1';
+        bindPress(clearEl, () => {
+          safeUiAction(() => {
+            this.gearFilter = 'all';
+            this.gearRarity = 'all';
+            this.gearFilterQ = '';
+            this._gearPickerScroll = 0;
+            const q = document.getElementById('gearFilterQ');
+            if (q) q.value = '';
+            AudioSys.sfx('select');
+            this.renderGear({ pickerOnly: true });
+          }, 'gearFilterClear', 'Filter mislukt');
+        });
+      }
+    }
 
     const picker = document.getElementById('gearPicker');
     if (picker) {
@@ -53317,14 +53637,17 @@ const UI = {
         const unlock = gearUnlockState(it, pickSlot);
         const equippedHere = eq[it.slot] === it.id || eq[it.slotId] === it.id
           || unlock.state === 'already-equipped';
+        const action = this._gearActionFor(unlock, equippedHere);
         const el = document.createElement('button');
         el.type = 'button';
         el.className = 'gear-card'
           + (this.gearItemPick === it.id ? ' sel' : '')
           + (unlock.unlocked ? '' : ' locked')
+          + (unlock.state === 'not-owned' ? ' not-owned' : '')
           + (equippedHere ? ' equipped' : '');
         el.setAttribute('data-gear-id', it.id);
         el.setAttribute('data-equip-state', unlock.state || '');
+        el.setAttribute('data-gear-action', action.key);
         el.setAttribute('data-rarity', it.rarity || '');
         el.setAttribute('aria-disabled', unlock.unlocked ? 'false' : 'true');
         const tint = (it.look && it.look.tint) || it.color || '#333c55';
@@ -53333,12 +53656,15 @@ const UI = {
           ? `<span class="gear-pill gear-pill-rar rar-${esc(rar)}">${esc(tOr('gear.rar.' + rar, rar))}</span>`
           : '';
         const meta = unlock.unlocked
-          ? (gearHasStats(it) ? gearStatLine(it) : tOr('gear.vanityHint', 'Geen stats — alleen look'))
+          ? (equippedHere
+            ? tOr('gear.wearingNow', 'Nu aan — tik om uit te doen')
+            : (gearHasStats(it) ? gearStatLine(it) : tOr('gear.vanityHint', 'Geen stats — alleen look')))
           : (unlock.label || tOr('gear.pillLock', 'LOCK'));
         el.innerHTML =
           `<span class="gear-card-swatch" style="background:${esc(tint)}"></span>` +
-          `<span class="gear-card-body"><span class="gear-card-name">${esc(gearItemName(it))} ${pillFor(it, unlock, { on: equippedHere })} ${rarPill}</span>` +
-          `<span class="gear-card-meta">${esc(meta)}</span></span>`;
+          `<span class="gear-card-body"><span class="gear-card-name">${esc(gearItemName(it))} ${pillFor(it, unlock, { on: false })} ${rarPill}</span>` +
+          `<span class="gear-card-meta">${esc(meta)}</span></span>` +
+          `<span class="gear-card-action ${esc(action.key)}">${esc(action.label)}</span>`;
         bindPress(el, () => {
           safeUiAction(() => {
             this.gearItemPick = it.id;

@@ -354,6 +354,36 @@ function unequipGear(slotId) {
   return { ok: true };
 }
 
+/** True when owned gear is only starter cosmetics — no adventure/world drops yet. */
+function gearIsStarterOnly(s) {
+  const st = s || (typeof save !== 'undefined' ? save : null);
+  const owned = st && st.gear && st.gear.owned;
+  if (!owned || typeof owned !== 'object') return true;
+  let any = false;
+  for (const id of Object.keys(owned)) {
+    if (!id || id === '__proto__' || id === 'constructor' || id === 'prototype') continue;
+    const rec = owned[id];
+    if (rec == null || rec === false) continue;
+    any = true;
+    const src = (rec && typeof rec === 'object') ? String(rec.src || '') : '';
+    if (src && src !== 'starter') return false;
+    const it = (typeof gearItemById === 'function') ? gearItemById(id) : null;
+    if (it && it.starter !== true) return false;
+  }
+  return true;
+}
+
+function unequipAllGear() {
+  let n = 0;
+  for (const sid of _gearSlotIds()) {
+    const eq = getEquippedGear();
+    if (!eq[sid]) continue;
+    unequipGear(sid);
+    n++;
+  }
+  return { ok: true, n };
+}
+
 function gearEquippedCount() {
   const eq = getEquippedGear();
   return _gearSlotIds().reduce((n, sid) => n + (eq[sid] ? 1 : 0), 0);

@@ -770,15 +770,17 @@ function grantStarterGear(s, now) {
   if (typeof DEFAULT_SAVE !== 'undefined' && st === DEFAULT_SAVE) return;
   const tNow = gearNowMs(now);
   const bag = ensureGearSave(st);
+  const justGranted = [];
   for (const item of GEAR_ITEMS) {
     if (!item.starter) continue;
     if (bag.owned[item.id]) continue;
     if (!gearItemLootable(item, st, tNow)) continue;
     bag.owned[item.id] = { at: tNow, src: 'starter' };
+    justGranted.push(item.id);
   }
   for (const slot of GEAR_SLOT_IDS) {
     if (bag.equipped[slot]) continue;
-    const pick = GEAR_ITEMS.find((it) => it.slot === slot && it.starter && bag.owned[it.id]);
+    const pick = GEAR_ITEMS.find((it) => it.slot === slot && it.starter && justGranted.indexOf(it.id) >= 0);
     if (pick) bag.equipped[slot] = pick.id;
   }
 }

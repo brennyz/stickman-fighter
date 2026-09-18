@@ -33,6 +33,8 @@ must(/id="gearWeaponAside"/.test(html), 'missing weapon aside');
 must(/id="gearDollCanvas"/.test(html), 'missing stickman preview');
 must(/id="gearFilterBar"/.test(html) && /id="gearFilterQ"/.test(html), 'filter bar + search required for large catalog');
 must(/id="gearRarityBar"/.test(html) && /id="gearFilterCount"/.test(html), 'rarity bar + result count required');
+must(/id="gearFilterClear"/.test(html) && /id="gearSheetHint"/.test(html) && /id="gearLayout"/.test(html), 'sheet tools + layout wrappers required');
+must(/id="gearHuntCta"/.test(html) && /id="btnGearHuntAdv"/.test(html) && /id="gearUnequipAll"/.test(html), 'hunt CTA + unequip-all required');
 must(!/data-gear-slot="arms"/.test(html) && !/data-gear-slot="aura"/.test(html), 'legacy arms/aura slots must not be in HTML');
 must(/hub-tile-gear/.test(html), 'Character tile must use HOME hub-tile chrome');
 
@@ -57,6 +59,24 @@ must(/gearEquipItem/.test(ui) && /gearTooltipModel/.test(ui) && /drawGearHeroDol
 must(/expectSlot/.test(ui) && /gearSheetRows|gearSlotInventory/.test(ui), 'renderGear must pass expectSlot and use slot inventory');
 must(/btnGear',\s*'hub\.gear'/.test(i18n), 'Character tile must be i18n-wired');
 must(/btnGearHome',\s*'hub\.gear'/.test(i18n), 'HOME gear tile must be i18n-wired');
+const catalog = fs.readFileSync(path.join(root, 'src/i18n/catalog.js'), 'utf8');
+const deChrome = fs.readFileSync(path.join(root, 'src/i18n/catalog-de.js'), 'utf8');
+const locales = fs.readFileSync(path.join(root, 'src/i18n/catalog-locales.js'), 'utf8');
+const catalogEn = catalog.split('const CATALOG_EN')[1] || '';
+must(/huntBtn: 'Go to Adventure'/.test(catalogEn), 'EN hunt CTA missing');
+must(/unequipAll: 'Unequip all'/.test(catalogEn), 'EN unequip-all missing');
+must(/gearUnequipAll: 'Unequipped all'/.test(catalogEn), 'EN unequip-all toast missing');
+must(/huntBtn: 'Zum Abenteuer'/.test(deChrome), 'DE hunt CTA missing');
+must(/unequipAll: 'Alles ablegen'/.test(deChrome), 'DE unequip-all missing');
+must(/gearUnequipAll: 'Alles abgelegt'/.test(deChrome + locales), 'DE unequip-all toast missing');
+must(/huntBtn: 'Aller en Aventure'/.test(locales), 'FR hunt CTA missing');
+must(/unequipAll: 'Tout enlever'/.test(locales), 'FR unequip-all missing');
+must(/gearUnequipAll: 'Tout enlevé'/.test(locales), 'FR unequip-all toast missing');
+must(/huntBtn: 'Ir a Aventura'/.test(locales), 'ES hunt CTA missing');
+must(/unequipAll: 'Quitar todo'/.test(locales), 'ES unequip-all missing');
+must(/gearUnequipAll: 'Todo quitado'/.test(locales), 'ES unequip-all toast missing');
+must(!/tOr\('gear\.huntBtn', 'Naar Avontuur'/.test(ui), 'huntBtn fallback must not leak Dutch');
+must(!/tOr\('gear\.unequipAll', 'Alles uitdoen'/.test(ui), 'unequipAll fallback must not leak Dutch');
 must(/--menu-tile-solid/.test(css.match(/\.gear-slot-card \{[\s\S]*?\}/)?.[0] || ''), 'slot cards must use HOME tiles');
 must(/min-height:\s*max\(56px,\s*var\(--touch-min\)\)/.test(css), 'Android touch floor missing on slot cards');
 must(!/\.gear-picker \{[\s\S]{0,160}max-height/.test(css), 'picker must not nest-scroll (one page scroll)');
@@ -68,6 +88,9 @@ must(/function gearSortItems/.test(uiAdapt) && /function gearRaritiesInList/.tes
 must(/gearFilterItems\(items, filter, q, rarity\)/.test(uiAdapt) || /function gearFilterItems\(items, filter, q, rarity\)/.test(uiAdapt), 'gearFilterItems must take rarity');
 must(/isCosmetic/.test(uiAdapt) && /hasStats/.test(uiAdapt), 'contract item flags missing');
 must(/\.gear-filter-btn/.test(css), 'filter chips CSS missing');
+must(/\.gear-card-action/.test(css) && /\.gear-detail-actions/.test(css) && /\.gear-unequip-all/.test(css) && /\.gear-hunt-cta/.test(css), 'equip/unequip/lock affordances CSS missing');
+must(!/\.gear-detail-actions\s*\{\s*display:\s*none/.test(css), 'detail actions must be visible');
+must(/min-width:\s*900px/.test(css) && /grid-template-columns/.test(css), 'desktop two-column gear layout missing');
 must(!/\.screen\s*\{\s*display:\s*none\s*!important/.test(css), 'nuclear display:none forbidden');
 
 const chrome = ['/usr/local/bin/google-chrome', '/usr/bin/google-chrome'].find((p) => fs.existsSync(p));
@@ -148,6 +171,29 @@ async function run() {
       const titleEl = cards[0] && cards[0].querySelector('.gear-slot-title');
       const subEl = cards[0] && cards[0].querySelector('.gear-slot-sub');
       if (!titleEl || !subEl) return { ok: false, why: 'slot title/sub missing' };
+      if (document.querySelector('#gearSlotList [data-gear-unequip]:not([hidden])')) {
+        return { ok: false, why: 'per-slot unequip must not sit on slot rows (mistap)' };
+      }
+      const hunt = document.getElementById('gearHuntCta');
+      const huntBtn = document.getElementById('btnGearHuntAdv');
+      if (!hunt || hunt.hidden || !huntBtn) {
+        return { ok: false, why: 'starter-only hunt CTA to Adventure missing', hidden: hunt && hunt.hidden };
+      }
+      if (!/Avontuur|Adventure|Abenteuer|Aventure|Aventura/i.test((hunt.textContent || '') + (huntBtn.textContent || ''))) {
+        return { ok: false, why: 'hunt CTA must name Adventure', text: hunt.textContent };
+      }
+      if (typeof gearIsStarterOnly === 'function' && !gearIsStarterOnly(save)) {
+        return { ok: false, why: 'fresh save must be starter-only' };
+      }
+      const allOff = document.getElementById('gearUnequipAll');
+      if (!allOff || allOff.hidden) return { ok: false, why: 'unequip-all missing while starters are on' };
+      const sum = document.getElementById('gearSummary');
+      if (sum && /131/.test(sum.textContent || '')) {
+        return { ok: false, why: 'summary must not dump catalog N on phone', text: sum.textContent };
+      }
+      if (sum && !/look|Look|stats|Stats/i.test(sum.textContent || '')) {
+        return { ok: false, why: 'summary must say look vs stats', text: sum.textContent };
+      }
       const titleBox = titleEl.getBoundingClientRect();
       const subBox = subEl.getBoundingClientRect();
       if (Math.abs(titleBox.top - subBox.top) < 8) {
@@ -245,6 +291,14 @@ async function run() {
       save.lvl = Math.max(save.lvl || 1, 20);
       save.createdAt = Math.min(save.createdAt || Date.now(), Date.now() - 90 * 86400000);
       save.gear.owned.head_visor_neon = save.gear.owned.head_visor_neon || { at: Date.now(), src: 'smoke' };
+      UI.renderGear();
+      const huntAfterDrop = document.getElementById('gearHuntCta');
+      if (huntAfterDrop && !huntAfterDrop.hidden) {
+        return { ok: false, why: 'hunt CTA must hide after a non-starter drop' };
+      }
+      if (typeof gearIsStarterOnly === 'function' && gearIsStarterOnly(save)) {
+        return { ok: false, why: 'visor drop must end starter-only' };
+      }
       const statOk = gearCanEquip('head_visor_neon', { expectSlot: 'head' });
       if (!statOk || statOk.state !== 'ok' || !statOk.canEquip) {
         return { ok: false, why: 'owned unlocked visor must be ok', statOk };
@@ -353,6 +407,93 @@ async function run() {
       const stat = [...document.querySelectorAll('.gear-pill-stat')];
       if (!look.length || !stat.length) return { ok: false, why: 'LOOK/STAT pills missing' };
 
+      const worn = document.querySelector('#gearPicker [data-gear-id="head_wrap_cloth"]');
+      if (!worn || worn.getAttribute('data-gear-action') !== 'unequip') {
+        return { ok: false, why: 'equipped card must expose unequip action', act: worn && worn.getAttribute('data-gear-action') };
+      }
+      if (!worn.querySelector('.gear-card-action')) return { ok: false, why: 'card action chip missing' };
+      const detailAct = document.querySelector('#gearDetail [data-gear-act="unequip"]');
+      if (!detailAct) return { ok: false, why: 'detail unequip button missing' };
+      const detailBox = document.querySelector('#gearDetail .gear-detail-actions');
+      if (!detailBox || detailBox.getBoundingClientRect().height < 36) {
+        return { ok: false, why: 'detail actions not visible', h: detailBox && detailBox.getBoundingClientRect().height };
+      }
+      const headOn = save.gear.equipped.head;
+      const chestBtn = document.querySelector('#gearSlotList [data-slot="chest"]');
+      if (!chestBtn) return { ok: false, why: 'chest slot missing for swap test' };
+      chestBtn.click();
+      if (save.gear.equipped.head !== headOn) {
+        return { ok: false, why: 'swapping slots must not unequip', head: save.gear.equipped.head };
+      }
+      if (UI.gearSlotPick !== 'chest') return { ok: false, why: 'chest tap must select chest', pick: UI.gearSlotPick };
+
+      UI.gearSlotPick = 'head';
+      UI.renderGear();
+      const allBtn = document.getElementById('gearUnequipAll');
+      if (!allBtn || allBtn.hidden) return { ok: false, why: 'unequip-all hidden while filled' };
+      if (typeof unequipAllGear !== 'function') return { ok: false, why: 'unequipAllGear helper missing' };
+      allBtn.click();
+      if (save.gear.equipped.head || save.gear.equipped.chest) {
+        return { ok: false, why: 'unequip-all must clear slots', eq: save.gear.equipped };
+      }
+      if (!save.gear.owned.head_wrap_cloth) {
+        return { ok: false, why: 'unequip-all must keep owned starters' };
+      }
+
+      UI.gearFilter = 'lock';
+      UI.gearFilterQ = '';
+      UI.gearRarity = 'all';
+      UI.renderGear({ pickerOnly: true });
+      const lockCard = document.querySelector('#gearPicker .gear-card.locked');
+      if (!lockCard) return { ok: false, why: 'LOCK filter must show a locked card' };
+      if (lockCard.getAttribute('data-gear-action') !== 'locked') {
+        return { ok: false, why: 'locked card action', act: lockCard.getAttribute('data-gear-action') };
+      }
+      const lockAct = lockCard.querySelector('.gear-card-action');
+      if (!lockAct || !lockAct.textContent.trim()) return { ok: false, why: 'locked card must show lock reason action' };
+
+      const clearBtn = document.getElementById('gearFilterClear');
+      if (!clearBtn || clearBtn.hidden) return { ok: false, why: 'clear filters must show when filtered' };
+      clearBtn.click();
+      if (UI.gearFilter !== 'all') return { ok: false, why: 'clear filters must reset type', filter: UI.gearFilter };
+      const nChip = document.querySelector('#gearFilterBar [data-gear-filter="all"] [data-gear-filter-n]');
+      if (!nChip || !/^\d+$/.test((nChip.textContent || '').trim())) {
+        return { ok: false, why: 'filter chips must show counts', text: nChip && nChip.textContent };
+      }
+
+      const prevLang = (typeof save !== 'undefined' && save.lang) || 'nl';
+      const chromeWant = {
+        en: { hunt: 'Go to Adventure', all: 'Unequip all', toast: 'Unequipped all' },
+        de: { hunt: 'Zum Abenteuer', all: 'Alles ablegen', toast: 'Alles abgelegt' },
+        fr: { hunt: 'Aller en Aventure', all: 'Tout enlever', toast: 'Tout enlevé' },
+        es: { hunt: 'Ir a Aventura', all: 'Quitar todo', toast: 'Todo quitado' },
+      };
+      if (typeof t === 'function') {
+        for (const lang of Object.keys(chromeWant)) {
+          save.lang = lang;
+          if (typeof applyLang === 'function') applyLang();
+          else UI.renderGear();
+          const want = chromeWant[lang];
+          const hb = document.getElementById('btnGearHuntAdv');
+          const ao = document.getElementById('gearUnequipAll');
+          if (!hb || hb.textContent !== want.hunt) {
+            return { ok: false, why: 'hunt CTA i18n ' + lang, text: hb && hb.textContent };
+          }
+          if (!ao || ao.textContent !== want.all) {
+            return { ok: false, why: 'unequip-all i18n ' + lang, text: ao && ao.textContent };
+          }
+          if (t('toast.gearUnequipAll') !== want.toast) {
+            return { ok: false, why: 'toast.gearUnequipAll i18n ' + lang, text: t('toast.gearUnequipAll') };
+          }
+          if (/Naar Avontuur|Alles uitdoen|Alles uitgedaan/.test((hb.textContent || '') + (ao.textContent || '') + t('toast.gearUnequipAll'))) {
+            return { ok: false, why: 'Dutch leak on ' + lang };
+          }
+        }
+        save.lang = prevLang;
+        if (typeof applyLang === 'function') applyLang();
+        else UI.renderGear();
+      }
+
       return {
         ok: true,
         ids,
@@ -366,10 +507,33 @@ async function run() {
     }
   });
 
+  await page.setViewport({ width: 1100, height: 800, isMobile: false, hasTouch: false });
+  await page.evaluate(() => {
+    UI.safeOpen('gearScreen', () => UI.renderGear());
+  });
+  const desk = await page.evaluate(() => {
+    const layout = document.getElementById('gearLayout');
+    const loadout = document.getElementById('gearLoadout');
+    const inv = document.getElementById('gearInvSection');
+    if (!layout || !loadout || !inv) return { ok: false, why: 'desktop layout nodes missing' };
+    const cs = getComputedStyle(layout);
+    if (cs.display !== 'grid') return { ok: false, why: 'desktop layout not grid', display: cs.display };
+    const lb = loadout.getBoundingClientRect();
+    const ib = inv.getBoundingClientRect();
+    if (ib.left < lb.right - 8) {
+      return { ok: false, why: 'desktop columns should sit side by side', left: lb.right, right: ib.left };
+    }
+    return { ok: true };
+  });
+
   await browser.close();
   try { if (server && server.close) server.close(); } catch (_) {}
   if (!result || !result.ok) {
     console.error('SMOKE_FAIL gear-screen', result);
+    process.exit(1);
+  }
+  if (!desk || !desk.ok) {
+    console.error('SMOKE_FAIL gear-screen desktop', desk);
     process.exit(1);
   }
   console.log('SMOKE_OK gear-screen', result.cards.join(','), result.catalog, result.aside);
