@@ -208,7 +208,8 @@ function openUpgradesHub() {
 bindPress(document.getElementById('btnUpgrades'), openUpgradesHub);
 bindPress(document.getElementById('btnUpgradesHome'), openUpgradesHub);
 bindPress(document.getElementById('btnPets'), () => {
-  openCollectionScreen('petScreen', () => UI.renderPets());
+  if (typeof UI !== 'undefined' && UI.openPets) UI.openPets();
+  else openCollectionScreen('petScreen', () => UI.renderPets());
 });
 bindPress(document.getElementById('btnChestPull'), () => {
   AudioSys.init();
@@ -241,7 +242,8 @@ bindPress(document.getElementById('btnSummonGotoPets'), () => {
   if (state === 'play' && game) return;
   UI.clearSummonRevealTimers();
   UI._chestPullBusy = false;
-  openCollectionScreen('petScreen', () => UI.renderPets());
+  if (typeof UI !== 'undefined' && UI.openPets) UI.openPets();
+  else openCollectionScreen('petScreen', () => UI.renderPets());
 });
 bindPress(document.getElementById('btnBuildings'), () => {
   AudioSys.init(); AudioSys.sfx('select');

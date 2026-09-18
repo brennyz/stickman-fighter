@@ -156,7 +156,184 @@ function petProgressLine(speciesId) {
   if (canBuyPetWithCoins(def.id)) return t('ui.petLineBuy', { cost });
   const need = petKillNeed(speciesId);
   const cur = save.dex[speciesId] || 0;
-  const coinHint = petCoinsBalance() > 0 ? ` · ${petCoinsBalance()}/${cost} PC` : '';
-  if (cur <= 0) return `Pet · ${need} kills${coinHint}`;
-  return `Pet · ${Math.min(cur, need)}/${need} kills${coinHint}`;
+  const wallet = petCoinsBalance();
+  const coinHint = wallet > 0
+    ? ((typeof tOr === 'function')
+      ? tOr('pets.coinHint', ' · {have}/{cost} PC', { have: wallet, cost })
+      : ` · ${wallet}/${cost} PC`)
+    : '';
+  if (cur <= 0) {
+    const needLine = (typeof tOr === 'function')
+      ? tOr('pets.lineNeed', 'Pet · {need} kills', { need })
+      : `Pet · ${need} kills`;
+    return needLine + coinHint;
+  }
+  return t('ui.petTameLine', { cur: Math.min(cur, need), need, cost });
+}
+
+function petStatusOf(defOrId) {
+  const def = typeof defOrId === 'string' ? petDef(defOrId) : defOrId;
+  if (!def) return null;
+  const tamed = isPetTamed(def.id);
+  const active = !!(tamed && save.activePet === def.id);
+  const kills = (save.dex && save.dex[def.speciesId]) || 0;
+  const need = petKillNeed(def.speciesId);
+  const cost = petCoinCost(def.id);
+  const canBuy = !tamed && canBuyPetWithCoins(def.id);
+  const canClaim = !tamed && kills >= need;
+  const pct = tamed ? 100 : Math.min(100, Math.round((kills / Math.max(1, need)) * 100));
+  let status = 'locked';
+  if (active) status = 'active';
+  else if (tamed) status = 'tamed';
+  else if (canClaim) status = 'claimable';
+  else if (canBuy) status = 'buyable';
+  else if (kills > 0) status = 'progress';
+  return { id: def.id, speciesId: def.speciesId, tamed, active, kills, need, cost, canBuy, canClaim, pct, status };
+}
+
+function petPerkLine(def) {
+  if (!def) return '';
+  const txt = (key, fallback, params) => (typeof tOr === 'function') ? tOr(key, fallback, params) : fallback;
+  switch (def.passive) {
+    case 'dmg':
+      return txt('pets.perkDmg', '+{pct}% damage', { pct: Math.round(def.passiveVal * 1000) / 10 });
+    case 'hp':
+      return txt('pets.perkHp', '+{n} max HP', { n: def.passiveVal });
+    case 'energy':
+      return txt('pets.perkEnergy', '+{pct}% energy regen', { pct: Math.round((def.passiveVal - 1) * 1000) / 10 });
+    case 'crit':
+      return txt('pets.perkCrit', '+{pct}% crit', { pct: Math.round(def.passiveVal * 1000) / 10 });
+    case 'speed':
+      return txt('pets.perkSpeed', '+{pct}% speed', { pct: Math.round((def.passiveVal - 1) * 1000) / 10 });
+    case 'shield':
+      return txt('pets.perkShield', 'Shield {n} / wave', { n: def.passiveVal });
+    default:
+      return def.perk || '';
+  }
+}
+
+function petLiveBonusLine(def) {
+  if (!def || !isPetTamed(def.id)) return '';
+  const was = save.activePet;
+  const bonus = (was === def.id && typeof petPassiveBonus === 'function')
+    ? petPassiveBonus()
+    : null;
+  if (!bonus) return petPerkLine(def);
+  const txt = (key, fallback, params) => (typeof tOr === 'function') ? tOr(key, fallback, params) : fallback;
+  if (bonus.dmgMul > 1.001) {
+    return txt('pets.liveDmg', 'Now +{pct}% damage', { pct: Math.round((bonus.dmgMul - 1) * 1000) / 10 });
+  }
+  if (bonus.maxHp > 0) return txt('pets.liveHp', 'Now +{n} max HP', { n: bonus.maxHp });
+  if (bonus.energyMul > 1.001) {
+    return txt('pets.liveEnergy', 'Now +{pct}% energy regen', { pct: Math.round((bonus.energyMul - 1) * 1000) / 10 });
+  }
+  if (bonus.critBonus > 0.001) {
+    return txt('pets.liveCrit', 'Now +{pct}% crit', { pct: Math.round(bonus.critBonus * 1000) / 10 });
+  }
+  if (bonus.speedMul > 1.001) {
+    return txt('pets.liveSpeed', 'Now +{pct}% speed', { pct: Math.round((bonus.speedMul - 1) * 1000) / 10 });
+  }
+  if (bonus.shieldWave > 0) {
+    return txt('pets.liveShield', 'Now shield {n} / wave', { n: Math.round(bonus.shieldWave * 10) / 10 });
+  }
+  return petPerkLine(def);
+}
+
+function petsFilterRoster(filter) {
+  return PET_ROSTER.filter((def) => {
+    const st = petStatusOf(def);
+    if (!st) return false;
+    if (filter === 'ready') return st.canBuy || st.canClaim;
+    if (filter === 'progress') return !st.tamed && st.kills > 0;
+    if (filter === 'tamed') return st.tamed;
+    return true;
+  });
+}
+
+function petsWalletModel() {
+  if (typeof ensureEggDaily === 'function') {
+    try { ensureEggDaily(); } catch (_) {}
+  }
+  return {
+    petCoins: petCoinsBalance(),
+    tamed: petTamedCount(),
+    total: PET_ROSTER.length,
+    eggs: (typeof eggOwnedCount === 'function') ? eggOwnedCount() : 0,
+    eggTotal: (typeof EGG_ROSTER !== 'undefined') ? EGG_ROSTER.length : 0,
+    dailyReady: (typeof canCrackDailyEgg === 'function') ? canCrackDailyEgg() : false,
+    advBonus: (typeof canAdvEggBonus === 'function') ? canAdvEggBonus() : false,
+  };
+}
+
+function petsNextGoal() {
+  if (typeof canCrackDailyEgg === 'function' && canCrackDailyEgg()) {
+    return { kind: 'egg', key: 'pets.nextEgg' };
+  }
+  let buy = null;
+  let claim = null;
+  let tame = null;
+  for (const def of PET_ROSTER) {
+    const st = petStatusOf(def);
+    if (!st || st.tamed) continue;
+    const sp = SPECIES[def.speciesId];
+    const name = sp ? sp.name : def.id;
+    if (st.canClaim && !claim) claim = Object.assign({ name }, st);
+    if (st.canBuy && (!buy || st.cost < buy.cost)) buy = Object.assign({ name }, st);
+    if (st.kills > 0 && (!tame || st.pct > tame.pct)) tame = Object.assign({ name }, st);
+  }
+  if (claim) return { kind: 'claim', key: 'pets.nextClaim', name: claim.name, id: claim.id, cur: claim.kills, need: claim.need };
+  if (buy) return { kind: 'buy', key: 'pets.nextBuy', name: buy.name, cost: buy.cost, id: buy.id };
+  if (tame) {
+    return {
+      kind: 'tame', key: 'pets.nextTame', name: tame.name, id: tame.id,
+      cur: Math.min(tame.kills, tame.need), need: tame.need,
+    };
+  }
+  if (typeof canAdvEggBonus === 'function' && canAdvEggBonus()) {
+    return { kind: 'eggAdv', key: 'pets.nextEggAdv' };
+  }
+  if (petTamedCount() >= PET_ROSTER.length
+    && typeof EGG_ROSTER !== 'undefined'
+    && typeof eggOwnedCount === 'function'
+    && eggOwnedCount() >= EGG_ROSTER.length) {
+    return { kind: 'done', key: 'pets.nextNone' };
+  }
+  return { kind: 'hint', key: 'pets.nextHint' };
+}
+
+function petsNextGoalLine() {
+  const goal = petsNextGoal();
+  const txt = (key, fallback, params) => (typeof tOr === 'function') ? tOr(key, fallback, params) : (fallback || '');
+  switch (goal.kind) {
+    case 'egg': return txt(goal.key, 'Daily egg ready');
+    case 'eggAdv': return txt(goal.key, 'Win adventure for a bonus egg');
+    case 'claim': return txt(goal.key, 'Claim {name} · {cur}/{need} kills', goal);
+    case 'buy': return txt(goal.key, 'Buy {name} · {cost} PC', goal);
+    case 'tame': return txt(goal.key, 'Tame {name} · {cur}/{need} kills', goal);
+    case 'done': return txt(goal.key, 'Collection complete');
+    default: return txt(goal.key, 'Hunt in the monster book or play coin bonus');
+  }
+}
+
+function petsHubStatLine() {
+  const goal = petsNextGoal();
+  const txt = (key, fallback, params) => (typeof tOr === 'function') ? tOr(key, fallback, params) : (fallback || '');
+  if (goal.kind === 'egg') return txt('pets.hubEggReady', 'Daily egg ready');
+  if (goal.kind === 'claim') return txt('pets.hubNextClaim', 'Ready to tame · {name}', { name: goal.name });
+  if (goal.kind === 'buy') return txt('pets.hubNextBuy', 'Buy ready · {cost} PC', { cost: goal.cost });
+  if (goal.kind === 'tame') return txt('pets.hubNextTame', 'Almost tamed · {name}', { name: goal.name });
+  const w = petsWalletModel();
+  if (w.tamed > 0 || w.eggs > 0 || w.petCoins > 0) {
+    return t('ui.hubStatPetsFull', {
+      pets: w.tamed, total: w.total, coins: w.petCoins, eggs: w.eggs, eggTotal: w.eggTotal,
+    });
+  }
+  return t('ui.hubStatPetsEmpty', { total: w.total });
+}
+
+function claimPetFromDex(petId) {
+  const def = petDef(petId);
+  if (!def || isPetTamed(def.id)) return null;
+  if (typeof maybeTamePet !== 'function') return null;
+  return maybeTamePet(def.speciesId);
 }

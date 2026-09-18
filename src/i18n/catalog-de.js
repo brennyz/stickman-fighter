@@ -269,6 +269,7 @@ const CATALOG_DE_CHROME = {
     petNone: 'Kein aktives Pet',
     petFollow: '{name} folgt dir jetzt!',
     petNoCoins: 'Nicht genug Pet-Coins',
+    petNoClaim: 'Noch nicht genug Kills',
     petBought: '{name} gekauft! Folgt dir jetzt.',
     eggAlreadyOpened: 'Tages-Ei schon geöffnet — morgen wieder',
     eggDuplicateUi: 'Doppel-Ei: {name} (+10 XP)',

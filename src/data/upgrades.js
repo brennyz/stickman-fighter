@@ -345,18 +345,21 @@ function petUpgradeBonuses(petId) {
 function petUpgradeSummary(id) {
   const lv = itemUpgradeLevel('pet', id);
   const b = petUpgradeBonuses(id);
+  const txt = (key, fallback, params) => (typeof tOr === 'function') ? tOr(key, fallback, params) : fallback;
   const parts = [];
-  if (b.passiveMul > 1.001) parts.push(`passief ×${b.passiveMul.toFixed(2)}`);
-  if (b.assistMul > 1.001) parts.push(`assist ×${b.assistMul.toFixed(2)}`);
-  if (b.cdMul < 0.999) parts.push(`CD ×${b.cdMul.toFixed(2)}`);
-  if (lv >= itemUpgradeMax('pet', id)) parts.push('MAX');
-  return parts.length ? parts.join(' · ') : (lv ? `Lv ${lv}` : '—');
+  if (b.passiveMul > 1.001) parts.push(txt('pets.upPassive', 'passive ×{n}', { n: b.passiveMul.toFixed(2) }));
+  if (b.assistMul > 1.001) parts.push(txt('pets.upAssist', 'assist ×{n}', { n: b.assistMul.toFixed(2) }));
+  if (b.cdMul < 0.999) parts.push(txt('pets.upCd', 'CD ×{n}', { n: b.cdMul.toFixed(2) }));
+  if (lv >= itemUpgradeMax('pet', id)) parts.push(txt('pets.upMax', 'MAX'));
+  return parts.length ? parts.join(' · ') : (lv ? ('Lv ' + lv) : '—');
 }
 
 function petUpgradePreview(id) {
   const lv = itemUpgradeLevel('pet', id);
   if (lv >= itemUpgradeMax('pet', id)) return '';
-  return `passief +10% · assist +8% · CD −7%`;
+  return (typeof tOr === 'function')
+    ? tOr('pets.upPreview', 'passive +10% · assist +8% · CD −7%')
+    : 'passive +10% · assist +8% · CD −7%';
 }
 
 /* ---- Style upgrades ---- */

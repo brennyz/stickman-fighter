@@ -1400,6 +1400,9 @@ const UI = {
       if (active === 'buildingsScreen' && typeof this.buildingsGoBack === 'function' && this.buildingsGoBack()) {
         return;
       }
+      if (active === 'petScreen' && typeof this.petsGoBack === 'function' && this.petsGoBack()) {
+        return;
+      }
       if (active === 'weaponScreen' && this.weaponOpenedFrom === 'gear') {
         this.weaponOpenedFrom = null;
         this.safeOpen('gearScreen', () => this.renderGear());
@@ -1995,11 +1998,8 @@ const UI = {
       setStat('hubStatUpgrades', ready > 0
         ? t('ui.upgradeReady', { n: ready })
         : (skillLv > 0 ? t('ui.hubStatSkillLv', { n: skillLv }) : t('ui.hubStatSkillShards')));
-      const petsN = petTamedCount();
-      const eggsN = eggOwnedCount();
-      const pc = petCoinsBalance();
-      setStat('hubStatPets', eggsN > 0 || petsN > 0 || pc > 0
-        ? t('ui.hubStatPetsFull', { pets: petsN, total: PET_ROSTER.length, coins: pc, eggs: eggsN, eggTotal: EGG_ROSTER.length })
+      setStat('hubStatPets', (typeof petsHubStatLine === 'function')
+        ? petsHubStatLine()
         : t('ui.hubStatPetsEmpty', { total: PET_ROSTER.length }));
       const stylesN = STYLES.filter(s => styleUnlocked(s)).length;
       setStat('hubStatStyle', t('ui.hubStatOutfits', { n: stylesN, total: STYLES.length }));
@@ -3960,239 +3960,10 @@ const UI = {
     }
   },
 
-  renderPets() {
-    const tab = this.petTab || 'dex';
-    const bar = document.getElementById('petTabBar');
-    if (bar) {
-      bar.innerHTML =
-        `<button type="button" class="dex-filter-btn${tab === 'dex' ? ' active' : ''}" data-pet-tab="dex">Dex · ${petTamedCount()}/${PET_ROSTER.length}</button>` +
-        `<button type="button" class="dex-filter-btn${tab === 'egg' ? ' active' : ''}" data-pet-tab="egg">Ei arcade · ${eggOwnedCount()}/${EGG_ROSTER.length}</button>`;
-      bar.querySelectorAll('[data-pet-tab]').forEach((btn) => {
-        bindPress(btn, () => {
-          AudioSys.sfx('select');
-          UI.petTab = btn.getAttribute('data-pet-tab') || 'dex';
-          UI.renderPets();
-        });
-      });
-    }
-    const dexPanel = document.getElementById('petDexPanel');
-    const eggPanel = document.getElementById('petEggPanel');
-    if (dexPanel) dexPanel.style.display = tab === 'dex' ? '' : 'none';
-    if (eggPanel) eggPanel.style.display = tab === 'egg' ? '' : 'none';
-    if (tab === 'egg') {
-      this.renderEggPets();
-      return;
-    }
-    this.renderDexPets();
-  },
-
-  renderDexPets() {
-    const sumEl = document.getElementById('petSummary');
-    if (sumEl) {
-      const tamed = petTamedCount();
-      const active = activePetDef();
-      const wallet = petCoinsBalance();
-      const pBr = petRarityBreakdown();
-      const pTotals = petRarityTotals();
-      const petChips = Object.keys(RARITIES).map(rid => {
-        const rar = RARITIES[rid];
-        const n = pBr[rid] || 0;
-        const tot = pTotals[rid] || 0;
-        if (!tot) return '';
-        return `<span class="rar-pill" style="color:${rar.color};border-color:${rar.color};margin:2px">${rarityLabel(rid)} ${n}/${tot}</span>`;
-      }).filter(Boolean).join(' ');
-      sumEl.style.display = 'block';
-      sumEl.innerHTML =
-        t('ui.petSummaryTamed', {
-          tamed,
-          total: PET_ROSTER.length,
-          active: active ? SPECIES[active.speciesId].name : t('ui.petNone'),
-          wallet,
-        }) +
-        (petChips ? `<div style="margin-top:6px;line-height:1.7">${petChips}</div>` : '') +
-        `<div style="margin-top:6px;font-size:12px;opacity:.85">${t('ui.petCoinTip')}</div>`;
-    }
-    const list = document.getElementById('petList');
-    if (!list) return;
-    list.innerHTML = '';
-    for (const def of PET_ROSTER) {
-      const sp = SPECIES[def.speciesId];
-      if (!sp) continue;
-      const rar = rarityOf(sp.rarity);
-      const kills = save.dex[def.speciesId] || 0;
-      const need = petKillNeed(def.speciesId);
-      const tamed = isPetTamed(def.id);
-      const active = save.activePet === def.id;
-      const cost = petCoinCost(def.id);
-      const canBuy = canBuyPetWithCoins(def.id);
-      const el = document.createElement('div');
-      el.className = 'card' + (tamed ? '' : ' locked') + (active ? ' sel' : '') + (canBuy ? ' dex-available' : '');
-      el.style.borderColor = tamed ? rar.color : undefined;
-      const cv = document.createElement('canvas');
-      cv.width = 64; cv.height = 64;
-      const cc = cv.getContext('2d');
-      cc.translate(32, 38);
-      cc.scale(0.55, 0.55);
-      if (tamed) drawMonsterArt(cc, sp, sp.size, 1.2, false, false);
-      else {
-        cc.globalAlpha = 0.45;
-        drawMonsterArt(cc, Object.assign({}, sp, { c1: '#20242e', c2: '#14161e' }), sp.size, 1.2, false, false);
-      }
-      el.appendChild(cv);
-      const info = document.createElement('div');
-      const badge = active ? ` <span class="rar-pill" style="color:#7cf5ff;border-color:#7cf5ff">${t('ui.petActive').toUpperCase()}</span>` : '';
-      const upLv = tamed ? itemUpgradeLevel('pet', def.id) : 0;
-      const upMax = tamed ? itemUpgradeMax('pet', def.id) : 0;
-      const upBadge = upLv > 0 ? ` <span class="rar-pill" style="color:#ffd75e;border-color:#ffd75e">↑ Lv ${upLv}/${upMax}</span>` : '';
-      const petEntry = tamed && save.pets ? save.pets[def.id] : null;
-      const chestPetSk = petEntry && typeof petEntry.skill === 'string' ? petEntry.skill : null;
-      const chestPetBadge = chestPetSk
-        ? ` <span class="rar-pill" style="color:#ffd75e;border-color:#ffd75e">${t('ui.weaponChestBadge')}</span>`
-        : '';
-      info.innerHTML = `<div class="cname">${sp.name} <span class="rar-pill" style="color:${rar.color};border-color:${rar.color}">${rarityLabel(sp.rarity)}</span>${badge}${chestPetBadge}${upBadge}</div>` +
-        `<div class="cinfo">${def.perk}</div>` +
-        (chestPetSk ? `<div class="cinfo" style="opacity:.9;font-size:12px;margin-top:3px;color:#ffd75e">✦ ${chestPetSk}</div>` : '') +
-        `<div class="cinfo" style="opacity:.78;font-size:12px;margin-top:3px">${tamed
-          ? t('ui.petTamedAssist')
-          : (canBuy
-            ? t('ui.petBuyLine', { cost })
-            : t('ui.petTameLine', { cur: Math.min(kills, need), need, cost }) + ` ${SVG_COIN_ICON}`)}</div>` +
-        (tamed && (upLv > 0 || itemUpgradeShards('pet', def.id) > 0)
-          ? `<div class="cinfo" style="opacity:.82;font-size:12px;margin-top:3px">${petUpgradeSummary(def.id)}</div>` : '');
-      el.appendChild(info);
-      const right = document.createElement('div');
-      right.className = 'right';
-      if (tamed) {
-        right.innerHTML = active ? `${SVG_CHECK_MINI} ${t('ui.petActive')}` : t('ui.petEquip');
-      } else if (canBuy) {
-        right.innerHTML = `${t('ui.petBuy')}<br>${cost} ${SVG_COIN_ICON}`;
-        right.style.color = '#ff9ad5';
-      } else {
-        right.innerHTML = kills > 0 ? `${need - kills} kills` : `${cost} ${SVG_COIN_ICON}`;
-        right.style.opacity = '0.7';
-      }
-      el.appendChild(right);
-      if (tamed) {
-        bindPress(el, () => {
-          safeUiAction(() => {
-            if (active) {
-              equipPet(null);
-              UI.toast(t('toast.petNone'), 1400);
-            } else {
-              equipPet(def.id);
-              AudioSys.sfx('select');
-              UI.toast(t('toast.petFollow', { name: sp.name }), 2200);
-            }
-            this.renderPets();
-          }, 'equipPet/' + def.id, t('ui.errPetPick'));
-        });
-      } else if (canBuy) {
-        bindPress(el, () => {
-          safeUiAction(() => {
-            const res = buyPetWithCoins(def.id);
-            if (!res) {
-              UI.toast(t('toast.petNoCoins'), 1800);
-              return;
-            }
-            AudioSys.sfx('summon');
-            UI.toast(t('toast.petBought', { name: sp.name }), 2600);
-            this.renderPets();
-          }, 'buyPet/' + def.id, t('ui.errPetBuy'));
-        });
-      }
-      list.appendChild(el);
-    }
-  },
-
-  renderEggPets() {
-    ensureEggDaily();
-    const sum = eggProgressSummary();
-    const sumEl = document.getElementById('eggSummary');
-    if (sumEl) {
-      sumEl.style.display = 'block';
-      sumEl.innerHTML =
-        t('ui.eggSummary', {
-          owned: `<b>${sum.owned}</b>`, total: `<b>${sum.total}</b>`,
-          active: `<b>${sum.activeName}</b>`, daily: `<b>${sum.daily}</b>`,
-        }) +
-        `<div style="margin-top:6px;font-size:12px;opacity:.85">${t('ui.eggSummaryHint')}</div>`;
-    }
-    const crackBtn = document.getElementById('eggCrackBtn');
-    if (crackBtn) {
-      const ready = canCrackDailyEgg();
-      crackBtn.style.display = ready ? '' : 'none';
-      crackBtn.innerHTML =
-        `<span class="ico"><img src="assets/buttons/chrome/egg.svg" alt="" width="28" height="28" decoding="async" draggable="false"></span>` +
-        `<div>${t('pets.crackEgg')}<small>${t('pets.crackEggSub')}</small></div>`;
-      if (!crackBtn.dataset.bound) {
-        crackBtn.dataset.bound = '1';
-        bindPress(crackBtn, () => {
-          safeUiAction(() => {
-            const res = crackDailyEgg();
-            if (!res) {
-              UI.toast(t('toast.eggAlreadyOpened'), 2200);
-              return;
-            }
-            try { AudioSys.sfx('diceRoll'); } catch (_) {}
-            const rar = rarityOf(res.def.rarity);
-            UI.toast(res.duplicate
-              ? t('toast.eggDuplicateUi', { name: res.def.name })
-              : t('toast.eggHatch', { name: res.def.name, rarity: rarityLabel(res.def.rarity) }), 3600);
-            this.renderPets();
-            this.renderMenu();
-          }, 'crackDailyEgg', t('ui.errEggCrack'));
-        });
-      }
-    }
-    const list = document.getElementById('eggList');
-    if (!list) return;
-    list.innerHTML = '';
-    for (const def of EGG_ROSTER) {
-      const rar = rarityOf(def.rarity);
-      const owned = isEggOwned(def.id);
-      const active = save.activeEggPet === def.id;
-      const el = document.createElement('div');
-      el.className = 'card' + (owned ? '' : ' locked') + (active ? ' sel' : '');
-      el.style.borderColor = owned ? rar.color : undefined;
-      const cv = document.createElement('canvas');
-      cv.width = 64; cv.height = 64;
-      const cc = cv.getContext('2d');
-      cc.translate(32, 36);
-      drawEggPetArt(cc, def, 18, 1.1, 0, 0, !owned);
-      el.appendChild(cv);
-      const info = document.createElement('div');
-      const badge = active ? ` <span class="rar-pill" style="color:#ffd75e;border-color:#ffd75e">${t('ui.petActive').toUpperCase()}</span>` : '';
-      info.innerHTML = `<div class="cname">${def.name} <span class="rar-pill" style="color:${rar.color};border-color:${rar.color}">${rarityLabel(def.rarity)}</span>${badge}</div>` +
-        `<div class="cinfo">${def.perk}</div>` +
-        `<div class="cinfo" style="opacity:.78;font-size:12px;margin-top:3px">${owned ? t('ui.eggCosmetic') : t('ui.eggUnhatched')}</div>`;
-      el.appendChild(info);
-      const right = document.createElement('div');
-      right.className = 'right';
-      if (owned) {
-        right.innerHTML = active ? `&#10004; ${t('ui.petActive')}` : t('ui.petEquip');
-      } else {
-        right.textContent = '???';
-        right.style.opacity = '0.7';
-      }
-      el.appendChild(right);
-      if (owned) {
-        bindPress(el, () => {
-          safeUiAction(() => {
-            if (active) {
-              equipEggPet(null);
-              UI.toast(t('toast.eggNone'), 1400);
-            } else {
-              equipEggPet(def.id);
-              AudioSys.sfx('select');
-              UI.toast(t('toast.eggFloat', { name: def.name }), 2200);
-            }
-            this.renderPets();
-          }, 'equipEggPet/' + def.id, t('ui.errEggPick'));
-        });
-      }
-      list.appendChild(el);
-    }
-  },
+  /* Pets list/detail lives in src/ui/pets-ui.js (overrides these after load). */
+  renderPets() {},
+  renderDexPets() {},
+  renderEggPets() {},
 
   renderStyle() {
     const sumEl = document.getElementById('styleSummary');
