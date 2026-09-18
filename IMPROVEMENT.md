@@ -1,3 +1,4 @@
+| 2026-09-18 | **i18n style/result** | Examiner #317: DE/FR/ES style tips (geen Leaf/energy/knockback mix); win/lose titels gelijk (DÉFAITE / LE ROBOT); advLoseKeep zonder EN run/loot; toast.resultHiccup. Versus ongemoeid. **v1.18.177 / SW v387**. Draft. |
 | 2026-09-18 | **i18n factories/gear** | Examiner #317: factory power `.label`/`.blurb` (geen EN catalog-leak); gearLocked FR/ES; DE nameShort+hub clamp. Versus ongemoeid. **v1.18.176 / SW v386**. Draft. |
 | 2026-09-18 | **i18n HUD/settings** | Examiner #317: HUD/FOMO DE/FR/ES (geen Summons/Unlock/BLOCK leak); settings import+persistCtx; style/season clamp 390px. Versus ongemoeid. **v1.18.175 / SW v385**. Draft. |
 | 2026-09-18 | **i18n pets/gear** | Examiner #317: DE/FR/ES pets+gear chrome (geen EN lock/perk leak); egg names; petKillsLeft; 390px clamp/toast wrap. Versus ongemoeid. **v1.18.174 / SW v384**. Draft. |
@@ -149,6 +150,7 @@ Schrijf **1–3 regels** per sessie: datum, d#, wat, versie.
 
 | Datum (UTC) | d# | Update |
 |-------------|-----|--------|
+| 2026-09-18 | — | LANGUAGE examiner #317: style tips DE/FR/ES + result win/lose consistency + Dutch audit. Draft, geen main. **v1.18.177 / SW 387**. |
 | 2026-09-18 | — | LANGUAGE examiner #317: factory powers/detail + gear lock toasts + DE nameShort. Draft, geen main. **v1.18.176 / SW 386**. |
 | 2026-09-18 | — | LANGUAGE examiner #317: HUD/FOMO/settings locale + style/season 390px clamp. Draft, geen main. **v1.18.175 / SW 385**. |
 | 2026-09-18 | — | LANGUAGE examiner #317: pets/gear DE/FR/ES keys (lock/perk/egg), petKillsLeft, 390px clamp. Draft, geen main. **v1.18.174 / SW 384**. |

@@ -86,6 +86,13 @@ async function run() {
       const tProduce = typeof t === 'function' ? t('buildings.desc.produceLocked', { res: 'x' }) : '';
       const tGearToast = typeof t === 'function' ? t('toast.gearLocked', { why: 'z' }) : '';
       const tNameShort = typeof t === 'function' ? t('buildings.stick_lighter.nameShort') : '';
+      const tStyleLeaf = typeof t === 'function' ? t('style.leaf_band.name') : '';
+      const tStyleEnergy = typeof t === 'function' ? t('style.energy_glow.bonus') : '';
+      const tStyleVoid = typeof t === 'function' ? t('style.void.name') : '';
+      const tAdvLose = typeof t === 'function' ? t('result.advLose') : '';
+      const tTrainLose = typeof t === 'function' ? t('result.trainLose') : '';
+      const tKeep = typeof t === 'function' ? t('result.advLoseKeep') : '';
+      const tSeasonBeat = typeof t === 'function' ? t('season.beat.result.jungle') : '';
       let collectTitle = '';
       let collectGear = '';
       try {
@@ -107,6 +114,7 @@ async function run() {
         musicName, sfxName, profileAria, summons, tAdv, tHud, leftover,
         tGearLock, tPetSum, tPerk, tEgg, tKills, tKick, tImport, tStats, tQuota, tPersist,
         tPower, tProduce, tGearToast, tNameShort, collectTitle, collectGear, playState, playMode,
+        tStyleLeaf, tStyleEnergy, tStyleVoid, tAdvLose, tTrainLose, tKeep, tSeasonBeat,
       };
     }
     const en = snap('en');
@@ -127,6 +135,8 @@ async function run() {
       && /KICK/.test(en.tKick) && /Preview/.test(en.tImport) && !/tik Laden|om te laden/.test(en.tImport)
       && /weapon/.test(en.tPersist)
       && /Collection/i.test(en.collectTitle) && /Spark/.test(en.tPower) && /Still locked/.test(en.tGearToast)
+      && /bandana/i.test(en.tStyleLeaf) && en.tAdvLose === 'YOU LOSE'
+      && /ROBOT WINS/.test(en.tTrainLose)
       && en.playState === 'play' && /train/.test(en.playMode);
     const deOk = /Abenteuer/i.test(de.adv) && /Sammlung/i.test(de.collect)
       && /Waffen/i.test(de.weapons) && /Einstellungen/i.test(de.settings)
@@ -143,6 +153,12 @@ async function run() {
       && /Sammlung/i.test(de.collectTitle) && /Funke/.test(de.tPower) && !/Spark Kindle|Unlock/.test(de.tPower + de.tProduce)
       && /gesperrt/i.test(de.tGearToast) && !/Still locked|Nog op slot/.test(de.tGearToast)
       && /Anzünder/.test(de.tNameShort) && !/Stock-Anzünder/.test(de.tNameShort)
+      && /Blatt/.test(de.tStyleLeaf) && !/Leaf/.test(de.tStyleLeaf)
+      && /Energie/.test(de.tStyleEnergy) && !/Energy|Knockback/.test(de.tStyleEnergy)
+      && /Leeren/.test(de.tStyleVoid) && !/Void/.test(de.tStyleVoid)
+      && de.tAdvLose === 'VERLOREN' && /ROBOT GEWINNT/.test(de.tTrainLose)
+      && /Lauf|Beute/.test(de.tKeep) && !/\brun\b/.test(de.tKeep)
+      && /Dschungel/.test(de.tSeasonBeat)
       && de.playState === 'play' && /train/.test(de.playMode);
     const nlOk = /Avontuur/.test(nl.adv) && /Collectie/.test(nl.collect)
       && /Wapens/.test(nl.weapons) && /Instellingen/.test(nl.settings)
@@ -150,6 +166,9 @@ async function run() {
       && /Oproepen/.test(nl.summons)
       && /Nog niet gevonden/.test(nl.tGearLock) && /Kiezel/.test(nl.tEgg)
       && /Collectie/.test(nl.collectTitle) && /Vonk/.test(nl.tPower) && !/unlock/i.test(nl.tProduce)
+      && /Blad/.test(nl.tStyleLeaf) && !/Leaf/.test(nl.tStyleLeaf)
+      && nl.tAdvLose === 'VERLOREN' && /ROBOT WINT/.test(nl.tTrainLose)
+      && /buit|ronde/.test(nl.tKeep) && !/\bloot\b|\brun\b/.test(nl.tKeep)
       && nl.playState === 'play' && /train/.test(nl.playMode);
     const frOk = /Pas encore trouvé/.test(fr.tGearLock) && !EN_LOCK.test(fr.tGearLock)
       && /Aide saut/.test(fr.tPerk) && /Galet/.test(fr.tEgg) && !DUTCH_COPY.test(fr.tPerk + fr.tEgg + fr.tGearLock + fr.tPetSum)
@@ -159,6 +178,11 @@ async function run() {
       && /Collection/i.test(fr.collectTitle) && /Étincelle|Etincelle/.test(fr.tPower)
       && !/Spark Kindle|Unlock|\+ build/.test(fr.tPower + fr.tProduce)
       && /verrouill/i.test(fr.tGearToast) && !/Still locked|Nog op slot/.test(fr.tGearToast)
+      && /feuille/.test(fr.tStyleLeaf) && !/Leaf/.test(fr.tStyleLeaf)
+      && /énergie/.test(fr.tStyleEnergy) && !/energy|knockback/.test(fr.tStyleEnergy)
+      && fr.tAdvLose === 'DÉFAITE' && /LE ROBOT GAGNE/.test(fr.tTrainLose)
+      && /partie/.test(fr.tKeep) && !/\brun\b/.test(fr.tKeep)
+      && /jungle/i.test(fr.tSeasonBeat)
       && fr.playState === 'play' && /train/.test(fr.playMode);
     const esOk = /Aún no hallado/.test(es.tGearLock) && !EN_LOCK.test(es.tGearLock)
       && /Ayuda salto/.test(es.tPerk) && /Guijarro/.test(es.tEgg) && !DUTCH_COPY.test(es.tPerk + es.tEgg + es.tGearLock + es.tPetSum)
@@ -168,6 +192,11 @@ async function run() {
       && /Colecci/.test(es.collectTitle) && /Chispa/.test(es.tPower)
       && !/Spark Kindle|Unlock/.test(es.tPower + es.tProduce)
       && /bloqueado/i.test(es.tGearToast) && !/Still locked|Nog op slot/.test(es.tGearToast)
+      && /Pañuelo|hoja/.test(es.tStyleLeaf) && !/Leaf/.test(es.tStyleLeaf)
+      && /energ/.test(es.tStyleEnergy) && !/energy|knockback/.test(es.tStyleEnergy)
+      && es.tAdvLose === 'DERROTA' && /EL ROBOT GANA/.test(es.tTrainLose)
+      && /partida/.test(es.tKeep) && !/\brun\b/.test(es.tKeep)
+      && /jungla/i.test(es.tSeasonBeat)
       && es.playState === 'play' && /train/.test(es.playMode);
     return { ok: !!(enOk && deOk && nlOk && frOk && esOk), en, de, nl, fr, es, enOk, deOk, nlOk, frOk, esOk };
   });

@@ -334,4 +334,25 @@ if (!/gearLocked: 'Aún bloqueado/.test(locales)) fail('ES toast.gearLocked miss
 if (/weaponsSub: '26 Waffen · Summons'/.test(i18n)) fail('DE hub.weaponsSub still English Summons');
 if (!/-webkit-line-clamp: 2/.test(css) || !/\.hub-tile-title/.test(css)) fail('hub-tile-title clamp missing (DE compound overflow)');
 
-console.log('SMOKE_OK i18n-locale: Tips/VERLOREN + #273 coverage + #283 overlays + 2026-09-18 factories/gear');
+if (/name: 'Leaf-Bandana'/.test(catalog)) fail('DE style still Leaf-Bandana');
+if (/name: 'Bandana Leaf'/.test(catalog)) fail('FR/ES style still Bandana Leaf');
+if (/Lueur energy/.test(catalog)) fail('FR energy_glow still Lueur energy');
+if (/Brillo de energy/.test(catalog)) fail('ES energy_glow still Brillo de energy');
+if (/Void-Wanderer/.test(catalog)) fail('DE void still Void-Wanderer');
+const catalogFrEs = catalog.split('const CATALOG_FR')[1] || '';
+if (/knockback/.test(catalogFrEs)) fail('FR/ES style leftover English knockback');
+if (/cette run restent/.test(catalog + i18n + locales)) fail('FR advLoseKeep still English run');
+if (/esta run se quedan/.test(catalog + i18n + locales)) fail('ES advLoseKeep still English run');
+if (/loot van deze run/.test(catalog + i18n)) fail('NL advLoseKeep still English loot/run');
+if (/advLose: 'DÉFAITE\.\.\.'/.test(catalog + locales)) fail('FR advLose still dotted DÉFAITE...');
+if (/advLose: 'DERROTA\.\.\.'/.test(catalog + locales)) fail('ES advLose still dotted DERROTA...');
+if (!/trainLose: 'LE ROBOT GAGNE/.test(locales + i18n)) fail('FR trainLose must be LE ROBOT GAGNE');
+if (!/trainLose: 'EL ROBOT GANA/.test(locales + i18n)) fail('ES trainLose must be EL ROBOT GANA');
+if (/tOr\('result\.advLoseKeep', 'XP en loot/.test(ui + game)) fail('advLoseKeep still Dutch tOr fallback');
+if (!/t\('result\.advLoseKeep'\)/.test(ui + game)) fail('advLoseKeep must use t()');
+if (!/resultHiccup:/.test(catalog + locales)) fail('toast.resultHiccup missing');
+if (!/name: 'Blatt-Bandana'/.test(catalog)) fail('DE leaf_band must be Blatt-Bandana');
+if (!/name: 'Bandana feuille'/.test(catalog)) fail('FR leaf_band must be Bandana feuille');
+if (!/name: 'Pañuelo hoja'/.test(catalog)) fail('ES leaf_band must be Pañuelo hoja');
+
+console.log('SMOKE_OK i18n-locale: Tips/VERLOREN + #273 coverage + #283 overlays + 2026-09-18 style/result');

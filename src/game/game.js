@@ -985,7 +985,7 @@ class Game {
           base = t('result.advDiffLine', { diff: advDiffLabel(diff) }) + base;
         }
         if (!win) {
-          const keep = tOr('result.advLoseKeep', 'XP en loot van deze run blijven');
+          const keep = t('result.advLoseKeep');
           if (keep) base = keep + ' · ' + base;
         }
         if (masterBuffActive(lv, diff) && !win) base += t('result.masterBuffActive');
@@ -1709,7 +1709,7 @@ class Game {
         || tOr('combat.trainTipDefault', 'Tip: spring lasers · energy vol → Spiral Orb');
     scheduleGameResult(this, 1400, () => UI.showResult(win, {
       titleKey: win ? 'result.trainWin' : 'result.trainLose',
-      title: win ? tOr('result.trainWin', 'KAMPIOEN!') : tOr('result.trainLose', 'ROBOT WINT...'),
+      title: win ? t('result.trainWin') : t('result.trainLose'),
       detailKey: win ? 'result.trainDetailWin' : 'result.trainDetailLose',
       detailParams: { p: this.roundsP, r: this.roundsR, combo: trainBest, wins: save.trainWins },
       detail: win

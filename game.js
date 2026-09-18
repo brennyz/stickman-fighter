@@ -323,9 +323,9 @@ const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const VERSION_UPDATE_SAVE_KEY = 'stickfighter_version_update_save_v1';
 const VERSION_UPDATE_FLAG_KEY = 'stickfighter_version_update_flag_v1';
 const SAVE_EXPORT_SCHEMA = 3;
-const APP_VERSION = '1.18.176';
+const APP_VERSION = '1.18.177';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 386;
+const SW_CACHE_REV = 387;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', petCoins: 0, dex: {}, summons: {}, pets: {}, activePet: null,
   eggPets: {}, activeEggPet: null, eggDaily: null,
   chestDaily: null, chestWeapons: {},
@@ -2393,7 +2393,7 @@ const I18N = {
     result: { again: 'Opnieuw', next: 'Volgend level', menu: 'Hoofdmenu', menuArcade: 'Arcade', rematch: 'Rematch', rematchSub: 'Zelfde vechters',
       trainAgainSub: 'vs RabbitRobot',
       advWin: 'GEWONNEN!', advLose: 'VERLOREN', trainWin: 'KAMPIOEN!', trainLose: 'ROBOT WINT...',
-      advLoseKeep: 'XP en loot van deze run blijven',
+      advLoseKeep: 'XP en buit van deze ronde blijven',
       wavesStart: 'begin',
       xp: '+{xp} XP verdiend · nu Lv {lvl} ({cur}/{need} XP)' },
     settings: {
@@ -3152,7 +3152,7 @@ const I18N = {
     },
     result: { again: 'Nochmal', next: 'Nächstes Level', menu: 'Hauptmenü', menuArcade: 'Arcade', rematch: 'Revanche', rematchSub: 'Gleiche Kämpfer',
       trainAgainSub: 'vs RabbitRobot',
-      advWin: 'GEWONNEN!', advLose: 'VERLOREN', trainWin: 'MEISTER!', trainLose: 'ROBOT GEWINNT...',
+      advWin: 'GEWONNEN!', advLose: 'VERLOREN', trainWin: 'MEISTER!', trainLose: 'ROBOT GEWINNT…',
       advLoseKeep: 'XP und Beute von diesem Lauf bleiben',
       wavesStart: 'Start',
       xp: '+{xp} XP · jetzt Lv {lvl} ({cur}/{need} XP)' },
@@ -3476,8 +3476,8 @@ const I18N = {
     },
     result: { again: 'Rejouer', next: 'Niveau suivant', menu: 'Menu principal', menuArcade: 'Arcade', rematch: 'Revanche', rematchSub: 'Mêmes combattants',
       trainAgainSub: 'vs RabbitRobot',
-      advWin: 'VICTOIRE !', advLose: 'DÉFAITE', trainWin: 'CHAMPION !', trainLose: 'ROBOT GAGNE...',
-      advLoseKeep: 'XP et butin de cette run restent',
+      advWin: 'VICTOIRE !', advLose: 'DÉFAITE', trainWin: 'CHAMPION !', trainLose: 'LE ROBOT GAGNE…',
+      advLoseKeep: 'XP et butin de cette partie restent',
       wavesStart: 'début',
       xp: '+{xp} XP · Lv {lvl} ({cur}/{need} XP)' },
     settings: {
@@ -3784,8 +3784,8 @@ const I18N = {
     },
     result: { again: 'Otra vez', next: 'Siguiente nivel', menu: 'Menú principal', menuArcade: 'Arcade', rematch: 'Revancha', rematchSub: 'Mismos luchadores',
       trainAgainSub: 'vs RabbitRobot',
-      advWin: '¡VICTORIA!', advLose: 'DERROTA', trainWin: '¡CAMPEÓN!', trainLose: 'ROBOT GANA...',
-      advLoseKeep: 'XP y botín de esta run se quedan',
+      advWin: '¡VICTORIA!', advLose: 'DERROTA', trainWin: '¡CAMPEÓN!', trainLose: 'EL ROBOT GANA…',
+      advLoseKeep: 'XP y botín de esta partida se quedan',
       wavesStart: 'inicio',
       xp: '+{xp} XP · Lv {lvl} ({cur}/{need} XP)' },
     settings: {
@@ -8275,22 +8275,22 @@ function tickWeaponStatusEffects(game, dt) {
 const STYLES = [
   { id: 'classic', name: 'Klassiek', body: '#f2f5ff', accent: '#3db8ff', bandana: null,
     needLvl: 1, hint: 'Standaard ninja',
-    tooltip: 'Basis ninja — geen bonus, wel de snelste unlock.',
-    bonus: 'Geen combat-bonus' },
-  { id: 'leaf_band', name: 'Leaf bandana', body: '#f2f5ff', accent: '#43b25b', bandana: '#2d6b36', plate: '#dfe8ff',
-    needLvl: 5, hint: 'Unlock op Lv 5',
-    tooltip: 'Leaf-dorp headband. Iets meer max HP — standvastig in lange levels.',
+    tooltip: 'Basis ninja — geen bonus, wel de snelste vrijgave.',
+    bonus: 'Geen gevechtsbonus' },
+  { id: 'leaf_band', name: 'Blad-bandana', body: '#f2f5ff', accent: '#43b25b', bandana: '#2d6b36', plate: '#dfe8ff',
+    needLvl: 5, hint: 'Vrij vanaf Lv 5',
+    tooltip: 'Blad-dorp hoofdband. Iets meer max HP — standvastig in lange levels.',
     bonus: '+5 max HP', mods: { maxHp: 5 } },
   { id: 'energy_glow', name: 'Energie gloed', body: '#e8f4ff', accent: '#7cf5ff', bandana: '#3db8ff', glow: true,
     needTrain: 3, hint: 'Win 3× training',
-    tooltip: 'Blauwe energy-aura. Energy laadt sneller — vaker Spiral Orb/Lightning Pierce.',
-    bonus: '+8% energy-regen', mods: { energyMul: 1.08 } },
+    tooltip: 'Blauwe energie-aura. Energie laadt sneller — vaker Spiral Orb/Lightning Pierce.',
+    bonus: '+8% energie-regen', mods: { energyMul: 1.08 } },
   { id: 'crimson_pact', name: 'Rode mantel', body: '#1a1424', accent: '#e04f4f', bandana: '#e04f4f', coat: true,
-    needLvl: 12, hint: 'Unlock op Lv 12',
+    needLvl: 12, hint: 'Vrij vanaf Lv 12',
     tooltip: 'Rode mantel — agressieve slagen. Meer schade op melee en wapens.',
     bonus: '+4% schade', mods: { dmgMul: 1.04 } },
   { id: 'shadow', name: 'Schaduw-ninja', body: '#8fa3d9', accent: '#b06ae0', bandana: '#2a1840',
-    needLvl: 15, hint: 'Unlock op Lv 15',
+    needLvl: 15, hint: 'Vrij vanaf Lv 15',
     tooltip: 'Schaduw-stappen. Extra crit-kans op alle hits.',
     bonus: '+3% crit', mods: { critBonus: 0.03 } },
   { id: 'guvve', name: 'Guvvedukkie', body: '#43b25b', accent: '#ffe259', bandana: '#2a8a38', duck: true,
@@ -8298,41 +8298,41 @@ const STYLES = [
     tooltip: 'Quack-cosplay. Bonus XP bij avontuur-kills — licht, geen grind.',
     bonus: '+6% avontuur-XP', mods: { xpMul: 1.06 } },
   { id: 'gold', name: 'Legendarisch', body: '#ffd75e', accent: '#c97a20', bandana: '#ffb830', glow: true,
-    needLvl: 25, hint: 'Unlock op Lv 25',
-    tooltip: 'Gouden outline + gloed. Sterkere knockback op kicks en specials.',
-    bonus: '+10% knockback', mods: { kbMul: 1.1 } },
+    needLvl: 25, hint: 'Vrij vanaf Lv 25',
+    tooltip: 'Gouden outline + gloed. Sterkere terugslag op kicks en specials.',
+    bonus: '+10% terugslag', mods: { kbMul: 1.1 } },
   { id: 'sand', name: 'Woestijn', body: '#e8c98a', accent: '#c97a20', bandana: '#8a6030',
-    needLvl: 8, hint: 'Unlock op Lv 8',
+    needLvl: 8, hint: 'Vrij vanaf Lv 8',
     tooltip: 'Zandmantel — minder schade bij hits én sterker blok. Tank-stijl voor omringing.',
     bonus: '−14% schade · blok −25% chip', mods: { defMul: 0.86, blockMul: 0.75 } },
   { id: 'samurai', name: 'Samurai', body: '#2a2a35', accent: '#e04f4f', bandana: '#1a1a22', topknot: true,
-    needLvl: 20, hint: 'Unlock op Lv 20',
+    needLvl: 20, hint: 'Vrij vanaf Lv 20',
     tooltip: 'Topknot + katana-houding. Wapen-combo’s raken iets verder.',
-    bonus: '+8% wapen-reach', mods: { weaponRange: 1.08 } },
+    bonus: '+8% wapenbereik', mods: { weaponRange: 1.08 } },
   { id: 'cyber', name: 'Cyber-ninja', body: '#1a2040', accent: '#7cf5ff', bandana: '#4ecf6a', visor: true, lightning: true,
-    needLvl: 18, hint: 'Unlock op Lv 18',
-    tooltip: 'Neon-visier + bliksem-flits bij melee. Snellere energy en visuele chain-sparks.',
-    bonus: 'Lightning FX · +6% energy', mods: { energyMul: 1.06, lightning: true, dmgMul: 1.02 } },
+    needLvl: 18, hint: 'Vrij vanaf Lv 18',
+    tooltip: 'Neon-visier + bliksem-flits bij melee. Snellere energie en visuele chain-sparks.',
+    bonus: 'Bliksem-FX · +6% energie', mods: { energyMul: 1.06, lightning: true, dmgMul: 1.02 } },
   { id: 'fox', name: 'Vossen-ninja', body: '#ff8c42', accent: '#ffe259', bandana: '#d05a1e', fox: true,
     needDex: 12, hint: '12 monsters in boek',
     tooltip: 'Vossenoren — sneller op de grond. Ideaal voor kiting en shuriken.',
     bonus: '+5% loopsnelheid', mods: { speedMul: 1.05 } },
   { id: 'storm', name: 'Stormgeest', body: '#dfe8ff', accent: '#6fd7ff', bandana: '#2a7fc0', glow: true, lightning: true,
     needTrain: 5, hint: 'Win 5× training',
-    tooltip: 'Storm-aura + zachte bliksem. Extra shield bij start van elke golf.',
-    bonus: 'Lightning gloed · +0.8s shield/golf', mods: { shieldWave: 0.8, lightning: true } },
-  { id: 'void', name: 'Void-waker', body: '#2a1840', accent: '#ff6b9d', bandana: '#5a1040', coat: true,
-    needLvl: 40, hint: 'Unlock op Lv 40',
-    tooltip: 'Void-mantel — zwaardere technique. Specials (Spiral Orb/Lightning Pierce/Void Gaze) raken harder.',
-    bonus: '+8% technique-schade', mods: { techniqueMul: 1.08 } },
+    tooltip: 'Storm-aura + zachte bliksem. Extra schild bij start van elke golf.',
+    bonus: 'Bliksem-gloed · +0.8s schild/golf', mods: { shieldWave: 0.8, lightning: true } },
+  { id: 'void', name: 'Leegte-loper', body: '#2a1840', accent: '#ff6b9d', bandana: '#5a1040', coat: true,
+    needLvl: 40, hint: 'Vrij vanaf Lv 40',
+    tooltip: 'Leegte-mantel — zwaardere techniek. Specials (Spiral Orb/Lightning Pierce/Void Gaze) raken harder.',
+    bonus: '+8% techniek-schade', mods: { techniqueMul: 1.08 } },
   { id: 'hunter', name: 'Jagerlook', body: '#6b5344', accent: '#5ad06a', bandana: '#3d5c32', hunter: true,
     needDexKills: 75, hint: '75 kills in monsterboek',
     tooltip: 'Jager-cape + groene accenten. Bonus schade vs monsters in avontuur.',
     bonus: '+6% vs monsters', mods: { advDmgMul: 1.06 } },
   { id: 'crystal', name: 'Kristallijn', body: '#e8f7ff', accent: '#6fd7ff', bandana: '#2f7fc0', glow: true, crystal: true,
     needDexTiers: 4, hint: '4 rariteiten in monsterboek',
-    tooltip: 'Kristallen shard — reflecterende gloed. Korte shield elke golf.',
-    bonus: '+1.0s shield/golf', mods: { shieldWave: 1.0 } },
+    tooltip: 'Kristallen shard — reflecterende gloed. Kort schild elke golf.',
+    bonus: '+1.0s schild/golf', mods: { shieldWave: 1.0 } },
   { id: 'tome', name: 'Boekmeester', body: '#f5efe6', accent: '#c98850', bandana: '#6b5344', tome: true,
     needDexHalf: true, hint: 'Helft van het monsterboek',
     tooltip: 'Monsterboek op je rug. Meer HP-bonus bij nieuwe dex-ontdekkingen (visueel + klein HP-top-up).',
@@ -20937,12 +20937,12 @@ function seedNlGameStrings() {
   if (!I18N.nl.result) I18N.nl.result = {};
   Object.assign(I18N.nl.result, {
     advWin: 'GEWONNEN!', advLose: 'VERLOREN', trainWin: 'KAMPIOEN!', trainLose: 'ROBOT WINT...',
-    advLoseKeep: 'XP en loot van deze run blijven',
+    advLoseKeep: 'XP en buit van deze ronde blijven',
     trainAgainSub: 'vs RabbitRobot',
     wavesStart: 'begin',
     vsP1Win: 'SPELER 1 WINT!', vsP2Win: 'SPELER 2 WINT!', wallRecord: 'NIEUW RECORD!', wallTime: 'TIJD IS OM!',
     matsRecord: 'RECORD!', matsDone: 'Goed gedaan!',
-    perfectRun: 'Perfecte run — hou je HP hoog!',
+    perfectRun: 'Perfecte ronde — hou je HP hoog!',
     pickupsHelp: '{hint} — pickups helpen',
     lossBlockTip: 'Tip: blokkeer · mik omhoog op vliegers · {prog}',
     lossOrbTip: 'Tip: pak groene orbs · vul SUPER vóór baas · {prog}',
@@ -20970,7 +20970,7 @@ function seedNlGameStrings() {
     wallComboBarTip: 'Tip: snelle opeenvolgende slagen vullen de combo-balk',
     wallStrongCombo: 'Sterke combo (×{n}) — volgende keer record?',
     wallBehindPace: 'Achter record-tempo — probeer combo ×5+ voor meer sloop',
-    wallGoodPace: 'Goed tempo — volgende run kan record breken!',
+    wallGoodPace: 'Goed tempo — volgende ronde kan record breken!',
     matsPetTip: 'Pet coins uitgeven in Collectie → Pets · elke 2 munten = 1 pet coin',
     matsControlTip: 'Joystick omhoog = hoger mikken (slag + gooi) · shuriken max 3× snel',
     masterBuffActive: ' · Meester-buff actief',
@@ -21202,6 +21202,7 @@ function seedNlGameStrings() {
     persistPrimaryFail: 'Hoofd-save mislukt — backup wel bijgewerkt (export in Instellingen)',
     persistFail: 'Opslaan mislukt — export save in Instellingen',
     persistFailCtx: 'Opslaan mislukt ({context}) — export save in Instellingen',
+    resultHiccup: 'Resultaat hiccup — probeer Opnieuw / Menu',
     persistCtxSkill: 'skill', persistCtxSuper: 'super', persistCtxWeapon: 'wapen',
     persistCtxStyle: 'stijl', persistCtxMission: 'missie', persistCtxClaim: 'claim',
     persistCtxDaily: 'dagbonus', persistCtxXp: 'XP', persistCtxGear: 'uitrusting',
@@ -22403,6 +22404,7 @@ const CATALOG_EN = {
     persistPrimaryFail: 'Main save failed — backup updated (export in Settings)',
     persistFail: 'Save failed — export in Settings',
     persistFailCtx: 'Save failed ({context}) — export in Settings',
+    resultHiccup: 'Result hiccup — try Again / Menu',
     persistCtxSkill: 'skill', persistCtxSuper: 'super', persistCtxWeapon: 'weapon',
     persistCtxStyle: 'style', persistCtxMission: 'mission', persistCtxClaim: 'claim',
     persistCtxDaily: 'daily', persistCtxXp: 'XP', persistCtxGear: 'gear',
@@ -23363,24 +23365,24 @@ const CATALOG_DE = {
   },
   style: {
     classic: { name: 'Klassisch', hint: 'Standard-Ninja', tooltip: 'Basis-Ninja — kein Bonus.', bonus: 'Kein Kampfbonus' },
-    leaf_band: { name: 'Leaf-Bandana', hint: 'Lv 5', tooltip: 'Leaf-Dorf-Kopfband. Etwas mehr max HP.', bonus: '+5 max HP' },
-    energy_glow: { name: 'Energie-Glühen', hint: '3× Training gewinnen', tooltip: 'Blaues Energy. Schnelleres Laden.', bonus: '+8% Energy-Regen' },
+    leaf_band: { name: 'Blatt-Bandana', hint: 'Lv 5', tooltip: 'Blatt-Dorf-Kopfband. Etwas mehr max HP.', bonus: '+5 max HP' },
+    energy_glow: { name: 'Energie-Glühen', hint: '3× Training gewinnen', tooltip: 'Blaue Energie-Aura. Schnelleres Laden.', bonus: '+8% Energie-Regen' },
     crimson_pact: { name: 'Roter Mantel', hint: 'Lv 12', tooltip: 'Aggressive Schläge.', bonus: '+4% Schaden' },
-    shadow: { name: 'Schatten-Ninja', hint: 'Lv 15', tooltip: 'Extra Crit-Chance.', bonus: '+3% Crit' },
+    shadow: { name: 'Schatten-Ninja', hint: 'Lv 15', tooltip: 'Extra Krit-Chance.', bonus: '+3% Krit' },
     guvve: { name: 'Guvvedukkie', hint: '8 Monster im Buch', tooltip: 'Quack-Cosplay. Bonus-XP.', bonus: '+6% Abenteuer-XP' },
-    gold: { name: 'Legendär', hint: 'Lv 25', tooltip: 'Goldene Umrandung.', bonus: '+10% Knockback' },
+    gold: { name: 'Legendär', hint: 'Lv 25', tooltip: 'Goldene Umrandung.', bonus: '+10% Rückstoß' },
     sand: { name: 'Wüste', hint: 'Lv 8', tooltip: 'Sandmantel — weniger Schaden.', bonus: '−14% Schaden · Block −25%' },
     samurai: { name: 'Samurai', hint: 'Lv 20', tooltip: 'Katana-Haltung.', bonus: '+8% Waffen-Reichweite' },
-    cyber: { name: 'Cyber-Ninja', hint: 'Lv 18', tooltip: 'Neon-Visier.', bonus: 'Blitz-FX · +6% Energy' },
+    cyber: { name: 'Cyber-Ninja', hint: 'Lv 18', tooltip: 'Neon-Visier.', bonus: 'Blitz-FX · +6% Energie' },
     fox: { name: 'Fuchs-Ninja', hint: '12 Monster im Buch', tooltip: 'Fuchsohren — schneller.', bonus: '+5% Lauftempo' },
     storm: { name: 'Sturmgeist', hint: '5× Training gewinnen', tooltip: 'Sturm-Aura.', bonus: 'Blitz · +0,8s Schild/Welle' },
-    void: { name: 'Void-Wanderer', hint: 'Lv 40', tooltip: 'Schwerere Technique.', bonus: '+8% Technique-Schaden' },
+    void: { name: 'Leerenwanderer', hint: 'Lv 40', tooltip: 'Schwerere Technik.', bonus: '+8% Technik-Schaden' },
     hunter: { name: 'Jägerlook', hint: '75 Kills im Buch', tooltip: 'Jäger-Umhang.', bonus: '+6% vs Monster' },
     crystal: { name: 'Kristallin', hint: '4 Seltenheiten', tooltip: 'Kristall-Splitter.', bonus: '+1,0s Schild/Welle' },
     tome: { name: 'Buchmeister', hint: 'Hälfte des Buches', tooltip: 'Monsterbuch auf dem Rücken.', bonus: '+4 max HP · Buchweisheit' },
   },
   result: {
-    advWin: 'GEWONNEN!', advLose: 'VERLOREN', trainWin: 'MEISTER!', trainLose: 'ROBOT GEWINNT...',
+    advWin: 'GEWONNEN!', advLose: 'VERLOREN', trainWin: 'MEISTER!', trainLose: 'ROBOT GEWINNT…',
     advLoseKeep: 'XP und Beute von diesem Lauf bleiben',
     trainAgainSub: 'vs RabbitRobot',
     wavesStart: 'Start',
@@ -23390,7 +23392,7 @@ const CATALOG_DE = {
   banner: {
     levelUp: 'LEVEL UP! Lv {lvl}', masterBuff: 'MEISTER-BUFF +20%', bossWave: 'BOSS-WELLE!',
     woodsWave: 'WALD-WELLE', frostWave: 'FROST-WELLE', cryptWave: 'KRYPTEN-WELLE', scrapWave: 'SCHROTT-WELLE', reefWave: 'RIFF-WELLE',
-    fight: 'KÄMPF!', levelClear: 'LEVEL {n} FERTIG!', won: 'GEWONNEN!', lost: 'VERLOREN...', summon: '✦ SUMMON! ✦',
+    fight: 'KÄMPF!', levelClear: 'LEVEL {n} FERTIG!', won: 'GEWONNEN!', lost: 'VERLOREN', summon: '✦ SUMMON! ✦',
     matsStart: 'MÜNZEN-BONUS', wallStart: 'ZERSTÖRE DIE MAUER!', bonusDone: 'BONUS FERTIG!',
     kets: 'KABLAM…', ketsBam: 'KABLAM!',
   },
@@ -23472,25 +23474,25 @@ const CATALOG_FR = {
   },
   style: {
     classic: { name: 'Classique', hint: 'Ninja standard', tooltip: 'Ninja de base — pas de bonus.', bonus: 'Pas de bonus combat' },
-    leaf_band: { name: 'Bandana Leaf', hint: 'Lv 5', tooltip: 'Bandeau du village.', bonus: '+5 PV max' },
-    energy_glow: { name: 'Lueur energy', hint: '3× entraînement gagné', tooltip: 'Aura bleue.', bonus: '+8% regen energy' },
-    crimson_pact: { name: 'Manteau rouge', hint: 'Lv 12', tooltip: 'Coups agressifs.', bonus: '+4% dégâts' },
-    shadow: { name: 'Ninja ombre', hint: 'Lv 15', tooltip: 'Crit en plus.', bonus: '+3% crit' },
-    guvve: { name: 'Guvvedukkie', hint: '8 monstres au bestiaire', tooltip: 'Cosplay coin-coin.', bonus: '+6% XP aventure' },
-    gold: { name: 'Légendaire', hint: 'Lv 25', tooltip: 'Contour doré.', bonus: '+10% knockback' },
-    sand: { name: 'Désert', hint: 'Lv 8', tooltip: 'Manteau de sable.', bonus: '−14% dégâts · bloc −25%' },
-    samurai: { name: 'Samouraï', hint: 'Lv 20', tooltip: 'Posture katana.', bonus: '+8% portée arme' },
-    cyber: { name: 'Cyber-ninja', hint: 'Lv 18', tooltip: 'Visière néon.', bonus: 'FX éclair · +6% energy' },
-    fox: { name: 'Ninja renard', hint: '12 monstres', tooltip: 'Oreilles de renard.', bonus: '+5% vitesse' },
+    leaf_band: { name: 'Bandana feuille', hint: 'Lv 5', tooltip: 'Bandeau du village.', bonus: '+5 PV max' },
+    energy_glow: { name: 'Lueur d’énergie', hint: '3× entraînement gagné', tooltip: 'Aura bleue.', bonus: '+8 % regen énergie' },
+    crimson_pact: { name: 'Manteau rouge', hint: 'Lv 12', tooltip: 'Coups agressifs.', bonus: '+4 % dégâts' },
+    shadow: { name: 'Ninja ombre', hint: 'Lv 15', tooltip: 'Crit en plus.', bonus: '+3 % crit' },
+    guvve: { name: 'Guvvedukkie', hint: '8 monstres au bestiaire', tooltip: 'Cosplay coin-coin.', bonus: '+6 % XP aventure' },
+    gold: { name: 'Légendaire', hint: 'Lv 25', tooltip: 'Contour doré.', bonus: '+10 % recul' },
+    sand: { name: 'Désert', hint: 'Lv 8', tooltip: 'Manteau de sable.', bonus: '−14 % dégâts · bloc −25 %' },
+    samurai: { name: 'Samouraï', hint: 'Lv 20', tooltip: 'Posture katana.', bonus: '+8 % portée arme' },
+    cyber: { name: 'Cyber-ninja', hint: 'Lv 18', tooltip: 'Visière néon.', bonus: 'FX éclair · +6 % énergie' },
+    fox: { name: 'Ninja renard', hint: '12 monstres', tooltip: 'Oreilles de renard.', bonus: '+5 % vitesse' },
     storm: { name: 'Esprit tempête', hint: '5× entraînement', tooltip: 'Aura tempête.', bonus: 'Éclair · +0,8s bouclier/vague' },
-    void: { name: 'Marcheur du vide', hint: 'Lv 40', tooltip: 'Technique plus lourds.', bonus: '+8% dégâts technique' },
-    hunter: { name: 'Look chasseur', hint: '75 kills bestiaire', tooltip: 'Cape chasseur.', bonus: '+6% vs monstres' },
+    void: { name: 'Marcheur du vide', hint: 'Lv 40', tooltip: 'Techniques plus lourdes.', bonus: '+8 % dégâts technique' },
+    hunter: { name: 'Look chasseur', hint: '75 kills bestiaire', tooltip: 'Cape chasseur.', bonus: '+6 % vs monstres' },
     crystal: { name: 'Cristallin', hint: '4 raretés', tooltip: 'Éclat cristal.', bonus: '+1,0s bouclier/vague' },
     tome: { name: 'Maître du livre', hint: 'Moitié du bestiaire', tooltip: 'Bestiaire sur le dos.', bonus: '+4 PV max · sagesse' },
   },
   result: {
-    advWin: 'VICTOIRE !', advLose: 'DÉFAITE...', trainWin: 'CHAMPION !', trainLose: 'ROBOT GAGNE...',
-    advLoseKeep: 'XP et butin de cette run restent',
+    advWin: 'VICTOIRE !', advLose: 'DÉFAITE', trainWin: 'CHAMPION !', trainLose: 'LE ROBOT GAGNE…',
+    advLoseKeep: 'XP et butin de cette partie restent',
     trainAgainSub: 'vs RabbitRobot',
     wavesStart: 'début',
     vsP1Win: 'JOUEUR 1 GAGNE !', vsP2Win: 'JOUEUR 2 GAGNE !', wallRecord: 'NOUVEAU RECORD !', wallTime: 'FIN DU TEMPS !',
@@ -23499,16 +23501,16 @@ const CATALOG_FR = {
   banner: {
     levelUp: 'LEVEL UP ! Lv {lvl}', masterBuff: 'BUFF MAÎTRE +20 %', bossWave: 'VAGUE BOSS !',
     woodsWave: 'VAGUE FORÊT', frostWave: 'VAGUE GEL', cryptWave: 'VAGUE CRYPTE', scrapWave: 'VAGUE FERRAILLE', reefWave: 'VAGUE RÉCIF',
-    fight: 'COMBAT !', levelClear: 'NIVEAU {n} TERMINÉ !', won: 'VICTOIRE !', lost: 'DÉFAITE...', summon: '✦ INVOCATION ! ✦',
+    fight: 'COMBAT !', levelClear: 'NIVEAU {n} TERMINÉ !', won: 'VICTOIRE !', lost: 'DÉFAITE', summon: '✦ INVOCATION ! ✦',
     matsStart: 'BONUS PIÈCES', wallStart: 'CASSE LE MUR !', bonusDone: 'BONUS TERMINÉ !',
     kets: 'KABLAM…', ketsBam: 'KABLAM !',
   },
   help: { tips: [
-    'Power-ups : les monstres vaincus laissent parfois des orbes — PV, rage, energy, bouclier.',
+    'Power-ups : les monstres vaincus laissent parfois des orbes — PV, rage, énergie, bouclier.',
     'Boss : sous la moitié des PV ils deviennent plus furieux (phase 2).',
     'Combos : enchaîne vite pour ×2 / ×3 dégâts.',
     'Dash : double-tap gauche/droite (ou Shift) pour esquiver.',
-    'Spiral Orb : remplis la barre energy — charge une boule et frappe.',
+    'Spiral Orb : remplis la barre d’énergie — charge une boule et frappe.',
     'Substitution : nuage de fumée + esquive (bouton ou Shift). Invulnérabilité brève.',
     'Combo arme : arme 3× vite — ①②③. Touche ① et ②, puis ③ finisher.',
     '2 joueurs : roster 5 icônes saga · best-of-3.',
@@ -23598,25 +23600,25 @@ const CATALOG_ES = {
   },
   style: {
     classic: { name: 'Clásico', hint: 'Ninja estándar', tooltip: 'Ninja base — sin bonus.', bonus: 'Sin bonus combate' },
-    leaf_band: { name: 'Bandana Leaf', hint: 'Lv 5', tooltip: 'Cinta del pueblo.', bonus: '+5 HP máx' },
-    energy_glow: { name: 'Brillo de energy', hint: '3× entrenamiento ganado', tooltip: 'Aura azul.', bonus: '+8% regen energy' },
+    leaf_band: { name: 'Pañuelo hoja', hint: 'Lv 5', tooltip: 'Cinta del pueblo.', bonus: '+5 PV máx' },
+    energy_glow: { name: 'Brillo de energía', hint: '3× entrenamiento ganado', tooltip: 'Aura azul.', bonus: '+8% regen energía' },
     crimson_pact: { name: 'Capa roja', hint: 'Lv 12', tooltip: 'Golpes agresivos.', bonus: '+4% daño' },
     shadow: { name: 'Ninja sombra', hint: 'Lv 15', tooltip: 'Más críticos.', bonus: '+3% crít' },
     guvve: { name: 'Guvvedukkie', hint: '8 monstruos en libro', tooltip: 'Cosplay cuac.', bonus: '+6% XP aventura' },
-    gold: { name: 'Legendario', hint: 'Lv 25', tooltip: 'Contorno dorado.', bonus: '+10% knockback' },
+    gold: { name: 'Legendario', hint: 'Lv 25', tooltip: 'Contorno dorado.', bonus: '+10% retroceso' },
     sand: { name: 'Desierto', hint: 'Lv 8', tooltip: 'Capa de arena.', bonus: '−14% daño · bloqueo −25%' },
     samurai: { name: 'Samurái', hint: 'Lv 20', tooltip: 'Postura katana.', bonus: '+8% alcance arma' },
-    cyber: { name: 'Cyber-ninja', hint: 'Lv 18', tooltip: 'Visor neón.', bonus: 'FX rayo · +6% energy' },
+    cyber: { name: 'Cyber-ninja', hint: 'Lv 18', tooltip: 'Visor neón.', bonus: 'FX rayo · +6% energía' },
     fox: { name: 'Ninja zorro', hint: '12 monstruos', tooltip: 'Orejas de zorro.', bonus: '+5% velocidad' },
     storm: { name: 'Espíritu tormenta', hint: '5× entrenamiento', tooltip: 'Aura tormenta.', bonus: 'Rayo · +0,8s escudo/ola' },
-    void: { name: 'Caminante del vacío', hint: 'Lv 40', tooltip: 'Techniques más fuertes.', bonus: '+8% daño de technique' },
+    void: { name: 'Caminante del vacío', hint: 'Lv 40', tooltip: 'Técnicas más fuertes.', bonus: '+8% daño de técnica' },
     hunter: { name: 'Look cazador', hint: '75 kills libro', tooltip: 'Capa cazador.', bonus: '+6% vs monstruos' },
     crystal: { name: 'Cristalino', hint: '4 rarezas', tooltip: 'Fragmento cristal.', bonus: '+1,0s escudo/ola' },
-    tome: { name: 'Maestro del libro', hint: 'Mitad del bestiario', tooltip: 'Libro en la espalda.', bonus: '+4 HP máx · sabiduría' },
+    tome: { name: 'Maestro del libro', hint: 'Mitad del bestiario', tooltip: 'Libro en la espalda.', bonus: '+4 PV máx · sabiduría' },
   },
   result: {
-    advWin: '¡VICTORIA!', advLose: 'DERROTA...', trainWin: '¡CAMPEÓN!', trainLose: 'ROBOT GANA...',
-    advLoseKeep: 'XP y botín de esta run se quedan',
+    advWin: '¡VICTORIA!', advLose: 'DERROTA', trainWin: '¡CAMPEÓN!', trainLose: 'EL ROBOT GANA…',
+    advLoseKeep: 'XP y botín de esta partida se quedan',
     trainAgainSub: 'vs RabbitRobot',
     wavesStart: 'inicio',
     vsP1Win: '¡JUGADOR 1 GANA!', vsP2Win: '¡JUGADOR 2 GANA!', wallRecord: '¡NUEVO RÉCORD!', wallTime: '¡SE ACABÓ EL TIEMPO!',
@@ -23625,16 +23627,16 @@ const CATALOG_ES = {
   banner: {
     levelUp: '¡SUBIDA DE NIVEL! Lv {lvl}', masterBuff: 'BUFF MAESTRO +20%', bossWave: '¡OLA JEFE!',
     woodsWave: 'OLA BOSQUE', frostWave: 'OLA ESCARCHA', cryptWave: 'OLA CRIPTA', scrapWave: 'OLA CHATARRA', reefWave: 'OLA ARRECIFE',
-    fight: '¡LUCHA!', levelClear: '¡NIVEL {n} LISTO!', won: '¡VICTORIA!', lost: 'DERROTA...', summon: '✦ ¡INVOCACIÓN! ✦',
+    fight: '¡LUCHA!', levelClear: '¡NIVEL {n} LISTO!', won: '¡VICTORIA!', lost: 'DERROTA', summon: '✦ ¡INVOCACIÓN! ✦',
     matsStart: 'BONUS MONEDAS', wallStart: '¡ROMPE EL MURO!', bonusDone: '¡BONUS LISTO!',
     kets: '¡KABLAM…!', ketsBam: '¡KABLAM!',
   },
   help: { tips: [
-    'Power-ups: monstruos derrotados sueltan orbes — HP, furia, energy, escudo.',
-    'Jefes: bajo mitad HP se vuelven más feroces (fase 2).',
+    'Power-ups: monstruos derrotados sueltan orbes — PV, furia, energía, escudo.',
+    'Jefes: bajo mitad PV se vuelven más feroces (fase 2).',
     'Combos: golpea rápido para ×2 / ×3 daño.',
     'Dash: doble toque izquierda/derecha (o Shift) para esquivar.',
-    'Spiral Orb: llena la barra energy — carga una bola y golpea.',
+    'Spiral Orb: llena la barra de energía — carga una bola y golpea.',
     'Sustitución: nube de humo + esquiva (botón o Shift). Invulnerabilidad breve.',
     'Combo arma: arma 3× rápido — ①②③. Acierta ① y ②, luego ③ finisher.',
     '2 jugadores: roster 5 iconos saga · best-of-3.',
@@ -23881,7 +23883,7 @@ const CATALOG_DE_CHROME = {
     petCoinsLine: '+{n} Pet-Coins',
   },
   result: {
-    advWin: 'GEWONNEN!', advLose: 'VERLOREN', trainWin: 'MEISTER!', trainLose: 'ROBOT GEWINNT...',
+    advWin: 'GEWONNEN!', advLose: 'VERLOREN', trainWin: 'MEISTER!', trainLose: 'ROBOT GEWINNT…',
     trainDetailWin: 'RabbitRobot besiegt ({p}-{r}) · max Combo ×{combo} · {wins}× gewonnen',
     trainDetailLose: 'RabbitRobot war zu stark ({p}-{r}) · max Combo ×{combo}',
     vsP1Win: 'SPIELER 1 GEWINNT!', vsP2Win: 'SPIELER 2 GEWINNT!', wallRecord: 'NEUER REKORD!', wallTime: 'ZEIT UM!',
@@ -24044,6 +24046,7 @@ const CATALOG_DE_CHROME = {
     persistPrimaryFail: 'Haupt-Save fehlgeschlagen — Backup aktualisiert (Export in Einstellungen)',
     persistFail: 'Speichern fehlgeschlagen — Export in Einstellungen',
     persistFailCtx: 'Speichern fehlgeschlagen ({context}) — Export in Einstellungen',
+    resultHiccup: 'Ergebnis-Hiccup — Nochmal / Menü',
     persistCtxSkill: 'Skill', persistCtxSuper: 'Super', persistCtxWeapon: 'Waffe',
     persistCtxStyle: 'Stil', persistCtxMission: 'Mission', persistCtxClaim: 'Claim',
     persistCtxDaily: 'Tagesbonus', persistCtxXp: 'XP', persistCtxGear: 'Ausrüstung',
@@ -24849,11 +24852,12 @@ overlayI18nCatalog(CATALOG_FR, {
   pickup: { heal: '+PV', rage: 'RAGE', energy: 'ÉNERGIE', shield: 'BOUCLIER' },
   result: {
     advWin: 'VICTOIRE !', advLose: 'DÉFAITE', trainWin: 'CHAMPION !', trainLose: 'LE ROBOT GAGNE…',
+    advLoseKeep: 'XP et butin de cette partie restent',
     trainDetailWin: 'RabbitRobot à terre ({p}-{r}) · combo max ×{combo} · {wins}× gagné',
     trainDetailLose: 'RabbitRobot trop fort ({p}-{r}) · combo max ×{combo}',
     vsP1Win: 'JOUEUR 1 GAGNE !', vsP2Win: 'JOUEUR 2 GAGNE !', wallRecord: 'NOUVEAU RECORD !', wallTime: 'TEMPS ÉCOULÉ !',
     matsRecord: 'NOUVEAU RECORD !', matsDone: 'Bien joué !',
-    perfectRun: 'Run parfaite — garde tes PV hauts !',
+    perfectRun: 'Partie parfaite — garde tes PV hauts !',
     pickupsHelp: '{hint} — les orbes aident',
     lossBlockTip: 'Astuce : bloque · vise en haut les voiliers · {prog}',
     lossOrbTip: 'Astuce : prends les orbes verts · remplis SUPER avant le boss · {prog}',
@@ -24879,7 +24883,7 @@ overlayI18nCatalog(CATALOG_FR, {
     wallComboBarTip: 'Astuce : des coups rapides remplissent la barre combo',
     wallStrongCombo: 'Gros combo (×{n}) — record la prochaine fois ?',
     wallBehindPace: 'En retard sur le record — vise combo ×5+ ',
-    wallGoodPace: 'Bon rythme — le prochain run peut battre le record !',
+    wallGoodPace: 'Bon rythme — la prochaine partie peut battre le record !',
     matsPetTip: 'Dépense les pet coins dans Collection → Pets · 2 pièces = 1 pet coin',
     matsControlTip: 'Joystick haut = viser plus haut · shuriken max 3× vite',
     masterBuffActive: ' · Buff maître actif',
@@ -24948,7 +24952,7 @@ overlayI18nCatalog(CATALOG_FR, {
     satan: 'SATAN — {name} !', satanIncoming: 'SATAN APPROCHE…', satanWin: 'SATAN VAINCU !',
   },
   help: { tips: [
-    'Power-ups : les monstres vaincus laissent parfois des orbes — PV, rage, energy, bouclier.',
+    'Power-ups : les monstres vaincus laissent parfois des orbes — PV, rage, énergie, bouclier.',
     'Boss : sous la moitié des PV ils deviennent plus furieux (phase 2).',
     'Combos : enchaîne vite pour ×2 / ×3 dégâts.',
     'Dash : double-tap gauche/droite (ou Shift) pour esquiver.',
@@ -24984,6 +24988,7 @@ overlayI18nCatalog(CATALOG_FR, {
     persistPrimaryFail: 'Sauvegarde principale ratée — copie à jour (exporte dans Options)',
     persistFail: 'Sauvegarde ratée — exporte dans Options',
     persistFailCtx: 'Sauvegarde ratée ({context}) — exporte dans Options',
+    resultHiccup: 'Accroc résultat — Réessayer / Menu',
     gearLocked: 'Encore verrouillé · {why}',
     gearEquipped: '{name} équipé',
     gearUnequipped: '{name} retiré',
@@ -25458,11 +25463,12 @@ overlayI18nCatalog(CATALOG_ES, {
   pickup: { heal: '+PV', rage: 'RAGE', energy: 'ENERGÍA', shield: 'ESCUDO' },
   result: {
     advWin: '¡VICTORIA!', advLose: 'DERROTA', trainWin: '¡CAMPEÓN!', trainLose: 'EL ROBOT GANA…',
+    advLoseKeep: 'XP y botín de esta partida se quedan',
     trainDetailWin: 'RabbitRobot caído ({p}-{r}) · combo máx ×{combo} · {wins}× ganado',
     trainDetailLose: 'RabbitRobot demasiado fuerte ({p}-{r}) · combo máx ×{combo}',
     vsP1Win: '¡JUGADOR 1 GANA!', vsP2Win: '¡JUGADOR 2 GANA!', wallRecord: '¡NUEVO RÉCORD!', wallTime: '¡SE ACABÓ EL TIEMPO!',
     matsRecord: '¡NUEVO RÉCORD!', matsDone: '¡Bien hecho!',
-    perfectRun: 'Run perfecta — mantén el HP alto',
+    perfectRun: 'Partida perfecta — mantén el PV alto',
     pickupsHelp: '{hint} — los orbes ayudan',
     lossBlockTip: 'Consejo: bloquea · apunta arriba a los voladores · {prog}',
     lossOrbTip: 'Consejo: coge orbes verdes · llena SUPER antes del jefe · {prog}',
@@ -25488,7 +25494,7 @@ overlayI18nCatalog(CATALOG_ES, {
     wallComboBarTip: 'Consejo: golpes rápidos llenan la barra combo',
     wallStrongCombo: 'Gran combo (×{n}) — ¿récord la próxima?',
     wallBehindPace: 'Por detrás del récord — prueba combo ×5+',
-    wallGoodPace: 'Buen ritmo — la próxima run puede batir el récord',
+    wallGoodPace: 'Buen ritmo — la próxima partida puede batir el récord',
     matsPetTip: 'Gasta pet coins en Colección → Pets · 2 monedas = 1 pet coin',
     matsControlTip: 'Joystick arriba = apunta más alto · shuriken máx 3× rápido',
     masterBuffActive: ' · Buff maestro activo',
@@ -25557,7 +25563,7 @@ overlayI18nCatalog(CATALOG_ES, {
     satan: 'SATAN — ¡{name}!', satanIncoming: 'SATAN SE ACERCA…', satanWin: '¡SATAN DERROTADO!',
   },
   help: { tips: [
-    'Power-ups: los monstruos derrotados a veces sueltan orbes — HP, furia, energy, escudo.',
+    'Power-ups: los monstruos derrotados a veces sueltan orbes — PV, furia, energía, escudo.',
     'Jefes: bajo la mitad de HP se vuelven más feroces (fase 2).',
     'Combos: golpea rápido para ×2 / ×3 daño.',
     'Dash: doble toque izquierda/derecha (o Shift) para esquivar.',
@@ -25593,6 +25599,7 @@ overlayI18nCatalog(CATALOG_ES, {
     persistPrimaryFail: 'Partida principal fallida — copia actualizada (exporta en Opciones)',
     persistFail: 'No se pudo guardar — exporta en Opciones',
     persistFailCtx: 'No se pudo guardar ({context}) — exporta en Opciones',
+    resultHiccup: 'Fallo de resultado — Otra vez / Menú',
     gearLocked: 'Aún bloqueado · {why}',
     gearEquipped: '{name} puesto',
     gearUnequipped: '{name} quitado',
@@ -26080,6 +26087,7 @@ overlayI18nCatalog(CATALOG_DE, {
   pickup: { heal: '+HP', rage: 'RAGE', energy: 'ENERGY', shield: 'SCHILD' },
   result: {
     advWin: 'GEWONNEN!', advLose: 'VERLOREN', trainWin: 'MEISTER!', trainLose: 'ROBOT GEWINNT…',
+    advLoseKeep: 'XP und Beute von diesem Lauf bleiben',
     trainDetailWin: 'RabbitRobot besiegt ({p}-{r}) · max Combo ×{combo} · {wins}× gewonnen',
     trainDetailLose: 'RabbitRobot war zu stark ({p}-{r}) · max Combo ×{combo}',
     vsP1Win: 'SPIELER 1 GEWINNT!', vsP2Win: 'SPIELER 2 GEWINNT!', wallRecord: 'NEUER REKORD!', wallTime: 'ZEIT UM!',
@@ -26216,6 +26224,7 @@ overlayI18nCatalog(CATALOG_DE, {
     persistPrimaryFail: 'Hauptsave fehlgeschlagen — Backup aktualisiert (Export in Einstellungen)',
     persistFail: 'Speichern fehlgeschlagen — Export in Einstellungen',
     persistFailCtx: 'Speichern fehlgeschlagen ({context}) — Export in Einstellungen',
+    resultHiccup: 'Ergebnis-Hiccup — Nochmal / Menü',
     gearLocked: 'Noch gesperrt · {why}',
     gearEquipped: '{name} ausgerüstet',
     gearUnequipped: '{name} abgelegt',
@@ -41674,7 +41683,7 @@ class Game {
           base = t('result.advDiffLine', { diff: advDiffLabel(diff) }) + base;
         }
         if (!win) {
-          const keep = tOr('result.advLoseKeep', 'XP en loot van deze run blijven');
+          const keep = t('result.advLoseKeep');
           if (keep) base = keep + ' · ' + base;
         }
         if (masterBuffActive(lv, diff) && !win) base += t('result.masterBuffActive');
@@ -42398,7 +42407,7 @@ class Game {
         || tOr('combat.trainTipDefault', 'Tip: spring lasers · energy vol → Spiral Orb');
     scheduleGameResult(this, 1400, () => UI.showResult(win, {
       titleKey: win ? 'result.trainWin' : 'result.trainLose',
-      title: win ? tOr('result.trainWin', 'KAMPIOEN!') : tOr('result.trainLose', 'ROBOT WINT...'),
+      title: win ? t('result.trainWin') : t('result.trainLose'),
       detailKey: win ? 'result.trainDetailWin' : 'result.trainDetailLose',
       detailParams: { p: this.roundsP, r: this.roundsR, combo: trainBest, wins: save.trainWins },
       detail: win
@@ -51864,9 +51873,7 @@ const UI = {
     const titleKey = data.titleKey || (data.mode === 'training'
       ? (win ? 'result.trainWin' : 'result.trainLose')
       : (win ? 'result.advWin' : 'result.advLose'));
-    const titleFallback = data.mode === 'training'
-      ? (win ? tOr('result.trainWin', 'KAMPIOEN!') : tOr('result.trainLose', 'ROBOT WINT...'))
-      : (win ? tOr('result.advWin', 'GEWONNEN!') : tOr('result.advLose', 'VERLOREN'));
+    const titleFallback = (typeof t === 'function') ? t(titleKey) : titleKey;
     // Never reuse a stale English title (ROBOT WINS / YOU LOST) when the UI is NL.
     const painted = (typeof tOr === 'function') ? tOr(titleKey, titleFallback) : titleFallback;
     title.textContent = painted;
@@ -51883,7 +51890,7 @@ const UI = {
         detail = tOr(data.detailKey, detail, params);
         if (data.diffLineKey) detail = tOr(data.diffLineKey, '', data.diffLineParams || {}) + detail;
         if (data.keepLoot) {
-          const keep = tOr('result.advLoseKeep', 'XP en loot van deze run blijven');
+          const keep = t('result.advLoseKeep');
           if (keep) detail = keep + ' · ' + detail;
         }
         if (data.masterBuff) detail += tOr('result.masterBuffActive', '');
@@ -51957,7 +51964,7 @@ const UI = {
     playMenuBgm(true);
     AudioSys.applyVolumes();
     } catch (err) {
-      sfReportError('showResult', err, 'Resultaat hiccup — probeer Opnieuw / Menu');
+      sfReportError('showResult', err, (typeof tOr === 'function') ? tOr('toast.resultHiccup', 'Resultaat hiccup — probeer Opnieuw / Menu') : 'Resultaat hiccup — probeer Opnieuw / Menu');
       // NOOIT stil naar startscherm: forceer result-screen best-effort
       try {
         state = 'result';

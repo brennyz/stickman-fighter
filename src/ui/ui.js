@@ -5029,9 +5029,7 @@ const UI = {
     const titleKey = data.titleKey || (data.mode === 'training'
       ? (win ? 'result.trainWin' : 'result.trainLose')
       : (win ? 'result.advWin' : 'result.advLose'));
-    const titleFallback = data.mode === 'training'
-      ? (win ? tOr('result.trainWin', 'KAMPIOEN!') : tOr('result.trainLose', 'ROBOT WINT...'))
-      : (win ? tOr('result.advWin', 'GEWONNEN!') : tOr('result.advLose', 'VERLOREN'));
+    const titleFallback = (typeof t === 'function') ? t(titleKey) : titleKey;
     // Never reuse a stale English title (ROBOT WINS / YOU LOST) when the UI is NL.
     const painted = (typeof tOr === 'function') ? tOr(titleKey, titleFallback) : titleFallback;
     title.textContent = painted;
@@ -5048,7 +5046,7 @@ const UI = {
         detail = tOr(data.detailKey, detail, params);
         if (data.diffLineKey) detail = tOr(data.diffLineKey, '', data.diffLineParams || {}) + detail;
         if (data.keepLoot) {
-          const keep = tOr('result.advLoseKeep', 'XP en loot van deze run blijven');
+          const keep = t('result.advLoseKeep');
           if (keep) detail = keep + ' · ' + detail;
         }
         if (data.masterBuff) detail += tOr('result.masterBuffActive', '');
@@ -5122,7 +5120,7 @@ const UI = {
     playMenuBgm(true);
     AudioSys.applyVolumes();
     } catch (err) {
-      sfReportError('showResult', err, 'Resultaat hiccup — probeer Opnieuw / Menu');
+      sfReportError('showResult', err, (typeof tOr === 'function') ? tOr('toast.resultHiccup', 'Resultaat hiccup — probeer Opnieuw / Menu') : 'Resultaat hiccup — probeer Opnieuw / Menu');
       // NOOIT stil naar startscherm: forceer result-screen best-effort
       try {
         state = 'result';

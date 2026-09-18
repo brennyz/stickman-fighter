@@ -77,4 +77,28 @@ Post-mega-merge (`v1.18.172`) audit, Z→A: **nl → fr → es → en → de**. 
 | de | factory `nameShort` | Stock-Anzünder / Holzhäcksler overflow | Anzünder / Häcksler / Boesa / Pfeife |
 | * | hub tiles / gear cards | DE compounds op 390px | 2-line clamp + ellipsis |
 
-Versie: **v1.18.176 / SW 386**. Draft PR, geen main-merge. Deel-URL `speel.html`.
+## Examiner P0 — style tips + result consistency (zelfde draft)
+
+| locale | key / locatie | probleem | fix |
+|--------|---------------|----------|-----|
+| de/fr/es | `style.*` name/bonus/tooltip | leftover *Leaf-Bandana* / *energy* / *knockback* / *Void-Wanderer* / *Techniques* | Blatt-Bandana · Bandana feuille · Pañuelo hoja; Energie/énergie/energía; Rückstoß/recul/retroceso; Leerenwanderer |
+| * | `result.advLose` / `trainLose` / `banner.lost` | FR/ES `DÉFAITE...` vs overlay `DÉFAITE`; FR `ROBOT GAGNE` vs `LE ROBOT GAGNE` | Zelfde titel in i18n + catalog + overlay; geen trailing dots |
+| nl/fr/es | `result.advLoseKeep` | leftover *loot* / *run* | buit/ronde · butin/partie · botín/partida |
+| * | `showResult` / `game.js` | Dutch `tOr` fallback *XP en loot van deze run* | `t('result.advLoseKeep')` |
+| * | `toast.resultHiccup` | hardcoded NL bij result-fout | 5-talen key |
+| nl | `STYLES` seed | *Unlock op Lv* / *Leaf bandana* / *Void-waker* | Vrij vanaf Lv · Blad-bandana · Leegte-loper |
+
+Season beats waren al gelokaliseerd (DE Dschungel, ES Jungla). *Auto* / *Arcade* blijven merk-labels.
+
+## Hardcoded Dutch audit (buiten nl-catalogs)
+
+Grep `src/` zonder i18n: result-zichtbare fallbacks zijn weg. Residual (niet deze pass):
+
+- `sfReportError(..., '… hiccup — speel door')` in `game.js` / `loop.js` — alleen bij crash-toast
+- `missions.js` daily `label: 'Avontuur'` — fallback achter `t()`
+- `scenery.js` `lab('menu.adventure', 'Avontuur')` — `t()` eerst
+- veel `tOr(key, '… mislukt')` last-resort als de key bestaat niet
+
+Versus ongemoeid. Arcade skill-namen blijven merk-EN.
+
+Versie: **v1.18.177 / SW 387**. Draft PR, geen main-merge. Deel-URL `speel.html`.
