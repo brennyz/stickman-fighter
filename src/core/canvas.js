@@ -94,16 +94,81 @@ function playfieldSizeNow() {
   return { w: ww, h: hh };
 }
 
+function fighterIsDead(f) {
+  return !!(f && !(f.hp > 0));
+}
+
+/**
+ * Live layout box — visualViewport can lag after portrait↔landscape, leaving
+ * W×H on a stale tall floor while the CSS window is already short.
+ */
+function visiblePlayfieldBox(worldW, worldH) {
+  let visW = worldW;
+  let visH = worldH;
+  const shrink = (w, h) => {
+    if (w > 8 && w < visW - 4) visW = Math.round(w);
+    if (h > 8 && h < visH - 4) visH = Math.round(h);
+  };
+  try {
+    if (typeof innerWidth === 'number' && typeof innerHeight === 'number') {
+      shrink(innerWidth, innerHeight);
+    }
+  } catch (_) {}
+  try {
+    const vv = (typeof window !== 'undefined') ? window.visualViewport : null;
+    if (vv && vv.width > 0 && vv.height > 0) shrink(vv.width, vv.height);
+  } catch (_) {}
+  try {
+    if (typeof viewportGameSize === 'function') {
+      const vp = viewportGameSize();
+      if (vp) shrink(vp.w, vp.h);
+    }
+  } catch (_) {}
+  try {
+    if (typeof canvas !== 'undefined' && canvas && typeof canvas.getBoundingClientRect === 'function') {
+      const r = canvas.getBoundingClientRect();
+      shrink(r.width, r.height);
+    }
+  } catch (_) {}
+  return { w: visW, h: visH };
+}
+
+/** Fallen pose (rotate -1.45) lies ~72px toward -face, ~10px above the feet. */
+function pinDeadFighterPose(f, game, visW, gy) {
+  if (!f || !game) return;
+  if (!(f.scale > 0.2 && Number.isFinite(f.scale))) f.scale = 1;
+  if (!f.face) f.face = 1;
+  const corpse = 72;
+  const minX = corpse;
+  const maxX = Math.max(minX + 8, visW - corpse);
+  if (!Number.isFinite(f.x)) f.x = visW * 0.25;
+  f.x = clamp(f.x, minX, maxX);
+  f.y = gy;
+  f.vy = 0;
+  f.onGround = true;
+}
+
 /** Keep fighters/mobs on the painted ground after rotate / late visualViewport. */
 function pinPlayfieldBodies(game) {
   if (!game) return;
   const { w: ww, h: hh } = playfieldSizeNow();
+  const vis = visiblePlayfieldBox(ww, hh);
   let gy = Number(game.ground);
   if (!Number.isFinite(gy) || gy < 24 || gy > hh) {
     gy = (typeof playfieldGroundY === 'function') ? playfieldGroundY(hh, ww) : hh * 0.72;
   }
   if (!Number.isFinite(gy) || gy < 24) gy = Math.max(80, hh * 0.7);
   if (gy > hh - 12) gy = Math.max(80, hh - 28);
+  // Playtest #336: dead pose vanished after rotate when the world floor sat
+  // below the new letterbox. Re-ground onto the visible window.
+  const playerDead = fighterIsDead(game.player);
+  if (playerDead && vis.h < hh - 8) {
+    const visFloor = (typeof playfieldGroundY === 'function')
+      ? playfieldGroundY(vis.h, vis.w)
+      : Math.min(vis.h * 0.80, vis.h - 28);
+    gy = Math.min(gy, visFloor);
+  }
+  if (gy > vis.h - 12) gy = Math.max(80, vis.h - 28);
   game.ground = gy;
   game.minX = 40;
   game.maxX = Math.max(80, ww - 40);
@@ -112,8 +177,12 @@ function pinPlayfieldBodies(game) {
     if (!(f.scale > 0.2 && Number.isFinite(f.scale))) f.scale = 1;
     if (!f.face) f.face = 1;
     if (!Number.isFinite(f.x)) f.x = fallbackX;
+    if (fighterIsDead(f)) {
+      pinDeadFighterPose(f, game, vis.w, gy);
+      return;
+    }
     f.x = clamp(f.x, game.minX, game.maxX);
-    if (!Number.isFinite(f.y) || f.y > hh + 16 || f.y < 12) f.y = gy;
+    if (!Number.isFinite(f.y) || f.y > vis.h + 16 || f.y < 12) f.y = gy;
     else if (f.y > gy) f.y = gy;
   };
   pinFighter(game.player, ww * 0.25);
@@ -164,6 +233,7 @@ function drawFighterFallback(c, f) {
   const x = Number.isFinite(f.x) ? f.x : ww * 0.25;
   const y = Number.isFinite(f.y) ? f.y : (hh * 0.72);
   const col = fighterCombatStroke(f.color || '#f2f5ff');
+  const dead = fighterIsDead(f);
   c.save();
   c.globalAlpha = 1;
   c.strokeStyle = col;
@@ -171,18 +241,20 @@ function drawFighterFallback(c, f) {
   c.lineWidth = 5;
   c.lineCap = 'round';
   c.lineJoin = 'round';
+  c.translate(x, y);
+  if (dead) c.rotate(-1.45);
   c.beginPath();
-  c.arc(x, y - 70, 11, 0, Math.PI * 2);
+  c.arc(0, -70, 11, 0, Math.PI * 2);
   c.stroke();
   c.beginPath();
-  c.moveTo(x, y - 58);
-  c.lineTo(x, y - 22);
-  c.moveTo(x - 18, y - 46);
-  c.lineTo(x + 18, y - 46);
-  c.moveTo(x, y - 22);
-  c.lineTo(x - 14, y);
-  c.moveTo(x, y - 22);
-  c.lineTo(x + 14, y);
+  c.moveTo(0, -58);
+  c.lineTo(0, -22);
+  c.moveTo(-18, -46);
+  c.lineTo(18, -46);
+  c.moveTo(0, -22);
+  c.lineTo(-14, 0);
+  c.moveTo(0, -22);
+  c.lineTo(14, 0);
   c.stroke();
   c.restore();
 }

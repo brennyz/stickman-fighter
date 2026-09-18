@@ -345,7 +345,18 @@ class Fighter {
       this.deadT += dt;
       resetWeaponCombo(this);
       this.vy += 1600 * dt; this.y += this.vy * dt;
-      if (this.y > game.ground) { this.y = game.ground; this.vy = 0; }
+      const floor = (game && Number.isFinite(game.ground)) ? game.ground : this.y;
+      const visH = (typeof H === 'number' && H > 8) ? H : Infinity;
+      if (this.y > floor || this.y > visH - 4) {
+        this.y = Number.isFinite(visH) ? Math.min(floor, visH - 28) : floor;
+        this.vy = 0;
+        this.onGround = true;
+      }
+      if (this.y < 12) {
+        this.y = floor;
+        this.vy = 0;
+        this.onGround = true;
+      }
       return;
     }
     const locked = game.inputLocked && (this.isPlayer || this.playerSlot);

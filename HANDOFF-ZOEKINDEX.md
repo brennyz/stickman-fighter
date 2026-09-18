@@ -19,6 +19,7 @@ rg -l "handoff|coinrun|projAimVelocity|charSelectScreen|ASSET-STYLE" .
 
 | Gebruiker vroeg | Versie | Commit | Waar in code |
 |-----------------|--------|--------|----------------|
+| **Death+rotate fallen pose** | 1.18.191 | this branch | `pinDeadFighterPose` · visible letterbox floor · `onResize` re-pin dead · `smoke:death-rotate`. Playtest #336. Versus out. |
 | **Invisible fighters recover** | 1.18.190 | main | `drawCombatants` · `pinPlayfieldBodies` · `fighterCombatStroke` · recover re-paint · `smoke:fighters-visible`. Versus out. |
 | **Landscape Begin/HOME SPELEN** | 1.18.190 | main | two-col title-gate + FOMO left dock · `smoke:landscape-begin`. Versus out. |
 | **Telegraph readability** | 1.18.190 | main | fair-fail ring + `combatFailRetryTip` · keep #314 density 0.50 · `docs/COMBAT-TELEGRAPH.md`. Versus out. |

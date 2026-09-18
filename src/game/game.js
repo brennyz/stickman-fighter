@@ -420,6 +420,10 @@ class Game {
       this.maxX = W - 40;
     }
     if (typeof pinPlayfieldBodies === 'function') pinPlayfieldBodies(this);
+    // Playtest #336: death then rotate left the fallen pose under the new floor.
+    if (this.player && !(this.player.hp > 0) && typeof pinPlayfieldBodies === 'function') {
+      pinPlayfieldBodies(this);
+    }
     if (this.mode === 'versus' && this.p2) {
       applyVsArenaBounds(this);
       Input.dualMode = true;
