@@ -339,7 +339,7 @@ if (typeof UI === 'object' && UI) {
         : (view.pending + '/' + view.capacity + ' ' + buildingsEscape(view.resourceLabel));
       btn.innerHTML =
         '<span class="hub-tile-ico">' + buildingsArtHtml(view) + '</span>'
-        + '<span class="hub-tile-title">' + buildingsEscape(view.name) + '</span>'
+        + '<span class="hub-tile-title">' + buildingsEscape(view.nameShort || view.name) + '</span>'
         + '<span class="hub-tile-sub">' + buildingsEscape(does) + '</span>'
         + '<span class="hub-tile-stat">' + lockBit + (stock ? ' · ' + stock : '') + '</span>';
       if (!this._buildingsRowBound[view.id]) {

@@ -542,8 +542,9 @@ function buildingLabel(id, field) {
   if (!def) return id || '?';
   const f = field || 'name';
   const key = 'buildings.' + def.id + '.' + f;
-  if (typeof tOr === 'function') return tOr(key, def[f] || def.name);
-  return def[f] || def.name;
+  const fallback = def[f] || (f === 'nameShort' ? def.short : def.name) || def.name;
+  if (typeof tOr === 'function') return tOr(key, fallback);
+  return fallback;
 }
 
 function buildingResourceLabel(resId) {
@@ -643,6 +644,7 @@ function buildingTooltipModel(id, st) {
   return {
     id: def.id,
     name: buildingLabel(def.id, 'name'),
+    nameShort: buildingLabel(def.id, 'nameShort'),
     blurb: buildingLabel(def.id, 'blurb'),
     short: def.short,
     worldUnlock: def.worldUnlock,

@@ -212,4 +212,31 @@ if (!/wild: 'Bosque'/.test(locales)) fail('ES dexBiome.wild must be Bosque');
 if (!/scrap: 'Scrap'/.test(catalog)) fail('EN dexBiome.scrap missing');
 if (!/scrap: 'Schrott'/.test(deChrome + locales)) fail('DE dexBiome.scrap must not stay Dutch Schroot');
 
-console.log('SMOKE_OK i18n-locale: Tips/VERLOREN + #273 coverage + #283 overlays + 2026-09-16 FR/ES/DE polish');
+if (/Naar summons/.test(catalog + i18n)) fail('NL FOMO still says Naar summons');
+if (/Zu Summons/.test(i18n + locales + deChrome)) fail('DE FOMO still says Zu Summons');
+if (/A summons/.test(i18n + locales)) fail('ES FOMO still says A summons');
+if (/Vers les summons/.test(i18n + locales)) fail('FR FOMO still says Vers les summons');
+if (!/produceLocked:/.test(i18n)) fail('buildings.desc.produceLocked missing — Dutch fallback would leak');
+if (!/nameShort: 'Aansteker'/.test(i18n)) fail('NL factory nameShort missing (Android card overflow)');
+if (!/nameShort: 'Stock-Anzünder'/.test(i18n)) fail('DE factory nameShort missing');
+if (!/nameShort: 'Allume-Bâton'/.test(i18n)) fail('FR factory nameShort missing');
+if (!/nameShort: 'Palo-Mechero'/.test(i18n)) fail('ES factory nameShort missing');
+if (!/nameShort: 'Stick-Lighter'/.test(i18n)) fail('EN factory nameShort missing');
+if (/sfxOff: 'Sound aus'/.test(i18n)) fail('DE audio.sfxOff still English Sound');
+if (/audioSfxOnly: 'Nur Sound'/.test(i18n)) fail('DE pause.audioSfxOnly still English Sound');
+if (!/sfxOff: 'Ton aus'/.test(i18n)) fail('DE audio.sfxOff must be Ton aus');
+if (/kickTele: 'KICK — spring/.test(locales)) fail('DE HUD kickTele overlay still English KICK');
+if (/kickTele: 'KICK — saute/.test(locales)) fail('FR HUD kickTele overlay still English KICK');
+if (/kickTele: 'KICK — ¡salta/.test(locales)) fail('ES HUD kickTele overlay still English KICK');
+if (!/kickTele: 'TRITT — spring/.test(locales + deChrome)) fail('DE HUD kickTele must be TRITT');
+if (!/kickTele: 'PIED — saute/.test(locales)) fail('FR HUD kickTele must be PIED');
+if (!/kickTele: 'PATADA — ¡salta/.test(locales)) fail('ES HUD kickTele must be PATADA');
+if (!/summonHead: 'Coffres'/.test(locales)) fail('FR ui.summonHead missing');
+if (!/summonHead: 'Cofres'/.test(locales)) fail('ES ui.summonHead missing');
+if (!/islandFallback: 'island \{n\}'/.test(i18n)) fail('EN buildings.islandFallback missing (Dutch eiland leak)');
+if (!/islandFallback: 'Insel \{n\}'/.test(i18n)) fail('DE buildings.islandFallback missing');
+if (/upgrade: 'Upgrade'/.test((i18n.split(/\n\s+de:\s+\{/)[1] || '').split(/\n\s+fr:\s+\{/)[0] || '')) {
+  fail('DE buildings.upgrade still leftover English Upgrade');
+}
+
+console.log('SMOKE_OK i18n-locale: Tips/VERLOREN + #273 coverage + #283 overlays + 2026-09-18 layout-safe copy');
