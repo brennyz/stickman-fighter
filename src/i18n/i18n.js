@@ -1697,7 +1697,7 @@ function achLabel(ach, field) {
   const k = 'ach.' + ach.id + '.' + field;
   const v = t(k);
   if (v && v !== k) return v;
-  return ach[field];
+  return '';
 }
 
 function setText(id, key, params) {

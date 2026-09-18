@@ -1119,11 +1119,11 @@ function applySaveImportText(text, sourceLabel) {
 
 function readSaveImportFile(file) {
   return new Promise((resolve, reject) => {
-    if (!file) { reject(new Error('Geen bestand gekozen')); return; }
-    if (file.size > 120000) { reject(new Error('Save-bestand te groot (>120 KB)')); return; }
+    if (!file) { reject(new Error('No file chosen')); return; }
+    if (file.size > 120000) { reject(new Error('Save file too large (>120 KB)')); return; }
     const reader = new FileReader();
     reader.onload = () => resolve(String(reader.result || ''));
-    reader.onerror = () => reject(new Error('Bestand lezen mislukt'));
+    reader.onerror = () => reject(new Error('Could not read file'));
     reader.readAsText(file);
   });
 }
@@ -1137,7 +1137,7 @@ function bindSaveImportFile() {
     if (!file) return;
     safeAsync((async () => {
       const text = await readSaveImportFile(file);
-      if (!text.trim()) throw new Error('Bestand is leeg');
+      if (!text.trim()) throw new Error('File is empty');
       applySaveImportText(text, file.name || 'bestand');
       AudioSys.sfx('select');
     })(), 'importSaveFile', errT('ui.errImportFile', 'Could not read import file'));
@@ -2124,7 +2124,7 @@ function importSaveJson(text) {
   const { save: next, warnings } = previewImportSave(text);
   const keptBackup = typeof snapshotSaveToBackup === 'function' && snapshotSaveToBackup(save);
   save = next;
-  if (!persistPrimaryOnly()) throw new Error('Import gelukt maar opslaan mislukt — probeer opnieuw');
+  if (!persistPrimaryOnly()) throw new Error('Import ok but persist failed — try again');
   try { if (typeof syncAudioThemeAfterSaveChange === 'function') syncAudioThemeAfterSaveChange(); } catch (_) {}
   try { checkAchievements(); } catch (_) {}
   try { UI.renderMenu(); } catch (_) {}

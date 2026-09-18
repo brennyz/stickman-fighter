@@ -113,4 +113,14 @@ Versus ongemoeid. Arcade skill-namen blijven merk-EN.
 
 Technische `sfReportError(where, err)` zonder userMsg blijft console + gelokaliseerde default-toast.
 
-Versie: **v1.18.178 / SW 388**. Draft PR, geen main-merge. Deel-URL `speel.html`.
+## Examiner P0 — ach leftovers + laatste mislukt (zelfde draft)
+
+| locale | key / locatie | probleem | fix |
+|--------|---------------|----------|-----|
+| EN/DE/FR/ES | `ach.lv70` / `ach.zoneWeapons10` | Ontbrak → t() viel terug op NL *Hel-legende* / *Zone-verzamelaar* | Catalog + DE overlay |
+| DE overlay | `ach.dexWild`…`dexFrost` | Overlay wipe → EN leak | Overlay aangevuld |
+| * | `achLabel` | Fallback `ach.name` (NL seed) | Leeg als key ontbreekt |
+| * | `tOr('ui.summonFail', 'Mislukt')` | Dutch last-resort | `errT` EN last-resort |
+| * | import `Error('… mislukt')` | Console/throw NL | EN technical; user-toast blijft `ui.errImportFile` |
+
+Versie: **v1.18.179 / SW 389**. Draft PR, geen main-merge. Deel-URL `speel.html`.

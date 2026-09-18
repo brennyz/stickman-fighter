@@ -323,9 +323,9 @@ const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const VERSION_UPDATE_SAVE_KEY = 'stickfighter_version_update_save_v1';
 const VERSION_UPDATE_FLAG_KEY = 'stickfighter_version_update_flag_v1';
 const SAVE_EXPORT_SCHEMA = 3;
-const APP_VERSION = '1.18.178';
+const APP_VERSION = '1.18.179';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 388;
+const SW_CACHE_REV = 389;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', petCoins: 0, dex: {}, summons: {}, pets: {}, activePet: null,
   eggPets: {}, activeEggPet: null, eggDaily: null,
   chestDaily: null, chestWeapons: {},
@@ -4020,7 +4020,7 @@ function achLabel(ach, field) {
   const k = 'ach.' + ach.id + '.' + field;
   const v = t(k);
   if (v && v !== k) return v;
-  return ach[field];
+  return '';
 }
 
 function setText(id, key, params) {
@@ -5766,11 +5766,11 @@ function applySaveImportText(text, sourceLabel) {
 
 function readSaveImportFile(file) {
   return new Promise((resolve, reject) => {
-    if (!file) { reject(new Error('Geen bestand gekozen')); return; }
-    if (file.size > 120000) { reject(new Error('Save-bestand te groot (>120 KB)')); return; }
+    if (!file) { reject(new Error('No file chosen')); return; }
+    if (file.size > 120000) { reject(new Error('Save file too large (>120 KB)')); return; }
     const reader = new FileReader();
     reader.onload = () => resolve(String(reader.result || ''));
-    reader.onerror = () => reject(new Error('Bestand lezen mislukt'));
+    reader.onerror = () => reject(new Error('Could not read file'));
     reader.readAsText(file);
   });
 }
@@ -5784,7 +5784,7 @@ function bindSaveImportFile() {
     if (!file) return;
     safeAsync((async () => {
       const text = await readSaveImportFile(file);
-      if (!text.trim()) throw new Error('Bestand is leeg');
+      if (!text.trim()) throw new Error('File is empty');
       applySaveImportText(text, file.name || 'bestand');
       AudioSys.sfx('select');
     })(), 'importSaveFile', errT('ui.errImportFile', 'Could not read import file'));
@@ -6771,7 +6771,7 @@ function importSaveJson(text) {
   const { save: next, warnings } = previewImportSave(text);
   const keptBackup = typeof snapshotSaveToBackup === 'function' && snapshotSaveToBackup(save);
   save = next;
-  if (!persistPrimaryOnly()) throw new Error('Import gelukt maar opslaan mislukt — probeer opnieuw');
+  if (!persistPrimaryOnly()) throw new Error('Import ok but persist failed — try again');
   try { if (typeof syncAudioThemeAfterSaveChange === 'function') syncAudioThemeAfterSaveChange(); } catch (_) {}
   try { checkAchievements(); } catch (_) {}
   try { UI.renderMenu(); } catch (_) {}
@@ -22198,6 +22198,8 @@ const CATALOG_EN = {
     streak10: { name: 'Unstoppable', desc: 'Kill streak ×10 in adventure' },
     trainCombo10: { name: 'Dummy master', desc: 'Training combo ×10' },
     lv50: { name: 'Legend', desc: 'Unlock level 50' },
+    lv70: { name: 'Hell legend', desc: 'Unlock level 70 (Hell)' },
+    zoneWeapons10: { name: 'Zone collector', desc: 'Collect 10 Nightmare/Hell weapons' },
     daily7: { name: 'Determined', desc: 'Claim 7 daily bonuses in a row' },
     vs5: { name: 'Duelist', desc: 'Play 5× 2-player duels' },
     vsFatality1: { name: 'Finish him!', desc: 'Land a versus fatality on match KO' },
@@ -23375,6 +23377,8 @@ const CATALOG_DE = {
     streak10: { name: 'Unaufhaltsam', desc: 'Kill-Streak ×10 im Abenteuer' },
     trainCombo10: { name: 'Dummy-Meister', desc: 'Training-Combo ×10' },
     lv50: { name: 'Legende', desc: 'Level 50 freischalten' },
+    lv70: { name: 'Höllen-Legende', desc: 'Level 70 freischalten (Hölle)' },
+    zoneWeapons10: { name: 'Zonen-Sammler', desc: '10 Albtraum/Hölle-Waffen sammeln' },
     daily7: { name: 'Entschlossen', desc: '7 Tagesboni in Folge' },
     vs5: { name: 'Duellant', desc: '5× 2-Spieler-Duell gespielt' },
     vs_roster: { name: 'Volles Roster', desc: '10+ verschiedene Kämpfer (2P)' },
@@ -23484,6 +23488,8 @@ const CATALOG_FR = {
     streak10: { name: 'Impossible à arrêter', desc: 'Série ×10 en aventure' },
     trainCombo10: { name: 'Maître du dummy', desc: 'Combo entraînement ×10' },
     lv50: { name: 'Légende', desc: 'Débloquer niveau 50' },
+    lv70: { name: 'Légende de l’enfer', desc: 'Débloquer niveau 70 (Enfer)' },
+    zoneWeapons10: { name: 'Collectionneur de zone', desc: 'Collecte 10 armes Cauchemar/Enfer' },
     daily7: { name: 'Déterminé', desc: '7 bonus quotidiens d\'affilée' },
     vs5: { name: 'Duelliste', desc: '5× duels 2 joueurs' },
     vs_roster: { name: 'Roster complet', desc: '10+ combattants différents (2P)' },
@@ -23610,6 +23616,8 @@ const CATALOG_ES = {
     streak10: { name: 'Imparable', desc: 'Racha ×10 en aventura' },
     trainCombo10: { name: 'Maestro del dummy', desc: 'Combo entrenamiento ×10' },
     lv50: { name: 'Leyenda', desc: 'Desbloquear nivel 50' },
+    lv70: { name: 'Leyenda del infierno', desc: 'Desbloquear nivel 70 (Infierno)' },
+    zoneWeapons10: { name: 'Coleccionista de zona', desc: 'Reúne 10 armas Pesadilla/Infierno' },
     daily7: { name: 'Determinado', desc: '7 bonos diarios seguidos' },
     vs5: { name: 'Duelista', desc: '5× duelos a 2 jugadores' },
     vs_roster: { name: 'Roster completo', desc: '10+ luchadores distintos (2P)' },
@@ -26177,6 +26185,10 @@ overlayI18nCatalog(CATALOG_DE, {
     dexFarm: { name: 'Farmjäger', desc: '10 Farm-Arten im Buch' },
     dexZoo: { name: 'Safari-Guide', desc: '10 Zoo-Arten im Buch' },
     dexSea: { name: 'Gezeitenkenner', desc: '5 Meer-Arten im Buch' },
+    dexWild: { name: 'Waldjäger', desc: '10 Wald-Arten im Buch' },
+    dexCrypt: { name: 'Krypten-Guide', desc: '10 Krypten-Arten im Buch' },
+    dexScrap: { name: 'Schrottkenner', desc: '10 Schrott-Arten im Buch' },
+    dexFrost: { name: 'Frostkenner', desc: '8 Frost-Arten im Buch' },
     train5: { name: 'Robotbrecher', desc: '5× Training gewonnen' },
     wall100: { name: 'Abrissprofi', desc: 'Mauer-Rekord 100+' },
     combo8: { name: 'Combo-König', desc: 'Combo ×8 erreicht' },
@@ -26187,6 +26199,8 @@ overlayI18nCatalog(CATALOG_DE, {
     streak10: { name: 'Unaufhaltsam', desc: 'Kill-Streak ×10 im Abenteuer' },
     trainCombo10: { name: 'Dummy-Meister', desc: 'Training-Combo ×10' },
     lv50: { name: 'Legende', desc: 'Level 50 freischalten' },
+    lv70: { name: 'Höllen-Legende', desc: 'Level 70 freischalten (Hölle)' },
+    zoneWeapons10: { name: 'Zonen-Sammler', desc: '10 Albtraum/Hölle-Waffen sammeln' },
     daily7: { name: 'Entschlossen', desc: '7 Tagesboni abgeholt' },
     vs5: { name: 'Duellant', desc: '5× 2-Spieler-Duell gespielt' },
     vsFatality1: { name: 'Finish him!', desc: 'Lande eine Versus-Fatality beim Match-KO' },
@@ -49660,7 +49674,7 @@ const UI = {
         this._chestPullLeftSnap = null;
       }
       const text = document.getElementById('summonRevealText');
-      const msg = typeof chestResultToast === 'function' ? chestResultToast(res) : (res && res.ok ? 'Summon!' : tOr('ui.summonFail', 'Mislukt'));
+      const msg = typeof chestResultToast === 'function' ? chestResultToast(res) : (res && res.ok ? 'Summon!' : errT('ui.summonFail', 'Summon failed — try again'));
       // Never spoil via toast/text during the open — only after card
       this._summonPendingMsg = (res && res.ok) ? msg : null;
       if (text) text.textContent = (res && res.ok) ? tOr('ui.summonOpening', 'Kist opent…') : msg;

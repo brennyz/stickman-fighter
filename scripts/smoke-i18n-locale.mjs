@@ -358,6 +358,14 @@ if (!/name: 'Pañuelo hoja'/.test(catalog)) fail('ES leaf_band must be Pañuelo 
 if (/label: 'Avontuur'/.test(missions)) fail('DAILY_PLAY_TARGETS still hardcodes Dutch Avontuur labels');
 if (/function dailyText[\s\S]{0,220}return def \? def\.text/.test(catalog)) fail('dailyText still falls back to Dutch DAILY_DEFS.text');
 if (/function dailyHint[\s\S]{0,180}DAILY_PLAY_HINTS\[id\]/.test(catalog)) fail('dailyHint still falls back to Dutch DAILY_PLAY_HINTS');
+if (/function achLabel[\s\S]{0,180}return ach\[field\]/.test(i18n)) fail('achLabel still falls back to Dutch ACHIEVEMENTS names');
+if (!/lv70: \{ name: 'Hell legend'/.test(catalog)) fail('EN ach.lv70 missing — Hel-legende leak');
+if (!/zoneWeapons10: \{ name: 'Zone collector'/.test(catalog)) fail('EN ach.zoneWeapons10 missing — Zone-verzamelaar leak');
+if (!/lv70: \{ name: 'Höllen-Legende'/.test(catalog + locales)) fail('DE ach.lv70 missing');
+if (!/lv70: \{ name: 'Légende de l.enfer'/.test(catalog)) fail('FR ach.lv70 missing');
+if (!/lv70: \{ name: 'Leyenda del infierno'/.test(catalog)) fail('ES ach.lv70 missing');
+if (/tOr\('ui\.summonFail', 'Mislukt'\)/.test(ui)) fail('summonFail still Dutch Mislukt last-resort');
+if (/Bestand lezen mislukt/.test(missions)) fail('import FileReader error still Dutch');
 if (!/function errT\(/.test(i18n)) fail('errT helper missing — Dutch last-resort leaks');
 if (!/errRetry:/.test(catalog + locales)) fail('toast.errRetry missing');
 if (!/fightHiccup:/.test(catalog + locales)) fail('toast.fightHiccup missing');

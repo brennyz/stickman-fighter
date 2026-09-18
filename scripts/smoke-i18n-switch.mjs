@@ -97,6 +97,8 @@ async function run() {
       const tOpenMode = typeof t === 'function' ? t('ui.errOpenMode') : '';
       const tDaily = typeof t === 'function' ? t('daily.kills12.text') : '';
       const tFightHiccup = typeof t === 'function' ? t('toast.fightHiccup') : '';
+      const tAchLv70 = typeof t === 'function' ? t('ach.lv70.name') : '';
+      const tAchZone = typeof t === 'function' ? t('ach.zoneWeapons10.name') : '';
       let collectTitle = '';
       let collectGear = '';
       try {
@@ -119,7 +121,7 @@ async function run() {
         tGearLock, tPetSum, tPerk, tEgg, tKills, tKick, tImport, tStats, tQuota, tPersist,
         tPower, tProduce, tGearToast, tNameShort, collectTitle, collectGear, playState, playMode,
         tStyleLeaf, tStyleEnergy, tStyleVoid, tAdvLose, tTrainLose, tKeep, tSeasonBeat,
-        tErrRetry, tOpenMode, tDaily, tFightHiccup,
+        tErrRetry, tOpenMode, tDaily, tFightHiccup, tAchLv70, tAchZone,
       };
     }
     const en = snap('en');
@@ -144,6 +146,8 @@ async function run() {
       && /ROBOT WINS/.test(en.tTrainLose)
       && /Action failed/.test(en.tErrRetry) && /pick from the menu/.test(en.tOpenMode)
       && /Defeat 12|12 monsters/i.test(en.tDaily) && /fight continues/.test(en.tFightHiccup)
+      && /Hell legend/.test(en.tAchLv70) && /Zone collector/.test(en.tAchZone)
+      && !/Hel-legende|Zone-verzamelaar/.test(en.tAchLv70 + en.tAchZone)
       && en.playState === 'play' && /train/.test(en.playMode);
     const deOk = /Abenteuer/i.test(de.adv) && /Sammlung/i.test(de.collect)
       && /Waffen/i.test(de.weapons) && /Einstellungen/i.test(de.settings)
@@ -168,6 +172,8 @@ async function run() {
       && /Dschungel/.test(de.tSeasonBeat)
       && /fehlgeschlagen/.test(de.tErrRetry) && !/mislukt|Kon modus/.test(de.tErrRetry + de.tOpenMode)
       && /Besiege 12/.test(de.tDaily) && /kämpf weiter/.test(de.tFightHiccup)
+      && /Höllen-Legende/.test(de.tAchLv70) && /Zonen-Sammler/.test(de.tAchZone)
+      && !/Hel-legende|Zone-verzamelaar/.test(de.tAchLv70 + de.tAchZone)
       && de.playState === 'play' && /train/.test(de.playMode);
     const nlOk = /Avontuur/.test(nl.adv) && /Collectie/.test(nl.collect)
       && /Wapens/.test(nl.weapons) && /Instellingen/.test(nl.settings)
@@ -180,6 +186,7 @@ async function run() {
       && /buit|ronde/.test(nl.tKeep) && !/\bloot\b|\brun\b/.test(nl.tKeep)
       && /mislukt/.test(nl.tErrRetry) && /Kon modus/.test(nl.tOpenMode)
       && /Versla 12/.test(nl.tDaily)
+      && /Hel-legende/.test(nl.tAchLv70) && /Zone-verzamelaar/.test(nl.tAchZone)
       && nl.playState === 'play' && /train/.test(nl.playMode);
     const frOk = /Pas encore trouvé/.test(fr.tGearLock) && !EN_LOCK.test(fr.tGearLock)
       && /Aide saut/.test(fr.tPerk) && /Galet/.test(fr.tEgg) && !DUTCH_COPY.test(fr.tPerk + fr.tEgg + fr.tGearLock + fr.tPetSum)
@@ -196,6 +203,8 @@ async function run() {
       && /jungle/i.test(fr.tSeasonBeat)
       && /ratée/.test(fr.tErrRetry) && !/mislukt|Kon modus/.test(fr.tErrRetry + fr.tOpenMode)
       && /Vaincs 12/.test(fr.tDaily) && /Accroc/.test(fr.tFightHiccup)
+      && /enfer/i.test(fr.tAchLv70) && /zone/i.test(fr.tAchZone)
+      && !/Hel-legende|Zone-verzamelaar/.test(fr.tAchLv70 + fr.tAchZone)
       && fr.playState === 'play' && /train/.test(fr.playMode);
     const esOk = /Aún no hallado/.test(es.tGearLock) && !EN_LOCK.test(es.tGearLock)
       && /Ayuda salto/.test(es.tPerk) && /Guijarro/.test(es.tEgg) && !DUTCH_COPY.test(es.tPerk + es.tEgg + es.tGearLock + es.tPetSum)
@@ -212,6 +221,8 @@ async function run() {
       && /jungla/i.test(es.tSeasonBeat)
       && /fallida/.test(es.tErrRetry) && !/mislukt|Kon modus/.test(es.tErrRetry + es.tOpenMode)
       && /Derrota 12/.test(es.tDaily) && /Fallo/.test(es.tFightHiccup)
+      && /infierno/i.test(es.tAchLv70) && /zona/i.test(es.tAchZone)
+      && !/Hel-legende|Zone-verzamelaar/.test(es.tAchLv70 + es.tAchZone)
       && es.playState === 'play' && /train/.test(es.playMode);
     return { ok: !!(enOk && deOk && nlOk && frOk && esOk), en, de, nl, fr, es, enOk, deOk, nlOk, frOk, esOk };
   });
