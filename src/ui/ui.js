@@ -957,6 +957,9 @@ function hubTileStatLine(hub) {
       }
     }
     case 'gear': {
+      if (typeof juiceGearNeedsAdventure === 'function' && juiceGearNeedsAdventure()) {
+        return tOr('gear.hubStatEmpty', 'starter · 0 drops');
+      }
       const n = typeof gearEquippedCount === 'function' ? gearEquippedCount() : 0;
       return typeof tOr === 'function' ? tOr('gear.hubStat', '{n}/5', { n }) : (n + '/5');
     }
@@ -3955,6 +3958,12 @@ const UI = {
           }).join('')}</div>`
         : '';
       sumEl.style.display = 'block';
+      if (dexEmpty) {
+        sumEl.innerHTML = t('ui.dexSummary', {
+          n: `<b>0</b>`, total: `<b>${SPECIES_ORDER.length}</b>`,
+          kills: `<b>${kills}</b>`, hp: `<b>${totalHp}</b>`, tiers: `<b>0</b>`,
+        });
+      } else {
       const biomeTot = typeof dexBiomeTotals === 'function' ? dexBiomeTotals() : {};
       const biomeChips = ['farm', 'zoo', 'sea', 'wild', 'crypt', 'scrap', 'frost'].map((b) => {
         const tot = biomeTot[b] || 0;
@@ -3974,6 +3983,7 @@ const UI = {
         (biomeChips ? `<div style="margin-top:4px;line-height:1.7">${biomeChips}</div>` : '') +
         cosmeticHtml +
         dexNextAchievementHtml();
+      }
     }
     const bindFilterBar = (host, attr, stateKey, mkButtons, renderFn) => {
       if (!host) return;

@@ -38,6 +38,8 @@ must(/juicePetsNeedTame/.test(ui) && /juiceDexNeedDiscover/.test(ui), 'pets/book
 must(/pets\.emptyOwned/.test(ui) && /dex\.emptyOwned/.test(ui), 'pets/book empty CTA missing');
 must(/dexFilterBar[\s\S]{0,220}dexEmpty \? 'none'/.test(ui), 'empty book must hide filter chips');
 must(/hubStatEmpty/.test(ui), 'starter-only gear tile must not show 5/5');
+must(/case 'gear':[\s\S]{0,180}juiceGearNeedsAdventure/.test(ui), 'HOME gear data-hub-stat must use starter-empty line');
+must(/if \(dexEmpty\)/.test(ui), 'empty book must slim the 0/N summary');
 must(/btnPets[\s\S]{0,400}hub-tile-empty/.test(ui) && /btnDex[\s\S]{0,400}hub-tile-empty/.test(ui), 'HOME pets/book empty tiles missing');
 must(/combat\.ko/.test(game), 'kill pop must be one KO confirm');
 must(!/`\+\$\{xp\} XP`/.test(game), 'kill must not stack +XP floater on KO');
