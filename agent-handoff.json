@@ -20,7 +20,7 @@
     "featureBranch": "cursor/first-kill-chrome-b83a",
     "pushBlocked": null,
     "shareUrl": "https://brennyz.github.io/stickman-fighter/speel.html",
-    "note": "Draft only. #344 first-kill: keep KO+freeze+banner.newDex, drop toast.dexDiscover. No Versus. No main. v1.18.191 / SW 401.",
+    "note": "#346 DONE + STOP. First-kill: KO+freeze+banner.newDex, no toast.dexDiscover. Draft only, no main. v1.18.191 / SW 401.",
     "updated": "2026-09-18T16:06:11Z",
     "localMainHead": "aa80d25c5f708549af287716914c2016228a2a46",
     "remoteMainHead": "aa80d25c5f708549af287716914c2016228a2a46"
@@ -1238,6 +1238,10 @@
   ],
   "sessionLog": [
     {
+      "at": "2026-09-18T16:46:53Z",
+      "summary": "#346 DONE + STOP. First-kill chrome draft parked. No main."
+    },
+    {
       "at": "2026-09-18T16:44:53Z",
       "summary": "Draft #346: first-kill drops toast.dexDiscover; keep KO+freeze+banner.newDex. juice-feel SMOKE_OK. No Versus, no main."
     },
@@ -1332,10 +1336,6 @@
     {
       "at": "2026-09-18T12:36:17Z",
       "summary": "examiner P0: pets/gear locale + 390px overflow (start)"
-    },
-    {
-      "at": "2026-09-18T12:31:56Z",
-      "summary": "LANGUAGE: factory desc + nameShort, FOMO/HUD locale, export gear/fabriek i18n. Draft #317, geen main."
     }
   ],
   "implementedFeaturesSummary": "d18 char select deel 1+2 (v1.11.1-2); Mats coinrun + shuriken mik/vliegers + anti-spam (v1.12.0); speel.html (v1.12.2+). Zie HANDOFF-ZOEKINDEX.md en improvement-d20-bag.json userFeatureLog.",
