@@ -19,6 +19,7 @@ rg -l "handoff|coinrun|projAimVelocity|charSelectScreen|ASSET-STYLE" .
 
 | Gebruiker vroeg | Versie | Commit | Waar in code |
 |-----------------|--------|--------|----------------|
+| **Phone landscape pads (~844×390)** | 1.18.190 | this branch | `touchPhoneLandscape` · 1P jump/punch/swipe · `docs/LANDSCAPE-TOUCH.md` · `smoke:landscape-touch`. #321 pause gutter kept. Versus out. |
 | **Mobile combat density** | 1.18.186 | main | `src/systems/combat-density.js` · `buildLevel` / spawn cadence · `docs/COMBAT-DENSITY.md` · Versus out |
 | **Landscape combat camera/canvas** | 1.18.190 | this branch | `alignCombatPlayfield` / `combatViewAlign` · `#game --vv-*` · resize-before-spawn · `smoke:landscape-combat`. Versus out. |
 | **Phone HUD keep-out (~390×844)** | 1.18.186 | main | `hudSafeLayout` / pause gutter · compact combat+wall/train · sheet bottoms · `smoke:hud-phone`. Versus out. |
