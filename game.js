@@ -8942,15 +8942,17 @@ function grantStarterGear(s, now) {
   if (typeof DEFAULT_SAVE !== 'undefined' && st === DEFAULT_SAVE) return;
   const tNow = gearNowMs(now);
   const bag = ensureGearSave(st);
+  const justGranted = [];
   for (const item of GEAR_ITEMS) {
     if (!item.starter) continue;
     if (bag.owned[item.id]) continue;
     if (!gearItemLootable(item, st, tNow)) continue;
     bag.owned[item.id] = { at: tNow, src: 'starter' };
+    justGranted.push(item.id);
   }
   for (const slot of GEAR_SLOT_IDS) {
     if (bag.equipped[slot]) continue;
-    const pick = GEAR_ITEMS.find((it) => it.slot === slot && it.starter && bag.owned[it.id]);
+    const pick = GEAR_ITEMS.find((it) => it.slot === slot && it.starter && justGranted.indexOf(it.id) >= 0);
     if (pick) bag.equipped[slot] = pick.id;
   }
 }
@@ -50740,33 +50742,16 @@ const UI = {
     const allOff = document.getElementById('gearUnequipAll');
     if (!pickerOnly && allOff) {
       allOff.hidden = filled < 1;
-      allOff.classList.toggle('is-armed', !!this._gearUnequipAllArmed);
-      allOff.textContent = this._gearUnequipAllArmed
-        ? tOr('gear.unequipAllConfirm', 'Nog eens tikken')
-        : tOr('gear.unequipAll', 'Alles uitdoen');
+      allOff.classList.remove('is-armed');
+      allOff.textContent = tOr('gear.unequipAll', 'Alles uitdoen');
       if (!allOff.dataset.sfGearAllOff) {
         allOff.dataset.sfGearAllOff = '1';
-        bindPress(allOff, () => {
+        let lastRun = 0;
+        const runAllOff = () => {
+          const now = Date.now();
+          if (now - lastRun < 80) return;
+          lastRun = now;
           safeUiAction(() => {
-            if (!this._gearUnequipAllArmed) {
-              this._gearUnequipAllArmed = true;
-              if (this._gearUnequipAllT) {
-                try { clearTimeout(this._gearUnequipAllT); } catch (_) {}
-              }
-              this._gearUnequipAllT = setTimeout(() => {
-                this._gearUnequipAllArmed = false;
-                this._gearUnequipAllT = null;
-                if (typeof this.renderGear === 'function') this.renderGear();
-              }, 2400);
-              AudioSys.sfx('select');
-              this.renderGear();
-              return;
-            }
-            this._gearUnequipAllArmed = false;
-            if (this._gearUnequipAllT) {
-              try { clearTimeout(this._gearUnequipAllT); } catch (_) {}
-              this._gearUnequipAllT = null;
-            }
             const res = (typeof unequipAllGear === 'function')
               ? unequipAllGear()
               : { ok: true, n: (typeof listGearSlots === 'function' ? listGearSlots() : []).reduce((n, s) => {
@@ -50778,7 +50763,8 @@ const UI = {
             this.renderGear();
             this.renderMenu();
           }, 'gearUnequipAll', tOr('gear.errSlot', 'Slot pick failed'));
-        });
+        };
+        allOff.addEventListener('click', runAllOff);
       }
     }
 

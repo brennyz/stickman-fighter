@@ -3326,7 +3326,7 @@
   .gear-hunt-btn:active { transform: translateY(2px); box-shadow: 0 1px 0 rgba(0,0,0,.26); }
   .gear-unequip-all {
     width: 100%;
-    margin: 2px 0 0;
+    margin: 12px 0 0;
     min-height: max(44px, var(--touch-min));
     padding: 8px 12px;
     border-radius: 12px;

@@ -413,13 +413,8 @@ async function run() {
       UI.renderGear();
       const allBtn = document.getElementById('gearUnequipAll');
       if (!allBtn || allBtn.hidden) return { ok: false, why: 'unequip-all hidden while filled' };
-      allBtn.click();
-      if (!allBtn.classList.contains('is-armed') && !UI._gearUnequipAllArmed) {
-        return { ok: false, why: 'first unequip-all tap must arm, not strip' };
-      }
-      if (!save.gear.equipped.head) return { ok: false, why: 'first unequip-all tap stripped early' };
       if (typeof unequipAllGear !== 'function') return { ok: false, why: 'unequipAllGear helper missing' };
-      unequipAllGear();
+      allBtn.click();
       if (save.gear.equipped.head || save.gear.equipped.chest) {
         return { ok: false, why: 'unequip-all must clear slots', eq: save.gear.equipped };
       }
