@@ -2053,7 +2053,7 @@
       width:48px; height:48px; border-radius:14px; font-size:18px; display:none;
       background:rgba(20,26,48,.8); border:1px solid rgba(255,255,255,.22); color:#fff;
       box-shadow:0 4px 12px rgba(0,0,0,.35); pointer-events:auto;
-      touch-action:manipulation; cursor:pointer; position:relative;
+      touch-action:manipulation; cursor:pointer;
       padding:0; align-items:center; justify-content:center; }
   #pauseBtn.show { display:flex; }
   #pauseBtn::before { content:''; position:absolute; inset:-14px; }
@@ -3744,6 +3744,7 @@
       --touch-min: 44px;
     }
     #pauseBtn {
+      position: fixed;
       top: max(8px, calc(var(--vv-top, 0px) + env(safe-area-inset-top)));
       right: max(8px, env(safe-area-inset-right));
       width: 48px;
