@@ -867,6 +867,12 @@ function bootGame() {
   } catch (_) {}
   window.__sfBooted = true;
   try {
+    if (typeof prewarmFxPool === 'function') prewarmFxPool();
+    if (typeof speciesTop20Ranked === 'function') {
+      setTimeout(() => { try { speciesTop20Ranked(); } catch (_) {} }, 0);
+    }
+  } catch (_) {}
+  try {
     if (typeof window.__sfDismissBootFailToast === 'function') window.__sfDismissBootFailToast();
   } catch (_) {}
   safeCall(runSplashIntro, 'splash');
@@ -1046,6 +1052,15 @@ function bootGame() {
     alignCombatPlayfield: typeof alignCombatPlayfield === 'function' ? alignCombatPlayfield : null,
     touchPhoneLandscape: typeof touchPhoneLandscape === 'function' ? touchPhoneLandscape : null,
     Input: typeof Input !== 'undefined' ? Input : null,
+    fx: {
+      lite: () => (typeof fxLite === 'function' ? fxLite() : false),
+      spawnLite: () => (typeof fxSpawnLite === 'function' ? fxSpawnLite() : false),
+      touch: () => (typeof fxTouchDevice === 'function' ? fxTouchDevice() : false),
+      caps: () => (typeof fxCaps === 'function' ? fxCaps() : null),
+      prewarm: (n) => (typeof prewarmFxPool === 'function' ? prewarmFxPool(n) : 0),
+      poolSize: () => (typeof fxPoolSize === 'function' ? fxPoolSize() : 0),
+      summary: () => (typeof perfFxSummary === 'function' ? perfFxSummary() : null),
+    },
     previewTop20Spawn: () => {
       try { AudioSys.init(); AudioSys.sfx('top20Spawn'); } catch (_) {}
       try { if (game && typeof game.shake === 'function') game.shake(4, 0.16); } catch (_) {}

@@ -5,11 +5,15 @@
    Modi: Avontuur, Training, Versus 2P, Muur, Mats (coinrun).
    Audio (sfx + bgm) is procedureel via Web Audio — rechtenvrij.
    d20 c4 d5: horde FX scaling, pause perf strip helpers.
+   Mid-phone fxLite: particle pool + spawn hitch guard. Fighters always draw.
    ========================================================================= */
 
 const TAU = Math.PI * 2;
 const BANNER_LANES = 3;
 const FX_CAP = { particles: 140, floaters: 28, projectiles: 48, banners: BANNER_LANES, afterimages: 12 };
+const FX_POOL_PREWARM = 48;
+const FX_POOL_MAX = 160;
+const _fxParticlePool = [];
 const Perf = {
   tier: 0,
   emaMs: 16.7,
@@ -89,14 +93,69 @@ function perfHordeLoad() {
   else if (alive >= 10) mul = 0.9;
   return { alive, mul };
 }
+/** Mid-phone / compact viewport — tighter FX before Perf.tier has time to climb. */
+function fxTouchDevice() {
+  if (typeof window !== 'undefined' && window.__sfForceTouchFx) return true;
+  if (typeof IS_TOUCH !== 'undefined' && IS_TOUCH) return true;
+  if (typeof W === 'number' && W > 0 && W < 720) return true;
+  return false;
+}
+
+/**
+ * Spawn-hitch guard: liteFx, reduced-motion, Perf.tier, or first ~1.5s on mid phones.
+ * Caps bursts / freeze only — never hides fighters.
+ */
+function fxSpawnLite() {
+  if (typeof save !== 'undefined' && save && save.liteFx) return true;
+  if (typeof motionReduced === 'function' && motionReduced()) return true;
+  if (typeof Perf !== 'undefined' && Perf.tier >= 1) return true;
+  if (fxTouchDevice() && typeof Perf !== 'undefined' && Perf.frames < 90) return true;
+  return false;
+}
+
+function allocFxParticle() {
+  const p = _fxParticlePool.pop();
+  if (p) {
+    p.x = 0; p.y = 0; p.vx = 0; p.vy = 0;
+    p.life = 0; p.maxLife = 0; p.color = '#fff';
+    p.size = 2; p.kind = 'square'; p.grav = 900;
+    return p;
+  }
+  return { x: 0, y: 0, vx: 0, vy: 0, life: 0, maxLife: 0, color: '#fff', size: 2, kind: 'square', grav: 900 };
+}
+
+function releaseFxParticle(p) {
+  if (!p || _fxParticlePool.length >= FX_POOL_MAX) return;
+  _fxParticlePool.push(p);
+}
+
+function prewarmFxPool(n) {
+  const want = n == null ? FX_POOL_PREWARM : n;
+  const need = Math.max(0, want - _fxParticlePool.length);
+  for (let i = 0; i < need; i++) {
+    _fxParticlePool.push({
+      x: 0, y: 0, vx: 0, vy: 0, life: 0, maxLife: 0,
+      color: '#fff', size: 2, kind: 'square', grav: 900,
+    });
+  }
+  return _fxParticlePool.length;
+}
+
+function fxPoolSize() {
+  return _fxParticlePool.length;
+}
+
 function fxCaps() {
   let mul = 1;
-  if (save.liteFx) mul = 0.55;
+  if (save.liteFx) mul = 0.42;
   else if (Perf.tier >= 2) mul = 0.42;
-  else if (Perf.tier >= 1) mul = 0.68;
+  else if (Perf.tier >= 1) mul = 0.62;
+  else if (fxTouchDevice()) mul = 0.72;
   if (motionReduced()) mul *= 0.62;
   mul *= perfHordeLoad().mul;
-  const floor = { particles: 24, floaters: 8, projectiles: 16, banners: 2, afterimages: 4 };
+  const floor = (fxTouchDevice() || save.liteFx)
+    ? { particles: 16, floaters: 6, projectiles: 12, banners: 2, afterimages: 3 }
+    : { particles: 24, floaters: 8, projectiles: 16, banners: 2, afterimages: 4 };
   const out = {};
   for (const k of Object.keys(FX_CAP)) {
     out[k] = Math.max(floor[k] || 2, Math.floor(FX_CAP[k] * mul));
@@ -121,10 +180,13 @@ function perfFxRoom(g, type) {
 function perfFxBudgetAllow(g, cost) {
   cost = cost || 1;
   if (!g) return true;
-  if (!save.liteFx && Perf.tier < 1 && perfHordeLoad().mul >= 0.95) return true;
-  let maxPerFrame = save.liteFx ? 5 : (Perf.tier >= 2 ? 9 : 14);
+  // Mid phones / first-second spawn must not get an unlimited FX dump.
+  if (!save.liteFx && Perf.tier < 1 && perfHordeLoad().mul >= 0.95
+    && !fxSpawnLite() && !fxTouchDevice()) return true;
+  let maxPerFrame = save.liteFx ? 4 : (Perf.tier >= 2 ? 8 : (fxTouchDevice() ? 10 : 14));
+  if (fxSpawnLite()) maxPerFrame = Math.min(maxPerFrame, 6);
   const horde = perfHordeLoad();
-  if (horde.mul < 1) maxPerFrame = Math.max(4, Math.floor(maxPerFrame * horde.mul));
+  if (horde.mul < 1) maxPerFrame = Math.max(3, Math.floor(maxPerFrame * horde.mul));
   if (g._fxBudgetFrame !== Perf.frames) {
     g._fxBudgetFrame = Perf.frames;
     g._fxBudgetUsed = 0;

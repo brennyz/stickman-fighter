@@ -30,6 +30,10 @@ function startGame(mode, opts) {
     else if (typeof resize === 'function') resize();
   } catch (_) {}
   try {
+    try {
+      if (typeof prewarmFxPool === 'function') prewarmFxPool();
+      if (typeof speciesTop20Ranked === 'function') speciesTop20Ranked();
+    } catch (_) {}
     game = new Game(mode, opts);
   } catch (err) {
     sfReportError('start/' + mode, err);

@@ -328,6 +328,7 @@ class Game {
     this.minX = 40; this.maxX = W - 40;
     this.shakeT = 0; this.shakeMag = 0; this.freezeT = 0;
     this.particles = []; this.floaters = []; this.projectiles = []; this.banners = [];
+    try { if (typeof prewarmFxPool === 'function') prewarmFxPool(); } catch (_) {}
     this.monsters = [];
     this.inputLocked = false;
     this.playerHurtCd = 0;
@@ -3519,7 +3520,12 @@ class Game {
         if (pt.y > this.ground && pt.vy > 0) { pt.y = this.ground; pt.vy *= -0.4; }
       }
     }
-    this.particles = this.particles.filter(p => p.life > 0);
+    const keep = [];
+    for (const p of this.particles) {
+      if (p.life > 0) keep.push(p);
+      else if (typeof releaseFxParticle === 'function') releaseFxParticle(p);
+    }
+    this.particles = keep;
     for (const fl of this.floaters) {
       fl.life -= dt;
       fl.y -= (fl.vy || 40) * dt;
@@ -3534,7 +3540,12 @@ class Game {
   trimFxCaps() {
     const cap = fxCaps();
     const drop = (arr, max) => {
-      if (arr.length > max) arr.splice(0, arr.length - max);
+      if (arr.length > max) {
+        const gone = arr.splice(0, arr.length - max);
+        if (arr === this.particles && typeof releaseFxParticle === 'function') {
+          for (const p of gone) releaseFxParticle(p);
+        }
+      }
     };
     drop(this.particles, cap.particles);
     drop(this.floaters, cap.floaters);
@@ -3575,8 +3586,9 @@ class Game {
     opts = opts || {};
     const kind = opts.kind || 'square';
     const floorN = kind === 'spark' ? 1 : 2;
+    const spawnLite = typeof fxSpawnLite === 'function' && fxSpawnLite();
     if (motionReduced()) n = Math.max(floorN, Math.floor(n * 0.45));
-    else if (save.liteFx || Perf.tier >= 1) n = Math.max(kind === 'spark' ? 1 : 3, Math.floor(n * 0.65));
+    else if (save.liteFx || Perf.tier >= 1 || spawnLite) n = Math.max(kind === 'spark' ? 1 : 3, Math.floor(n * 0.55));
     if (Perf.tier >= 2) n = Math.max(floorN, Math.floor(n * 0.55));
     if (!perfFxBudgetAllow(this, Math.min(n, 4))) n = Math.max(floorN, Math.floor(n * 0.45));
     if (n <= 0 || perfFxRoom(this, 'particle') <= 0) return;
@@ -3589,16 +3601,20 @@ class Game {
     for (let i = 0; i < n; i++) {
       const a = rand(0, TAU);
       const sp = kind === 'spark' ? rand(20, 90) : rand(60, 320);
-      this.particles.push({
-        x, y,
-        vx: Math.cos(a) * sp,
-        vy: Math.sin(a) * sp - (kind === 'spark' ? 40 : 120),
-        life: kind === 'spark' ? rand(0.12, 0.28) : rand(0.3, 0.7),
-        color,
-        size: baseSize || rand(2, 5),
-        kind,
-        grav: kind === 'spark' ? 200 : 900,
-      });
+      const pt = (typeof allocFxParticle === 'function') ? allocFxParticle() : {
+        x: 0, y: 0, vx: 0, vy: 0, life: 0, maxLife: 0, color: '#fff', size: 2, kind: 'square', grav: 900,
+      };
+      pt.x = x;
+      pt.y = y;
+      pt.vx = Math.cos(a) * sp;
+      pt.vy = Math.sin(a) * sp - (kind === 'spark' ? 40 : 120);
+      pt.life = kind === 'spark' ? rand(0.12, 0.28) : rand(0.3, 0.7);
+      pt.maxLife = pt.life;
+      pt.color = color;
+      pt.size = baseSize || rand(2, 5);
+      pt.kind = kind;
+      pt.grav = kind === 'spark' ? 200 : 900;
+      this.particles.push(pt);
     }
   }
   floater(x, y, txt, color, size, layer) {
@@ -3879,6 +3895,7 @@ class Game {
     if (this.mode === 'wall') this.drawWall(c);
     if (this.mode === 'coinrun') this.drawCoinRunLayer(c);
 
+    // Fighters always draw — skipFx / fxLite / spawnLite only throttle particles.
     this.drawCombatants(c);
 
     // projectielen
