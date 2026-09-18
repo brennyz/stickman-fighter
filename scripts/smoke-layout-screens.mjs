@@ -40,7 +40,8 @@ must(/id="resCtaDock"/.test(html) && /result-cta-primary/.test(css) && /min-heig
   'result Flappy retry dock / 84px primary missing');
 must(/RESULT_SHOW_LOSE_MS = 700/.test(fs.readFileSync(path.join(root, 'src/systems/missions.js'), 'utf8')),
   'lose result delay must be 700ms (<3s)');
-must(/sticky-under-back\) \+ 54px/.test(css), 'toast must sit under factory/settings titles');
+must(/toast-under-title/.test(css) && /sticky-under-back\) \+ 96px/.test(css),
+  'toast must sit under factory/settings titles');
 must(/orientation: landscape\) and \(max-height: 420px\)/.test(css),
   'landscape 844×390 hub breakpoint missing');
 must(!/data-hub="versus"/.test(html), 'versus hub tile must stay retired');

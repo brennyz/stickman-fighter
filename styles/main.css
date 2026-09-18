@@ -2152,8 +2152,15 @@
   body:not(.is-playing) #toastHost { top:max(70px, calc(env(safe-area-inset-top, 0px) + 56px)); }
   body.is-playing #toastHost { top:max(86px, calc(env(safe-area-inset-top, 0px) + 70px)); }
   /* Welcome / collect toasts must sit under back + title (factories, settings, style). */
+  body.toast-under-title #toastHost,
+  body:not(.is-playing):has(#buildingsScreen.active) #toastHost,
+  body:not(.is-playing):has(#settingsScreen.active) #toastHost,
+  body:not(.is-playing):has(#styleScreen.active) #toastHost,
   body:not(.is-playing):has(.screen.active:not(#menuScreen):not(#resultScreen)) #toastHost {
-    top: max(118px, calc(var(--sticky-under-back) + 54px));
+    top: max(152px, calc(var(--sticky-under-back) + 96px));
+  }
+  body:has(#resultScreen.active) #toastHost {
+    top: max(168px, calc(env(safe-area-inset-top, 0px) + 148px));
   }
   .toast { background:rgba(10,14,28,.94); border:1.5px solid rgba(255,215,94,.55); color:#fff;
       padding:12px 16px; border-radius:14px; font-weight:800; font-size:15px; line-height:1.35;
@@ -4183,5 +4190,14 @@
     #resultScreen .result-cta-primary { min-height: 56px; font-size: 18px; }
     #resultScreen .stars-big { margin: 4px 0 6px; font-size: min(6vw, 28px); }
     #resultScreen .result-cta-dock { padding-top: 6px; }
+    body:not(.is-playing) #toastHost,
+    body.toast-under-title #toastHost {
+      top: auto;
+      bottom: max(52px, calc(env(safe-area-inset-bottom, 0px) + 44px));
+    }
+    body:has(#resultScreen.active) #toastHost {
+      top: max(72px, calc(env(safe-area-inset-top, 0px) + 64px));
+      bottom: auto;
+    }
   }
 

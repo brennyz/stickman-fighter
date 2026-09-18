@@ -1224,6 +1224,7 @@ const UI = {
           return;
         }
         try { this.clearToasts(); } catch (_) {}
+        try { document.body.classList.remove('toast-under-title'); } catch (_) {}
         try { clearScreensForPlay(); } catch (_) {}
       } else {
         const target = document.getElementById(id);
@@ -1237,6 +1238,8 @@ const UI = {
         if (id !== 'menuScreen') {
           try { this._dismissWelcomeToast(); } catch (_) {}
         }
+        document.body.classList.toggle('toast-under-title',
+          !!(id && id !== 'menuScreen' && id !== 'resultScreen'));
       }
       for (const s of this.screens) {
         if (id && s === id) continue;
