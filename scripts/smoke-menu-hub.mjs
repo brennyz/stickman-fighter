@@ -61,6 +61,8 @@ must(/chestDaily/.test(storage), 'missing chestDaily in DEFAULT_SAVE');
 must(/sanitizeChestDaily|chestWeapons/.test(storage), 'missing chest save sanitize hooks');
 must(/src\/data\/chest-summons\.js/.test(fs.readFileSync(path.join(root, 'src/manifest.json'), 'utf8')), 'manifest missing chest-summons.js');
 must(/body\.is-playing #menuScreen \.menu-stage/.test(css), 'missing play-safe stage hide');
+must(!/fomo-ritual-sheet[\s\S]{0,220}max-height:\s*min\(78vh/.test(css), 'EX-021: Vandaag sheet 78vh covers HOME');
+must(/fomo-ritual-sheet[\s\S]{0,280}max-height:\s*min\(4[048]vh/.test(css), 'EX-021: compact Vandaag sheet');
 must(/sf-icon-broken/.test(css), 'missing broken-icon CSS');
 must(/function hardenButtonIcons/.test(fs.readFileSync(path.join(root, 'src/systems/missions.js'), 'utf8')), 'missing hardenButtonIcons');
 

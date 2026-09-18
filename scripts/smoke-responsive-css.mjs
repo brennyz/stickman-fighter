@@ -37,6 +37,8 @@ must(/#pauseBtn \{ position:fixed;/.test(css) && !/#pauseBtn \{[^}]*position:rel
   '#pauseBtn must stay position:fixed (relative pulled it onto the HP row)');
 must(/\.menu-dock \.btn\.tog[\s\S]*min-height:\s*var\(--touch-min\)/.test(css),
   'phone dock buttons should honor --touch-min');
+must(/fomo-ritual-sheet[\s\S]{0,280}max-height:\s*min\(4[048]vh/.test(css), 'layout: compact FOMO sheet on 390px');
+must(/body:not\(\.is-playing\)\.sf-sub-screen #toastHost/.test(css), 'layout: sub-screen toast offset');
 
 const storage = fs.readFileSync(path.join(root, 'src/core/storage.js'), 'utf8');
 const sw = fs.readFileSync(path.join(root, 'sw.js'), 'utf8');

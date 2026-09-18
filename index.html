@@ -212,8 +212,10 @@
   <div id="fomoRitual" hidden>
     <button type="button" class="fomo-ritual-backdrop" id="fomoRitualBackdrop" aria-label="Sluiten"></button>
     <div class="fomo-ritual-sheet" role="dialog" aria-modal="true" aria-labelledby="fomoRitualTitle">
-      <button type="button" class="fomo-ritual-x" id="fomoRitualDismiss" aria-label="Sluiten">×</button>
-      <h2 class="fomo-ritual-title" id="fomoRitualTitle">Vandaag</h2>
+      <header class="fomo-ritual-head">
+        <h2 class="fomo-ritual-title" id="fomoRitualTitle">Vandaag</h2>
+        <button type="button" class="fomo-ritual-x" id="fomoRitualDismiss" aria-label="Sluiten">×</button>
+      </header>
       <div class="fomo-ritual-rows" id="fomoRitualRows"></div>
       <p class="fomo-ritual-reset" id="fomoRitualReset"></p>
       <button type="button" class="btn mode-btn b-continue fomo-ritual-cta" id="fomoRitualCta">

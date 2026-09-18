@@ -2731,18 +2731,30 @@
       transform:translateX(-50%); z-index:var(--z-toast); pointer-events:none;
       display:flex; flex-direction:column; gap:8px; align-items:center;
       width:min(92vw, 420px); max-width:calc(100vw - 24px); }
-  body:not(.is-playing) #toastHost { top:max(70px, calc(env(safe-area-inset-top, 0px) + 56px)); }
-  body.is-playing #toastHost { top:max(86px, calc(env(safe-area-inset-top, 0px) + 70px)); }
-  /* Welcome / collect toasts must sit under back + title (factories, settings, style). */
+  /* HOME: dock toasts above the meta row — never on the logo or first tiles. */
+  body:not(.is-playing) #toastHost {
+    top: auto;
+    bottom: max(88px, calc(env(safe-area-inset-bottom, 0px) + 76px));
+  }
+  /* Sub-screens: sit below back-btn + .head (buildings title). */
+  body:not(.is-playing).sf-sub-screen #toastHost,
   body.toast-under-title #toastHost,
   body:not(.is-playing):has(#buildingsScreen.active) #toastHost,
   body:not(.is-playing):has(#settingsScreen.active) #toastHost,
   body:not(.is-playing):has(#styleScreen.active) #toastHost,
   body:not(.is-playing):has(.screen.active:not(#menuScreen):not(#resultScreen)) #toastHost {
     top: max(152px, calc(var(--sticky-under-back) + 96px));
+    bottom: auto;
   }
+  /* FOMO Vandaag open: park toast in HOME peek strip, not on logo or sheet. */
+  body.fomo-ritual-open #toastHost {
+    top: max(100px, calc(env(safe-area-inset-top, 0px) + 84px));
+    bottom: auto;
+  }
+  body.is-playing #toastHost { top:max(86px, calc(env(safe-area-inset-top, 0px) + 70px)); bottom: auto; }
   body:has(#resultScreen.active) #toastHost {
     top: max(168px, calc(env(safe-area-inset-top, 0px) + 148px));
+    bottom: auto;
   }
   .toast { background:rgba(8,12,24,.96); border:2px solid rgba(255,215,94,.7); color:#fff;
       padding:12px 16px; border-radius:14px; font-weight:800; font-size:15px; line-height:1.35;
@@ -2784,8 +2796,8 @@
     visibility: hidden;
     pointer-events: none;
   }
-  /* EX-021: Vandaag is a hub overlay, not a .screen. Lock HOME chrome so tiles
-     / sticky footer cannot steal dismiss taps on ~390. */
+  /* EX-021: Vandaag is a compact bottom sheet — HOME title + tiles stay visible above.
+     Lock HOME chrome so tiles / sticky footer cannot steal dismiss taps on ~390. */
   #menuScreen.screen.is-fomo,
   #menuScreen.is-fomo {
     z-index: var(--z-fomo);
@@ -2811,32 +2823,43 @@
   #menuScreen #fomoRitual.is-open .fomo-ritual-backdrop { animation: fomoFadeIn .28s ease; }
   .fomo-ritual-backdrop {
     position: absolute; inset: 0; border: 0; padding: 0; margin: 0;
-    background: rgba(6, 10, 22, .68); cursor: pointer;
+    background: linear-gradient(180deg,
+      rgba(6, 10, 22, .22) 0%,
+      rgba(6, 10, 22, .38) 42%,
+      rgba(6, 10, 22, .7) 100%);
+    cursor: pointer;
     z-index: 0;
   }
   .fomo-ritual-sheet {
     position: relative; z-index: 1; width: min(92vw, 440px); max-width: 100%;
-    max-height: min(72vh, 560px);
-    overflow-y: auto; -webkit-overflow-scrolling: touch; overscroll-behavior: contain;
+    max-height: min(48vh, 400px);
+    height: auto;
+    display: flex; flex-direction: column;
+    overflow: hidden; flex-shrink: 1;
     background: #121a28; border: 2px solid rgba(124, 245, 255, .42); border-radius: 18px;
-    padding: 16px 16px 14px; box-shadow: 0 16px 40px rgba(0,0,0,.55); color: #e8f0ff;
-    margin-bottom: max(8px, env(safe-area-inset-bottom, 0px));
+    padding: 14px 14px 12px; box-shadow: 0 16px 40px rgba(0,0,0,.55); color: #e8f0ff;
+    margin-bottom: max(16px, env(safe-area-inset-bottom, 0px));
   }
+  .fomo-ritual-head { flex: 0 0 auto; position: relative; min-height: 44px; }
   @keyframes fomoSheetIn { from { opacity:0; transform:translateY(22px); } to { opacity:1; transform:none; } }
   @keyframes fomoFadeIn { from { opacity:0; } to { opacity:1; } }
   body.reduced-motion #menuScreen #fomoRitual.is-open .fomo-ritual-sheet,
   body.reduced-motion #menuScreen #fomoRitual.is-open .fomo-ritual-backdrop { animation: none; }
   .fomo-ritual-x {
-    position: absolute; top: 4px; right: 4px; z-index: 2;
+    position: absolute; top: 0; right: 0; z-index: 2;
     width: var(--touch-min); height: var(--touch-min); border: 0;
     background: transparent; color: #9db1e3; font-size: 28px; line-height: 1; font-weight: 700;
     cursor: pointer; touch-action: manipulation; pointer-events: auto;
   }
   .fomo-ritual-title {
-    margin: 0 48px 10px 0; font-family: 'Black Ops One', sans-serif;
-    font-size: 22px; color: #ffd75e; letter-spacing: .04em;
+    margin: 0 44px 8px 0; font-family: 'Black Ops One', sans-serif;
+    font-size: 20px; color: #ffd75e; letter-spacing: .04em;
   }
-  .fomo-ritual-rows { display: flex; flex-direction: column; gap: 8px; margin-bottom: 10px; }
+  .fomo-ritual-rows {
+    display: flex; flex-direction: column; gap: 8px; margin-bottom: 10px;
+    flex: 1 1 auto; min-height: 0; overflow-y: auto;
+    -webkit-overflow-scrolling: touch; overscroll-behavior: contain;
+  }
   .fomo-ritual-row {
     background: rgba(255,255,255,.05); border: 1px solid rgba(255,255,255,.1);
     border-radius: 12px; padding: 10px 12px; font-size: 14px; line-height: 1.4; font-weight: 700;
@@ -2850,10 +2873,15 @@
     border-color: rgba(124, 252, 138, .45); color: #7cfc8a;
   }
   .fomo-ritual-row small { display: block; margin-top: 2px; font-size: 12px; font-weight: 600; color: #9db1e3; }
-  .fomo-ritual-reset { margin: 0 0 12px; font-size: 12px; font-weight: 700; color: #7cf5ff; }
-  .fomo-ritual-cta { width: 100%; justify-content: center; margin: 0;
+  .fomo-ritual-reset { flex: 0 0 auto; margin: 0 0 10px; font-size: 12px; font-weight: 700; color: #7cf5ff; }
+  .fomo-ritual-cta { flex: 0 0 auto; width: 100%; justify-content: center; margin: 0;
     white-space: normal; text-align: center; line-height: 1.2; max-width: 100%; }
   #fomoRitualReopen { margin: 0 auto 10px; }
+  @media (max-width: 430px), (max-height: 860px) {
+    .fomo-ritual-sheet { max-height: min(40vh, 340px); padding: 12px 12px 10px; }
+    .fomo-ritual-title { font-size: 18px; }
+    .fomo-ritual-row { padding: 8px 10px; font-size: 13px; }
+  }
 
   .version-update-overlay { position:fixed; inset:0; z-index:55; display:flex; align-items:center; justify-content:center;
       padding:max(16px, env(safe-area-inset-top)) 16px max(16px, env(safe-area-inset-bottom));
@@ -5047,8 +5075,8 @@
       align-items: flex-end;
     }
     .fomo-ritual-sheet {
-      max-height: min(70vh, 560px);
-      padding: 14px 14px var(--sheet-bottom-pad);
+      max-height: min(40vh, 340px);
+      padding: 12px 12px var(--sheet-bottom-pad);
     }
     .fomo-ritual-cta,
     #btnGambleGooiStart,

@@ -2982,6 +2982,15 @@ function welcomeToastOnHub() {
   }
 }
 
+function fomoRitualIsOpen() {
+  try {
+    const el = document.getElementById('fomoRitual');
+    return !!(el && !el.hidden);
+  } catch (_) {
+    return false;
+  }
+}
+
 function maybeWelcomeToast() {
   ensureTipsSeen();
   if (save.tipsSeen.welcome) return;

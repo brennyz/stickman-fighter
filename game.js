@@ -8264,6 +8264,15 @@ function welcomeToastOnHub() {
   }
 }
 
+function fomoRitualIsOpen() {
+  try {
+    const el = document.getElementById('fomoRitual');
+    return !!(el && !el.hidden);
+  } catch (_) {
+    return false;
+  }
+}
+
 function maybeWelcomeToast() {
   ensureTipsSeen();
   if (save.tipsSeen.welcome) return;
@@ -51582,6 +51591,7 @@ const UI = {
         const scr = document.getElementById(s);
         if (scr) scr.classList.remove('active');
       }
+      try { this.syncHudChrome(id); } catch (_) {}
       if (id) {
         try { if (typeof syncSeasonFlavorUi === 'function') syncSeasonFlavorUi(); } catch (_) {}
         const el = document.getElementById(id);
@@ -51834,6 +51844,7 @@ const UI = {
   },
 
   _dismissWelcomeToast() {
+    try { this.dismissWelcomeToasts(); } catch (_) {}
     let welcome = '';
     try { welcome = (typeof t === 'function') ? t('toast.welcome') : ''; } catch (_) {}
     const els = (this._toastEls || []).slice();
@@ -51843,7 +51854,14 @@ const UI = {
     }
   },
 
+  _toastKeyFromMsg(msg) {
+    const raw = String(msg == null ? '' : msg).trim();
+    if (/^[a-z][a-z0-9]*(\.[a-zA-Z0-9_]+)+$/.test(raw) && raw.length < 80) return raw;
+    return '';
+  },
+
   toast(msg, ms, opts) {
+    const key = this._toastKeyFromMsg(msg);
     const text = this._resolveToastText(msg);
     if (!text) return;
     const spec = this._parseToastArgs(ms, opts);
@@ -51856,18 +51874,21 @@ const UI = {
     this._toastQ = this._toastQ || [];
     this._toastEls = this._toastEls || [];
 
-    const sameEl = this._toastEls.find((el) => el && el.textContent === text);
+    const sameEl = this._toastEls.find((el) => el && (
+      el.textContent === text || (key && el.dataset && el.dataset.toastKey === key)
+    ));
     if (sameEl) {
       this._bumpToast(sameEl, spec.ms);
       return;
     }
-    const sameQ = this._toastQ.find((q) => q.text === text);
+    const sameQ = this._toastQ.find((q) => q && (q.text === text || (key && q.key === key)));
     if (sameQ) {
       sameQ.ms = Math.max(sameQ.ms, spec.ms);
       if (spec.tone !== 'info') sameQ.tone = spec.tone;
+      if (key) sameQ.key = key;
       return;
     }
-    const item = { text, ms: spec.ms, tone: spec.tone };
+    const item = { text, ms: spec.ms, tone: spec.tone, key };
     if (this._toastEls.length >= 1) {
       this._toastQ.push(item);
       if (this._toastQ.length > 4) this._toastQ.shift();
@@ -51895,6 +51916,12 @@ const UI = {
     const el = document.createElement('div');
     el.className = 'toast' + (item.tone && item.tone !== 'info' ? ' toast-' + item.tone : '');
     el.textContent = item.text;
+    if (item.key) {
+      try { el.dataset.toastKey = item.key; } catch (_) {}
+      if (item.key === 'toast.welcome') {
+        try { el.classList.add('toast-welcome'); } catch (_) {}
+      }
+    }
     try { el.setAttribute('role', 'status'); } catch (_) {}
     const dismiss = () => this._dismissToast(el);
     try {
@@ -51946,6 +51973,44 @@ const UI = {
     this._toastEls = this._toastEls || [];
     while (this._toastEls.length < 1 && this._toastQ.length) {
       this._mountToast(this._toastQ.shift());
+    }
+  },
+
+  refreshToastsI18n() {
+    const els = this._toastEls || [];
+    for (const el of els) {
+      const key = el && el.dataset && el.dataset.toastKey;
+      if (!key) continue;
+      const next = this._resolveToastText(key);
+      if (next) el.textContent = next;
+    }
+    this._toastQ = (this._toastQ || []).map((q) => {
+      if (!q || !q.key) return q;
+      const next = this._resolveToastText(q.key);
+      return next ? Object.assign({}, q, { text: next }) : q;
+    });
+  },
+
+  dismissWelcomeToasts() {
+    const els = (this._toastEls || []).slice();
+    for (const el of els) {
+      if (!el) continue;
+      const key = el.dataset && el.dataset.toastKey;
+      const welcome = key === 'toast.welcome'
+        || (el.classList && el.classList.contains('toast-welcome'));
+      if (welcome) this._dismissToast(el);
+    }
+    this._toastQ = (this._toastQ || []).filter((q) => !q || q.key !== 'toast.welcome');
+  },
+
+  syncHudChrome(id) {
+    const sub = !!(id && id !== 'menuScreen');
+    try { document.body.classList.toggle('sf-sub-screen', sub); } catch (_) {}
+    if (!id || id !== 'menuScreen') {
+      try { this.hideFomoRitual(); } catch (_) {}
+    }
+    if (sub) {
+      try { this.dismissWelcomeToasts(); } catch (_) {}
     }
   },
 
@@ -52606,6 +52671,7 @@ const UI = {
     const el = document.getElementById('fomoRitual');
     document.body.classList.toggle('is-fomo', on);
     document.body.classList.toggle('fomo-open', on);
+    document.body.classList.toggle('fomo-ritual-open', on);
     if (menu) {
       menu.classList.toggle('is-fomo', on);
       const chrome = menu.querySelector('.menu-chrome');
@@ -52632,6 +52698,7 @@ const UI = {
     if (el) el.hidden = true;
     try { el && el.classList.remove('is-open'); } catch (_) {}
     try { document.body.classList.remove('fomo-open'); } catch (_) {}
+    try { document.body.classList.remove('fomo-ritual-open'); } catch (_) {}
     this._syncFomoHubLock(false);
   },
 
@@ -52643,6 +52710,7 @@ const UI = {
       el.hidden = true;
       try { el.classList.remove('is-open'); } catch (_) {}
       try { document.body.classList.remove('fomo-open'); } catch (_) {}
+      try { document.body.classList.remove('fomo-ritual-open'); } catch (_) {}
       this._syncFomoHubLock(false);
     };
     const menu = document.getElementById('menuScreen');
@@ -52721,6 +52789,7 @@ const UI = {
     if (dismiss) dismiss.setAttribute('aria-label', tOr('fomo.ritualDismiss', 'Sluiten'));
     el.hidden = false;
     try { document.body.classList.add('fomo-open'); } catch (_) {}
+    try { document.body.classList.add('fomo-ritual-open'); } catch (_) {}
     try {
       const tut = document.getElementById('summonTut');
       if (tut) tut.hidden = true;
