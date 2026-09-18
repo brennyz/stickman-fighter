@@ -2116,6 +2116,9 @@
     flex-direction: column; align-items: center;
     padding-bottom: max(16px, env(safe-area-inset-bottom, 0px));
   }
+  /* Shared with #323 flappy-retry: #resCtaDock, .result-cta-primary/quiet,
+     #resultScreen.is-lose.is-adventure, result.onceMore, RESULT_SHOW_LOSE_MS.
+     #318 adds is-win + #resNext primary. Do not add restartAdventureInstant here. */
   #resultScreen .result-cta-dock {
     width: min(var(--ui-rail), 420px); max-width: 100%; margin-top: auto; padding-top: 12px;
     display: flex; flex-direction: column; align-items: center; gap: 8px;
@@ -2134,8 +2137,19 @@
     box-shadow: 0 6px 0 #7a4a10, 0 10px 22px rgba(0,0,0,.35);
   }
   #resultScreen.is-lose.is-adventure #resAgain.result-cta-primary div { color: #1a1208; }
+  #resultScreen.is-win #resNext.result-cta-primary { order: -1; }
+  #resultScreen.is-win.is-adventure #resNext.result-cta-primary {
+    background: linear-gradient(180deg, #7cfc8a 0%, #3ecf6a 55%, #1f7a35 100%);
+    border: 2px solid rgba(255,255,255,.22); color: #07140a;
+    box-shadow: 0 6px 0 #145226, 0 10px 22px rgba(0,0,0,.35);
+  }
+  #resultScreen.is-win.is-adventure #resNext.result-cta-primary div { color: #07140a; }
+  #resultScreen.is-win.is-adventure #resAgain:not(.result-cta-primary) {
+    min-height: 48px; width: 100%; opacity: .92; font-size: 16px;
+  }
   #resultScreen .result-cta-quiet,
-  #resultScreen.is-lose.is-adventure #resMenu.result-cta-quiet {
+  #resultScreen.is-lose.is-adventure #resMenu.result-cta-quiet,
+  #resultScreen.is-win.is-adventure #resMenu.result-cta-quiet {
     min-height: 44px; width: auto; margin-top: 2px;
     background: transparent; box-shadow: none; border-color: transparent;
     font-size: 14px; opacity: .72;

@@ -500,6 +500,39 @@ async function runAt(browser, width, height, label) {
   if (result.overflow) report.fails.push({ where: 'result overflow', result });
 
   await page.evaluate(() => {
+    if (typeof UI === 'object' && UI.showResult) {
+      UI.showResult(true, {
+        mode: 'adventure', level: 1, win: true, xp: 10, stars: 2,
+        titleKey: 'result.advWin', title: 'GEWONNEN!',
+      });
+    }
+  });
+  const resultWin = await page.evaluate(() => {
+    const screen = document.getElementById('resultScreen');
+    const next = document.getElementById('resNext');
+    const again = document.getElementById('resAgain');
+    const nr = next && next.getBoundingClientRect();
+    const ar = again && again.getBoundingClientRect();
+    const hidden = !next || next.style.display === 'none' || getComputedStyle(next).display === 'none';
+    return {
+      win: !!(screen && screen.classList.contains('is-win') && screen.classList.contains('is-adventure')),
+      nextPrimary: !!(next && next.classList.contains('result-cta-primary')),
+      againQuiet: !!(again && again.classList.contains('result-cta-quiet')),
+      nextH: nr && Math.round(nr.height),
+      nextAboveAgain: !!(nr && ar && nr.bottom <= ar.top + 2),
+      hidden,
+      overflow: !!(nr && (nr.right > window.innerWidth + 2 || nr.left < -2)),
+      label: next && (next.querySelector('div') || next).textContent,
+    };
+  });
+  if (!resultWin.win || resultWin.hidden || !resultWin.nextPrimary) {
+    report.fails.push({ where: 'result win next CTA', resultWin });
+  }
+  if (width <= 420 && !(resultWin.nextH >= 72)) report.fails.push({ where: 'win Volgend level not huge', resultWin });
+  if (!resultWin.nextAboveAgain) report.fails.push({ where: 'win next not first in dock', resultWin });
+  if (resultWin.overflow) report.fails.push({ where: 'win next overflow', resultWin });
+
+  await page.evaluate(() => {
     if (typeof UI === 'object' && UI.openBuildings) UI.openBuildings();
     if (typeof UI === 'object' && UI.toast) UI.toast('Welkom — tik een melding weg · Tips in het menu', 8000);
   });

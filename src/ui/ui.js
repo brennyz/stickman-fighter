@@ -5148,11 +5148,13 @@ const UI = {
         else if (!win && data.mode === 'adventure') label.textContent = tOr('result.onceMore', tOr('result.again', 'Nog één keer'));
         else label.textContent = t('result.again');
       }
-      again.classList.toggle('result-cta-primary', !(showNext));
+      again.classList.toggle('result-cta-primary', !showNext);
+      again.classList.toggle('result-cta-quiet', showNext);
     }
     const screen = document.getElementById('resultScreen');
     if (screen) {
       screen.classList.toggle('is-lose', !win);
+      screen.classList.toggle('is-win', !!win);
       screen.classList.toggle('is-adventure', data.mode === 'adventure');
     }
     const menuBtn = document.getElementById('resMenu');
