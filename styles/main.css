@@ -3074,7 +3074,7 @@
   .mission-flow-arrow { color:#5a6a8a; font-weight:800; font-size:12px; }
   .mission-mode-pill { display:inline-block; font-size:10px; font-weight:800; padding:2px 8px; border-radius:999px;
     color:#7cf5ff; border:1px solid rgba(124,245,255,.35); margin-right:4px; vertical-align:middle; }
-  #buildingsScreen.buildings-screen { align-items: stretch; }
+  #buildingsScreen.buildings-screen { align-items: stretch; position: relative; }
   #buildingsScreen .head { margin-bottom: 4px; }
   #buildingsWallet.buildings-wallet {
     position: sticky; top: 0; z-index: 4;
@@ -3238,6 +3238,25 @@
     border-color: rgba(255,90,90,.5);
   }
   #buildingsScreen .buildings-empty-start-wrap { width: 100%; }
+  #buildingsScreen .buildings-collect-all-wrap { width: 100%; margin: 0 0 8px; }
+  #buildingsScreen .buildings-collect-all {
+    display: flex; align-items: center; justify-content: space-between; gap: 8px;
+    width: 100%; min-height: 40px; padding: 8px 12px;
+    border-radius: 12px; border: 1px solid rgba(124,252,138,.45);
+    background: rgba(20, 48, 28, .55); color: #e8f0ff;
+    font-size: 14px; font-weight: 800; text-align: left;
+  }
+  #buildingsScreen .buildings-collect-all small {
+    font-size: 11px; font-weight: 800; color: #7cfc8a; letter-spacing: .04em; text-transform: uppercase;
+  }
+  #buildingsScreen .buildings-pill-tip {
+    position: absolute; z-index: 12; max-width: min(88vw, 280px);
+    padding: 6px 10px; border-radius: 10px;
+    background: #12182a; border: 1px solid rgba(255,215,94,.45);
+    color: #ffd75e; font-size: 12px; font-weight: 800; line-height: 1.25;
+    pointer-events: none; box-shadow: 0 6px 16px rgba(0,0,0,.35);
+  }
+  #buildingsScreen .buildings-pill-tip[hidden] { display: none; }
   #buildingsScreen .buildings-empty-start {
     display: block; width: 100%; margin: 0 0 8px; padding: 8px 10px;
     border-radius: 12px; border: 1px solid rgba(124,245,255,.38);
@@ -3543,7 +3562,7 @@
   }
 
   /* Buildings HOME screen — Android-first list → detail */
-  #buildingsScreen.buildings-screen { align-items: stretch; }
+  #buildingsScreen.buildings-screen { align-items: stretch; position: relative; }
   #buildingsScreen .buildings-body {
     width: min(94vw, 480px);
     margin: 0 auto;

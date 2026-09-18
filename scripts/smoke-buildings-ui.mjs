@@ -88,6 +88,10 @@ must(ui.includes('emptyStart') && ui.includes('buildings-empty-start'), 'first-t
 must(/costPc/.test(i18n) && /islandFallback/.test(i18n) && /emptyStartCost/.test(i18n), 'buildings cost/empty i18n keys missing');
 must(css.includes('buildings-cost-chip') && css.includes('is-short') && css.includes('is-ok'), 'afford chip CSS missing');
 must(css.includes('buildings-empty-start'), 'empty start CSS missing');
+must(ui.includes('doBuildingCollectAll') && ui.includes('data-buildings-collect-all'), 'collect-all affordance missing');
+must(ui.includes('buildingsPillTip') && ui.includes('paintBuildingsPillTip'), 'pill offline tip missing');
+must(/collectAllDone/.test(i18n) && /pillTipReady/.test(i18n), 'collect-all / pill-tip i18n missing');
+must(css.includes('buildings-collect-all') && css.includes('buildings-pill-tip'), 'collect-all / pill-tip CSS missing');
 must(ui.includes('buildingDescModel'), 'UI must consume systems buildingDescModel');
 must(ui.includes('buildingWalletModel'), 'UI must consume systems buildingWalletModel');
 must(ui.includes('buildingArtSrc'), 'UI must consume systems buildingArtSrc');
@@ -266,6 +270,63 @@ async function runBrowser() {
       if (typeof UI.buildingsShowList === 'function') UI.buildingsShowList();
       const backToList = (scr && scr.getAttribute('data-buildings-pane')) === 'list';
       const hasDoes = doesLines.filter(Boolean).length >= 5;
+      if (typeof save !== 'undefined') {
+        save.unlocked = 70;
+        save.buildings = save.buildings || { schema: 1, factories: {}, wallet: {} };
+        save.buildings.factories = save.buildings.factories || {};
+        save.buildings.wallet = save.buildings.wallet || {};
+        save.buildings.factories.stick_lighter = { level: 2, lastTickAt: Date.now() - 20 * 3600000, stored: 48 };
+        save.buildings.factories.woodchip_glue = { level: 2, lastTickAt: Date.now() - 20 * 3600000, stored: 36 };
+        if (typeof persist === 'function') persist();
+      }
+      if (typeof UI.buildingsShowList === 'function') UI.buildingsShowList();
+      const collectAllBtn = document.querySelector('[data-buildings-collect-all], #btnBuildingsCollectAll');
+      const collectAllOn = !!(collectAllBtn && !(collectAllBtn.closest('#buildingsCollectAll') || {}).hidden);
+      const wrapAll = document.getElementById('buildingsCollectAll');
+      const collectAllShown = !!(wrapAll && !wrapAll.hidden && collectAllBtn);
+      const spark0 = (typeof buildingWallet === 'function') ? Number(buildingWallet('spark') || 0) : 0;
+      const glue0 = (typeof buildingWallet === 'function') ? Number(buildingWallet('glue') || 0) : 0;
+      if (typeof UI.doBuildingCollectAll === 'function') UI.doBuildingCollectAll();
+      const spark1 = (typeof buildingWallet === 'function') ? Number(buildingWallet('spark') || 0) : 0;
+      const glue1 = (typeof buildingWallet === 'function') ? Number(buildingWallet('glue') || 0) : 0;
+      const collectAllOk = spark1 > spark0 && glue1 > glue0;
+      const samplePill = document.querySelector('[data-buildings-collect]');
+      const tipAttr = (samplePill && samplePill.getAttribute('title')) || '';
+      const hasOfflineTip = /8u|8h/.test(tipAttr);
+      if (typeof UI.paintBuildingsPillTip === 'function' && samplePill) {
+        UI.paintBuildingsPillTip(samplePill, tipAttr || 'Max 8u offline · daarna VOL');
+      }
+      const tipEl = document.getElementById('buildingsPillTip');
+      const tipOn = !!(tipEl && !tipEl.hidden && /8u|8h|offline|VOL|FULL/i.test(tipEl.textContent || ''));
+      if (typeof save !== 'undefined') {
+        save.petCoins = 80;
+        save.unlocked = 1;
+        save.buildings = { schema: 1, factories: {}, wallet: { spark: 0, glue: 0, chip: 0, steam: 0, echo: 0 } };
+        if (typeof persist === 'function') persist();
+      }
+      if (typeof UI.buildingsShowList === 'function') UI.buildingsShowList();
+      const walkEmpty = !!document.querySelector('[data-buildings-empty]');
+      if (typeof UI.buildingsShowDetail === 'function') UI.buildingsShowDetail('stick_lighter');
+      if (typeof UI.buildingsShowUpgradeStep === 'function') UI.buildingsShowUpgradeStep();
+      if (typeof UI.doBuildingUpgrade === 'function') UI.doBuildingUpgrade('stick_lighter');
+      const walkBuilt = !!((typeof buildingsGet === 'function' ? buildingsGet('stick_lighter') : null) || {}).level;
+      if (typeof save !== 'undefined') {
+        save.buildings = save.buildings || { schema: 1, factories: {}, wallet: {} };
+        save.buildings.factories = save.buildings.factories || {};
+        save.buildings.factories.stick_lighter = Object.assign(
+          {}, save.buildings.factories.stick_lighter || {},
+          { level: 1, lastTickAt: Date.now() - 20 * 3600000, stored: 64 }
+        );
+        if (typeof persist === 'function') persist();
+      }
+      if (typeof UI.renderBuildings === 'function') UI.renderBuildings();
+      const sparkWalk0 = (typeof buildingWallet === 'function') ? Number(buildingWallet('spark') || 0) : 0;
+      if (typeof UI.doBuildingCollect === 'function') UI.doBuildingCollect('stick_lighter');
+      const sparkWalk1 = (typeof buildingWallet === 'function') ? Number(buildingWallet('spark') || 0) : 0;
+      const walkCollected = sparkWalk1 > sparkWalk0;
+      if (typeof UI.buildingsShowUpgradeStep === 'function') UI.buildingsShowUpgradeStep();
+      const walkSheet = !!((document.getElementById('buildingsUpgradeSheet') || {}).hidden === false);
+      const walk390 = !!(walkEmpty && walkBuilt && walkCollected && walkSheet);
       return {
         ok: !!(scr && scr.classList.contains('active')
           && ids.length === 5
@@ -289,7 +350,8 @@ async function runBrowser() {
           && apiLive
           && emptyStartOn && emptyStartShort && emptyGone
           && hasAffordChips && toastShort && !enLeak && !deLeak
-          && /Factor/i.test(enHead) && /Fabrik/i.test(deHead)),
+          && /Factor/i.test(enHead) && /Fabrik/i.test(deHead)
+          && collectAllShown && collectAllOk && hasOfflineTip && tipOn && walk390),
         ids,
         factoryIds,
         chips,
@@ -332,6 +394,15 @@ async function runBrowser() {
         deHead,
         enLeak,
         deLeak,
+        collectAllShown,
+        collectAllOk,
+        hasOfflineTip,
+        tipOn,
+        walkEmpty,
+        walkBuilt,
+        walkCollected,
+        walkSheet,
+        walk390,
         head: (document.getElementById('buildingsScreenHead') || {}).textContent || '',
       };
     } catch (e) {

@@ -244,7 +244,29 @@ function buildingsFmtAmt(n) {
 
 function buildingsCollectLocked(id) {
   const lock = UI && UI._buildingsCollectBusy;
-  return !!(lock && lock.until > Date.now() && (!id || lock.id === id));
+  return !!(lock && lock.until > Date.now() && (!id || lock.id === id || lock.id === '*'));
+}
+
+function buildingsOfflineHours() {
+  const n = (typeof BUILDING_OFFLINE_HOURS === 'number') ? BUILDING_OFFLINE_HOURS : 8;
+  return Math.max(1, Math.floor(Number(n) || 8));
+}
+
+function buildingsReadyRows(rows) {
+  return (rows || []).filter((r) => r && !r.locked && r.canCollect);
+}
+
+function buildingsPillTip(view) {
+  const h = buildingsOfflineHours();
+  if (!view || view.locked) return buildingsTxt('buildings.pillTipLocked', 'Open of bouw eerst');
+  if (buildingsIsUnbuilt(view)) return buildingsTxt('buildings.pillTipBuild', 'Tik Bouw — hopper start daarna');
+  if (buildingsHopperFull(view)) {
+    return buildingsTxt('buildings.pillTipFull', 'VOL · max {h}u offline', { h, n: buildingsFmtAmt(view.pending), cap: view.capacity || 0 });
+  }
+  if (view.canCollect) {
+    return buildingsTxt('buildings.pillTipReady', '{n} klaar · max {h}u offline', { n: buildingsFmtAmt(view.pending), h });
+  }
+  return buildingsTxt('buildings.pillTip', 'Max {h}u offline · daarna VOL', { h });
 }
 
 function buildingsEta(view) {
@@ -271,8 +293,10 @@ function buildingsPillHtml(view, opts) {
   else if (ready) label = buildingsTxt('buildings.pillReady', 'Oogst {n}', { n: buildingsFmtAmt(view.pending) });
   else label = buildingsTxt('buildings.pillWait', '{n}/{cap}', { n: view.pending || 0, cap: view.capacity || 0 });
   const idAttr = (opts && opts.id) ? ' id="' + buildingsEscape(opts.id) + '"' : '';
+  const tip = buildingsPillTip(view);
   return '<button type="button" class="' + cls + '"' + idAttr
     + ' data-buildings-collect="' + buildingsEscape(view.id) + '"'
+    + ' title="' + buildingsEscape(tip) + '" aria-label="' + buildingsEscape(label + ' · ' + tip) + '"'
     + (ready ? '' : ' aria-disabled="true"')
     + '><span class="buildings-res-n">' + buildingsEscape(label) + '</span>'
     + '<small>' + buildingsEscape(view.resourceLabel || '') + '</small></button>';
@@ -286,6 +310,7 @@ if (typeof UI === 'object' && UI) {
   UI._buildingsDetailKey = '';
   UI._buildingsDelegates = false;
   UI._buildingsCollectBusy = null;
+  UI._buildingsPillHold = null;
 
   UI.openBuildings = function openBuildings() {
     this.buildingsPane = 'list';
@@ -295,6 +320,7 @@ if (typeof UI === 'object' && UI) {
     this._buildingsDetailKey = '';
     this.stopBuildingsTick();
     this.ensureBuildingsDelegates();
+    this.ensureBuildingsPillInfo();
     this.safeOpen('buildingsScreen', () => this.renderBuildings(), {
       msg: buildingsTxt('buildings.loadFail', 'Fabrieken laden mislukt'),
     });
@@ -333,8 +359,15 @@ if (typeof UI === 'object' && UI) {
         if (startId) UI.buildingsShowDetail(startId);
         return;
       }
+      const allBtn = e.target && e.target.closest && e.target.closest('[data-buildings-collect-all]');
+      if (allBtn) {
+        UI.doBuildingCollectAll();
+        return;
+      }
       const pill = e.target && e.target.closest && e.target.closest('[data-buildings-collect]');
       if (pill) {
+        const hold = UI._buildingsPillHold;
+        if (hold && hold.shown && hold.until > Date.now()) return;
         const id = pill.getAttribute('data-buildings-collect');
         if (buildingsCollectLocked(id)) return;
         if (pill.classList.contains('is-collect')) {
@@ -373,6 +406,8 @@ if (typeof UI === 'object' && UI) {
     bind(detail, (e) => handle(e, true));
     const emptyHost = this.ensureBuildingsEmptyHost();
     bind(emptyHost, (e) => handle(e, false));
+    const allHost = this.ensureBuildingsCollectAllHost();
+    bind(allHost, (e) => handle(e, false));
   };
 
   UI.ensureBuildingsEmptyHost = function ensureBuildingsEmptyHost() {
@@ -387,6 +422,108 @@ if (typeof UI === 'object' && UI) {
     if (listEl && listEl.parentNode === overview) overview.insertBefore(host, listEl);
     else overview.insertBefore(host, overview.firstChild);
     return host;
+  };
+
+  UI.ensureBuildingsCollectAllHost = function ensureBuildingsCollectAllHost() {
+    let host = document.getElementById('buildingsCollectAll');
+    if (host) return host;
+    const overview = document.getElementById('buildingsOverview');
+    if (!overview) return null;
+    host = document.createElement('div');
+    host.id = 'buildingsCollectAll';
+    host.className = 'buildings-collect-all-wrap';
+    host.hidden = true;
+    const empty = document.getElementById('buildingsEmptyStart');
+    const listEl = document.getElementById('buildingsList');
+    if (empty && empty.parentNode === overview) overview.insertBefore(host, empty.nextSibling);
+    else if (listEl && listEl.parentNode === overview) overview.insertBefore(host, listEl);
+    else overview.insertBefore(host, overview.firstChild);
+    return host;
+  };
+
+  UI.paintBuildingsCollectAll = function paintBuildingsCollectAll(rows, pane) {
+    const host = this.ensureBuildingsCollectAllHost();
+    if (!host) return;
+    const ready = buildingsReadyRows(rows);
+    const show = pane === 'list' && ready.length >= 2;
+    host.hidden = !show;
+    if (!show) {
+      host.innerHTML = '';
+      return;
+    }
+    const n = ready.length;
+    host.innerHTML =
+      '<button type="button" class="buildings-collect-all" data-buildings-collect-all="1" id="btnBuildingsCollectAll">'
+      + '<span>' + buildingsEscape(buildingsTxt('buildings.collectAll', 'Oogst {n}', { n })) + '</span>'
+      + '<small>' + buildingsEscape(buildingsTxt('buildings.collectAllSub', 'alles')) + '</small></button>';
+  };
+
+  UI.ensureBuildingsPillInfo = function ensureBuildingsPillInfo() {
+    const scr = document.getElementById('buildingsScreen');
+    if (!scr || scr.dataset.sfPillInfo) return;
+    scr.dataset.sfPillInfo = '1';
+    let timer = 0;
+    let holdEl = null;
+    const clearTimer = () => { if (timer) { try { clearTimeout(timer); } catch (_) {} timer = 0; } };
+    const onDown = (e) => {
+      const pill = e.target && e.target.closest && e.target.closest('[data-buildings-collect]');
+      if (!pill || !scr.contains(pill)) return;
+      holdEl = pill;
+      clearTimer();
+      timer = setTimeout(() => {
+        if (holdEl !== pill) return;
+        const id = pill.getAttribute('data-buildings-collect');
+        const view = (typeof buildingsGet === 'function') ? buildingsGet(id) : null;
+        const tip = buildingsPillTip(view);
+        UI._buildingsPillHold = { id, shown: true, until: Date.now() + 520 };
+        UI.paintBuildingsPillTip(pill, tip);
+      }, 420);
+    };
+    const onEnd = () => {
+      clearTimer();
+      holdEl = null;
+    };
+    scr.addEventListener('pointerdown', onDown, true);
+    scr.addEventListener('pointerup', onEnd, true);
+    scr.addEventListener('pointercancel', onEnd, true);
+    scr.addEventListener('contextmenu', (e) => {
+      if (e.target && e.target.closest && e.target.closest('[data-buildings-collect]')) {
+        if (e.preventDefault) e.preventDefault();
+      }
+    }, true);
+  };
+
+  UI.paintBuildingsPillTip = function paintBuildingsPillTip(anchor, text) {
+    if (!text) return;
+    let tip = document.getElementById('buildingsPillTip');
+    if (!tip) {
+      tip = document.createElement('div');
+      tip.id = 'buildingsPillTip';
+      tip.className = 'buildings-pill-tip';
+      tip.setAttribute('role', 'status');
+      const scr = document.getElementById('buildingsScreen') || document.body;
+      scr.appendChild(tip);
+    }
+    tip.textContent = text;
+    tip.hidden = false;
+    tip.classList.add('is-on');
+    try {
+      const box = anchor && anchor.getBoundingClientRect ? anchor.getBoundingClientRect() : null;
+      const host = (tip.offsetParent || document.getElementById('buildingsScreen') || document.body).getBoundingClientRect();
+      if (box) {
+        const left = Math.max(8, Math.min(box.left - host.left, host.width - 200));
+        const top = Math.max(8, box.top - host.top - 36);
+        tip.style.left = left + 'px';
+        tip.style.top = top + 'px';
+      }
+    } catch (_) {}
+    if (this._buildingsPillTipHide) {
+      try { clearTimeout(this._buildingsPillTipHide); } catch (_) {}
+    }
+    this._buildingsPillTipHide = setTimeout(() => {
+      tip.classList.remove('is-on');
+      tip.hidden = true;
+    }, 2200);
   };
 
   UI.buildingsShowList = function buildingsShowList() {
@@ -550,6 +687,7 @@ if (typeof UI === 'object' && UI) {
       emptyHost.hidden = !showEmpty;
       emptyHost.innerHTML = showEmpty ? buildingsEmptyStartHtml(rows) : '';
     }
+    this.paintBuildingsCollectAll(rows, pane);
     const view = rows.find((r) => r.id === sel) || rows[0];
     if (detail) {
       const key = (view && view.id || '') + ':' + (this.buildingsStep || 'harvest') + ':' + pane;
@@ -823,6 +961,55 @@ if (typeof UI === 'object' && UI) {
       try {
         this.toast((res && res.message) || buildingsTxt('buildings.collectEmpty', 'Nog niks klaar'), 2200, { tone: 'warn' });
       } catch (_) {}
+    }
+    this._buildingsDetailKey = '';
+    this.renderBuildings();
+    try { this.renderMenu(); } catch (_) {}
+  };
+
+  UI.doBuildingCollectAll = function doBuildingCollectAll() {
+    const now = Date.now();
+    if (this._buildingsCollectBusy && this._buildingsCollectBusy.until > now) return;
+    const rows = (typeof buildingsList === 'function') ? buildingsList() : [];
+    const ready = buildingsReadyRows(rows);
+    if (ready.length < 2) return;
+    this._buildingsCollectBusy = { id: '*', until: now + 480 };
+    if (typeof AudioSys !== 'undefined') { try { AudioSys.init(); AudioSys.sfx('claim'); } catch (_) { try { AudioSys.sfx('select'); } catch (__) {} } }
+    let parts = [];
+    if (typeof collectAllBuildingResources === 'function') {
+      try {
+        const bag = collectAllBuildingResources({ silent: true });
+        parts = (bag && bag.parts) || [];
+      } catch (_) { parts = []; }
+    }
+    if (!parts.length) {
+      for (const row of ready) {
+        try {
+          const one = (typeof buildingsCollect === 'function') ? buildingsCollect(row.id) : null;
+          if (one && one.ok && one.amount > 0) parts.push(one);
+        } catch (_) {}
+      }
+    }
+    const total = parts.reduce((n, p) => n + Math.max(0, Math.floor(Number(p && p.amount) || 0)), 0);
+    const k = parts.length;
+    if (total > 0) {
+      const first = parts[0] || {};
+      this.buildingsFlash = {
+        id: first.id || first.buildingId,
+        resId: first.resourceId || first.resource,
+        resLabel: (typeof buildingsResourceLabel === 'function')
+          ? buildingsResourceLabel(first.resourceId || first.resource)
+          : (first.resourceId || ''),
+        amount: total,
+        capped: false,
+        cap: 0,
+        until: now + 2200,
+      };
+      try {
+        this.toast(buildingsTxt('buildings.collectAllDone', '+{n} · {k} klaar', { n: total, k }), 2200, { tone: 'ok' });
+      } catch (_) {}
+    } else {
+      try { this.toast(buildingsTxt('buildings.collectEmpty', 'Nog niks klaar'), 1800, { tone: 'warn' }); } catch (_) {}
     }
     this._buildingsDetailKey = '';
     this.renderBuildings();

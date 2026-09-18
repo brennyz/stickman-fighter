@@ -97,6 +97,8 @@ When `BUILDING_IDS` + `buildingCollect` are present, the HOME screen binds that 
 7. First open (nothing built): one-line **empty start** — `Stok-Aansteker is open — tik Bouw (20 PC)` / EN `Lighter is open — tap Build (20 PC)`. Tap opens stick_lighter. No wall of text.
 8. Upgrade… → sheet with does/next + **red/green cost chips** (wallet covers = green, short = red). Confirm is `is-afford` / `is-broke`. Success toast is short (`Lighter · Lv 4`), not the full factory name. Unbuilt uses **Bouwen…**. Locked factory: **Naar Avontuur**. Max: status line, harvest still runs. EN/DE overlays use locale keys (`costPc`, `islandFallback`, `sheetClose`) — no Dutch leftovers.
 9. ← Overzicht or Back closes sheet → detail → list; Back on the list returns to KIES JE PAD. Versus tile must stay gone.
+10. When **2+ hoppers are ready**, a one-tap **Oogst n / alles** bar sits above the list (`#buildingsCollectAll`). Hidden at 0–1 ready.
+11. Long-press (or `title`) on a resource pill shows one line: `Max 8u offline · daarna VOL` (ready/full variants). Does not collect.
 
 Debug without adventure progress: in console
 `save.unlocked = 70; persist(); location.reload()` then all five unlock.
