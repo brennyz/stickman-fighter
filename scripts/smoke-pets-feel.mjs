@@ -28,6 +28,7 @@ must(petSrc.includes('predY'), 'jump vy predict missing');
 must(petSrc.includes('flipped'), 'face-flip snap missing');
 must(petSrc.includes('this.windT'), 'assist telegraph windT missing');
 must(petSrc.includes('setLineDash'), 'telegraph intent dash missing');
+must(petSrc.includes('Math.max(24'), 'telegraph ring must have a readable min radius');
 must(petSrc.includes('petPickAssistTarget'), 'shared assist target pick missing');
 must(petSrc.includes('petAssistRange'), 'training-wide assist range missing');
 must(petSrc.includes('this.lungeT'), 'hit lunge juice missing');
@@ -79,6 +80,8 @@ async function runBrowser() {
       save.pets.pet_slymo = { at: Date.now(), kills: 12 };
       save.activePet = 'pet_slymo';
       save.reducedMotion = false;
+      save.tipsSeen = save.tipsSeen || {};
+      save.tipsSeen.moveBarAim = 1;
       if (typeof persist === 'function') persist();
       startGame('training');
       const g = game;
@@ -151,6 +154,33 @@ async function runBrowser() {
       return { ok: false, why: String(err && err.message || err) };
     }
   });
+
+  if (result.ok) {
+    await page.evaluate(() => {
+      const splash = document.getElementById('sfSplash') || document.getElementById('splash');
+      if (splash) splash.style.display = 'none';
+      document.body.classList.add('is-playing');
+      const g = game;
+      if (!g || !g.pet || !g.player) return;
+      g.over = false;
+      g.inputLocked = false;
+      g.pet.windT = 1;
+      g.pet.windX = (g.robot && g.robot.x) || (g.player.x + 90);
+      try { g.draw(ctx); } catch (_) {
+        try { g.pet.draw(ctx); } catch (__) {}
+      }
+    });
+    await new Promise((r) => setTimeout(r, 40));
+    const shot = '/tmp/pets_assist_telegraph_readable.png';
+    try {
+      const cv = await page.$('#game');
+      if (cv) await cv.screenshot({ path: shot });
+      else await page.screenshot({ path: shot, fullPage: false });
+      console.log('SMOKE_SHOT', shot);
+    } catch (err) {
+      console.log('SMOKE_SHOT_FAIL', String(err && err.message || err));
+    }
+  }
 
   await browser.close();
   if (server) try { server.close(); } catch (_) {}

@@ -109,7 +109,7 @@ class Pet {
     if (inTrain && (!g.robot || !g.robot.alive)) { this.windT = 0; return; }
 
     this.assistT -= dt;
-    const windWin = (typeof motionReduced === 'function' && motionReduced()) ? 0.12 : 0.28;
+    const windWin = (typeof motionReduced === 'function' && motionReduced()) ? 0.14 : 0.38;
     const pick = petPickAssistTarget(g, p);
     const reach = petAssistRange(g);
     const canStrike = !g.inputLocked;
@@ -173,43 +173,6 @@ class Pet {
     const reduced = typeof motionReduced === 'function' && motionReduced();
     const touch = typeof IS_TOUCH !== 'undefined' && IS_TOUCH;
 
-    if (wind > 0.08 && !reduced) {
-      c.save();
-      c.globalAlpha = 0.32 + wind * 0.5;
-      c.strokeStyle = col;
-      c.lineWidth = lite ? 1.8 : (touch ? 2.6 : 2.2);
-      c.beginPath();
-      c.arc(this.x, this.y - this.size * 0.4, this.size * (1.22 + wind * 0.95), 0, TAU);
-      c.stroke();
-      if (this.windX) {
-        const dir = Math.sign(this.windX - this.x) || 1;
-        const tip = this.x + dir * (this.size + 18 + wind * 10);
-        const midY = this.y - this.size * 0.55;
-        c.globalAlpha = 0.18 + wind * 0.28;
-        if (typeof c.setLineDash === 'function') c.setLineDash([4, 5]);
-        c.lineWidth = lite ? 1.2 : 1.6;
-        c.beginPath();
-        c.moveTo(this.x + dir * (this.size + 2), midY);
-        c.lineTo(this.x + dir * Math.min(56, Math.abs(this.windX - this.x) * 0.22), midY);
-        c.stroke();
-        if (typeof c.setLineDash === 'function') c.setLineDash([]);
-        c.globalAlpha = 0.42 + wind * 0.48;
-        c.lineWidth = lite ? 1.6 : 2.2;
-        c.beginPath();
-        c.moveTo(this.x + dir * (this.size + 4), midY);
-        c.lineTo(tip, midY);
-        c.stroke();
-        c.beginPath();
-        c.moveTo(tip, midY);
-        c.lineTo(tip - dir * (6 + wind * 2), midY - 5);
-        c.lineTo(tip - dir * (6 + wind * 2), midY + 5);
-        c.closePath();
-        c.fillStyle = col;
-        c.fill();
-      }
-      c.restore();
-    }
-
     c.save();
     c.translate(this.x + lean, this.y - this.size * 0.35);
     if (this.face < 0) { c.scale(-1, 1); }
@@ -232,9 +195,60 @@ class Pet {
     c.globalAlpha = 0.5 + appear * 0.25;
     c.fillStyle = wind > 0.2 ? col : 'rgba(124,245,255,.75)';
     c.beginPath();
-    c.arc(this.x + lean * 0.4, this.y - this.size * 1.15, wind > 0.2 ? 3.1 : 2.2, 0, TAU);
+    c.arc(this.x + lean * 0.4, this.y - this.size * 1.15, wind > 0.2 ? 4.2 : 2.2, 0, TAU);
     c.fill();
     c.restore();
+
+    if (wind > 0.08 && !reduced) {
+      c.save();
+      const cx = this.x;
+      const cy = this.y - this.size * 0.4;
+      const ringR = Math.max(24, this.size * 2.4) + wind * 16;
+      c.fillStyle = col;
+      c.globalAlpha = 0.12 + wind * 0.16;
+      c.beginPath();
+      c.arc(cx, cy, ringR, 0, TAU);
+      c.fill();
+      c.strokeStyle = '#ffffff';
+      c.globalAlpha = 0.28 + wind * 0.2;
+      c.lineWidth = lite ? 1.6 : 2.2;
+      c.beginPath();
+      c.arc(cx, cy, ringR + 6 + wind * 4, 0, TAU);
+      c.stroke();
+      c.strokeStyle = col;
+      c.globalAlpha = 0.55 + wind * 0.4;
+      c.lineWidth = lite ? 2.4 : (touch ? 3.8 : 3.2);
+      c.beginPath();
+      c.arc(cx, cy, ringR, 0, TAU);
+      c.stroke();
+      if (this.windX) {
+        const dir = Math.sign(this.windX - this.x) || 1;
+        const midY = this.y - this.size * 0.55;
+        const tip = this.x + dir * (ringR + 10 + wind * 8);
+        c.globalAlpha = 0.22 + wind * 0.28;
+        if (typeof c.setLineDash === 'function') c.setLineDash([5, 5]);
+        c.lineWidth = lite ? 1.4 : 1.8;
+        c.beginPath();
+        c.moveTo(this.x + dir * (ringR * 0.55), midY);
+        c.lineTo(this.x + dir * Math.min(72, Math.max(28, Math.abs(this.windX - this.x) * 0.18)), midY);
+        c.stroke();
+        if (typeof c.setLineDash === 'function') c.setLineDash([]);
+        c.globalAlpha = 0.55 + wind * 0.4;
+        c.lineWidth = lite ? 2 : 2.6;
+        c.beginPath();
+        c.moveTo(this.x + dir * (ringR * 0.7), midY);
+        c.lineTo(tip, midY);
+        c.stroke();
+        c.beginPath();
+        c.moveTo(tip, midY);
+        c.lineTo(tip - dir * (8 + wind * 3), midY - 7);
+        c.lineTo(tip - dir * (8 + wind * 3), midY + 7);
+        c.closePath();
+        c.fillStyle = col;
+        c.fill();
+      }
+      c.restore();
+    }
   }
 }
 
