@@ -167,3 +167,18 @@ Versie: **v1.18.182 / SW 392**. Deel-URL `speel.html`.
 Eerste 30s = learn-by-doing, één primaire actie. Versus ongemoeid. Draft, geen main.
 
 Versie: **v1.18.184 / SW 394**. Deel-URL `speel.html`.
+
+## Examiner P0 — lose/win + FOMO + settings leftovers
+
+| locale | key | was | fix |
+|--------|-----|-----|-----|
+| fr/es/nl | `runLoot.head` | *Cette/Esta/Deze run* | partie / partida / ronde |
+| fr/es/de | `banner.summon` / `runLoot.summonLine` / toast summon | *SUMMON* | Coffre / Cofre / Kiste |
+| fr/es | `result.finishersLine` + `daily.finisher3` | *finishers* | coups finaux / remates |
+| de | `ui.dexAppears` / `dexUnlockLv` / gamble Skip / settings.sub | Unlock / Skip / Sound | frei / Überspringen / Ton |
+| fr/es | `settings.saveOnline*` / `audioThemeHead` | missing → EN Mood/Online save | Ambiance / Ambiente + synchro keys |
+| fr | `toast.errExport` | *Export raté* | Copie ratée |
+
+Geen layout (#318/#321). Versus ongemoeid. Draft, geen main.
+
+Versie: **v1.18.185 / SW 395**. Deel-URL `speel.html`.

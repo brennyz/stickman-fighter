@@ -109,6 +109,13 @@ async function run() {
       const petSub = txt('petScreenSub');
       const tSummonOpen = typeof t === 'function' ? t('ui.summonOpen') : '';
       const tSummonPull = typeof t === 'function' ? t('ui.summonPull') : '';
+      const tLootHead = typeof t === 'function' ? t('runLoot.head') : '';
+      const tBanSummon = typeof t === 'function' ? t('banner.summon') : '';
+      const tSetSub = typeof t === 'function' ? t('settings.sub') : '';
+      const tAudio = typeof t === 'function' ? t('settings.audioThemeHead') : '';
+      const tFin3 = typeof t === 'function' ? t('daily.finisher3.text') : '';
+      const tDexApp = typeof t === 'function' ? t('ui.dexAppears', { lv: 5 }) : '';
+      const tFomoCta = typeof t === 'function' ? t('fomo.ritualCtaSummon') : '';
       let collectTitle = '';
       let collectGear = '';
       try {
@@ -133,7 +140,7 @@ async function run() {
         tStyleLeaf, tStyleEnergy, tStyleVoid, tAdvLose, tTrainLose, tKeep, tSeasonBeat,
         tErrRetry, tOpenMode, tDaily, tFightHiccup, tAchLv70, tAchZone,
         tPickRem, tKillRem, tRunRem, tPick3, tHelp0, tFirstMin, tPetTip, petSub,
-        tSummonOpen, tSummonPull,
+        tSummonOpen, tSummonPull, tLootHead, tBanSummon, tSetSub, tAudio, tFin3, tDexApp, tFomoCta,
       };
     }
     const en = snap('en');
@@ -196,6 +203,11 @@ async function run() {
       && /Laufen/.test(de.tFirstMin) && !/Erste Minute:|Eerste minuut:|First minute:/.test(de.tFirstMin)
       && /Münzen-Bonus/.test(de.tPetTip) && !/Monsterbuch zähmen|monsterboek/.test(de.tPetTip)
       && /Öffnen|Kiste/.test(de.tSummonPull + de.tSummonOpen) && !/Open chest/.test(de.tSummonPull + de.tSummonOpen)
+      && /Lauf/.test(de.tLootHead) && !/\brun\b/.test(de.tLootHead)
+      && /KISTE/.test(de.tBanSummon) && !/SUMMON/.test(de.tBanSummon)
+      && /Ton/.test(de.tSetSub) && !/Sound/.test(de.tSetSub)
+      && /frei/.test(de.tDexApp) && !/Unlock/.test(de.tDexApp)
+      && /Kisten/.test(de.tFomoCta) && !/Summon/i.test(de.tFomoCta)
       && de.playState === 'play' && /train/.test(de.playMode);
     const nlOk = /Avontuur/.test(nl.adv) && /Collectie/.test(nl.collect)
       && /Wapens/.test(nl.weapons) && /Instellingen/.test(nl.settings)
@@ -238,6 +250,11 @@ async function run() {
       && /Cours · frappe/.test(fr.tFirstMin) && !/First minute:|Eerste minuut:/.test(fr.tFirstMin)
       && /Bonus pièces/.test(fr.tPetTip) && !/bestiaire|monsterboek/.test(fr.tPetTip)
       && /Ouvrir/.test(fr.tSummonPull + fr.tSummonOpen) && !/Open chest|Open kist/.test(fr.tSummonPull + fr.tSummonOpen)
+      && /partie/.test(fr.tLootHead) && !/\brun\b/.test(fr.tLootHead)
+      && /COFFRE/.test(fr.tBanSummon) && !/SUMMON/.test(fr.tBanSummon)
+      && /Ambiance/.test(fr.tAudio) && !/Mood|soundtrack/.test(fr.tAudio)
+      && /coups finaux/.test(fr.tFin3) && !/finisher/i.test(fr.tFin3)
+      && /coffre/.test(fr.tFomoCta) && !/Summon/i.test(fr.tFomoCta)
       && fr.playState === 'play' && /train/.test(fr.playMode);
     const esOk = /Aún no hallado/.test(es.tGearLock) && !EN_LOCK.test(es.tGearLock)
       && /Ayuda salto/.test(es.tPerk) && /Guijarro/.test(es.tEgg) && !DUTCH_COPY.test(es.tPerk + es.tEgg + es.tGearLock + es.tPetSum)
@@ -263,6 +280,11 @@ async function run() {
       && /Corre · pega/.test(es.tFirstMin) && !/First minute:|Eerste minuut:/.test(es.tFirstMin)
       && /Bonus monedas/.test(es.tPetTip) && !/bestiario|monsterboek/.test(es.tPetTip)
       && /Abrir/.test(es.tSummonPull + es.tSummonOpen) && !/Open chest|Open kist/.test(es.tSummonPull + es.tSummonOpen)
+      && /partida/.test(es.tLootHead) && !/\brun\b/.test(es.tLootHead)
+      && /COFRE/.test(es.tBanSummon) && !/SUMMON/.test(es.tBanSummon)
+      && /Ambiente/.test(es.tAudio) && !/Mood/.test(es.tAudio)
+      && /remates/.test(es.tFin3) && !/finisher/i.test(es.tFin3)
+      && /cofre/.test(es.tFomoCta) && !/Summon/i.test(es.tFomoCta)
       && es.playState === 'play' && /train/.test(es.playMode);
     return { ok: !!(enOk && deOk && nlOk && frOk && esOk), en, de, nl, fr, es, enOk, deOk, nlOk, frOk, esOk };
   });

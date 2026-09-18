@@ -96,8 +96,8 @@ if (/Lande 3 finishers/.test(catalog + locales)) fail('FR still has machine-Dutc
 if (/Aterriza 3 finishers/.test(catalog + locales)) fail('ES still has machine-English Aterriza 3 finishers');
 if (/Schlacker/.test(catalog + locales)) fail('DE wall100 still has garbled Schlacker');
 if (/DANNeben/.test(locales)) fail('DE miss typo DANNeben');
-if (!/Place 3 finishers/.test(locales)) fail('FR finisher3 not polished');
-if (!/Asesta 3 finishers/.test(locales)) fail('ES finisher3 not polished');
+if (!/Place 3 coups finaux/.test(locales)) fail('FR finisher3 not polished');
+if (!/Asesta 3 remates/.test(locales)) fail('ES finisher3 not polished');
 if (!/Abrissprofi/.test(locales)) fail('DE wall100 not polished to Abrissprofi');
 
 if (/charBig5Hint: 'Eigen vechters/.test(catalogEn)) fail('EN catalog still has Dutch charBig5Hint');
@@ -420,4 +420,21 @@ if (!/\.buildings-card-does/.test(css) || !/-webkit-line-clamp: 2/.test(css)) {
 }
 if (!/\.pet-coin-tip/.test(css)) fail('pet-coin-tip clamp missing');
 
-console.log('SMOKE_OK i18n-locale: Tips/VERLOREN + #273 coverage + #283 overlays + 2026-09-18 overlap HUD wrap');
+if (/Cette run/.test(locales)) fail('FR runLoot still English run');
+if (/Esta run/.test(locales)) fail('ES runLoot still English run');
+if (/Deze run/.test(catalog)) fail('NL runLoot still English run');
+if (/✦ SUMMON/.test(locales + deChrome)) fail('DE/FR/ES banner still English SUMMON');
+if (/summon: '✦ SUMMON! ✦'/.test((catalog.split('const CATALOG_EN')[0] || ''))) fail('NL banner.summon still English SUMMON');
+if (/Summon: \{name\}/.test(locales + deChrome)) fail('DE/FR/ES runLoot.summonLine still Summon');
+if (/Unlock Lv/.test(locales + deChrome)) fail('DE still Unlock Lv');
+if (/Skip =/.test(deChrome + locales)) fail('DE gamble still English Skip');
+if (/title: 'Einstellungen', sub: 'Sound/.test(i18n)) fail('DE settings.sub still Sound');
+if (/Soundeffekte:/.test(i18n)) fail('DE settings still Soundeffekte');
+if (!/saveOnlineLine: 'Save en ligne/.test(i18n)) fail('FR settings.saveOnlineLine missing — EN leak');
+if (!/saveOnlineLine: 'Save online · última sincro/.test(i18n)) fail('ES settings.saveOnlineLine missing — EN leak');
+if (/finishersLine: ' · \{n\} finishers'/.test(locales)) fail('FR/ES result.finishersLine still English finishers');
+if (/text: 'Place 3 finishers/.test(locales + catalog)) fail('FR daily.finisher3 still finishers');
+if (/text: 'Asesta 3 finishers/.test(locales + catalog)) fail('ES daily.finisher3 still finishers');
+if (/errExport: 'Export raté/.test(locales)) fail('FR toast.errExport still English Export');
+
+console.log('SMOKE_OK i18n-locale: Tips/VERLOREN + #273 coverage + #283 overlays + 2026-09-18 result/FOMO/settings');
