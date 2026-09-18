@@ -50,7 +50,7 @@
       "id": "w-20260918T125800",
       "from": "user",
       "text": "KEEP IMPROVING #319 (no main). P0: (1) Egg hatch / daily egg — one clear CTA when ready. (2) Equip pet from combat HUD/home if missing. (3) Empty Dex / locked pets copy without wall of text on 390px. Re-smoke pets-ui + i18n + menu. speel.html, no Versus.",
-      "status": "in-progress",
+      "status": "done-in-code",
       "updated": "2026-09-18",
       "notes": "Draft PR #319 only. No Versus. speel.html."
     },
@@ -1081,6 +1081,10 @@
   ],
   "sessionLog": [
     {
+      "at": "2026-09-18T13:31:16Z",
+      "summary": "Pets P0 on #319: chrome daily-egg CTA, HOME/pause equip, short 390px Dex. Draft, no main."
+    },
+    {
       "at": "2026-09-18T12:57:43Z",
       "summary": "Pets catch-up: first-class collection screen (wallet/hero/next-goal/list-detail). Draft PR #319. No Versus."
     },
@@ -1175,10 +1179,6 @@
     {
       "at": "2026-09-14T12:45:42Z",
       "summary": "P1 entry: Android-first landing — geen iPad-blok op Android"
-    },
-    {
-      "at": "2026-09-14T12:44:05Z",
-      "summary": "Toast-wachtrij: één tegelijk, Android Chrome/TWA zelfde HTML onder statusbalk · v1.18.156 / SW 366"
     }
   ],
   "implementedFeaturesSummary": "d18 char select deel 1+2 (v1.11.1-2); Mats coinrun + shuriken mik/vliegers + anti-spam (v1.12.0); speel.html (v1.12.2+). Zie HANDOFF-ZOEKINDEX.md en improvement-d20-bag.json userFeatureLog.",
