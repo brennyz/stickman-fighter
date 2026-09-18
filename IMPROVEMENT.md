@@ -145,6 +145,7 @@ Schrijf **1–3 regels** per sessie: datum, d#, wat, versie.
 
 | Datum (UTC) | d# | Update |
 |-------------|-----|--------|
+| 2026-09-18 | — | **#324 DONE:** tablet 834 mid-band cadence. Stop — no further combat P0. **v1.18.181 / SW 391**. Draft, no main. |
 | 2026-09-18 | — | **Tablet 834 mid-band:** milder cadence clamp 0.66–1.22 / 0.55–1.15 + hold 0.80 + wave-gap ×0.72. Follow-up on #314. Desktop/phone contract unchanged. **v1.18.181 / SW 391**. Draft. |
 | 2026-09-18 | — | **#314 lane DONE:** minute-1+ sustain clamp 0.62–1.05 + compact wave-gap ×0.56; result CTA left to #323 (1600/1400 untouched). P3 leftovers only. **v1.18.180 / SW 390**. Draft. |
 | 2026-09-18 | — | **#314 P0 combat feel:** compact first-30s spawn clamp 0.70–1.12s + hold 0.55 + edge 18; punch/kick prefer-strike vs joy (swipe 34%×62%). Contract in `docs/COMBAT-DENSITY.md`. **v1.18.179 / SW 389**. Draft. |

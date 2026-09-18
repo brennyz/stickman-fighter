@@ -20,7 +20,7 @@
     "featureBranch": "cursor/tablet-midband-2236",
     "pushBlocked": null,
     "shareUrl": "https://brennyz.github.io/stickman-fighter/speel.html",
-    "note": "Draft tablet 834 mid-band on top of #314. v1.18.181 / SW 391. Not on main. speel.html.",
+    "note": "DONE #324 tablet 834 mid-band + #314 phone density. No further combat P0. v1.18.181 / SW 391. Not on main. speel.html.",
     "updated": "2026-09-18T12:52:00Z",
     "localMainHead": "a18fc9e67633773cb18b638c64c9a86916d02d27",
     "remoteMainHead": "a18fc9e67633773cb18b638c64c9a86916d02d27"
@@ -38,14 +38,27 @@
     "pendingUpload": [],
     "pendingMerge": [
       {
+        "pr": 324,
+        "url": "https://github.com/brennyz/stickman-fighter/pull/324",
+        "title": "DONE: Tablet 834 mid-band cadence (follow-up on #314)",
+        "branch": "cursor/tablet-midband-2236"
+      },
+      {
         "pr": 314,
         "url": "https://github.com/brennyz/stickman-fighter/pull/314",
-        "title": "Mobile combat density — phone horde scale, desktop unchanged",
+        "title": "DONE: Mobile combat density — phone horde scale, desktop unchanged",
         "branch": "cursor/mobile-combat-density-2236"
       }
     ]
   },
   "userWishlist": [
+    {
+      "id": "w-20260918T152700",
+      "from": "user",
+      "text": "#324 is enough for tablet cadence. Mark DONE; stop unless a clear P0 remains. No main.",
+      "status": "done-in-code",
+      "updated": "2026-09-18"
+    },
     {
       "id": "w-20260918T152400",
       "from": "user",
@@ -1129,6 +1142,10 @@
   ],
   "sessionLog": [
     {
+      "at": "2026-09-18T13:28:18Z",
+      "summary": "Marked #324 DONE (tablet 834 cadence). No further combat P0. #314 already DONE. No main."
+    },
+    {
       "at": "2026-09-18T13:26:57Z",
       "summary": "Optional P0: tablet 834 mid-band cadence follow-up on #314 (milder clamp). Examinator leftovers already on #320. Draft, no main."
     },
@@ -1223,10 +1240,6 @@
     {
       "at": "2026-09-14T13:50:58Z",
       "summary": "Same PR #264: EN tooltips + SW-banner follow game lang; Arcade pick already HOME tiles."
-    },
-    {
-      "at": "2026-09-14T13:49:29Z",
-      "summary": "Arcade pick-mode HOME-tegels + chrome i18n volgt taal. PR #264. #263 geparkeerd. Niet stil main."
     }
   ],
   "implementedFeaturesSummary": "d18 char select deel 1+2 (v1.11.1-2); Mats coinrun + shuriken mik/vliegers + anti-spam (v1.12.0); speel.html (v1.12.2+). Zie HANDOFF-ZOEKINDEX.md en improvement-d20-bag.json userFeatureLog.",

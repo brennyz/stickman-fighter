@@ -125,17 +125,17 @@ Measured `buildLevel` budgets (same wave **count**, fewer bodies on phone):
 
 `npm run smoke:adventure` on a 390×844 Chrome window still clears level 1 (spawnQ 2 then 4). `smoke:wave12` still advances 1→2. Training / Versus unchanged.
 
-## Lane status — DONE (P3 leftovers only)
+## Lane status — DONE
 
-Combat P0/P1 on this lane is **done**. Desktop 1.0 unchanged. Versus out.
+Phone density **#314** and tablet 834 cadence **#324** are **done**. Desktop 1.0 unchanged. Versus out. No further combat P0 on this lane.
 
-**P3 leftovers** (not this PR):
+**Owned elsewhere / later (not this lane):**
 
 | Item | Owner |
 |------|--------|
-| Death result CTA timing / `Nog één keer` | **#323** — do not touch here |
-| Tablet 834 portrait mid-band | follow-up draft (this branch) |
-| Satan / tide duel cadence | special-duel path, not density spawn |
-| Hell 20+ many-minute juice (feel, not counts) | later |
+| Death result CTA timing / `Nog één keer` | **#323** |
+| Examinator leftovers | **#320** |
+| Satan / tide duel cadence | special-duel path |
+| Hell 20+ many-minute juice | later |
 
 Re-check: `npm run smoke:combat-density && npm run smoke:adventure`.
