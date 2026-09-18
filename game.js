@@ -323,9 +323,9 @@ const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const VERSION_UPDATE_SAVE_KEY = 'stickfighter_version_update_save_v1';
 const VERSION_UPDATE_FLAG_KEY = 'stickfighter_version_update_flag_v1';
 const SAVE_EXPORT_SCHEMA = 3;
-const APP_VERSION = '1.18.176';
+const APP_VERSION = '1.18.177';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 386;
+const SW_CACHE_REV = 387;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', petCoins: 0, dex: {}, summons: {}, pets: {}, activePet: null,
   eggPets: {}, activeEggPet: null, eggDaily: null,
   chestDaily: null, chestWeapons: {},
@@ -2504,6 +2504,8 @@ const I18N = {
       walletPc: 'PC', walletDex: 'Dex', walletEgg: 'Ei', walletEggReady: 'Ei',
       ready: 'klaar', filterAll: 'Alle', filterReady: 'Klaar', filterProgress: 'Bezig', filterTamed: 'Getemd',
       filterCount: '{n} pets', emptyFilter: 'Niets in deze filter',
+      emptyFilterAct: 'Toon alle', emptyFirst: 'Tem via kills of koop met PC',
+      emptyEggFirst: 'Open het dag-ei', pauseNoneHint: 'Nog geen pet · jaag of koop',
       nextEgg: 'Dag-ei klaar', nextEggAdv: 'Win avontuur voor een bonus-ei',
       nextClaim: 'Tem {name} · {cur}/{need} kills', nextBuy: 'Koop {name} · {cost} PC',
       nextTame: 'Tem {name} · {cur}/{need} kills', nextNone: 'Collectie compleet',
@@ -2842,6 +2844,8 @@ const I18N = {
       walletPc: 'PC', walletDex: 'Dex', walletEgg: 'Egg', walletEggReady: 'Egg',
       ready: 'ready', filterAll: 'All', filterReady: 'Ready', filterProgress: 'In progress', filterTamed: 'Tamed',
       filterCount: '{n} pets', emptyFilter: 'Nothing in this filter',
+      emptyFilterAct: 'Show all', emptyFirst: 'Tame via kills or buy with PC',
+      emptyEggFirst: 'Open the daily egg', pauseNoneHint: 'No pet yet · hunt or buy',
       nextEgg: 'Daily egg ready', nextEggAdv: 'Win adventure for a bonus egg',
       nextClaim: 'Tame {name} · {cur}/{need} kills', nextBuy: 'Buy {name} · {cost} PC',
       nextTame: 'Tame {name} · {cur}/{need} kills', nextNone: 'Collection complete',
@@ -3229,6 +3233,8 @@ const I18N = {
       walletPc: 'PC', walletDex: 'Dex', walletEgg: 'Ei', walletEggReady: 'Ei',
       ready: 'bereit', filterAll: 'Alle', filterReady: 'Bereit', filterProgress: 'Unterwegs', filterTamed: 'Gezähmt',
       filterCount: '{n} Pets', emptyFilter: 'Nichts in diesem Filter',
+      emptyFilterAct: 'Alle zeigen', emptyFirst: 'Zähmen per Kills oder PC',
+      emptyEggFirst: 'Tägliches Ei öffnen', pauseNoneHint: 'Noch kein Pet · jagen/kaufen',
       nextEgg: 'Tages-Ei bereit', nextEggAdv: 'Gewinne Abenteuer für ein Bonus-Ei',
       nextClaim: 'Zähme {name} · {cur}/{need} Kills', nextBuy: 'Kaufe {name} · {cost} PC',
       nextTame: 'Zähme {name} · {cur}/{need} Kills', nextNone: 'Sammlung komplett',
@@ -3547,6 +3553,8 @@ const I18N = {
       walletPc: 'PC', walletDex: 'Dex', walletEgg: 'Œuf', walletEggReady: 'Œuf',
       ready: 'prêt', filterAll: 'Tous', filterReady: 'Prêts', filterProgress: 'En cours', filterTamed: 'Apprivoisés',
       filterCount: '{n} pets', emptyFilter: 'Rien dans ce filtre',
+      emptyFilterAct: 'Tout voir', emptyFirst: 'Dompte ou achète avec PC',
+      emptyEggFirst: 'Ouvre l\'œuf du jour', pauseNoneHint: 'Pas de pet · chasse ou achète',
       nextEgg: 'Œuf du jour prêt', nextEggAdv: 'Gagne l\'aventure pour un œuf bonus',
       nextClaim: 'Apprivoise {name} · {cur}/{need} kills', nextBuy: 'Achète {name} · {cost} PC',
       nextTame: 'Apprivoise {name} · {cur}/{need} kills', nextNone: 'Collection complète',
@@ -3857,6 +3865,8 @@ const I18N = {
       walletPc: 'PC', walletDex: 'Dex', walletEgg: 'Huevo', walletEggReady: 'Huevo',
       ready: 'listo', filterAll: 'Todos', filterReady: 'Listos', filterProgress: 'En curso', filterTamed: 'Domados',
       filterCount: '{n} pets', emptyFilter: 'Nada en este filtro',
+      emptyFilterAct: 'Ver todos', emptyFirst: 'Doma o compra con PC',
+      emptyEggFirst: 'Abre el huevo diario', pauseNoneHint: 'Sin pet · caza o compra',
       nextEgg: 'Huevo diario listo', nextEggAdv: 'Gana aventura para un huevo extra',
       nextClaim: 'Doma {name} · {cur}/{need} kills', nextBuy: 'Compra {name} · {cost} PC',
       nextTame: 'Doma {name} · {cur}/{need} kills', nextNone: 'Colección completa',
@@ -21437,6 +21447,8 @@ function seedNlGameStrings() {
     pauseNone: 'Nog geen pet', pauseEquip: 'Uitrusten · {name}',
     pauseCycle: 'Wissel · {name}', pauseActive: '{name} volgt',
     listLocked: '{cur}/{need} · {cost} PC', ready: 'klaar',
+    emptyFilterAct: 'Toon alle', emptyFirst: 'Tem via kills of koop met PC',
+    emptyEggFirst: 'Open het dag-ei', pauseNoneHint: 'Nog geen pet · jaag of koop',
   });
   if (!I18N.nl.hub) I18N.nl.hub = {};
   Object.assign(I18N.nl.hub, { pets: 'Pets', petsSub: 'Tem · koop · dag-ei' });
@@ -22247,6 +22259,8 @@ const CATALOG_EN = {
     pauseCycle: 'Swap · {name}', pauseActive: '{name} follows',
     listLocked: '{cur}/{need} · {cost} PC', listTamed: 'Tamed', listActive: 'On',
     ready: 'ready',
+    emptyFilterAct: 'Show all', emptyFirst: 'Tame via kills or buy with PC',
+    emptyEggFirst: 'Open the daily egg', pauseNoneHint: 'No pet yet · hunt or buy',
   },
   gear: {
     hubStat: '{n}/5',
@@ -23942,6 +23956,8 @@ const CATALOG_DE_CHROME = {
     pauseNone: 'Noch kein Pet', pauseEquip: 'Ausrüsten · {name}',
     pauseCycle: 'Wechseln · {name}', pauseActive: '{name} folgt',
     listLocked: '{cur}/{need} · {cost} PC', listTamed: 'Gezähmt', listActive: 'An',
+    emptyFilterAct: 'Alle zeigen', emptyFirst: 'Zähmen per Kills oder PC',
+    emptyEggFirst: 'Tägliches Ei öffnen', pauseNoneHint: 'Noch kein Pet · jagen/kaufen',
     ready: 'bereit',
   },
   runLoot: {
@@ -25214,6 +25230,8 @@ overlayI18nCatalog(CATALOG_FR, {
     pauseCycle: 'Changer · {name}', pauseActive: '{name} te suit',
     listLocked: '{cur}/{need} · {cost} PC', listTamed: 'Apprivoisé', listActive: 'Actif',
     ready: 'prêt',
+    emptyFilterAct: 'Tout voir', emptyFirst: 'Dompte ou achète avec PC',
+    emptyEggFirst: 'Ouvre l\'œuf du jour', pauseNoneHint: 'Pas de pet · chasse ou achète',
   },
   hub: {
     pets: 'Pets', petsSub: 'Apprivoiser · acheter · œuf',
@@ -25744,6 +25762,8 @@ overlayI18nCatalog(CATALOG_ES, {
     pauseCycle: 'Cambiar · {name}', pauseActive: '{name} te sigue',
     listLocked: '{cur}/{need} · {cost} PC', listTamed: 'Domado', listActive: 'Activo',
     ready: 'listo',
+    emptyFilterAct: 'Ver todos', emptyFirst: 'Doma o compra con PC',
+    emptyEggFirst: 'Abre el huevo diario', pauseNoneHint: 'Sin pet · caza o compra',
   },
   hub: {
     pets: 'Pets', petsSub: 'Domar · comprar · huevo',
@@ -26288,6 +26308,8 @@ overlayI18nCatalog(CATALOG_DE, {
     pauseCycle: 'Wechseln · {name}', pauseActive: '{name} folgt',
     listLocked: '{cur}/{need} · {cost} PC', listTamed: 'Gezähmt', listActive: 'An',
     ready: 'bereit',
+    emptyFilterAct: 'Alle zeigen', emptyFirst: 'Zähmen per Kills oder PC',
+    emptyEggFirst: 'Tägliches Ei öffnen', pauseNoneHint: 'Noch kein Pet · jagen/kaufen',
   },
   hub: {
     pets: 'Pets', petsSub: 'Zähmen · kaufen · Tages-Ei',
@@ -52452,6 +52474,8 @@ if (typeof UI === 'object' && UI) {
 
   UI.startPetsHeroTick = function startPetsHeroTick() {
     this.stopPetsHeroTick();
+    if (typeof motionReduced === 'function' && motionReduced()) return;
+    let n = 0;
     const step = (ts) => {
       const scr = document.getElementById('petScreen');
       if (!scr || !scr.classList.contains('active')) {
@@ -52459,7 +52483,8 @@ if (typeof UI === 'object' && UI) {
         return;
       }
       this._petsHeroT = (ts || 0) / 1000;
-      this.paintPetsHero(true);
+      n++;
+      if (n % 4 === 1) this.paintPetsHero(true);
       this._petsHeroRaf = requestAnimationFrame(step);
     };
     this._petsHeroRaf = requestAnimationFrame(step);
@@ -52611,7 +52636,11 @@ if (typeof UI === 'object' && UI) {
     if (!ids.length) {
       chip.disabled = true;
       chip.classList.add('is-empty');
-      if (lbl) lbl.textContent = petsTxt('pets.pauseNone', 'No pet yet');
+      if (lbl) {
+        lbl.textContent = petsIsNarrow()
+          ? petsTxt('pets.pauseNoneHint', 'No pet yet · hunt or buy')
+          : petsTxt('pets.pauseNone', 'No pet yet');
+      }
       return;
     }
     chip.disabled = false;
@@ -52641,7 +52670,9 @@ if (typeof UI === 'object' && UI) {
         : petsTxt(narrowEgg ? 'pets.heroEmptyShort' : 'pets.heroEmptyEgg', 'No egg');
       if (perkEl) perkEl.textContent = def
         ? ((typeof eggLabel === 'function') ? eggLabel(def, 'perk') : (def.perk || ''))
-        : petsTxt(narrowEgg ? 'pets.heroTap' : 'pets.heroEggHint', 'Tap a row');
+        : ((typeof petsNextGoalLine === 'function')
+          ? petsNextGoalLine()
+          : petsTxt(narrowEgg ? 'pets.emptyEggFirst' : 'pets.heroEggHint', 'Open the daily egg'));
       if (bonusEl) bonusEl.textContent = def
         ? petsTxt('pets.eggCosmeticHero', 'Look only — no combat boost')
         : '';
@@ -52663,9 +52694,11 @@ if (typeof UI === 'object' && UI) {
     if (nameEl) nameEl.textContent = def && sp
       ? sp.name
       : petsTxt(narrow ? 'pets.heroEmptyShort' : 'pets.heroEmpty', 'No pet');
-    if (perkEl) perkEl.textContent = def
-      ? ((typeof petPerkLine === 'function') ? petPerkLine(def) : (def.perk || ''))
-      : petsTxt(narrow ? 'pets.heroTap' : 'pets.heroFollows', 'Tap a row');
+      if (perkEl) perkEl.textContent = def
+        ? ((typeof petPerkLine === 'function') ? petPerkLine(def) : (def.perk || ''))
+        : ((typeof petsNextGoalLine === 'function')
+          ? petsNextGoalLine()
+          : petsTxt(narrow ? 'pets.emptyFirst' : 'pets.heroFollows', 'Tame via kills or buy with PC'));
     if (bonusEl) {
       bonusEl.textContent = def
         ? ((typeof petLiveBonusLine === 'function') ? petLiveBonusLine(def) : '')
@@ -52813,7 +52846,23 @@ if (typeof UI === 'object' && UI) {
     if (!rows.length) {
       const empty = document.createElement('div');
       empty.className = 'pets-empty';
-      empty.textContent = petsTxt('pets.emptyFilter', 'Nothing in this filter');
+      const tamed = (typeof petTamedCount === 'function') ? petTamedCount() : 0;
+      const title = (this.petFilter === 'tamed' && !tamed)
+        ? petsTxt('pets.emptyFirst', 'Tame via kills or buy with PC')
+        : petsTxt('pets.emptyFilter', 'Nothing in this filter');
+      empty.innerHTML = '<p class="pets-empty-copy">' + petsEscape(title) + '</p>';
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'btn mode-btn big-touch pets-empty-btn';
+      btn.textContent = petsTxt('pets.emptyFilterAct', 'Show all');
+      if (typeof bindPress === 'function') {
+        bindPress(btn, () => {
+          try { AudioSys.sfx('select'); } catch (_) {}
+          UI.petFilter = 'all';
+          UI.renderPets();
+        });
+      }
+      empty.appendChild(btn);
       list.appendChild(empty);
       return;
     }
@@ -52837,17 +52886,22 @@ if (typeof UI === 'object' && UI) {
     el.setAttribute('role', 'listitem');
     if (st.tamed) el.style.borderColor = rar.color;
     const cv = document.createElement('canvas');
-    cv.width = 64; cv.height = 64;
+    const thumb = petsIsNarrow() ? 48 : 64;
+    cv.width = thumb; cv.height = thumb;
     cv.setAttribute('aria-hidden', 'true');
     const cc = cv.getContext('2d');
-    cc.translate(32, 38);
+    cc.translate(thumb / 2, thumb * 0.6);
     cc.scale(0.55, 0.55);
-    if (sp && typeof drawMonsterArt === 'function') {
-      if (st.tamed) drawMonsterArt(cc, sp, sp.size, 1.2, false, false);
-      else {
-        cc.globalAlpha = 0.72;
-        drawMonsterArt(cc, sp, sp.size, 1.2, false, false);
-      }
+    if (sp && typeof drawMonsterArt === 'function' && (st.tamed || !petsIsNarrow())) {
+      if (!st.tamed) cc.globalAlpha = 0.72;
+      drawMonsterArt(cc, sp, sp.size, 1.2, false, false);
+    } else if (!st.tamed) {
+      cc.strokeStyle = 'rgba(232,240,255,.4)';
+      cc.lineWidth = 3;
+      if (typeof cc.setLineDash === 'function') cc.setLineDash([4, 3]);
+      cc.beginPath();
+      cc.arc(0, -10, 20, 0, Math.PI * 2);
+      cc.stroke();
     }
     const info = document.createElement('div');
     info.className = 'pets-card-body';

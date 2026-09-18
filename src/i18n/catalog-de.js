@@ -30,6 +30,8 @@ const CATALOG_DE_CHROME = {
     pauseNone: 'Noch kein Pet', pauseEquip: 'Ausrüsten · {name}',
     pauseCycle: 'Wechseln · {name}', pauseActive: '{name} folgt',
     listLocked: '{cur}/{need} · {cost} PC', listTamed: 'Gezähmt', listActive: 'An',
+    emptyFilterAct: 'Alle zeigen', emptyFirst: 'Zähmen per Kills oder PC',
+    emptyEggFirst: 'Tägliches Ei öffnen', pauseNoneHint: 'Noch kein Pet · jagen/kaufen',
     ready: 'bereit',
   },
   runLoot: {

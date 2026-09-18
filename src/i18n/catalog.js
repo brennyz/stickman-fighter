@@ -420,6 +420,8 @@ function seedNlGameStrings() {
     pauseNone: 'Nog geen pet', pauseEquip: 'Uitrusten · {name}',
     pauseCycle: 'Wissel · {name}', pauseActive: '{name} volgt',
     listLocked: '{cur}/{need} · {cost} PC', ready: 'klaar',
+    emptyFilterAct: 'Toon alle', emptyFirst: 'Tem via kills of koop met PC',
+    emptyEggFirst: 'Open het dag-ei', pauseNoneHint: 'Nog geen pet · jaag of koop',
   });
   if (!I18N.nl.hub) I18N.nl.hub = {};
   Object.assign(I18N.nl.hub, { pets: 'Pets', petsSub: 'Tem · koop · dag-ei' });
@@ -1230,6 +1232,8 @@ const CATALOG_EN = {
     pauseCycle: 'Swap · {name}', pauseActive: '{name} follows',
     listLocked: '{cur}/{need} · {cost} PC', listTamed: 'Tamed', listActive: 'On',
     ready: 'ready',
+    emptyFilterAct: 'Show all', emptyFirst: 'Tame via kills or buy with PC',
+    emptyEggFirst: 'Open the daily egg', pauseNoneHint: 'No pet yet · hunt or buy',
   },
   gear: {
     hubStat: '{n}/5',

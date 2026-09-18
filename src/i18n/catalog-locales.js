@@ -380,6 +380,8 @@ overlayI18nCatalog(CATALOG_FR, {
     pauseCycle: 'Changer · {name}', pauseActive: '{name} te suit',
     listLocked: '{cur}/{need} · {cost} PC', listTamed: 'Apprivoisé', listActive: 'Actif',
     ready: 'prêt',
+    emptyFilterAct: 'Tout voir', emptyFirst: 'Dompte ou achète avec PC',
+    emptyEggFirst: 'Ouvre l\'œuf du jour', pauseNoneHint: 'Pas de pet · chasse ou achète',
   },
   hub: {
     pets: 'Pets', petsSub: 'Apprivoiser · acheter · œuf',
@@ -910,6 +912,8 @@ overlayI18nCatalog(CATALOG_ES, {
     pauseCycle: 'Cambiar · {name}', pauseActive: '{name} te sigue',
     listLocked: '{cur}/{need} · {cost} PC', listTamed: 'Domado', listActive: 'Activo',
     ready: 'listo',
+    emptyFilterAct: 'Ver todos', emptyFirst: 'Doma o compra con PC',
+    emptyEggFirst: 'Abre el huevo diario', pauseNoneHint: 'Sin pet · caza o compra',
   },
   hub: {
     pets: 'Pets', petsSub: 'Domar · comprar · huevo',
@@ -1454,6 +1458,8 @@ overlayI18nCatalog(CATALOG_DE, {
     pauseCycle: 'Wechseln · {name}', pauseActive: '{name} folgt',
     listLocked: '{cur}/{need} · {cost} PC', listTamed: 'Gezähmt', listActive: 'An',
     ready: 'bereit',
+    emptyFilterAct: 'Alle zeigen', emptyFirst: 'Zähmen per Kills oder PC',
+    emptyEggFirst: 'Tägliches Ei öffnen', pauseNoneHint: 'Noch kein Pet · jagen/kaufen',
   },
   hub: {
     pets: 'Pets', petsSub: 'Zähmen · kaufen · Tages-Ei',

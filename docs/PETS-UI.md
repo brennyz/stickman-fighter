@@ -33,6 +33,7 @@ Feel-only — assist damage and cooldown numbers unchanged.
 - Kill **progress bars** on every dex card
 - **List → detail** (Android portrait: list first; tap a row for “What does this do?”)
 - List cards stay short on 390px: name + rarity + `{cur}/{need} · {cost} PC` (perk lives in detail)
+- **390 empty/equip:** hero perk = next-goal (not “tap a row”); tamed-filter empty has **Show all**; pause chip “hunt or buy”. List scrolls inside the pane (no whole-screen drag). Combat follow P0 left as-is.
 - Detail CTAs: Equip / Unequip / Tame now (if kills already met) / Buy
 - **Pause pet chip**: no tamed = copy only; unequipped = one-tap first tamed; equipped = cycle. Stays in pause (no mid-fight screen hop)
 - EN / DE / NL / FR / ES chrome for the new UI

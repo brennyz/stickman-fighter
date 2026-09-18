@@ -73,6 +73,11 @@ must(/pets:\s*\{/.test(i18n) && /doesTitle/.test(i18n), 'i18n missing pets doesT
 must(/filterReady/.test(i18n) && /crackWait/.test(i18n), 'i18n missing filter/crack-wait copy');
 must(/listLocked/.test(i18n) && /pauseEquip/.test(i18n) && /ritualCtaEgg/.test(i18n),
   'i18n missing locked-list / pause / FOMO egg CTA');
+must(/emptyFirst/.test(i18n) && /emptyFilterAct/.test(i18n) && /pauseNoneHint/.test(i18n),
+  'i18n missing 390 empty/equip copy');
+must(/emptyFirst/.test(ui) && /pets-empty-btn/.test(ui), 'empty-state CTA missing');
+must(/overflow-y:\s*auto/.test(css) && /#petScreen \.pets-list/.test(css),
+  '390 list must scroll independently');
 must(manifest.includes('src/ui/pets-ui.js'), 'manifest missing pets-ui');
 must(/No Versus/.test(docs), 'docs must keep Versus retired');
 must(/speel\.html/.test(docs), 'docs must keep speel.html share URL');
@@ -132,6 +137,25 @@ async function runBrowser() {
       if (!heroBox || heroBox.height < 60) return { ok: false, why: 'hero too small', h: heroBox && heroBox.height };
       const next = document.getElementById('petsNext');
       if (!next || !(next.textContent || '').trim()) return { ok: false, why: 'next-goal empty' };
+      const heroPerk = (document.getElementById('petsHeroPerk') || {}).textContent || '';
+      if (/tik een rij|tap a row/i.test(heroPerk)) {
+        return { ok: false, why: 'empty hero still says tap a row', heroPerk };
+      }
+      UI.petFilter = 'tamed';
+      UI.renderPets();
+      const empty = document.querySelector('#petList .pets-empty');
+      if (!empty) return { ok: false, why: 'tamed-filter empty state missing' };
+      if (!/Tem via|Tame via|Zähmen|Dompte|Doma/i.test(empty.textContent || '')) {
+        return { ok: false, why: 'emptyFirst copy missing', text: empty.textContent };
+      }
+      if (!empty.querySelector('.pets-empty-btn')) return { ok: false, why: 'empty Show-all CTA missing' };
+      const listEl = document.getElementById('petList');
+      const ov = listEl ? getComputedStyle(listEl).overflowY : '';
+      if (ov !== 'auto' && ov !== 'scroll') {
+        return { ok: false, why: 'list not independently scrollable', ov };
+      }
+      UI.petFilter = 'all';
+      UI.renderPets();
       const cards = [...document.querySelectorAll('#petList [data-pet-id]')];
       if (cards.length < 12) return { ok: false, why: 'need 12 dex pets', n: cards.length };
       const tooSmall = cards.filter((c) => c.getBoundingClientRect().height < 44);

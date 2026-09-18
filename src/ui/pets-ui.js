@@ -100,6 +100,8 @@ if (typeof UI === 'object' && UI) {
 
   UI.startPetsHeroTick = function startPetsHeroTick() {
     this.stopPetsHeroTick();
+    if (typeof motionReduced === 'function' && motionReduced()) return;
+    let n = 0;
     const step = (ts) => {
       const scr = document.getElementById('petScreen');
       if (!scr || !scr.classList.contains('active')) {
@@ -107,7 +109,8 @@ if (typeof UI === 'object' && UI) {
         return;
       }
       this._petsHeroT = (ts || 0) / 1000;
-      this.paintPetsHero(true);
+      n++;
+      if (n % 4 === 1) this.paintPetsHero(true);
       this._petsHeroRaf = requestAnimationFrame(step);
     };
     this._petsHeroRaf = requestAnimationFrame(step);
@@ -259,7 +262,11 @@ if (typeof UI === 'object' && UI) {
     if (!ids.length) {
       chip.disabled = true;
       chip.classList.add('is-empty');
-      if (lbl) lbl.textContent = petsTxt('pets.pauseNone', 'No pet yet');
+      if (lbl) {
+        lbl.textContent = petsIsNarrow()
+          ? petsTxt('pets.pauseNoneHint', 'No pet yet · hunt or buy')
+          : petsTxt('pets.pauseNone', 'No pet yet');
+      }
       return;
     }
     chip.disabled = false;
@@ -289,7 +296,9 @@ if (typeof UI === 'object' && UI) {
         : petsTxt(narrowEgg ? 'pets.heroEmptyShort' : 'pets.heroEmptyEgg', 'No egg');
       if (perkEl) perkEl.textContent = def
         ? ((typeof eggLabel === 'function') ? eggLabel(def, 'perk') : (def.perk || ''))
-        : petsTxt(narrowEgg ? 'pets.heroTap' : 'pets.heroEggHint', 'Tap a row');
+        : ((typeof petsNextGoalLine === 'function')
+          ? petsNextGoalLine()
+          : petsTxt(narrowEgg ? 'pets.emptyEggFirst' : 'pets.heroEggHint', 'Open the daily egg'));
       if (bonusEl) bonusEl.textContent = def
         ? petsTxt('pets.eggCosmeticHero', 'Look only — no combat boost')
         : '';
@@ -311,9 +320,11 @@ if (typeof UI === 'object' && UI) {
     if (nameEl) nameEl.textContent = def && sp
       ? sp.name
       : petsTxt(narrow ? 'pets.heroEmptyShort' : 'pets.heroEmpty', 'No pet');
-    if (perkEl) perkEl.textContent = def
-      ? ((typeof petPerkLine === 'function') ? petPerkLine(def) : (def.perk || ''))
-      : petsTxt(narrow ? 'pets.heroTap' : 'pets.heroFollows', 'Tap a row');
+      if (perkEl) perkEl.textContent = def
+        ? ((typeof petPerkLine === 'function') ? petPerkLine(def) : (def.perk || ''))
+        : ((typeof petsNextGoalLine === 'function')
+          ? petsNextGoalLine()
+          : petsTxt(narrow ? 'pets.emptyFirst' : 'pets.heroFollows', 'Tame via kills or buy with PC'));
     if (bonusEl) {
       bonusEl.textContent = def
         ? ((typeof petLiveBonusLine === 'function') ? petLiveBonusLine(def) : '')
@@ -461,7 +472,23 @@ if (typeof UI === 'object' && UI) {
     if (!rows.length) {
       const empty = document.createElement('div');
       empty.className = 'pets-empty';
-      empty.textContent = petsTxt('pets.emptyFilter', 'Nothing in this filter');
+      const tamed = (typeof petTamedCount === 'function') ? petTamedCount() : 0;
+      const title = (this.petFilter === 'tamed' && !tamed)
+        ? petsTxt('pets.emptyFirst', 'Tame via kills or buy with PC')
+        : petsTxt('pets.emptyFilter', 'Nothing in this filter');
+      empty.innerHTML = '<p class="pets-empty-copy">' + petsEscape(title) + '</p>';
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'btn mode-btn big-touch pets-empty-btn';
+      btn.textContent = petsTxt('pets.emptyFilterAct', 'Show all');
+      if (typeof bindPress === 'function') {
+        bindPress(btn, () => {
+          try { AudioSys.sfx('select'); } catch (_) {}
+          UI.petFilter = 'all';
+          UI.renderPets();
+        });
+      }
+      empty.appendChild(btn);
       list.appendChild(empty);
       return;
     }
@@ -485,17 +512,22 @@ if (typeof UI === 'object' && UI) {
     el.setAttribute('role', 'listitem');
     if (st.tamed) el.style.borderColor = rar.color;
     const cv = document.createElement('canvas');
-    cv.width = 64; cv.height = 64;
+    const thumb = petsIsNarrow() ? 48 : 64;
+    cv.width = thumb; cv.height = thumb;
     cv.setAttribute('aria-hidden', 'true');
     const cc = cv.getContext('2d');
-    cc.translate(32, 38);
+    cc.translate(thumb / 2, thumb * 0.6);
     cc.scale(0.55, 0.55);
-    if (sp && typeof drawMonsterArt === 'function') {
-      if (st.tamed) drawMonsterArt(cc, sp, sp.size, 1.2, false, false);
-      else {
-        cc.globalAlpha = 0.72;
-        drawMonsterArt(cc, sp, sp.size, 1.2, false, false);
-      }
+    if (sp && typeof drawMonsterArt === 'function' && (st.tamed || !petsIsNarrow())) {
+      if (!st.tamed) cc.globalAlpha = 0.72;
+      drawMonsterArt(cc, sp, sp.size, 1.2, false, false);
+    } else if (!st.tamed) {
+      cc.strokeStyle = 'rgba(232,240,255,.4)';
+      cc.lineWidth = 3;
+      if (typeof cc.setLineDash === 'function') cc.setLineDash([4, 3]);
+      cc.beginPath();
+      cc.arc(0, -10, 20, 0, Math.PI * 2);
+      cc.stroke();
     }
     const info = document.createElement('div');
     info.className = 'pets-card-body';

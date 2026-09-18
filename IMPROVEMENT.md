@@ -148,6 +148,7 @@ Schrijf **1–3 regels** per sessie: datum, d#, wat, versie.
 
 | Datum (UTC) | d# | Update |
 |-------------|-----|--------|
+| 2026-09-18 | — | **Pets DONE #319:** 390 empty/equip + inner list scroll. Combat follow P0 left solid. Draft, no main. **v1.18.177 / SW 387**. |
 | 2026-09-18 | — | **Pets P0 feel #319:** snappy follow (vx/vy + face-flip/dash/jump), assist telegraph, light hit/kill/equip juice. No Versus, no main. **v1.18.176 / SW 386**. |
 | 2026-09-18 | — | **Pets P3 DONE #319:** EN/DE/FR/ES HOME Pets tile + pause chip + egg CTAs. Draft, no main. **v1.18.175 / SW 385**. |
 | 2026-09-18 | — | **Pets P0 on #319:** chrome daily-egg CTA; HOME 1-tap Pets + pause chip (equip/cycle, no mid-fight hop); locked Dex short on 390px. No Versus. Draft. **v1.18.174 / SW 384**. |

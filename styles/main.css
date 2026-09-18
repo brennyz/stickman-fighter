@@ -4025,8 +4025,13 @@
     text-align: center;
     font-weight: 800;
     color: var(--menu-ink-muted);
-    padding: 18px 8px;
+    padding: 18px 12px;
+    border-radius: 14px;
+    border: 1px solid var(--menu-edge);
+    background: var(--menu-tile-solid);
   }
+  #petScreen .pets-empty-copy { margin: 0; font: inherit; color: inherit; line-height: 1.35; }
+  #petScreen .pets-empty-btn { width: 100%; margin-top: 10px; justify-content: center; }
   #petScreen .pets-crack-btn {
     width: min(94vw, 480px);
     margin: 0 auto 10px;
@@ -4045,15 +4050,61 @@
   body.big-touch #petScreen .pets-card { min-height: max(60px, var(--touch-min)); }
   body.big-touch #petScreen .pets-filter-btn { min-height: max(48px, var(--touch-min)); }
   @media (max-width: 480px) {
-    #petScreen .pets-hero { padding: 8px 10px; gap: 10px; }
+    #petScreen.pets-screen { overflow: hidden; }
+    #petScreen .back-btn,
+    #petScreen .pets-screen-head,
+    #petScreen .pets-wallet,
+    #petScreen .pets-tab-bar,
+    #petScreen .pets-filter-bar,
+    #petScreen .pets-crack-btn,
+    #petScreen .sub-home-bar { flex: 0 0 auto; }
+    #petScreen .pets-hero { padding: 8px 10px; gap: 10px; flex: 0 0 auto; }
     #petScreen .pets-hero-canvas { width: 64px; height: 64px; }
     #petScreen .pets-hero-name { font-size: 14px; }
-    #petScreen .pets-next { margin-bottom: 6px; }
+    #petScreen .pets-hero-perk,
+    #petScreen .pets-hero-bonus { font-size: 12px; }
+    #petScreen .pets-next { margin-bottom: 6px; flex: 0 0 auto; }
     #petScreen .pets-filter-count { display: none; }
     #petScreen .pets-tip { display: none; }
+    #petScreen .pets-rar-strip { display: none; }
     #petScreen .pets-hero-bonus:empty { display: none; }
     #petScreen .pets-card .cinfo:not(.pets-status) { display: none; }
     #petScreen .pets-crack-btn { width: min(94vw, 480px); margin-bottom: 8px; }
+    #petScreen .pets-body {
+      flex: 1 1 auto;
+      min-height: 0;
+      width: min(94vw, 480px);
+      overflow: hidden;
+    }
+    #petScreen .pets-overview {
+      display: flex;
+      flex-direction: column;
+      min-height: 0;
+      flex: 1 1 auto;
+    }
+    #petScreen .pets-list {
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+      overscroll-behavior: contain;
+      touch-action: pan-y;
+      flex: 1 1 auto;
+      min-height: 0;
+      padding-bottom: 12px;
+    }
+    #petScreen[data-pets-pane="detail"] .pets-detail {
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+      overscroll-behavior: contain;
+      flex: 1 1 auto;
+      min-height: 0;
+    }
+    #petScreen .pets-card {
+      content-visibility: auto;
+      contain-intrinsic-size: auto 64px;
+      contain: content;
+    }
+    #petScreen .pets-card canvas { width: 44px; height: 44px; }
+    #petScreen .pets-empty { font-size: 14px; padding: 14px 12px; }
   }
   @media (min-width: 720px) and (orientation: landscape) {
     #petScreen .pets-screen-head,
