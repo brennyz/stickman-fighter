@@ -36,6 +36,8 @@ must(/function adventureSpawnCadence\(/.test(densSrc), 'adventureSpawnCadence mi
 must(/function combatSmoothOpenInterval\(/.test(densSrc), 'combatSmoothOpenInterval missing');
 must(/function combatWaveGapSec\(/.test(densSrc), 'combatWaveGapSec missing');
 must(/function combatPreferStrike\(/.test(densSrc), 'combatPreferStrike missing');
+must(/function combatCadenceBand\(/.test(densSrc), 'combatCadenceBand missing');
+must(/COMBAT_TAB_OPEN_MIN = 0\.66/.test(densSrc), 'tablet opener band missing');
 must(/function scaleAdventurePerWave\(/.test(densSrc), 'scaleAdventurePerWave missing');
 must(/COMBAT_DENSITY_MIN = 0\.50/.test(densSrc), 'phone floor must stay 0.50 (still a horde)');
 must(/function combatLoseResultMs\(/.test(densSrc), 'combatLoseResultMs missing');
@@ -253,6 +255,31 @@ must(iso.combatSpawnEdgeX(1, desk) === 1280 + 40, 'desktop spawn edge W+40');
 must(iso.combatSpawnEdgeX(1, phone) === 390 + 18, 'phone spawn edge W+18');
 must(iso.combatSpawnEdgeX(-1, phone) === -18, 'phone left spawn -18');
 must(iso.combatSmoothOpenInterval(2.58, 0, desk) === 2.58, 'desktop smooth is a no-op');
+const tab = profileAt({ w: 834, h: 1194, touch: true });
+must(tab.tablet === true && tab.compact === false, '834 portrait is tablet mid-band', tab);
+must(tab.scale > phone.scale && tab.scale < desk.scale, 'tablet scale between phone 0.50 and desktop 1.0', tab);
+must(tab.maxAlive > phone.maxAlive && tab.maxAlive < deskTouch.maxAlive, 'tablet alive between phone and large-touch', tab);
+must(tab.spawnBatchMax === 2, 'tablet batch stays 2', tab);
+must(iso.scaleAdventurePerWave(24, tab) > 12 && iso.scaleAdventurePerWave(24, tab) < 24,
+  'tablet per-wave 24 sits between phone 12 and desktop 24');
+const tabOpenRaw = iso.adventureSpawnCadence(2, true, false, 1.55, tab);
+const tabOpen = iso.adventureSpawnCadence(2, true, false, 1.55, tab, 0);
+must(tabOpenRaw.interval > 2.0, 'raw tablet opener is the empty hole (~2.10s)', tabOpenRaw);
+must(tabOpen.interval >= 0.66 && tabOpen.interval <= 1.22, 'tablet first-30s clamp 0.66–1.22', tabOpen);
+const tabSpike = iso.adventureSpawnCadence(4, false, false, 1, tab, 5);
+must(tabSpike.interval >= 0.66 && tabSpike.interval <= 1.22, 'tablet wave-2 dump clamped', tabSpike);
+const tabMin1 = iso.adventureSpawnCadence(30, false, false, 1, tab, 65);
+must(tabMin1.interval >= 0.55 && tabMin1.interval <= 1.15, 'tablet minute-1+ no 0.31s dump', tabMin1);
+must(iso.combatOpenerHold(0, tab) === 0.80, 'tablet first-30s hold 0.80');
+must(iso.combatOpenerHold(31, tab) === 1.2, 'tablet after 30s hold back to 1.2');
+must(iso.combatWaveGapSec(1.55, 65, tab) < 1.55 && iso.combatWaveGapSec(1.55, 65, tab) >= 1.00,
+  'tablet between-wave hole shorter, milder than phone');
+must(iso.combatWaveGapSec(1.55, 65, tab) > iso.combatWaveGapSec(1.55, 65, phone),
+  'tablet wave gap milder than phone ×0.56');
+must(iso.combatWaveGapSec(2.35, 65, tab) === 2.35, 'tablet win-clear fanfare unscaled');
+must(iso.combatSpawnEdgeX(1, tab) === 834 + 28, 'tablet spawn edge W+28');
+must(iso.combatJoySwipeAccepts(80, 900, 834, 1194, tab) === false, 'tablet has no phone swipe pad');
+must(!/lose-retry/.test(densSrc), 'density module must not own result CTA layout');
 must(iso.combatLoseResultMs(desk) === 850, 'desktop lose CTA 850ms');
 must(iso.combatLoseResultMs(phone) === 650, 'phone lose CTA 650ms');
 must(iso.combatLoseResultMs(phone) + 1100 < 3000, 'phone death banner+CTA under 3s');
@@ -285,6 +312,8 @@ must(iso.combatPreferStrike(80, 800, [kickBtn, punchBtn], joyHome, phone) === nu
   'tap on the joy home is not a strike');
 must(iso.combatPreferStrike(230, 800, [kickBtn, punchBtn], joyHome, desk) === null,
   'desktop has no prefer-strike');
+must(iso.combatPreferStrike(230, 1100, [kickBtn, punchBtn], joyHome, tab) === null,
+  'tablet has no prefer-strike');
 must(!/combatPreferStrike/.test(versusSrc), 'versus.js must not use prefer-strike');
 must(!/combatSmoothOpenInterval/.test(versusSrc), 'versus.js must not use opener clamp');
 
@@ -517,6 +546,15 @@ must(ctx.combatOpenerHold(0, { w: 390, h: 844 }) === 0.55, 'vm phone hold 0.55')
 must(ctx.combatSpawnEdgeX(1, { w: 390, h: 844 }) === 408, 'vm phone edge 408');
 must(ctx.combatPreferStrike(230, 800, [{ id: 'kick', x: 268, y: 800, r: 24 }], { x: 64, y: 800 }, { w: 390, h: 844 }),
   'vm prefer-strike claims near-miss kick');
+must(ctx.combatSmoothOpenInterval(2.10, 0, { w: 834, h: 1194 }) <= 1.22, 'vm tablet opener clamp');
+must(ctx.combatSmoothOpenInterval(0.31, 65, { w: 834, h: 1194 }) === 0.55, 'vm tablet minute-1 floor');
+must(ctx.combatOpenerHold(0, { w: 834, h: 1194 }) === 0.80, 'vm tablet hold 0.80');
+must(ctx.combatWaveGapSec(1.55, 65, { w: 834, h: 1194 }) < 1.55, 'vm tablet wave gap shorter');
+must(ctx.combatWaveGapSec(1.55, 65, { w: 834, h: 1194 }) > ctx.combatWaveGapSec(1.55, 65, { w: 390, h: 844 }),
+  'vm tablet gap milder than phone');
+must(ctx.combatDensityProfile({ w: 834, h: 1194 }).scale > 0.5
+  && ctx.combatDensityProfile({ w: 834, h: 1194 }).scale < 1,
+  'vm tablet scale between phone and desktop');
 
 console.log('TELEGRAPH_390', {
   phoneWind: ctx.applyCombatTelegraphWind(0.45, { w: 390, h: 844 }),

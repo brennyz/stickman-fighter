@@ -34,7 +34,16 @@ Density muls stacked into **empty then spike** on 390px: wave 1 interval ≈ 2.5
 | Spawn edge | `W+40` / `-40` | `W+18` / `-18` | Same compact edge |
 | Batch | Opener single-file | Opener single-file | Single-file |
 
-Helpers: `combatSmoothOpenInterval`, `combatWaveGapSec`, `combatOpenerHold`, `combatSpawnEdgeX`. Desktop never enters the clamp.
+| Piece | Tablet 834×1194 (mid-band) |
+|-------|----------------------------|
+| Scale / max alive | **0.806 / ~37** — between phone 0.50/~12 and desktop 1.0/78 |
+| Spawn interval | First 30s clamp **0.66–1.22s**; after 30s **0.55–1.15s** (no 0.31s dump) |
+| Start hold | **0.80s** |
+| Between-wave pause | **×0.72** (floor 1.00, cap 1.60) |
+| Spawn edge | `W+28` / `-28` |
+| Batch | **2** |
+
+Helpers: `combatCadenceBand`, `combatSmoothOpenInterval`, `combatWaveGapSec`, `combatOpenerHold`, `combatSpawnEdgeX`. Desktop never enters the clamp. Result CTA layout stays with #318/#323.
 
 ## Death → fail telegraph → Nog één keer (P0)
 
@@ -71,7 +80,7 @@ Kick sits on the inner column of the right cluster (closest strike to the joy). 
 | Desktop 1280×800 (mouse) | **1.00** | **78** | 1.00 | 3 | 32 |
 | Desktop 1280×800 (touch laptop) | **1.00** | **54** | 1.00 | 3 | 32 |
 | iPad landscape ≥960 | **1.00** | 54 (touch) | 1.00 | 3 | 32 |
-| iPad portrait 834×1194 | 0.806 | ~37 | 1.12 | 2 | 42 |
+| iPad portrait 834×1194 | **0.806** | **~37** | 1.12 + clamp | 2 | 42 |
 | Phone landscape 844×390 | 0.751 | **14** (compact cap) | 1.55 | 1 | 64 |
 | Phone portrait 390×844 | **0.50** | **~12** | 1.55 | 1 | 64 |
 | Android small 360×800 | **0.50** | **~10** | 1.55 | 1 | 64 |
@@ -135,7 +144,7 @@ Combat density on 390px was still a pile-on at floor 0.60 / ~17 alive. This pass
 
 | Item | Owner |
 |------|--------|
-| Tablet 834 mid-band cadence | #324 (stacked draft) |
+| Tablet 834 mid-band cadence | **this PR** — 0.66–1.22 / 0.55–1.15 |
 | Satan / tide duel cadence | special-duel path, not density spawn |
 | Hell 20+ many-minute juice (feel, not counts) | later |
 | Android native / TWA bump | out of scope |

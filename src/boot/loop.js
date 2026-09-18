@@ -1026,6 +1026,7 @@ function bootGame() {
       loseResultMs: combatLoseResultMs,
       failRetryTip: combatFailRetryTip,
       noteFailTele: notePlayerFailTele,
+      cadenceBand: combatCadenceBand,
     } : null,
     previewTop20Spawn: () => {
       try { AudioSys.init(); AudioSys.sfx('top20Spawn'); } catch (_) {}

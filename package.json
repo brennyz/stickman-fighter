@@ -1,7 +1,7 @@
 {
   "name": "stickman-fighter",
   "private": true,
-  "version": "1.18.182",
+  "version": "1.18.183",
   "description": "Stickman Fighter PWA",
   "scripts": {
     "build": "node scripts/build.mjs",
