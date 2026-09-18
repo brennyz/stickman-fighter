@@ -36,7 +36,10 @@ must(/function combatSmoothOpenInterval\(/.test(densSrc), 'combatSmoothOpenInter
 must(/function combatWaveGapSec\(/.test(densSrc), 'combatWaveGapSec missing');
 must(/function combatPreferStrike\(/.test(densSrc), 'combatPreferStrike missing');
 must(/function scaleAdventurePerWave\(/.test(densSrc), 'scaleAdventurePerWave missing');
-must(/COMBAT_DENSITY_MIN = 0\.60/.test(densSrc), 'phone floor must stay 0.60 (still a horde)');
+must(/COMBAT_DENSITY_MIN = 0\.50/.test(densSrc), 'phone floor must stay 0.50 (still a horde)');
+must(/function combatLoseResultMs\(/.test(densSrc), 'combatLoseResultMs missing');
+must(/function notePlayerFailTele\(/.test(densSrc), 'notePlayerFailTele missing');
+must(/function combatFailRetryTip\(/.test(densSrc), 'combatFailRetryTip missing');
 must(/COMBAT_DENSITY_WIDE_W = 960/.test(densSrc), 'wide-screen lock missing');
 must(/Versus/.test(densSrc) && /untouched/.test(densSrc), 'density module must document Versus-out');
 
@@ -78,9 +81,22 @@ must(/combatSmoothOpenInterval\(/.test(gameSrc), 'nextWave / spawn must clamp co
 must(/combatOpenerHold\(/.test(gameSrc), 'initAdventure must use compact opener hold');
 must(/combatSpawnEdgeX\(/.test(gameSrc), 'spawn must use combatSpawnEdgeX');
 must(/combatWaveGapSec\(/.test(gameSrc), 'between-wave pause must use combatWaveGapSec');
-must(/scheduleGameResult\(this, win \? 1600 : 1400/.test(gameSrc),
-  '#314 must leave Adventure result delay to #323 (keep 1600/1400)');
-must(!/function showResult\(/.test(gameSrc), '#314 must not own showResult');
+must(/combatLoseResultMs\(/.test(gameSrc), 'lose result delay must use combatLoseResultMs');
+must(/scheduleGameResult\(this, win \? 1600 :/.test(gameSrc), 'win result delay stays 1600');
+must(!/scheduleGameResult\(this, win \? 1600 : 1400/.test(gameSrc), 'lose delay no longer hard 1400');
+must(/restartAdventureInstant/.test(fs.readFileSync(path.join(root, 'src/boot/start.js'), 'utf8')),
+  'resAgain lose must call restartAdventureInstant');
+must(/function restartAdventureInstant\(/.test(fs.readFileSync(path.join(root, 'src/systems/missions.js'), 'utf8')),
+  'restartAdventureInstant helper missing');
+must(/notePlayerFailTele/.test(fs.readFileSync(path.join(root, 'src/entities/fighter.js'), 'utf8')),
+  'player hurt must note fail telegraph');
+must(/againRetry/.test(fs.readFileSync(path.join(root, 'src/ui/ui.js'), 'utf8')),
+  'showResult must label Nog één keer on adventure lose');
+must(/lose-retry/.test(fs.readFileSync(path.join(root, 'src/ui/ui.js'), 'utf8')),
+  'showResult must mark lose-retry for the big CTA');
+must(/lose-retry/.test(fs.readFileSync(path.join(root, 'styles/main.css'), 'utf8')),
+  'result CSS must fatten adventure lose retry');
+must(!/function showResult\(/.test(gameSrc), 'showResult stays in ui.js');
 must(/combatPreferStrike\(/.test(fs.readFileSync(path.join(root, 'src/systems/input.js'), 'utf8')),
   'onDown must prefer punch/kick near the joy pad');
 must(/claimTouchStrike\(/.test(fs.readFileSync(path.join(root, 'src/systems/input.js'), 'utf8')),
@@ -152,16 +168,16 @@ must(deskTouch.scale === 1, 'touch-laptop scale must stay 1.0', deskTouch);
 must(deskTouch.maxAlive === 54, 'touch-laptop maxAlive must stay legacy 54', deskTouch);
 
 const phone = profileAt({ w: 390, h: 844, touch: true });
-must(phone.scale === 0.6, 'phone portrait scale must sit on 0.60 floor', phone);
-must(phone.maxAlive <= 20 && phone.maxAlive >= 10, 'phone maxAlive should be ~10–20', phone);
+must(phone.scale === 0.5, 'phone portrait scale must sit on 0.50 floor', phone);
+must(phone.maxAlive <= 14 && phone.maxAlive >= 8, 'phone maxAlive should be ~8–14', phone);
 must(phone.spawnBatchMax === 1, 'phone must spawn single-file', phone);
-must(phone.spawnGapPx >= 48, 'phone spawn gap must be wider than desktop 32', phone);
-must(phone.spawnIntervalMul > 1.2, 'phone spawn interval must be slower', phone);
+must(phone.spawnGapPx >= 56, 'phone spawn gap must be wider than desktop 32', phone);
+must(phone.spawnIntervalMul > 1.4, 'phone spawn interval must be slower', phone);
 must(phone.maxAlive < desk.maxAlive, 'phone maxAlive must be below desktop');
 must(phone.scale < desk.scale, 'phone scale must be below desktop');
 
 const phoneLand = profileAt({ w: 844, h: 390, touch: true });
-must(phoneLand.scale < 1 && phoneLand.scale >= 0.6, 'phone landscape in (0.60, 1)', phoneLand);
+must(phoneLand.scale < 1 && phoneLand.scale >= 0.5, 'phone landscape in (0.50, 1)', phoneLand);
 must(phoneLand.maxAlive < deskTouch.maxAlive, 'phone landscape maxAlive < large-touch 54', phoneLand);
 must(phoneLand.maxAlive > phone.maxAlive, 'landscape phone may host more than portrait', phoneLand);
 
@@ -180,8 +196,8 @@ const openCad = iso.adventureSpawnCadence(8, true, false, 1, phone);
 must(openCad.batch === 1, 'opener always single-file', openCad);
 
 must(iso.scaleAdventurePerWave(24, desk) === 24, 'desktop per-wave 24 stays 24');
-must(iso.scaleAdventurePerWave(24, phone) === 15, 'phone per-wave 24 → 15 (ceil 24*0.6)');
-must(iso.scaleAdventurePerWave(36, phone) === 22, 'phone cap-36 → 22');
+must(iso.scaleAdventurePerWave(24, phone) === 12, 'phone per-wave 24 → 12 (ceil 24*0.5)');
+must(iso.scaleAdventurePerWave(36, phone) === 18, 'phone cap-36 → 18');
 must(iso.scaleAdventureHordePad(4, desk) === 4, 'desktop boss pad unchanged');
 must(iso.scaleAdventureHordePad(4, phone) === 2, 'phone boss pad 4 → 2');
 
@@ -236,6 +252,28 @@ must(iso.combatSpawnEdgeX(1, desk) === 1280 + 40, 'desktop spawn edge W+40');
 must(iso.combatSpawnEdgeX(1, phone) === 390 + 18, 'phone spawn edge W+18');
 must(iso.combatSpawnEdgeX(-1, phone) === -18, 'phone left spawn -18');
 must(iso.combatSmoothOpenInterval(2.58, 0, desk) === 2.58, 'desktop smooth is a no-op');
+must(iso.combatLoseResultMs(desk) === 850, 'desktop lose CTA 850ms');
+must(iso.combatLoseResultMs(phone) === 650, 'phone lose CTA 650ms');
+must(iso.combatLoseResultMs(phone) + 1100 < 3000, 'phone death banner+CTA under 3s');
+must(typeof iso.notePlayerFailTele === 'function', 'notePlayerFailTele missing in iso');
+must(typeof iso.combatFailRetryTip === 'function', 'combatFailRetryTip missing in iso');
+iso.tOr = (k, fb, p) => {
+  if (k === 'result.againRetry') return 'Nog één keer';
+  if (k === 'result.failTeleTip') return (p.cue || '') + ' → ' + (p.again || '');
+  if (k === 'result.failTeleSlam') return 'SLAM';
+  if (k === 'result.failTeleCharge') return 'CHARGE';
+  if (k === 'result.failTeleFlyer') return 'vlieger';
+  return fb;
+};
+const tipGame = { lastFailTele: 'slam' };
+must(iso.combatFailRetryTip(tipGame).indexOf('SLAM') >= 0, 'fail tip names the cue', iso.combatFailRetryTip(tipGame));
+must(iso.combatFailRetryTip(tipGame).indexOf('Nog één keer') >= 0, 'fail tip points at retry', iso.combatFailRetryTip(tipGame));
+must(iso.combatFailRetryTip({ lastFailTele: null }, '') === '', 'no cue → empty tip');
+const rec = { mode: 'adventure', lastFailTele: null, monsters: [{ alive: true, flying: true, sp: { type: 'fly' } }] };
+iso.notePlayerFailTele(rec, {});
+must(rec.lastFailTele === 'flyer', 'notePlayerFailTele infers flyer', rec.lastFailTele);
+iso.notePlayerFailTele(rec, { failKind: 'slam' });
+must(rec.lastFailTele === 'slam', 'notePlayerFailTele records slam', rec.lastFailTele);
 
 const kickBtn = { id: 'kick', x: 268, y: 800, r: 24 };
 const punchBtn = { id: 'punch', x: 322, y: 800, r: 24 };
@@ -407,7 +445,7 @@ const deskBudget = deskLv.waves.reduce((s, w) => s + w.length, 0);
 const phoneBudget = phoneLv.waves.reduce((s, w) => s + w.length, 0);
 
 must(deskLv.combatDensity && deskLv.combatDensity.scale === 1, 'buildLevel desktop scale 1', deskLv.combatDensity);
-must(phoneLv.combatDensity && phoneLv.combatDensity.scale === 0.6, 'buildLevel phone scale 0.6', phoneLv.combatDensity);
+must(phoneLv.combatDensity && phoneLv.combatDensity.scale === 0.5, 'buildLevel phone scale 0.5', phoneLv.combatDensity);
 must(deskLv.waves.length === phoneLv.waves.length, 'wave COUNT must match (do not shorten stages)', {
   desk: deskLv.waves.length, phone: phoneLv.waves.length,
 });
@@ -533,7 +571,12 @@ console.log('OPENER_STRIKE_390', {
   waveGap: ctx.combatWaveGapSec(1.55, 65, { w: 390, h: 844 }),
   swipe34: ctx.combatJoySwipeAccepts(80, 700, 390, 844, { w: 390, h: 844 }),
   swipeOld42: ctx.combatJoySwipeAccepts(150, 700, 390, 844, { w: 390, h: 844 }),
-  resultDelayUntouched: /scheduleGameResult\(this, win \? 1600 : 1400/.test(gameSrc),
+  loseMsPhone: ctx.combatLoseResultMs({ w: 390, h: 844 }),
+  loseMsDesk: ctx.combatLoseResultMs({ w: 1280, h: 800 }),
 });
+must(ctx.combatLoseResultMs({ w: 390, h: 844 }) === 650, 'vm phone lose 650');
+must(ctx.combatLoseResultMs({ w: 1280, h: 800 }) === 850, 'vm desktop lose 850');
+must(typeof ctx.restartAdventureInstant === 'function', 'restartAdventureInstant not in vm');
+must(typeof ctx.notePlayerFailTele === 'function', 'notePlayerFailTele not in vm');
 
 console.log('SMOKE_OK combat-density');

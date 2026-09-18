@@ -1023,6 +1023,9 @@ function bootGame() {
       flyerHover: combatFlyerHover,
       meleeLift: combatMeleeAimLift,
       partGateSec: combatPartGateWalkSec,
+      loseResultMs: combatLoseResultMs,
+      failRetryTip: combatFailRetryTip,
+      noteFailTele: notePlayerFailTele,
     } : null,
     previewTop20Spawn: () => {
       try { AudioSys.init(); AudioSys.sfx('top20Spawn'); } catch (_) {}

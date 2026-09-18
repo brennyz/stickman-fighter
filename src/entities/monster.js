@@ -204,7 +204,7 @@ class Monster {
         if (this.telegraphT <= 0) {
           AudioSys.sfx('hit2'); game.shake(8, 0.25);
           if (Math.abs(p.x - this.x) < this.size + 62 && p.y > game.ground - 90)
-            p.takeDamage(this.dmg, Math.sign(p.x - this.x) * 320, game);
+            p.takeDamage(this.dmg, Math.sign(p.x - this.x) * 320, game, { attacker: this, failKind: 'slam' });
         }
       } else {
         this.x += dir * this.speed * dt;
@@ -290,7 +290,7 @@ class Monster {
       const rr = (this.size + p.bodyR) * 0.82;
       if ((p.x - this.x) ** 2 + (p.bodyY - this.y) ** 2 < rr * rr) {
         const d = this.dashT > 0 ? this.dmg * 1.3 : this.dmg;
-        if (p.takeDamage(d, dir * 180, game) > 0) {
+        if (p.takeDamage(d, dir * 180, game, { attacker: this }) > 0) {
           game.shake(4, 0.15);
           applyHitStop(game, { kind: 'punch', dmg: d }, { playerHurt: true, heavy: d >= 18 });
         }

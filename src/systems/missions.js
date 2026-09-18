@@ -2237,6 +2237,20 @@ function playGambleRollSfx(g) {
 }
 
 /**
+ * Adventure lose rematch: same level, no dice flash. Death → play < ~3s.
+ * Win / first pick still use gokGooiStartLevel.
+ */
+function restartAdventureInstant(n, diff, gamble) {
+  try { cancelGambleStart(); } catch (_) {}
+  try { if (typeof UI !== 'undefined' && UI.hideGambleRollFlash) UI.hideGambleRollFlash(); } catch (_) {}
+  const level = Math.max(1, Math.min(MAX_LEVEL, Number(n) || 1));
+  const d = (typeof normalizeAdvDiffId === 'function')
+    ? normalizeAdvDiffId(diff || (typeof currentAdvDiff === 'function' ? currentAdvDiff() : 'normal'))
+    : (diff || 'normal');
+  startGame('adventure', { level: level, difficulty: d, gamble: gamble || null, instantRetry: true });
+}
+
+/**
  * Level-tik of Continue → dobbel-flash → vecht.
  * NOOIT afbreken omdat levelScreen niet open staat (Continue komt van menu).
  * Alleen cancelGambleStart() (token bump) mag de start killen.

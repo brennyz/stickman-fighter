@@ -8,16 +8,16 @@
  *
  * Rules:
  * - Desktop / wide tablets (width ≥ 960) stay at 1.0 — do not gut PC.
- * - Phone stays a horde (scale floor 0.60), just not a pile-on.
+ * - Phone stays a horde (scale floor 0.50), just not a pile-on.
  * - Versus / training / wall / coinrun are untouched.
  * - Wave *count* (stage length) is not shortened.
  */
 const COMBAT_DENSITY_REF_W = 1100;
 const COMBAT_DENSITY_REF_H = 620;
 const COMBAT_DENSITY_WIDE_W = 960;
-const COMBAT_DENSITY_MIN = 0.60;
+const COMBAT_DENSITY_MIN = 0.50;
 const COMBAT_DENSITY_MAX = 1;
-const COMBAT_DENSITY_SLOT_PX = 55;
+const COMBAT_DENSITY_SLOT_PX = 64;
 const ADVENTURE_MAX_ALIVE_DESKTOP = 78;
 const ADVENTURE_MAX_ALIVE_TOUCH = 54;
 
@@ -55,7 +55,7 @@ function combatDensityIsTablet(w, h) {
 }
 
 /**
- * 0.60–1.00 density factor. Width-weighted: side-spawns walk in across W.
+ * 0.50–1.00 density factor. Width-weighted: side-spawns walk in across W.
  * Wide screens (≥960) always return 1 so desktop math is unchanged.
  */
 function combatDensityScale(wOrOpts, h) {
@@ -84,8 +84,8 @@ function combatDensityProfile(wOrOpts, h) {
   const tablet = combatDensityIsTablet(sz.w, sz.h);
   const touchCeil = combatDensityTouchCeil();
   const slots = Math.max(4, Math.floor(sz.w / COMBAT_DENSITY_SLOT_PX));
-  const layers = compact ? 2 : (tablet ? 2.4 : 3);
-  const offscreen = compact ? 3 : (tablet ? 6 : 10);
+  const layers = compact ? 1.65 : (tablet ? 2.4 : 3);
+  const offscreen = compact ? 2 : (tablet ? 6 : 10);
   const fromSlots = Math.round(slots * layers + offscreen);
   const fromLegacy = Math.round(touchCeil * scale);
   let maxAlive;
@@ -93,7 +93,7 @@ function combatDensityProfile(wOrOpts, h) {
     maxAlive = touchCeil;
   } else {
     maxAlive = Math.min(fromSlots, fromLegacy);
-    maxAlive = combatDensityClamp(maxAlive, compact ? 10 : 14, touchCeil);
+    maxAlive = combatDensityClamp(maxAlive, compact ? 8 : 14, compact ? 14 : touchCeil);
   }
   return {
     w: sz.w,
@@ -102,8 +102,8 @@ function combatDensityProfile(wOrOpts, h) {
     compact: !!compact,
     tablet: !!tablet,
     maxAlive,
-    spawnIntervalMul: compact ? 1.38 : (tablet ? 1.12 : 1),
-    spawnGapPx: compact ? 56 : (tablet ? 42 : 32),
+    spawnIntervalMul: compact ? 1.55 : (tablet ? 1.12 : 1),
+    spawnGapPx: compact ? 64 : (tablet ? 42 : 32),
     spawnBatchMax: compact ? 1 : (tablet ? 2 : 3),
   };
 }
@@ -154,7 +154,7 @@ function combatSmoothOpenInterval(raw, elapsedSec, profile) {
 /**
  * Compact between-wave hole. Desktop unchanged.
  * Win-clear fanfare (base ≥ 2.3) stays — that is not a combat spike.
- * Result CTA delay is #323 — do not use this for showResult.
+ * Win-result delay stays 1600ms. Lose uses combatLoseResultMs.
  */
 function combatWaveGapSec(base, elapsedSec, profile) {
   const n = Number(base);
@@ -457,6 +457,80 @@ function applyCombatTelegraphWind(baseWind, profile, flags) {
   if (profile.compact) w = Math.max(w, COMBAT_TELEGRAPH_FLOOR);
   if (profile.compact && flags && flags.colossal) w = Math.max(w, 0.46);
   return w;
+}
+
+const COMBAT_LOSE_MS_COMPACT = 650;
+const COMBAT_LOSE_MS_DESK = 850;
+const COMBAT_LOSE_MS_REDUCED = 160;
+
+/** Death → result CTA. Compact ~650ms, desktop ~850ms, reduced-motion 160. Win stays 1600. */
+function combatLoseResultMs(profile) {
+  if (typeof motionReduced === 'function' && motionReduced()) return COMBAT_LOSE_MS_REDUCED;
+  profile = asCombatProfile(profile);
+  return profile.compact ? COMBAT_LOSE_MS_COMPACT : COMBAT_LOSE_MS_DESK;
+}
+
+function combatFailTeleKind(src) {
+  if (!src) return '';
+  if (typeof src === 'string') return src;
+  const kind = src.kind || src.failKind || '';
+  if (kind === 'fire') return 'fire';
+  if (kind === 'laser' || kind === 'orb' || kind === 'ink' || kind === 'shoot') return 'shoot';
+  const attacker = src.attacker || src;
+  const sp = attacker.sp || {};
+  if (sp.type === 'tank') return 'slam';
+  if (sp.type === 'charge' || (sp.type === 'swim' && sp.art === 'shark')) return 'charge';
+  if (sp.type === 'fly' || sp.type === 'dragon' || attacker.flying) return 'flyer';
+  if (sp.type === 'shoot') return 'shoot';
+  if ((attacker.dashT || 0) > 0) return 'charge';
+  if ((attacker.telegraphT || 0) > 0 && sp.type === 'tank') return 'slam';
+  return '';
+}
+
+function combatFailCueLabel(kind) {
+  const map = {
+    slam: ['result.failTeleSlam', 'SLAM'],
+    charge: ['result.failTeleCharge', 'CHARGE'],
+    flyer: ['result.failTeleFlyer', 'vlieger'],
+    shoot: ['result.failTeleShoot', 'SCHIET'],
+    fire: ['result.failTeleFire', 'VUUR'],
+  };
+  const pair = map[kind];
+  if (!pair) return '';
+  return (typeof tOr === 'function') ? tOr(pair[0], pair[1]) : pair[1];
+}
+
+/** Record last readable fail cue on player hurt (Adventure). */
+function notePlayerFailTele(game, src) {
+  if (!game || game.mode !== 'adventure') return;
+  let kind = combatFailTeleKind(src);
+  if (!kind && game.monsters && game.monsters.length) {
+    const teles = (typeof adventureTelegraphHuds === 'function')
+      ? adventureTelegraphHuds(game.monsters)
+      : [];
+    if (teles[0] && teles[0].kind) {
+      kind = teles[0].kind === 'fire' ? 'fire' : (teles[0].kind === 'shoot' ? 'shoot' : teles[0].kind);
+    } else {
+      for (let i = 0; i < game.monsters.length; i++) {
+        const m = game.monsters[i];
+        if (!m || !m.alive) continue;
+        if (m.flying || (m.sp && (m.sp.type === 'fly' || m.sp.type === 'dragon'))) {
+          kind = 'flyer';
+          break;
+        }
+      }
+    }
+  }
+  if (kind) game.lastFailTele = kind;
+}
+
+/** One-line tip: "SLAM → Nog één keer". Empty when no cue (caller falls back). */
+function combatFailRetryTip(game, fallback) {
+  const again = (typeof tOr === 'function') ? tOr('result.againRetry', 'Nog één keer') : 'Nog één keer';
+  const cue = combatFailCueLabel(game && game.lastFailTele);
+  if (!cue) return fallback == null ? '' : fallback;
+  if (typeof tOr === 'function') return tOr('result.failTeleTip', '{cue} → {again}', { cue: cue, again: again });
+  return cue + ' → ' + again;
 }
 
 /** Resize: keep baked colossal HP, refit radius to the current playfield. */

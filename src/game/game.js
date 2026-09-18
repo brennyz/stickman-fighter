@@ -164,6 +164,7 @@ class Game {
     const st = playerStats();
     if (mode === 'adventure') {
       this.advDiff = normalizeAdvDiffId(opts.difficulty || currentAdvDiff());
+      this.lastFailTele = null;
     }
     if (mode !== 'versus') {
       const advLevel = mode === 'adventure' ? (opts.level || 1) : 0;
@@ -1009,10 +1010,12 @@ class Game {
       persist();
       // Heat / master already land on the VERLOREN result tip — late toasts stuck on that screen.
       AudioSys.sfx('lose');
-      this.banner(t('banner.lost'), 2, '#ff6b6b', 50);
+      try { this.shake(6, 0.22); } catch (_) {}
+      this.banner(t('banner.lost'), 1.1, '#ff6b6b', 50);
     }
-    // Resultaat-scherm altijd tonen (Volgende level / Opnieuw) — niet stil naar menu
-    scheduleGameResult(this, win ? 1600 : 1400, () => UI.showResult(win, {
+    // Resultaat-scherm altijd tonen (Volgende level / Nog één keer) — niet stil naar menu
+    const loseMs = (typeof combatLoseResultMs === 'function') ? combatLoseResultMs() : 850;
+    scheduleGameResult(this, win ? 1600 : loseMs, () => UI.showResult(win, {
       titleKey: win ? 'result.advWin' : 'result.advLose',
       title: win ? t('result.advWin') : t('result.advLose'),
       detailKey: win ? 'result.advDetailWin' : 'result.advDetailLose',
@@ -1055,23 +1058,17 @@ class Game {
         : (stars >= 3 ? t('result.perfectRun') : (stars > prevStars
         ? t('result.starImproved', { stars, prev: prevStars })
         : t('result.pickupsHelp', { hint: starHintLine() })))) : (() => {
-        const prog = this.waveIdx >= 0 ? t('result.wavesProg', { cur: this.waveIdx + 1, total: this.level.waves.length }) : tOr('result.wavesStart', 'begin');
         const failsNow = advFailCount(lv, diff);
-        let heatTip = '';
+        const retry = tOr('result.againRetry', 'Nog één keer');
+        const tele = (typeof combatFailRetryTip === 'function') ? combatFailRetryTip(this, '') : '';
+        const lead = tele || retry;
         if (failsNow >= SATAN_FAIL_THRESHOLD && typeof shouldTriggerSatan === 'function' && shouldTriggerSatan(lv, diff)) {
-          heatTip = t('result.heatSatanNext');
-        } else if (failsNow >= SATAN_DANGER_FAILS) {
-          heatTip = t('result.heatDanger');
-        } else if (failsNow >= 7) {
-          heatTip = t('result.heatRising', { n: failsNow, max: SATAN_FAIL_THRESHOLD });
+          return lead + ' · ' + t('result.heatSatanNext');
         }
-        const base = this.player.hp <= 0
-          ? t('result.lossBlockTip', { prog })
-          : t('result.lossOrbTip', { prog });
-        const once = onceResultTip('adventure', 'loss',
-          t('result.lossGambleTip'));
-        const core = once ? `${once} · ${base}` : base;
-        return heatTip ? `${heatTip} · ${core}` : core;
+        if (failsNow >= SATAN_DANGER_FAILS) {
+          return lead + ' · ' + t('result.heatDanger');
+        }
+        return lead;
       })(),
     }));
   }
@@ -3165,7 +3162,7 @@ class Game {
         if (pl && pl.alive && this.playerHurtCd <= 0
             && projHitsTarget(p, pl.bodyX, pl.bodyY, pl.bodyR * 0.8)) {
           const hit = resolveProjHit(p);
-          pl.takeDamage(hit.dmg, projKnockDir(p, pl.x) * 260, this);
+          pl.takeDamage(hit.dmg, projKnockDir(p, pl.x) * 260, this, { kind: p.kind || 'shoot' });
           applyHitStop(this, { kind: skProj && (skProj.behavior === 'dash' || skProj.behavior === 'slash') ? 'special' : 'punch', dmg: hit.dmg },
             { crit: hit.crit, heavy: hit.dmg >= 18, playerHurt: true });
           this.floater(pl.x, pl.y - 115, '-' + hit.dmg, '#ff8080', 16);

@@ -627,6 +627,9 @@ class Fighter {
         game.comboT = 0;
       }
       if (game.mode === 'adventure') game.killStreak = 0;
+      if (game.mode === 'adventure' && typeof notePlayerFailTele === 'function') {
+        try { notePlayerFailTele(game, opts); } catch (_) {}
+      }
     }
     this.hurtT = dmg >= 18 ? 0.28 : 0.24;
     this.hitFlashT = motionReduced() ? 0.06 : (dmg >= 18 ? 0.18 : 0.14);

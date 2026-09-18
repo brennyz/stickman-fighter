@@ -5018,6 +5018,7 @@ const UI = {
     try {
     this.lastResult = data;
     try { this.clearToasts(); } catch (_) {}
+    try { if (this.hideFomoRitual) this.hideFomoRitual(); } catch (_) {}
     const title = document.getElementById('resTitle');
     if (!title) throw new Error('result DOM missing');
     const titleKey = data.titleKey || (data.mode === 'training'
@@ -5098,9 +5099,12 @@ const UI = {
       if (label) {
         if (data.mode === 'versus') label.innerHTML = t('result.rematch') + '<small>' + t('result.rematchSub') + '</small>';
         else if (data.mode === 'training') label.innerHTML = t('result.again') + '<small>' + tOr('result.trainAgainSub', 'vs RabbitRobot') + '</small>';
+        else if (!win && data.mode === 'adventure') label.textContent = tOr('result.againRetry', 'Nog één keer');
         else label.textContent = t('result.again');
       }
     }
+    const rs = document.getElementById('resultScreen');
+    if (rs) rs.classList.toggle('lose-retry', !win && data.mode === 'adventure');
     const menuBtn = document.getElementById('resMenu');
     if (menuBtn) {
       const label = menuBtn.querySelector('div');

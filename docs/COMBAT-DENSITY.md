@@ -2,27 +2,27 @@
 
 **Lane:** mobile combat balance · **Modes:** Adventure only · **Not:** Versus, Training, Wall, Coinrun  
 **Share URL:** `speel.html`  
-**Android-first.** Draft #314. Desktop (`W ≥ 960`) stays legacy 1.0.
+**Android-first (web / PWA).** Draft #314. Desktop (`W ≥ 960`) stays legacy 1.0. No Android native.
 
-This is the **final viewport contract** for this lane. Phone gets a fair strip. Desktop does not get easier.
+This is the **viewport contract** for this lane. Phone gets a fair strip. Desktop does not get easier.
 
 ## Contract (what must stay true)
 
 | Rule | Desktop 1280×800 | Phone 390×844 (and compact) |
 |------|------------------|-----------------------------|
-| Scale / horde | **1.00** — do not gut PC | Floor **0.60** — still a horde, not a pile-on |
-| Max alive | **78** mouse / **54** touch | **~17** portrait (slots × layers, live cap) |
-| Spawn batch / gap | Batch **3** · gap **32** | Batch **1** · gap **56** |
-| Interval mul | **1.00** | **1.38** then clamp (see opener / sustain) |
+| Scale / horde | **1.00** — do not gut PC | Floor **0.50** — still a horde, not a pile-on |
+| Max alive | **78** mouse / **54** touch | **~12** portrait (slots × 1.65 layers, live cap **8–14**) |
+| Spawn batch / gap | Batch **3** · gap **32** | Batch **1** · gap **64** |
+| Interval mul | **1.00** | **1.55** then clamp (see opener / sustain) |
 | Wave **count** | Unchanged | **Same count** (stage length / XP) |
 | HP / damage | Unchanged | Unchanged |
 | Versus / Training / Wall / Coinrun | Untouched | Untouched |
 
-Wide screens (`W ≥ 960`) always get scale `1.00`. Phone floor `0.60` means level 12 ≈ 15/wave vs 24 on desktop — still a horde, not 36 bodies in 390px. Early openers stay soft-capped (level 1 = 2 then 4).
+Wide screens (`W ≥ 960`) always get scale `1.00`. Phone floor `0.50` means level 12 ≈ 12/wave vs 24 on desktop — still a horde, not 36 bodies in 390px. Early openers stay soft-capped (level 1 = 2 then 4).
 
 ## First 30s opener + minute-1+ sustain (P0)
 
-Density muls stacked into **empty then spike** on 390px: wave 1 interval ≈ 2.58s, wave 2 ≈ 0.52s. After the 30s opener, raw ×1.38 still dumped (~0.38s) after a ~2.2s wave-pause hole.
+Density muls stacked into **empty then spike** on 390px: wave 1 interval ≈ 2.58s, wave 2 ≈ 0.52s. After the 30s opener, raw ×1.55 still dumps after a wave-pause hole — sustain clamp holds the floor.
 
 | Piece | Desktop | Phone first 30s | Phone after 30s / minute 1+ |
 |-------|---------|-----------------|------------------------------|
@@ -36,9 +36,23 @@ Density muls stacked into **empty then spike** on 390px: wave 1 interval ≈ 2.5
 
 Helpers: `combatSmoothOpenInterval`, `combatWaveGapSec`, `combatOpenerHold`, `combatSpawnEdgeX`. Desktop never enters the clamp.
 
-## Death result CTA — leave #323 alone
+## Death → fail telegraph → Nog één keer (P0)
 
-#323 owns Flappy-feel retry (`Nog één keer` in ~700ms). This lane does **not** change `scheduleGameResult(win ? 1600 : 1400)`, `showResult`, result CSS, or rematch routing. Combat-only.
+Readable last-hit cue, then a fat retry. Death → play again in under ~3s. No extra toasts.
+
+| Piece | Desktop | Phone 390×844 |
+|-------|---------|---------------|
+| Lose result delay | **850ms** | **650ms** (reduced-motion **160ms**) |
+| Win result delay | **1600ms** | **1600ms** (unchanged) |
+| Lose banner | **1.1s** | **1.1s** + light shake |
+| Retry label | **Nog één keer** | Same, min-height **72px** (`#resultScreen.lose-retry`) |
+| Rematch | Instant same level, **no dice** | Same (`restartAdventureInstant`) |
+| Tip | `{cue} → Nog één keer` | SLAM / CHARGE / vlieger / SCHIET / VUUR |
+| FOMO sheet | Hidden on result | Hidden on result |
+
+Win still uses `gokGooiStartLevel` (dice flash). Versus / Training rematch paths unchanged. #323 may still land its own CTA later — this lane owns the Adventure lose path on #314.
+
+Helpers: `combatLoseResultMs`, `notePlayerFailTele`, `combatFailRetryTip`, `restartAdventureInstant`.
 
 ## Touch punch / kick vs joy (P0)
 
@@ -57,10 +71,10 @@ Kick sits on the inner column of the right cluster (closest strike to the joy). 
 | Desktop 1280×800 (mouse) | **1.00** | **78** | 1.00 | 3 | 32 |
 | Desktop 1280×800 (touch laptop) | **1.00** | **54** | 1.00 | 3 | 32 |
 | iPad landscape ≥960 | **1.00** | 54 (touch) | 1.00 | 3 | 32 |
-| iPad portrait 834×1194 | 0.806 | 42 | 1.12 | 2 | 42 |
-| Phone landscape 844×390 | 0.751 | 33 | 1.38 | 1 | 56 |
-| Phone portrait 390×844 | **0.60** | **17** | 1.38 | 1 | 56 |
-| Android small 360×800 | **0.60** | 15 | 1.38 | 1 | 56 |
+| iPad portrait 834×1194 | 0.806 | ~37 | 1.12 | 2 | 42 |
+| Phone landscape 844×390 | 0.751 | **14** (compact cap) | 1.55 | 1 | 64 |
+| Phone portrait 390×844 | **0.50** | **~12** | 1.55 | 1 | 64 |
+| Android small 360×800 | **0.50** | **~10** | 1.55 | 1 | 64 |
 
 ## Fairness extras (examinator EX-1…6)
 
@@ -82,14 +96,16 @@ Kick sits on the inner column of the right cluster (closest strike to the joy). 
 
 | Piece | Where |
 |-------|--------|
-| Profile / cadence / opener / strike | `src/systems/combat-density.js` |
+| Profile / cadence / opener / strike / lose CTA | `src/systems/combat-density.js` |
+| Instant rematch | `restartAdventureInstant` in `src/systems/missions.js` |
 | Wave size + boss pad | `buildLevel` in `src/data/monsters.js` |
 | Live alive-cap + spacing + opener hold | `updateAdventure` / `nextWave` / `initAdventure` in `src/game/game.js` |
 | Punch/kick prefer-strike | `claimTouchStrike` in `src/systems/input.js` |
+| Fail telegraph record | `notePlayerFailTele` from `Fighter.takeDamage` |
 | Test hook | `window.__sf.combatDensity` |
 | Proof smoke | `npm run smoke:combat-density` |
 
-Live cap (`adventureMaxAliveNow`) follows the current viewport so rotate-to-landscape can admit more walkers without rebuilding the wave list. Wave **composition** is baked at `startGame` from the viewport at that moment.
+Live cap (`adventureMaxAliveNow`) follows the current viewport so rotate-to-landscape can admit more walkers without rebuilding the wave list (compact still caps at 14). Wave **composition** is baked at `startGame` from the viewport at that moment.
 
 ## Prove
 
@@ -98,29 +114,29 @@ npm run smoke:combat-density
 npm run smoke:adventure
 ```
 
-The density smoke prints the table, asserts desktop scale/cadence == legacy, asserts phone < desktop on mid-level spawn budget, asserts first-30s clamp + prefer-strike, and greps Versus off the density path.
+The density smoke prints the table, asserts desktop scale/cadence == legacy, asserts phone < desktop on mid-level spawn budget, asserts first-30s clamp + prefer-strike, asserts lose CTA 650/850 + fail tip, and greps Versus off the density path.
 
 Measured `buildLevel` budgets (same wave **count**, fewer bodies on phone):
 
 | Level | Desktop spawn bodies | Phone 390×844 | Waves |
 |-------|---------------------:|--------------:|------:|
 | 1 (opener) | 2 + 4 | 2 + 4 (unchanged) | 2 |
-| 12 Normal | 112 | 67 | 4 |
-| 20 Hell 3.0 | 219 | 136 | still a horde |
+| 12 Normal | 112 | ~56 | 4 |
+| 20 Hell 3.0 | 219 | still a horde (≥20) | same count |
 
 `npm run smoke:adventure` on a 390×844 Chrome window still clears level 1 (spawnQ 2 then 4). `smoke:wave12` still advances 1→2. Training / Versus unchanged.
 
-## Lane status — DONE (P3 leftovers only)
+## Lane status — P0 reopen (density + retry)
 
-Combat P0/P1 on this lane is **done**. Desktop 1.0 unchanged. Versus out.
+Combat density on 390px was still a pile-on at floor 0.60 / ~17 alive. This pass tightens compact pressure and owns the Adventure lose CTA on #314.
 
-**P3 leftovers** (not this PR):
+**Leftovers** (not this PR):
 
 | Item | Owner |
 |------|--------|
-| Death result CTA timing / `Nog één keer` | **#323** — do not touch here |
-| Tablet 834 portrait mid-band (not compact clamp) | later polish |
+| Tablet 834 mid-band cadence | #324 (stacked draft) |
 | Satan / tide duel cadence | special-duel path, not density spawn |
 | Hell 20+ many-minute juice (feel, not counts) | later |
+| Android native / TWA bump | out of scope |
 
 Re-check: `npm run smoke:combat-density && npm run smoke:adventure`.

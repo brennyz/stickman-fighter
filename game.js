@@ -323,9 +323,9 @@ const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const VERSION_UPDATE_SAVE_KEY = 'stickfighter_version_update_save_v1';
 const VERSION_UPDATE_FLAG_KEY = 'stickfighter_version_update_flag_v1';
 const SAVE_EXPORT_SCHEMA = 3;
-const APP_VERSION = '1.18.180';
+const APP_VERSION = '1.18.182';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 390;
+const SW_CACHE_REV = 392;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', petCoins: 0, dex: {}, summons: {}, pets: {}, activePet: null,
   eggPets: {}, activeEggPet: null, eggDaily: null,
   chestDaily: null, chestWeapons: {},
@@ -2364,7 +2364,7 @@ const I18N = {
       audioHint: 'Volume in pauze — sliders sync met Instellingen',
       audioMuteAll: 'Alles uit', audioRestore: 'Standaard', audioSfxOnly: 'Alleen geluid',
     },
-    result: { again: 'Opnieuw', next: 'Volgend level', menu: 'Hoofdmenu', menuArcade: 'Arcade', rematch: 'Rematch', rematchSub: 'Zelfde vechters',
+    result: { again: 'Opnieuw', againRetry: 'Nog één keer', next: 'Volgend level', menu: 'Hoofdmenu', menuArcade: 'Arcade', rematch: 'Rematch', rematchSub: 'Zelfde vechters',
       trainAgainSub: 'vs RabbitRobot',
       advWin: 'GEWONNEN!', advLose: 'VERLOREN', trainWin: 'KAMPIOEN!', trainLose: 'ROBOT WINT...',
       advLoseKeep: 'XP en loot van deze run blijven',
@@ -2653,7 +2653,7 @@ const I18N = {
       audioHint: 'Volume in pause — sliders sync with Settings',
       audioMuteAll: 'Mute all', audioRestore: 'Default', audioSfxOnly: 'SFX only',
     },
-    result: { again: 'Again', next: 'Next level', menu: 'Main menu', menuArcade: 'Arcade', rematch: 'Rematch', rematchSub: 'Same fighters',
+    result: { again: 'Again', againRetry: 'One more time', next: 'Next level', menu: 'Main menu', menuArcade: 'Arcade', rematch: 'Rematch', rematchSub: 'Same fighters',
       trainAgainSub: 'vs RabbitRobot',
       advWin: 'VICTORY!', advLose: 'YOU LOSE', trainWin: 'CHAMPION!', trainLose: 'ROBOT WINS...',
       advLoseKeep: 'XP and loot from this run stay',
@@ -3000,7 +3000,7 @@ const I18N = {
       audioHint: 'Lautstärke in Pause — Regler wie in Einstellungen',
       audioMuteAll: 'Alles aus', audioRestore: 'Standard', audioSfxOnly: 'Nur Sound',
     },
-    result: { again: 'Nochmal', next: 'Nächstes Level', menu: 'Hauptmenü', menuArcade: 'Arcade', rematch: 'Revanche', rematchSub: 'Gleiche Kämpfer',
+    result: { again: 'Nochmal', againRetry: 'Noch einmal', next: 'Nächstes Level', menu: 'Hauptmenü', menuArcade: 'Arcade', rematch: 'Revanche', rematchSub: 'Gleiche Kämpfer',
       trainAgainSub: 'vs RabbitRobot',
       advWin: 'GEWONNEN!', advLose: 'VERLOREN', trainWin: 'MEISTER!', trainLose: 'ROBOT GEWINNT...',
       advLoseKeep: 'XP und Beute von diesem Lauf bleiben',
@@ -3279,7 +3279,7 @@ const I18N = {
       audioHint: 'Volume en pause — comme dans Options',
       audioMuteAll: 'Tout couper', audioRestore: 'Par défaut', audioSfxOnly: 'Son seulement',
     },
-    result: { again: 'Rejouer', next: 'Niveau suivant', menu: 'Menu principal', menuArcade: 'Arcade', rematch: 'Revanche', rematchSub: 'Mêmes combattants',
+    result: { again: 'Rejouer', againRetry: 'Encore une fois', next: 'Niveau suivant', menu: 'Menu principal', menuArcade: 'Arcade', rematch: 'Revanche', rematchSub: 'Mêmes combattants',
       trainAgainSub: 'vs RabbitRobot',
       advWin: 'VICTOIRE !', advLose: 'DÉFAITE', trainWin: 'CHAMPION !', trainLose: 'ROBOT GAGNE...',
       advLoseKeep: 'XP et butin de cette run restent',
@@ -3539,7 +3539,7 @@ const I18N = {
       audioHint: 'Volumen en pausa — igual que en Opciones',
       audioMuteAll: 'Todo apagado', audioRestore: 'Predeterminado', audioSfxOnly: 'Solo sonido',
     },
-    result: { again: 'Otra vez', next: 'Siguiente nivel', menu: 'Menú principal', menuArcade: 'Arcade', rematch: 'Revancha', rematchSub: 'Mismos luchadores',
+    result: { again: 'Otra vez', againRetry: 'Una vez más', next: 'Siguiente nivel', menu: 'Menú principal', menuArcade: 'Arcade', rematch: 'Revancha', rematchSub: 'Mismos luchadores',
       trainAgainSub: 'vs RabbitRobot',
       advWin: '¡VICTORIA!', advLose: 'DERROTA', trainWin: '¡CAMPEÓN!', trainLose: 'ROBOT GANA...',
       advLoseKeep: 'XP y botín de esta run se quedan',
@@ -4121,7 +4121,11 @@ function applyLangStaticScreens() {
   const resAgain = document.getElementById('resAgain');
   if (resAgain) {
     const d = resAgain.querySelector('div');
-    if (d) d.textContent = t('result.again');
+    if (d) {
+      const last = (typeof UI !== 'undefined' && UI.lastResult) ? UI.lastResult : null;
+      if (last && last.mode === 'adventure' && !last.win) d.textContent = tOr('result.againRetry', t('result.again'));
+      else d.textContent = t('result.again');
+    }
   }
   const resNext = document.getElementById('resNext');
   if (resNext) {
@@ -6616,6 +6620,20 @@ function playGambleRollSfx(g) {
       else if (g.outcome === 'superBoss' || g.outcome === 'miniBoss') AudioSys.sfx('gambleBoss');
     } catch (_) {}
   }, delay);
+}
+
+/**
+ * Adventure lose rematch: same level, no dice flash. Death → play < ~3s.
+ * Win / first pick still use gokGooiStartLevel.
+ */
+function restartAdventureInstant(n, diff, gamble) {
+  try { cancelGambleStart(); } catch (_) {}
+  try { if (typeof UI !== 'undefined' && UI.hideGambleRollFlash) UI.hideGambleRollFlash(); } catch (_) {}
+  const level = Math.max(1, Math.min(MAX_LEVEL, Number(n) || 1));
+  const d = (typeof normalizeAdvDiffId === 'function')
+    ? normalizeAdvDiffId(diff || (typeof currentAdvDiff === 'function' ? currentAdvDiff() : 'normal'))
+    : (diff || 'normal');
+  startGame('adventure', { level: level, difficulty: d, gamble: gamble || null, instantRetry: true });
 }
 
 /**
@@ -20667,6 +20685,13 @@ function seedNlGameStrings() {
     matsRecord: 'RECORD!', matsDone: 'Goed gedaan!',
     perfectRun: 'Perfecte run — hou je HP hoog!',
     pickupsHelp: '{hint} — pickups helpen',
+    againRetry: 'Nog één keer',
+    failTeleTip: '{cue} → {again}',
+    failTeleSlam: 'SLAM',
+    failTeleCharge: 'CHARGE',
+    failTeleFlyer: 'vlieger',
+    failTeleShoot: 'SCHIET',
+    failTeleFire: 'VUUR',
     lossBlockTip: 'Tip: blokkeer · mik omhoog op vliegers · {prog}',
     lossOrbTip: 'Tip: pak groene orbs · vul SUPER vóór baas · {prog}',
     lossGambleTip: 'Eerste nederlaag: vóór elk level kun je dobbelen — bondgenoot helpt tussen golven.',
@@ -21934,6 +21959,13 @@ const CATALOG_EN = {
     matsRecord: 'NEW RECORD!', matsDone: 'Well done!',
     perfectRun: 'Perfect run — keep HP high!',
     pickupsHelp: '{hint} — pickups help',
+    againRetry: 'One more time',
+    failTeleTip: '{cue} → {again}',
+    failTeleSlam: 'SLAM',
+    failTeleCharge: 'CHARGE',
+    failTeleFlyer: 'flyer',
+    failTeleShoot: 'SHOT',
+    failTeleFire: 'FIRE',
     lossBlockTip: 'Tip: block · aim up at flyers · {prog}',
     lossOrbTip: 'Tip: grab green orbs · fill SUPER before boss · {prog}',
     lossGambleTip: 'First loss: before each level you can gamble — ally helps between waves.',
@@ -23491,6 +23523,13 @@ const CATALOG_DE_CHROME = {
     matsRecord: 'NEUER REKORD!', matsDone: 'Gut gemacht!',
     perfectRun: 'Perfekter Lauf — HP hoch halten!',
     pickupsHelp: '{hint} — Pickups helfen',
+    againRetry: 'Noch einmal',
+    failTeleTip: '{cue} → {again}',
+    failTeleSlam: 'SLAM',
+    failTeleCharge: 'CHARGE',
+    failTeleFlyer: 'Flieger',
+    failTeleShoot: 'SCHUSS',
+    failTeleFire: 'FEUER',
     lossBlockTip: 'Tipp: blocken · nach oben zielen auf Flieger · {prog}',
     lossOrbTip: 'Tipp: grüne Orbs · SUPER vor dem Boss füllen · {prog}',
     lossGambleTip: 'Erste Niederlage: vor jedem Level würfeln — Verbündeter hilft zwischen Wellen.',
@@ -24395,6 +24434,13 @@ overlayI18nCatalog(CATALOG_FR, {
     matsRecord: 'NOUVEAU RECORD !', matsDone: 'Bien joué !',
     perfectRun: 'Run parfaite — garde tes PV hauts !',
     pickupsHelp: '{hint} — les orbes aident',
+    againRetry: 'Encore une fois',
+    failTeleTip: '{cue} → {again}',
+    failTeleSlam: 'SLAM',
+    failTeleCharge: 'CHARGE',
+    failTeleFlyer: 'volant',
+    failTeleShoot: 'TIR',
+    failTeleFire: 'FEU',
     lossBlockTip: 'Astuce : bloque · vise en haut les voiliers · {prog}',
     lossOrbTip: 'Astuce : prends les orbes verts · remplis SUPER avant le boss · {prog}',
     lossGambleTip: '1re défaite : avant chaque niveau tu peux parier — un allié aide entre les vagues.',
@@ -24912,6 +24958,13 @@ overlayI18nCatalog(CATALOG_ES, {
     matsRecord: '¡NUEVO RÉCORD!', matsDone: '¡Bien hecho!',
     perfectRun: 'Run perfecta — mantén el HP alto',
     pickupsHelp: '{hint} — los orbes ayudan',
+    againRetry: 'Una vez más',
+    failTeleTip: '{cue} → {again}',
+    failTeleSlam: 'SLAM',
+    failTeleCharge: 'CHARGE',
+    failTeleFlyer: 'volador',
+    failTeleShoot: 'DISPARO',
+    failTeleFire: 'FUEGO',
     lossBlockTip: 'Consejo: bloquea · apunta arriba a los voladores · {prog}',
     lossOrbTip: 'Consejo: coge orbes verdes · llena SUPER antes del jefe · {prog}',
     lossGambleTip: 'Primera derrota: antes de cada nivel puedes apostar — un aliado ayuda entre oleadas.',
@@ -25442,6 +25495,13 @@ overlayI18nCatalog(CATALOG_DE, {
     matsRecord: 'NEUER REKORD!', matsDone: 'Gut gemacht!',
     perfectRun: 'Perfekter Lauf — halte HP hoch!',
     pickupsHelp: '{hint} — Kugeln helfen',
+    againRetry: 'Noch einmal',
+    failTeleTip: '{cue} → {again}',
+    failTeleSlam: 'SLAM',
+    failTeleCharge: 'CHARGE',
+    failTeleFlyer: 'Flieger',
+    failTeleShoot: 'SCHUSS',
+    failTeleFire: 'FEUER',
     lossBlockTip: 'Tipp: blocken · nach oben auf Flieger zielen · {prog}',
     lossOrbTip: 'Tipp: grüne Kugeln · SUPER vor dem Boss füllen · {prog}',
     lossGambleTip: 'Erste Niederlage: vor jedem Level kannst du würfeln — Verbündeter hilft zwischen Wellen.',
@@ -29862,16 +29922,16 @@ addEventListener('keyup', e => {
  *
  * Rules:
  * - Desktop / wide tablets (width ≥ 960) stay at 1.0 — do not gut PC.
- * - Phone stays a horde (scale floor 0.60), just not a pile-on.
+ * - Phone stays a horde (scale floor 0.50), just not a pile-on.
  * - Versus / training / wall / coinrun are untouched.
  * - Wave *count* (stage length) is not shortened.
  */
 const COMBAT_DENSITY_REF_W = 1100;
 const COMBAT_DENSITY_REF_H = 620;
 const COMBAT_DENSITY_WIDE_W = 960;
-const COMBAT_DENSITY_MIN = 0.60;
+const COMBAT_DENSITY_MIN = 0.50;
 const COMBAT_DENSITY_MAX = 1;
-const COMBAT_DENSITY_SLOT_PX = 55;
+const COMBAT_DENSITY_SLOT_PX = 64;
 const ADVENTURE_MAX_ALIVE_DESKTOP = 78;
 const ADVENTURE_MAX_ALIVE_TOUCH = 54;
 
@@ -29909,7 +29969,7 @@ function combatDensityIsTablet(w, h) {
 }
 
 /**
- * 0.60–1.00 density factor. Width-weighted: side-spawns walk in across W.
+ * 0.50–1.00 density factor. Width-weighted: side-spawns walk in across W.
  * Wide screens (≥960) always return 1 so desktop math is unchanged.
  */
 function combatDensityScale(wOrOpts, h) {
@@ -29938,8 +29998,8 @@ function combatDensityProfile(wOrOpts, h) {
   const tablet = combatDensityIsTablet(sz.w, sz.h);
   const touchCeil = combatDensityTouchCeil();
   const slots = Math.max(4, Math.floor(sz.w / COMBAT_DENSITY_SLOT_PX));
-  const layers = compact ? 2 : (tablet ? 2.4 : 3);
-  const offscreen = compact ? 3 : (tablet ? 6 : 10);
+  const layers = compact ? 1.65 : (tablet ? 2.4 : 3);
+  const offscreen = compact ? 2 : (tablet ? 6 : 10);
   const fromSlots = Math.round(slots * layers + offscreen);
   const fromLegacy = Math.round(touchCeil * scale);
   let maxAlive;
@@ -29947,7 +30007,7 @@ function combatDensityProfile(wOrOpts, h) {
     maxAlive = touchCeil;
   } else {
     maxAlive = Math.min(fromSlots, fromLegacy);
-    maxAlive = combatDensityClamp(maxAlive, compact ? 10 : 14, touchCeil);
+    maxAlive = combatDensityClamp(maxAlive, compact ? 8 : 14, compact ? 14 : touchCeil);
   }
   return {
     w: sz.w,
@@ -29956,8 +30016,8 @@ function combatDensityProfile(wOrOpts, h) {
     compact: !!compact,
     tablet: !!tablet,
     maxAlive,
-    spawnIntervalMul: compact ? 1.38 : (tablet ? 1.12 : 1),
-    spawnGapPx: compact ? 56 : (tablet ? 42 : 32),
+    spawnIntervalMul: compact ? 1.55 : (tablet ? 1.12 : 1),
+    spawnGapPx: compact ? 64 : (tablet ? 42 : 32),
     spawnBatchMax: compact ? 1 : (tablet ? 2 : 3),
   };
 }
@@ -30008,7 +30068,7 @@ function combatSmoothOpenInterval(raw, elapsedSec, profile) {
 /**
  * Compact between-wave hole. Desktop unchanged.
  * Win-clear fanfare (base ≥ 2.3) stays — that is not a combat spike.
- * Result CTA delay is #323 — do not use this for showResult.
+ * Win-result delay stays 1600ms. Lose uses combatLoseResultMs.
  */
 function combatWaveGapSec(base, elapsedSec, profile) {
   const n = Number(base);
@@ -30311,6 +30371,80 @@ function applyCombatTelegraphWind(baseWind, profile, flags) {
   if (profile.compact) w = Math.max(w, COMBAT_TELEGRAPH_FLOOR);
   if (profile.compact && flags && flags.colossal) w = Math.max(w, 0.46);
   return w;
+}
+
+const COMBAT_LOSE_MS_COMPACT = 650;
+const COMBAT_LOSE_MS_DESK = 850;
+const COMBAT_LOSE_MS_REDUCED = 160;
+
+/** Death → result CTA. Compact ~650ms, desktop ~850ms, reduced-motion 160. Win stays 1600. */
+function combatLoseResultMs(profile) {
+  if (typeof motionReduced === 'function' && motionReduced()) return COMBAT_LOSE_MS_REDUCED;
+  profile = asCombatProfile(profile);
+  return profile.compact ? COMBAT_LOSE_MS_COMPACT : COMBAT_LOSE_MS_DESK;
+}
+
+function combatFailTeleKind(src) {
+  if (!src) return '';
+  if (typeof src === 'string') return src;
+  const kind = src.kind || src.failKind || '';
+  if (kind === 'fire') return 'fire';
+  if (kind === 'laser' || kind === 'orb' || kind === 'ink' || kind === 'shoot') return 'shoot';
+  const attacker = src.attacker || src;
+  const sp = attacker.sp || {};
+  if (sp.type === 'tank') return 'slam';
+  if (sp.type === 'charge' || (sp.type === 'swim' && sp.art === 'shark')) return 'charge';
+  if (sp.type === 'fly' || sp.type === 'dragon' || attacker.flying) return 'flyer';
+  if (sp.type === 'shoot') return 'shoot';
+  if ((attacker.dashT || 0) > 0) return 'charge';
+  if ((attacker.telegraphT || 0) > 0 && sp.type === 'tank') return 'slam';
+  return '';
+}
+
+function combatFailCueLabel(kind) {
+  const map = {
+    slam: ['result.failTeleSlam', 'SLAM'],
+    charge: ['result.failTeleCharge', 'CHARGE'],
+    flyer: ['result.failTeleFlyer', 'vlieger'],
+    shoot: ['result.failTeleShoot', 'SCHIET'],
+    fire: ['result.failTeleFire', 'VUUR'],
+  };
+  const pair = map[kind];
+  if (!pair) return '';
+  return (typeof tOr === 'function') ? tOr(pair[0], pair[1]) : pair[1];
+}
+
+/** Record last readable fail cue on player hurt (Adventure). */
+function notePlayerFailTele(game, src) {
+  if (!game || game.mode !== 'adventure') return;
+  let kind = combatFailTeleKind(src);
+  if (!kind && game.monsters && game.monsters.length) {
+    const teles = (typeof adventureTelegraphHuds === 'function')
+      ? adventureTelegraphHuds(game.monsters)
+      : [];
+    if (teles[0] && teles[0].kind) {
+      kind = teles[0].kind === 'fire' ? 'fire' : (teles[0].kind === 'shoot' ? 'shoot' : teles[0].kind);
+    } else {
+      for (let i = 0; i < game.monsters.length; i++) {
+        const m = game.monsters[i];
+        if (!m || !m.alive) continue;
+        if (m.flying || (m.sp && (m.sp.type === 'fly' || m.sp.type === 'dragon'))) {
+          kind = 'flyer';
+          break;
+        }
+      }
+    }
+  }
+  if (kind) game.lastFailTele = kind;
+}
+
+/** One-line tip: "SLAM → Nog één keer". Empty when no cue (caller falls back). */
+function combatFailRetryTip(game, fallback) {
+  const again = (typeof tOr === 'function') ? tOr('result.againRetry', 'Nog één keer') : 'Nog één keer';
+  const cue = combatFailCueLabel(game && game.lastFailTele);
+  if (!cue) return fallback == null ? '' : fallback;
+  if (typeof tOr === 'function') return tOr('result.failTeleTip', '{cue} → {again}', { cue: cue, again: again });
+  return cue + ' → ' + again;
 }
 
 /** Resize: keep baked colossal HP, refit radius to the current playfield. */
@@ -35417,6 +35551,9 @@ class Fighter {
         game.comboT = 0;
       }
       if (game.mode === 'adventure') game.killStreak = 0;
+      if (game.mode === 'adventure' && typeof notePlayerFailTele === 'function') {
+        try { notePlayerFailTele(game, opts); } catch (_) {}
+      }
     }
     this.hurtT = dmg >= 18 ? 0.28 : 0.24;
     this.hitFlashT = motionReduced() ? 0.06 : (dmg >= 18 ? 0.18 : 0.14);
@@ -35983,7 +36120,7 @@ class Monster {
         if (this.telegraphT <= 0) {
           AudioSys.sfx('hit2'); game.shake(8, 0.25);
           if (Math.abs(p.x - this.x) < this.size + 62 && p.y > game.ground - 90)
-            p.takeDamage(this.dmg, Math.sign(p.x - this.x) * 320, game);
+            p.takeDamage(this.dmg, Math.sign(p.x - this.x) * 320, game, { attacker: this, failKind: 'slam' });
         }
       } else {
         this.x += dir * this.speed * dt;
@@ -36069,7 +36206,7 @@ class Monster {
       const rr = (this.size + p.bodyR) * 0.82;
       if ((p.x - this.x) ** 2 + (p.bodyY - this.y) ** 2 < rr * rr) {
         const d = this.dashT > 0 ? this.dmg * 1.3 : this.dmg;
-        if (p.takeDamage(d, dir * 180, game) > 0) {
+        if (p.takeDamage(d, dir * 180, game, { attacker: this }) > 0) {
           game.shake(4, 0.15);
           applyHitStop(game, { kind: 'punch', dmg: d }, { playerHurt: true, heavy: d >= 18 });
         }
@@ -40675,6 +40812,7 @@ class Game {
     const st = playerStats();
     if (mode === 'adventure') {
       this.advDiff = normalizeAdvDiffId(opts.difficulty || currentAdvDiff());
+      this.lastFailTele = null;
     }
     if (mode !== 'versus') {
       const advLevel = mode === 'adventure' ? (opts.level || 1) : 0;
@@ -41520,10 +41658,12 @@ class Game {
       persist();
       // Heat / master already land on the VERLOREN result tip — late toasts stuck on that screen.
       AudioSys.sfx('lose');
-      this.banner(t('banner.lost'), 2, '#ff6b6b', 50);
+      try { this.shake(6, 0.22); } catch (_) {}
+      this.banner(t('banner.lost'), 1.1, '#ff6b6b', 50);
     }
-    // Resultaat-scherm altijd tonen (Volgende level / Opnieuw) — niet stil naar menu
-    scheduleGameResult(this, win ? 1600 : 1400, () => UI.showResult(win, {
+    // Resultaat-scherm altijd tonen (Volgende level / Nog één keer) — niet stil naar menu
+    const loseMs = (typeof combatLoseResultMs === 'function') ? combatLoseResultMs() : 850;
+    scheduleGameResult(this, win ? 1600 : loseMs, () => UI.showResult(win, {
       titleKey: win ? 'result.advWin' : 'result.advLose',
       title: win ? t('result.advWin') : t('result.advLose'),
       detailKey: win ? 'result.advDetailWin' : 'result.advDetailLose',
@@ -41566,23 +41706,17 @@ class Game {
         : (stars >= 3 ? t('result.perfectRun') : (stars > prevStars
         ? t('result.starImproved', { stars, prev: prevStars })
         : t('result.pickupsHelp', { hint: starHintLine() })))) : (() => {
-        const prog = this.waveIdx >= 0 ? t('result.wavesProg', { cur: this.waveIdx + 1, total: this.level.waves.length }) : tOr('result.wavesStart', 'begin');
         const failsNow = advFailCount(lv, diff);
-        let heatTip = '';
+        const retry = tOr('result.againRetry', 'Nog één keer');
+        const tele = (typeof combatFailRetryTip === 'function') ? combatFailRetryTip(this, '') : '';
+        const lead = tele || retry;
         if (failsNow >= SATAN_FAIL_THRESHOLD && typeof shouldTriggerSatan === 'function' && shouldTriggerSatan(lv, diff)) {
-          heatTip = t('result.heatSatanNext');
-        } else if (failsNow >= SATAN_DANGER_FAILS) {
-          heatTip = t('result.heatDanger');
-        } else if (failsNow >= 7) {
-          heatTip = t('result.heatRising', { n: failsNow, max: SATAN_FAIL_THRESHOLD });
+          return lead + ' · ' + t('result.heatSatanNext');
         }
-        const base = this.player.hp <= 0
-          ? t('result.lossBlockTip', { prog })
-          : t('result.lossOrbTip', { prog });
-        const once = onceResultTip('adventure', 'loss',
-          t('result.lossGambleTip'));
-        const core = once ? `${once} · ${base}` : base;
-        return heatTip ? `${heatTip} · ${core}` : core;
+        if (failsNow >= SATAN_DANGER_FAILS) {
+          return lead + ' · ' + t('result.heatDanger');
+        }
+        return lead;
       })(),
     }));
   }
@@ -43676,7 +43810,7 @@ class Game {
         if (pl && pl.alive && this.playerHurtCd <= 0
             && projHitsTarget(p, pl.bodyX, pl.bodyY, pl.bodyR * 0.8)) {
           const hit = resolveProjHit(p);
-          pl.takeDamage(hit.dmg, projKnockDir(p, pl.x) * 260, this);
+          pl.takeDamage(hit.dmg, projKnockDir(p, pl.x) * 260, this, { kind: p.kind || 'shoot' });
           applyHitStop(this, { kind: skProj && (skProj.behavior === 'dash' || skProj.behavior === 'slash') ? 'special' : 'punch', dmg: hit.dmg },
             { crit: hit.crit, heavy: hit.dmg >= 18, playerHurt: true });
           this.floater(pl.x, pl.y - 115, '-' + hit.dmg, '#ff8080', 16);
@@ -51737,6 +51871,7 @@ const UI = {
     try {
     this.lastResult = data;
     try { this.clearToasts(); } catch (_) {}
+    try { if (this.hideFomoRitual) this.hideFomoRitual(); } catch (_) {}
     const title = document.getElementById('resTitle');
     if (!title) throw new Error('result DOM missing');
     const titleKey = data.titleKey || (data.mode === 'training'
@@ -51817,9 +51952,12 @@ const UI = {
       if (label) {
         if (data.mode === 'versus') label.innerHTML = t('result.rematch') + '<small>' + t('result.rematchSub') + '</small>';
         else if (data.mode === 'training') label.innerHTML = t('result.again') + '<small>' + tOr('result.trainAgainSub', 'vs RabbitRobot') + '</small>';
+        else if (!win && data.mode === 'adventure') label.textContent = tOr('result.againRetry', 'Nog één keer');
         else label.textContent = t('result.again');
       }
     }
+    const rs = document.getElementById('resultScreen');
+    if (rs) rs.classList.toggle('lose-retry', !win && data.mode === 'adventure');
     const menuBtn = document.getElementById('resMenu');
     if (menuBtn) {
       const label = menuBtn.querySelector('div');
@@ -53249,7 +53387,13 @@ bindPress(document.getElementById('resAgain'), () => {
   if (!d || !d.mode) return;
   AudioSys.sfx('select');
   try { if (game) game._resultToken = (game._resultToken || 0) + 1; } catch (_) {}
-  if (d.mode === 'adventure') gokGooiStartLevel(d.level);
+  if (d.mode === 'adventure') {
+    if (!d.win && typeof restartAdventureInstant === 'function') {
+      restartAdventureInstant(d.level, d.difficulty, null);
+    } else {
+      gokGooiStartLevel(d.level);
+    }
+  }
   else if (d.mode === 'versus') {
     const p1 = d.p1 || vsSelect.p1;
     const p2 = d.p2 || vsSelect.p2;
@@ -54297,6 +54441,9 @@ function bootGame() {
       flyerHover: combatFlyerHover,
       meleeLift: combatMeleeAimLift,
       partGateSec: combatPartGateWalkSec,
+      loseResultMs: combatLoseResultMs,
+      failRetryTip: combatFailRetryTip,
+      noteFailTele: notePlayerFailTele,
     } : null,
     previewTop20Spawn: () => {
       try { AudioSys.init(); AudioSys.sfx('top20Spawn'); } catch (_) {}
