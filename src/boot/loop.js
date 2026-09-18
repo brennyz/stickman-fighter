@@ -1032,6 +1032,8 @@ function bootGame() {
       noteFailTele: notePlayerFailTele,
       cadenceBand: combatCadenceBand,
     } : null,
+    hudSafeLayout: typeof hudSafeLayout === 'function' ? hudSafeLayout : null,
+    hudPhoneCompact: typeof hudPhoneCompact === 'function' ? hudPhoneCompact : null,
     previewTop20Spawn: () => {
       try { AudioSys.init(); AudioSys.sfx('top20Spawn'); } catch (_) {}
       try { if (game && typeof game.shake === 'function') game.shake(4, 0.16); } catch (_) {}

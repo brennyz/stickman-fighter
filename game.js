@@ -30836,6 +30836,85 @@ function hudInsetTop() {
   return Math.max(readSafeInsets().top, 6) + 10;
 }
 
+/** Phone portrait (~390×844). Combat + menu chrome use a compact keep-out. */
+function hudPhoneCompact(W, H) {
+  const w = W != null ? W : (typeof window !== 'undefined' ? window.innerWidth : 800);
+  const h = H != null ? H : (typeof window !== 'undefined' ? window.innerHeight : 600);
+  return w <= 430 && h > w * 1.05;
+}
+
+/** Right keep-out for HTML #pauseBtn (48–56px + margin + safe-area). */
+function hudPauseGutter(W, H) {
+  const compact = hudPhoneCompact(W, H);
+  let big = false;
+  try { big = !!(document.body && document.body.classList.contains('big-touch')); } catch (_) {}
+  const btn = big ? 56 : 48;
+  const pad = compact ? 10 : 12;
+  const safeR = (typeof readSafeInsets === 'function') ? readSafeInsets().right : 0;
+  return btn + pad + Math.max(4, safeR);
+}
+
+function hudChromeRowH(W, H) {
+  return hudPhoneCompact(W, H) ? 54 : 48;
+}
+
+function hudCenterTop(W, H) {
+  const top = hudInsetTop();
+  return hudPhoneCompact(W, H) ? top + hudChromeRowH(W, H) : Math.max(28, top + 4);
+}
+
+function hudPlayerBarWidth(W, H) {
+  if (hudPhoneCompact(W, H)) return Math.min(188, W * 0.48);
+  return Math.min(240, W * 0.32);
+}
+
+/** Y just above the touch-button cluster so countdown rings don't sit on punch/jump. */
+function hudTouchClearY(H) {
+  const hh = H != null ? H : (typeof window !== 'undefined' ? window.innerHeight : 600);
+  try {
+    if (typeof Input !== 'undefined' && Input.buttons && Input.buttons.length) {
+      let minY = hh;
+      for (const b of Input.buttons) {
+        if (b && typeof b.y === 'number') minY = Math.min(minY, b.y - (b.r || 0));
+      }
+      if (minY < hh) return Math.max(hh * 0.42, minY - 28);
+    }
+  } catch (_) {}
+  return hh - 140;
+}
+
+function syncHudPhoneClass(W, H) {
+  try {
+    if (document.body) document.body.classList.toggle('hud-phone', hudPhoneCompact(W, H));
+  } catch (_) {}
+}
+
+/** Geometry for smoke + drawHUD: HP, pause, stars must not overlap on ~390×844. */
+function hudSafeLayout(W, H, mode) {
+  const compact = hudPhoneCompact(W, H);
+  const pauseG = hudPauseGutter(W, H);
+  const top = hudInsetTop();
+  const hpW = hudPlayerBarWidth(W, H);
+  const safeL = (typeof readSafeInsets === 'function') ? readSafeInsets().left : 0;
+  const hpX = Math.max(12, safeL + 8);
+  const starW = 58;
+  const pause = { x: W - pauseG, y: Math.max(4, top - 8), w: pauseG, h: compact ? 52 : 56 };
+  const hp = { x: hpX, y: top, w: hpW, h: compact ? 46 : 52 };
+  const stars = { x: W - pauseG - starW, y: top, w: starW, h: 16 };
+  return {
+    compact,
+    pauseGutter: pauseG,
+    top,
+    chromeH: hudChromeRowH(W, H),
+    centerY: hudCenterTop(W, H),
+    touchClearY: hudTouchClearY(H),
+    hp,
+    pause,
+    stars,
+    mode: mode || null,
+  };
+}
+
 function playfieldGroundY(H, W) {
   const portrait = H > W * 1.02;
   const dualVs = typeof Input !== 'undefined' && Input.dualMode;
@@ -31206,6 +31285,7 @@ Object.assign(Input, {
 const InputP2 = makePad('p2');
 
 Input.layout = function (W, H) {
+  if (typeof syncHudPhoneClass === 'function') syncHudPhoneClass(W, H);
   if (Input.dualMode) {
     _padP1Methods.layout.call(Input, W, H);
     InputP2.layout(W, H);
@@ -47029,16 +47109,22 @@ class Game {
       c.fillRect(0, 0, W, H);
     }
     // spelerbalk (niet in 2P — eigen layout)
-    const bw = Math.min(240, W * 0.32);
-    const bx = Math.max(12, readSafeInsets().left + 8);
-    const by = hudInsetTop();
-    if (this.mode === 'adventure' && this.runLoot && runLootHasItems(this.runLoot)) {
+    const hudLay = (typeof hudSafeLayout === 'function')
+      ? hudSafeLayout(W, H, this.mode)
+      : { compact: false, pauseGutter: 64, top: hudInsetTop(), chromeH: 48, centerY: Math.max(28, hudInsetTop() + 4), touchClearY: H - 78, hp: { x: Math.max(12, readSafeInsets().left + 8), y: hudInsetTop(), w: Math.min(240, W * 0.32), h: 52 } };
+    this._hudLay = hudLay;
+    const compact = !!hudLay.compact;
+    const pauseG = hudLay.pauseGutter || 64;
+    const bw = (hudLay.hp && hudLay.hp.w) || (typeof hudPlayerBarWidth === 'function' ? hudPlayerBarWidth(W, H) : Math.min(240, W * 0.32));
+    const bx = (hudLay.hp && hudLay.hp.x) || Math.max(12, readSafeInsets().left + 8);
+    const by = (hudLay.hp && hudLay.hp.y) || hudInsetTop();
+    if (!compact && this.mode === 'adventure' && this.runLoot && runLootHasItems(this.runLoot)) {
       const short = runLootSummaryShort(this.runLoot);
       if (short) {
         c.font = '700 11px -apple-system, sans-serif';
         c.textAlign = 'right';
         c.fillStyle = 'rgba(255,255,255,.78)';
-        c.fillText(t('runLoot.hudShort', { line: short }), W - Math.max(10, readSafeInsets().right + 8), by + 2);
+        c.fillText(t('runLoot.hudShort', { line: short }), W - pauseG - 8, by + 2);
         c.textAlign = 'left';
       }
     }
@@ -47134,14 +47220,14 @@ class Game {
       const isl = islandMeta(islandFromLevel(this.level.n));
       const wCap = adventureWeaponCapForLevel(this.level.n);
       const wv = Math.max(1, this.waveIdx + 1);
-      let hy = Math.max(28, hudInsetTop() + 4);
+      let hy = compact ? hudLay.centerY : Math.max(28, hudInsetTop() + 4);
       this.advHudBottom = hy;
 
-      c.font = '800 16px -apple-system, sans-serif';
+      c.font = compact ? '800 13px -apple-system, sans-serif' : '800 16px -apple-system, sans-serif';
       fillHudText(c, t('hud.levelWave', { n: this.level.n, wv: Math.min(wv, this.level.waves.length), total: this.level.waves.length }), W / 2, hy, {
         fill: a11yHighContrast() ? '#fff' : 'rgba(255,255,255,.9)',
       });
-      hy += 17;
+      hy += compact ? 14 : 17;
 
       if (this.advDiff && this.advDiff !== 'normal') {
         const dm = advDiffMeta(this.advDiff);
@@ -47159,12 +47245,14 @@ class Game {
         hy += 16;
       }
 
-      c.font = '700 11px -apple-system, sans-serif';
-      c.fillStyle = isl.accent;
-      c.globalAlpha = 0.92;
-      c.fillText(t('hud.islandWeapon', { name: islandLabel(islandFromLevel(this.level.n), 'name'), cap: wCap }), W / 2, hy);
-      c.globalAlpha = 1;
-      hy += 14;
+      if (!compact) {
+        c.font = '700 11px -apple-system, sans-serif';
+        c.fillStyle = isl.accent;
+        c.globalAlpha = 0.92;
+        c.fillText(t('hud.islandWeapon', { name: islandLabel(islandFromLevel(this.level.n), 'name'), cap: wCap }), W / 2, hy);
+        c.globalAlpha = 1;
+        hy += 14;
+      }
 
       if (this.waveIdx >= 0 && this.wavePause <= 0) {
         const curMeta = this.level.waveMeta && this.level.waveMeta[this.waveIdx];
@@ -47237,29 +47325,30 @@ class Game {
       }
 
       const starY = Math.max(24, hudInsetTop() + 2);
+      const starX0 = (hudLay.stars && hudLay.stars.x != null) ? hudLay.stars.x : (W - pauseG - 58);
       if (p.alive) {
         const hpPct = p.hp / Math.max(1, p.maxhp);
         const proj = starsFromHpPct(hpPct);
         const prevBest = this.advPrevStars || 0;
         for (let i = 0; i < 3; i++) {
           const ghost = prevBest > 0 && i < prevBest && i >= proj;
-          drawStarShape(c, W - 52 + i * 19, starY, 8, ghost ? 'rgba(255,215,94,.22)' : '#ffd75e', !ghost && i < proj);
+          drawStarShape(c, starX0 + 6 + i * 19, starY, 8, ghost ? 'rgba(255,215,94,.22)' : '#ffd75e', !ghost && i < proj);
         }
-        this.drawAdvStarBuffer(c, W - 58, starY + 13, hpPct);
+        this.drawAdvStarBuffer(c, starX0, starY + 13, hpPct);
         if (proj > prevBest) {
           c.font = '800 9px -apple-system, sans-serif';
           c.textAlign = 'right';
           c.fillStyle = '#7cfc8a';
-          c.fillText(t('hud.starBeat', { n: proj - prevBest }), W - 8, starY + 28);
+          c.fillText(t('hud.starBeat', { n: proj - prevBest }), starX0 + 56, starY + 28);
         } else if (prevBest > 0) {
           c.font = '700 8px -apple-system, sans-serif';
           c.textAlign = 'right';
           c.fillStyle = 'rgba(255,255,255,.42)';
-          c.fillText(t('hud.starBest', { n: prevBest }), W - 8, starY + 28);
+          c.fillText(t('hud.starBest', { n: prevBest }), starX0 + 56, starY + 28);
         }
       }
 
-      const rightX = W - Math.max(14, readSafeInsets().right + 8);
+      const rightX = W - pauseG - 8;
       let rightY = starY + 18;
       if ((this.killStreak || 0) >= 2) {
         c.textAlign = 'right';
@@ -47307,7 +47396,7 @@ class Game {
       }
 
       c.textAlign = 'center';
-      if (p.alive && !boss) {
+      if (!compact && p.alive && !boss) {
         const hpPct = p.hp / Math.max(1, p.maxhp);
         const pct = Math.round(hpPct * 100);
         let starHint = t('hud.starZone');
@@ -47318,7 +47407,7 @@ class Game {
         c.fillText(t('hud.hpPct', { pct, hint: starHint }), W / 2, hy);
         hy += 14;
       }
-      if (this.waveIdx >= 0 && (this.spawnQueue.length > 0 || this.monsters.some((m) => m.alive))) {
+      if (!compact && this.waveIdx >= 0 && (this.spawnQueue.length > 0 || this.monsters.some((m) => m.alive))) {
         const rem = this.spawnQueue.length + this.monsters.filter((m) => m.alive).length;
         c.font = '700 11px sans-serif';
         c.fillStyle = 'rgba(255,255,255,.62)';
@@ -47350,7 +47439,7 @@ class Game {
         const totalPause = this.wavePauseTotal || 1.55;
         const pauseFrac = clamp(1 - this.wavePause / totalPause, 0, 1);
         const ringX = W / 2;
-        const ringY = H - 78;
+        const ringY = (typeof hudTouchClearY === 'function') ? hudTouchClearY(H) : (hudLay.touchClearY || (H - 140));
         const ringR = 24;
         const stageClear = !!this._levelClearPending;
         if (!motionReduced()) {
@@ -47393,7 +47482,9 @@ class Game {
       }
     } else if (this.mode === 'training') {
       const r = this.robot;
-      const half = Math.min(300, W * 0.36);
+      const half = compact
+        ? Math.min(128, Math.max(88, W - pauseG - (bx + bw) - 20))
+        : Math.min(300, W * 0.36);
       if (this.phase === 'intro' && this.phaseT < 1.55) {
         const n = Math.ceil(Math.max(0.35, 1.55 - this.phaseT));
         c.font = '900 48px sans-serif';
@@ -47431,26 +47522,28 @@ class Game {
               icon: this.trainTelegraphKind === 'kick' ? 'kick' : 'punch',
             }
             : null));
+      const trainYOff = compact ? Math.max(0, hudLay.centerY - 40) : 0;
       if (tele) {
         const barW = Math.min(220, W - 48);
         const bx = (W - barW) / 2;
+        const teleY = 88 + trainYOff;
         c.fillStyle = 'rgba(0,0,0,.4)';
-        this.rr(c, bx - 4, 88, barW + 8, 22, 8);
+        this.rr(c, bx - 4, teleY, barW + 8, 22, 8);
         c.fill();
         if (tele.icon && typeof drawStrikeHudChip === 'function') {
-          drawStrikeHudChip(c, tele.icon, bx + 12, 99, 10);
+          drawStrikeHudChip(c, tele.icon, bx + 12, teleY + 11, 10);
         }
         c.font = '800 11px sans-serif';
         c.textAlign = 'center';
         const trainTeleLabel = typeof wrapHudLines === 'function'
           ? wrapHudLines(c, tele.label, barW - (tele.icon ? 36 : 12), 1)[0]
           : tele.label;
-        fillHudText(c, trainTeleLabel, W / 2, 102, { fill: tele.color, strokeW: a11yHighContrast() ? 3 : 0 });
+        fillHudText(c, trainTeleLabel, W / 2, teleY + 14, { fill: tele.color, strokeW: a11yHighContrast() ? 3 : 0 });
         c.fillStyle = 'rgba(255,255,255,.15)';
-        this.rr(c, bx, 108, barW, 5, 3);
+        this.rr(c, bx, teleY + 20, barW, 5, 3);
         c.fill();
         c.fillStyle = tele.color;
-        this.rr(c, bx, 108, barW * clamp(tele.frac, 0, 1), 5, 3);
+        this.rr(c, bx, teleY + 20, barW * clamp(tele.frac, 0, 1), 5, 3);
         c.fill();
       }
       if (this.trainMeleeTelegraphT > 0 && r.alive && !this.trainLaserTelegraph && !this.trainTelegraphT) {
@@ -47512,20 +47605,21 @@ class Game {
       const frac = clamp(r.hp / maxHp, 0, 1);
       const ghostFrac = clamp((r.hpGhost != null ? r.hpGhost : r.hp) / maxHp, 0, 1);
       const reading = (this.hitReadT || 0) > 0;
-      c.fillStyle = 'rgba(0,0,0,.5)'; this.rr(c, W - half - 20, by - 6, half + 8, 36, 10); c.fill();
-      c.fillStyle = '#333c55'; this.rr(c, W - half - 16, by, half, 18, 6); c.fill();
+      const robotRight = W - pauseG - 4;
+      c.fillStyle = 'rgba(0,0,0,.5)'; this.rr(c, robotRight - half - 4, by - 6, half + 8, 36, 10); c.fill();
+      c.fillStyle = '#333c55'; this.rr(c, robotRight - half, by, half, 18, 6); c.fill();
       if (ghostFrac > frac) {
         c.fillStyle = '#ffd0a8';
-        this.rr(c, W - 16 - half * ghostFrac, by, half * ghostFrac, 18, 6); c.fill();
+        this.rr(c, robotRight - half * ghostFrac, by, half * ghostFrac, 18, 6); c.fill();
       }
       c.fillStyle = reading ? '#ffd75e' : '#ff6b6b';
-      this.rr(c, W - 16 - half * frac, by, half * frac, 18, 6); c.fill();
+      this.rr(c, robotRight - half * frac, by, half * frac, 18, 6); c.fill();
       c.font = reading ? '900 15px sans-serif' : '800 13px sans-serif';
       c.textAlign = 'right';
       c.fillStyle = reading ? '#ffd75e' : '#fff';
       const hpNow = Math.max(0, Math.round(r.hp));
-      c.fillText(tOr('hud.rabbitRobotHp', 'RABBIT {hp}/{max}', { hp: hpNow, max: Math.round(maxHp), pct: Math.round(frac * 100) }), W - 20, by + 34);
-      // timer + rondepunten
+      c.fillText(tOr('hud.rabbitRobotHp', 'RABBIT {hp}/{max}', { hp: hpNow, max: Math.round(maxHp), pct: Math.round(frac * 100) }), robotRight - 4, by + 34);
+      // timer + rondepunten — below HP/pause on phone so they don't cover the bars
       c.textAlign = 'center';
       c.font = '800 12px sans-serif';
       c.fillStyle = 'rgba(255,255,255,.65)';
@@ -47533,56 +47627,56 @@ class Game {
       const scoreLine = decisiveRound
         ? t('hud.decisiveRound', { s: this.roundsP, r: this.roundsR })
         : t('hud.roundInfo', { n: this.round, s: this.roundsP, r: this.roundsR });
-      c.fillText(scoreLine, W / 2, 68);
+      c.fillText(scoreLine, W / 2, 68 + trainYOff);
       const tLeft = Math.ceil(Math.max(0, this.roundTimer));
       const urgent = this.roundTimer < 15 && this.phase === 'fight';
       c.font = urgent ? '900 28px sans-serif' : '900 26px sans-serif';
       c.fillStyle = urgent ? '#ff9a9a' : '#fff';
       if (urgent && !motionReduced()) {
         c.save();
-        c.translate(W / 2, 40);
+        c.translate(W / 2, 40 + trainYOff);
         c.scale(1 + Math.sin(this.t * 10) * 0.05, 1 + Math.sin(this.t * 10) * 0.05);
         c.fillText(String(tLeft), 0, 0);
         c.restore();
       } else {
-        c.fillText(String(tLeft), W / 2, 40);
+        c.fillText(String(tLeft), W / 2, 40 + trainYOff);
       }
       const timerBarW = Math.min(160, W * 0.28);
       const timerFrac = clamp(this.roundTimer / 60, 0, 1);
       c.fillStyle = 'rgba(0,0,0,.35)';
-      this.rr(c, W / 2 - timerBarW / 2, 46, timerBarW, 5, 3);
+      this.rr(c, W / 2 - timerBarW / 2, 46 + trainYOff, timerBarW, 5, 3);
       c.fill();
       c.fillStyle = urgent ? '#ff6b6b' : '#7cf5ff';
-      this.rr(c, W / 2 - timerBarW / 2, 46, timerBarW * timerFrac, 5, 3);
+      this.rr(c, W / 2 - timerBarW / 2, 46 + trainYOff, timerBarW * timerFrac, 5, 3);
       c.fill();
       if (this.roundTimer < 12 && this.phase === 'fight') {
         c.font = '700 9px sans-serif';
         c.fillStyle = 'rgba(255,255,255,.55)';
-        c.fillText(t('hud.timeHpWin'), W / 2, 58);
+        c.fillText(t('hud.timeHpWin'), W / 2, 58 + trainYOff);
       }
       const mpP = this.roundsP === 1 && this.roundsR < 2;
       const mpR = this.roundsR === 1 && this.roundsP < 2;
       for (let i = 0; i < 2; i++) {
         const px = W / 2 - 34 - i * 18;
         c.fillStyle = i < this.roundsP ? '#7cfc8a' : 'rgba(255,255,255,.25)';
-        c.beginPath(); c.arc(px, 82, 6, 0, TAU); c.fill();
+        c.beginPath(); c.arc(px, 82 + trainYOff, 6, 0, TAU); c.fill();
         if (mpP && i === 1) {
           c.strokeStyle = '#ffd75e'; c.lineWidth = 2;
-          c.beginPath(); c.arc(px, 82, 9, 0, TAU); c.stroke();
+          c.beginPath(); c.arc(px, 82 + trainYOff, 9, 0, TAU); c.stroke();
         }
         const rx = W / 2 + 34 + i * 18;
         c.fillStyle = i < this.roundsR ? '#ff6b6b' : 'rgba(255,255,255,.25)';
-        c.beginPath(); c.arc(rx, 82, 6, 0, TAU); c.fill();
+        c.beginPath(); c.arc(rx, 82 + trainYOff, 6, 0, TAU); c.fill();
         if (mpR && i === 1) {
           c.strokeStyle = '#ffd75e'; c.lineWidth = 2;
-          c.beginPath(); c.arc(rx, 82, 9, 0, TAU); c.stroke();
+          c.beginPath(); c.arc(rx, 82 + trainYOff, 9, 0, TAU); c.stroke();
         }
       }
       if ((this.trainDummyGrace || 0) > 0) {
         c.textAlign = 'center';
         c.font = '800 12px sans-serif';
         c.fillStyle = '#7cf5ff';
-        c.fillText(t('hud.dummyGrace', { n: this.trainDummyGrace.toFixed(1) }), W / 2, 118);
+        c.fillText(t('hud.dummyGrace', { n: this.trainDummyGrace.toFixed(1) }), W / 2, 118 + trainYOff);
       }
       if (this.combo > 0 && this.comboT > 0 && save.comboHud !== false) {
         const col = this.combo >= 8 ? '#ff7a4d' : '#ffd75e';
@@ -47591,13 +47685,13 @@ class Game {
         c.textAlign = 'left';
         c.font = '800 13px sans-serif';
         c.fillStyle = col;
-        c.fillText(t('hud.combo', { n: this.combo }), 16, 118);
+        c.fillText(t('hud.combo', { n: this.combo }), 16, 118 + trainYOff);
         c.font = '700 10px sans-serif';
         c.fillStyle = 'rgba(255,255,255,.65)';
-        if (nextGoal) c.fillText(t('hud.goal', { n: nextGoal }), 16, 132);
-        if (rec > 0) c.fillText(t('hud.record', { n: rec }), 16, nextGoal ? 146 : 132);
+        if (nextGoal) c.fillText(t('hud.goal', { n: nextGoal }), 16, 132 + trainYOff);
+        if (rec > 0) c.fillText(t('hud.record', { n: rec }), 16, (nextGoal ? 146 : 132) + trainYOff);
         const barW = Math.min(120, W * 0.28);
-        const barY = nextGoal ? (rec > 0 ? 152 : 138) : (rec > 0 ? 146 : 132);
+        const barY = (nextGoal ? (rec > 0 ? 152 : 138) : (rec > 0 ? 146 : 132)) + trainYOff;
         c.fillStyle = 'rgba(255,255,255,.15)';
         this.rr(c, 16, barY, barW, 4, 2);
         c.fill();
@@ -47610,49 +47704,50 @@ class Game {
       const wallDur = this.wallDuration || 60;
       const tLeft = Math.ceil(Math.max(0, this.wallTimer));
       const urgent = this.wallTimer < 10;
+      const wallYOff = compact ? Math.max(0, hudLay.centerY - 36) : 0;
       const barW = Math.min(220, W - 48);
       const barX = (W - barW) / 2;
       const timeFrac = clamp(this.wallTimer / wallDur, 0, 1);
       c.font = '700 9px sans-serif';
       c.textAlign = 'left';
       c.fillStyle = 'rgba(255,255,255,.45)';
-      c.fillText(t('hud.time'), barX, 44);
+      c.fillText(t('hud.time'), barX, 44 + wallYOff);
       c.textAlign = 'center';
       c.fillStyle = 'rgba(0,0,0,.42)';
-      this.rr(c, barX, 48, barW, 7, 4); c.fill();
+      this.rr(c, barX, 48 + wallYOff, barW, 7, 4); c.fill();
       c.strokeStyle = 'rgba(255,255,255,.22)';
       c.lineWidth = 1;
       for (const frac of [0.5, 0.25]) {
         const tx = barX + barW * frac;
         c.beginPath();
-        c.moveTo(tx, 47);
-        c.lineTo(tx, 56);
+        c.moveTo(tx, 47 + wallYOff);
+        c.lineTo(tx, 56 + wallYOff);
         c.stroke();
       }
       c.fillStyle = urgent ? '#ff6b6b' : '#7cf5ff';
-      this.rr(c, barX, 48, Math.max(4, barW * timeFrac), 7, 4); c.fill();
+      this.rr(c, barX, 48 + wallYOff, Math.max(4, barW * timeFrac), 7, 4); c.fill();
 
-      c.font = '900 30px sans-serif';
+      c.font = compact ? '900 24px sans-serif' : '900 30px sans-serif';
       c.fillStyle = urgent ? '#ff6b6b' : '#fff';
       if (urgent && !motionReduced()) {
         c.save();
-        c.translate(W / 2, 36);
+        c.translate(W / 2, 36 + wallYOff);
         c.scale(1 + Math.sin(this.t * 12) * 0.06, 1 + Math.sin(this.t * 12) * 0.06);
         c.fillText(String(tLeft), 0, 0);
         c.restore();
       } else {
-        c.fillText(String(tLeft), W / 2, 36);
+        c.fillText(String(tLeft), W / 2, 36 + wallYOff);
       }
       if (this.wallGen > 0) {
         c.font = '800 12px sans-serif';
         c.textAlign = 'left';
         c.fillStyle = 'rgba(255,215,94,.85)';
-        c.fillText(t('hud.wallGen', { n: this.wallGen + 1 }), 16, 36);
+        c.fillText(t('hud.wallGen', { n: this.wallGen + 1 }), 16, 36 + wallYOff);
         c.textAlign = 'center';
       }
-      c.font = '800 17px sans-serif'; c.fillStyle = '#ffd75e';
-      c.fillText(t('hud.stones', { n: this.score }), W / 2, 68);
-      c.font = '700 13px sans-serif';
+      c.font = compact ? '800 15px sans-serif' : '800 17px sans-serif'; c.fillStyle = '#ffd75e';
+      c.fillText(t('hud.stones', { n: this.score }), W / 2, 68 + wallYOff);
+      c.font = compact ? '700 11px sans-serif' : '700 13px sans-serif';
       const bestSaved = save.bestWall || 0;
       const rec = Math.max(bestSaved, this.score);
       const beaten = bestSaved > 0 && this.score > bestSaved;
@@ -47660,15 +47755,15 @@ class Game {
       c.fillStyle = beaten ? '#7cfc8a' : 'rgba(255,255,255,.55)';
       if (bestSaved > 0 && this.score < bestSaved) {
         const gap = bestSaved - this.score;
-        c.fillText(t('hud.recordGap', { best: bestSaved, gap }), W / 2, 86);
+        c.fillText(t('hud.recordGap', { best: bestSaved, gap }), W / 2, 86 + wallYOff);
       } else {
-        c.fillText(beaten ? t('hud.recordBroken', { rec }) : t('hud.recordLine', { rec }), W / 2, 86);
+        c.fillText(beaten ? t('hud.recordBroken', { rec }) : t('hud.recordLine', { rec }), W / 2, 86 + wallYOff);
       }
       // Record-chase meter (score → best) + expected-pace tick
       if (bestSaved > 0) {
         const chaseW = Math.min(180, W * 0.48);
         const chaseX = (W - chaseW) / 2;
-        const chaseY = 90;
+        const chaseY = 90 + wallYOff;
         const chaseFrac = clamp(this.score / Math.max(1, bestSaved), 0, 1.15);
         c.fillStyle = 'rgba(0,0,0,.38)';
         this.rr(c, chaseX, chaseY, chaseW, 5, 3); c.fill();
@@ -47703,7 +47798,7 @@ class Game {
           bestSaved > 0
             ? t('hud.paceProjRecord', { proj, best: bestSaved })
             : t('hud.paceProj', { proj }),
-          W / 2, 110
+          W / 2, 110 + wallYOff
         );
       }
       const comboWin = this.wallComboWindow || 1.4;
@@ -47711,7 +47806,7 @@ class Game {
         const cFrac = clamp(this.comboT / comboWin, 0, 1);
         const cBarW = Math.min(160, W * 0.42);
         const cBarX = (W - cBarW) / 2;
-        const cy = showProj ? (this.combo > 1 ? 156 : 140) : (this.combo > 1 ? 142 : 126);
+        const cy = (showProj ? (this.combo > 1 ? 156 : 140) : (this.combo > 1 ? 142 : 126)) + wallYOff;
         c.font = '700 9px sans-serif';
         c.textAlign = 'left';
         c.fillStyle = 'rgba(124,245,255,.55)';
@@ -47730,9 +47825,9 @@ class Game {
       if (this.combo > 1) {
         const pulse = motionReduced() ? 1 : (1 + Math.sin(this.t * 10) * 0.1);
         c.save();
-        c.translate(W / 2, showProj ? 136 : 122);
+        c.translate(W / 2, (showProj ? 136 : 122) + wallYOff);
         c.scale(pulse, pulse);
-        c.font = '900 22px sans-serif'; c.fillStyle = '#7cf5ff';
+        c.font = compact ? '900 18px sans-serif' : '900 22px sans-serif'; c.fillStyle = '#7cf5ff';
         c.fillText(t('hud.combo', { n: this.combo }), 0, 0);
         c.font = '700 12px sans-serif'; c.fillStyle = 'rgba(124,245,255,.85)';
         c.fillText(t('hud.comboSmash', { pct: Math.min(this.combo, 12) * 4 }), 0, 18);
@@ -47740,22 +47835,23 @@ class Game {
       } else if (this.combo === 1 && this.comboT > 0) {
         c.font = '700 12px sans-serif';
         c.fillStyle = 'rgba(124,245,255,.75)';
-        c.fillText(t('hud.comboActive'), W / 2, showProj ? 126 : 114);
+        c.fillText(t('hud.comboActive'), W / 2, (showProj ? 126 : 114) + wallYOff);
       }
     } else if (this.mode === 'coinrun') {
+      const coinYOff = compact ? Math.max(0, hudLay.centerY - 42) : 0;
       const tLeft = Math.ceil(Math.max(0, this.coinTimer));
-      c.font = '900 30px sans-serif';
+      c.font = compact ? '900 24px sans-serif' : '900 30px sans-serif';
       c.fillStyle = this.coinTimer < 10 ? '#ff6b6b' : '#fff';
-      c.fillText(String(tLeft), W / 2, 42);
-      c.font = '800 18px sans-serif'; c.fillStyle = '#ffd75e';
-      c.fillText(t('hud.coins', { n: this.coinsCollected }), W / 2, 70);
+      c.fillText(String(tLeft), W / 2, 42 + coinYOff);
+      c.font = compact ? '800 15px sans-serif' : '800 18px sans-serif'; c.fillStyle = '#ffd75e';
+      c.fillText(t('hud.coins', { n: this.coinsCollected }), W / 2, 70 + coinYOff);
       c.font = '700 13px sans-serif'; c.fillStyle = 'rgba(255,255,255,.7)';
-      c.fillText(t('hud.matsRecord', { n: save.stats.matsCoinBest || 0 }), W / 2, 90);
+      c.fillText(t('hud.matsRecord', { n: save.stats.matsCoinBest || 0 }), W / 2, 90 + coinYOff);
       const pendingPet = matsPetCoinsFromRun(this.coinsCollected);
       c.fillStyle = '#ff9ad5';
-      c.fillText(t('hud.petCoins', { pending: pendingPet, wallet: petCoinsBalance() }), W / 2, 108);
+      c.fillText(t('hud.petCoins', { pending: pendingPet, wallet: petCoinsBalance() }), W / 2, 108 + coinYOff);
       c.fillStyle = 'rgba(124,245,255,.85)';
-      c.fillText(t('hud.matsHint'), W / 2, 128);
+      c.fillText(t('hud.matsHint'), W / 2, 128 + coinYOff);
     } else if (this.mode === 'versus' && this.p2) {
       const p2 = this.p2;
       const half = Math.min(260, W * 0.38);
@@ -56036,6 +56132,8 @@ function bootGame() {
       noteFailTele: notePlayerFailTele,
       cadenceBand: combatCadenceBand,
     } : null,
+    hudSafeLayout: typeof hudSafeLayout === 'function' ? hudSafeLayout : null,
+    hudPhoneCompact: typeof hudPhoneCompact === 'function' ? hudPhoneCompact : null,
     previewTop20Spawn: () => {
       try { AudioSys.init(); AudioSys.sfx('top20Spawn'); } catch (_) {}
       try { if (game && typeof game.shake === 'function') game.shake(4, 0.16); } catch (_) {}

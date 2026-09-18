@@ -30,6 +30,13 @@ must(/\.char-saga-bar button[\s\S]*min-height:\s*var\(--touch-min\)/.test(css)
   || /char-saga-bar button \{[\s\S]*min-height:var\(--touch-min\)/.test(css),
   'saga buttons should honor --touch-min');
 must(/clamp\(/.test(css), 'expected clamp() fluid type');
+must(/--hud-pause-gutter:/.test(css), 'missing --hud-pause-gutter token');
+must(/--sheet-bottom-pad:/.test(css), 'missing --sheet-bottom-pad token');
+must(/@media \(max-width: 430px\)/.test(css), 'missing phone HUD ≤430 breakpoint');
+must(/#pauseBtn \{ position:fixed;/.test(css) && !/#pauseBtn \{[^}]*position:relative/.test(css),
+  '#pauseBtn must stay position:fixed (relative pulled it onto the HP row)');
+must(/\.menu-dock \.btn\.tog[\s\S]*min-height:\s*var\(--touch-min\)/.test(css),
+  'phone dock buttons should honor --touch-min');
 
 const storage = fs.readFileSync(path.join(root, 'src/core/storage.js'), 'utf8');
 const sw = fs.readFileSync(path.join(root, 'sw.js'), 'utf8');

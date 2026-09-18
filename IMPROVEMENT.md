@@ -1,3 +1,4 @@
+| 2026-09-18 | **MEGA-MERGE #321** | Phone HUD keep-out (`hudSafeLayout` / pause gutter) onto main. Density stays #314. Retry stays #323. |
 | 2026-09-18 | **MEGA-MERGE #320** | Examinator unique P0 (first-punch, killer tip, speciesLabel) onto main after #317+#323. Retry stays #323. |
 | 2026-09-18 | **i18n tips Power-ups** | Examiner #317 sprint DONE (P3): DE/FR/ES Tips `Power-ups:` → Funde/Orbes. Versus ongemoeid. **v1.18.182 / SW v392**. Draft. |
 | 2026-09-18 | **i18n mission loanwords** | Examiner #317: DE remainder Pickups→Funde; DE/FR/ES kills/run/power-ups in mission UI. Versus ongemoeid. **v1.18.181 / SW v391**. Draft. |
@@ -15,6 +16,7 @@
 | 2026-09-18 | **EXAMINATOR FEEL** | Flappy bar on board. Unique P0 EX-022: lose retry 380ms + one Opnieuw CTA, skip gamble. Juice=#316 HUD=#314. IAP note only. **v1.18.175 / SW 385**. |
 | 2026-09-18 | **EXAMINATOR leftover** | #320 unique: EX-013 speciesLabel + locale names, EX-014 gamble t(), EX-015 FR/ES pressStart, EX-021 compact 390 FOMO (tiles tappable). Sibling EX DELEGATED. **v1.18.174 / SW 384**. |
 | 2026-09-18 | **EXAMINATOR P0** | Playtest desk+390: phone horde scale, i18n pills/wearing/summon tOr, pet follow snap, factories list XOR detail, HUD hint wrap. Living `EXAMINATOR.md`. Draft only. **v1.18.173 / SW 383**. |
+| 2026-09-18 | **mobile HUD** | Phone ~390×844: pause gutter (stars/HP/toasts), compact combat + wall/train/record stack, sheet bottoms + 44px dock. No Versus. **v1.18.173 / SW v383**. |
 | 2026-09-16 | **i18n spotcheck** | Main-spotcheck: EN YOU LOSE (niet VERLOREN); DE Hallo/Ton/Münze; FR/ES install-titel; fomo+buildings al in #299. **v1.18.169 / SW v379**. |
 | 2026-09-16 | **i18n alle talen** | Post-#283 factcheck Z→A (nl→fr→es→en→de): FOMO/fabrieken/wapens FR/ES/DE; speel.html i18n + #stepsIos; Versus ongemoeid. **v1.18.168 / SW v378**. |
 | 2026-09-14 | **i18n Z→A rebase** | #283 rebased on #273: coverage keys + FR/ES/DE overlays; polish wording wins. **v1.18.165 / SW v375**. |
