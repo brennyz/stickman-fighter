@@ -2234,19 +2234,77 @@
     .sf-splash-canvas { width: min(82vw, 720px); }
     .sf-splash-bar { width: min(52vw, 420px); }
   }
-  @media (max-height: 720px) {
+  @media (max-height: 720px) and (min-height: 521px) {
     .sf-splash.is-title .sf-splash-canvas { height: 34vh; }
     .sf-splash.is-title .sf-splash-title { margin-top: calc(32vh - 4px); }
   }
-  @media (orientation: landscape) and (max-height: 500px) {
-    .sf-splash { gap: 6px; padding-top: 8px; }
-    .sf-splash-canvas { width: min(52vw, 560px); }
-    .sf-splash-title { font-size: clamp(22px, 5.5vw, 34px); }
-    .sf-splash.is-title .sf-splash-canvas { height: 28vh; width: 100%; max-width: none; }
-    .sf-splash.is-title .sf-splash-title { margin-top: calc(26vh - 4px); font-size: clamp(22px, 5.5vw, 34px); }
+  /* P0 landscape begin: title-gate + HOME SPELEN — 844×390 / short phones.
+     Vista left (letterboxed), title + SPELEN right, clear of Android nav. */
+  @media (orientation: landscape) and (max-height: 520px) {
+    .sf-splash,
+    .sf-splash.is-title {
+      display: grid;
+      grid-template-columns: minmax(0, 1.2fr) minmax(220px, 40vw);
+      grid-template-rows: auto 1fr auto;
+      align-items: stretch;
+      justify-items: stretch;
+      justify-content: stretch;
+      gap: 8px 14px;
+      padding:
+        max(8px, env(safe-area-inset-top, 0px))
+        max(48px, env(safe-area-inset-right, 0px))
+        max(8px, env(safe-area-inset-bottom, 0px))
+        max(12px, env(safe-area-inset-left, 0px));
+      overflow: hidden;
+      box-sizing: border-box;
+    }
+    .sf-splash-canvas,
+    .sf-splash.is-title .sf-splash-canvas {
+      position: relative;
+      inset: auto;
+      top: auto;
+      left: auto;
+      right: auto;
+      grid-column: 1;
+      grid-row: 1 / -1;
+      width: 100%;
+      height: 100%;
+      max-width: none;
+      max-height: 100%;
+      aspect-ratio: auto;
+      object-fit: contain;
+      object-position: center bottom;
+      border: none;
+      box-shadow: none;
+      border-radius: 0;
+    }
+    .sf-splash-title,
+    .sf-splash.is-title .sf-splash-title {
+      grid-column: 2;
+      grid-row: 1;
+      margin-top: 0;
+      align-self: end;
+      font-size: clamp(20px, 4.2vw, 30px);
+    }
+    .sf-splash-bar,
+    .sf-splash-sub {
+      grid-column: 2;
+    }
+    .sf-title-gate {
+      grid-column: 2;
+      grid-row: 2;
+      align-self: start;
+      width: 100%;
+      max-width: 100%;
+      margin-top: 0;
+      gap: 8px;
+    }
     .sf-title-name-wrap input { min-height: 44px; font-size: 16px; }
     .sf-splash .sf-title-start,
-    .sf-splash .sf-title-continue { min-height: 48px; }
+    .sf-splash .sf-title-continue {
+      min-height: 48px;
+      width: 100%;
+    }
     .sf-title-note { display: none; }
   }
   body.reduced-motion .sf-splash { transition: none; }
@@ -3692,17 +3750,66 @@
       --ui-rail: min(78vw, 620px);
       --ui-gap: 6px;
       --type-title: clamp(22px, 5vw, 32px);
+      --sf-land-gutter-right: max(48px, env(safe-area-inset-right, 0px));
     }
     .screen {
       padding-top: max(6px, calc(env(safe-area-inset-top) + 2px));
+      padding-right: max(14px, var(--sf-land-gutter-right));
       padding-bottom: max(10px, calc(env(safe-area-inset-bottom) + 4px));
     }
     #menuScreen.menu-video-overhaul .menu-stage {
-      height: min(22dvh, 120px);
+      height: 0;
+      display: none;
+    }
+    #menuScreen.menu-video-overhaul .menu-chrome {
+      display: grid;
+      grid-template-columns: minmax(140px, 28%) minmax(0, 1fr);
+      grid-template-rows: auto auto;
+      column-gap: 12px;
+      row-gap: 6px;
+      align-items: start;
+      width: 100%;
+      max-width: 100%;
+      box-sizing: border-box;
+      padding:
+        max(6px, env(safe-area-inset-top, 0px))
+        max(48px, env(safe-area-inset-right, 0px))
+        max(8px, env(safe-area-inset-bottom, 0px))
+        max(12px, env(safe-area-inset-left, 0px));
     }
     #menuScreen.menu-video-overhaul .menu-title-glass {
-      margin-bottom: 6px;
-      padding: 4px 12px 6px;
+      grid-column: 1;
+      grid-row: 1;
+      width: 100%;
+      margin: 0;
+      padding: 6px 10px 8px;
+    }
+    #menuScreen.menu-video-overhaul .menu-landing-body {
+      grid-column: 2;
+      grid-row: 1;
+      width: 100%;
+      min-width: 0;
+    }
+    #menuScreen.menu-video-overhaul .menu-landing-footer.menu-utility-row,
+    #menuScreen.menu-video-overhaul .menu-landing-footer {
+      grid-column: 1 / -1;
+      grid-row: 2;
+    }
+    #menuScreen.menu-video-overhaul .hub-tile-featured,
+    #menuScreen.menu-video-overhaul .hub-tile-adventure {
+      min-height: 48px;
+    }
+    #menuScreen.menu-video-overhaul .menu-landing-inner,
+    #menuScreen.menu-video-overhaul .hub-tile-grid,
+    #menuScreen.menu-video-overhaul .menu-utility-row {
+      width: 100%;
+      max-width: 100%;
+    }
+    #menuScreen.menu-video-overhaul .menu-landing-footer {
+      position: static;
+    }
+    #menuScreen.menu-video-overhaul .menu-profile-bar {
+      display: none;
     }
     #menuScreen.menu-video-overhaul h1.title.arcade-logo {
       font-size: clamp(20px, 4.8vw, 28px);
@@ -5687,6 +5794,51 @@
       max(32px, calc(env(safe-area-inset-bottom, 0px) + 24px)) max(12px, env(safe-area-inset-left));
     padding-bottom: max(32px, calc(env(safe-area-inset-bottom, 0px) + 24px));
   }
+  /* Never paint Vandaag over the Begin SPELEN gate. */
+  body:has(#sfSplash.is-title) #menuScreen #fomoRitual,
+  body:has(#sfSplash:not(.is-done)) #menuScreen #fomoRitual {
+    display: none;
+  }
+  /* P0 landscape FOMO: dock Vandaag in the title column — do not cover SPELEN/Avontuur. */
+  @media (orientation: landscape) and (max-height: 520px) {
+    #menuScreen.menu-video-overhaul > #fomoRitual,
+    #menuScreen #fomoRitual {
+      align-items: stretch;
+      justify-content: flex-start;
+      padding:
+        max(8px, env(safe-area-inset-top, 0px))
+        max(48px, env(safe-area-inset-right, 0px))
+        max(12px, calc(env(safe-area-inset-bottom, 0px) + 8px))
+        max(12px, env(safe-area-inset-left, 0px));
+      pointer-events: none;
+    }
+    #menuScreen #fomoRitual .fomo-ritual-backdrop {
+      top: 0;
+      bottom: 0;
+      left: 0;
+      right: auto;
+      width: min(26%, 210px);
+      height: auto;
+      pointer-events: auto;
+      background: linear-gradient(90deg, rgba(6, 10, 22, .5) 0%, rgba(6, 10, 22, .1) 72%, transparent 100%);
+    }
+    #menuScreen #fomoRitual .fomo-ritual-sheet {
+      pointer-events: auto;
+      align-self: stretch;
+      width: min(24vw, 200px);
+      max-width: min(26%, 200px);
+      max-height: calc(100dvh - 24px);
+      margin: 0;
+      box-sizing: border-box;
+    }
+    body.fomo-open #menuScreen .menu-landing-body,
+    body.fomo-open #menuScreen .menu-game-grid {
+      visibility: visible;
+    }
+    body.fomo-open #menuScreen.menu-video-overhaul .menu-title-glass {
+      visibility: hidden;
+    }
+  }
   .fomo-ritual-title { margin-right: 48px; }
   .fomo-ritual-x {
     top: 4px;
@@ -5782,8 +5934,9 @@
       display: none;
     }
     #menuScreen.menu-video-overhaul .menu-title-glass {
-      margin: 0 auto 4px;
-      padding: 2px 10px 4px;
+      margin: 0;
+      padding: 6px 10px 8px;
+      width: 100%;
     }
     #menuScreen.menu-video-overhaul h1.title.arcade-logo {
       font-size: clamp(18px, 4vw, 24px);
@@ -5798,6 +5951,50 @@
     #menuScreen.menu-video-overhaul .hub-tile {
       min-height: 48px;
       padding: 6px 32px 6px 10px;
+    }
+    /* P0 landscape begin: title left, Play/Avontuur first in the right column. */
+    #menuScreen.menu-video-overhaul .menu-chrome {
+      display: grid;
+      grid-template-columns: minmax(140px, 28%) minmax(0, 1fr);
+      grid-template-rows: auto auto;
+      column-gap: 12px;
+      row-gap: 6px;
+      align-items: start;
+      width: 100%;
+      max-width: 100%;
+      box-sizing: border-box;
+      padding:
+        max(6px, env(safe-area-inset-top, 0px))
+        max(48px, env(safe-area-inset-right, 0px))
+        max(8px, env(safe-area-inset-bottom, 0px))
+        max(12px, env(safe-area-inset-left, 0px));
+    }
+    #menuScreen.menu-video-overhaul .menu-title-glass {
+      grid-column: 1;
+      grid-row: 1;
+    }
+    #menuScreen.menu-video-overhaul .menu-landing-body {
+      grid-column: 2;
+      grid-row: 1;
+      width: 100%;
+      min-width: 0;
+    }
+    #menuScreen.menu-video-overhaul .menu-landing-footer {
+      grid-column: 1 / -1;
+      grid-row: 2;
+    }
+    #menuScreen.menu-video-overhaul .hub-tile-featured,
+    #menuScreen.menu-video-overhaul .hub-tile-adventure {
+      min-height: 48px;
+    }
+    #menuScreen.menu-video-overhaul .menu-landing-inner,
+    #menuScreen.menu-video-overhaul .hub-tile-grid,
+    #menuScreen.menu-video-overhaul .menu-utility-row {
+      width: 100%;
+      max-width: 100%;
+    }
+    #menuScreen.menu-video-overhaul .menu-landing-footer {
+      position: static;
     }
     .menu-dock .btn.tog { min-height: 36px; font-size: 8px; padding: 4px 2px 3px; }
     #resultScreen .bigres { margin: 8px 0 4px; font-size: min(8vw, 40px); }

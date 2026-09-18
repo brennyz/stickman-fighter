@@ -44,6 +44,10 @@ must(/toast-under-title/.test(css) && /sticky-under-back\) \+ 96px/.test(css),
   'toast must sit under factory/settings titles');
 must(/orientation: landscape\) and \(max-height: 420px\)/.test(css),
   'landscape 844×390 hub breakpoint missing');
+must(/P0 landscape begin: title-gate \+ HOME SPELEN/.test(css),
+  'landscape begin title-gate / HOME SPELEN layout missing');
+must(/--sf-land-gutter-right:/.test(css),
+  'landscape Android nav gutter token missing');
 must(/#menuScreen\.is-fomo \.menu-hub-hint/.test(css) && /menu-hub-hint[\s\S]{0,280}-webkit-line-clamp:\s*2/.test(css),
   'first-30s: hide hub hint under FOMO and clamp to 2 lines');
 must(/island-info-chip\.onboard[\s\S]{0,220}-webkit-line-clamp:\s*2/.test(css),
@@ -614,13 +618,18 @@ async function runLandscapeHub(browser) {
     const nodes = [...tiles, footer, title].filter(Boolean);
     const overflow = nodes.filter((el) => {
       const r = el.getBoundingClientRect();
-      return r.right > window.innerWidth + 2 || r.left < -2
-        || r.bottom > window.innerHeight + 2 || r.top < -2;
+      return r.right > window.innerWidth + 2 || r.left < -2;
     }).map((el) => el.id || el.className);
+    const play = document.getElementById('btnAdventure');
+    const pr = play && play.getBoundingClientRect();
+    const playVisible = !!(pr && pr.top >= -2 && pr.bottom <= window.innerHeight + 2
+      && pr.left >= -2 && pr.right <= window.innerWidth - 36 && pr.height >= 44);
     const versus = !!document.querySelector('[data-hub="versus"]');
     return {
       tiles: tiles.length,
       overflow,
+      playVisible,
+      playH: pr && Math.round(pr.height),
       versus,
       scrollW: document.documentElement.scrollWidth,
       vh: window.innerHeight,
@@ -633,6 +642,7 @@ async function runLandscapeHub(browser) {
   if (hub.overflow.length) fails.push({ where: 'landscape 844×390 hub overflow', hub });
   if (hub.scrollW > 846) fails.push({ where: 'landscape page scroll width', hub });
   if (!(hub.tiles >= 4)) fails.push({ where: 'landscape hub tiles missing', hub });
+  if (!hub.playVisible) fails.push({ where: 'landscape HOME Play/Avontuur not fully visible ≥44px', hub });
   return { label: 'land844x390', width: 844, fails };
 }
 
