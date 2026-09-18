@@ -1371,13 +1371,13 @@ class Game {
       const hpB = rarityHpBonus(sp.rarity);
       try { noteRunLootDex(this.runLoot, sp, hpB); } catch (_) {}
       try {
+        // #344 first-kill juice: one discover signal. Keep banner + KO/freeze; drop toast chrome.
         this.banner(t('banner.newDex', { rar: rarityLabel(sp.rarity), name: (typeof speciesLabel === 'function' ? speciesLabel(sp) : (sp.name || m.spId)), hp: hpB }), 2.0, rar.color, 28);
       } catch (_) {}
       if (this.player) {
         this.player.maxhp += hpB;
         this.player.hp += hpB;
       }
-      try { UI.toast(t('toast.dexDiscover', { rar: rarityLabel(sp.rarity), name: (typeof speciesLabel === 'function' ? speciesLabel(sp) : (sp.name || m.spId)), hp: hpB }), 3200, { tone: 'ok' }); } catch (_) {}
     }
     if (m.spId && save.dex) {
       save.dex[m.spId] = (save.dex[m.spId] || 0) + 1;

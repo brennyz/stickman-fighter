@@ -47,6 +47,14 @@ must(/if \(dexEmpty\)/.test(ui), 'empty book must slim the 0/N summary');
 must(/btnPets[\s\S]{0,400}hub-tile-empty/.test(ui) && /btnDex[\s\S]{0,400}hub-tile-empty/.test(ui), 'HOME pets/book empty tiles missing');
 must(/combat\.ko/.test(game), 'kill pop must be one KO confirm');
 must(!/`\+\$\{xp\} XP`/.test(game), 'kill must not stack +XP floater on KO');
+const firstDex = (game.match(/if \(m\.spId && save\.dex && !save\.dex\[m\.spId\]\) \{[\s\S]*?\n    \}/) || [])[0] || '';
+must(firstDex, 'first-kill dex discover block missing');
+const firstDexBanner = /banner\.newDex/.test(firstDex);
+const firstDexToast = /toast\.dexDiscover/.test(firstDex);
+must(firstDexBanner !== firstDexToast, 'first-kill must keep banner XOR toast, not both');
+must(firstDexBanner || firstDexToast, 'first-kill must keep one discover signal');
+must(!firstDexToast, 'first-kill must drop toast chrome so KO + banner stay clean');
+must(/juiceKillSnap\(this, m\)/.test(game) && /freezeT/.test(juice), 'first-kill must keep KO freeze snap');
 must(/_hitConfirmAt/.test(storage), 'hit confirm must rate-limit');
 must(/if \(motionReduced\(\)\) return;/.test(storage) && /_hitConfirmAt/.test(storage), 'hit confirm must skip pulse under reduced-motion');
 must(/if \(!motionReduced\(\)\) c\.scale/.test(monster), 'monster death squash must skip under reduced-motion');
@@ -106,6 +114,7 @@ if (built) {
   must(/juiceResultDelayMs/.test(built) && /juiceRetryAdventure/.test(built), 'built game.js missing feel-bar retry');
   must(/juicePaintResultCtas/.test(built) && /juice\.strikeNudge/.test(built), 'built game.js missing feel-bar CTA/nudge');
   must(/function juiceKillSnap/.test(built) && /function juiceEquipCombat/.test(built), 'built game.js missing combat juice snaps');
+  must(/banner\.newDex/.test(built) && !/toast\.dexDiscover/.test(built), 'built game.js must drop first-kill dex toast');
 }
 
 console.log('SMOKE_OK juice-feel');
