@@ -20,7 +20,7 @@
     "featureBranch": "cursor/playtest-telegraphs-51fa",
     "pushBlocked": null,
     "shareUrl": "https://brennyz.github.io/stickman-fighter/speel.html",
-    "note": "20m MEGA-MERGE LIVE. #333 #325 #334 #329 #332 #331 #328 #330 #326 #327. SKIP #324. Leave #311. v1.18.190 / SW 400. speel.html. Pages ~1–3 min then Verse versie. Playtest swarm.",
+    "note": "Playtest 6/9 telegraph draft #342 on cursor/playtest-telegraphs-51fa. LIVE main still v1.18.190 / SW 400. This branch v1.18.191 / SW 401. No main.",
     "updated": "2026-09-18T16:06:11Z",
     "localMainHead": "aa80d25c5f708549af287716914c2016228a2a46",
     "remoteMainHead": "aa80d25c5f708549af287716914c2016228a2a46"
@@ -45,6 +45,11 @@
         "pr": 324,
         "title": "Tablet midband (SKIP — already in #314)",
         "skip": true
+      },
+      {
+        "pr": 342,
+        "title": "Playtest 6/9: telegraph / fair-fail findings (draft)",
+        "branch": "cursor/playtest-telegraphs-51fa"
       }
     ]
   },
