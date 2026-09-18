@@ -2023,6 +2023,7 @@ const UI = {
         : t('ui.hubStatSummonEmpty'));
       const collectSummon = document.getElementById('btnCollectSummons');
       if (collectSummon) {
+        collectSummon.classList.add('hub-tile-featured');
         collectSummon.classList.toggle('has-summons', collectSummonLeft > 0);
         collectSummon.setAttribute('data-hub-badge', tOr('ui.summonGotoChest', 'Kist'));
       }
@@ -2079,7 +2080,7 @@ const UI = {
         }
       } else cont.style.display = 'none';
     }
-    document.querySelectorAll('[data-hub]').forEach((el) => {
+    document.querySelectorAll('#menuScreen [data-hub]').forEach((el) => {
       const featured = featHub ? el.dataset.hub === featHub : el.dataset.hub === 'adventure';
       el.classList.toggle('hub-tile-featured', featured);
       if (featured) {
