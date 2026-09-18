@@ -1145,6 +1145,7 @@ function seedNlFromRuntime() {
   if (!I18N.nl.gear) I18N.nl.gear = {};
   Object.assign(I18N.nl.gear, {
     hubStat: '{n}/5',
+    hubStatEmpty: 'starter · 0 drops',
     summarySlots: '<b>{n}</b>/5',
     pillVanity: 'LOOK',
     pillStat: 'STAT',
@@ -1216,6 +1217,7 @@ function mergeI18nCatalogs() {
 const CATALOG_EN = {
   gear: {
     hubStat: '{n}/5',
+    hubStatEmpty: 'starter · 0 drops',
     summarySlots: '<b>{n}</b>/5',
     pillVanity: 'LOOK',
     pillStat: 'STAT',

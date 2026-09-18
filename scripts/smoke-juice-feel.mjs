@@ -36,6 +36,8 @@ must(/@keyframes hubReadyPulse/.test(css), 'HOME ready pulse CSS missing');
 must(/juiceGearNeedsAdventure/.test(ui) && /juice-empty-owned/.test(ui), 'gear starter-only Adventure banner missing');
 must(/juicePetsNeedTame/.test(ui) && /juiceDexNeedDiscover/.test(ui), 'pets/book empty helpers missing');
 must(/pets\.emptyOwned/.test(ui) && /dex\.emptyOwned/.test(ui), 'pets/book empty CTA missing');
+must(/dexFilterBar[\s\S]{0,220}dexEmpty \? 'none'/.test(ui), 'empty book must hide filter chips');
+must(/hubStatEmpty/.test(ui), 'starter-only gear tile must not show 5/5');
 must(/btnPets[\s\S]{0,400}hub-tile-empty/.test(ui) && /btnDex[\s\S]{0,400}hub-tile-empty/.test(ui), 'HOME pets/book empty tiles missing');
 must(/combat\.ko/.test(game), 'kill pop must be one KO confirm');
 must(!/`\+\$\{xp\} XP`/.test(game), 'kill must not stack +XP floater on KO');

@@ -2077,9 +2077,9 @@ const UI = {
       const stylesN = STYLES.filter(s => styleUnlocked(s)).length;
       setStat('hubStatStyle', t('ui.hubStatOutfits', { n: stylesN, total: STYLES.length }));
       const gearN = typeof gearEquippedCount === 'function' ? gearEquippedCount() : 0;
-      setStat('hubStatGear', typeof tOr === 'function'
-        ? tOr('gear.hubStat', '{n}/5', { n: gearN })
-        : (gearN + '/5'));
+      setStat('hubStatGear', juiceGearNeedsAdventure()
+        ? tOr('gear.hubStatEmpty', 'starter · 0 drops')
+        : (typeof tOr === 'function' ? tOr('gear.hubStat', '{n}/5', { n: gearN }) : (gearN + '/5')));
       const skillsN = skillUnlockedCount();
       const activeSk = skillById(save.skill || 'spiral_orb');
       const activeSp = equippedSuper();
@@ -3930,6 +3930,11 @@ const UI = {
   },
 
   renderDex() {
+    const dexEmpty = juiceDexNeedDiscover();
+    for (const id of ['dexFilterBar', 'dexBiomeFilterBar', 'dexTypeFilterBar', 'dexSortBar']) {
+      const bar = document.getElementById(id);
+      if (bar) bar.style.display = dexEmpty ? 'none' : '';
+    }
     const sumEl = document.getElementById('dexSummary');
     if (sumEl) {
       const totalHp = dexHpBonus();
@@ -4150,7 +4155,7 @@ const UI = {
           active: active ? SPECIES[active.speciesId].name : t('ui.petNone'),
           wallet,
         }) +
-        (petChips ? `<div style="margin-top:6px;line-height:1.7">${petChips}</div>` : '') +
+        ((tamed > 0 && petChips) ? `<div style="margin-top:6px;line-height:1.7">${petChips}</div>` : '') +
         `<div style="margin-top:6px;font-size:12px;opacity:.85">${t('ui.petCoinTip')}</div>`;
     }
     const list = document.getElementById('petList');

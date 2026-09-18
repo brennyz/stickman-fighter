@@ -886,6 +886,7 @@ const CATALOG_DE_CHROME = {
     errLoadHelp: 'Tipps laden fehlgeschlagen',
   },
   gear: {
+    hubStatEmpty: 'Starter · 0 Drops',
     filterAll: 'Alles',
     filterOwned: 'Deins',
     filterAria: 'Filter',

@@ -193,8 +193,8 @@ async function run() {
         return { ok: false, why: 'vanity wrap must be cosmetic without stats' };
       }
       const hub = document.getElementById('hubStatGear');
-      if (hub && hub.textContent && !/\/5\b/.test(hub.textContent)) {
-        return { ok: false, why: 'hub tile must show equippedCount/5', text: hub.textContent };
+      if (hub && hub.textContent && !/\/5\b/.test(hub.textContent) && !/0 drops|starter/i.test(hub.textContent)) {
+        return { ok: false, why: 'hub tile must show equippedCount/5 or starter-empty', text: hub.textContent };
       }
 
       const already = gearEquipState('head_wrap_cloth');
