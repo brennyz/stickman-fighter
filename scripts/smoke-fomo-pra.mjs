@@ -70,7 +70,7 @@ const css = fs.readFileSync(path.join(root, 'styles/main.css'), 'utf8');
 if (/fomo-ritual-sheet[\s\S]{0,220}max-height:\s*min\(78vh/.test(css)) {
   fail('EX-021: Vandaag sheet still 78vh — covers HOME on 390px');
 }
-if (!/fomo-ritual-sheet[\s\S]{0,280}max-height:\s*min\(4[48]vh/.test(css)) {
+if (!/fomo-ritual-sheet[\s\S]{0,280}max-height:\s*min\(4[048]vh/.test(css)) {
   fail('EX-021: Vandaag sheet must be a compact bottom sheet (≤48vh)');
 }
 if (!/fomo-ritual-head/.test(html) || !/fomo-ritual-head/.test(css)) {

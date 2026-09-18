@@ -46,6 +46,7 @@ must(/tik een melding weg/.test(catalog), 'NL welcome should mention tap-to-dism
 
 must(/toast-ok/.test(css) && /toast-danger/.test(css), 'toast tone CSS missing');
 must(/body\.is-playing #toastHost/.test(css), 'play-mode toast placement missing');
+must(/body:not\(\.is-playing\) #toastHost[\s\S]{0,160}bottom:/.test(css), 'HOME toasts must dock at the bottom');
 must(/body:not\(\.is-playing\)\.sf-sub-screen #toastHost/.test(css), 'sub-screen toast must sit below .head');
 must(/body\.fomo-ritual-open #toastHost/.test(css), 'FOMO-open toast placement missing');
 must(/pointer-events:\s*auto/.test(css.match(/\.toast \{[\s\S]*?\}/)?.[0] || ''), 'toast must be tappable');

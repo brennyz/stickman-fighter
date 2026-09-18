@@ -2235,6 +2235,8 @@ const UI = {
       this.hideFomoRitual();
       return;
     }
+    el.hidden = false;
+    try { document.body.classList.add('fomo-ritual-open'); } catch (_) {}
     const rows = document.getElementById('fomoRitualRows');
     const title = document.getElementById('fomoRitualTitle');
     const reset = document.getElementById('fomoRitualReset');
