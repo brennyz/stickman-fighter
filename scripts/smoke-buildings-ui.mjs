@@ -280,8 +280,8 @@ async function runBrowser() {
         if (typeof persist === 'function') persist();
       }
       if (typeof UI.buildingsShowList === 'function') UI.buildingsShowList();
+      UI._buildingsCollectBusy = null;
       const collectAllBtn = document.querySelector('[data-buildings-collect-all], #btnBuildingsCollectAll');
-      const collectAllOn = !!(collectAllBtn && !(collectAllBtn.closest('#buildingsCollectAll') || {}).hidden);
       const wrapAll = document.getElementById('buildingsCollectAll');
       const collectAllShown = !!(wrapAll && !wrapAll.hidden && collectAllBtn);
       const spark0 = (typeof buildingWallet === 'function') ? Number(buildingWallet('spark') || 0) : 0;
@@ -290,9 +290,10 @@ async function runBrowser() {
       const spark1 = (typeof buildingWallet === 'function') ? Number(buildingWallet('spark') || 0) : 0;
       const glue1 = (typeof buildingWallet === 'function') ? Number(buildingWallet('glue') || 0) : 0;
       const collectAllOk = spark1 > spark0 && glue1 > glue0;
-      const samplePill = document.querySelector('[data-buildings-collect]');
-      const tipAttr = (samplePill && samplePill.getAttribute('title')) || '';
-      const hasOfflineTip = /8u|8h/.test(tipAttr);
+      const samplePill = document.querySelector('[data-factory-id="stick_lighter"] [data-buildings-collect]')
+        || document.querySelector('[data-buildings-collect]');
+      const tipAttr = (samplePill && (samplePill.getAttribute('title') || samplePill.getAttribute('aria-label'))) || '';
+      const hasOfflineTip = /8u|8h|offline/i.test(tipAttr);
       if (typeof UI.paintBuildingsPillTip === 'function' && samplePill) {
         UI.paintBuildingsPillTip(samplePill, tipAttr || 'Max 8u offline · daarna VOL');
       }
@@ -320,6 +321,7 @@ async function runBrowser() {
         if (typeof persist === 'function') persist();
       }
       if (typeof UI.renderBuildings === 'function') UI.renderBuildings();
+      UI._buildingsCollectBusy = null;
       const sparkWalk0 = (typeof buildingWallet === 'function') ? Number(buildingWallet('spark') || 0) : 0;
       if (typeof UI.doBuildingCollect === 'function') UI.doBuildingCollect('stick_lighter');
       const sparkWalk1 = (typeof buildingWallet === 'function') ? Number(buildingWallet('spark') || 0) : 0;
