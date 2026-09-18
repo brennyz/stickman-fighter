@@ -4834,14 +4834,30 @@
       min-height: max(48px, var(--touch-min));
       padding: 8px 14px 8px 10px;
     }
-    #gearScreen .gear-loadout { gap: 8px; }
+    #gearScreen .gear-loadout {
+      display: grid;
+      grid-template-columns: minmax(120px, 38vw) minmax(0, 1fr);
+      grid-template-areas:
+        "hero slots"
+        "hero aside"
+        "hero unequip";
+      column-gap: 8px;
+      row-gap: 6px;
+      align-items: start;
+    }
+    #gearScreen .gear-hero { grid-area: hero; }
+    #gearScreen #gearSlotList { grid-area: slots; }
+    #gearScreen #gearWeaponAside { grid-area: aside; }
+    #gearScreen #gearUnequipAll { grid-area: unequip; margin: 0; }
     #gearScreen .gear-slot-list { gap: 6px; }
     #gearScreen .gear-slot-card.hub-tile,
     #gearScreen .gear-slot-card {
       min-height: max(48px, var(--touch-min));
-      padding: 8px 12px;
+      padding: 8px 10px;
     }
-    #gearScreen .gear-unequip-all { margin-top: 4px; }
+    #gearScreen .gear-slot-title { font-size: 14px; -webkit-line-clamp: 1; }
+    #gearScreen .gear-slot-sub { -webkit-line-clamp: 1; }
+    #gearScreen .gear-unequip-all { margin-top: 0; }
   }
   @media (max-width: 380px) {
     .gear-doll-canvas { width: min(48vw, 160px); height: min(44vw, 172px); max-height: 172px; }
