@@ -3742,19 +3742,11 @@
   body.big-touch #buildingsScreen .buildings-wallet-chip {
     min-height: 36px;
   }
-  @media (min-width: 720px) and (orientation: landscape) {
-    #buildingsScreen .buildings-body {
-      width: min(94vw, 860px);
-      display: grid;
-      grid-template-columns: minmax(280px, 1fr) minmax(0, 1.1fr);
-      align-items: start;
-    }
-    #buildingsScreen .buildings-wallet { width: min(94vw, 860px); }
-    #buildingsScreen .buildings-detail { order: 0; display: flex; }
-    #buildingsScreen .buildings-list { order: 1; display: flex; }
-    #buildingsScreen[data-buildings-pane="list"] #buildingsDetail,
-    #buildingsScreen[data-buildings-pane="list"] .buildings-detail { display: flex; }
-    #buildingsScreen[data-buildings-pane="detail"] #buildingsOverview { display: block; }
-    #buildingsScreen[data-buildings-pane="detail"] .buildings-list { display: flex; }
+  @media (min-width: 720px) {
+    #buildingsScreen .buildings-body { width: min(94vw, 520px); }
+    #buildingsWallet.buildings-wallet,
+    #buildingsScreen .buildings-wallet { width: min(92vw, 520px); }
+    #buildingsOverview { width: min(92vw, 520px); }
+    #buildingsDetail.buildings-detail { width: min(92vw, 520px); }
   }
 
