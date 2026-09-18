@@ -43,7 +43,7 @@
       "id": "w-20260918T122400",
       "from": "user",
       "text": "WORKER lane: MOBILE SAFE / HUD. Combat + menu HUD crowding on phone: touch targets, margins, overlapping bars, record/start controls if any, sheet bottoms. Make ~390×844 playable without covering critical info. No Versus. Draft PR only. speel.html.",
-      "status": "in-progress",
+      "status": "done-in-code",
       "updated": "2026-09-18",
       "notes": "Phone HUD keep-out: pause gutter, compact combat stack, sheet bottoms, 44px dock."
     },
@@ -1066,6 +1066,10 @@
   ],
   "sessionLog": [
     {
+      "at": "2026-09-18T13:46:08Z",
+      "summary": "Phone HUD keep-out ~390×844: pause gutter + fixed pauseBtn, compact combat/wall/train/record stack, sheet bottoms, 44px dock. Draft PR #321. Versus untouched. speel.html."
+    },
+    {
       "at": "2026-09-16T12:33:04Z",
       "summary": "Mega-merge leftover GitHub PRs #297 #300 #302 #307 #308 #309 closed — content already on origin/main 0044b2e (v1.18.172 / SW 382). Pages live."
     },
@@ -1160,10 +1164,6 @@
     {
       "at": "2026-09-14T12:44:05Z",
       "summary": "Toast-wachtrij: één tegelijk, Android Chrome/TWA zelfde HTML onder statusbalk · v1.18.156 / SW 366"
-    },
-    {
-      "at": "2026-09-14T12:41:28Z",
-      "summary": "Start toast-wachtrij: één tegelijk, Android Chrome/TWA"
     }
   ],
   "implementedFeaturesSummary": "d18 char select deel 1+2 (v1.11.1-2); Mats coinrun + shuriken mik/vliegers + anti-spam (v1.12.0); speel.html (v1.12.2+). Zie HANDOFF-ZOEKINDEX.md en improvement-d20-bag.json userFeatureLog.",
