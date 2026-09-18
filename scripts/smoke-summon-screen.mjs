@@ -710,6 +710,10 @@ async function run() {
       try { if (typeof syncA11yClasses === 'function') syncA11yClasses(); } catch (_) {}
       UI.finishSummonReveal();
       UI.goMenu();
+      const splash = document.getElementById('sfSplash');
+      if (splash) { splash.hidden = true; splash.style.display = 'none'; }
+      const fomo = document.getElementById('fomoRitual');
+      if (fomo) fomo.hidden = true;
       UI.openSummonHub();
       UI.renderSummon();
       const btn = document.getElementById('btnChestPull');

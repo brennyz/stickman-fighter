@@ -5877,10 +5877,10 @@
       display: none;
     }
     #summonScreen .summon-stage {
-      max-height: min(42vh, 160px);
+      max-height: min(36vh, 140px);
       aspect-ratio: 16 / 9;
       flex: 1 1 auto;
-      min-height: 96px;
+      min-height: 88px;
     }
     #summonScreen .summon-actions {
       flex: 0 0 auto;
@@ -5889,6 +5889,7 @@
       overflow: visible;
       margin: 0;
       width: 100%;
+      padding-bottom: 2px;
     }
     #summonScreen .summon-pull-btn,
     #summonScreen .summon-actions .btn,
@@ -5898,16 +5899,26 @@
       max-width: none;
     }
     #summonScreen .summon-pull-btn,
-    #summonScreen .summon-actions .summon-pull-btn {
+    #summonScreen .summon-actions .summon-pull-btn,
+    #summonScreen .summon-actions .btn.summon-pull-btn {
       min-height: 48px;
-      height: auto;
+      max-height: 52px;
+      height: 52px;
+      margin: 0;
+      padding: 6px 12px;
       font-size: 16px;
       box-shadow: 0 3px 0 #7a4a10, 0 6px 12px rgba(0,0,0,.3);
       width: 100%;
     }
+    #summonScreen .summon-pull-btn .ico {
+      width: 28px;
+      height: 28px;
+    }
+    #summonScreen .summon-pull-btn small { display: none; }
     #summonScreen .summon-pull-btn > div {
       white-space: nowrap;
       overflow: visible;
+      line-height: 1.15;
     }
     #summonScreen .summon-cancel-row { margin: 0; }
     #summonScreen .summon-card-canvas {
