@@ -1,0 +1,635 @@
+{
+  "at": "2026-09-18T16:17:17.747Z",
+  "build": "c9a29fc v1.18.190 SW400",
+  "versus": "retired",
+  "views": {
+    "tab834": {
+      "view": {
+        "id": "tab834",
+        "width": 834,
+        "height": 1194,
+        "isMobile": true,
+        "isLandscape": false
+      },
+      "seed": {
+        "ok": true,
+        "vw": 834,
+        "vh": 1194
+      },
+      "shots": {
+        "home": "docs/playtest-meta-390/tab834-vet-00-home.png",
+        "factories": "docs/playtest-meta-390/tab834-vet-10-factories.png",
+        "factoriesDetail": "docs/playtest-meta-390/tab834-vet-11-factories-detail.png",
+        "factoriesSheet": "docs/playtest-meta-390/tab834-vet-12-factories-sheet.png",
+        "gear": "docs/playtest-meta-390/tab834-vet-20-gear.png",
+        "gearSlot": "docs/playtest-meta-390/tab834-vet-21-gear-slot.png",
+        "pets": "docs/playtest-meta-390/tab834-vet-30-pets.png",
+        "petsDetail": "docs/playtest-meta-390/tab834-vet-31-pets-detail.png",
+        "summons": "docs/playtest-meta-390/tab834-vet-40-summons.png",
+        "summonsPull": "docs/playtest-meta-390/tab834-vet-41-summons-pull.png"
+      },
+      "screens": {
+        "home": {
+          "scan": {
+            "active": true,
+            "scrollH": 1194,
+            "clientH": 1194,
+            "vh": 1194,
+            "vw": 834,
+            "scrollNeed": false,
+            "overflow": [],
+            "vs": false
+          },
+          "tiles": [
+            {
+              "id": "btnBuildings",
+              "y": null,
+              "h": null,
+              "text": null
+            },
+            {
+              "id": "btnGearHome",
+              "y": null,
+              "h": null,
+              "text": null
+            },
+            {
+              "id": "btnPetsHome",
+              "y": null,
+              "h": null,
+              "text": null
+            },
+            {
+              "id": "btnSummons",
+              "y": null,
+              "h": null,
+              "text": null
+            }
+          ]
+        },
+        "factories": {
+          "scan": {
+            "active": true,
+            "scrollH": 1194,
+            "clientH": 1194,
+            "vh": 1194,
+            "vw": 834,
+            "scrollNeed": false,
+            "overflow": [],
+            "vs": false
+          },
+          "wallet": {
+            "id": "buildingsWallet",
+            "y": 175,
+            "w": 480,
+            "h": 71,
+            "bottom": 246,
+            "text": "PC 640 VONKEN 24 +12/u LIJM 8 +7/u SNIPPERS 3 STOOM 0 ECHO 0"
+          },
+          "cardN": 5,
+          "first": "Lv 3AanstekerVonken 12/uur · VonkspoorOogst 36Vonken",
+          "detail": {
+            "scan": {
+              "active": true,
+              "scrollH": 1194,
+              "clientH": 1194,
+              "vh": 1194,
+              "vw": 834,
+              "scrollNeed": false,
+              "overflow": [],
+              "vs": false
+            },
+            "name": "Stok-Aansteker Fabriek Lv 3",
+            "upgrade": {
+              "id": "btnBuildingUpgrade",
+              "y": 627,
+              "w": 454,
+              "h": 102,
+              "bottom": 729,
+              "text": "Opwaarderen… Mis 6 Vonken — speel of oogst eerst"
+            }
+          },
+          "sheet": {
+            "open": true,
+            "panel": {
+              "id": "",
+              "y": 795,
+              "w": 420,
+              "h": 377,
+              "bottom": 1172,
+              "text": "Aansteker opwaarderen Lv 4: Vonken 15/uur · 120 Opwaarderen naar Lv 4? 70 PC 30 Vonken Mis 6 Vonken — speel of oogst eer"
+            },
+            "overflow": false
+          }
+        },
+        "gear": {
+          "scan": {
+            "active": true,
+            "scrollH": 3843,
+            "clientH": 1194,
+            "vh": 1194,
+            "vw": 834,
+            "scrollNeed": true,
+            "overflow": [],
+            "vs": false
+          },
+          "doll": {
+            "id": "gearDollCanvas",
+            "y": -982,
+            "w": 220,
+            "h": 260,
+            "bottom": -722,
+            "text": ""
+          },
+          "tools": {
+            "id": "gearSheetTools",
+            "y": 203,
+            "w": 420,
+            "h": 252,
+            "bottom": 455,
+            "text": "Alles27 Look15 Stats12 Slot13 Van jou27 Alle gewoon ongewoon zeldzaam episch legendarisch mythisch nachtmerrie hel 27/27"
+          },
+          "slots": [
+            {
+              "slot": "head",
+              "y": 626
+            },
+            {
+              "slot": "chest",
+              "y": 720
+            },
+            {
+              "slot": "hands",
+              "y": 814
+            },
+            {
+              "slot": "legs",
+              "y": 908
+            },
+            {
+              "slot": "back",
+              "y": 1002
+            }
+          ],
+          "layout": "none",
+          "after": {
+            "scan": {
+              "active": true,
+              "scrollH": 3843,
+              "clientH": 1194,
+              "vh": 1194,
+              "vw": 834,
+              "scrollNeed": true,
+              "overflow": [],
+              "vs": false
+            },
+            "rows": 27,
+            "pickerH": 2044,
+            "count": "27/27 in Hoofd"
+          }
+        },
+        "pets": {
+          "scan": {
+            "active": true,
+            "scrollH": 1320,
+            "clientH": 1194,
+            "vh": 1194,
+            "vw": 834,
+            "scrollNeed": true,
+            "overflow": [],
+            "vs": false
+          },
+          "wallet": {
+            "id": "petsWallet",
+            "y": 247,
+            "w": 480,
+            "h": 52,
+            "bottom": 299,
+            "text": "PC 640 DEX 3/12 EI klaar"
+          },
+          "hero": {
+            "id": "petsHero",
+            "y": 307,
+            "w": 480,
+            "h": 110,
+            "bottom": 417,
+            "text": "Slymo Spring-assist — extra schade Nu +3% schade"
+          },
+          "next": {
+            "id": "petsNext",
+            "y": 425,
+            "w": 480,
+            "h": 46,
+            "bottom": 471,
+            "text": "Dag-ei klaar"
+          },
+          "crack": {
+            "id": "eggCrackBtn",
+            "y": 479,
+            "w": 480,
+            "h": 48,
+            "bottom": 527,
+            "text": "Dag-ei openen Gratis arcade-pull"
+          },
+          "tabs": {
+            "id": "petTabBar",
+            "y": 537,
+            "w": 480,
+            "h": 58,
+            "bottom": 595,
+            "text": "Dex · 3/12 Ei arcade · 0/12"
+          },
+          "cards": 12,
+          "cardsOnFold": 5,
+          "firstCardY": 0,
+          "detail": {
+            "scan": {
+              "active": true,
+              "scrollH": 1320,
+              "clientH": 1194,
+              "vh": 1194,
+              "vw": 834,
+              "scrollNeed": true,
+              "overflow": [],
+              "vs": false
+            },
+            "cta": {
+              "id": "",
+              "y": 982,
+              "w": 454,
+              "h": 62,
+              "bottom": 1044,
+              "text": "Uitzetten"
+            },
+            "text": "← Overzicht Slymo Gewoon WAT DOET DIT? Spring-assist — extra schade Nu +3% schade Assist · cooldown 4.6s Getemd · assist in avontuur Uitzetten"
+          }
+        },
+        "summons": {
+          "scan": {
+            "active": true,
+            "scrollH": 1194,
+            "clientH": 1194,
+            "vh": 1194,
+            "vw": 834,
+            "scrollNeed": false,
+            "overflow": [],
+            "vs": false
+          },
+          "stage": {
+            "id": "summonStage",
+            "y": 259,
+            "w": 604,
+            "h": 340,
+            "bottom": 598,
+            "text": ""
+          },
+          "cta": {
+            "id": "btnChestPull",
+            "y": 616,
+            "w": 604,
+            "h": 108,
+            "bottom": 724,
+            "text": "Open kist 10 over"
+          },
+          "quota": "10/10",
+          "ctaBelow": false,
+          "ratio": 3.1,
+          "pull": {
+            "pullMs": 1610,
+            "after": {
+              "quota": "9/10",
+              "card": {
+                "id": "summonCenterCard",
+                "y": 243,
+                "w": 220,
+                "h": 236,
+                "bottom": 478,
+                "text": "EI Ei · Mosbal GEWOON"
+              },
+              "log": "Ei · Mosbal · Gewoon"
+            }
+          }
+        }
+      },
+      "version": {
+        "app": "1.18.190",
+        "sw": 400,
+        "versus": false
+      }
+    },
+    "land844": {
+      "view": {
+        "id": "land844",
+        "width": 844,
+        "height": 390,
+        "isMobile": true,
+        "isLandscape": true
+      },
+      "seed": {
+        "ok": true,
+        "vw": 844,
+        "vh": 390
+      },
+      "shots": {
+        "home": "docs/playtest-meta-390/land844-vet-00-home.png",
+        "factories": "docs/playtest-meta-390/land844-vet-10-factories.png",
+        "factoriesDetail": "docs/playtest-meta-390/land844-vet-11-factories-detail.png",
+        "factoriesSheet": "docs/playtest-meta-390/land844-vet-12-factories-sheet.png",
+        "gear": "docs/playtest-meta-390/land844-vet-20-gear.png",
+        "gearSlot": "docs/playtest-meta-390/land844-vet-21-gear-slot.png",
+        "pets": "docs/playtest-meta-390/land844-vet-30-pets.png",
+        "petsDetail": "docs/playtest-meta-390/land844-vet-31-pets-detail.png",
+        "summons": "docs/playtest-meta-390/land844-vet-40-summons.png",
+        "summonsPull": "docs/playtest-meta-390/land844-vet-41-summons-pull.png"
+      },
+      "screens": {
+        "home": {
+          "scan": {
+            "active": true,
+            "scrollH": 498,
+            "clientH": 390,
+            "vh": 390,
+            "vw": 844,
+            "scrollNeed": true,
+            "overflow": [],
+            "vs": false
+          },
+          "tiles": [
+            {
+              "id": "btnBuildings",
+              "y": 157,
+              "h": 62,
+              "text": "Fabrieken"
+            },
+            {
+              "id": "btnGearHome",
+              "y": 157,
+              "h": 62,
+              "text": "Uitrusting"
+            },
+            {
+              "id": "btnPetsHome",
+              "y": 231,
+              "h": 62,
+              "text": "Pets"
+            },
+            {
+              "id": "btnSummons",
+              "y": 231,
+              "h": 62,
+              "text": "Oproepen"
+            }
+          ]
+        },
+        "factories": {
+          "scan": {
+            "active": true,
+            "scrollH": 949,
+            "clientH": 390,
+            "vh": 390,
+            "vw": 844,
+            "scrollNeed": true,
+            "overflow": [],
+            "vs": false
+          },
+          "wallet": {
+            "id": "buildingsWallet",
+            "y": 134,
+            "w": 520,
+            "h": 71,
+            "bottom": 205,
+            "text": "PC 640 VONKEN 24 +12/u LIJM 8 +7/u SNIPPERS 3 STOOM 0 ECHO 0"
+          },
+          "cardN": 5,
+          "first": "Lv 3AanstekerVonken 12/uur · VonkspoorOogst 36Vonken",
+          "detail": {
+            "scan": {
+              "active": true,
+              "scrollH": 949,
+              "clientH": 390,
+              "vh": 390,
+              "vw": 844,
+              "scrollNeed": true,
+              "overflow": [],
+              "vs": false
+            },
+            "name": "Stok-Aansteker Fabriek Lv 3",
+            "upgrade": {
+              "id": "btnBuildingUpgrade",
+              "y": 587,
+              "w": 494,
+              "h": 88,
+              "bottom": 674,
+              "text": "Opwaarderen… Mis 6 Vonken — speel of oogst eerst"
+            }
+          },
+          "sheet": {
+            "open": true,
+            "panel": {
+              "id": "",
+              "y": 65,
+              "w": 420,
+              "h": 304,
+              "bottom": 369,
+              "text": "Aansteker opwaarderen Lv 4: Vonken 15/uur · 120 Opwaarderen naar Lv 4? 70 PC 30 Vonken Mis 6 Vonken — speel of oogst eer"
+            },
+            "overflow": false
+          }
+        },
+        "gear": {
+          "scan": {
+            "active": true,
+            "scrollH": 3804,
+            "clientH": 390,
+            "vh": 390,
+            "vw": 844,
+            "scrollNeed": true,
+            "overflow": [],
+            "vs": false
+          },
+          "doll": {
+            "id": "gearDollCanvas",
+            "y": -958,
+            "w": 220,
+            "h": 260,
+            "bottom": -698,
+            "text": ""
+          },
+          "tools": {
+            "id": "gearSheetTools",
+            "y": 204,
+            "w": 420,
+            "h": 252,
+            "bottom": 456,
+            "text": "Alles27 Look15 Stats12 Slot13 Van jou27 Alle gewoon ongewoon zeldzaam episch legendarisch mythisch nachtmerrie hel 27/27"
+          },
+          "slots": [
+            {
+              "slot": "head",
+              "y": 594
+            },
+            {
+              "slot": "chest",
+              "y": 688
+            },
+            {
+              "slot": "hands",
+              "y": 782
+            },
+            {
+              "slot": "legs",
+              "y": 876
+            },
+            {
+              "slot": "back",
+              "y": 970
+            }
+          ],
+          "layout": "none",
+          "after": {
+            "scan": {
+              "active": true,
+              "scrollH": 3804,
+              "clientH": 390,
+              "vh": 390,
+              "vw": 844,
+              "scrollNeed": true,
+              "overflow": [],
+              "vs": false
+            },
+            "rows": 27,
+            "pickerH": 2044,
+            "count": "27/27 in Hoofd"
+          }
+        },
+        "pets": {
+          "scan": {
+            "active": true,
+            "scrollH": 2311,
+            "clientH": 390,
+            "vh": 390,
+            "vw": 844,
+            "scrollNeed": true,
+            "overflow": [],
+            "vs": false
+          },
+          "wallet": {
+            "id": "petsWallet",
+            "y": 233,
+            "w": 793,
+            "h": 52,
+            "bottom": 285,
+            "text": "PC 640 DEX 3/12 EI klaar"
+          },
+          "hero": {
+            "id": "petsHero",
+            "y": 293,
+            "w": 793,
+            "h": 110,
+            "bottom": 403,
+            "text": "Slymo Spring-assist — extra schade Nu +3% schade"
+          },
+          "next": {
+            "id": "petsNext",
+            "y": 411,
+            "w": 793,
+            "h": 46,
+            "bottom": 457,
+            "text": "Dag-ei klaar"
+          },
+          "crack": {
+            "id": "eggCrackBtn",
+            "y": 465,
+            "w": 560,
+            "h": 48,
+            "bottom": 513,
+            "text": "Dag-ei openen Gratis arcade-pull"
+          },
+          "tabs": {
+            "id": "petTabBar",
+            "y": 523,
+            "w": 782,
+            "h": 58,
+            "bottom": 581,
+            "text": "Dex · 3/12 Ei arcade · 1/12"
+          },
+          "cards": 12,
+          "cardsOnFold": 0,
+          "firstCardY": 0,
+          "detail": {
+            "scan": {
+              "active": true,
+              "scrollH": 2311,
+              "clientH": 390,
+              "vh": 390,
+              "vw": 844,
+              "scrollNeed": true,
+              "overflow": [],
+              "vs": false
+            },
+            "cta": {
+              "id": "",
+              "y": 964,
+              "w": 338,
+              "h": 52,
+              "bottom": 1016,
+              "text": "Uitzetten"
+            },
+            "text": "← Overzicht Slymo Gewoon WAT DOET DIT? Spring-assist — extra schade Nu +3% schade Assist · cooldown 4.6s Getemd · assist in avontuur Uitzetten"
+          }
+        },
+        "summons": {
+          "scan": {
+            "active": true,
+            "scrollH": 390,
+            "clientH": 390,
+            "vh": 390,
+            "vw": 844,
+            "scrollNeed": false,
+            "overflow": [],
+            "vs": false
+          },
+          "stage": {
+            "id": "summonStage",
+            "y": 179,
+            "w": 584,
+            "h": 133,
+            "bottom": 311,
+            "text": ""
+          },
+          "cta": {
+            "id": "btnChestPull",
+            "y": 326,
+            "w": 584,
+            "h": 100,
+            "bottom": 426,
+            "text": "Open kist 9 over"
+          },
+          "quota": "9/10",
+          "ctaBelow": false,
+          "ratio": 1.3,
+          "pull": {
+            "pullMs": 1614,
+            "after": {
+              "quota": "",
+              "card": {
+                "id": "summonCenterCard",
+                "y": 78,
+                "w": 280,
+                "h": 234,
+                "bottom": 312,
+                "text": "PET COINS +19 pet coins ONGEWOON"
+              },
+              "log": ""
+            }
+          }
+        }
+      },
+      "version": {
+        "app": "1.18.190",
+        "sw": 400,
+        "versus": false
+      }
+    }
+  }
+}
