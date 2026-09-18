@@ -3753,5 +3753,33 @@
     .summon-where { display: none; }
     .summon-pull-btn { min-height: 52px; }
     .summon-log { max-height: 72px; overflow: auto; }
+    /* EX-021: compact FOMO so HOME tiles stay tappable. #313 owns HOME-only / fomo-open. */
+    #menuScreen #fomoRitual {
+      align-items: flex-end;
+      padding: 8px 10px calc(10px + env(safe-area-inset-bottom, 0px));
+      pointer-events: none;
+    }
+    #menuScreen #fomoRitual .fomo-ritual-backdrop {
+      top: auto;
+      height: 52%;
+      background: linear-gradient(to top, rgba(6, 10, 22, .55), rgba(6, 10, 22, .08));
+      pointer-events: auto;
+    }
+    #menuScreen #fomoRitual .fomo-ritual-sheet {
+      pointer-events: auto;
+      max-height: min(44vh, 340px);
+      padding: 10px 12px 10px;
+      width: min(96vw, 390px);
+    }
+    #menuScreen #fomoRitual .fomo-ritual-title { font-size: 16px; margin: 0 36px 6px 0; }
+    #menuScreen #fomoRitual .fomo-ritual-rows { gap: 5px; margin-bottom: 6px; }
+    #menuScreen #fomoRitual .fomo-ritual-row { padding: 6px 8px; font-size: 12px; }
+    #menuScreen #fomoRitual .fomo-ritual-reset { margin: 0 0 8px; font-size: 11px; }
+    #menuScreen #fomoRitual .fomo-ritual-x {
+      width: 40px; height: 40px;
+      background: rgba(255,255,255,.08);
+      border-radius: 10px;
+      font-size: 22px;
+    }
   }
 

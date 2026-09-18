@@ -394,7 +394,8 @@ function spawnTop20ForTest(game, spId) {
   if (game.monsters) game.monsters.push(mon);
   try {
     if (typeof game.floater === 'function' && mon.sp && mon.sp.name) {
-      game.floater(mon.x, mon.y - mon.size - 18, mon.sp.name, '#ffd75e', 14);
+      const nm = (typeof speciesLabel === 'function') ? speciesLabel(mon.sp) : mon.sp.name;
+      game.floater(mon.x, mon.y - mon.size - 18, nm, '#ffd75e', 14);
     }
   } catch (_) {}
   return mon;
@@ -1185,16 +1186,18 @@ function gambleRollToastLine(g) {
 
 function gambleOutcomeLabel(g) {
   if (!g) return '';
-  if (g.outcome === 'superBoss') return 'Pech! Super-baas in een willekeurige golf';
-  if (g.outcome === 'miniBoss') return 'Risico: extra elite-super in een golf';
-  if (g.outcome === 'superAlly') {
-    const a = GAMBLE_ALLIES[g.allyId];
-    return `Jackpot! Super-bondgenoot: ${a ? a.name : 'Sage'} (sterk buff)`;
+  const out = g.outcome || 'neutral';
+  const a = (typeof GAMBLE_ALLIES !== 'undefined') ? GAMBLE_ALLIES[g.allyId] : null;
+  const name = a ? a.name : 'Sage';
+  /* EX-014: locale via gamble.* — do not call gambleOutcomeLabelFromKey (it falls back here). */
+  if (typeof t === 'function') {
+    const v = t('gamble.' + out, { name });
+    if (v && v !== ('gamble.' + out)) return v;
   }
-  if (g.outcome === 'ally') {
-    const a = GAMBLE_ALLIES[g.allyId];
-    return `Geluk! Bondgenoot: ${a ? a.name : 'Sage'} (buff dit level)`;
-  }
+  if (out === 'superBoss') return 'Pech! Super-baas in een willekeurige golf';
+  if (out === 'miniBoss') return 'Risico: extra elite-super in een golf';
+  if (out === 'superAlly') return `Jackpot! Super-bondgenoot: ${name} (sterk buff)`;
+  if (out === 'ally') return `Geluk! Bondgenoot: ${name} (buff dit level)`;
   return 'Neutraal — gewoon level (geen extra gok-effect)';
 }
 
@@ -1202,7 +1205,9 @@ function gambleOutcomeLabel(g) {
 function triggerSpecialEnemyIntro(game, monster, kind) {
   if (!game || !monster) return;
   const tier = kind || (monster.superBoss ? 'superBoss' : (monster.bossCore ? 'boss' : (monster.elite ? 'elite' : 'boss')));
-  const name = (monster.sp && monster.sp.name) || 'Baas';
+  const name = (typeof speciesLabel === 'function' && monster.sp)
+    ? speciesLabel(monster.sp)
+    : ((monster.sp && monster.sp.name) || 'Baas');
   const rar = rarityOf(monster.sp?.rarity || 'rare');
   const bigBoss = !!(monster.bossCore || monster.superBoss || tier === 'superBoss');
   const colossal = !!monster.colossal;

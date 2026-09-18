@@ -1140,13 +1140,13 @@ class Game {
       const hpB = rarityHpBonus(sp.rarity);
       try { noteRunLootDex(this.runLoot, sp, hpB); } catch (_) {}
       try {
-        this.banner(t('banner.newDex', { rar: rarityLabel(sp.rarity), name: sp.name || m.spId, hp: hpB }), 2.0, rar.color, 28);
+        this.banner(t('banner.newDex', { rar: rarityLabel(sp.rarity), name: (typeof speciesLabel === 'function' ? speciesLabel(sp) : (sp.name || m.spId)), hp: hpB }), 2.0, rar.color, 28);
       } catch (_) {}
       if (this.player) {
         this.player.maxhp += hpB;
         this.player.hp += hpB;
       }
-      try { UI.toast(t('toast.dexDiscover', { rar: rarityLabel(sp.rarity), name: sp.name || m.spId, hp: hpB }), 3200, { tone: 'ok' }); } catch (_) {}
+      try { UI.toast(t('toast.dexDiscover', { rar: rarityLabel(sp.rarity), name: (typeof speciesLabel === 'function' ? speciesLabel(sp) : (sp.name || m.spId)), hp: hpB }), 3200, { tone: 'ok' }); } catch (_) {}
     }
     if (m.spId && save.dex) {
       save.dex[m.spId] = (save.dex[m.spId] || 0) + 1;
@@ -5103,7 +5103,7 @@ class Game {
         c.fillStyle = '#e04f5f'; this.rr(c, W / 2 - bwid / 2, hy, bwid * boss.hp / boss.maxhp, 10, 5); c.fill();
         hy += 18;
         c.font = '700 12px sans-serif';
-        fillHudText(c, String((boss.sp && boss.sp.name) || 'BOSS').toUpperCase(), W / 2, hy, { fill: '#ffc8d0' });
+        fillHudText(c, String((typeof speciesLabel === 'function' && boss.sp) ? speciesLabel(boss.sp) : ((boss.sp && boss.sp.name) || 'BOSS')).toUpperCase(), W / 2, hy, { fill: '#ffc8d0' });
         hy += 16;
       }
 

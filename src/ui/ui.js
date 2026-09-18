@@ -3950,7 +3950,8 @@ const UI = {
       const biomeLbl = biome ? tOr('ui.dexBiome.' + biome, (typeof DEX_BIOME_LABEL !== 'undefined' && DEX_BIOME_LABEL[biome]) || '') : '';
       const blurb = kills && typeof speciesBlurb === 'function' ? speciesBlurb(id) : '';
       const blurbLine = blurb ? `<div class="dex-blurb">${blurb}</div>` : '';
-      info.innerHTML = `<div class="cname">${kills ? sp.name : '???'} ${kills ? `<span class="rar-pill" style="color:${rar.color};border-color:${rar.color}">${rarityLabel(sp.rarity)}</span>` : ''}${id === topKillId ? ` <span class="rar-pill" style="color:#ffd75e;border-color:#ffd75e">${t('ui.topHunter')}</span>` : ''}${kills && biomeLbl ? ` <span class="rar-pill" style="color:#9fd4ff;border-color:#4a7aa0">${biomeLbl}</span>` : ''}</div>
+      const spName = (typeof speciesLabel === 'function') ? speciesLabel(sp) : (sp.name || id);
+      info.innerHTML = `<div class="cname">${kills ? spName : '???'} ${kills ? `<span class="rar-pill" style="color:${rar.color};border-color:${rar.color}">${rarityLabel(sp.rarity)}</span>` : ''}${id === topKillId ? ` <span class="rar-pill" style="color:#ffd75e;border-color:#ffd75e">${t('ui.topHunter')}</span>` : ''}${kills && biomeLbl ? ` <span class="rar-pill" style="color:#9fd4ff;border-color:#4a7aa0">${biomeLbl}</span>` : ''}</div>
         <div class="cinfo">${kills ? t('ui.dexStats', { type: typeLbl, hp: sp.hp, dmg: sp.dmg, spd: sp.speed, xp: sp.xp, lvl: unlockLv || '?' }) : t('ui.dexNotBeaten')}</div>${blurbLine}${lockHint}${petLine}${statRow}`;
       el.appendChild(info);
       const right = document.createElement('div');
@@ -4051,7 +4052,8 @@ const UI = {
       const chestPetBadge = chestPetSk
         ? ` <span class="rar-pill" style="color:#ffd75e;border-color:#ffd75e">${t('ui.weaponChestBadge')}</span>`
         : '';
-      info.innerHTML = `<div class="cname">${sp.name} <span class="rar-pill" style="color:${rar.color};border-color:${rar.color}">${rarityLabel(sp.rarity)}</span>${badge}${chestPetBadge}${upBadge}</div>` +
+      const petName = (typeof speciesLabel === 'function') ? speciesLabel(sp) : sp.name;
+      info.innerHTML = `<div class="cname">${petName} <span class="rar-pill" style="color:${rar.color};border-color:${rar.color}">${rarityLabel(sp.rarity)}</span>${badge}${chestPetBadge}${upBadge}</div>` +
         `<div class="cinfo">${def.perk}</div>` +
         (chestPetSk ? `<div class="cinfo" style="opacity:.9;font-size:12px;margin-top:3px;color:#ffd75e">✦ ${chestPetSk}</div>` : '') +
         `<div class="cinfo" style="opacity:.78;font-size:12px;margin-top:3px">${tamed
@@ -4083,7 +4085,7 @@ const UI = {
             } else {
               equipPet(def.id);
               AudioSys.sfx('select');
-              UI.toast(t('toast.petFollow', { name: sp.name }), 2200);
+              UI.toast(t('toast.petFollow', { name: petName }), 2200);
             }
             this.renderPets();
           }, 'equipPet/' + def.id, t('ui.errPetPick'));
@@ -4097,7 +4099,7 @@ const UI = {
               return;
             }
             AudioSys.sfx('summon');
-            UI.toast(t('toast.petBought', { name: sp.name }), 2600);
+            UI.toast(t('toast.petBought', { name: petName }), 2600);
             this.renderPets();
           }, 'buyPet/' + def.id, t('ui.errPetBuy'));
         });

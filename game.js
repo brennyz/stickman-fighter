@@ -323,9 +323,9 @@ const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const VERSION_UPDATE_SAVE_KEY = 'stickfighter_version_update_save_v1';
 const VERSION_UPDATE_FLAG_KEY = 'stickfighter_version_update_flag_v1';
 const SAVE_EXPORT_SCHEMA = 3;
-const APP_VERSION = '1.18.173';
+const APP_VERSION = '1.18.174';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 383;
+const SW_CACHE_REV = 384;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', petCoins: 0, dex: {}, summons: {}, pets: {}, activePet: null,
   eggPets: {}, activeEggPet: null, eggDaily: null,
   chestDaily: null, chestWeapons: {},
@@ -3189,7 +3189,7 @@ const I18N = {
       music: 'Musique', missions: 'Missions',
       summons: 'Summons', summonsSub: 'Coffre du jour · arme et pet',
       options: 'Options', tips: 'Astuces', fresh: 'Nouvelle version', install: 'Ajouter comme app', installSub: 'Une icône, comme une vraie app',
-      pressStart: 'insert coin', missionReady: 'mission prête', dayBonus: 'Bonus du jour',
+      pressStart: 'insère une pièce', missionReady: 'mission prête', dayBonus: 'Bonus du jour',
       choosePath: 'CHOISIS TON CHEMIN', lastPlayed: 'DERNIER', playHere: 'JOUER', saveSync: 'save OK',
       startGame: 'JOUER', startSub: 'Lance le combat',
       titleName: 'Nom — pas obligatoire', titleNamePh: 'Surnom (optionnel)',
@@ -3451,7 +3451,7 @@ const I18N = {
       music: 'Música', missions: 'Misiones',
       summons: 'Summons', summonsSub: 'Cofre diario · arma y pet',
       options: 'Opciones', tips: 'Consejos', fresh: 'Versión nueva', install: 'Añadir como app', installSub: 'Un icono, como una app real',
-      pressStart: 'insert coin', missionReady: 'misión lista', dayBonus: 'Bonus diario',
+      pressStart: 'inserta una moneda', missionReady: 'misión lista', dayBonus: 'Bonus diario',
       choosePath: 'ELIGE TU CAMINO', lastPlayed: 'ÚLTIMO', playHere: 'JUEGA', saveSync: 'save OK',
       startGame: 'JUGAR', startSub: 'Empieza el combate',
       titleName: 'Nombre — no hace falta', titleNamePh: 'Apodo (opcional)',
@@ -16244,7 +16244,8 @@ function spawnTop20ForTest(game, spId) {
   if (game.monsters) game.monsters.push(mon);
   try {
     if (typeof game.floater === 'function' && mon.sp && mon.sp.name) {
-      game.floater(mon.x, mon.y - mon.size - 18, mon.sp.name, '#ffd75e', 14);
+      const nm = (typeof speciesLabel === 'function') ? speciesLabel(mon.sp) : mon.sp.name;
+      game.floater(mon.x, mon.y - mon.size - 18, nm, '#ffd75e', 14);
     }
   } catch (_) {}
   return mon;
@@ -17035,16 +17036,18 @@ function gambleRollToastLine(g) {
 
 function gambleOutcomeLabel(g) {
   if (!g) return '';
-  if (g.outcome === 'superBoss') return 'Pech! Super-baas in een willekeurige golf';
-  if (g.outcome === 'miniBoss') return 'Risico: extra elite-super in een golf';
-  if (g.outcome === 'superAlly') {
-    const a = GAMBLE_ALLIES[g.allyId];
-    return `Jackpot! Super-bondgenoot: ${a ? a.name : 'Sage'} (sterk buff)`;
+  const out = g.outcome || 'neutral';
+  const a = (typeof GAMBLE_ALLIES !== 'undefined') ? GAMBLE_ALLIES[g.allyId] : null;
+  const name = a ? a.name : 'Sage';
+  /* EX-014: locale via gamble.* — do not call gambleOutcomeLabelFromKey (it falls back here). */
+  if (typeof t === 'function') {
+    const v = t('gamble.' + out, { name });
+    if (v && v !== ('gamble.' + out)) return v;
   }
-  if (g.outcome === 'ally') {
-    const a = GAMBLE_ALLIES[g.allyId];
-    return `Geluk! Bondgenoot: ${a ? a.name : 'Sage'} (buff dit level)`;
-  }
+  if (out === 'superBoss') return 'Pech! Super-baas in een willekeurige golf';
+  if (out === 'miniBoss') return 'Risico: extra elite-super in een golf';
+  if (out === 'superAlly') return `Jackpot! Super-bondgenoot: ${name} (sterk buff)`;
+  if (out === 'ally') return `Geluk! Bondgenoot: ${name} (buff dit level)`;
   return 'Neutraal — gewoon level (geen extra gok-effect)';
 }
 
@@ -17052,7 +17055,9 @@ function gambleOutcomeLabel(g) {
 function triggerSpecialEnemyIntro(game, monster, kind) {
   if (!game || !monster) return;
   const tier = kind || (monster.superBoss ? 'superBoss' : (monster.bossCore ? 'boss' : (monster.elite ? 'elite' : 'boss')));
-  const name = (monster.sp && monster.sp.name) || 'Baas';
+  const name = (typeof speciesLabel === 'function' && monster.sp)
+    ? speciesLabel(monster.sp)
+    : ((monster.sp && monster.sp.name) || 'Baas');
   const rar = rarityOf(monster.sp?.rarity || 'rare');
   const bigBoss = !!(monster.bossCore || monster.superBoss || tier === 'superBoss');
   const colossal = !!monster.colossal;
@@ -20996,6 +21001,13 @@ function seedNlGameStrings() {
     ally: 'Geluk! Bondgenoot: {name} (buff dit level)',
     neutral: 'Neutraal — gewoon level (geen extra gok-effect)',
   });
+  if (!I18N.nl.species) I18N.nl.species = {};
+  Object.assign(I18N.nl.species, {
+    piepvleugel: 'Piepvleugel', stekelra: 'Stekelra', ijzerstek: 'Ijzerstek',
+    nachtwolk: 'Nachtwolk', blikkert: 'Blikkert', laserblik: 'Laserblik',
+    vlamvos: 'Vlamvos', stormvos: 'Stormvos', rotsbonk: 'Rotsbonk',
+    vlamdraak: 'Vlamdraak', schaduwvorst: 'Schaduwvorst', voidkonijn: 'Voidkonijn',
+  });
   if (!I18N.nl.versionUpdate) I18N.nl.versionUpdate = {};
   Object.assign(I18N.nl.versionUpdate, {
     beforeTitle: 'Versie ophalen',
@@ -22999,6 +23011,21 @@ const CATALOG_EN = {
     ally: 'Lucky! Ally: {name} (buff this level)',
     neutral: 'Neutral — normal level (no extra gamble effect)',
   },
+  /* EX-013: Dutch compound proper nouns → short EN labels. Slymo/Flapper stay as-is. */
+  species: {
+    piepvleugel: 'Peepwing',
+    stekelra: 'Spikehog',
+    ijzerstek: 'Ironspike',
+    nachtwolk: 'Nightcloud',
+    blikkert: 'Tinblink',
+    laserblik: 'Lasercan',
+    vlamvos: 'Flamefox',
+    stormvos: 'Stormfox',
+    rotsbonk: 'Rockbonk',
+    vlamdraak: 'Flamedrake',
+    schaduwvorst: 'Shadowlord',
+    voidkonijn: 'Voidbunny',
+  },
 };
 
 const CATALOG_DE = {
@@ -23444,6 +23471,32 @@ function gambleOutcomeLabelFromKey(g) {
   return (v && v !== k) ? v : (typeof gambleOutcomeLabel === 'function' ? gambleOutcomeLabel(g) : out);
 }
 
+/** EX-013: locale species name. NL keeps SPECIES.name (Dutch proper nouns). */
+function speciesLabel(spOrId) {
+  let id = '';
+  let fallback = '';
+  if (typeof spOrId === 'string') {
+    id = spOrId;
+    fallback = (typeof SPECIES !== 'undefined' && SPECIES[id] && SPECIES[id].name) || id;
+  } else if (spOrId && typeof spOrId === 'object') {
+    id = spOrId.id || spOrId.spId || '';
+    if (!id && typeof SPECIES !== 'undefined') {
+      for (const k of Object.keys(SPECIES)) {
+        if (SPECIES[k] === spOrId) { id = k; break; }
+      }
+    }
+    fallback = spOrId.name
+      || (id && typeof SPECIES !== 'undefined' && SPECIES[id] && SPECIES[id].name)
+      || id
+      || '';
+  }
+  if (!fallback && !id) return '';
+  const lang = (typeof getLang === 'function') ? getLang() : 'nl';
+  if (lang === 'nl' || !id) return fallback;
+  if (typeof tOr === 'function') return tOr('species.' + id, fallback);
+  return fallback;
+}
+
 function i18nList(key) {
   const parts = key.split('.');
   const lang = getLang();
@@ -23623,6 +23676,20 @@ const CATALOG_DE_CHROME = {
     superAlly: 'Jackpot! Super-Verbündeter: {name} (starker Buff)',
     ally: 'Glück! Verbündeter: {name} (Buff dieses Level)',
     neutral: 'Neutral — normales Level (kein Extra-Effekt)',
+  },
+  species: {
+    piepvleugel: 'Piepflügel',
+    stekelra: 'Stachelra',
+    ijzerstek: 'Eisenstachel',
+    nachtwolk: 'Nachtwolke',
+    blikkert: 'Blechblink',
+    laserblik: 'Laserblech',
+    vlamvos: 'Flammenfuchs',
+    stormvos: 'Sturmfuchs',
+    rotsbonk: 'Felsbonk',
+    vlamdraak: 'Flammendrache',
+    schaduwvorst: 'Schattenfürst',
+    voidkonijn: 'Leerenhase',
   },
   fighter: {
     energyEmpty: 'Energy nicht voll!', subst: 'Substitution!', dash: 'Dash!',
@@ -24941,6 +25008,20 @@ overlayI18nCatalog(CATALOG_FR, {
     ally: 'Chance ! Allié : {name} (buff ce niveau)',
     neutral: 'Neutre — niveau normal (pas d’effet extra)',
   },
+  species: {
+    piepvleugel: 'Ailepiou',
+    stekelra: 'Piquant',
+    ijzerstek: 'Pic-fer',
+    nachtwolk: 'Nuage-nuit',
+    blikkert: 'Canclic',
+    laserblik: 'Laserboîte',
+    vlamvos: 'Renard-feu',
+    stormvos: 'Renard-orage',
+    rotsbonk: 'Roc-bonk',
+    vlamdraak: 'Drake-feu',
+    schaduwvorst: 'Seigneur-ombre',
+    voidkonijn: 'Lapin-vide',
+  },
 });
 
 overlayI18nCatalog(CATALOG_ES, {
@@ -25457,6 +25538,20 @@ overlayI18nCatalog(CATALOG_ES, {
     superAlly: '¡Jackpot! Super-aliado: {name} (buff fuerte)',
     ally: '¡Suerte! Aliado: {name} (buff este nivel)',
     neutral: 'Neutral — nivel normal (sin efecto extra)',
+  },
+  species: {
+    piepvleugel: 'Alippiío',
+    stekelra: 'Púasra',
+    ijzerstek: 'Púahierro',
+    nachtwolk: 'Nubenoche',
+    blikkert: 'Lataclic',
+    laserblik: 'Láserlata',
+    vlamvos: 'Zorrallama',
+    stormvos: 'Zorratormenta',
+    rotsbonk: 'Rocabonk',
+    vlamdraak: 'Dragónllama',
+    schaduwvorst: 'Señorsombra',
+    voidkonijn: 'Conejovacio',
   },
 });
 
@@ -26005,6 +26100,12 @@ function applyLocaleOverlays() {
       summonNothing: 'Rien de spécial',
     },
     gear: { pillVanity: 'LOOK', pillStat: 'STAT', pillLock: 'VERROU', wearing: 'sur toi' },
+    species: {
+      piepvleugel: 'Ailepiou', stekelra: 'Piquant', ijzerstek: 'Pic-fer',
+      nachtwolk: 'Nuage-nuit', blikkert: 'Canclic', laserblik: 'Laserboîte',
+      vlamvos: 'Renard-feu', stormvos: 'Renard-orage', rotsbonk: 'Roc-bonk',
+      vlamdraak: 'Drake-feu', schaduwvorst: 'Seigneur-ombre', voidkonijn: 'Lapin-vide',
+    },
   });
   deepMergeI18n(I18N.es, {
     ui: {
@@ -26014,6 +26115,12 @@ function applyLocaleOverlays() {
       summonNothing: 'Nada especial',
     },
     gear: { pillVanity: 'LOOK', pillStat: 'STAT', pillLock: 'BLOQ', wearing: 'puesto' },
+    species: {
+      piepvleugel: 'Alippiío', stekelra: 'Púasra', ijzerstek: 'Púahierro',
+      nachtwolk: 'Nubenoche', blikkert: 'Lataclic', laserblik: 'Láserlata',
+      vlamvos: 'Zorrallama', stormvos: 'Zorratormenta', rotsbonk: 'Rocabonk',
+      vlamdraak: 'Dragónllama', schaduwvorst: 'Señorsombra', voidkonijn: 'Conejovacio',
+    },
   });
 }
 /* --- src/systems/audio-samples.js --- */
@@ -41202,13 +41309,13 @@ class Game {
       const hpB = rarityHpBonus(sp.rarity);
       try { noteRunLootDex(this.runLoot, sp, hpB); } catch (_) {}
       try {
-        this.banner(t('banner.newDex', { rar: rarityLabel(sp.rarity), name: sp.name || m.spId, hp: hpB }), 2.0, rar.color, 28);
+        this.banner(t('banner.newDex', { rar: rarityLabel(sp.rarity), name: (typeof speciesLabel === 'function' ? speciesLabel(sp) : (sp.name || m.spId)), hp: hpB }), 2.0, rar.color, 28);
       } catch (_) {}
       if (this.player) {
         this.player.maxhp += hpB;
         this.player.hp += hpB;
       }
-      try { UI.toast(t('toast.dexDiscover', { rar: rarityLabel(sp.rarity), name: sp.name || m.spId, hp: hpB }), 3200, { tone: 'ok' }); } catch (_) {}
+      try { UI.toast(t('toast.dexDiscover', { rar: rarityLabel(sp.rarity), name: (typeof speciesLabel === 'function' ? speciesLabel(sp) : (sp.name || m.spId)), hp: hpB }), 3200, { tone: 'ok' }); } catch (_) {}
     }
     if (m.spId && save.dex) {
       save.dex[m.spId] = (save.dex[m.spId] || 0) + 1;
@@ -45165,7 +45272,7 @@ class Game {
         c.fillStyle = '#e04f5f'; this.rr(c, W / 2 - bwid / 2, hy, bwid * boss.hp / boss.maxhp, 10, 5); c.fill();
         hy += 18;
         c.font = '700 12px sans-serif';
-        fillHudText(c, String((boss.sp && boss.sp.name) || 'BOSS').toUpperCase(), W / 2, hy, { fill: '#ffc8d0' });
+        fillHudText(c, String((typeof speciesLabel === 'function' && boss.sp) ? speciesLabel(boss.sp) : ((boss.sp && boss.sp.name) || 'BOSS')).toUpperCase(), W / 2, hy, { fill: '#ffc8d0' });
         hy += 16;
       }
 
@@ -50181,7 +50288,8 @@ const UI = {
       const biomeLbl = biome ? tOr('ui.dexBiome.' + biome, (typeof DEX_BIOME_LABEL !== 'undefined' && DEX_BIOME_LABEL[biome]) || '') : '';
       const blurb = kills && typeof speciesBlurb === 'function' ? speciesBlurb(id) : '';
       const blurbLine = blurb ? `<div class="dex-blurb">${blurb}</div>` : '';
-      info.innerHTML = `<div class="cname">${kills ? sp.name : '???'} ${kills ? `<span class="rar-pill" style="color:${rar.color};border-color:${rar.color}">${rarityLabel(sp.rarity)}</span>` : ''}${id === topKillId ? ` <span class="rar-pill" style="color:#ffd75e;border-color:#ffd75e">${t('ui.topHunter')}</span>` : ''}${kills && biomeLbl ? ` <span class="rar-pill" style="color:#9fd4ff;border-color:#4a7aa0">${biomeLbl}</span>` : ''}</div>
+      const spName = (typeof speciesLabel === 'function') ? speciesLabel(sp) : (sp.name || id);
+      info.innerHTML = `<div class="cname">${kills ? spName : '???'} ${kills ? `<span class="rar-pill" style="color:${rar.color};border-color:${rar.color}">${rarityLabel(sp.rarity)}</span>` : ''}${id === topKillId ? ` <span class="rar-pill" style="color:#ffd75e;border-color:#ffd75e">${t('ui.topHunter')}</span>` : ''}${kills && biomeLbl ? ` <span class="rar-pill" style="color:#9fd4ff;border-color:#4a7aa0">${biomeLbl}</span>` : ''}</div>
         <div class="cinfo">${kills ? t('ui.dexStats', { type: typeLbl, hp: sp.hp, dmg: sp.dmg, spd: sp.speed, xp: sp.xp, lvl: unlockLv || '?' }) : t('ui.dexNotBeaten')}</div>${blurbLine}${lockHint}${petLine}${statRow}`;
       el.appendChild(info);
       const right = document.createElement('div');
@@ -50282,7 +50390,8 @@ const UI = {
       const chestPetBadge = chestPetSk
         ? ` <span class="rar-pill" style="color:#ffd75e;border-color:#ffd75e">${t('ui.weaponChestBadge')}</span>`
         : '';
-      info.innerHTML = `<div class="cname">${sp.name} <span class="rar-pill" style="color:${rar.color};border-color:${rar.color}">${rarityLabel(sp.rarity)}</span>${badge}${chestPetBadge}${upBadge}</div>` +
+      const petName = (typeof speciesLabel === 'function') ? speciesLabel(sp) : sp.name;
+      info.innerHTML = `<div class="cname">${petName} <span class="rar-pill" style="color:${rar.color};border-color:${rar.color}">${rarityLabel(sp.rarity)}</span>${badge}${chestPetBadge}${upBadge}</div>` +
         `<div class="cinfo">${def.perk}</div>` +
         (chestPetSk ? `<div class="cinfo" style="opacity:.9;font-size:12px;margin-top:3px;color:#ffd75e">✦ ${chestPetSk}</div>` : '') +
         `<div class="cinfo" style="opacity:.78;font-size:12px;margin-top:3px">${tamed
@@ -50314,7 +50423,7 @@ const UI = {
             } else {
               equipPet(def.id);
               AudioSys.sfx('select');
-              UI.toast(t('toast.petFollow', { name: sp.name }), 2200);
+              UI.toast(t('toast.petFollow', { name: petName }), 2200);
             }
             this.renderPets();
           }, 'equipPet/' + def.id, t('ui.errPetPick'));
@@ -50328,7 +50437,7 @@ const UI = {
               return;
             }
             AudioSys.sfx('summon');
-            UI.toast(t('toast.petBought', { name: sp.name }), 2600);
+            UI.toast(t('toast.petBought', { name: petName }), 2600);
             this.renderPets();
           }, 'buyPet/' + def.id, t('ui.errPetBuy'));
         });

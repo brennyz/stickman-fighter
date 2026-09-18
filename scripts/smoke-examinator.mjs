@@ -53,6 +53,23 @@ if (/#buildingsScreen\[data-buildings-pane="list"\] \.buildings-detail \{ displa
 if (!/EX-001/.test(exam)) fail('EXAMINATOR.md must keep ranked EX ids');
 if (!/speel\.html/.test(exam)) fail('EXAMINATOR.md must keep speel.html');
 if (!/No Versus|Versus:\s*retired/.test(exam)) fail('EXAMINATOR.md must keep Versus retired');
+if (!/DELEGATED #313/.test(exam)) fail('EX-010 must be DELEGATED #313');
+if (!/DELEGATED #315/.test(exam)) fail('EX-011 must be DELEGATED #315');
+if (!/DELEGATED #314/.test(exam)) fail('EX-012 HUD must be DELEGATED #314');
+if (!/DELEGATED #312/.test(exam)) fail('EX-016 must be DELEGATED #312');
+if (!/DELEGATED #318/.test(exam)) fail('EX-017/018 must be DELEGATED #318');
+if (!/function speciesLabel/.test(catalog)) fail('speciesLabel helper missing');
+if (!/piepvleugel: 'Peepwing'/.test(catalog)) fail('EN species.piepvleugel must be Peepwing');
+if (!/t\('gamble\.' \+ out/.test(monsters)) fail('gambleOutcomeLabel must use t(gamble.*)');
+if (/if \(g\.outcome === 'superBoss'\) return 'Pech!/.test(monsters)) fail('gambleOutcomeLabel still hardcoded Dutch first');
+if (!/pressStart: 'insère une pièce'/.test(i18n)) fail('FR pressStart must be insère une pièce');
+if (!/pressStart: 'inserta una moneda'/.test(i18n)) fail('ES pressStart must be inserta una moneda');
+if (i18n.match(/pressStart: 'insert coin'/g)?.length > 1) fail('FR/ES pressStart still insert coin');
+if (!/EX-021: compact FOMO/.test(css)) fail('390 FOMO compact comment missing');
+if (!/#menuScreen #fomoRitual \{\s*align-items: flex-end;[\s\S]*pointer-events: none;/.test(css)) {
+  fail('390 FOMO overlay must be pointer-events none so tiles stay tappable');
+}
+if (!/max-height: min\(44vh, 340px\)/.test(css)) fail('390 FOMO sheet must be compact max-height');
 
 console.log('SMOKE_OK examinator: static P0 guards');
 
@@ -98,6 +115,19 @@ async function snap(browser, w, h, lang) {
       wearing: typeof t === 'function' ? t('gear.wearing') : null,
       pill: typeof t === 'function' ? t('gear.pillVanity') : null,
       press: typeof t === 'function' ? t('menu.pressStart') : null,
+      piep: typeof speciesLabel === 'function' ? speciesLabel('piepvleugel') : null,
+      gamble: typeof gambleOutcomeLabel === 'function' ? gambleOutcomeLabel({ outcome: 'superBoss' }) : null,
+      fomoSheet: (() => {
+        const el = document.querySelector('#fomoRitual .fomo-ritual-sheet');
+        if (!el) return null;
+        const cs = getComputedStyle(el);
+        return { maxH: cs.maxHeight, pad: cs.paddingTop };
+      })(),
+      fomoOverlay: (() => {
+        const el = document.getElementById('fomoRitual');
+        if (!el) return null;
+        return { pe: getComputedStyle(el).pointerEvents };
+      })(),
     };
   }, lang, w);
   await page.close();
@@ -114,6 +144,9 @@ const browser = await puppeteer.default.launch({
 const phone = await snap(browser, 390, 844, 'en');
 const desk = await snap(browser, 1280, 800, 'en');
 const phoneNl = await snap(browser, 390, 844, 'nl');
+const phoneFr = await snap(browser, 390, 844, 'fr');
+const phoneEs = await snap(browser, 390, 844, 'es');
+const phoneDe = await snap(browser, 390, 844, 'de');
 await browser.close();
 if (server && server.close) try { server.close(); } catch (_) {}
 
@@ -126,5 +159,16 @@ if (desk.profile.maxAlive < 36) fail('desk horde was over-nerfed: ' + desk.profi
 if (phone.wearing !== 'on') fail('EN wearing leak: ' + phone.wearing);
 if (phoneNl.pill !== 'SIER') fail('NL vanity pill: ' + phoneNl.pill);
 if (phoneNl.press !== 'gooi een munt') fail('NL pressStart: ' + phoneNl.press);
+if (phone.piep !== 'Peepwing') fail('EN piepvleugel: ' + phone.piep);
+if (phoneNl.piep !== 'Piepvleugel') fail('NL piepvleugel must stay Dutch: ' + phoneNl.piep);
+if (phoneDe.piep !== 'Piepflügel') fail('DE piepvleugel: ' + phoneDe.piep);
+if (phoneFr.piep !== 'Ailepiou') fail('FR piepvleugel: ' + phoneFr.piep);
+if (phoneEs.piep !== 'Alippiío') fail('ES piepvleugel: ' + phoneEs.piep);
+if (!phone.gamble || /Pech!|Super-baas/.test(phone.gamble)) fail('EN gamble still Dutch: ' + phone.gamble);
+if (phoneFr.press !== 'insère une pièce') fail('FR pressStart: ' + phoneFr.press);
+if (phoneEs.press !== 'inserta una moneda') fail('ES pressStart: ' + phoneEs.press);
+if (phone.fomoOverlay && phone.fomoOverlay.pe !== 'none') {
+  fail('390 FOMO overlay pointer-events must be none, got ' + phone.fomoOverlay.pe);
+}
 
 console.log('SMOKE_OK examinator: phone', phone.lv10total, '/', phone.lv20total, 'desk', desk.lv10total, '/', desk.lv20total);

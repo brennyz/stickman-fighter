@@ -376,6 +376,13 @@ function seedNlGameStrings() {
     ally: 'Geluk! Bondgenoot: {name} (buff dit level)',
     neutral: 'Neutraal — gewoon level (geen extra gok-effect)',
   });
+  if (!I18N.nl.species) I18N.nl.species = {};
+  Object.assign(I18N.nl.species, {
+    piepvleugel: 'Piepvleugel', stekelra: 'Stekelra', ijzerstek: 'Ijzerstek',
+    nachtwolk: 'Nachtwolk', blikkert: 'Blikkert', laserblik: 'Laserblik',
+    vlamvos: 'Vlamvos', stormvos: 'Stormvos', rotsbonk: 'Rotsbonk',
+    vlamdraak: 'Vlamdraak', schaduwvorst: 'Schaduwvorst', voidkonijn: 'Voidkonijn',
+  });
   if (!I18N.nl.versionUpdate) I18N.nl.versionUpdate = {};
   Object.assign(I18N.nl.versionUpdate, {
     beforeTitle: 'Versie ophalen',
@@ -2379,6 +2386,21 @@ const CATALOG_EN = {
     ally: 'Lucky! Ally: {name} (buff this level)',
     neutral: 'Neutral — normal level (no extra gamble effect)',
   },
+  /* EX-013: Dutch compound proper nouns → short EN labels. Slymo/Flapper stay as-is. */
+  species: {
+    piepvleugel: 'Peepwing',
+    stekelra: 'Spikehog',
+    ijzerstek: 'Ironspike',
+    nachtwolk: 'Nightcloud',
+    blikkert: 'Tinblink',
+    laserblik: 'Lasercan',
+    vlamvos: 'Flamefox',
+    stormvos: 'Stormfox',
+    rotsbonk: 'Rockbonk',
+    vlamdraak: 'Flamedrake',
+    schaduwvorst: 'Shadowlord',
+    voidkonijn: 'Voidbunny',
+  },
 };
 
 const CATALOG_DE = {
@@ -2822,6 +2844,32 @@ function gambleOutcomeLabelFromKey(g) {
   const k = 'gamble.' + out;
   const v = t(k);
   return (v && v !== k) ? v : (typeof gambleOutcomeLabel === 'function' ? gambleOutcomeLabel(g) : out);
+}
+
+/** EX-013: locale species name. NL keeps SPECIES.name (Dutch proper nouns). */
+function speciesLabel(spOrId) {
+  let id = '';
+  let fallback = '';
+  if (typeof spOrId === 'string') {
+    id = spOrId;
+    fallback = (typeof SPECIES !== 'undefined' && SPECIES[id] && SPECIES[id].name) || id;
+  } else if (spOrId && typeof spOrId === 'object') {
+    id = spOrId.id || spOrId.spId || '';
+    if (!id && typeof SPECIES !== 'undefined') {
+      for (const k of Object.keys(SPECIES)) {
+        if (SPECIES[k] === spOrId) { id = k; break; }
+      }
+    }
+    fallback = spOrId.name
+      || (id && typeof SPECIES !== 'undefined' && SPECIES[id] && SPECIES[id].name)
+      || id
+      || '';
+  }
+  if (!fallback && !id) return '';
+  const lang = (typeof getLang === 'function') ? getLang() : 'nl';
+  if (lang === 'nl' || !id) return fallback;
+  if (typeof tOr === 'function') return tOr('species.' + id, fallback);
+  return fallback;
 }
 
 function i18nList(key) {

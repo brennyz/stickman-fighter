@@ -1,6 +1,6 @@
 # EXAMINATOR — living board (Stickman Fighter)
 
-**Role:** Klöpping-style conductor. Playtest desktop + mobile (~390px), rank issues, fix P0s, leave a pick-list for sibling workers.
+**Role:** Klöpping-style conductor. Playtest desktop + mobile (~390px), rank issues, fix unique leftovers, leave a pick-list for sibling workers.
 
 **Share URL:** `speel.html` — never `ipad.html` or tunnel links.  
 **Versus:** retired. Do not revive.  
@@ -8,9 +8,24 @@
 **This sprint:** mobile **web** viewport only. Native Android APK / TWA / Play upload = **out of scope** (see bottom).
 
 **Baseline playtested:** v1.18.172 / SW 382 (`origin/main` `a7a4b74`)  
-**This draft PR:** v1.18.173 / SW 383 · branch `cursor/examinator-p0-bb6c` · **do not merge to main**
+**This draft PR:** v1.18.174 / SW 384 · branch `cursor/examinator-p0-bb6c` · **#320 — do not merge to main**
 
-How to pick work: take the **lowest open EX-id** in your lane. Mark `in-progress` / `done` here when you start/finish. Do not steal a `done` item unless the owner asks to change it.
+How to pick work: take the **lowest open EX-id** in your lane. Mark `in-progress` / `done` / `DELEGATED #PR` here when you start/finish. Do not steal a `done` or `DELEGATED` item unless the owner asks to change it.
+
+---
+
+## Sibling draft map (do not duplicate)
+
+| PR | Branch | Lane | EX they own |
+|----|--------|------|-------------|
+| **#314** | `cursor/mobile-combat-density-2236` | density / HUD | EX-001 remainder · **EX-012** |
+| **#313** | `cursor/summons-cleanup-18b8` | summons | **EX-010** · EX-006 remainder · FOMO HOME-only / `fomo-open` chrome |
+| **#315** | `cursor/gear-screens-ux-a278` | gear | **EX-011** · **EX-019** |
+| **#319** | `cursor/pets-catchup-bc19` | pets | collection Pets screen (EX-003 follow already on #320) |
+| **#312** | `cursor/factories-ux-unclunky-d443` | factories | **EX-016** · factory sheet UX (EX-004 list XOR already on #320) |
+| **#317** | `cursor/i18n-layout-copy-f2a3` | i18n layout | factories/FOMO/HUD/gear **layout** copy — **not** EX-013/014/015 |
+| **#316** | `cursor/juice-feel-f8cf` | juice | KO confirm / empty CTAs / reduced-motion |
+| **#318** | `cursor/ui-layout-polish-7643` | UI | **EX-017** · **EX-018** · HOME/Collectie chrome |
 
 ---
 
@@ -29,18 +44,14 @@ How to pick work: take the **lowest open EX-id** in your lane. Mark `in-progress
 
 | ID | P | Status | Owner lane | Symptom | Where to start |
 |----|---|--------|------------|---------|----------------|
-| EX-010 | P1 | open | summons | Chest stage still large vs CTA; video path can feel slow/clunky after first tap | `styles/main.css` `.summon-stage` · `src/ui/ui.js` `openSummonHub` / pull timers |
-| EX-011 | P1 | open | gear | 131-item catalog + LOOK/STAT chips still a long one-page scroll; filters wrap ok at 390 but picker is busy | `src/ui/ui.js` `renderGear` · `#gearScreen` |
-| EX-012 | P1 | open | combat HUD | First-minute hint + star bar + wave label stack tight on 390; floaters can crowd left | `src/game/game.js` `drawHud` / floaters |
-| EX-013 | P1 | open | i18n | Monster *names* stay Dutch proper-nouns on EN/DE/FR/ES (Slymo ok; `Piepvleugel` less so) | `src/data/monsters.js` SPECIES.name · i18n `species.*` |
-| EX-014 | P2 | open | i18n | `gambleOutcomeLabel()` hardcoded Dutch; EN players see “Pech! Super-baas…” | `src/data/monsters.js` ~1130 |
-| EX-015 | P2 | open | i18n | FR/ES `pressStart` still `insert coin`; DE is fine (`Münze einwerfen`) | `src/i18n/i18n.js` fr/es menu |
-| EX-016 | P2 | open | factories | Long factory names wrap; “Wat doet dit?” block is wordy on 390 | `src/ui/buildings-ui.js` · `buildings.stick_lighter` blurb |
-| EX-017 | P2 | open | A–Z | Collectie tile counts mix formats (`1/63 vrij` vs `12 dier - munten`) | `src/ui/ui.js` hub stats |
-| EX-018 | P2 | open | A–Z | “Verder spelen” continue banner stays on HOME after a run | `#btnContinue` / `menu.continue` |
-| EX-019 | P3 | open | i18n | Gear chips LOOK/STAT still English tokens in FR/ES (short on purpose) | catalog-locales overlays |
+| EX-010 | P1 | **DELEGATED #313** | summons | Chest stage still large vs CTA; video path can feel slow/clunky after first tap | `styles/main.css` `.summon-stage` · `src/ui/ui.js` `openSummonHub` / pull timers |
+| EX-011 | P1 | **DELEGATED #315** | gear | 131-item catalog + LOOK/STAT chips still a long one-page scroll; filters wrap ok at 390 but picker is busy | `src/ui/ui.js` `renderGear` · `#gearScreen` |
+| EX-012 | P1 | **DELEGATED #314** | combat HUD | First-minute hint + star bar + wave label stack tight on 390; floaters can crowd left. #320 already wraps hint (EX-005); **do not re-tune density here** | `docs/COMBAT-DENSITY.md` on #314 |
+| EX-016 | P2 | **DELEGATED #312** | factories | Long factory names wrap; “Wat doet dit?” block is wordy on 390 | `src/ui/buildings-ui.js` · `buildings.stick_lighter` blurb |
+| EX-017 | P2 | **DELEGATED #318** | A–Z | Collectie tile counts mix formats (`1/63 vrij` vs `12 dier - munten`) | `src/ui/ui.js` hub stats |
+| EX-018 | P2 | **DELEGATED #318** | A–Z | “Verder spelen” continue banner stays on HOME after a run | `#btnContinue` / `menu.continue` |
+| EX-019 | P3 | **DELEGATED #315** | i18n | Gear chips LOOK/STAT still English tokens in FR/ES (short on purpose) | catalog-locales overlays |
 | EX-020 | P3 | open | Android native | TWA / Play / APK signing, back-gesture, display-cutout, install prompt — **next sprint** | `native/android/` · `docs/store/` |
-| EX-021 | P2 | open | FOMO / HOME | First-open «Vandaag» ritual sheet covers HOME tiles on 390px (by design, still blocks the grid until dismiss) | `src/systems/missions.js` FOMO ritual · `#fomoRitual` |
 
 ---
 
@@ -48,12 +59,16 @@ How to pick work: take the **lowest open EX-id** in your lane. Mark `in-progress
 
 | ID | P | Status | Fix |
 |----|---|--------|-----|
-| EX-001 | P0 | **done** | Phone/tablet horde scale. Same wave math as desk was drowning 390px (`ADVENTURE_HORDE_MUL=6`, `MAX_ALIVE` 54). Now `adventureHordeProfile()`: phone ≤8 alive / ≤12 per wave / slower spawn; tablet mid; desk keeps 6× horde. |
-| EX-002 | P0 | **done** | i18n leaks: NL gear pills LOOK/STAT/LOCK → SIER/STAT/VAST; EN `gear.wearing` no longer falls back to `aan`; DE OPTIK/SPERRE; summon card copy via `tOr` (egg/coins/XP/fail); NL `pressStart` `gooi een munt`. |
-| EX-003 | P0 | **done** | Pets lagged (lerp 8/7). Follow 16–20 + snap if >150px behind. Egg-pet same. |
-| EX-004 | P0 | **done** | Factories: kill landscape dual-pane (list XOR detail). Wallet chips wrap at 390. |
+| EX-001 | P0 | **done** (#314 also owns density) | Phone/tablet horde scale. `adventureHordeProfile()`: phone ≤8 alive / ≤12 per wave / slower spawn; tablet mid; desk keeps 6× horde. |
+| EX-002 | P0 | **done** | i18n leaks: NL gear pills LOOK/STAT/LOCK → SIER/STAT/VAST; EN `gear.wearing` no longer falls back to `aan`; DE OPTIK/SPERRE; summon card copy via `tOr`; NL `pressStart` `gooi een munt`. |
+| EX-003 | P0 | **done** (#319 owns Pets screen) | Pets lagged (lerp 8/7). Follow 16–20 + snap if >150px behind. Egg-pet same. |
+| EX-004 | P0 | **done** (#312 owns factory sheet) | Factories: kill landscape dual-pane (list XOR detail). Wallet chips wrap at 390. |
 | EX-005 | P1 | **done** | Combat first-minute hint wraps on narrow `W` instead of one overflowing pill. |
-| EX-006 | P1 | **partial** | Summons: hide `summon-where` + shrink stage at ≤430px. Full chest/video rebuild = EX-010. |
+| EX-006 | P1 | **partial → DELEGATED #313** | #320: hide `summon-where` + shrink stage at ≤430px. Full chest/video rebuild = #313. |
+| EX-013 | P1 | **done** | `speciesLabel()` + EN/DE/FR/ES names for Dutch compounds (`Piepvleugel` → Peepwing / Piepflügel / Ailepiou / Alippiío). NL keeps SPECIES.name. Dex / HUD / banners / pets list wired. |
+| EX-014 | P2 | **done** | `gambleOutcomeLabel()` uses `t('gamble.*')` — EN no longer sees “Pech! Super-baas…”. |
+| EX-015 | P2 | **done** | FR `insère une pièce` · ES `inserta una moneda` (`menu.pressStart`). DE already `Münze einwerfen`. |
+| EX-021 | P2 | **done** | 390px FOMO sheet compact + HOME tiles stay tappable (backdrop only lower half). **Does not** restage #313 HOME-only / `fomo-open` chrome hide. |
 
 ---
 
@@ -65,13 +80,15 @@ Desktop ~1280×800 and phone 390×844 (Puppeteer + computer-use). Versus tile ab
 | Surface | 390px | Desktop | Notes |
 |---------|-------|---------|-------|
 | Title gate / SPELEN | ok | ok | Android-first landing on `speel.html` |
-| HOME hub | tiles stack; FOMO «Vandaag» sheet covers grid on first open (EX-021) | 2-col | NL/EN/DE switch clean on chrome |
-| Factories | list→detail | **was** dual-pane clutter | ids confirmed |
-| Gear | pills wrap risk | long scroll | LOOK/STAT English tokens (fixed NL) |
-| Summons | chest-heavy | sparse CTA | EX-010 still open |
+| HOME hub | tiles usable above compact FOMO sheet (EX-021) | 2-col | NL/EN/DE switch clean on chrome |
+| Factories | list→detail | dual-pane killed on #320 | ids confirmed; further copy = #312 |
+| Gear | pills wrap | long scroll | LOOK/STAT leftover FR/ES = #315 |
+| Summons | chest-heavy | sparse CTA | EX-010 = #313 |
 | Adventure Lv1 | 2+3/4 mobs | same | opener already soft |
-| Adventure Lv10/20 | **96 / 214 mobs, 54 alive** pre-fix | same counts | EX-001 |
-| Pets | not visible enough in short fight | lag in code | EX-003 |
+| Adventure Lv10/20 | phone scaled | desk 96 / 214 | EX-001 + #314 |
+| Pets | follow snap | follow snap | collection screen = #319 |
+| Gamble toast | locale | locale | EX-014 |
+| Species names | Peepwing on EN | same | EX-013 |
 
 Probe (pre-fix, v1.18.172):
 
@@ -100,7 +117,7 @@ factory ids stick_lighter…echo_whistle  OK
 - Bubblewrap / TWA `appVersionName` still 1.18.172 until a Play drop  
 - Predictive back, display-cutout, installability QA on a real device  
 - Play Console store listing / data-safety (docs exist, not this PR)  
-- Offline SW on Android Chrome after this cache rev (383) — player taps «Verse versie»
+- Offline SW on Android Chrome after this cache rev (384) — player taps «Verse versie»
 
 ---
 

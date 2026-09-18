@@ -519,6 +519,20 @@ overlayI18nCatalog(CATALOG_FR, {
     ally: 'Chance ! Allié : {name} (buff ce niveau)',
     neutral: 'Neutre — niveau normal (pas d’effet extra)',
   },
+  species: {
+    piepvleugel: 'Ailepiou',
+    stekelra: 'Piquant',
+    ijzerstek: 'Pic-fer',
+    nachtwolk: 'Nuage-nuit',
+    blikkert: 'Canclic',
+    laserblik: 'Laserboîte',
+    vlamvos: 'Renard-feu',
+    stormvos: 'Renard-orage',
+    rotsbonk: 'Roc-bonk',
+    vlamdraak: 'Drake-feu',
+    schaduwvorst: 'Seigneur-ombre',
+    voidkonijn: 'Lapin-vide',
+  },
 });
 
 overlayI18nCatalog(CATALOG_ES, {
@@ -1035,6 +1049,20 @@ overlayI18nCatalog(CATALOG_ES, {
     superAlly: '¡Jackpot! Super-aliado: {name} (buff fuerte)',
     ally: '¡Suerte! Aliado: {name} (buff este nivel)',
     neutral: 'Neutral — nivel normal (sin efecto extra)',
+  },
+  species: {
+    piepvleugel: 'Alippiío',
+    stekelra: 'Púasra',
+    ijzerstek: 'Púahierro',
+    nachtwolk: 'Nubenoche',
+    blikkert: 'Lataclic',
+    laserblik: 'Láserlata',
+    vlamvos: 'Zorrallama',
+    stormvos: 'Zorratormenta',
+    rotsbonk: 'Rocabonk',
+    vlamdraak: 'Dragónllama',
+    schaduwvorst: 'Señorsombra',
+    voidkonijn: 'Conejovacio',
   },
 });
 
@@ -1575,6 +1603,14 @@ function applyLocaleOverlays() {
   if (typeof CATALOG_FR === 'object') deepMergeI18n(I18N.fr, CATALOG_FR);
   if (typeof CATALOG_ES === 'object') deepMergeI18n(I18N.es, CATALOG_ES);
   if (typeof CATALOG_DE === 'object') deepMergeI18n(I18N.de, CATALOG_DE);
+  deepMergeI18n(I18N.de, {
+    species: {
+      piepvleugel: 'Piepflügel', stekelra: 'Stachelra', ijzerstek: 'Eisenstachel',
+      nachtwolk: 'Nachtwolke', blikkert: 'Blechblink', laserblik: 'Laserblech',
+      vlamvos: 'Flammenfuchs', stormvos: 'Sturmfuchs', rotsbonk: 'Felsbonk',
+      vlamdraak: 'Flammendrache', schaduwvorst: 'Schattenfürst', voidkonijn: 'Leerenhase',
+    },
+  });
   deepMergeI18n(I18N.fr, {
     ui: {
       summonLoadFail: 'Invocations introuvables',
@@ -1583,6 +1619,12 @@ function applyLocaleOverlays() {
       summonNothing: 'Rien de spécial',
     },
     gear: { pillVanity: 'LOOK', pillStat: 'STAT', pillLock: 'VERROU', wearing: 'sur toi' },
+    species: {
+      piepvleugel: 'Ailepiou', stekelra: 'Piquant', ijzerstek: 'Pic-fer',
+      nachtwolk: 'Nuage-nuit', blikkert: 'Canclic', laserblik: 'Laserboîte',
+      vlamvos: 'Renard-feu', stormvos: 'Renard-orage', rotsbonk: 'Roc-bonk',
+      vlamdraak: 'Drake-feu', schaduwvorst: 'Seigneur-ombre', voidkonijn: 'Lapin-vide',
+    },
   });
   deepMergeI18n(I18N.es, {
     ui: {
@@ -1592,5 +1634,11 @@ function applyLocaleOverlays() {
       summonNothing: 'Nada especial',
     },
     gear: { pillVanity: 'LOOK', pillStat: 'STAT', pillLock: 'BLOQ', wearing: 'puesto' },
+    species: {
+      piepvleugel: 'Alippiío', stekelra: 'Púasra', ijzerstek: 'Púahierro',
+      nachtwolk: 'Nubenoche', blikkert: 'Lataclic', laserblik: 'Láserlata',
+      vlamvos: 'Zorrallama', stormvos: 'Zorratormenta', rotsbonk: 'Rocabonk',
+      vlamdraak: 'Dragónllama', schaduwvorst: 'Señorsombra', voidkonijn: 'Conejovacio',
+    },
   });
 }
