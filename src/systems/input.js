@@ -930,7 +930,11 @@ function playfieldGroundY(H, W) {
   if (portrait && H < 520) return H * 0.7;
   if (portrait && H < 640) return H * 0.72;
   if (portrait) return H * 0.73;
-  return H * 0.78;
+  // Landscape phone (~844×390): keep a full stickman above the fold.
+  const raw = H * 0.72;
+  const minY = Math.min(H - 28, Math.max(96, H * 0.58));
+  const maxY = Math.max(minY, H - 28);
+  return raw < minY ? minY : (raw > maxY ? maxY : raw);
 }
 
 function pointerGameCoords(clientX, clientY) {

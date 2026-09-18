@@ -1171,6 +1171,14 @@
       "text": "Systems equip-API klaar (#295): align sheets/equip-flow. Bind gearEquipState/gearCanEquip (ok|vanity-ok|already-equipped|locked|not-owned|wrong-slot|unknown), gearEquipItem(id,{expectSlot?}), gearSlotInventory(slot,save). DOM #gearScreen/[data-slot]/[data-gear-id] ongewijzigd. Schema 1 ongemoeid. Geen layout-conflict met systems. Update PR #307 met screenshots + NL API-note.",
       "status": "in-progress",
       "updated": "2026-09-16"
+    },
+    {
+      "id": "w-20260918T153400",
+      "from": "user",
+      "text": "P0 FIX — Player (and likely enemies) INVISIBLE in combat but combat still runs (haptics/ticks). Landscape Android purple city BG, pause top-right, empty stage. Investigate draw/render: sprite, camera, canvas transform, alpha, z-order, landscape resize, CSS scaling, gear/pet overlays. Fix portrait AND landscape at common phone sizes. Prove smoke + screenshots 844×390 and 390×844. Draft PR only. No Versus. Share URL speel.html. Do not merge main.",
+      "status": "done-in-code",
+      "updated": "2026-09-18",
+      "notes": "Draft #333 cursor/invisible-fighters-2aa5. Isolate drawCombatants, pinPlayfieldBodies after rotate, fighterCombatStroke lift, loop recover re-paints combatants. Chrome proof 844×390 + 390×844 cyber city. v1.18.190 / SW 400. speel.html. Do not merge."
     }
   ],
   "agentRules": [
