@@ -38,6 +38,10 @@
     "pendingUpload": [],
     "pendingMerge": [
       {
+        "pr": 331,
+        "title": "landscape touch 844×390 (draft, no main)"
+      },
+      {
         "pr": 311,
         "title": "playtest-harden-cycles"
       },
@@ -55,7 +59,7 @@
       "text": "MASTERGAME — Stickman Fighter landscape touch controls. Off main. Draft PR. No Versus. speel.html. Until ~17:54 Amsterdam. Punch/jump/swipe reachable and mistap-safe in landscape ~844×390; ≥44px targets; don't collide with system nav. Portrait must not regress. Coordinate with HUD — don't break pause gutter from #321. Draft only.",
       "status": "done-in-code",
       "updated": "2026-09-18",
-      "notes": "Draft branch cursor/landscape-touch-de95. 1P short-landscape pads. #321 pause gutter unchanged. Versus out. speel.html."
+      "notes": "DONE in code on draft #331 (cursor/landscape-touch-de95). 1P 844×390 jump/punch/swipe, ≥44px, 24px nav keep-out, #321 pause gutter kept, portrait locked. PARTIAL: live browser click-through not finished before 17:54. Smokes landscape-touch + hud-phone + touch-btns + combat-density OK. Versus out. No main."
     },
     {
       "id": "w-20260918T141700",
@@ -1184,6 +1188,10 @@
   ],
   "sessionLog": [
     {
+      "at": "2026-09-18T15:54:45Z",
+      "summary": "DONE in code: landscape 1P pads on draft #331. PARTIAL live browser E2E (17:54 stop). No main."
+    },
+    {
       "at": "2026-09-18T15:01:24Z",
       "summary": "Leftover stack: #318 UI chrome + #322 FOMO 390px on main. Keep #321 HUD + #323 retry. SKIP #324. Leave #311."
     },
@@ -1278,10 +1286,6 @@
     {
       "at": "2026-09-18T12:30:17Z",
       "summary": "LANGUAGE worker: layout-safe NL/EN/DE/FR/ES copy (factory desc, FOMO, HUD telegraphs). Draft, geen main."
-    },
-    {
-      "at": "2026-09-16T12:33:04Z",
-      "summary": "Mega-merge leftover GitHub PRs #297 #300 #302 #307 #308 #309 closed — content already on origin/main 0044b2e (v1.18.172 / SW 382). Pages live."
     }
   ],
   "implementedFeaturesSummary": "d18 char select deel 1+2 (v1.11.1-2); Mats coinrun + shuriken mik/vliegers + anti-spam (v1.12.0); speel.html (v1.12.2+). Zie HANDOFF-ZOEKINDEX.md en improvement-d20-bag.json userFeatureLog.",
