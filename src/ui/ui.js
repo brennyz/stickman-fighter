@@ -5115,6 +5115,8 @@ const UI = {
     state = 'result';
     scheduleResize();
     document.getElementById('pauseBtn')?.classList.remove('show');
+    const rs = document.getElementById('resultScreen');
+    if (rs) rs.classList.toggle('is-lose', !win);
     this.show('resultScreen');
     AudioSys.setPaused(false);
     playMenuBgm(true);

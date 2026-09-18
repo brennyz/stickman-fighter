@@ -323,9 +323,9 @@ const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const VERSION_UPDATE_SAVE_KEY = 'stickfighter_version_update_save_v1';
 const VERSION_UPDATE_FLAG_KEY = 'stickfighter_version_update_flag_v1';
 const SAVE_EXPORT_SCHEMA = 3;
-const APP_VERSION = '1.18.174';
+const APP_VERSION = '1.18.175';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 384;
+const SW_CACHE_REV = 385;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', petCoins: 0, dex: {}, summons: {}, pets: {}, activePet: null,
   eggPets: {}, activeEggPet: null, eggDaily: null,
   chestDaily: null, chestWeapons: {},
@@ -26092,6 +26092,14 @@ function applyLocaleOverlays() {
   if (typeof CATALOG_FR === 'object') deepMergeI18n(I18N.fr, CATALOG_FR);
   if (typeof CATALOG_ES === 'object') deepMergeI18n(I18N.es, CATALOG_ES);
   if (typeof CATALOG_DE === 'object') deepMergeI18n(I18N.de, CATALOG_DE);
+  deepMergeI18n(I18N.de, {
+    species: {
+      piepvleugel: 'Piepflügel', stekelra: 'Stachelra', ijzerstek: 'Eisenstachel',
+      nachtwolk: 'Nachtwolke', blikkert: 'Blechblink', laserblik: 'Laserblech',
+      vlamvos: 'Flammenfuchs', stormvos: 'Sturmfuchs', rotsbonk: 'Felsbonk',
+      vlamdraak: 'Flammendrache', schaduwvorst: 'Schattenfürst', voidkonijn: 'Leerenhase',
+    },
+  });
   deepMergeI18n(I18N.fr, {
     ui: {
       summonLoadFail: 'Invocations introuvables',
@@ -41134,7 +41142,7 @@ class Game {
       this.banner(t('banner.lost'), 2, '#ff6b6b', 50);
     }
     // Resultaat-scherm altijd tonen (Volgende level / Opnieuw) — niet stil naar menu
-    scheduleGameResult(this, win ? 1600 : 1400, () => UI.showResult(win, {
+    scheduleGameResult(this, win ? 1600 : 380, () => UI.showResult(win, {
       titleKey: win ? 'result.advWin' : 'result.advLose',
       title: win ? t('result.advWin') : t('result.advLose'),
       detailKey: win ? 'result.advDetailWin' : 'result.advDetailLose',
@@ -41881,7 +41889,7 @@ class Game {
           : tOr('result.trainStyleMore', 'Unlock stijlen door meer train-wins!')))
       : onceResultTip('training', 'loss', tOr('combat.trainLostTip', tOr('combat.trainLossTip', 'Spring tijdens LIGHTNING PIERCE — robot mist · spring oor-lasers')))
         || tOr('combat.trainTipDefault', 'Tip: spring lasers · energy vol → Spiral Orb');
-    scheduleGameResult(this, 1400, () => UI.showResult(win, {
+    scheduleGameResult(this, win ? 1400 : 380, () => UI.showResult(win, {
       titleKey: win ? 'result.trainWin' : 'result.trainLose',
       title: win ? tOr('result.trainWin', 'KAMPIOEN!') : tOr('result.trainLose', 'ROBOT WINT...'),
       detailKey: win ? 'result.trainDetailWin' : 'result.trainDetailLose',
@@ -51453,6 +51461,8 @@ const UI = {
     state = 'result';
     scheduleResize();
     document.getElementById('pauseBtn')?.classList.remove('show');
+    const rs = document.getElementById('resultScreen');
+    if (rs) rs.classList.toggle('is-lose', !win);
     this.show('resultScreen');
     AudioSys.setPaused(false);
     playMenuBgm(true);
@@ -52867,21 +52877,44 @@ if (pauseVsSwap) {
     }), 2800);
   });
 }
-bindPress(document.getElementById('resAgain'), () => {
+/** EX-022: lose retry skips gamble flash so death → fight stays under 3s. */
+function retryLastFight() {
   const d = UI.lastResult;
-  if (!d || !d.mode) return;
+  if (!d || !d.mode) return false;
   AudioSys.sfx('select');
   try { if (game) game._resultToken = (game._resultToken || 0) + 1; } catch (_) {}
-  if (d.mode === 'adventure') gokGooiStartLevel(d.level);
-  else if (d.mode === 'versus') {
+  if (d.mode === 'adventure') {
+    if (!d.win) {
+      const diff = d.difficulty || (typeof currentAdvDiff === 'function' ? currentAdvDiff() : 'normal');
+      startGame('adventure', { level: d.level || 1, gamble: null, difficulty: diff });
+      return true;
+    }
+    gokGooiStartLevel(d.level);
+    return true;
+  }
+  if (d.mode === 'versus') {
     const p1 = d.p1 || vsSelect.p1;
     const p2 = d.p2 || vsSelect.p2;
     vsSelect.p1 = p1;
     vsSelect.p2 = p2;
     UI.toast(`Rematch · ${vsRosterName(p1) || 'P1'} vs ${vsRosterName(p2) || 'P2'}`, 2600);
     startGame('versus', { p1, p2 });
+    return true;
   }
-  else startGame(d.mode);
+  startGame(d.mode);
+  return true;
+}
+bindPress(document.getElementById('resAgain'), () => {
+  retryLastFight();
+});
+['resTitle', 'resDetail', 'resTip', 'resXp', 'resStars'].forEach((id) => {
+  const el = document.getElementById(id);
+  if (!el) return;
+  bindPress(el, () => {
+    const d = UI.lastResult;
+    if (!d || d.win) return;
+    retryLastFight();
+  });
 });
 bindPress(document.getElementById('resNext'), () => {
   const d = UI.lastResult;

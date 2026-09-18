@@ -8,7 +8,7 @@
 **This sprint:** mobile **web** viewport only. Native Android APK / TWA / Play upload = **out of scope** (see bottom).
 
 **Baseline playtested:** v1.18.172 / SW 382 (`origin/main` `a7a4b74`)  
-**This draft PR:** v1.18.174 / SW 384 · branch `cursor/examinator-p0-bb6c` · **#320 — do not merge to main**
+**This draft PR:** v1.18.175 / SW 385 · branch `cursor/examinator-p0-bb6c` · **#320 — do not merge to main**
 
 How to pick work: take the **lowest open EX-id** in your lane. Mark `in-progress` / `done` / `DELEGATED #PR` here when you start/finish. Do not steal a `done` or `DELEGATED` item unless the owner asks to change it.
 
@@ -24,8 +24,22 @@ How to pick work: take the **lowest open EX-id** in your lane. Mark `in-progress
 | **#319** | `cursor/pets-catchup-bc19` | pets | collection Pets screen (EX-003 follow already on #320) |
 | **#312** | `cursor/factories-ux-unclunky-d443` | factories | **EX-016** · factory sheet UX (EX-004 list XOR already on #320) |
 | **#317** | `cursor/i18n-layout-copy-f2a3` | i18n layout | factories/FOMO/HUD/gear **layout** copy — **not** EX-013/014/015 |
-| **#316** | `cursor/juice-feel-f8cf` | juice | KO confirm / empty CTAs / reduced-motion |
+| **#316** | `cursor/juice-feel-f8cf` | juice | KO confirm / empty CTAs / reduced-motion · **EX-025** |
 | **#318** | `cursor/ui-layout-polish-7643` | UI | **EX-017** · **EX-018** · HOME/Collectie chrome |
+
+---
+
+## FEEL bar (Flappy-inspired)
+
+Stickman is judged against a one-tap arcade loop — not a store sim. Payments / IAP stay **out of scope** until Android Play is live (note only; see EX-026).
+
+| Bar | Pass looks like | Stickman now |
+|-----|-----------------|--------------|
+| **Fair fail** | You know *why* you died (pipe, not RNG). Next try feels earned. | Lose banner is generic VERLOREN; the why-tip is a small line. Gamble can add a random super-boss on the *next* start. |
+| **&lt;3s retry** | Death → next flap in under three seconds. | Was **P0**: 1400ms hold + result card + two equal buttons + `gokGooiStartLevel` flash (~420ms). |
+| **One primary CTA** | One tap does the core verb (flap / retry). | HOME is a hub (many tiles — OK). Result lose had Opnieuw **and** Hoofdmenu as twin mode-btns. |
+| **Juice on core action** | Punch / kick / jump has snap, hit-stop, audio. | **DELEGATED #316** (KO confirm, empty CTAs, reduced-motion). Do not restage. |
+| **First-30s teach-by-doing** | Learn by playing, not by reading. | Title → HOME → island → gamble flash → HUD hint. Aim tutorial is closer to doing; the funnel still talks first. |
 
 ---
 
@@ -33,10 +47,10 @@ How to pick work: take the **lowest open EX-id** in your lane. Mark `in-progress
 
 | Rank | Meaning |
 |------|---------|
-| **P0** | Breaks Android-first play or owner-named pain (i18n leak, text overflow, phone horde, unusable factory/gear, pets that cannot keep up, summons that feel broken) |
+| **P0** | Breaks Android-first play, owner-named pain, **or** a FEEL-bar miss that blocks the loop (retry &gt;3s, no primary retry CTA) |
 | **P1** | Clunky / ugly but flow still works |
 | **P2** | A–Z polish, copy consistency |
-| **P3** | Nice-to-have / future Android native |
+| **P3** | Nice-to-have / future Android native / IAP after Play |
 
 ---
 
@@ -52,6 +66,10 @@ How to pick work: take the **lowest open EX-id** in your lane. Mark `in-progress
 | EX-018 | P2 | **DELEGATED #318** | A–Z | “Verder spelen” continue banner stays on HOME after a run | `#btnContinue` / `menu.continue` |
 | EX-019 | P3 | **DELEGATED #315** | i18n | Gear chips LOOK/STAT still English tokens in FR/ES (short on purpose) | catalog-locales overlays |
 | EX-020 | P3 | open | Android native | TWA / Play / APK signing, back-gesture, display-cutout, install prompt — **next sprint** | `native/android/` · `docs/store/` |
+| EX-023 | P1 | open | FEEL / first-30s | Island pick + gamble flash + FOMO + HUD hint before the first punch — reading, not doing | `gokGooiStartLevel` · `levelScreen` · `#fomoRitual` |
+| EX-024 | P1 | open | FEEL / fair fail | VERLOREN does not name the killer / telegraph; tip is easy to miss on 390 | `src/game/game.js` lose `tip` · `resTip` |
+| EX-025 | P2 | **DELEGATED #316** | FEEL / juice | Punch/kick/KO snap, empty-collection CTA, reduced-motion | `docs` / `smoke:juice-feel` on #316 |
+| EX-026 | P3 | open · **IAP out of scope** | payments | No coins-for-cash / Play Billing until Android Play is live. Do not add IAP. Note only. | `docs/store/` · `native/android/` |
 
 ---
 
@@ -69,6 +87,7 @@ How to pick work: take the **lowest open EX-id** in your lane. Mark `in-progress
 | EX-014 | P2 | **done** | `gambleOutcomeLabel()` uses `t('gamble.*')` — EN no longer sees “Pech! Super-baas…”. |
 | EX-015 | P2 | **done** | FR `insère une pièce` · ES `inserta una moneda` (`menu.pressStart`). DE already `Münze einwerfen`. |
 | EX-021 | P2 | **done** | 390px FOMO sheet compact + HOME tiles stay tappable (backdrop only lower half). **Does not** restage #313 HOME-only / `fomo-open` chrome hide. |
+| EX-022 | P0 | **done** | FEEL &lt;3s retry + one CTA on **lose**: result delay 380ms; `#resultScreen.is-lose` promotes Opnieuw, demotes Menu; lose+Opnieuw skips gamble flash (`startGame` same level). Title/tip tap retries. Win path unchanged (gamble + Volgend level). Not #314/#316. |
 
 ---
 
@@ -89,6 +108,7 @@ Desktop ~1280×800 and phone 390×844 (Puppeteer + computer-use). Versus tile ab
 | Pets | follow snap | follow snap | collection screen = #319 |
 | Gamble toast | locale | locale | EX-014 |
 | Species names | Peepwing on EN | same | EX-013 |
+| Result lose | one Opnieuw CTA, 380ms | same | EX-022 FEEL retry |
 
 Probe (pre-fix, v1.18.172):
 
@@ -117,7 +137,8 @@ factory ids stick_lighter…echo_whistle  OK
 - Bubblewrap / TWA `appVersionName` still 1.18.172 until a Play drop  
 - Predictive back, display-cutout, installability QA on a real device  
 - Play Console store listing / data-safety (docs exist, not this PR)  
-- Offline SW on Android Chrome after this cache rev (384) — player taps «Verse versie»
+- Offline SW on Android Chrome after this cache rev (385) — player taps «Verse versie»
+- **Payments / IAP** — out of scope until Play is live (EX-026). No shop, no Billing SDK on this sprint.
 
 ---
 

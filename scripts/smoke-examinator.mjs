@@ -70,6 +70,17 @@ if (!/#menuScreen #fomoRitual \{\s*align-items: flex-end;[\s\S]*pointer-events: 
   fail('390 FOMO overlay must be pointer-events none so tiles stay tappable');
 }
 if (!/max-height: min\(44vh, 340px\)/.test(css)) fail('390 FOMO sheet must be compact max-height');
+if (!/FEEL bar/.test(exam)) fail('EXAMINATOR.md must keep FEEL bar');
+if (!/EX-022/.test(exam)) fail('EXAMINATOR.md must rank EX-022 retry');
+if (!/EX-026/.test(exam) || !/IAP out of scope/.test(exam)) fail('EXAMINATOR.md must note IAP out of scope');
+if (!/win \? 1600 : 380/.test(game)) fail('adventure lose result delay must be 380ms');
+if (!/win \? 1400 : 380/.test(game)) fail('training lose result delay must be 380ms');
+if (!/classList.toggle\('is-lose'/.test(ui)) fail('resultScreen must toggle is-lose');
+if (!/#resultScreen.is-lose #resAgain/.test(css)) fail('lose result must promote Opnieuw');
+if (!/#resultScreen.is-lose #resMenu/.test(css)) fail('lose result must demote Menu');
+const startJs = fs.readFileSync(path.join(root, 'src/boot/start.js'), 'utf8');
+if (!/function retryLastFight/.test(startJs)) fail('retryLastFight helper missing');
+if (!/gamble: null/.test(startJs)) fail('lose adventure retry must skip gamble');
 
 console.log('SMOKE_OK examinator: static P0 guards');
 
@@ -147,6 +158,28 @@ const phoneNl = await snap(browser, 390, 844, 'nl');
 const phoneFr = await snap(browser, 390, 844, 'fr');
 const phoneEs = await snap(browser, 390, 844, 'es');
 const phoneDe = await snap(browser, 390, 844, 'de');
+const feelPage = await browser.newPage();
+await feelPage.setViewport({ width: 390, height: 844, isMobile: true, hasTouch: true });
+await feelPage.goto(smokeBaseUrl(8793), { waitUntil: 'load', timeout: 30000 });
+await feelPage.waitForFunction(() => window.__sfBooted, { timeout: 25000 });
+const feel = await feelPage.evaluate(() => {
+  try { if (typeof enterHubFromTitle === 'function') enterHubFromTitle({}); } catch (_) {}
+  UI.showResult(false, {
+    mode: 'adventure', level: 1, win: false, xp: 0,
+    titleKey: 'result.advLose', title: 'VERLOREN',
+    detail: 'feel', tip: 'jump',
+  });
+  const rs = document.getElementById('resultScreen');
+  const again = document.getElementById('resAgain');
+  const menu = document.getElementById('resMenu');
+  return {
+    lose: !!(rs && rs.classList.contains('is-lose')),
+    againH: again ? Math.round(again.getBoundingClientRect().height) : 0,
+    menuH: menu ? Math.round(menu.getBoundingClientRect().height) : 0,
+    hasRetry: typeof retryLastFight === 'function',
+  };
+});
+await feelPage.close();
 await browser.close();
 if (server && server.close) try { server.close(); } catch (_) {}
 
@@ -170,5 +203,9 @@ if (phoneEs.press !== 'inserta una moneda') fail('ES pressStart: ' + phoneEs.pre
 if (phone.fomoOverlay && phone.fomoOverlay.pe !== 'none') {
   fail('390 FOMO overlay pointer-events must be none, got ' + phone.fomoOverlay.pe);
 }
+if (!feel.lose) fail('lose result must set #resultScreen.is-lose');
+if (!feel.hasRetry) fail('retryLastFight must exist on lose');
+if (feel.againH < 50) fail('lose Opnieuw CTA too small: ' + feel.againH);
+if (feel.menuH >= feel.againH) fail('lose Menu must be smaller than Opnieuw');
 
 console.log('SMOKE_OK examinator: phone', phone.lv10total, '/', phone.lv20total, 'desk', desk.lv10total, '/', desk.lv20total);
