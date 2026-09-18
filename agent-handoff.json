@@ -50,6 +50,14 @@
   },
   "userWishlist": [
     {
+      "id": "w-20260918T160800",
+      "from": "user",
+      "text": "PLAYTEST BOT 5/9 — Stickman Fighter. LIVE main c9a29fc v1.18.190 SW400. Until ~18:36 Amsterdam. Focus: DEATH→RETRY — die, fat Nog één keer <3s, same-level rematch, killer tip. Portrait+landscape. Draft findings. No Versus. No main.",
+      "status": "in-progress",
+      "updated": "2026-09-18",
+      "notes": "Playtest lane 5/9 death-retry. Draft findings only, do not merge main."
+    },
+    {
       "id": "w-20260918T155700",
       "from": "user",
       "text": "MEGA-MERGE Stickman 20m-session drafts to main. Brendon wants playtest swarm on a fixed build next. Priority: #333 invisible fighters, #325 landscape combat camera/floor, #334 examinator feel (keep pauseG), #329 landscape begin/HOME SPELEN + FOMO dock, #332 telegraph readability (keep #314 density), #331 landscape touch, #328 first-30s teach, #330 combat juice, #326 death-retry polish, #327 fxLite if mergeable. No Versus. speel.html. No force-push. Conflict: keep #333 drawCombatants+recover, #325 viewport/floor, #334 pauseG HUD, #329 two-col SPELEN + FOMO left dock, #323/#326 fat gold Nog één keer + restartAdventureInstant.",
