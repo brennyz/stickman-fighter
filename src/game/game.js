@@ -1034,7 +1034,7 @@ class Game {
     // Resultaat-scherm altijd tonen (Volgende level / Opnieuw) — niet stil naar menu
     const loseCopy = !win && typeof adventureLoseCopy === 'function' ? adventureLoseCopy(this) : null;
     scheduleGameResult(this, win ? 1600 : 1400, () => UI.showResult(win, {
-      titleKey: win ? 'result.advWin' : ((loseCopy && loseCopy.titleKey) || 'result.advLose'),
+      titleKey: win ? 'result.advWin' : 'result.advLose',
       title: win ? t('result.advWin') : ((loseCopy && loseCopy.title) || t('result.advLose')),
       titleParams: loseCopy && loseCopy.titleParams,
       detailKey: win ? 'result.advDetailWin' : 'result.advDetailLose',

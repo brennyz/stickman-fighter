@@ -41276,7 +41276,7 @@ class Game {
     // Resultaat-scherm altijd tonen (Volgende level / Opnieuw) — niet stil naar menu
     const loseCopy = !win && typeof adventureLoseCopy === 'function' ? adventureLoseCopy(this) : null;
     scheduleGameResult(this, win ? 1600 : 1400, () => UI.showResult(win, {
-      titleKey: win ? 'result.advWin' : ((loseCopy && loseCopy.titleKey) || 'result.advLose'),
+      titleKey: win ? 'result.advWin' : 'result.advLose',
       title: win ? t('result.advWin') : ((loseCopy && loseCopy.title) || t('result.advLose')),
       titleParams: loseCopy && loseCopy.titleParams,
       detailKey: win ? 'result.advDetailWin' : 'result.advDetailLose',
@@ -51509,12 +51509,18 @@ const UI = {
     try { this.clearToasts(); } catch (_) {}
     const title = document.getElementById('resTitle');
     if (!title) throw new Error('result DOM missing');
-    const titleKey = data.titleKey || (data.mode === 'training'
+    let titleKey = data.titleKey || (data.mode === 'training'
       ? (win ? 'result.trainWin' : 'result.trainLose')
       : (win ? 'result.advWin' : 'result.advLose'));
+    const killerName = data.titleParams && data.titleParams.name;
+    if (!win && killerName && (titleKey === 'result.advLose' || titleKey === 'result.advLoseBy')) {
+      titleKey = 'result.advLoseBy';
+    }
     const titleFallback = data.mode === 'training'
       ? (win ? tOr('result.trainWin', 'KAMPIOEN!') : tOr('result.trainLose', 'ROBOT WINT...'))
-      : (win ? tOr('result.advWin', 'GEWONNEN!') : tOr('result.advLose', 'VERLOREN'));
+      : (win ? tOr('result.advWin', 'GEWONNEN!') : (killerName
+        ? tOr('result.advLoseBy', 'VERLOREN · {name}', data.titleParams)
+        : tOr('result.advLose', 'VERLOREN')));
     // Never reuse a stale English title (ROBOT WINS / YOU LOST) when the UI is NL.
     const painted = (typeof tOr === 'function')
       ? tOr(titleKey, titleFallback, data.titleParams || {})

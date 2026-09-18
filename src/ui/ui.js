@@ -5024,12 +5024,18 @@ const UI = {
     try { this.clearToasts(); } catch (_) {}
     const title = document.getElementById('resTitle');
     if (!title) throw new Error('result DOM missing');
-    const titleKey = data.titleKey || (data.mode === 'training'
+    let titleKey = data.titleKey || (data.mode === 'training'
       ? (win ? 'result.trainWin' : 'result.trainLose')
       : (win ? 'result.advWin' : 'result.advLose'));
+    const killerName = data.titleParams && data.titleParams.name;
+    if (!win && killerName && (titleKey === 'result.advLose' || titleKey === 'result.advLoseBy')) {
+      titleKey = 'result.advLoseBy';
+    }
     const titleFallback = data.mode === 'training'
       ? (win ? tOr('result.trainWin', 'KAMPIOEN!') : tOr('result.trainLose', 'ROBOT WINT...'))
-      : (win ? tOr('result.advWin', 'GEWONNEN!') : tOr('result.advLose', 'VERLOREN'));
+      : (win ? tOr('result.advWin', 'GEWONNEN!') : (killerName
+        ? tOr('result.advLoseBy', 'VERLOREN · {name}', data.titleParams)
+        : tOr('result.advLose', 'VERLOREN')));
     // Never reuse a stale English title (ROBOT WINS / YOU LOST) when the UI is NL.
     const painted = (typeof tOr === 'function')
       ? tOr(titleKey, titleFallback, data.titleParams || {})
