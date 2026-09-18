@@ -42,7 +42,7 @@
         "url": "https://github.com/brennyz/stickman-fighter/pull/313",
         "branch": "cursor/summons-cleanup-18b8",
         "title": "Summon systems: clearer chest flow + cleaner mobile UI",
-        "note": "Draft only. Do not merge until Brendon says merge."
+        "note": "DONE P0–P2; remaining EX P3-only. Draft only. Do not merge until Brendon says merge."
       }
     ]
   },
