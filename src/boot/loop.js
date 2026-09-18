@@ -1013,6 +1013,8 @@ function bootGame() {
       fairLane: combatColossalFairLane,
       enrageWalk: combatEnrageWalkMul,
       spreadPickupX: combatSpreadPickupX,
+      teleHudSlots: combatTelegraphHudSlots,
+      pickTeleHuds: combatPickTelegraphHuds,
     } : null,
     previewTop20Spawn: () => {
       try { AudioSys.init(); AudioSys.sfx('top20Spawn'); } catch (_) {}

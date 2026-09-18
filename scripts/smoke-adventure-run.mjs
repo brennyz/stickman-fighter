@@ -103,6 +103,13 @@ async function run() {
     const hellWalk = (typeof combatEnrageWalkMul === 'function') ? combatEnrageWalkMul(1.32, vp) : null;
     const lootFan = (typeof combatSpreadPickupX === 'function')
       ? combatSpreadPickupX(180, [{ x: 180, life: 1 }], vp) : null;
+    const hudMocks = (typeof adventureTelegraphHuds === 'function')
+      ? adventureTelegraphHuds([
+        { alive: true, telegraphT: 0.40, telegraphMax: 0.45, sp: { type: 'tank' } },
+        { alive: true, telegraphT: 0.22, telegraphMax: 0.45, sp: { type: 'charge' } },
+      ]) : [];
+    const hudPick = (typeof combatPickTelegraphHuds === 'function')
+      ? combatPickTelegraphHuds(hudMocks, vp) : hudMocks;
     const colossalProbe = {
       w: vp.w,
       h: vp.h,
@@ -196,6 +203,12 @@ async function run() {
       appVersion: typeof APP_VERSION !== 'undefined' ? APP_VERSION : '?',
       colossalProbe,
       enrageLootProbe: { hellWalk, lootFan },
+      teleHudProbe: {
+        n: hudMocks.length,
+        shown: hudPick.length,
+        first: hudPick[0] && hudPick[0].kind,
+        extra: (hudPick[0] && hudPick[0].extra) || 0,
+      },
     };
   }, levelN);
 
@@ -214,6 +227,11 @@ async function run() {
   if (!(er.hellWalk > 1.32 && er.hellWalk < 1.5 && Math.abs((er.lootFan || 0) - 180) >= 40)) {
     result.ok = false;
     result.errors = (result.errors || []).concat(['enrage-loot:phone-fair ' + JSON.stringify(er)]);
+  }
+  const hud = result.teleHudProbe || {};
+  if (!(hud.n === 2 && hud.shown === 2 && hud.first === 'charge')) {
+    result.ok = false;
+    result.errors = (result.errors || []).concat(['tele-hud:multi-cue ' + JSON.stringify(hud)]);
   }
 
   await browser.close();

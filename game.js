@@ -323,9 +323,9 @@ const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const VERSION_UPDATE_SAVE_KEY = 'stickfighter_version_update_save_v1';
 const VERSION_UPDATE_FLAG_KEY = 'stickfighter_version_update_flag_v1';
 const SAVE_EXPORT_SCHEMA = 3;
-const APP_VERSION = '1.18.176';
+const APP_VERSION = '1.18.177';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 386;
+const SW_CACHE_REV = 387;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', petCoins: 0, dex: {}, summons: {}, pets: {}, activePet: null,
   eggPets: {}, activeEggPet: null, eggDaily: null,
   chestDaily: null, chestWeapons: {},
@@ -30099,6 +30099,23 @@ function combatSpreadPickupX(x, others, profile, bounds) {
   return Math.round(nx);
 }
 
+/** How many HUD telegraph bars fit. Short landscape keeps 1 + overflow chip. */
+function combatTelegraphHudSlots(profile) {
+  profile = asCombatProfile(profile);
+  if (profile.h < 430) return 1;
+  return 2;
+}
+
+function combatPickTelegraphHuds(teles, profile) {
+  profile = asCombatProfile(profile);
+  const list = (teles || []).slice().sort((a, b) => (Number(a.remain) || 99) - (Number(b.remain) || 99));
+  const slots = combatTelegraphHudSlots(profile);
+  const shown = list.slice(0, slots);
+  const extra = list.length - shown.length;
+  if (extra > 0 && shown[0]) shown[0].extra = extra;
+  return shown;
+}
+
 /** Desktop stays 2.0. Phone keeps a "huge" boss without eating the 390px strip. */
 function combatColossalSizeMul(profile) {
   profile = asCombatProfile(profile);
@@ -40335,19 +40352,25 @@ function gameUiTimerOk(ref, opts) {
 }
 
 function adventureTelegraphHud(m) {
-  if (!m || !m.alive) return null;
+  return adventureTelegraphHudFromMonster(m);
+}
+
+function adventureTelegraphHudFromMonster(m) {
+  if (!m || !m.alive || !m.sp) return null;
   if (m.telegraphT > 0) {
     const max = Math.max(0.2, m.telegraphMax || m.telegraphT);
     if (m.sp.type === 'tank') {
       return {
         label: (typeof t === 'function' ? t('hud.teleSlam') : 'SLAM — spring!'),
         color: '#ff9a3d', frac: m.telegraphT / max, max, icon: 'jump',
+        remain: m.telegraphT, kind: 'slam',
       };
     }
     if (m.sp.type === 'charge' || (m.sp.type === 'swim' && m.sp.art === 'shark')) {
       return {
         label: (typeof t === 'function' ? t('hud.teleCharge') : 'CHARGE — uit de weg!'),
         color: '#ffdd66', frac: m.telegraphT / max, max, icon: 'jump',
+        remain: m.telegraphT, kind: 'charge',
       };
     }
   }
@@ -40355,24 +40378,36 @@ function adventureTelegraphHud(m) {
     return {
       label: (typeof t === 'function' ? t('hud.teleShoot') : 'SCHIET — side-step!'),
       color: '#7cf5ff', frac: 1 - m.shootCD / 0.32, max: 0.32,
+      remain: m.shootCD, kind: 'shoot',
     };
   }
   if (m.sp.type === 'dragon' && m.shootCD > 0 && m.shootCD < 0.38) {
     return {
       label: (typeof t === 'function' ? t('hud.teleFire') : 'VUUR — side-step!'),
       color: '#ff7a4d', frac: 1 - m.shootCD / 0.38, max: 0.38,
+      remain: m.shootCD, kind: 'fire',
     };
   }
   return null;
 }
 
-function drawTelegraphBar(c, game, tele, y) {
+function adventureTelegraphHuds(monsters) {
+  const out = [];
+  for (const m of monsters || []) {
+    const one = adventureTelegraphHudFromMonster(m);
+    if (one) out.push(one);
+  }
+  return out;
+}
+
+function drawTelegraphBar(c, game, tele, y, index) {
   const dens = (typeof combatDensityProfile === 'function') ? combatDensityProfile() : null;
   const compact = !!(dens && dens.compact);
   const short = (typeof H === 'number' && H < 500);
   const barW = Math.min(compact ? 268 : 320, W - (compact ? 24 : 32));
   const bx = (W - barW) / 2;
   if (compact || short) y = Math.min(y, H * (short ? 0.50 : 0.58));
+  y += (Number(index) || 0) * (compact ? 38 : 36);
   c.fillStyle = 'rgba(0,0,0,.62)';
   game.rr(c, bx - 8, y - 20, barW + 16, 34, 10);
   c.fill();
@@ -40386,6 +40421,12 @@ function drawTelegraphBar(c, game, tele, y) {
   } else {
     c.fillStyle = tele.color;
     c.fillText(tele.label, W / 2, y);
+  }
+  if (tele.extra > 0) {
+    c.font = compact ? '900 14px sans-serif' : '900 13px sans-serif';
+    c.textAlign = 'right';
+    c.fillStyle = '#fff';
+    c.fillText('+' + tele.extra, bx + barW - 2, y);
   }
   c.fillStyle = 'rgba(255,255,255,.2)';
   game.rr(c, bx, y + 8, barW, 8, 4);
@@ -45502,12 +45543,14 @@ class Game {
         });
         if (!stageClear) this.drawNextWavePreview(c);
       }
-      let advTele = null;
-      for (const m of this.monsters) {
-        advTele = adventureTelegraphHud(m);
-        if (advTele) break;
+      const advTelesRaw = adventureTelegraphHuds(this.monsters);
+      const advTeles = (typeof combatPickTelegraphHuds === 'function')
+        ? combatPickTelegraphHuds(advTelesRaw)
+        : advTelesRaw.slice(0, 1);
+      const teleY = bossAlive ? hy + 8 : hy;
+      for (let i = 0; i < advTeles.length; i++) {
+        drawTelegraphBar(c, this, advTeles[i], teleY, i);
       }
-      if (advTele) drawTelegraphBar(c, this, advTele, bossAlive ? hy + 8 : hy);
     } else if (this.mode === 'training') {
       const r = this.robot;
       const half = Math.min(300, W * 0.36);
@@ -54055,6 +54098,8 @@ function bootGame() {
       fairLane: combatColossalFairLane,
       enrageWalk: combatEnrageWalkMul,
       spreadPickupX: combatSpreadPickupX,
+      teleHudSlots: combatTelegraphHudSlots,
+      pickTeleHuds: combatPickTelegraphHuds,
     } : null,
     previewTop20Spawn: () => {
       try { AudioSys.init(); AudioSys.sfx('top20Spawn'); } catch (_) {}

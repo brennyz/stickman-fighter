@@ -253,6 +253,23 @@ function combatSpreadPickupX(x, others, profile, bounds) {
   return Math.round(nx);
 }
 
+/** How many HUD telegraph bars fit. Short landscape keeps 1 + overflow chip. */
+function combatTelegraphHudSlots(profile) {
+  profile = asCombatProfile(profile);
+  if (profile.h < 430) return 1;
+  return 2;
+}
+
+function combatPickTelegraphHuds(teles, profile) {
+  profile = asCombatProfile(profile);
+  const list = (teles || []).slice().sort((a, b) => (Number(a.remain) || 99) - (Number(b.remain) || 99));
+  const slots = combatTelegraphHudSlots(profile);
+  const shown = list.slice(0, slots);
+  const extra = list.length - shown.length;
+  if (extra > 0 && shown[0]) shown[0].extra = extra;
+  return shown;
+}
+
 /** Desktop stays 2.0. Phone keeps a "huge" boss without eating the 390px strip. */
 function combatColossalSizeMul(profile) {
   profile = asCombatProfile(profile);

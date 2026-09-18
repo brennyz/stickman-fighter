@@ -61,6 +61,12 @@ must(/combatEnrageWalkMul\(/.test(fs.readFileSync(path.join(root, 'src/entities/
   'enrage walk must use combatEnrageWalkMul');
 must(/combatSpreadPickupX\(/.test(fs.readFileSync(path.join(root, 'src/game/game.js'), 'utf8')),
   'spawnPickup must fan compact floor loot');
+must(/adventureTelegraphHuds\(/.test(fs.readFileSync(path.join(root, 'src/game/game.js'), 'utf8')),
+  'HUD must collect all telegraph cues');
+must(/combatPickTelegraphHuds\(/.test(fs.readFileSync(path.join(root, 'src/game/game.js'), 'utf8')),
+  'HUD must pick soonest cues, not break on first');
+must(!/if \(advTele\) break/.test(fs.readFileSync(path.join(root, 'src/game/game.js'), 'utf8')),
+  'HUD must not break on the first telegraph');
 must(!/applyCombatTelegraphWind/.test(versusSrc), 'versus.js must not use telegraph density');
 
 must(/opener \? 1 :/.test(gameSrc), 'opener must stay single-file');
@@ -208,6 +214,30 @@ must(Math.abs(phoneLoot - 200) >= 40, 'phone stacked loot fans ≥40px', phoneLo
 must(!/combatEnrageWalkMul/.test(versusSrc), 'versus.js must not use enrage walk scale');
 must(!/combatSpreadPickupX/.test(versusSrc), 'versus.js must not use pickup fan');
 
+must(iso.combatTelegraphHudSlots(desk) === 2, 'desktop HUD can show 2 cues');
+must(iso.combatTelegraphHudSlots(phone) === 2, 'phone portrait HUD shows 2 stacked cues');
+must(iso.combatTelegraphHudSlots(phoneLand) === 1, 'short landscape HUD stays 1 + overflow');
+const picked = iso.combatPickTelegraphHuds([
+  { remain: 0.40, label: 'slam' },
+  { remain: 0.18, label: 'charge' },
+  { remain: 0.90, label: 'fire' },
+], phone);
+must(picked.length === 2 && picked[0].label === 'charge' && picked[1].label === 'slam',
+  'phone HUD sorts soonest first', picked);
+must(picked[0].extra === 1, 'phone 2-slot +1 when a third cue is waiting', picked);
+const twoOnly = iso.combatPickTelegraphHuds([
+  { remain: 0.40, label: 'slam' },
+  { remain: 0.18, label: 'charge' },
+], phone);
+must(twoOnly.length === 2 && !twoOnly[0].extra, 'phone 2-of-2 has no overflow chip', twoOnly);
+const landPick = iso.combatPickTelegraphHuds([
+  { remain: 0.40, label: 'slam' },
+  { remain: 0.18, label: 'charge' },
+], phoneLand);
+must(landPick.length === 1 && landPick[0].label === 'charge' && landPick[0].extra === 1,
+  'short landscape shows soonest +1', landPick);
+must(!/combatPickTelegraphHuds/.test(versusSrc), 'versus.js must not use multi telegraph HUD');
+
 /* ---- buildLevel with explicit viewports (full bundle) ---- */
 if (!built) fail('game.js missing — run npm run build first');
 
@@ -343,6 +373,15 @@ must(ctx.combatEnrageWalkMul(1.32, { w: 390, h: 844 }) < 1.5, 'vm phone Hell wal
 must(ctx.combatEnrageWalkMul(1.32, { w: 390, h: 844 }) > 1.32, 'vm phone Hell walk still a rush');
 must(Math.abs(ctx.combatSpreadPickupX(180, [{ x: 180, life: 1 }], { w: 390, h: 844 }) - 180) >= 40,
   'vm phone loot fans off the pile');
+must(typeof ctx.adventureTelegraphHuds === 'function', 'adventureTelegraphHuds not in vm');
+const slamM = { alive: true, telegraphT: 0.40, telegraphMax: 0.45, sp: { type: 'tank' } };
+const chargeM = { alive: true, telegraphT: 0.22, telegraphMax: 0.45, sp: { type: 'charge' } };
+const hudList = ctx.adventureTelegraphHuds([slamM, chargeM, { alive: true, sp: { type: 'hop' } }]);
+must(hudList.length === 2, 'vm two winding elites both produce HUD cues', hudList);
+const phoneHud = ctx.combatPickTelegraphHuds(hudList, { w: 390, h: 844 });
+must(phoneHud.length === 2 && phoneHud[0].kind === 'charge', 'vm 390 stacks soonest charge then slam', phoneHud);
+const landHud = ctx.combatPickTelegraphHuds(hudList, { w: 844, h: 390 });
+must(landHud.length === 1 && landHud[0].extra === 1, 'vm 844×390 one bar +1', landHud);
 
 console.log('TELEGRAPH_390', {
   phoneWind: ctx.applyCombatTelegraphWind(0.45, { w: 390, h: 844 }),
@@ -354,6 +393,14 @@ console.log('TELEGRAPH_390', {
 
 const phoneCap = ctx.combatBossSizeCap({ w: 390, h: 844 });
 const phoneFit = ctx.combatFitBossSize(168, { w: 390, h: 844 });
+console.log('TELE_HUD_390', {
+  slots390: ctx.combatTelegraphHudSlots({ w: 390, h: 844 }),
+  slotsLand: ctx.combatTelegraphHudSlots({ w: 844, h: 390 }),
+  n: hudList.length,
+  phoneShown: phoneHud.map((h) => h.kind),
+  landExtra: landHud[0] && landHud[0].extra,
+});
+
 console.log('ENRAGE_LOOT_390', {
   deskHell: ctx.combatEnrageWalkMul(1.32, { w: 1280, h: 800 }),
   phoneHell: ctx.combatEnrageWalkMul(1.32, { w: 390, h: 844 }),

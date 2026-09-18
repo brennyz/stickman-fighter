@@ -85,12 +85,15 @@ Desktop Hell stays `1.32 × enrageMul` (Hell **1.7424** on top of `speedMul` 1.1
 
 `spawnPickup` fans compact drops to a **40px** x-gap so gear + shards do not pile on one corpse. Desktop x is unchanged.
 
+## Multi telegraph HUD (EX-4)
+
+`adventureTelegraphHuds` collects every winding cue (not the first only). Portrait/desktop show **2** bars, soonest first. Short landscape (H<430) stays **1** bar plus a `+N` chip so the fight strip is not covered. Versus / training unchanged.
+
 ## Remaining mobile overwhelm (EX)
 
-Still true after density + telegraph + colossal + enrage-walk + loot fan:
+Still true after density + telegraph + colossal + enrage-walk + loot fan + multi-HUD:
 
-1. **HUD shows one telegraph** (`adventureTelegraphHud` breaks on the first). Two elites winding at once = one bar.
-2. **Flyers / aim-up** on short landscape (844×390): vertical fight space is still tight.
-3. **Part-gate “hold right”** on portrait still asks for a long right-walk with the left stick.
+1. **Flyers / aim-up** on short landscape (844×390): vertical fight space is still tight.
+2. **Part-gate “hold right”** on portrait still asks for a long right-walk with the left stick.
 
 Re-check after play: `npm run smoke:combat-density && npm run smoke:adventure`.
