@@ -43,7 +43,7 @@
       "id": "w-20260918T125036",
       "from": "user",
       "text": "KEEP IMPROVING #317: factories powers/detail + gear lock toast EN leak; DE compound button overflow (ellipsis/nameShort); smoke:i18n NL/EN/DE/FR/ES 390px HOME+Collectie+combat start. Draft only, speel.html, no Versus.",
-      "status": "open",
+      "status": "done-in-code",
       "updated": "2026-09-18"
     },
     {
@@ -1087,6 +1087,10 @@
   ],
   "sessionLog": [
     {
+      "at": "2026-09-18T12:54:59Z",
+      "summary": "Examiner #317 factory powers/detail + gear lock toasts + DE nameShort. v1.18.176 / SW 386. Draft, geen main."
+    },
+    {
       "at": "2026-09-18T12:50:36Z",
       "summary": "examiner P0 factories/gear-lock + DE button overflow start"
     },
@@ -1181,10 +1185,6 @@
     {
       "at": "2026-09-14T13:49:29Z",
       "summary": "Arcade pick-mode HOME-tegels + chrome i18n volgt taal. PR #264. #263 geparkeerd. Niet stil main."
-    },
-    {
-      "at": "2026-09-14T13:44:04Z",
-      "summary": "Arcade pick-mode restyle + i18n chrome volgt game-taal"
     }
   ],
   "implementedFeaturesSummary": "d18 char select deel 1+2 (v1.11.1-2); Mats coinrun + shuriken mik/vliegers + anti-spam (v1.12.0); speel.html (v1.12.2+). Zie HANDOFF-ZOEKINDEX.md en improvement-d20-bag.json userFeatureLog.",
