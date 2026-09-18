@@ -323,9 +323,9 @@ const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const VERSION_UPDATE_SAVE_KEY = 'stickfighter_version_update_save_v1';
 const VERSION_UPDATE_FLAG_KEY = 'stickfighter_version_update_flag_v1';
 const SAVE_EXPORT_SCHEMA = 3;
-const APP_VERSION = '1.18.180';
+const APP_VERSION = '1.18.181';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 390;
+const SW_CACHE_REV = 391;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', petCoins: 0, dex: {}, summons: {}, pets: {}, activePet: null,
   eggPets: {}, activeEggPet: null, eggDaily: null,
   chestDaily: null, chestWeapons: {},
@@ -29983,54 +29983,77 @@ const COMBAT_OPEN_MIN = 0.70;
 const COMBAT_OPEN_MAX = 1.12;
 const COMBAT_SUSTAIN_MIN = 0.62;
 const COMBAT_SUSTAIN_MAX = 1.05;
+const COMBAT_TAB_OPEN_MIN = 0.66;
+const COMBAT_TAB_OPEN_MAX = 1.22;
+const COMBAT_TAB_SUSTAIN_MIN = 0.55;
+const COMBAT_TAB_SUSTAIN_MAX = 1.15;
 const COMBAT_OPEN_HOLD_COMPACT = 0.55;
+const COMBAT_OPEN_HOLD_TABLET = 0.80;
 const COMBAT_OPEN_HOLD_DESK = 1.2;
 const COMBAT_SPAWN_EDGE_COMPACT = 18;
+const COMBAT_SPAWN_EDGE_TABLET = 28;
 const COMBAT_SPAWN_EDGE_DESK = 40;
 
+/** Compact/tablet cadence band. Desktop (wide) returns null = raw. */
+function combatCadenceBand(elapsedSec, profile) {
+  profile = asCombatProfile(profile);
+  const t = Number(elapsedSec);
+  if (!Number.isFinite(t)) return null;
+  if (profile.compact) {
+    return t < COMBAT_OPEN_SEC
+      ? { min: COMBAT_OPEN_MIN, max: COMBAT_OPEN_MAX }
+      : { min: COMBAT_SUSTAIN_MIN, max: COMBAT_SUSTAIN_MAX };
+  }
+  if (profile.tablet) {
+    return t < COMBAT_OPEN_SEC
+      ? { min: COMBAT_TAB_OPEN_MIN, max: COMBAT_TAB_OPEN_MAX }
+      : { min: COMBAT_TAB_SUSTAIN_MIN, max: COMBAT_TAB_SUSTAIN_MAX };
+  }
+  return null;
+}
+
 /**
- * Compact spawn interval clamp. Desktop stays raw.
- * First 30s: 0.70–1.12 (opener empty-then-spike).
- * After 30s / minute 1+: 0.62–1.05 so later waves are not a 0.38s dump
- * after a 2s hole (wavePause + raw cadence).
+ * Spawn interval clamp. Desktop stays raw.
+ * Phone: 0.70–1.12 first 30s, 0.62–1.05 after.
+ * Tablet 834 mid-band: milder 0.66–1.22 / 0.55–1.15 (batch 2 still, no 0.31s dump).
  */
 function combatSmoothOpenInterval(raw, elapsedSec, profile) {
   const n = Number(raw);
   if (!(n > 0)) return n;
-  profile = asCombatProfile(profile);
-  if (!profile.compact) return n;
-  const t = Number(elapsedSec);
-  if (!Number.isFinite(t)) return n;
-  if (t < COMBAT_OPEN_SEC) return combatDensityClamp(n, COMBAT_OPEN_MIN, COMBAT_OPEN_MAX);
-  return combatDensityClamp(n, COMBAT_SUSTAIN_MIN, COMBAT_SUSTAIN_MAX);
+  const band = combatCadenceBand(elapsedSec, profile);
+  if (!band) return n;
+  return combatDensityClamp(n, band.min, band.max);
 }
 
 /**
- * Compact between-wave hole. Desktop unchanged.
- * Win-clear fanfare (base ≥ 2.3) stays — that is not a combat spike.
+ * Between-wave hole. Desktop unchanged. Win-clear fanfare (base ≥ 2.3) stays.
  * Result CTA delay is #323 — do not use this for showResult.
  */
 function combatWaveGapSec(base, elapsedSec, profile) {
   const n = Number(base);
   if (!(n > 0)) return n;
   profile = asCombatProfile(profile);
-  if (!profile.compact) return n;
   if (n >= 2.3) return n;
-  return combatDensityClamp(n * 0.56, 0.82, 1.25);
+  if (profile.compact) return combatDensityClamp(n * 0.56, 0.82, 1.25);
+  if (profile.tablet) return combatDensityClamp(n * 0.72, 1.00, 1.60);
+  return n;
 }
 
-/** Compact first-30s wave hold. Desktop / after 30s stay 1.2s. */
+/** First-30s wave hold. Desktop / after 30s stay 1.2s. */
 function combatOpenerHold(elapsedSec, profile) {
   profile = asCombatProfile(profile);
-  if (!profile.compact) return COMBAT_OPEN_HOLD_DESK;
   const t = Number(elapsedSec);
   if (!(t < COMBAT_OPEN_SEC)) return COMBAT_OPEN_HOLD_DESK;
-  return COMBAT_OPEN_HOLD_COMPACT;
+  if (profile.compact) return COMBAT_OPEN_HOLD_COMPACT;
+  if (profile.tablet) return COMBAT_OPEN_HOLD_TABLET;
+  return COMBAT_OPEN_HOLD_DESK;
 }
 
 function combatSpawnEdgeOff(profile) {
   profile = asCombatProfile(profile);
-  return profile.compact ? COMBAT_SPAWN_EDGE_COMPACT : COMBAT_SPAWN_EDGE_DESK;
+  if (profile.compact) return COMBAT_SPAWN_EDGE_COMPACT;
+  if (profile.tablet) return COMBAT_SPAWN_EDGE_TABLET;
+  return COMBAT_SPAWN_EDGE_DESK;
 }
 
 /** Compact: spawn closer to the strip so the first walker is on-screen sooner. */
