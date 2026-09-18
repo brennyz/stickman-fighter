@@ -124,7 +124,7 @@ async function run() {
     must(layout.vw === 390, 'expected 390px viewport, got ' + layout.vw);
     must(layout.active && layout.lose, 'lose adventure result not active: ' + JSON.stringify(layout));
     must(/nog één keer|one more go/i.test(layout.label), 'onceMore label missing: ' + layout.label);
-    must(layout.againH >= 72 && layout.againW >= 300, 'retry CTA not huge on 390px: ' + JSON.stringify(layout));
+    must(layout.againH >= 80 && layout.againW >= 300, 'retry CTA not huge on 390px: ' + JSON.stringify(layout));
     must(layout.againY <= layout.vh + 4, 'retry CTA below fold: ' + JSON.stringify(layout));
     must(layout.nextHidden && layout.menuQuiet && layout.primary, 'lose should be one primary CTA: ' + JSON.stringify(layout));
     must(layout.fomoHidden, 'FOMO must not fight result: ' + JSON.stringify(layout));
@@ -170,7 +170,7 @@ async function run() {
       };
     });
     must(/nog één keer|one more go/i.test(trainSnap.label), 'training lose onceMore missing: ' + trainSnap.label);
-    must(trainSnap.primary && trainSnap.retryFirst && trainSnap.againH >= 72,
+    must(trainSnap.primary && trainSnap.retryFirst && trainSnap.againH >= 80,
       'training lose CTA not huge: ' + JSON.stringify(trainSnap));
     must(trainSnap.delay <= 700, 'training lose delay not <3s: ' + trainSnap.delay);
     must(trainSnap.menuW > 0 && trainSnap.menuW < 220 && trainSnap.gap >= 10,
@@ -230,6 +230,24 @@ async function run() {
     must(timed.ms < 3000 && timed.state === 'result',
       'retry CTA not visible in <3s: ' + JSON.stringify(timed));
     must(/nog één keer|one more go/i.test(timed.label), 'timed lose label wrong: ' + timed.label);
+
+    const feelTip = await page.evaluate(() => {
+      const g = {
+        lastFailTele: 'slam',
+        lastHurtBy: { name: 'SlamToad', slam: true, type: 'tank' },
+        player: { hp: 0 },
+        waveIdx: 0,
+        level: { n: 1, waves: [1, 2, 3] },
+        advDiff: 'normal',
+      };
+      const tip = (typeof adventureLoseFeelTip === 'function')
+        ? adventureLoseFeelTip(g, { lv: 1, diff: 'normal' }) : '';
+      return { tip: tip, hasFn: typeof adventureLoseFeelTip === 'function' };
+    });
+    must(feelTip.hasFn, 'adventureLoseFeelTip missing after mega-merge');
+    must(/SLAM/i.test(feelTip.tip) && /nog één keer|one more go/i.test(feelTip.tip),
+      'killer/fail tip must keep cue → retry: ' + feelTip.tip);
+    must(/SlamToad/i.test(feelTip.tip), 'killer tip must name lastHurtBy: ' + feelTip.tip);
 
     const retry = await page.evaluate(() => {
       const again = document.getElementById('resAgain');

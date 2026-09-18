@@ -2712,18 +2712,28 @@
   #resultScreen.is-lose .detail { font-size: 14px; }
   body:has(#resultScreen.active) #fomoRitual { display: none; }
 
-  /* Adventure lose: one fat Flappy-style retry. No extra chrome. */
-  #resultScreen.lose-retry #resAgain {
-    min-height: 72px;
+  /* Adventure lose: restore #323 fat gold CTA after mega-merge (was 72/64).
+     Dock IDs stay #resCtaDock / #resRetrySafe — do not restage ownership. */
+  #resultScreen.lose-retry #resAgain,
+  #resultScreen.is-lose.is-adventure #resAgain.result-cta-primary,
+  #resultScreen.is-retry-first #resAgain.result-cta-primary {
+    min-height: 84px;
     font-size: min(7.2vw, 26px);
     font-weight: 900;
     letter-spacing: 0.02em;
-    margin-top: 12px;
+    margin-top: 0;
   }
   #resultScreen.lose-retry #resAgain div { font-size: inherit; line-height: 1.1; }
   #resultScreen.lose-retry #resMenu { min-height: 44px; opacity: 0.88; }
   @media (min-width: 960px) {
-    #resultScreen.lose-retry #resAgain { min-height: 64px; font-size: 24px; }
+    #resultScreen.lose-retry #resAgain { min-height: 72px; font-size: 24px; }
+  }
+  @media (orientation: landscape) and (max-height: 500px) {
+    #resultScreen.lose-retry #resAgain,
+    #resultScreen.is-lose.is-adventure #resAgain.result-cta-primary,
+    #resultScreen.is-retry-first #resAgain.result-cta-primary {
+      min-height: 56px;
+    }
   }
 
   /* Android Chrome/TWA: HTML-toast onder statusbalk. Queue + toon (ok/warn/danger) van #260. */

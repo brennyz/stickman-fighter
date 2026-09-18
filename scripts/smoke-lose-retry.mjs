@@ -45,6 +45,7 @@ async function runViewport(browser, base, vp) {
     if (!g || !g.player) return { ok: false, why: 'no game' };
     const dens = (typeof combatDensityProfile === 'function') ? combatDensityProfile() : null;
     g.lastFailTele = 'slam';
+    g.lastHurtBy = { name: 'SlamToad', slam: true, type: 'tank' };
     const t0 = performance.now();
     try { g.finishAdventure(false); } catch (e) { return { ok: false, why: String(e) }; }
     return {
@@ -65,6 +66,7 @@ async function runViewport(browser, base, vp) {
     const again = document.getElementById('resAgain');
     const rs = document.getElementById('resultScreen');
     const tip = document.getElementById('resTip');
+    const killer = document.getElementById('resKiller');
     const flash = document.getElementById('levelRollFlash');
     const rect = again ? again.getBoundingClientRect() : null;
     return {
@@ -74,6 +76,7 @@ async function runViewport(browser, base, vp) {
       loseRetry: !!(rs && rs.classList.contains('lose-retry')),
       againH: rect ? Math.round(rect.height) : 0,
       tip: tip ? tip.textContent : '',
+      killer: killer && !killer.hidden ? killer.textContent : '',
       flashOn: !!(flash && flash.classList.contains('visible')),
       fomo: !!(document.getElementById('fomoRitual') && !document.getElementById('fomoRitual').hidden),
     };
@@ -81,13 +84,14 @@ async function runViewport(browser, base, vp) {
 
   if (ui.delayMs >= 3000) fail(vp.id + ' death→CTA must be under 3s', ui);
   if (!ui.loseRetry) fail(vp.id + ' resultScreen missing lose-retry', ui);
-  if (!/nog één keer|one more time|noch einmal|encore une fois|una vez más/i.test(ui.label)) {
+  if (!/nog één keer|one more go|one more time|noch einmal|encore une fois|una más|una vez más/i.test(ui.label)) {
     fail(vp.id + ' retry label must be Nog één keer (or locale)', ui);
   }
-  if (vp.mobile && ui.againH < 64) fail(vp.id + ' retry button not fat enough', ui);
-  if (!/SLAM|CHARGE|vlieger|flyer|Nog één keer|One more time/i.test(ui.tip)) {
-    fail(vp.id + ' tip must name fail cue or retry', ui);
+  if (vp.mobile && ui.againH < 80) fail(vp.id + ' retry button not fat enough (want 84px)', ui);
+  if (!/SLAM/i.test(ui.tip) || !/Nog één keer|One more go|One more time|Noch einmal|Encore une fois|Una más/i.test(ui.tip)) {
+    fail(vp.id + ' tip must lead with fail cue → retry', ui);
   }
+  if (!/SlamToad/i.test(ui.killer || '')) fail(vp.id + ' #resKiller must name the killer', ui);
   if (ui.fomo) fail(vp.id + ' FOMO should hide on result', ui);
 
   const after = await page.evaluate(() => {
