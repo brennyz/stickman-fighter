@@ -323,9 +323,9 @@ const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const VERSION_UPDATE_SAVE_KEY = 'stickfighter_version_update_save_v1';
 const VERSION_UPDATE_FLAG_KEY = 'stickfighter_version_update_flag_v1';
 const SAVE_EXPORT_SCHEMA = 3;
-const APP_VERSION = '1.18.175';
+const APP_VERSION = '1.18.176';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 385;
+const SW_CACHE_REV = 386;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', petCoins: 0, dex: {}, summons: {}, pets: {}, activePet: null,
   eggPets: {}, activeEggPet: null, eggDaily: null,
   chestDaily: null, chestWeapons: {},
@@ -30053,10 +30053,51 @@ function combatJoySwipeAccepts(x, y, w, h, profile) {
   return x < W0 * 0.42 && y > H0 * 0.55;
 }
 
+const COMBAT_ENRAGE_WALK_BASE = 1.32;
+const COMBAT_ENRAGE_WALK_COMPACT = 0.52;
+const COMBAT_PICKUP_GAP_COMPACT = 40;
 const COMBAT_COLOSSAL_MUL_DESKTOP = 2;
 const COMBAT_COLOSSAL_MUL_PHONE = 1.38;
 const COMBAT_COLOSSAL_CAP_FRAC = 0.24;
 const COMBAT_COLOSSAL_CAP_MIN = 64;
+
+/**
+ * Hell stacks speedMul 1.16 × enrage 1.32 × walk 1.32 ≈ 2.02×. On 390px that
+ * deletes the dodge window after the density cut. Desktop stays raw.
+ * Compact keeps a real enrage bump (Hell still > Normal desktop 1.32).
+ */
+function combatEnrageWalkMul(enrageMul, profile) {
+  const raw = COMBAT_ENRAGE_WALK_BASE * (Number(enrageMul) > 0 ? Number(enrageMul) : 1);
+  profile = asCombatProfile(profile);
+  if (!profile.compact) return raw;
+  const extra = Math.max(0, raw - 1);
+  return 1 + extra * COMBAT_ENRAGE_WALK_COMPACT;
+}
+
+/** Compact: fan floor loot so gear + shards do not pile on one x. Desktop unchanged. */
+function combatSpreadPickupX(x, others, profile, bounds) {
+  profile = asCombatProfile(profile);
+  const raw = Number(x);
+  const nx0 = Number.isFinite(raw) ? raw : Math.round(profile.w * 0.5);
+  if (!profile.compact) return Math.round(nx0);
+  const minX = bounds && bounds.minX != null ? Number(bounds.minX) : 48;
+  const maxX = bounds && bounds.maxX != null ? Number(bounds.maxX) : Math.max(minX + 8, profile.w - 48);
+  let nx = combatDensityClamp(nx0, minX, maxX);
+  const list = (others || []).filter((p) => p && p.life > 0 && !p._got && Number.isFinite(Number(p.x)));
+  if (!list.length) return Math.round(nx);
+  const gap = COMBAT_PICKUP_GAP_COMPACT;
+  function free(tx) {
+    return list.every((p) => Math.abs(Number(p.x) - tx) >= gap);
+  }
+  if (free(nx)) return Math.round(nx);
+  for (let step = 1; step <= 10; step++) {
+    const left = combatDensityClamp(nx - step * gap, minX, maxX);
+    if (free(left)) return Math.round(left);
+    const right = combatDensityClamp(nx + step * gap, minX, maxX);
+    if (free(right)) return Math.round(right);
+  }
+  return Math.round(nx);
+}
 
 /** Desktop stays 2.0. Phone keeps a "huge" boss without eating the 390px strip. */
 function combatColossalSizeMul(profile) {
@@ -35692,7 +35733,11 @@ class Monster {
     this.atkCD -= dt; this.shootCD -= dt;
     if (this.superSlowT > 0) this.superSlowT -= dt;
     const gentechniqueMul = (this.superSlowT > 0) ? (this.superSlowMul || 0.25) : 1;
-    const enrageSpd = this.enraged ? (1.32 * (this.enrageMul || 1)) : 1;
+    const enrageSpd = this.enraged
+      ? ((typeof combatEnrageWalkMul === 'function')
+        ? combatEnrageWalkMul(this.enrageMul)
+        : (1.32 * (this.enrageMul || 1)))
+      : 1;
     const spdMul = enrageSpd * gentechniqueMul;
     const type = this.sp.type;
 
@@ -41654,6 +41699,13 @@ class Game {
     const pos = this.clampPickupPos(x, y);
     x = pos.x;
     y = pos.y;
+    if (typeof combatSpreadPickupX === 'function') {
+      const padX = 32;
+      x = combatSpreadPickupX(x, this.pickups, null, {
+        minX: (this.minX != null ? this.minX : 40) + padX,
+        maxX: (this.maxX != null ? this.maxX : W - 40) - padX,
+      });
+    }
     if (opts.skillId && SKILL_DEFS[opts.skillId]) {
       this.pickups.push({
         x, y, kind: 'skill_shard', skillId: opts.skillId, dropTier: opts.dropTier || 'normal',
@@ -54001,6 +54053,8 @@ function bootGame() {
       colossalMul: combatColossalSizeMul,
       fitBossSize: combatFitBossSize,
       fairLane: combatColossalFairLane,
+      enrageWalk: combatEnrageWalkMul,
+      spreadPickupX: combatSpreadPickupX,
     } : null,
     previewTop20Spawn: () => {
       try { AudioSys.init(); AudioSys.sfx('top20Spawn'); } catch (_) {}

@@ -1379,6 +1379,13 @@ class Game {
     const pos = this.clampPickupPos(x, y);
     x = pos.x;
     y = pos.y;
+    if (typeof combatSpreadPickupX === 'function') {
+      const padX = 32;
+      x = combatSpreadPickupX(x, this.pickups, null, {
+        minX: (this.minX != null ? this.minX : 40) + padX,
+        maxX: (this.maxX != null ? this.maxX : W - 40) - padX,
+      });
+    }
     if (opts.skillId && SKILL_DEFS[opts.skillId]) {
       this.pickups.push({
         x, y, kind: 'skill_shard', skillId: opts.skillId, dropTier: opts.dropTier || 'normal',

@@ -132,7 +132,11 @@ class Monster {
     this.atkCD -= dt; this.shootCD -= dt;
     if (this.superSlowT > 0) this.superSlowT -= dt;
     const gentechniqueMul = (this.superSlowT > 0) ? (this.superSlowMul || 0.25) : 1;
-    const enrageSpd = this.enraged ? (1.32 * (this.enrageMul || 1)) : 1;
+    const enrageSpd = this.enraged
+      ? ((typeof combatEnrageWalkMul === 'function')
+        ? combatEnrageWalkMul(this.enrageMul)
+        : (1.32 * (this.enrageMul || 1)))
+      : 1;
     const spdMul = enrageSpd * gentechniqueMul;
     const type = this.sp.type;
 

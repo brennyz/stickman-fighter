@@ -77,14 +77,20 @@ Versus / dual pads are not used.
 
 Desktop colossal stays **size ×2.0**, uncapped. Phone uses **×1.38** then a playfield cap (`0.24 × strip`, min 64) so a Guvvedrak-scale body (~168 radius) fits ~94px and leaves **≥80px** of ground if centered. HP/damage muls are unchanged. Compact colossal winds floor at **0.46s**. Resize refits via `refreshAdventureBossScale` (Satan keeps its own scaler).
 
+## Hell enrage walk (EX-2)
+
+Desktop Hell stays `1.32 × enrageMul` (Hell **1.7424** on top of `speedMul` 1.16). Compact damps only the **enrage extra** (`×0.52`): Hell phone **~1.386** — still faster than Normal desktop 1.32, but the 390px close is dodgeable after the wind floor. Nightmare/Normal compact get the same extra-damp so 2.0 is not a leftover.
+
+## Floor loot on 390px (EX-3)
+
+`spawnPickup` fans compact drops to a **40px** x-gap so gear + shards do not pile on one corpse. Desktop x is unchanged.
+
 ## Remaining mobile overwhelm (EX)
 
-Still true after density + telegraph + colossal fit:
+Still true after density + telegraph + colossal + enrage-walk + loot fan:
 
 1. **HUD shows one telegraph** (`adventureTelegraphHud` breaks on the first). Two elites winding at once = one bar.
 2. **Flyers / aim-up** on short landscape (844×390): vertical fight space is still tight.
-3. **Hell enrage walk speed** is not scaled — only the wind floor. Late Hell on a phone is still the hard lane.
-4. **Part-gate “hold right”** on portrait still asks for a long right-walk with the left stick.
-5. **Pickup clutter** after a thinner wave is better, but gear + shards can still stack on the 390px floor.
+3. **Part-gate “hold right”** on portrait still asks for a long right-walk with the left stick.
 
 Re-check after play: `npm run smoke:combat-density && npm run smoke:adventure`.

@@ -1011,6 +1011,8 @@ function bootGame() {
       colossalMul: combatColossalSizeMul,
       fitBossSize: combatFitBossSize,
       fairLane: combatColossalFairLane,
+      enrageWalk: combatEnrageWalkMul,
+      spreadPickupX: combatSpreadPickupX,
     } : null,
     previewTop20Spawn: () => {
       try { AudioSys.init(); AudioSys.sfx('top20Spawn'); } catch (_) {}

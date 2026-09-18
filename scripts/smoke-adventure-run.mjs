@@ -100,6 +100,9 @@ async function run() {
       h: (typeof H === 'number' && H > 0) ? H : 844,
     };
     const fit168 = (typeof combatFitBossSize === 'function') ? combatFitBossSize(168, vp) : null;
+    const hellWalk = (typeof combatEnrageWalkMul === 'function') ? combatEnrageWalkMul(1.32, vp) : null;
+    const lootFan = (typeof combatSpreadPickupX === 'function')
+      ? combatSpreadPickupX(180, [{ x: 180, life: 1 }], vp) : null;
     const colossalProbe = {
       w: vp.w,
       h: vp.h,
@@ -192,6 +195,7 @@ async function run() {
       milestones,
       appVersion: typeof APP_VERSION !== 'undefined' ? APP_VERSION : '?',
       colossalProbe,
+      enrageLootProbe: { hellWalk, lootFan },
     };
   }, levelN);
 
@@ -205,6 +209,11 @@ async function run() {
   if (!(probe.fit168 > 0 && probe.fit168 < probe.raw168 && probe.lane >= 80 && probe.wind >= 0.46)) {
     result.ok = false;
     result.errors = (result.errors || []).concat(['colossal:fair-window ' + JSON.stringify(probe)]);
+  }
+  const er = result.enrageLootProbe || {};
+  if (!(er.hellWalk > 1.32 && er.hellWalk < 1.5 && Math.abs((er.lootFan || 0) - 180) >= 40)) {
+    result.ok = false;
+    result.errors = (result.errors || []).concat(['enrage-loot:phone-fair ' + JSON.stringify(er)]);
   }
 
   await browser.close();

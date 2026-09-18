@@ -145,6 +145,7 @@ Schrijf **1–3 regels** per sessie: datum, d#, wat, versie.
 
 | Datum (UTC) | d# | Update |
 |-------------|-----|--------|
+| 2026-09-18 | — | **#314 EX-2/3:** compact Hell enrage walk extra ×0.52 (1.742→1.386; desktop raw); floor-loot 40px fan on 390. **v1.18.176 / SW 386**. Draft. |
 | 2026-09-18 | — | **#314 EX-1 colossal:** phone size ×1.38 + 0.24-strip cap (fair lane ≥80px); desktop ×2.0 uncapped; HP/dmg same; wind 0.46s. **v1.18.175 / SW 385**. Draft. |
 | 2026-09-18 | — | **#314 examinator:** 390px elite/boss telegraph readable (wind floor 0.38, on-screen trigger, intro hold, banner cap); compact jump slop + left-bottom swipe pad. Desktop winds unchanged. **v1.18.174 / SW 384**. Draft. |
 | 2026-09-18 | — | **Mobile combat density:** Adventure spawn counts / gap / max-alive scale by viewport. Phone portrait 0.60 / ~17 alive / single-file; desktop 1.0 / 78 unchanged. Versus out. **v1.18.173 / SW 383**. Draft, niet main. Docs: `docs/COMBAT-DENSITY.md`. |

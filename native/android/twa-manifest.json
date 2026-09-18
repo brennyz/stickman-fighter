@@ -20,8 +20,8 @@
     "path": "./signing/upload-keystore.jks",
     "alias": "upload"
   },
-  "appVersionName": "1.18.175",
-  "appVersionCode": 118175,
+  "appVersionName": "1.18.176",
+  "appVersionCode": 118176,
   "shortcuts": [],
   "generatorApp": "bubblewrap-cli",
   "webManifestUrl": "https://brennyz.github.io/stickman-fighter/manifest.webmanifest",

@@ -57,6 +57,10 @@ must(/combatColossalSizeMul\(/.test(fs.readFileSync(path.join(root, 'src/entitie
   'colossal spawn must use viewport size mul');
 must(/refreshAdventureBossScale\(/.test(fs.readFileSync(path.join(root, 'src/core/canvas.js'), 'utf8')),
   'resize must refit adventure colossal radius');
+must(/combatEnrageWalkMul\(/.test(fs.readFileSync(path.join(root, 'src/entities/monster.js'), 'utf8')),
+  'enrage walk must use combatEnrageWalkMul');
+must(/combatSpreadPickupX\(/.test(fs.readFileSync(path.join(root, 'src/game/game.js'), 'utf8')),
+  'spawnPickup must fan compact floor loot');
 must(!/applyCombatTelegraphWind/.test(versusSrc), 'versus.js must not use telegraph density');
 
 must(/opener \? 1 :/.test(gameSrc), 'opener must stay single-file');
@@ -189,6 +193,21 @@ must(iso.applyCombatTelegraphWind(0.45, phone, { colossal: true }) >= 0.46, 'pho
 must(iso.applyCombatTelegraphWind(0.45, desk, { colossal: true }) === 0.45, 'desktop colossal wind unchanged');
 must(typeof iso.refreshAdventureBossScale === 'function', 'resize refit helper missing');
 
+must(iso.combatEnrageWalkMul(1, desk) === 1.32, 'desktop Normal enrage walk 1.32');
+must(iso.combatEnrageWalkMul(1.32, desk) === 1.32 * 1.32, 'desktop Hell enrage walk 1.7424');
+must(iso.combatEnrageWalkMul(1.18, desk) === 1.32 * 1.18, 'desktop Nightmare enrage walk raw');
+const phoneHellWalk = iso.combatEnrageWalkMul(1.32, phone);
+must(phoneHellWalk < 1.32 * 1.32, 'phone Hell enrage walk slower than desktop', phoneHellWalk);
+must(phoneHellWalk > 1.32, 'phone Hell enrage still faster than Normal desktop 1.32', phoneHellWalk);
+must(Math.abs(phoneHellWalk - (1 + (1.32 * 1.32 - 1) * 0.52)) < 1e-9, 'phone Hell extra ×0.52', phoneHellWalk);
+must(iso.combatEnrageWalkMul(1, phone) < 1.32, 'phone Normal enrage extra also damped');
+must(iso.combatSpreadPickupX(200, [], desk) === 200, 'desktop loot x unchanged');
+must(iso.combatSpreadPickupX(200, [{ x: 200, life: 1 }], desk) === 200, 'desktop stacked loot stays');
+const phoneLoot = iso.combatSpreadPickupX(200, [{ x: 200, life: 1 }], phone);
+must(Math.abs(phoneLoot - 200) >= 40, 'phone stacked loot fans ≥40px', phoneLoot);
+must(!/combatEnrageWalkMul/.test(versusSrc), 'versus.js must not use enrage walk scale');
+must(!/combatSpreadPickupX/.test(versusSrc), 'versus.js must not use pickup fan');
+
 /* ---- buildLevel with explicit viewports (full bundle) ---- */
 if (!built) fail('game.js missing — run npm run build first');
 
@@ -319,6 +338,11 @@ must(ctx.combatColossalSizeMul({ w: 1280, h: 800 }) === 2, 'vm desktop colossal 
 must(ctx.combatFitBossSize(168, { w: 390, h: 844 }) < 168, 'vm phone fits guvve-scale colossal');
 must(ctx.combatColossalFairLane(ctx.combatFitBossSize(168, { w: 390, h: 844 }), { w: 390, h: 844 }) >= 80,
   'vm phone colossal leaves ≥80px fair lane');
+must(ctx.combatEnrageWalkMul(1.32, { w: 1280, h: 800 }) === 1.32 * 1.32, 'vm desktop Hell walk raw');
+must(ctx.combatEnrageWalkMul(1.32, { w: 390, h: 844 }) < 1.5, 'vm phone Hell walk damped');
+must(ctx.combatEnrageWalkMul(1.32, { w: 390, h: 844 }) > 1.32, 'vm phone Hell walk still a rush');
+must(Math.abs(ctx.combatSpreadPickupX(180, [{ x: 180, life: 1 }], { w: 390, h: 844 }) - 180) >= 40,
+  'vm phone loot fans off the pile');
 
 console.log('TELEGRAPH_390', {
   phoneWind: ctx.applyCombatTelegraphWind(0.45, { w: 390, h: 844 }),
@@ -330,6 +354,13 @@ console.log('TELEGRAPH_390', {
 
 const phoneCap = ctx.combatBossSizeCap({ w: 390, h: 844 });
 const phoneFit = ctx.combatFitBossSize(168, { w: 390, h: 844 });
+console.log('ENRAGE_LOOT_390', {
+  deskHell: ctx.combatEnrageWalkMul(1.32, { w: 1280, h: 800 }),
+  phoneHell: ctx.combatEnrageWalkMul(1.32, { w: 390, h: 844 }),
+  phoneNormal: ctx.combatEnrageWalkMul(1, { w: 390, h: 844 }),
+  lootFan: ctx.combatSpreadPickupX(180, [{ x: 180, life: 1 }], { w: 390, h: 844 }),
+});
+
 console.log('COLOSSAL_390', {
   deskMul: ctx.combatColossalSizeMul({ w: 1280, h: 800 }),
   phoneMul: ctx.combatColossalSizeMul({ w: 390, h: 844 }),
