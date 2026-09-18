@@ -564,14 +564,29 @@ function buildingTxt(key, fallback, params) {
   return out;
 }
 
+function buildingPowerField(power, field, fallback) {
+  if (!power) return '';
+  const id = power.id;
+  if (typeof t === 'function') {
+    const nestedKey = 'buildings.power.' + id + '.' + field;
+    const nested = t(nestedKey);
+    if (nested && nested !== nestedKey) return nested;
+    if (field === 'label') {
+      const flat = t('buildings.power.' + id);
+      if (flat && flat !== 'buildings.power.' + id) return flat;
+    }
+  }
+  return fallback || '';
+}
+
 function buildingPowerLabel(power) {
   if (!power) return '';
-  return buildingTxt('buildings.power.' + power.id + '.label', power.label || power.id);
+  return buildingPowerField(power, 'label', power.label || power.id);
 }
 
 function buildingPowerBlurb(power) {
   if (!power) return '';
-  return buildingTxt('buildings.power.' + power.id + '.blurb', power.blurb || '');
+  return buildingPowerField(power, 'blurb', '');
 }
 
 function buildingCostLabel(cost) {

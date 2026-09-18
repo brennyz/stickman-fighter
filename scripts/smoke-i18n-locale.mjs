@@ -220,7 +220,10 @@ if (/A summons/.test(i18n + locales)) fail('ES FOMO still says A summons');
 if (/Vers les summons/.test(i18n + locales)) fail('FR FOMO still says Vers les summons');
 if (!/produceLocked:/.test(i18n)) fail('buildings.desc.produceLocked missing — Dutch fallback would leak');
 if (!/nameShort: 'Aansteker'/.test(i18n)) fail('NL factory nameShort missing (Android card overflow)');
-if (!/nameShort: 'Stock-Anzünder'/.test(i18n)) fail('DE factory nameShort missing');
+if (!/nameShort: 'Anzünder'/.test(i18n)) fail('DE factory nameShort missing (keep short — Stock-Anzünder overflows)');
+if (/nameShort: 'Stock-Anzünder'/.test(i18n)) fail('DE nameShort still long Stock-Anzünder');
+if (/nameShort: 'Holzhäcksler'/.test(i18n)) fail('DE nameShort still long Holzhäcksler');
+if (/nameShort: 'Bambus-Boesa'/.test(i18n)) fail('DE nameShort still long Bambus-Boesa');
 if (!/nameShort: 'Allume-Bâton'/.test(i18n)) fail('FR factory nameShort missing');
 if (!/nameShort: 'Palo-Mechero'/.test(i18n)) fail('ES factory nameShort missing');
 if (!/nameShort: 'Stick-Lighter'/.test(i18n)) fail('EN factory nameShort missing');
@@ -315,5 +318,20 @@ if (/syncFailed: 'Sync fehlgeschlagen/.test(locales + deChrome)) fail('DE toast.
 if (/syncConfirm: 'Sync overschrijft/.test(catalog.split('const CATALOG_EN')[0] || '')) {
   fail('NL toast.syncConfirm still English Sync');
 }
+if (/nach Unlock \+ Bau/.test(i18n)) fail('DE produceLocked still English Unlock');
+if (/après débloc \+ build/.test(i18n)) fail('FR produceLocked still English build');
+if (/na unlock \+ bouw/.test(i18n)) fail('NL produceLocked still English unlock');
+if (!/spark_kindle: \{ label: 'Funke'/.test(i18n)) fail('DE buildings.power.spark_kindle.label missing — EN Spark Kindle leak');
+if (!/spark_kindle: \{ label: 'Étincelle'/.test(i18n)) fail('FR buildings.power.spark_kindle.label missing');
+if (!/spark_kindle: \{ label: 'Chispa'/.test(i18n)) fail('ES buildings.power.spark_kindle.label missing');
+if (!/spark_kindle: \{ label: 'Vonk'/.test(i18n)) fail('NL buildings.power.spark_kindle.label missing');
+if (!/kindle_trail: \{ label:/.test(i18n)) fail('buildings.power.kindle_trail missing — EN catalog blurb leak');
+if (!/function buildingPowerField/.test(fs.readFileSync(path.join(root, 'src/data/buildings.js'), 'utf8'))) {
+  fail('buildingPowerLabel must prefer locale .label over EN catalog');
+}
+if (!/gearLocked: 'Encore verrouillé/.test(locales)) fail('FR toast.gearLocked missing — EN Still locked leak');
+if (!/gearLocked: 'Aún bloqueado/.test(locales)) fail('ES toast.gearLocked missing');
+if (/weaponsSub: '26 Waffen · Summons'/.test(i18n)) fail('DE hub.weaponsSub still English Summons');
+if (!/-webkit-line-clamp: 2/.test(css) || !/\.hub-tile-title/.test(css)) fail('hub-tile-title clamp missing (DE compound overflow)');
 
-console.log('SMOKE_OK i18n-locale: Tips/VERLOREN + #273 coverage + #283 overlays + 2026-09-18 HUD/settings');
+console.log('SMOKE_OK i18n-locale: Tips/VERLOREN + #273 coverage + #283 overlays + 2026-09-18 factories/gear');

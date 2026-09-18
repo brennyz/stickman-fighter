@@ -44,12 +44,15 @@ async function run() {
     const DUTCH = /(Avontuur|Collectie|Instellingen|Wapens|Vandaag|Verzameld|Uitrusten|Dag-ei|muur |× vandaag|Alle types|Alle biomen|Export bevat|Laatst opgeslagen|Cosmetisch metgezel|Nog niet uitgekomen|Volgende prestatie|prestaties|soorten in monsterboek|Muziek|Effecten|Profiel en missies|Zet in app-lade|unlock Lv)/;
     function txt(id) { return (document.getElementById(id) || {}).textContent || ''; }
     function snap(lang) {
+      try { if (UI.goMenu) UI.goMenu(); } catch (_) {}
+      if (typeof state !== 'undefined') state = 'menu';
       if (typeof setLang === 'function') setLang(lang);
       else if (typeof save !== 'undefined') {
         save.lang = lang;
         if (typeof persist === 'function') persist();
         if (typeof applyLang === 'function') applyLang();
       }
+      try { if (UI.renderMenu) UI.renderMenu(); } catch (_) {}
       try { if (UI.renderDex) UI.renderDex(); } catch (_) {}
       try { if (UI.renderPets) UI.renderPets(); } catch (_) {}
       try { if (UI.renderSettings) UI.renderSettings(); } catch (_) {}
@@ -79,10 +82,31 @@ async function run() {
       const tStats = typeof t === 'function' ? t('ui.saveHealthStats', { lvl: 1, unlocked: 1, dex: 1, kills: 0 }) : '';
       const tQuota = typeof t === 'function' ? t('ui.summonQuota', { left: 3, total: 10 }) : '';
       const tPersist = typeof t === 'function' ? t('toast.persistCtxWeapon') : '';
+      const tPower = typeof t === 'function' ? t('buildings.power.spark_kindle.label') : '';
+      const tProduce = typeof t === 'function' ? t('buildings.desc.produceLocked', { res: 'x' }) : '';
+      const tGearToast = typeof t === 'function' ? t('toast.gearLocked', { why: 'z' }) : '';
+      const tNameShort = typeof t === 'function' ? t('buildings.stick_lighter.nameShort') : '';
+      let collectTitle = '';
+      let collectGear = '';
+      try {
+        if (UI.openModeHub) UI.openModeHub('collect');
+        collectTitle = txt('modeHubTitle');
+        collectGear = (document.querySelector('#btnGear .hub-tile-title') || {}).textContent || '';
+      } catch (_) {}
+      let playState = '';
+      let playMode = '';
+      try {
+        if (typeof startGame === 'function') startGame('training');
+        playState = (typeof state !== 'undefined') ? String(state) : '';
+        playMode = (typeof game !== 'undefined' && game) ? String(game.mode || '') : '';
+      } catch (_) {}
+      try { if (UI.goMenu) UI.goMenu(); } catch (_) {}
+      if (typeof state !== 'undefined') state = 'menu';
       return {
         lang, adv, collect, help, weapons, settings, dexSum, dexTypes, eggBtn, exportHint,
         musicName, sfxName, profileAria, summons, tAdv, tHud, leftover,
         tGearLock, tPetSum, tPerk, tEgg, tKills, tKick, tImport, tStats, tQuota, tPersist,
+        tPower, tProduce, tGearToast, tNameShort, collectTitle, collectGear, playState, playMode,
       };
     }
     const en = snap('en');
@@ -101,7 +125,9 @@ async function run() {
       && /Profile/i.test(en.profileAria)
       && /Not found yet/.test(en.tGearLock) && /Hop assist/.test(en.tPerk) && /Pebble/.test(en.tEgg)
       && /KICK/.test(en.tKick) && /Preview/.test(en.tImport) && !/tik Laden|om te laden/.test(en.tImport)
-      && /weapon/.test(en.tPersist);
+      && /weapon/.test(en.tPersist)
+      && /Collection/i.test(en.collectTitle) && /Spark/.test(en.tPower) && /Still locked/.test(en.tGearToast)
+      && en.playState === 'play' && /train/.test(en.playMode);
     const deOk = /Abenteuer/i.test(de.adv) && /Sammlung/i.test(de.collect)
       && /Waffen/i.test(de.weapons) && /Einstellungen/i.test(de.settings)
       && /Tipp/i.test(de.help) && !DUTCH.test(de.leftover)
@@ -113,22 +139,36 @@ async function run() {
       && /Noch nicht gefunden/.test(de.tGearLock) && !EN_LOCK.test(de.tGearLock)
       && /Sprung-Assist/.test(de.tPerk) && /Kiesel/.test(de.tEgg) && !DUTCH_COPY.test(de.tPerk + de.tEgg + de.tGearLock)
       && /TRITT/.test(de.tKick) && !/Unlock/.test(de.tStats) && /Kiste/.test(de.tQuota) && !/Summon/i.test(de.tQuota)
-      && /Waffe/.test(de.tPersist) && !/Preview:/.test(de.tImport);
+      && /Waffe/.test(de.tPersist) && !/Preview:/.test(de.tImport)
+      && /Sammlung/i.test(de.collectTitle) && /Funke/.test(de.tPower) && !/Spark Kindle|Unlock/.test(de.tPower + de.tProduce)
+      && /gesperrt/i.test(de.tGearToast) && !/Still locked|Nog op slot/.test(de.tGearToast)
+      && /Anzünder/.test(de.tNameShort) && !/Stock-Anzünder/.test(de.tNameShort)
+      && de.playState === 'play' && /train/.test(de.playMode);
     const nlOk = /Avontuur/.test(nl.adv) && /Collectie/.test(nl.collect)
       && /Wapens/.test(nl.weapons) && /Instellingen/.test(nl.settings)
       && /Tips/.test(nl.help) && /Boek|Alle types/.test(nl.dexSum + ' ' + nl.dexTypes)
       && /Oproepen/.test(nl.summons)
-      && /Nog niet gevonden/.test(nl.tGearLock) && /Kiezel/.test(nl.tEgg);
+      && /Nog niet gevonden/.test(nl.tGearLock) && /Kiezel/.test(nl.tEgg)
+      && /Collectie/.test(nl.collectTitle) && /Vonk/.test(nl.tPower) && !/unlock/i.test(nl.tProduce)
+      && nl.playState === 'play' && /train/.test(nl.playMode);
     const frOk = /Pas encore trouvé/.test(fr.tGearLock) && !EN_LOCK.test(fr.tGearLock)
       && /Aide saut/.test(fr.tPerk) && /Galet/.test(fr.tEgg) && !DUTCH_COPY.test(fr.tPerk + fr.tEgg + fr.tGearLock + fr.tPetSum)
       && /Apprivoisés/.test(fr.tPetSum)
       && /Coffre/.test(fr.summons) && /PIED/.test(fr.tKick) && /coffre/i.test(fr.tQuota)
-      && !/Unlock/.test(fr.tStats) && /arme/.test(fr.tPersist);
+      && !/Unlock/.test(fr.tStats) && /arme/.test(fr.tPersist)
+      && /Collection/i.test(fr.collectTitle) && /Étincelle|Etincelle/.test(fr.tPower)
+      && !/Spark Kindle|Unlock|\+ build/.test(fr.tPower + fr.tProduce)
+      && /verrouill/i.test(fr.tGearToast) && !/Still locked|Nog op slot/.test(fr.tGearToast)
+      && fr.playState === 'play' && /train/.test(fr.playMode);
     const esOk = /Aún no hallado/.test(es.tGearLock) && !EN_LOCK.test(es.tGearLock)
       && /Ayuda salto/.test(es.tPerk) && /Guijarro/.test(es.tEgg) && !DUTCH_COPY.test(es.tPerk + es.tEgg + es.tGearLock + es.tPetSum)
       && /Domados/.test(es.tPetSum)
       && /Cofre/.test(es.summons) && /PATADA/.test(es.tKick) && /cofre/i.test(es.tQuota)
-      && !/Unlock/.test(es.tStats) && /arma/.test(es.tPersist);
+      && !/Unlock/.test(es.tStats) && /arma/.test(es.tPersist)
+      && /Colecci/.test(es.collectTitle) && /Chispa/.test(es.tPower)
+      && !/Spark Kindle|Unlock/.test(es.tPower + es.tProduce)
+      && /bloqueado/i.test(es.tGearToast) && !/Still locked|Nog op slot/.test(es.tGearToast)
+      && es.playState === 'play' && /train/.test(es.playMode);
     return { ok: !!(enOk && deOk && nlOk && frOk && esOk), en, de, nl, fr, es, enOk, deOk, nlOk, frOk, esOk };
   });
 

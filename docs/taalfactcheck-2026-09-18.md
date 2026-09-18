@@ -67,4 +67,14 @@ Post-mega-merge (`v1.18.172`) audit, Z→A: **nl → fr → es → en → de**. 
 | de/es/nl | toast sync | leftover *Sync* | Abgleich / Copia / Online-save |
 | * | style cards / season blurbs | Lange tooltip/blurb overlap 390px | 2–3 line clamp + kortere hint |
 
-Versie: **v1.18.175 / SW 385**. Draft PR, geen main-merge. Deel-URL `speel.html`.
+## Examiner P0 — factories + gear lock + DE buttons (zelfde draft)
+
+| locale | key / locatie | probleem | fix |
+|--------|---------------|----------|-----|
+| * | `buildings.power.*.label/blurb` | Lookup `.label` miste → EN catalog *Spark Kindle* | 25 powers × 5 talen, korte labels |
+| de/fr/nl | `desc.produceLocked` | leftover *Unlock* / *build* / *unlock* | frei / construire / vrij |
+| fr/es | `toast.gearLocked` | Overlay miste key → EN *Still locked* | Encore verrouillé / Aún bloqueado |
+| de | factory `nameShort` | Stock-Anzünder / Holzhäcksler overflow | Anzünder / Häcksler / Boesa / Pfeife |
+| * | hub tiles / gear cards | DE compounds op 390px | 2-line clamp + ellipsis |
+
+Versie: **v1.18.176 / SW 386**. Draft PR, geen main-merge. Deel-URL `speel.html`.

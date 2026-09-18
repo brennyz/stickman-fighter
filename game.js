@@ -323,9 +323,9 @@ const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const VERSION_UPDATE_SAVE_KEY = 'stickfighter_version_update_save_v1';
 const VERSION_UPDATE_FLAG_KEY = 'stickfighter_version_update_flag_v1';
 const SAVE_EXPORT_SCHEMA = 3;
-const APP_VERSION = '1.18.175';
+const APP_VERSION = '1.18.176';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 385;
+const SW_CACHE_REV = 386;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', petCoins: 0, dex: {}, summons: {}, pets: {}, activePet: null,
   eggPets: {}, activeEggPet: null, eggDaily: null,
   chestDaily: null, chestWeapons: {},
@@ -2551,7 +2551,7 @@ const I18N = {
     },
     buildings: {
       title: 'Fabrieken',
-      sub: 'Tik een fabriek · oogst op tijd · upgrade',
+      sub: 'Tik een fabriek · oogst op tijd · opwaarderen',
       hubStatReady: '{n} klaar om te oogsten', hubStatIdle: '5 werken',
       hubStatLocked: '{n}/{total} open',
       level: 'Lv {n}', locked: 'Op slot',
@@ -2570,19 +2570,19 @@ const I18N = {
       whatItDoes: 'Wat doet dit?',
       powerNow: '{label} — {blurb}',
       powerNext: 'Volgende @ rank {n}: {label}',
-      powerNone: 'Bouw dit werk om de power te ontgrendelen',
+      powerNone: 'Bouw dit werk om de kracht te ontgrendelen',
       unbuilt: 'Nog niet gebouwd',
-      upgradeAsk: 'Upgrade naar Lv {next}?',
+      upgradeAsk: 'Opwaarderen naar Lv {next}?',
       buildAsk: 'Bouw {name}?',
       upgradeConfirm: 'Bevestig',
       upgradeBack: 'Terug naar oogst',
-      upgradeOpen: 'Upgrade…',
+      upgradeOpen: 'Opwaarderen…',
       buildOpen: 'Bouwen…',
       walletPc: 'PC',
-      upgradeTitle: 'Upgrade {name}',
+      upgradeTitle: '{name} opwaarderen',
       sheetClose: 'Sluiten',
       build: 'Bouwen', buildHint: 'Bouwen als eiland open is',
-      lockedWorld: 'Unlock: eiland {n}',
+      lockedWorld: 'Vrij: eiland {n}',
       rateLine: '{n}/uur · {pending} wacht · cap {cap}',
       collected: '+{n} {res} · {name}',
       collectedAll: 'Oogst +{n} uit {k} gebouwen',
@@ -2592,7 +2592,7 @@ const I18N = {
       islandFallback: 'eiland {n}',
       lockedWorldNamed: 'Dicht — speel {name} (eiland {n}) vrij',
       desc: {
-        produceLocked: 'Maakt {res} na unlock + bouw',
+        produceLocked: 'Maakt {res} na vrij + bouw',
         produceUnbuilt: 'Bouwen: daarna {res} ({n}/uur)',
         produce: '{res}: {n}/uur · max {cap}',
         powerOn: 'Kracht {rank}: {label} — {blurb}',
@@ -2603,10 +2603,31 @@ const I18N = {
         nextLv: 'Lv {n}: {res} {rate}/uur · {cap}{power}',
       },
       power: {
-        spark_kindle: 'Kindle', ember_pocket: 'Vonken', matchstick_storm: 'Match',
-        glue_trap: 'Lijm', splinter_edge: 'Snipper', chip_spray: 'Spray',
-        bamboo_vent: 'Vent', bamboo_burst: 'Boesa', pressure_cook: 'Stoom', boesa_overheat: 'Hitte',
-        taunt_toot: 'Toot', whistle_chorus: 'Koor',
+        spark_kindle: { label: 'Vonk', blurb: 'Eerste melee per golf laat een sintel achter.' },
+        kindle_trail: { label: 'Vonkspoor', blurb: 'Lopen strooit korte sintels.' },
+        ember_pocket: { label: 'Sintelzak', blurb: 'Wapentreffer kan een vonk loslaten.' },
+        flare_step: { label: 'Vlamstap', blurb: 'Korte dash met brandlijn.' },
+        matchstick_storm: { label: 'Lucifer', blurb: 'Regen lucifers — korte vuurkegel.' },
+        sticky_soles: { label: 'Plakzool', blurb: 'Minder knockback — voeten plakken.' },
+        tacky_block: { label: 'Kleefblok', blurb: 'Blok houdt een tik langer.' },
+        glue_trap: { label: 'Lijmval', blurb: 'Plas die het eerste monster remt.' },
+        paste_armor: { label: 'Lijmhuid', blurb: 'Dun lijmschild bij golfstart.' },
+        chip_golem: { label: 'Golem', blurb: 'Start elke golf met snipper-pantser.' },
+        splinter_edge: { label: 'Splinter', blurb: 'Wapentreffer slingert extra splinter.' },
+        chip_spray: { label: 'Spuit', blurb: 'Combo hoest extra snippers.' },
+        sawdust_cloud: { label: 'Zaagsel', blurb: 'Korte miss-nevel voor je.' },
+        hopper_guard: { label: 'Hopper', blurb: 'Eerste hit per golf is zachter.' },
+        chipper_fury: { label: 'Hak', blurb: 'Hoge combo’s spuiten splinters.' },
+        boiler_hiss: { label: 'Ketel', blurb: 'Dichte hitte tikt drukkers.' },
+        bamboo_vent: { label: 'Vent', blurb: 'Dash pufft een stoomstoot.' },
+        bamboo_burst: { label: 'Boesa', blurb: 'Stoomstoot — korte kegel.' },
+        pressure_cook: { label: 'Stoom', blurb: 'Combo’s bouwen een hitte-pip.' },
+        boesa_overheat: { label: 'Hitte', blurb: 'Lage HP: extra vuurtik.' },
+        taunt_toot: { label: 'Toet', blurb: 'Korte fluit — dichtstbijzijnde kijkt.' },
+        mill_heckle: { label: 'Molen', blurb: 'Raken toet een mini-taunt.' },
+        echo_ridge: { label: 'Echo', blurb: 'Kill laat een stun-rimpeling.' },
+        ridge_reply: { label: 'Kaats', blurb: 'Perfect blok echoot stun.' },
+        whistle_chorus: { label: 'Koor', blurb: 'Gebied-taunt + korte stun.' },
       },
       stick_lighter: { name: 'Stok-Aansteker Fabriek', nameShort: 'Aansteker', blurb: 'Scheef schuurtje dat stokken tegen elkaar wrijft tot ze vonken geven.' },
       stick_lighterSub: 'Vonken · Oost-eiland',
@@ -2915,10 +2936,31 @@ const I18N = {
         nextLv: 'Lv {n}: {res} {rate}/hr · {cap}{power}',
       },
       power: {
-        spark_kindle: 'Kindle', ember_pocket: 'Spark', matchstick_storm: 'Match',
-        glue_trap: 'Glue', splinter_edge: 'Chip', chip_spray: 'Spray',
-        bamboo_vent: 'Vent', bamboo_burst: 'Boesa', pressure_cook: 'Steam', boesa_overheat: 'Heat',
-        taunt_toot: 'Toot', whistle_chorus: 'Chorus',
+        spark_kindle: { label: 'Spark', blurb: 'First melee each wave leaves an ember.' },
+        kindle_trail: { label: 'Trail', blurb: 'Walking drops brief ember crumbs.' },
+        ember_pocket: { label: 'Ember', blurb: 'Weapon hits can pop a spark.' },
+        flare_step: { label: 'Flare', blurb: 'Short dash that leaves a burn line.' },
+        matchstick_storm: { label: 'Match', blurb: 'Shower of lit sticks — short fire cone.' },
+        sticky_soles: { label: 'Soles', blurb: 'Less knockback — boots grip the floor.' },
+        tacky_block: { label: 'Tacky', blurb: 'Block holds a beat longer.' },
+        glue_trap: { label: 'Glue', blurb: 'Puddle that slows the first monster.' },
+        paste_armor: { label: 'Paste', blurb: 'Thin glue shield at wave start.' },
+        chip_golem: { label: 'Golem', blurb: 'Start each wave with chip-armor.' },
+        splinter_edge: { label: 'Splint', blurb: 'Weapon hits fling a bonus splinter.' },
+        chip_spray: { label: 'Spray', blurb: 'Combos cough extra chips.' },
+        sawdust_cloud: { label: 'Dust', blurb: 'Brief miss-haze in front of you.' },
+        hopper_guard: { label: 'Guard', blurb: 'First hit each wave is a bit softer.' },
+        chipper_fury: { label: 'Fury', blurb: 'High combos spray splinters.' },
+        boiler_hiss: { label: 'Hiss', blurb: 'Close heat aura chips crowders.' },
+        bamboo_vent: { label: 'Vent', blurb: 'Dash puffs a steam shove.' },
+        bamboo_burst: { label: 'Boesa', blurb: 'Steam knock — short cone.' },
+        pressure_cook: { label: 'Cook', blurb: 'Combos build a heat pip.' },
+        boesa_overheat: { label: 'Heat', blurb: 'Low HP: extra fire chip.' },
+        taunt_toot: { label: 'Toot', blurb: 'Short whistle — nearest foe faces you.' },
+        mill_heckle: { label: 'Heckle', blurb: 'Taking a hit toots a tiny taunt.' },
+        echo_ridge: { label: 'Ridge', blurb: 'Kills leave a sound-stun ripple.' },
+        ridge_reply: { label: 'Reply', blurb: 'Perfect block echoes a stun pip.' },
+        whistle_chorus: { label: 'Chorus', blurb: 'Area taunt + brief stun.' },
       },
       stick_lighter: { name: 'Stick-Lighter Factory', nameShort: 'Stick-Lighter', blurb: 'A lopsided woodshed that rubs sticks together until they sulk into sparks.' },
       stick_lighterSub: 'Sparks · East island',
@@ -2990,7 +3032,7 @@ const I18N = {
       training: 'Training', trainingSub: '1v1 · RabbitRobot · Üben',
       wall: 'Mauer', wallSub: '60 Sek · Combo = schneller',
       mats: 'Münzen', matsSub: '45 Sek · Münzen → Pet-Coins',
-      weapons: 'Waffen', weaponsSub: '26 Waffen · Summons',
+      weapons: 'Waffen', weaponsSub: '26 Waffen · Kisten',
       pets: 'Pets', petsSub: 'Münzen · Dex zähmen',
       style: 'Stil', styleSub: 'Outfit-Freischaltungen',
       gear: 'Ausrüstung', gearSub: '5 Slots · Rüstung & Kosmetik',
@@ -3023,7 +3065,7 @@ const I18N = {
       whatItDoes: 'Was macht das?',
       powerNow: '{label} — {blurb}',
       powerNext: 'Als Nächstes @ Rang {n}: {label}',
-      powerNone: 'Baue das Werk, um die Power freizuschalten',
+      powerNone: 'Baue das Werk, um die Kraft freizuschalten',
       unbuilt: 'Noch nicht gebaut',
       upgradeAsk: 'Auf Lv {next} aufwerten?',
       buildAsk: '{name} bauen?',
@@ -3045,7 +3087,7 @@ const I18N = {
       islandFallback: 'Insel {n}',
       lockedWorldNamed: 'Zu — spiel {name} (Insel {n}) frei',
       desc: {
-        produceLocked: 'Macht {res} nach Unlock + Bau',
+        produceLocked: 'Macht {res} nach frei + Bau',
         produceUnbuilt: 'Bauen: dann {res} ({n}/Std)',
         produce: '{res}: {n}/Std · max {cap}',
         powerOn: 'Kraft {rank}: {label} — {blurb}',
@@ -3056,20 +3098,41 @@ const I18N = {
         nextLv: 'Lv {n}: {res} {rate}/Std · {cap}{power}',
       },
       power: {
-        spark_kindle: 'Kindle', ember_pocket: 'Funke', matchstick_storm: 'Streichholz',
-        glue_trap: 'Leim', splinter_edge: 'Span', chip_spray: 'Spray',
-        bamboo_vent: 'Dampf', bamboo_burst: 'Boesa', pressure_cook: 'Druck', boesa_overheat: 'Hitte',
-        taunt_toot: 'Toot', whistle_chorus: 'Chor',
+        spark_kindle: { label: 'Funke', blurb: 'Erster Nahkampf pro Welle hinterlässt Glut.' },
+        kindle_trail: { label: 'Pfad', blurb: 'Laufen streut kurze Glutkrümel.' },
+        ember_pocket: { label: 'Glut', blurb: 'Waffentreffer kann einen Funken lösen.' },
+        flare_step: { label: 'Flare', blurb: 'Kurzer Dash mit Brandlinie.' },
+        matchstick_storm: { label: 'Streich', blurb: 'Streichholzregen — kurzer Feuerkegel.' },
+        sticky_soles: { label: 'Sohlen', blurb: 'Weniger Knockback — Schuhe kleben.' },
+        tacky_block: { label: 'Kleber', blurb: 'Block hält einen Tick länger.' },
+        glue_trap: { label: 'Leim', blurb: 'Pfütze bremst das erste Monster.' },
+        paste_armor: { label: 'Paste', blurb: 'Dünner Leimschild bei Wellenstart.' },
+        chip_golem: { label: 'Golem', blurb: 'Jede Welle startet mit Span-Panzer.' },
+        splinter_edge: { label: 'Span', blurb: 'Waffentreffer schleudert extra Splitter.' },
+        chip_spray: { label: 'Sprüh', blurb: 'Combos husten extra Späne.' },
+        sawdust_cloud: { label: 'Mehl', blurb: 'Kurzer Nebel vor dir.' },
+        hopper_guard: { label: 'Wächter', blurb: 'Erster Treffer pro Welle weicher.' },
+        chipper_fury: { label: 'Wut', blurb: 'Hohe Combos sprühen Splitter.' },
+        boiler_hiss: { label: 'Kessel', blurb: 'Nah-Hitze tickt Dränger.' },
+        bamboo_vent: { label: 'Dampf', blurb: 'Dash pustet einen Dampfstoss.' },
+        bamboo_burst: { label: 'Boesa', blurb: 'Dampfschlag — kurzer Kegel.' },
+        pressure_cook: { label: 'Druck', blurb: 'Combos bauen Hitze-Pip.' },
+        boesa_overheat: { label: 'Glut+', blurb: 'Wenig HP: extra Feuertick.' },
+        taunt_toot: { label: 'Tröte', blurb: 'Kurzer Pfiff — nächster Gegner schaut.' },
+        mill_heckle: { label: 'Mühle', blurb: 'Treffer trötet eine Mini-Hänsel.' },
+        echo_ridge: { label: 'Echo', blurb: 'Kill lässt Stun-Welle.' },
+        ridge_reply: { label: 'Echo+', blurb: 'Perfekter Block echoet Stun.' },
+        whistle_chorus: { label: 'Chor', blurb: 'Flächen-Hänsel + kurzer Stun.' },
       },
-      stick_lighter: { name: 'Stock-Anzünder-Fabrik', nameShort: 'Stock-Anzünder', blurb: 'Schiefer Schuppen, der Stöcke reibt, bis sie Funken geben.' },
+      stick_lighter: { name: 'Stock-Anzünder-Fabrik', nameShort: 'Anzünder', blurb: 'Schiefer Schuppen, der Stöcke reibt, bis sie Funken geben.' },
       stick_lighterSub: 'Funken · Ostinsel',
       woodchip_glue: { name: 'Holzspan-Leim-Fabrik', nameShort: 'Holz-Leim', blurb: 'Kocht Sägemehl zu einer Paste, die härter klebt als eine Combo. Nicht lecken.' },
       woodchip_glueSub: 'Leim · Feuerinsel',
-      chipping_wood: { name: 'Holz-Häcksler-Fabrik', nameShort: 'Holzhäcksler', blurb: 'Fröhlicher Häcksler, der TIMBER flüstert und nützliche Späne hustet.' },
+      chipping_wood: { name: 'Holz-Häcksler-Fabrik', nameShort: 'Häcksler', blurb: 'Fröhlicher Häcksler, der TIMBER flüstert und nützliche Späne hustet.' },
       chipping_woodSub: 'Späne · Neoninsel',
-      bamboo_boesa: { name: 'Bambus-Boesa-Kessel', nameShort: 'Bambus-Boesa', blurb: 'Feuerinsel-Kessel, der hohles Boesa-Bambus dämpft, bis die Stängel pfeifen.' },
+      bamboo_boesa: { name: 'Bambus-Boesa-Kessel', nameShort: 'Boesa', blurb: 'Feuerinsel-Kessel, der hohles Boesa-Bambus dämpft, bis die Stängel pfeifen.' },
       bamboo_boesaSub: 'Dampf · Tempelinsel',
-      echo_whistle: { name: 'Echo-Pfeifenmühle', nameShort: 'Echo-Pfeife', blurb: 'Mühlrad, das Luft zu Spott mahlt. Das Gebäude motzt zurück.' },
+      echo_whistle: { name: 'Echo-Pfeifenmühle', nameShort: 'Pfeife', blurb: 'Mühlrad, das Luft zu Spott mahlt. Das Gebäude motzt zurück.' },
       echo_whistleSub: 'Echo · Finalinsel',
       bamboo_boesa_boiler: { name: 'Bambus-Boesa-Kessel' }, echo_whistle_mill: { name: 'Echo-Pfeifenmühle' },
       res: { spark: 'Funken', glue: 'Leim', chip: 'Span', steam: 'Dampf', echo: 'Echo', embers: 'Glut', chips: 'Späne', echoes: 'Echos' },
@@ -3348,7 +3411,7 @@ const I18N = {
       islandFallback: 'île {n}',
       lockedWorldNamed: 'Fermé — gagne {name} (île {n})',
       desc: {
-        produceLocked: 'Fait {res} après débloc + build',
+        produceLocked: 'Fait {res} après débloc + construire',
         produceUnbuilt: 'Construire : puis {res} ({n}/h)',
         produce: '{res} : {n}/h · max {cap}',
         powerOn: 'Pouvoir {rank} : {label} — {blurb}',
@@ -3359,10 +3422,31 @@ const I18N = {
         nextLv: 'Nv {n} : {res} {rate}/h · {cap}{power}',
       },
       power: {
-        spark_kindle: 'Kindle', ember_pocket: 'Étincelle', matchstick_storm: 'Allumette',
-        glue_trap: 'Colle', splinter_edge: 'Copeau', chip_spray: 'Spray',
-        bamboo_vent: 'Vapeur', bamboo_burst: 'Boesa', pressure_cook: 'Pression', boesa_overheat: 'Chaleur',
-        taunt_toot: 'Toot', whistle_chorus: 'Chœur',
+        spark_kindle: { label: 'Étincelle', blurb: 'Premier corps-à-corps de vague laisse une braise.' },
+        kindle_trail: { label: 'Sillage', blurb: 'Marcher sème de brèves braises.' },
+        ember_pocket: { label: 'Braise', blurb: 'Un coup d’arme peut lâcher une étincelle.' },
+        flare_step: { label: 'Flare', blurb: 'Dash court avec ligne de feu.' },
+        matchstick_storm: { label: 'Allumette', blurb: 'Pluie d’allumettes — court cône de feu.' },
+        sticky_soles: { label: 'Semelles', blurb: 'Moins de recul — les pieds collent.' },
+        tacky_block: { label: 'Colle+', blurb: 'Le bloc tient un temps de plus.' },
+        glue_trap: { label: 'Colle', blurb: 'Flaque qui ralentit le 1er monstre.' },
+        paste_armor: { label: 'Pâte', blurb: 'Fin bouclier de colle en début de vague.' },
+        chip_golem: { label: 'Golem', blurb: 'Chaque vague commence avec une armure copeaux.' },
+        splinter_edge: { label: 'Éclat', blurb: 'Le coup d’arme envoie un éclat bonus.' },
+        chip_spray: { label: 'Spray', blurb: 'Les combos crachent plus de copeaux.' },
+        sawdust_cloud: { label: 'Sciure', blurb: 'Court brouillard devant toi.' },
+        hopper_guard: { label: 'Garde', blurb: '1er coup de vague un peu plus doux.' },
+        chipper_fury: { label: 'Furie', blurb: 'Gros combos projettent des éclats.' },
+        boiler_hiss: { label: 'Chaudr.', blurb: 'Chaleur proche tick les presseurs.' },
+        bamboo_vent: { label: 'Vapeur', blurb: 'Le dash souffle un coup de vapeur.' },
+        bamboo_burst: { label: 'Boesa', blurb: 'Choc vapeur — court cône.' },
+        pressure_cook: { label: 'Pression', blurb: 'Les combos chargent de la chaleur.' },
+        boesa_overheat: { label: 'Chaleur', blurb: 'PV bas : tick feu extra.' },
+        taunt_toot: { label: 'Toot', blurb: 'Court sifflet — le plus proche te regarde.' },
+        mill_heckle: { label: 'Moulin', blurb: 'Prendre un coup toote une mini-moquerie.' },
+        echo_ridge: { label: 'Écho', blurb: 'Un KO laisse une onde stun.' },
+        ridge_reply: { label: 'Écho+', blurb: 'Bloc parfait echo un stun.' },
+        whistle_chorus: { label: 'Chœur', blurb: 'Moquerie de zone + court stun.' },
       },
       stick_lighter: { name: 'Usine Allume-Bâton', nameShort: 'Allume-Bâton', blurb: 'Hangar de travers qui frotte des bâtons jusqu’à ce qu’ils crachent des étincelles.' },
       stick_lighterSub: 'Étincelles · île de l’Est',
@@ -3646,10 +3730,31 @@ const I18N = {
         nextLv: 'Nv {n}: {res} {rate}/h · {cap}{power}',
       },
       power: {
-        spark_kindle: 'Kindle', ember_pocket: 'Chispa', matchstick_storm: 'Cerilla',
-        glue_trap: 'Cola', splinter_edge: 'Astilla', chip_spray: 'Spray',
-        bamboo_vent: 'Vapor', bamboo_burst: 'Boesa', pressure_cook: 'Presión', boesa_overheat: 'Calor',
-        taunt_toot: 'Toot', whistle_chorus: 'Coro',
+        spark_kindle: { label: 'Chispa', blurb: 'El primer melee de oleada deja brasa.' },
+        kindle_trail: { label: 'Rastro', blurb: 'Andar suelta brasas breves.' },
+        ember_pocket: { label: 'Brasa', blurb: 'Un golpe de arma puede soltar chispa.' },
+        flare_step: { label: 'Flare', blurb: 'Dash corto con línea de fuego.' },
+        matchstick_storm: { label: 'Cerilla', blurb: 'Lluvia de cerillas — cono corto.' },
+        sticky_soles: { label: 'Suelas', blurb: 'Menos empuje — los pies pegan.' },
+        tacky_block: { label: 'Pegajoso', blurb: 'El bloque dura un toque más.' },
+        glue_trap: { label: 'Cola', blurb: 'Charco que frena al 1.er monstruo.' },
+        paste_armor: { label: 'Pasta', blurb: 'Escudo fino de cola al empezar oleada.' },
+        chip_golem: { label: 'Golem', blurb: 'Cada oleada empieza con armadura astilla.' },
+        splinter_edge: { label: 'Astilla', blurb: 'El golpe lanza una astilla extra.' },
+        chip_spray: { label: 'Spray', blurb: 'Los combos tosen más astillas.' },
+        sawdust_cloud: { label: 'Serrín', blurb: 'Niebla breve delante.' },
+        hopper_guard: { label: 'Guarda', blurb: 'El 1.er golpe de oleada es más suave.' },
+        chipper_fury: { label: 'Furia', blurb: 'Combos altos rocían astillas.' },
+        boiler_hiss: { label: 'Caldera', blurb: 'Calor cercano pica a los que aprietan.' },
+        bamboo_vent: { label: 'Vapor', blurb: 'El dash sopla un empujón de vapor.' },
+        bamboo_burst: { label: 'Boesa', blurb: 'Golpe de vapor — cono corto.' },
+        pressure_cook: { label: 'Presión', blurb: 'Los combos cargan calor.' },
+        boesa_overheat: { label: 'Calor', blurb: 'PV bajos: tick de fuego extra.' },
+        taunt_toot: { label: 'Toot', blurb: 'Silbido corto — el más cercano te mira.' },
+        mill_heckle: { label: 'Molino', blurb: 'Recibir golpe pita una burla.' },
+        echo_ridge: { label: 'Eco', blurb: 'Un KO deja onda de aturdimiento.' },
+        ridge_reply: { label: 'Eco+', blurb: 'Bloqueo perfecto ecoa stun.' },
+        whistle_chorus: { label: 'Coro', blurb: 'Burla de zona + stun breve.' },
       },
       stick_lighter: { name: 'Fábrica Palo-Mechero', nameShort: 'Palo-Mechero', blurb: 'Cobertizo torcido que frota palos hasta que sueltan chispas.' },
       stick_lighterSub: 'Chispas · isla Este',
@@ -12629,14 +12734,29 @@ function buildingTxt(key, fallback, params) {
   return out;
 }
 
+function buildingPowerField(power, field, fallback) {
+  if (!power) return '';
+  const id = power.id;
+  if (typeof t === 'function') {
+    const nestedKey = 'buildings.power.' + id + '.' + field;
+    const nested = t(nestedKey);
+    if (nested && nested !== nestedKey) return nested;
+    if (field === 'label') {
+      const flat = t('buildings.power.' + id);
+      if (flat && flat !== 'buildings.power.' + id) return flat;
+    }
+  }
+  return fallback || '';
+}
+
 function buildingPowerLabel(power) {
   if (!power) return '';
-  return buildingTxt('buildings.power.' + power.id + '.label', power.label || power.id);
+  return buildingPowerField(power, 'label', power.label || power.id);
 }
 
 function buildingPowerBlurb(power) {
   if (!power) return '';
-  return buildingTxt('buildings.power.' + power.id + '.blurb', power.blurb || '');
+  return buildingPowerField(power, 'blurb', '');
 }
 
 function buildingCostLabel(cost) {
@@ -18940,6 +19060,12 @@ function petProgressLine(speciesId) {
   }
 
   function labelOf(key, fallback) {
+    if (typeof t === 'function') {
+      const nested = t('buildings.power.' + key + '.label');
+      if (nested && nested !== 'buildings.power.' + key + '.label') return nested;
+      const flat = t('buildings.power.' + key);
+      if (flat && flat !== 'buildings.power.' + key) return flat;
+    }
     if (typeof tOr === 'function') return tOr('buildings.power.' + key, fallback);
     return fallback;
   }
@@ -24858,6 +24984,9 @@ overlayI18nCatalog(CATALOG_FR, {
     persistPrimaryFail: 'Sauvegarde principale ratée — copie à jour (exporte dans Options)',
     persistFail: 'Sauvegarde ratée — exporte dans Options',
     persistFailCtx: 'Sauvegarde ratée ({context}) — exporte dans Options',
+    gearLocked: 'Encore verrouillé · {why}',
+    gearEquipped: '{name} équipé',
+    gearUnequipped: '{name} retiré',
     persistCtxSkill: 'skill', persistCtxSuper: 'super', persistCtxWeapon: 'arme',
     persistCtxStyle: 'style', persistCtxMission: 'mission', persistCtxClaim: 'réclame',
     persistCtxDaily: 'bonus', persistCtxXp: 'XP', persistCtxGear: 'équipement',
@@ -25464,6 +25593,9 @@ overlayI18nCatalog(CATALOG_ES, {
     persistPrimaryFail: 'Partida principal fallida — copia actualizada (exporta en Opciones)',
     persistFail: 'No se pudo guardar — exporta en Opciones',
     persistFailCtx: 'No se pudo guardar ({context}) — exporta en Opciones',
+    gearLocked: 'Aún bloqueado · {why}',
+    gearEquipped: '{name} puesto',
+    gearUnequipped: '{name} quitado',
     persistCtxSkill: 'skill', persistCtxSuper: 'super', persistCtxWeapon: 'arma',
     persistCtxStyle: 'estilo', persistCtxMission: 'misión', persistCtxClaim: 'reclamo',
     persistCtxDaily: 'bonus', persistCtxXp: 'XP', persistCtxGear: 'equipo',
@@ -26084,6 +26216,9 @@ overlayI18nCatalog(CATALOG_DE, {
     persistPrimaryFail: 'Hauptsave fehlgeschlagen — Backup aktualisiert (Export in Einstellungen)',
     persistFail: 'Speichern fehlgeschlagen — Export in Einstellungen',
     persistFailCtx: 'Speichern fehlgeschlagen ({context}) — Export in Einstellungen',
+    gearLocked: 'Noch gesperrt · {why}',
+    gearEquipped: '{name} ausgerüstet',
+    gearUnequipped: '{name} abgelegt',
     persistCtxSkill: 'Skill', persistCtxSuper: 'Super', persistCtxWeapon: 'Waffe',
     persistCtxStyle: 'Stil', persistCtxMission: 'Mission', persistCtxClaim: 'Claim',
     persistCtxDaily: 'Tagesbonus', persistCtxXp: 'XP', persistCtxGear: 'Ausrüstung',

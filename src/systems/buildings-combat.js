@@ -95,6 +95,12 @@
   }
 
   function labelOf(key, fallback) {
+    if (typeof t === 'function') {
+      const nested = t('buildings.power.' + key + '.label');
+      if (nested && nested !== 'buildings.power.' + key + '.label') return nested;
+      const flat = t('buildings.power.' + key);
+      if (flat && flat !== 'buildings.power.' + key) return flat;
+    }
     if (typeof tOr === 'function') return tOr('buildings.power.' + key, fallback);
     return fallback;
   }
