@@ -3815,24 +3815,35 @@ class Game {
       }
       c.font = '600 15px -apple-system, sans-serif';
       c.textAlign = 'center';
-      const tw = c.measureText(hintTxt).width;
       const padX = 16;
-      const hintY = (this.mode === 'adventure' && this.advHudBottom > 0)
-        ? Math.max(H * 0.2, this.advHudBottom + 20)
-        : H * 0.2;
-      const pillY = hintY - 24;
+      const maxHintW = Math.max(160, W - 32 - padX * 2);
+      const hintLines = (typeof wrapHudText === 'function')
+        ? wrapHudText(c, hintTxt, maxHintW, 2)
+        : [hintTxt];
+      const lh = 18;
+      let tw = 0;
+      for (const ln of hintLines) tw = Math.max(tw, c.measureText(ln).width);
+      const pillH = 12 + hintLines.length * lh;
+      const pauseClear = hudInsetTop() + 56;
+      const belowHud = (this.mode === 'adventure' && this.advHudBottom > 0)
+        ? this.advHudBottom + 22
+        : Math.max(H * 0.2, pauseClear + 10);
+      const hintY = Math.min(Math.max(belowHud, pauseClear + 10), H * 0.42);
+      const pillY = hintY - 20;
       c.fillStyle = 'rgba(6,10,24,.78)';
-      this.rr(c, W / 2 - tw / 2 - padX, pillY, tw + padX * 2, 30, 10);
+      this.rr(c, W / 2 - tw / 2 - padX, pillY, tw + padX * 2, pillH, 10);
       c.fill();
       c.strokeStyle = 'rgba(255,215,94,.35)';
       c.lineWidth = a11yHighContrast() ? 2.5 : 1.5;
-      this.rr(c, W / 2 - tw / 2 - padX, pillY, tw + padX * 2, 30, 10);
+      this.rr(c, W / 2 - tw / 2 - padX, pillY, tw + padX * 2, pillH, 10);
       c.stroke();
-      fillHudText(c, hintTxt, W / 2, hintY, {
-        fill: '#fff',
-        stroke: 'rgba(0,0,0,.85)',
-        strokeW: a11yHighContrast() ? 3.5 : 0,
-      });
+      for (let i = 0; i < hintLines.length; i++) {
+        fillHudText(c, hintLines[i], W / 2, hintY + i * lh, {
+          fill: '#fff',
+          stroke: 'rgba(0,0,0,.85)',
+          strokeW: a11yHighContrast() ? 3.5 : 0,
+        });
+      }
       c.globalAlpha = 1;
     }
     try { if (typeof drawAimTutorial === 'function') drawAimTutorial(c, this); } catch (_) {}
@@ -4097,7 +4108,8 @@ class Game {
     c.font = '800 10px -apple-system, sans-serif';
     const tw = c.measureText(label).width;
     const padX = 8;
-    const w = tw + padX * 2;
+    const maxChip = Math.max(80, (typeof W === 'number' ? W : 390) - 48);
+    const w = Math.min(tw + padX * 2, maxChip);
     const h = 16;
     const x = cx - w / 2;
     const y = cy - h / 2;
@@ -4111,7 +4123,14 @@ class Game {
     c.fillStyle = col;
     c.textAlign = 'center';
     c.textBaseline = 'middle';
-    c.fillText(label, cx, cy + 0.5);
+    let chipTxt = label;
+    if (c.measureText(chipTxt).width > w - padX * 2) {
+      while (chipTxt.length > 1 && c.measureText(chipTxt + '…').width > w - padX * 2) {
+        chipTxt = chipTxt.slice(0, -1);
+      }
+      chipTxt = chipTxt.replace(/\s+$/, '') + '…';
+    }
+    c.fillText(chipTxt, cx, cy + 0.5);
     c.restore();
     c.textBaseline = 'alphabetic';
     c.textAlign = 'left';
@@ -4819,7 +4838,15 @@ class Game {
         c.font = '700 11px -apple-system, sans-serif';
         c.textAlign = 'right';
         c.fillStyle = 'rgba(255,255,255,.78)';
-        c.fillText(t('runLoot.hudShort', { line: short }), W - Math.max(10, readSafeInsets().right + 8), by + 2);
+        const lootX = W - (typeof hudRightReserve === 'function' ? hudRightReserve() : Math.max(10, readSafeInsets().right + 8));
+        const lootMax = Math.max(80, lootX - bx - bw - 12);
+        if (typeof fillHudWrapped === 'function') {
+          fillHudWrapped(c, t('runLoot.hudShort', { line: short }), lootX, by + 2, {
+            fill: 'rgba(255,255,255,.78)', align: 'right', maxW: lootMax, maxLines: 2, lineH: 12,
+          });
+        } else {
+          c.fillText(t('runLoot.hudShort', { line: short }), lootX, by + 2);
+        }
         c.textAlign = 'left';
       }
     }
@@ -4943,9 +4970,18 @@ class Game {
       c.font = '700 11px -apple-system, sans-serif';
       c.fillStyle = isl.accent;
       c.globalAlpha = 0.92;
-      c.fillText(t('hud.islandWeapon', { name: islandLabel(islandFromLevel(this.level.n), 'name'), cap: wCap }), W / 2, hy);
+      const islTxt = t('hud.islandWeapon', { name: islandLabel(islandFromLevel(this.level.n), 'name'), cap: wCap });
+      const islMax = Math.max(140, W - (typeof hudRightReserve === 'function' ? hudRightReserve() : 64) - 24);
+      if (typeof fillHudWrapped === 'function') {
+        const used = fillHudWrapped(c, islTxt, W / 2, hy, {
+          fill: isl.accent, maxW: islMax, maxLines: 2, lineH: 13,
+        });
+        hy += Math.max(14, used);
+      } else {
+        c.fillText(islTxt, W / 2, hy);
+        hy += 14;
+      }
       c.globalAlpha = 1;
-      hy += 14;
 
       if (this.waveIdx >= 0 && this.wavePause <= 0) {
         const curMeta = this.level.waveMeta && this.level.waveMeta[this.waveIdx];
@@ -5018,29 +5054,33 @@ class Game {
       }
 
       const starY = Math.max(24, hudInsetTop() + 2);
+      const rightPad = typeof hudRightReserve === 'function'
+        ? hudRightReserve()
+        : Math.max(14, readSafeInsets().right + 8);
       if (p.alive) {
         const hpPct = p.hp / Math.max(1, p.maxhp);
         const proj = starsFromHpPct(hpPct);
         const prevBest = this.advPrevStars || 0;
+        const star0 = W - rightPad - 46;
         for (let i = 0; i < 3; i++) {
           const ghost = prevBest > 0 && i < prevBest && i >= proj;
-          drawStarShape(c, W - 52 + i * 19, starY, 8, ghost ? 'rgba(255,215,94,.22)' : '#ffd75e', !ghost && i < proj);
+          drawStarShape(c, star0 + i * 19, starY, 8, ghost ? 'rgba(255,215,94,.22)' : '#ffd75e', !ghost && i < proj);
         }
-        this.drawAdvStarBuffer(c, W - 58, starY + 13, hpPct);
+        this.drawAdvStarBuffer(c, star0 - 6, starY + 13, hpPct);
         if (proj > prevBest) {
           c.font = '800 9px -apple-system, sans-serif';
           c.textAlign = 'right';
           c.fillStyle = '#7cfc8a';
-          c.fillText(t('hud.starBeat', { n: proj - prevBest }), W - 8, starY + 28);
+          c.fillText(t('hud.starBeat', { n: proj - prevBest }), W - rightPad, starY + 28);
         } else if (prevBest > 0) {
           c.font = '700 8px -apple-system, sans-serif';
           c.textAlign = 'right';
           c.fillStyle = 'rgba(255,255,255,.42)';
-          c.fillText(t('hud.starBest', { n: prevBest }), W - 8, starY + 28);
+          c.fillText(t('hud.starBest', { n: prevBest }), W - rightPad, starY + 28);
         }
       }
 
-      const rightX = W - Math.max(14, readSafeInsets().right + 8);
+      const rightX = W - rightPad;
       let rightY = starY + 18;
       if ((this.killStreak || 0) >= 2) {
         c.textAlign = 'right';
@@ -5096,8 +5136,17 @@ class Game {
         else if (hpPct <= STAR_HP.three) starHint = t('hud.star3', { pct: Math.round(STAR_HP.three * 100) });
         c.font = '700 11px sans-serif';
         c.fillStyle = 'rgba(255,255,255,.7)';
-        c.fillText(t('hud.hpPct', { pct, hint: starHint }), W / 2, hy);
-        hy += 14;
+        const hpLine = t('hud.hpPct', { pct, hint: starHint });
+        const hpMax = Math.max(140, W - rightPad - 24);
+        if (typeof fillHudWrapped === 'function') {
+          const used = fillHudWrapped(c, hpLine, W / 2, hy, {
+            fill: 'rgba(255,255,255,.7)', maxW: hpMax, maxLines: 2, lineH: 13,
+          });
+          hy += Math.max(14, used);
+        } else {
+          c.fillText(hpLine, W / 2, hy);
+          hy += 14;
+        }
       }
       if (this.waveIdx >= 0 && (this.spawnQueue.length > 0 || this.monsters.some((m) => m.alive))) {
         const rem = this.spawnQueue.length + this.monsters.filter((m) => m.alive).length;

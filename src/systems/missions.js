@@ -2867,6 +2867,16 @@ function gambleOnboardHintLine() {
       : 'Eerste keer: sum ≤5 super-baas · sum ≥9 ally buff · Skip = geen gok');
 }
 
+function fomoRitualIsOpen() {
+  try {
+    if (document.body && document.body.classList.contains('is-fomo')) return true;
+    const el = document.getElementById('fomoRitual');
+    return !!(el && !el.hidden);
+  } catch (_) {
+    return false;
+  }
+}
+
 /** Welcome only on HOME hub — never chase Adventure/Settings/title. */
 function welcomeToastOnHub() {
   try {
@@ -2877,6 +2887,7 @@ function welcomeToastOnHub() {
     if (!menu || !menu.classList.contains('active')) return false;
     const other = document.querySelector('.screen.active:not(#menuScreen)');
     if (other) return false;
+    if (fomoRitualIsOpen()) return false;
     return true;
   } catch (_) {
     return false;
@@ -2912,8 +2923,8 @@ function maybeWelcomeToast() {
       const splash = document.getElementById('sfSplash');
       onSplash = !!(splash && !splash.classList.contains('is-done'));
     } catch (_) {}
-    // Still on title/splash — wait for HOME. Left hub already — don't follow.
-    if (onSplash && tries < 24) {
+    // Still on title/splash or FOMO sheet — wait. Don't stack welcome on Vandaag.
+    if ((onSplash || fomoRitualIsOpen()) && tries < 40) {
       setTimeout(tick, 350);
       return;
     }

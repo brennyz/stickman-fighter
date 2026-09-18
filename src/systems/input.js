@@ -789,6 +789,16 @@ function hudInsetTop() {
   return Math.max(readSafeInsets().top, 6) + 10;
 }
 
+/** Keep canvas HUD (stars / combo / loot) clear of the HTML #pauseBtn. */
+function hudRightReserve() {
+  const insets = readSafeInsets();
+  let pauseW = 48;
+  try {
+    if (document.body && document.body.classList.contains('big-touch')) pauseW = 56;
+  } catch (_) {}
+  return Math.max(insets.right + 8, 12) + pauseW + 6;
+}
+
 function playfieldGroundY(H, W) {
   const portrait = H > W * 1.02;
   const dualVs = typeof Input !== 'undefined' && Input.dualMode;

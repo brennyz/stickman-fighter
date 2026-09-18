@@ -2198,6 +2198,14 @@ const UI = {
       });
     }
     if (el) el.setAttribute('aria-hidden', on ? 'false' : 'true');
+    const hint = document.getElementById('menuHubHint');
+    if (hint) {
+      if (on) hint.setAttribute('hidden', '');
+      else hint.removeAttribute('hidden');
+    }
+    if (on) {
+      try { this._dismissWelcomeToast(); } catch (_) {}
+    }
   },
 
   hideFomoRitual() {

@@ -58,3 +58,47 @@ function fillHudText(c, text, x, y, opts) {
   c.fillStyle = fill;
   c.fillText(text, x, y);
 }
+
+/** Word-wrap HUD copy so long locale strings stay inside the canvas (layout, not i18n). */
+function wrapHudText(c, text, maxW, maxLines) {
+  const raw = String(text || '');
+  const limit = Math.max(1, maxLines || 2);
+  const width = Math.max(40, maxW || 200);
+  if (!raw) return [];
+  if (c.measureText(raw).width <= width) return [raw];
+  const words = raw.split(/\s+/);
+  const lines = [];
+  let line = '';
+  for (const word of words) {
+    const test = line ? line + ' ' + word : word;
+    if (c.measureText(test).width > width && line) {
+      lines.push(line);
+      line = word;
+      if (lines.length >= limit) break;
+    } else {
+      line = test;
+    }
+  }
+  if (lines.length < limit && line) lines.push(line);
+  if (lines.length >= limit) {
+    let last = lines[limit - 1];
+    const leftover = (line && lines[limit - 1] !== line) ? line : '';
+    if (leftover || c.measureText(last).width > width) {
+      while (last.length > 1 && c.measureText(last.replace(/\s+$/, '') + '…').width > width) {
+        last = last.slice(0, -1);
+      }
+      lines[limit - 1] = last.replace(/\s+$/, '') + '…';
+    }
+  }
+  return lines.slice(0, limit);
+}
+
+function fillHudWrapped(c, text, x, y, opts) {
+  opts = opts || {};
+  const lines = wrapHudText(c, text, opts.maxW, opts.maxLines || 2);
+  const lh = opts.lineH || 16;
+  for (let i = 0; i < lines.length; i++) {
+    fillHudText(c, lines[i], x, y + i * lh, opts);
+  }
+  return lines.length * lh;
+}

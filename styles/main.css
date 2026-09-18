@@ -1352,7 +1352,14 @@
   .menu-profile-bar .prof-xp { display: block; margin-top: 6px; height: 3px; border-radius: 999px; background: rgba(255,255,255,.07); overflow: hidden; }
   .menu-profile-bar .prof-xp > span { display: block; height: 100%; background: linear-gradient(90deg, #4ecf6a, #ffd75e); border-radius: inherit; transition: width .35s ease; }
   .menu-profile-bar .prof-foot { display: block; margin-top: 5px; font-size: 10px; opacity: .6; }
-  .menu-hub-hint { width: 100%; margin: 0; font-size: 10px; color: #8fa3d9; opacity: .85; text-align: center; line-height: 1.35; min-height: 1.35em; }
+  .menu-hub-hint {
+    width: 100%; margin: 0; padding: 0 8px; font-size: 10px; color: #8fa3d9; opacity: .85;
+    text-align: center; line-height: 1.35; min-height: 0; max-width: 100%;
+    overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
+  }
+  #menuScreen.is-fomo .menu-hub-hint,
+  body.is-fomo .menu-hub-hint,
+  body:has(#toastHost .toast) #menuScreen.active .menu-hub-hint { display: none; }
   .menu-dock {
     display: flex; justify-content: center; gap: clamp(4px, 1.2vw, 8px); width: 100%; margin: 0;
   }
@@ -1972,7 +1979,8 @@
   .island-bar { display:flex; flex-wrap:wrap; gap:8px; justify-content:center; width:min(92vw,640px); margin:8px 0 10px; }
   .diff-bar { display:flex; flex-wrap:nowrap; gap:8px; justify-content:center; width:min(92vw,480px); margin:4px auto 6px; }
   .diff-blurb { width:min(92vw,480px); margin:0 auto 10px; text-align:center; font-size:11px; line-height:1.35;
-      color:color-mix(in srgb, var(--diff-accent, #8fa3d9) 70%, #cdd8f5); opacity:.95; letter-spacing:.02em; min-height:1.35em; }
+      color:color-mix(in srgb, var(--diff-accent, #8fa3d9) 70%, #cdd8f5); opacity:.95; letter-spacing:.02em; min-height:0;
+      max-width:100%; overflow:hidden; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; }
   .diff-blurb-nightmare { color:#ffb08a; text-shadow:0 0 10px rgba(255,100,40,.25); }
   .diff-blurb-hell { color:#ff8a7a; text-shadow:0 0 12px rgba(255,40,30,.3); }
   .diff-tab { flex:1 1 0; min-width:0; padding:10px 8px; border-radius:14px; border:2px solid rgba(255,255,255,.12);
@@ -2000,18 +2008,25 @@
       box-shadow:0 0 0 1px color-mix(in srgb, var(--isl-accent, #ffd75e) 40%, transparent); }
   .island-tab.locked { opacity:.45; cursor:not-allowed; }
   .island-tab-n { font-size:18px; color:var(--isl-accent, #ffd75e); }
-  .island-tab-name { font-size:10px; line-height:1.2; text-align:center; opacity:.92; }
+  .island-tab-name { font-size:10px; line-height:1.2; text-align:center; opacity:.92;
+      max-width:100%; overflow:hidden; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; }
   .island-tab-lock { position:absolute; top:6px; right:6px; font-size:12px; opacity:.85; }
-  .island-info { width:min(92vw,640px); text-align:left; font-size:13px; color:#9db1e3; margin:0 0 12px; line-height:1.45;
+  .island-info { width:min(92vw,640px); max-width:100%; text-align:left; font-size:13px; color:#9db1e3; margin:0 0 12px; line-height:1.45;
       background:rgba(255,255,255,.05); border:1px solid rgba(255,255,255,.1); border-radius:16px; padding:12px 14px; }
-  .island-info-head { display:flex; align-items:center; gap:12px; }
+  .island-info-head { display:flex; align-items:center; gap:12px; min-width:0; }
+  .island-info-text { min-width:0; overflow-wrap:anywhere; }
+  .island-info-ico { flex:0 0 auto; }
   .island-info-ico svg,
   .island-info-ico img { width:36px; height:36px; display:block; }
-  .island-info-sub { font-size:12px; margin-top:4px; opacity:.92; word-spacing:.05em; line-height:1.45; }
+  .island-info-sub { font-size:12px; margin-top:4px; opacity:.92; word-spacing:.05em; line-height:1.45;
+      overflow:hidden; display:-webkit-box; -webkit-line-clamp:3; -webkit-box-orient:vertical; }
   .island-info-prog { margin-top:10px; height:7px; }
-  .island-info-chips { margin-top:8px; display:flex; flex-wrap:wrap; gap:6px; }
-  .island-info-chip { font-size:11px; font-weight:800; padding:4px 10px; border-radius:999px; background:rgba(196,122,255,.18); color:#c47aff; border:1px solid rgba(196,122,255,.35); }
-  .island-info-chip.onboard { background:rgba(124,245,255,.12); color:#9db8ff; border-color:rgba(124,245,255,.35); }
+  .island-info-chips { margin-top:8px; display:flex; flex-wrap:wrap; gap:6px; min-width:0; width:100%; }
+  .island-info-chip { font-size:11px; font-weight:800; padding:4px 10px; border-radius:999px; background:rgba(196,122,255,.18); color:#c47aff; border:1px solid rgba(196,122,255,.35);
+      min-width:0; max-width:100%; overflow-wrap:anywhere; line-height:1.3; }
+  .island-info-chip.onboard { background:rgba(124,245,255,.12); color:#9db8ff; border-color:rgba(124,245,255,.35);
+      flex:1 1 100%; border-radius:12px;
+      display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }
   .island-prog-track { display:block; width:100%; height:5px; border-radius:4px; background:#1a2040; overflow:hidden; }
   .island-prog-track i { display:block; height:100%; border-radius:4px; transition:width .25s ease; }
   .island-info-stars { margin-top:5px; height:4px; }
@@ -2081,7 +2096,7 @@
       width:48px; height:48px; border-radius:14px; font-size:18px; display:none;
       background:rgba(20,26,48,.8); border:1px solid rgba(255,255,255,.22); color:#fff;
       box-shadow:0 4px 12px rgba(0,0,0,.35); pointer-events:auto;
-      touch-action:manipulation; cursor:pointer; position:relative;
+      touch-action:manipulation; cursor:pointer;
       padding:0; align-items:center; justify-content:center; }
   #pauseBtn.show { display:flex; }
   #pauseBtn::before { content:''; position:absolute; inset:-14px; }
@@ -2239,6 +2254,7 @@
   .fomo-ritual-row {
     background: rgba(255,255,255,.05); border: 1px solid rgba(255,255,255,.1);
     border-radius: 12px; padding: 10px 12px; font-size: 14px; line-height: 1.4; font-weight: 700;
+    overflow-wrap: anywhere; min-width: 0;
   }
   .fomo-ritual-row small { display: block; margin-top: 2px; font-size: 12px; font-weight: 600; color: #9db1e3; }
   .fomo-ritual-reset { margin: 0 0 12px; font-size: 12px; font-weight: 700; color: #7cf5ff; }
@@ -2399,9 +2415,10 @@
   .char-saga-bar .saga-count { font-size:10px; opacity:.72; font-weight:700; }
   .rar-pill { display:inline-block; font-size:11px; font-weight:900; border:1px solid; border-radius:999px;
       padding:1px 8px; margin-left:6px; vertical-align:middle; letter-spacing:.3px; }
-  .dex-filter-bar { display:flex; flex-wrap:wrap; gap:6px; justify-content:center; width:min(92vw,520px); margin:0 0 12px; }
+  .dex-filter-bar { display:flex; flex-wrap:wrap; gap:6px; justify-content:center; width:min(92vw,520px); max-width:100%; margin:0 0 12px; }
   .dex-filter-btn { font-size:11px; font-weight:800; padding:7px 11px; border-radius:999px; border:1px solid rgba(255,255,255,.18);
-      background:rgba(20,26,48,.85); color:#cfe0ff; touch-action:manipulation; min-height:36px; }
+      background:rgba(20,26,48,.85); color:#cfe0ff; touch-action:manipulation; min-height:36px;
+      min-width:0; max-width:100%; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
   .dex-filter-btn.active { border-color: var(--dex-filter-color, #ffd75e); color:#fff; box-shadow:0 0 0 1px var(--dex-filter-color, #ffd75e); }
   .dex-cosmetic-row { display:flex; flex-wrap:wrap; gap:8px; margin-top:10px; }
   .dex-cosmetic-chip { flex:1 1 140px; font-size:11px; padding:8px 10px; border-radius:12px;
@@ -3688,6 +3705,10 @@
     letter-spacing: .02em;
     color: var(--menu-ink-muted);
     text-transform: uppercase;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
   #buildingsScreen .buildings-wallet-amt {
     font-size: 16px;
@@ -4126,6 +4147,10 @@
       justify-content: space-between;
       padding: 6px 8px;
     }
+    .island-info { padding: 10px 10px; }
+    .island-info-chip { padding: 4px 8px; }
+    .dex-filter-btn { padding: 7px 8px; }
+    .gear-filter-btn { padding: 8px 8px; font-size: 11px; }
     .hub-tile { padding-right: 32px; }
     .hub-tile-featured::before { right: 32px; max-width: calc(100% - 48px); }
     .settings-home-tile {

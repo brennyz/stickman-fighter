@@ -44,6 +44,16 @@ must(/toast-under-title/.test(css) && /sticky-under-back\) \+ 96px/.test(css),
   'toast must sit under factory/settings titles');
 must(/orientation: landscape\) and \(max-height: 420px\)/.test(css),
   'landscape 844×390 hub breakpoint missing');
+must(/#menuScreen\.is-fomo \.menu-hub-hint/.test(css) && /menu-hub-hint[\s\S]{0,280}-webkit-line-clamp:\s*2/.test(css),
+  'first-30s: hide hub hint under FOMO and clamp to 2 lines');
+must(/island-info-chip\.onboard[\s\S]{0,220}-webkit-line-clamp:\s*2/.test(css),
+  'island onboard chip must clamp instead of stretching');
+must(/function wrapHudText/.test(fs.readFileSync(path.join(root, 'src/systems/a11y.js'), 'utf8')),
+  'HUD wrap helper missing');
+must(/function hudRightReserve/.test(fs.readFileSync(path.join(root, 'src/systems/input.js'), 'utf8')),
+  'HUD pause gutter missing');
+must(/#pauseBtn \{[^}]*position:\s*fixed/.test(css) && !/#pauseBtn \{[^}]*position:\s*relative/.test(css),
+  'pauseBtn must stay position:fixed (HUD gutter)');
 must(!/data-hub="versus"/.test(html), 'versus hub tile must stay retired');
 must(/--sticky-under-back:/.test(css), 'missing --sticky-under-back token');
 must(/\.hub-tile \{[\s\S]*?overflow:\s*hidden/.test(css), 'hub tiles must clip overflow');
@@ -196,6 +206,22 @@ async function runAt(browser, width, height, label) {
   if (homeTileHits.length) report.fails.push({ where: 'HOME tiles overlap', homeTileHits });
 
   await page.evaluate(() => {
+    if (typeof UI === 'object' && UI.safeOpen) UI.safeOpen('levelScreen', () => UI.renderLevels());
+  });
+  const islands = await page.evaluate(() => {
+    const chips = [...document.querySelectorAll('#levelScreen .island-info-chip, #levelScreen .island-tab, #levelScreen .diff-tab')];
+    const overflow = chips.filter((el) => {
+      const r = el.getBoundingClientRect();
+      return r.right > window.innerWidth + 2 || r.left < -2;
+    }).map((el) => el.className);
+    return { chips: chips.length, overflow };
+  });
+  if (islands.overflow.length) report.fails.push({ where: 'island chips overflow', islands });
+
+  await page.evaluate(() => {
+    document.querySelectorAll('.screen').forEach((el) => el.classList.remove('active'));
+    const menu = document.getElementById('menuScreen');
+    if (menu) menu.classList.add('active');
     if (typeof UI === 'object' && UI.openModeHub) UI.openModeHub('collect');
   });
   const collect = await overlapPairs(page, [
@@ -379,10 +405,21 @@ async function runAt(browser, width, height, label) {
     const zFomo = overlay ? Number(getComputedStyle(overlay).zIndex) || 0 : 0;
     const zMenu = menu ? Number(getComputedStyle(menu).zIndex) || 0 : 0;
     const zToast = toast ? Number(getComputedStyle(toast).zIndex) || 0 : 0;
+    const hint = document.getElementById('menuHubHint');
+    const hintHidden = !hint || hint.hasAttribute('hidden')
+      || getComputedStyle(hint).display === 'none';
+    const welcome = toast && toast.querySelector('.toast');
+    const fr = overlay && overlay.getBoundingClientRect();
+    const wr = welcome && welcome.getBoundingClientRect();
+    const toastOnFomo = !!(welcome && fr
+      && wr.left < fr.right - 2 && wr.right > fr.left + 2
+      && wr.top < fr.bottom - 2 && wr.bottom > fr.top + 2);
     return {
       open: !!(overlay && !overlay.hidden),
       isFomo: !!(menu && menu.classList.contains('is-fomo')),
       chromeInert: !!(chrome && chrome.hasAttribute('inert')),
+      hintHidden,
+      toastOnFomo,
       xHit: hitAt(x),
       tileBlocked: !tileSteals,
       sheetBottom: sr && Math.round(sr.bottom),
@@ -402,6 +439,8 @@ async function runAt(browser, width, height, label) {
     report.fails.push({ where: 'FOMO under toast', fomo });
   }
   if (fomo.open && !fomo.tileBlocked) report.fails.push({ where: 'HOME tile click-through FOMO', fomo });
+  if (fomo.open && !fomo.hintHidden) report.fails.push({ where: 'first-30s hub hint under FOMO', fomo });
+  if (fomo.open && fomo.toastOnFomo) report.fails.push({ where: 'welcome toast on FOMO sheet', fomo });
 
   await page.evaluate(() => {
     if (typeof dismissFomoRitual === 'function') dismissFomoRitual();

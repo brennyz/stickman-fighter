@@ -47,6 +47,14 @@
   },
   "userWishlist": [
     {
+      "id": "w-20260918T133900",
+      "from": "user",
+      "text": "Keep going on PR #318 (same branch). Language/UI-UX text overlap remains highest P0. Fix remaining layout collisions, cramped chips/labels, and HUD overlap on mobile ~390px + desktop. Prefer layout/spacing over copy rewrites (i18n lane owns strings). First 30s: no text wall. No Android native; do not merge to main. Push more commits to this PR.",
+      "status": "in-progress",
+      "updated": "2026-09-18",
+      "notes": "Layout/spacing only on #318. FOMO hides hub-hint + welcome; clamp chips; wrap HUD away from pause. No string rewrites. No main."
+    },
+    {
       "id": "w-20260918T132300",
       "from": "user",
       "text": "KEEP #318 draft: win-path sticky primary CTA (Volgend level) same dock; document shared #323 hooks for mega-merge; stop at P3-only. No Versus, no main.",
