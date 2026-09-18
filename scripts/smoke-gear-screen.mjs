@@ -182,38 +182,6 @@ async function run() {
       if (!/Avontuur|Adventure|Abenteuer|Aventure|Aventura/i.test((hunt.textContent || '') + (huntBtn.textContent || ''))) {
         return { ok: false, why: 'hunt CTA must name Adventure', text: hunt.textContent };
       }
-      const prevLang = (typeof save !== 'undefined' && save.lang) || 'nl';
-      const chromeWant = {
-        en: { hunt: 'Go to Adventure', all: 'Unequip all', toast: 'Unequipped all' },
-        de: { hunt: 'Zum Abenteuer', all: 'Alles ablegen', toast: 'Alles abgelegt' },
-        fr: { hunt: 'Aller en Aventure', all: 'Tout enlever', toast: 'Tout enlevé' },
-        es: { hunt: 'Ir a Aventura', all: 'Quitar todo', toast: 'Todo quitado' },
-      };
-      if (typeof t === 'function') {
-        for (const lang of Object.keys(chromeWant)) {
-          save.lang = lang;
-          if (typeof applyLang === 'function') applyLang();
-          else UI.renderGear();
-          const want = chromeWant[lang];
-          const hb = document.getElementById('btnGearHuntAdv');
-          const ao = document.getElementById('gearUnequipAll');
-          if (!hb || hb.textContent !== want.hunt) {
-            return { ok: false, why: 'hunt CTA i18n ' + lang, text: hb && hb.textContent };
-          }
-          if (!ao || ao.textContent !== want.all) {
-            return { ok: false, why: 'unequip-all i18n ' + lang, text: ao && ao.textContent };
-          }
-          if (t('toast.gearUnequipAll') !== want.toast) {
-            return { ok: false, why: 'toast.gearUnequipAll i18n ' + lang, text: t('toast.gearUnequipAll') };
-          }
-          if (/Naar Avontuur|Alles uitdoen|Alles uitgedaan/.test((hb.textContent || '') + (ao.textContent || '') + t('toast.gearUnequipAll'))) {
-            return { ok: false, why: 'Dutch leak on ' + lang };
-          }
-        }
-        save.lang = prevLang;
-        if (typeof applyLang === 'function') applyLang();
-        else UI.renderGear();
-      }
       if (typeof gearIsStarterOnly === 'function' && !gearIsStarterOnly(save)) {
         return { ok: false, why: 'fresh save must be starter-only' };
       }
@@ -491,6 +459,39 @@ async function run() {
       const nChip = document.querySelector('#gearFilterBar [data-gear-filter="all"] [data-gear-filter-n]');
       if (!nChip || !/^\d+$/.test((nChip.textContent || '').trim())) {
         return { ok: false, why: 'filter chips must show counts', text: nChip && nChip.textContent };
+      }
+
+      const prevLang = (typeof save !== 'undefined' && save.lang) || 'nl';
+      const chromeWant = {
+        en: { hunt: 'Go to Adventure', all: 'Unequip all', toast: 'Unequipped all' },
+        de: { hunt: 'Zum Abenteuer', all: 'Alles ablegen', toast: 'Alles abgelegt' },
+        fr: { hunt: 'Aller en Aventure', all: 'Tout enlever', toast: 'Tout enlevé' },
+        es: { hunt: 'Ir a Aventura', all: 'Quitar todo', toast: 'Todo quitado' },
+      };
+      if (typeof t === 'function') {
+        for (const lang of Object.keys(chromeWant)) {
+          save.lang = lang;
+          if (typeof applyLang === 'function') applyLang();
+          else UI.renderGear();
+          const want = chromeWant[lang];
+          const hb = document.getElementById('btnGearHuntAdv');
+          const ao = document.getElementById('gearUnequipAll');
+          if (!hb || hb.textContent !== want.hunt) {
+            return { ok: false, why: 'hunt CTA i18n ' + lang, text: hb && hb.textContent };
+          }
+          if (!ao || ao.textContent !== want.all) {
+            return { ok: false, why: 'unequip-all i18n ' + lang, text: ao && ao.textContent };
+          }
+          if (t('toast.gearUnequipAll') !== want.toast) {
+            return { ok: false, why: 'toast.gearUnequipAll i18n ' + lang, text: t('toast.gearUnequipAll') };
+          }
+          if (/Naar Avontuur|Alles uitdoen|Alles uitgedaan/.test((hb.textContent || '') + (ao.textContent || '') + t('toast.gearUnequipAll'))) {
+            return { ok: false, why: 'Dutch leak on ' + lang };
+          }
+        }
+        save.lang = prevLang;
+        if (typeof applyLang === 'function') applyLang();
+        else UI.renderGear();
       }
 
       return {
