@@ -35,6 +35,7 @@ const REGRESSION_MUST_DEFINE = [
   'combatFitBossSize', 'combatColossalSizeMul', 'refreshAdventureBossScale',
   'combatEnrageWalkMul', 'combatSpreadPickupX',
   'combatTelegraphHudSlots', 'combatPickTelegraphHuds', 'adventureTelegraphHuds',
+  'combatFlyerHover', 'combatFlyerBob', 'combatMeleeAimLift', 'combatPartGateWalkSec',
 ];
 
 /** Consts / values that must appear in the bundle (not only functions). */

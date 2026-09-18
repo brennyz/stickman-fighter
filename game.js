@@ -323,9 +323,9 @@ const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const VERSION_UPDATE_SAVE_KEY = 'stickfighter_version_update_save_v1';
 const VERSION_UPDATE_FLAG_KEY = 'stickfighter_version_update_flag_v1';
 const SAVE_EXPORT_SCHEMA = 3;
-const APP_VERSION = '1.18.177';
+const APP_VERSION = '1.18.178';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 387;
+const SW_CACHE_REV = 388;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', petCoins: 0, dex: {}, summons: {}, pets: {}, activePet: null,
   eggPets: {}, activeEggPet: null, eggDaily: null,
   chestDaily: null, chestWeapons: {},
@@ -28610,9 +28610,11 @@ function fighterAimNorm(f) {
     const jx = pad.joy.dx;
     const jy = pad.joy.dy;
     // Verticale mik los van horizontale looprichting — joy ↑ blijft duidelijk
-    if (Math.abs(jy) >= JOY_AIM_DEAD_PX) {
+    const aimDead = (typeof combatJoyAimDead === 'function') ? combatJoyAimDead() : JOY_AIM_DEAD_PX;
+    const aimGain = (typeof combatJoyAimGain === 'function') ? combatJoyAimGain() : 1;
+    if (Math.abs(jy) >= aimDead) {
       ny = clamp(jy / JOY_MAX_PX, -1.05, 0.78);
-      if (ny < -0.14) ny = clamp(ny * 1.38, -1.15, 0);
+      if (ny < -0.14) ny = clamp(ny * 1.38 * aimGain, -1.15, 0);
     }
     if (Math.abs(jx) >= JOY_DEAD_PX) nx = clamp(jx / JOY_MAX_PX, -1, 1);
     else nx = face * 0.72;
@@ -28798,7 +28800,8 @@ function meleeHitPoint(f, spec) {
   const range = (spec && spec.range) || 40;
   const hx = f.x + f.face * range * (0.72 + Math.abs(aim.nx) * 0.18);
   const moveOff = (spec && spec.moveHitY) || 0;
-  const hy = f.y - 48 + clamp(aim.ny, -1, 0.65) * 88 + moveOff;
+  const lift = (typeof combatMeleeAimLift === 'function') ? combatMeleeAimLift() : 88;
+  const hy = f.y - 48 + clamp(aim.ny, -1, 0.65) * lift + moveOff;
   return { hx, hy, aim };
 }
 
@@ -30097,6 +30100,65 @@ function combatSpreadPickupX(x, others, profile, bounds) {
     if (free(right)) return Math.round(right);
   }
   return Math.round(nx);
+}
+
+/** Short landscape (844×390): little air between HUD and ground. */
+function combatIsShort(profile) {
+  profile = asCombatProfile(profile);
+  return profile.h < 430;
+}
+
+/**
+ * Flyer/dragon hover above ground. Desktop stays 110/130.
+ * Short strip caps so the body stays in the aim-up band, not the HUD.
+ */
+function combatFlyerHover(base, profile) {
+  profile = asCombatProfile(profile);
+  const b = Number(base) > 0 ? Number(base) : 110;
+  if (profile.h >= 500) return b;
+  const ground = profile.h * 0.78;
+  const air = Math.max(90, ground - (profile.h < 430 ? 56 : 70));
+  const cap = Math.max(54, Math.round(air * 0.34));
+  return Math.max(54, Math.min(b, cap));
+}
+
+function combatFlyerBob(base, profile) {
+  const b = Number(base) > 0 ? Number(base) : 42;
+  if (!combatIsShort(profile)) return b;
+  return Math.max(12, Math.round(b * 0.55));
+}
+
+function combatFlyerCeilY(profile) {
+  profile = asCombatProfile(profile);
+  return profile.h < 430 ? 56 : 72;
+}
+
+/** Melee aim-up lift (px). Desktop 88. Short/compact get a bit more reach. */
+function combatMeleeAimLift(profile) {
+  profile = asCombatProfile(profile);
+  if (combatIsShort(profile)) return 104;
+  if (profile.compact) return 96;
+  return 88;
+}
+
+/** Extra ny gain after the legacy 1.38 so a short swipe still aims up. */
+function combatJoyAimGain(profile) {
+  profile = asCombatProfile(profile);
+  if (combatIsShort(profile)) return 1.22;
+  if (profile.compact) return 1.10;
+  return 1;
+}
+
+function combatJoyAimDead(profile) {
+  profile = asCombatProfile(profile);
+  return combatIsShort(profile) ? 5 : 7;
+}
+
+/** Checkpoint hold-right. Desktop 3.35s. Compact/phone 2.2s. */
+function combatPartGateWalkSec(profile) {
+  profile = asCombatProfile(profile);
+  if (profile.compact) return 2.2;
+  return 3.35;
 }
 
 /** How many HUD telegraph bars fit. Short landscape keeps 1 + overflow chip. */
@@ -35695,7 +35757,14 @@ class Monster {
     this.x = x;
     this.flying = sp.type === 'fly' || sp.type === 'dragon';
     this.swimming = sp.type === 'swim';
-    this.y = this.flying ? game.ground - rand(90, 160) : game.ground - this.size;
+    if (this.flying) {
+      const hover = (typeof combatFlyerHover === 'function') ? combatFlyerHover(110) : 110;
+      const lo = Math.max(54, Math.round(hover * 0.75));
+      const hi = Math.max(lo + 8, Math.round(hover * 1.25));
+      this.y = game.ground - rand(lo, hi);
+    } else {
+      this.y = game.ground - this.size;
+    }
     this.vx = 0; this.vy = 0;
     this.t = rand(0, 10); this.flashT = 0; this.deadT = -1;
     this.atkCD = rand(0.5, 1.5); this.shootCD = rand(1, 2.5);
@@ -35768,7 +35837,10 @@ class Monster {
       this.x += this.vx * dt; this.y += this.vy * dt;
       if (this.y >= game.ground - this.size) { this.y = game.ground - this.size; this.vy = 0; this.vx *= 0.4; }
     } else if (type === 'fly') {
-      const ty = game.ground - 110 + Math.sin(this.t * 2.4) * 42;
+      const hover = (typeof combatFlyerHover === 'function') ? combatFlyerHover(110) : 110;
+      const bob = (typeof combatFlyerBob === 'function') ? combatFlyerBob(42) : 42;
+      let ty = game.ground - hover + Math.sin(this.t * 2.4) * bob;
+      if (typeof combatFlyerCeilY === 'function') ty = Math.max(ty, combatFlyerCeilY());
       this.y += (ty - this.y) * dt * 2.2;
       this.x += dir * this.speed * spdMul * dt * (dist > 30 ? 1 : 0);
     } else if (type === 'charge') {
@@ -35832,7 +35904,10 @@ class Monster {
       }
       this.y = game.ground - this.size;
     } else if (type === 'dragon') {
-      const ty = game.ground - 130 + Math.sin(this.t * 1.7) * 36;
+      const hover = (typeof combatFlyerHover === 'function') ? combatFlyerHover(130) : 130;
+      const bob = (typeof combatFlyerBob === 'function') ? combatFlyerBob(36) : 36;
+      let ty = game.ground - hover + Math.sin(this.t * 1.7) * bob;
+      if (typeof combatFlyerCeilY === 'function') ty = Math.max(ty, combatFlyerCeilY());
       this.y += (ty - this.y) * dt * 1.6;
       const want = 200;
       if (dist > want + 40) this.x += dir * this.speed * dt;
@@ -40891,7 +40966,9 @@ class Game {
     if (pg.walking) {
       pg.idleT = 0;
       pg.idleHintShown = false;
-      pg.progress = Math.min(1, (pg.progress || 0) + dt / PART_GATE_WALK_SEC);
+      const gateSec = (typeof combatPartGateWalkSec === 'function')
+        ? combatPartGateWalkSec() : PART_GATE_WALK_SEC;
+      pg.progress = Math.min(1, (pg.progress || 0) + dt / gateSec);
       this.worldX = (this.worldX || 0) + dt * (115 + move * 175);
       const tick = Math.floor((pg.progress || 0) * 3);
       if (tick > (pg.milestone || 0)) {
@@ -40907,7 +40984,9 @@ class Game {
         }
       }
     } else if (move < -0.05 && (pg.progress || 0) > 0) {
-      pg.progress = Math.max(0, pg.progress - (dt / PART_GATE_WALK_SEC) * PART_GATE_DECAY_MUL);
+      const gateSec = (typeof combatPartGateWalkSec === 'function')
+        ? combatPartGateWalkSec() : PART_GATE_WALK_SEC;
+      pg.progress = Math.max(0, pg.progress - (dt / gateSec) * PART_GATE_DECAY_MUL);
       this.worldX = (this.worldX || 0) + dt * 16;
       pg.idleT = (pg.idleT || 0) + dt;
     } else {
@@ -44692,7 +44771,8 @@ class Game {
     {
       const edgePulse = calm ? 0.72 : (0.5 + Math.max(0, Math.sin(gt * (walking ? 7 : 4))) * 0.5);
       const edgeX = W - Math.max(48, 56 * ui);
-      const edgeY = this.ground - 110;
+      const edgeLift = (typeof combatFlyerHover === 'function') ? combatFlyerHover(110) : 110;
+      const edgeY = this.ground - edgeLift;
       const edgeSz = Math.max(36, 48 * ui) * (walking ? 1.08 : 1);
       c.globalAlpha = 0.35 + edgePulse * 0.55;
       c.fillStyle = walking ? '#ffd75e' : '#7cf5ff';
@@ -54100,6 +54180,9 @@ function bootGame() {
       spreadPickupX: combatSpreadPickupX,
       teleHudSlots: combatTelegraphHudSlots,
       pickTeleHuds: combatPickTelegraphHuds,
+      flyerHover: combatFlyerHover,
+      meleeLift: combatMeleeAimLift,
+      partGateSec: combatPartGateWalkSec,
     } : null,
     previewTop20Spawn: () => {
       try { AudioSys.init(); AudioSys.sfx('top20Spawn'); } catch (_) {}

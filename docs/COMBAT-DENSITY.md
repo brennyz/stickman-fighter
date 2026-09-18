@@ -89,11 +89,14 @@ Desktop Hell stays `1.32 × enrageMul` (Hell **1.7424** on top of `speedMul` 1.1
 
 `adventureTelegraphHuds` collects every winding cue (not the first only). Portrait/desktop show **2** bars, soonest first. Short landscape (H<430) stays **1** bar plus a `+N` chip so the fight strip is not covered. Versus / training unchanged.
 
+## Flyers / aim-up on short landscape (EX-5)
+
+Desktop hover stays **110 / 130** with bob 42/36 and melee lift **88**. Short 844×390 lowers hover (cap ~84) and damps bob ×0.55 so flyers stay in the aim-up band, not the HUD. Compact melee lift **96**, short **104**. Joy aim-up gain **×1.10** compact / **×1.22** short (deadzone 5px). Tall phone portrait keeps desktop hover.
+
+## Part-gate hold-right (EX-6)
+
+Desktop checkpoint stay **3.35s**. Compact/phone **2.2s**. Edge arrow uses the same short-strip lift so it does not clip the HUD.
+
 ## Remaining mobile overwhelm (EX)
 
-Still true after density + telegraph + colossal + enrage-walk + loot fan + multi-HUD:
-
-1. **Flyers / aim-up** on short landscape (844×390): vertical fight space is still tight.
-2. **Part-gate “hold right”** on portrait still asks for a long right-walk with the left stick.
-
-Re-check after play: `npm run smoke:combat-density && npm run smoke:adventure`.
+None of the listed 390-overwhelm items from this lane. Re-check after play: `npm run smoke:combat-density && npm run smoke:adventure`.

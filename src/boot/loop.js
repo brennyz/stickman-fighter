@@ -1015,6 +1015,9 @@ function bootGame() {
       spreadPickupX: combatSpreadPickupX,
       teleHudSlots: combatTelegraphHudSlots,
       pickTeleHuds: combatPickTelegraphHuds,
+      flyerHover: combatFlyerHover,
+      meleeLift: combatMeleeAimLift,
+      partGateSec: combatPartGateWalkSec,
     } : null,
     previewTop20Spawn: () => {
       try { AudioSys.init(); AudioSys.sfx('top20Spawn'); } catch (_) {}

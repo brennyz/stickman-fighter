@@ -110,6 +110,11 @@ async function run() {
       ]) : [];
     const hudPick = (typeof combatPickTelegraphHuds === 'function')
       ? combatPickTelegraphHuds(hudMocks, vp) : hudMocks;
+    const flyerGate = {
+      hover: (typeof combatFlyerHover === 'function') ? combatFlyerHover(110, vp) : null,
+      lift: (typeof combatMeleeAimLift === 'function') ? combatMeleeAimLift(vp) : null,
+      gate: (typeof combatPartGateWalkSec === 'function') ? combatPartGateWalkSec(vp) : null,
+    };
     const colossalProbe = {
       w: vp.w,
       h: vp.h,
@@ -203,6 +208,7 @@ async function run() {
       appVersion: typeof APP_VERSION !== 'undefined' ? APP_VERSION : '?',
       colossalProbe,
       enrageLootProbe: { hellWalk, lootFan },
+      flyerGateProbe: flyerGate,
       teleHudProbe: {
         n: hudMocks.length,
         shown: hudPick.length,
@@ -232,6 +238,11 @@ async function run() {
   if (!(hud.n === 2 && hud.shown === 2 && hud.first === 'charge')) {
     result.ok = false;
     result.errors = (result.errors || []).concat(['tele-hud:multi-cue ' + JSON.stringify(hud)]);
+  }
+  const fg = result.flyerGateProbe || {};
+  if (!(fg.hover === 110 && fg.lift === 96 && fg.gate === 2.2)) {
+    result.ok = false;
+    result.errors = (result.errors || []).concat(['flyer-gate:phone ' + JSON.stringify(fg)]);
   }
 
   await browser.close();

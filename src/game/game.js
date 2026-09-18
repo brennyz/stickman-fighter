@@ -554,7 +554,9 @@ class Game {
     if (pg.walking) {
       pg.idleT = 0;
       pg.idleHintShown = false;
-      pg.progress = Math.min(1, (pg.progress || 0) + dt / PART_GATE_WALK_SEC);
+      const gateSec = (typeof combatPartGateWalkSec === 'function')
+        ? combatPartGateWalkSec() : PART_GATE_WALK_SEC;
+      pg.progress = Math.min(1, (pg.progress || 0) + dt / gateSec);
       this.worldX = (this.worldX || 0) + dt * (115 + move * 175);
       const tick = Math.floor((pg.progress || 0) * 3);
       if (tick > (pg.milestone || 0)) {
@@ -570,7 +572,9 @@ class Game {
         }
       }
     } else if (move < -0.05 && (pg.progress || 0) > 0) {
-      pg.progress = Math.max(0, pg.progress - (dt / PART_GATE_WALK_SEC) * PART_GATE_DECAY_MUL);
+      const gateSec = (typeof combatPartGateWalkSec === 'function')
+        ? combatPartGateWalkSec() : PART_GATE_WALK_SEC;
+      pg.progress = Math.max(0, pg.progress - (dt / gateSec) * PART_GATE_DECAY_MUL);
       this.worldX = (this.worldX || 0) + dt * 16;
       pg.idleT = (pg.idleT || 0) + dt;
     } else {
@@ -4355,7 +4359,8 @@ class Game {
     {
       const edgePulse = calm ? 0.72 : (0.5 + Math.max(0, Math.sin(gt * (walking ? 7 : 4))) * 0.5);
       const edgeX = W - Math.max(48, 56 * ui);
-      const edgeY = this.ground - 110;
+      const edgeLift = (typeof combatFlyerHover === 'function') ? combatFlyerHover(110) : 110;
+      const edgeY = this.ground - edgeLift;
       const edgeSz = Math.max(36, 48 * ui) * (walking ? 1.08 : 1);
       c.globalAlpha = 0.35 + edgePulse * 0.55;
       c.fillStyle = walking ? '#ffd75e' : '#7cf5ff';

@@ -77,7 +77,14 @@ class Monster {
     this.x = x;
     this.flying = sp.type === 'fly' || sp.type === 'dragon';
     this.swimming = sp.type === 'swim';
-    this.y = this.flying ? game.ground - rand(90, 160) : game.ground - this.size;
+    if (this.flying) {
+      const hover = (typeof combatFlyerHover === 'function') ? combatFlyerHover(110) : 110;
+      const lo = Math.max(54, Math.round(hover * 0.75));
+      const hi = Math.max(lo + 8, Math.round(hover * 1.25));
+      this.y = game.ground - rand(lo, hi);
+    } else {
+      this.y = game.ground - this.size;
+    }
     this.vx = 0; this.vy = 0;
     this.t = rand(0, 10); this.flashT = 0; this.deadT = -1;
     this.atkCD = rand(0.5, 1.5); this.shootCD = rand(1, 2.5);
@@ -150,7 +157,10 @@ class Monster {
       this.x += this.vx * dt; this.y += this.vy * dt;
       if (this.y >= game.ground - this.size) { this.y = game.ground - this.size; this.vy = 0; this.vx *= 0.4; }
     } else if (type === 'fly') {
-      const ty = game.ground - 110 + Math.sin(this.t * 2.4) * 42;
+      const hover = (typeof combatFlyerHover === 'function') ? combatFlyerHover(110) : 110;
+      const bob = (typeof combatFlyerBob === 'function') ? combatFlyerBob(42) : 42;
+      let ty = game.ground - hover + Math.sin(this.t * 2.4) * bob;
+      if (typeof combatFlyerCeilY === 'function') ty = Math.max(ty, combatFlyerCeilY());
       this.y += (ty - this.y) * dt * 2.2;
       this.x += dir * this.speed * spdMul * dt * (dist > 30 ? 1 : 0);
     } else if (type === 'charge') {
@@ -214,7 +224,10 @@ class Monster {
       }
       this.y = game.ground - this.size;
     } else if (type === 'dragon') {
-      const ty = game.ground - 130 + Math.sin(this.t * 1.7) * 36;
+      const hover = (typeof combatFlyerHover === 'function') ? combatFlyerHover(130) : 130;
+      const bob = (typeof combatFlyerBob === 'function') ? combatFlyerBob(36) : 36;
+      let ty = game.ground - hover + Math.sin(this.t * 1.7) * bob;
+      if (typeof combatFlyerCeilY === 'function') ty = Math.max(ty, combatFlyerCeilY());
       this.y += (ty - this.y) * dt * 1.6;
       const want = 200;
       if (dist > want + 40) this.x += dir * this.speed * dt;

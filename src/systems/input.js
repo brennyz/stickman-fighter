@@ -18,9 +18,11 @@ function fighterAimNorm(f) {
     const jx = pad.joy.dx;
     const jy = pad.joy.dy;
     // Verticale mik los van horizontale looprichting — joy ↑ blijft duidelijk
-    if (Math.abs(jy) >= JOY_AIM_DEAD_PX) {
+    const aimDead = (typeof combatJoyAimDead === 'function') ? combatJoyAimDead() : JOY_AIM_DEAD_PX;
+    const aimGain = (typeof combatJoyAimGain === 'function') ? combatJoyAimGain() : 1;
+    if (Math.abs(jy) >= aimDead) {
       ny = clamp(jy / JOY_MAX_PX, -1.05, 0.78);
-      if (ny < -0.14) ny = clamp(ny * 1.38, -1.15, 0);
+      if (ny < -0.14) ny = clamp(ny * 1.38 * aimGain, -1.15, 0);
     }
     if (Math.abs(jx) >= JOY_DEAD_PX) nx = clamp(jx / JOY_MAX_PX, -1, 1);
     else nx = face * 0.72;
@@ -206,7 +208,8 @@ function meleeHitPoint(f, spec) {
   const range = (spec && spec.range) || 40;
   const hx = f.x + f.face * range * (0.72 + Math.abs(aim.nx) * 0.18);
   const moveOff = (spec && spec.moveHitY) || 0;
-  const hy = f.y - 48 + clamp(aim.ny, -1, 0.65) * 88 + moveOff;
+  const lift = (typeof combatMeleeAimLift === 'function') ? combatMeleeAimLift() : 88;
+  const hy = f.y - 48 + clamp(aim.ny, -1, 0.65) * lift + moveOff;
   return { hx, hy, aim };
 }
 

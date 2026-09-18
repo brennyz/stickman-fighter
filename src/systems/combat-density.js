@@ -253,6 +253,65 @@ function combatSpreadPickupX(x, others, profile, bounds) {
   return Math.round(nx);
 }
 
+/** Short landscape (844×390): little air between HUD and ground. */
+function combatIsShort(profile) {
+  profile = asCombatProfile(profile);
+  return profile.h < 430;
+}
+
+/**
+ * Flyer/dragon hover above ground. Desktop stays 110/130.
+ * Short strip caps so the body stays in the aim-up band, not the HUD.
+ */
+function combatFlyerHover(base, profile) {
+  profile = asCombatProfile(profile);
+  const b = Number(base) > 0 ? Number(base) : 110;
+  if (profile.h >= 500) return b;
+  const ground = profile.h * 0.78;
+  const air = Math.max(90, ground - (profile.h < 430 ? 56 : 70));
+  const cap = Math.max(54, Math.round(air * 0.34));
+  return Math.max(54, Math.min(b, cap));
+}
+
+function combatFlyerBob(base, profile) {
+  const b = Number(base) > 0 ? Number(base) : 42;
+  if (!combatIsShort(profile)) return b;
+  return Math.max(12, Math.round(b * 0.55));
+}
+
+function combatFlyerCeilY(profile) {
+  profile = asCombatProfile(profile);
+  return profile.h < 430 ? 56 : 72;
+}
+
+/** Melee aim-up lift (px). Desktop 88. Short/compact get a bit more reach. */
+function combatMeleeAimLift(profile) {
+  profile = asCombatProfile(profile);
+  if (combatIsShort(profile)) return 104;
+  if (profile.compact) return 96;
+  return 88;
+}
+
+/** Extra ny gain after the legacy 1.38 so a short swipe still aims up. */
+function combatJoyAimGain(profile) {
+  profile = asCombatProfile(profile);
+  if (combatIsShort(profile)) return 1.22;
+  if (profile.compact) return 1.10;
+  return 1;
+}
+
+function combatJoyAimDead(profile) {
+  profile = asCombatProfile(profile);
+  return combatIsShort(profile) ? 5 : 7;
+}
+
+/** Checkpoint hold-right. Desktop 3.35s. Compact/phone 2.2s. */
+function combatPartGateWalkSec(profile) {
+  profile = asCombatProfile(profile);
+  if (profile.compact) return 2.2;
+  return 3.35;
+}
+
 /** How many HUD telegraph bars fit. Short landscape keeps 1 + overflow chip. */
 function combatTelegraphHudSlots(profile) {
   profile = asCombatProfile(profile);

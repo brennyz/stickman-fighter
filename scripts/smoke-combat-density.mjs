@@ -65,6 +65,12 @@ must(/adventureTelegraphHuds\(/.test(fs.readFileSync(path.join(root, 'src/game/g
   'HUD must collect all telegraph cues');
 must(/combatPickTelegraphHuds\(/.test(fs.readFileSync(path.join(root, 'src/game/game.js'), 'utf8')),
   'HUD must pick soonest cues, not break on first');
+must(/combatFlyerHover\(/.test(fs.readFileSync(path.join(root, 'src/entities/monster.js'), 'utf8')),
+  'flyers must use combatFlyerHover');
+must(/combatMeleeAimLift\(/.test(fs.readFileSync(path.join(root, 'src/systems/input.js'), 'utf8')),
+  'melee aim-up must use combatMeleeAimLift');
+must(/combatPartGateWalkSec\(/.test(fs.readFileSync(path.join(root, 'src/game/game.js'), 'utf8')),
+  'part-gate hold must use combatPartGateWalkSec');
 must(!/if \(advTele\) break/.test(fs.readFileSync(path.join(root, 'src/game/game.js'), 'utf8')),
   'HUD must not break on the first telegraph');
 must(!/applyCombatTelegraphWind/.test(versusSrc), 'versus.js must not use telegraph density');
@@ -238,6 +244,24 @@ must(landPick.length === 1 && landPick[0].label === 'charge' && landPick[0].extr
   'short landscape shows soonest +1', landPick);
 must(!/combatPickTelegraphHuds/.test(versusSrc), 'versus.js must not use multi telegraph HUD');
 
+must(iso.combatFlyerHover(110, desk) === 110, 'desktop flyer hover 110');
+must(iso.combatFlyerHover(130, desk) === 130, 'desktop dragon hover 130');
+must(iso.combatFlyerHover(110, phone) === 110, 'tall phone portrait keeps desktop hover');
+const landHover = iso.combatFlyerHover(110, phoneLand);
+must(landHover < 110 && landHover >= 54, 'short landscape flyer hover lowered', landHover);
+must(iso.combatFlyerBob(42, desk) === 42, 'desktop flyer bob 42');
+must(iso.combatFlyerBob(42, phoneLand) < 42, 'short landscape flyer bob damped');
+must(iso.combatMeleeAimLift(desk) === 88, 'desktop melee lift 88');
+must(iso.combatMeleeAimLift(phoneLand) === 104, 'short landscape melee lift 104');
+must(iso.combatMeleeAimLift(phone) === 96, 'phone portrait melee lift 96');
+must(iso.combatJoyAimGain(desk) === 1, 'desktop joy aim gain 1');
+must(iso.combatJoyAimGain(phoneLand) > 1, 'short landscape joy aim more sensitive');
+must(iso.combatPartGateWalkSec(desk) === 3.35, 'desktop part-gate 3.35s');
+must(iso.combatPartGateWalkSec(phone) === 2.2, 'phone part-gate 2.2s');
+must(iso.combatPartGateWalkSec(phoneLand) === 2.2, 'short landscape part-gate 2.2s');
+must(!/combatFlyerHover/.test(versusSrc), 'versus.js must not call flyer hover');
+must(!/combatPartGateWalkSec/.test(versusSrc), 'versus.js must not call part-gate scale');
+
 /* ---- buildLevel with explicit viewports (full bundle) ---- */
 if (!built) fail('game.js missing — run npm run build first');
 
@@ -382,6 +406,11 @@ const phoneHud = ctx.combatPickTelegraphHuds(hudList, { w: 390, h: 844 });
 must(phoneHud.length === 2 && phoneHud[0].kind === 'charge', 'vm 390 stacks soonest charge then slam', phoneHud);
 const landHud = ctx.combatPickTelegraphHuds(hudList, { w: 844, h: 390 });
 must(landHud.length === 1 && landHud[0].extra === 1, 'vm 844×390 one bar +1', landHud);
+must(ctx.combatFlyerHover(110, { w: 1280, h: 800 }) === 110, 'vm desktop flyer 110');
+must(ctx.combatFlyerHover(110, { w: 844, h: 390 }) < 110, 'vm short flyer lower');
+must(ctx.combatMeleeAimLift({ w: 844, h: 390 }) === 104, 'vm short melee lift');
+must(ctx.combatPartGateWalkSec({ w: 390, h: 844 }) === 2.2, 'vm phone gate 2.2');
+must(ctx.combatPartGateWalkSec({ w: 1280, h: 800 }) === 3.35, 'vm desktop gate 3.35');
 
 console.log('TELEGRAPH_390', {
   phoneWind: ctx.applyCombatTelegraphWind(0.45, { w: 390, h: 844 }),
@@ -393,6 +422,15 @@ console.log('TELEGRAPH_390', {
 
 const phoneCap = ctx.combatBossSizeCap({ w: 390, h: 844 });
 const phoneFit = ctx.combatFitBossSize(168, { w: 390, h: 844 });
+console.log('FLYER_GATE_390', {
+  deskHover: ctx.combatFlyerHover(110, { w: 1280, h: 800 }),
+  landHover: ctx.combatFlyerHover(110, { w: 844, h: 390 }),
+  phoneHover: ctx.combatFlyerHover(110, { w: 390, h: 844 }),
+  landLift: ctx.combatMeleeAimLift({ w: 844, h: 390 }),
+  phoneGate: ctx.combatPartGateWalkSec({ w: 390, h: 844 }),
+  deskGate: ctx.combatPartGateWalkSec({ w: 1280, h: 800 }),
+});
+
 console.log('TELE_HUD_390', {
   slots390: ctx.combatTelegraphHudSlots({ w: 390, h: 844 }),
   slotsLand: ctx.combatTelegraphHudSlots({ w: 844, h: 390 }),
