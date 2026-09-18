@@ -144,6 +144,9 @@ document.querySelectorAll('[data-hub]').forEach((el) => {
       if (typeof UI.openBuildings === 'function') UI.openBuildings();
     } else if (hub === 'gear') {
       openGearScreen('home');
+    } else if (hub === 'pets') {
+      if (typeof UI !== 'undefined' && UI.openPets) UI.openPets(null, { from: 'home' });
+      else openCollectionScreen('petScreen', () => UI.renderPets());
     } else {
       UI.openModeHub(hub);
     }
@@ -212,7 +215,8 @@ function openUpgradesHub() {
 bindPress(document.getElementById('btnUpgrades'), openUpgradesHub);
 bindPress(document.getElementById('btnUpgradesHome'), openUpgradesHub);
 bindPress(document.getElementById('btnPets'), () => {
-  openCollectionScreen('petScreen', () => UI.renderPets());
+  if (typeof UI !== 'undefined' && UI.openPets) UI.openPets();
+  else openCollectionScreen('petScreen', () => UI.renderPets());
 });
 bindPress(document.getElementById('btnChestPull'), () => {
   AudioSys.init();
@@ -268,7 +272,8 @@ bindPress(document.getElementById('btnSummonGotoPets'), () => {
   if (state === 'play' && game) return;
   UI.clearSummonRevealTimers();
   UI._chestPullBusy = false;
-  openCollectionScreen('petScreen', () => UI.renderPets());
+  if (typeof UI !== 'undefined' && UI.openPets) UI.openPets();
+  else openCollectionScreen('petScreen', () => UI.renderPets());
 });
 function openSummonFromCollect() {
   AudioSys.init(); AudioSys.sfx('select');
@@ -763,6 +768,34 @@ bindPauseAudioPreset('pauseAudioSfxOnly', () => {
   AudioSys.setMusicOn(false);
   AudioSys.setSfxOn(true);
   if ((Number(save.sfxVol) || 0) < 0.5) save.sfxVol = 1;
+});
+bindPress(document.getElementById('pausePetChip'), () => {
+  if (typeof state !== 'undefined' && state !== 'pause') return;
+  if (typeof game !== 'undefined' && game && game.mode === 'versus') return;
+  AudioSys.sfx('select');
+  const run = () => {
+    const res = (typeof cycleCombatPet === 'function') ? cycleCombatPet() : { kind: 'none' };
+    if (res.kind === 'none') {
+      UI.toast(typeof tOr === 'function' ? tOr('pets.pauseNone', 'No pet yet') : 'No pet yet', 1800);
+      return;
+    }
+    if (typeof spawnGamePet === 'function' && typeof game !== 'undefined' && game) {
+      try { spawnGamePet(game, { fromEquip: true }); } catch (_) {}
+    }
+    const name = (typeof petsSpeciesName === 'function') ? petsSpeciesName(res.def) : (res.id || '');
+    if (res.kind === 'equip') {
+      UI.toast(typeof tOr === 'function'
+        ? tOr('toast.petFollow', '{name} follows you', { name })
+        : (name + ' follows you'), 1800);
+    } else if (res.kind === 'cycle') {
+      UI.toast(typeof tOr === 'function'
+        ? tOr('toast.petFollow', '{name} follows you', { name })
+        : (name + ' follows you'), 1800);
+    }
+    if (typeof UI.paintPausePetChip === 'function') UI.paintPausePetChip();
+  };
+  if (typeof safeUiAction === 'function') safeUiAction(run, 'pausePetChip', t('ui.errPetPick'));
+  else run();
 });
 bindPress(document.getElementById('pauseResume'), () => {
   state = 'play';

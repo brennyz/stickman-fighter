@@ -22,7 +22,9 @@ const loop = fs.readFileSync(path.join(root, 'src/boot/loop.js'), 'utf8');
 const css = fs.readFileSync(path.join(root, 'styles/main.css'), 'utf8');
 const html = fs.readFileSync(path.join(root, 'index.html'), 'utf8');
 const game = fs.readFileSync(path.join(root, 'src/game/game.js'), 'utf8');
-const ui = fs.readFileSync(path.join(root, 'src/ui/ui.js'), 'utf8');
+const uiCore = fs.readFileSync(path.join(root, 'src/ui/ui.js'), 'utf8');
+const petsUi = fs.readFileSync(path.join(root, 'src/ui/pets-ui.js'), 'utf8');
+const ui = uiCore + '\n' + petsUi;
 const locales = fs.readFileSync(path.join(root, 'src/i18n/catalog-locales.js'), 'utf8');
 const start = fs.readFileSync(path.join(root, 'src/boot/start.js'), 'utf8');
 const deChrome = fs.readFileSync(path.join(root, 'src/i18n/catalog-de.js'), 'utf8');
@@ -144,6 +146,26 @@ if (/ · gear \$\{/.test(missions) || / · fabriek \+/.test(missions)) fail('sav
 if (!/ui\.saveHealthGear/.test(missions) || !/ui\.saveHealthFactory/.test(missions)) fail('save export gear/factory must use t()');
 if (/Volgende prestatie/.test(missions)) fail('dex next achievement still hardcodes Dutch');
 if (!/pets\.crackEgg/.test(ui)) fail('egg crack must use pets.crackEgg');
+if (!/pets\.listLocked/.test(ui)) fail('locked dex cards must use pets.listLocked');
+if (!/fomo\.ritualCtaEgg/.test(ui)) fail('FOMO egg CTA must use fomo.ritualCtaEgg');
+if (!/btnPetsHome/.test(i18n) || !/hub\.petsSub/.test(i18n)) fail('HOME Pets tile must bind hub.pets / hub.petsSub');
+if (!/paintPausePetChip/.test(i18n)) fail('applyLang must repaint pause pet chip');
+if (!/pauseNone: 'No pet yet'/.test(i18n)) fail('EN pets.pauseNone missing');
+if (!/pauseNone: 'Noch kein Pet'/.test(i18n)) fail('DE pets.pauseNone missing');
+if (!/pauseNone: 'Pas encore de pet'/.test(i18n)) fail('FR pets.pauseNone missing');
+if (!/pauseNone: 'Aún no hay pet'/.test(i18n)) fail('ES pets.pauseNone missing');
+if (!/petsSub: 'Tame · buy · daily egg'/.test(i18n)) fail('EN hub.petsSub missing');
+if (!/petsSub: 'Zähmen · kaufen · Tages-Ei'/.test(i18n)) fail('DE hub.petsSub missing');
+if (!/petsSub: 'Apprivoiser · acheter · œuf'/.test(i18n)) fail('FR hub.petsSub missing');
+if (!/petsSub: 'Domar · comprar · huevo'/.test(i18n)) fail('ES hub.petsSub missing');
+if (!/ritualCtaEgg: 'Open daily egg'/.test(i18n)) fail('EN fomo.ritualCtaEgg missing');
+if (!/ritualCtaEgg: 'Zum Tages-Ei'/.test(i18n)) fail('DE fomo.ritualCtaEgg missing');
+if (!/ritualCtaEgg: 'Vers l/.test(i18n)) fail('FR fomo.ritualCtaEgg missing');
+if (!/ritualCtaEgg: 'Al huevo diario'/.test(i18n)) fail('ES fomo.ritualCtaEgg missing');
+const i18nFr = (i18n.split(/\n\s+fr:\s+\{/)[1] || '').split(/\n\s+es:\s+\{/)[0];
+if (/listActive: 'On'/.test(i18nFr) || /listActive: 'On'/.test(i18nEs)) {
+  fail('FR/ES pets.listActive still English On');
+}
 if (!/egg\.dailyReady/.test(fs.readFileSync(path.join(root, 'src/data/egg-pets.js'), 'utf8'))) {
   fail('egg daily status must use egg.* keys');
 }
@@ -274,7 +296,7 @@ if (/Pet · \$\{need\} kills/.test(fs.readFileSync(path.join(root, 'src/data/pet
   fail('petProgressLine still hardcodes Pet · N kills');
 }
 if (!/ui\.petKillsLeft/.test(ui)) fail('pets right column must use ui.petKillsLeft');
-if (!/petPerkLabel\(def\)/.test(ui)) fail('pets sheet must use petPerkLabel');
+if (!/petPerkLabel\(def\)/.test(ui) && !/petPerkLabel\(rosterDef\)/.test(ui)) fail('pets sheet must use petPerkLabel');
 if (!/eggPetName\(def\)/.test(ui) && !/eggPetName\(res\.def\)/.test(ui)) fail('egg sheet must use eggPetName');
 if (!/eggPerkLabel\(def\)/.test(ui)) fail('egg sheet must use eggPerkLabel');
 if (!/pet_slymo: 'Hop assist/.test(i18n)) fail('EN pets.perk.pet_slymo missing');

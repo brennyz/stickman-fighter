@@ -898,6 +898,12 @@ function hubTileStatLine(hub) {
       const n = typeof gearEquippedCount === 'function' ? gearEquippedCount() : 0;
       return typeof tOr === 'function' ? tOr('gear.hubStat', '{n}/5', { n }) : (n + '/5');
     }
+    case 'pets':
+      try {
+        return (typeof petsHubStatLine === 'function') ? petsHubStatLine() : '';
+      } catch (_) {
+        return '';
+      }
     default:
       return '';
   }
@@ -1174,6 +1180,7 @@ const UI = {
       sub.textContent = this.pauseSubDefault;
     }
     this.renderPauseRunLoot();
+    try { if (typeof this.paintPausePetChip === 'function') this.paintPausePetChip(); } catch (_) {}
   },
 
   renderPauseRunLoot() {
@@ -1402,6 +1409,9 @@ const UI = {
         return;
       }
       if (active === 'buildingsScreen' && typeof this.buildingsGoBack === 'function' && this.buildingsGoBack()) {
+        return;
+      }
+      if (active === 'petScreen' && typeof this.petsGoBack === 'function' && this.petsGoBack()) {
         return;
       }
       if (active === 'weaponScreen' && this.weaponOpenedFrom === 'gear') {
@@ -2000,11 +2010,8 @@ const UI = {
       setStat('hubStatUpgrades', ready > 0
         ? t('ui.upgradeReady', { n: ready })
         : (skillLv > 0 ? t('ui.hubStatSkillLv', { n: skillLv }) : t('ui.hubStatSkillShards')));
-      const petsN = petTamedCount();
-      const eggsN = eggOwnedCount();
-      const pc = petCoinsBalance();
-      setStat('hubStatPets', eggsN > 0 || petsN > 0 || pc > 0
-        ? t('ui.hubStatPetsFull', { pets: petsN, total: PET_ROSTER.length, coins: pc, eggs: eggsN, eggTotal: EGG_ROSTER.length })
+      setStat('hubStatPets', (typeof petsHubStatLine === 'function')
+        ? petsHubStatLine()
         : t('ui.hubStatPetsEmpty', { total: PET_ROSTER.length }));
       const stylesN = STYLES.filter(s => styleUnlocked(s)).length;
       setStat('hubStatStyle', t('ui.hubStatOutfits', { n: stylesN, total: STYLES.length }));
@@ -2094,6 +2101,13 @@ const UI = {
         el.removeAttribute('data-hub-badge');
       }
     });
+    try {
+      const petsHome = document.getElementById('btnPetsHome');
+      if (petsHome && typeof canCrackDailyEgg === 'function' && canCrackDailyEgg()
+        && !petsHome.getAttribute('data-hub-badge')) {
+        petsHome.setAttribute('data-hub-badge', tOr('pets.ready', 'ready').toUpperCase());
+      }
+    } catch (_) {}
     document.querySelectorAll('[data-hub-stat]').forEach((el) => {
       // hubTileStatLine may include SVG_COIN_ICON <img> — must be HTML, not textContent
       el.innerHTML = hubTileStatLine(el.dataset.hubStat);
@@ -2226,20 +2240,30 @@ const UI = {
         html += `<div class="fomo-ritual-row">${text}<small>${task.progress}/${def.goal}</small></div>`;
       }
     } catch (_) {}
+    let eggReady = false;
     if (typeof fomoRitualEggVisible === 'function' && fomoRitualEggVisible()) {
-      let eggReady = false;
       try { eggReady = typeof canCrackDailyEgg === 'function' && canCrackDailyEgg(); } catch (_) {}
-      html += `<div class="fomo-ritual-row">${eggReady
+      html += `<button type="button" class="fomo-ritual-row${eggReady ? ' is-ready' : ''}" data-fomo-row="egg">${eggReady
         ? tOr('fomo.rowEggReady', 'Dag-ei klaar')
-        : tOr('fomo.rowEggDone', 'Dag-ei al open')}</div>`;
+        : tOr('fomo.rowEggDone', 'Dag-ei al open')}</button>`;
     }
     const streak = typeof dailyStreakLine === 'function' ? dailyStreakLine() : '';
     if (streak) html += `<div class="fomo-ritual-row">${streak}</div>`;
-    if (rows) rows.innerHTML = html;
+    if (rows) {
+      rows.innerHTML = html;
+      rows.querySelectorAll('[data-fomo-row]').forEach((btn) => {
+        if (typeof bindPress !== 'function') return;
+        bindPress(btn, () => {
+          this._fomoRitualCta = btn.getAttribute('data-fomo-row') || 'egg';
+          this.runFomoRitualCta();
+        });
+      });
+    }
     const resetLine = typeof dailyResetCountdown === 'function' ? dailyResetCountdown() : '';
     if (reset) reset.textContent = tOr('fomo.resetIn', 'Nieuw over {reset}', { reset: resetLine });
     let ctaKind = 'adv';
     if (left > 0) ctaKind = 'summon';
+    else if (eggReady) ctaKind = 'egg';
     else {
       try {
         if (typeof ensureDaily === 'function') ensureDaily();
@@ -2251,9 +2275,11 @@ const UI = {
     if (ctaLbl) {
       ctaLbl.textContent = ctaKind === 'summon'
         ? tOr('fomo.ritualCtaSummon', 'Naar summons')
-        : (ctaKind === 'mission'
-          ? tOr('fomo.ritualCtaMission', 'Speel missie')
-          : tOr('fomo.ritualCtaAdv', 'Naar avontuur'));
+        : (ctaKind === 'egg'
+          ? tOr('fomo.ritualCtaEgg', 'Naar dag-ei')
+          : (ctaKind === 'mission'
+            ? tOr('fomo.ritualCtaMission', 'Speel missie')
+            : tOr('fomo.ritualCtaAdv', 'Naar avontuur')));
     }
     const dismiss = document.getElementById('fomoRitualDismiss');
     if (dismiss) dismiss.setAttribute('aria-label', tOr('fomo.ritualDismiss', 'Sluiten'));
@@ -2271,6 +2297,10 @@ const UI = {
     else this.hideFomoRitual();
     if (kind === 'summon') {
       this.openSummonHub();
+      return;
+    }
+    if (kind === 'egg') {
+      if (typeof this.openPets === 'function') this.openPets('egg', { from: 'fomo' });
       return;
     }
     if (kind === 'mission') {
@@ -4192,242 +4222,10 @@ const UI = {
     }
   },
 
-  renderPets() {
-    const tab = this.petTab || 'dex';
-    const bar = document.getElementById('petTabBar');
-    if (bar) {
-      bar.innerHTML =
-        `<button type="button" class="dex-filter-btn${tab === 'dex' ? ' active' : ''}" data-pet-tab="dex">Dex · ${petTamedCount()}/${PET_ROSTER.length}</button>` +
-        `<button type="button" class="dex-filter-btn${tab === 'egg' ? ' active' : ''}" data-pet-tab="egg">Ei arcade · ${eggOwnedCount()}/${EGG_ROSTER.length}</button>`;
-      bar.querySelectorAll('[data-pet-tab]').forEach((btn) => {
-        bindPress(btn, () => {
-          AudioSys.sfx('select');
-          UI.petTab = btn.getAttribute('data-pet-tab') || 'dex';
-          UI.renderPets();
-        });
-      });
-    }
-    const dexPanel = document.getElementById('petDexPanel');
-    const eggPanel = document.getElementById('petEggPanel');
-    if (dexPanel) dexPanel.style.display = tab === 'dex' ? '' : 'none';
-    if (eggPanel) eggPanel.style.display = tab === 'egg' ? '' : 'none';
-    if (tab === 'egg') {
-      this.renderEggPets();
-      return;
-    }
-    this.renderDexPets();
-  },
-
-  renderDexPets() {
-    const sumEl = document.getElementById('petSummary');
-    if (sumEl) {
-      const tamed = petTamedCount();
-      const active = activePetDef();
-      const wallet = petCoinsBalance();
-      const pBr = petRarityBreakdown();
-      const pTotals = petRarityTotals();
-      const petChips = Object.keys(RARITIES).map(rid => {
-        const rar = RARITIES[rid];
-        const n = pBr[rid] || 0;
-        const tot = pTotals[rid] || 0;
-        if (!tot) return '';
-        return `<span class="rar-pill" style="color:${rar.color};border-color:${rar.color};margin:2px">${rarityLabel(rid)} ${n}/${tot}</span>`;
-      }).filter(Boolean).join(' ');
-      sumEl.style.display = 'block';
-      sumEl.innerHTML =
-        t('ui.petSummaryTamed', {
-          tamed,
-          total: PET_ROSTER.length,
-          active: active ? SPECIES[active.speciesId].name : t('ui.petNone'),
-          wallet,
-        }) +
-        (petChips ? `<div style="margin-top:6px;line-height:1.7">${petChips}</div>` : '') +
-        `<div class="pet-coin-tip">${t('ui.petCoinTip')}</div>`;
-    }
-    const list = document.getElementById('petList');
-    if (!list) return;
-    list.innerHTML = '';
-    for (const def of PET_ROSTER) {
-      const sp = SPECIES[def.speciesId];
-      if (!sp) continue;
-      const rar = rarityOf(sp.rarity);
-      const kills = save.dex[def.speciesId] || 0;
-      const need = petKillNeed(def.speciesId);
-      const tamed = isPetTamed(def.id);
-      const active = save.activePet === def.id;
-      const cost = petCoinCost(def.id);
-      const canBuy = canBuyPetWithCoins(def.id);
-      const el = document.createElement('div');
-      el.className = 'card' + (tamed ? '' : ' locked') + (active ? ' sel' : '') + (canBuy ? ' dex-available' : '');
-      el.style.borderColor = tamed ? rar.color : undefined;
-      const cv = document.createElement('canvas');
-      cv.width = 64; cv.height = 64;
-      const cc = cv.getContext('2d');
-      cc.translate(32, 38);
-      cc.scale(0.55, 0.55);
-      if (tamed) drawMonsterArt(cc, sp, sp.size, 1.2, false, false);
-      else {
-        cc.globalAlpha = 0.45;
-        drawMonsterArt(cc, Object.assign({}, sp, { c1: '#20242e', c2: '#14161e' }), sp.size, 1.2, false, false);
-      }
-      el.appendChild(cv);
-      const info = document.createElement('div');
-      info.className = 'card-info';
-      const badge = active ? ` <span class="rar-pill" style="color:#7cf5ff;border-color:#7cf5ff">${t('ui.petActive').toUpperCase()}</span>` : '';
-      const upLv = tamed ? itemUpgradeLevel('pet', def.id) : 0;
-      const upMax = tamed ? itemUpgradeMax('pet', def.id) : 0;
-      const upBadge = upLv > 0 ? ` <span class="rar-pill" style="color:#ffd75e;border-color:#ffd75e">↑ Lv ${upLv}/${upMax}</span>` : '';
-      const petEntry = tamed && save.pets ? save.pets[def.id] : null;
-      const chestPetSk = petEntry && typeof petEntry.skill === 'string' ? petEntry.skill : null;
-      const chestPetBadge = chestPetSk
-        ? ` <span class="rar-pill" style="color:#ffd75e;border-color:#ffd75e">${t('ui.weaponChestBadge')}</span>`
-        : '';
-      const petName = (typeof speciesLabel === 'function') ? speciesLabel(sp) : sp.name;
-      info.innerHTML = `<div class="cname">${petName} <span class="rar-pill" style="color:${rar.color};border-color:${rar.color}">${rarityLabel(sp.rarity)}</span>${badge}${chestPetBadge}${upBadge}</div>` +
-        `<div class="cinfo">${petPerkLabel(def)}</div>` +
-        (chestPetSk ? `<div class="cinfo" style="opacity:.9;font-size:12px;margin-top:3px;color:#ffd75e">✦ ${chestPetSk}</div>` : '') +
-        `<div class="cinfo" style="opacity:.78;font-size:12px;margin-top:3px">${tamed
-          ? t('ui.petTamedAssist')
-          : (canBuy
-            ? t('ui.petBuyLine', { cost })
-            : t('ui.petTameLine', { cur: Math.min(kills, need), need, cost }) + ` ${SVG_COIN_ICON}`)}</div>` +
-        (tamed && (upLv > 0 || itemUpgradeShards('pet', def.id) > 0)
-          ? `<div class="cinfo" style="opacity:.82;font-size:12px;margin-top:3px">${petUpgradeSummary(def.id)}</div>` : '');
-      el.appendChild(info);
-      const right = document.createElement('div');
-      right.className = 'right';
-      if (tamed) {
-        right.innerHTML = active ? `${SVG_CHECK_MINI} ${t('ui.petActive')}` : t('ui.petEquip');
-      } else if (canBuy) {
-        right.innerHTML = `${t('ui.petBuy')}<br>${cost} ${SVG_COIN_ICON}`;
-        right.style.color = '#ff9ad5';
-      } else {
-        right.innerHTML = kills > 0 ? t('ui.petKillsLeft', { n: need - kills }) : `${cost} ${SVG_COIN_ICON}`;
-        right.style.opacity = '0.7';
-      }
-      el.appendChild(right);
-      if (tamed) {
-        bindPress(el, () => {
-          safeUiAction(() => {
-            if (active) {
-              equipPet(null);
-              UI.toast(t('toast.petNone'), 1400);
-            } else {
-              equipPet(def.id);
-              AudioSys.sfx('select');
-              UI.toast(t('toast.petFollow', { name: petName }), 2200);
-            }
-            this.renderPets();
-          }, 'equipPet/' + def.id, t('ui.errPetPick'));
-        });
-      } else if (canBuy) {
-        bindPress(el, () => {
-          safeUiAction(() => {
-            const res = buyPetWithCoins(def.id);
-            if (!res) {
-              UI.toast(t('toast.petNoCoins'), 1800);
-              return;
-            }
-            AudioSys.sfx('summon');
-            UI.toast(t('toast.petBought', { name: petName }), 2600);
-            this.renderPets();
-          }, 'buyPet/' + def.id, t('ui.errPetBuy'));
-        });
-      }
-      list.appendChild(el);
-    }
-  },
-
-  renderEggPets() {
-    ensureEggDaily();
-    const sum = eggProgressSummary();
-    const sumEl = document.getElementById('eggSummary');
-    if (sumEl) {
-      sumEl.style.display = 'block';
-      sumEl.innerHTML =
-        t('ui.eggSummary', {
-          owned: `<b>${sum.owned}</b>`, total: `<b>${sum.total}</b>`,
-          active: `<b>${sum.activeName}</b>`, daily: `<b>${sum.daily}</b>`,
-        }) +
-        `<div style="margin-top:6px;font-size:12px;opacity:.85">${t('ui.eggSummaryHint')}</div>`;
-    }
-    const crackBtn = document.getElementById('eggCrackBtn');
-    if (crackBtn) {
-      const ready = canCrackDailyEgg();
-      crackBtn.style.display = ready ? '' : 'none';
-      crackBtn.innerHTML =
-        `<span class="ico"><img src="assets/buttons/chrome/egg.svg" alt="" width="28" height="28" decoding="async" draggable="false"></span>` +
-        `<div>${t('pets.crackEgg')}<small>${t('pets.crackEggSub')}</small></div>`;
-      if (!crackBtn.dataset.bound) {
-        crackBtn.dataset.bound = '1';
-        bindPress(crackBtn, () => {
-          safeUiAction(() => {
-            const res = crackDailyEgg();
-            if (!res) {
-              UI.toast(t('toast.eggAlreadyOpened'), 2200);
-              return;
-            }
-            try { AudioSys.sfx('diceRoll'); } catch (_) {}
-            const rar = rarityOf(res.def.rarity);
-            UI.toast(res.duplicate
-              ? t('toast.eggDuplicateUi', { name: eggPetName(res.def) })
-              : t('toast.eggHatch', { name: eggPetName(res.def), rarity: rarityLabel(res.def.rarity) }), 3600);
-            this.renderPets();
-            this.renderMenu();
-          }, 'crackDailyEgg', t('ui.errEggCrack'));
-        });
-      }
-    }
-    const list = document.getElementById('eggList');
-    if (!list) return;
-    list.innerHTML = '';
-    for (const def of EGG_ROSTER) {
-      const rar = rarityOf(def.rarity);
-      const owned = isEggOwned(def.id);
-      const active = save.activeEggPet === def.id;
-      const el = document.createElement('div');
-      el.className = 'card' + (owned ? '' : ' locked') + (active ? ' sel' : '');
-      el.style.borderColor = owned ? rar.color : undefined;
-      const cv = document.createElement('canvas');
-      cv.width = 64; cv.height = 64;
-      const cc = cv.getContext('2d');
-      cc.translate(32, 36);
-      drawEggPetArt(cc, def, 18, 1.1, 0, 0, !owned);
-      el.appendChild(cv);
-      const info = document.createElement('div');
-      info.className = 'card-info';
-      const badge = active ? ` <span class="rar-pill" style="color:#ffd75e;border-color:#ffd75e">${t('ui.petActive').toUpperCase()}</span>` : '';
-      info.innerHTML = `<div class="cname">${eggPetName(def)} <span class="rar-pill" style="color:${rar.color};border-color:${rar.color}">${rarityLabel(def.rarity)}</span>${badge}</div>` +
-        `<div class="cinfo">${eggPerkLabel(def)}</div>` +
-        `<div class="cinfo" style="opacity:.78;font-size:12px;margin-top:3px">${owned ? t('ui.eggCosmetic') : t('ui.eggUnhatched')}</div>`;
-      el.appendChild(info);
-      const right = document.createElement('div');
-      right.className = 'right';
-      if (owned) {
-        right.innerHTML = active ? `&#10004; ${t('ui.petActive')}` : t('ui.petEquip');
-      } else {
-        right.textContent = '???';
-        right.style.opacity = '0.7';
-      }
-      el.appendChild(right);
-      if (owned) {
-        bindPress(el, () => {
-          safeUiAction(() => {
-            if (active) {
-              equipEggPet(null);
-              UI.toast(t('toast.eggNone'), 1400);
-            } else {
-              equipEggPet(def.id);
-              AudioSys.sfx('select');
-              UI.toast(t('toast.eggFloat', { name: eggPetName(def) }), 2200);
-            }
-            this.renderPets();
-          }, 'equipEggPet/' + def.id, t('ui.errEggPick'));
-        });
-      }
-      list.appendChild(el);
-    }
-  },
+  /* Pets list/detail lives in src/ui/pets-ui.js (overrides these after load). */
+  renderPets() {},
+  renderDexPets() {},
+  renderEggPets() {},
 
   renderStyle() {
     const sumEl = document.getElementById('styleSummary');
@@ -5311,6 +5109,7 @@ const UI = {
       statusEl.textContent = line;
     }
     try { if (typeof renderAudioThemeSwitch === 'function') renderAudioThemeSwitch(); } catch (_) {}
+    try { if (typeof this.paintPausePetChip === 'function') this.paintPausePetChip(); } catch (_) {}
   },
 
   hideVersionUpdateDialog() {

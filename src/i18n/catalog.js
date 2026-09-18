@@ -322,6 +322,7 @@ function seedNlGameStrings() {
     petNone: 'Geen actieve pet',
     petFollow: '{name} volgt je nu!',
     petNoCoins: 'Niet genoeg pet coins',
+    petNoClaim: 'Nog niet genoeg kills',
     petBought: '{name} gekocht! Volgt je nu.',
     eggAlreadyOpened: 'Dag-ei al geopend — morgen weer',
     eggDuplicateUi: 'Dubbel ei: {name} (+10 XP)',
@@ -430,6 +431,7 @@ function seedNlGameStrings() {
     ritualCtaSummon: 'Naar oproepen',
     ritualCtaMission: 'Speel missie',
     ritualCtaAdv: 'Naar avontuur',
+    ritualCtaEgg: 'Naar dag-ei',
     ritualDismiss: 'Sluiten',
     ritualReopen: 'Dagoverzicht',
     resetIn: 'Nieuw over {reset}',
@@ -440,6 +442,18 @@ function seedNlGameStrings() {
     streakReward7: '+ei of oproepen',
     streakReward14: '+120 XP',
   });
+  if (!I18N.nl.pets) I18N.nl.pets = {};
+  Object.assign(I18N.nl.pets, {
+    crackEgg: 'Dag-ei openen', crackEggSub: 'Gratis arcade-pull',
+    nextEgg: 'Dag-ei klaar', hubEggReady: 'Dag-ei klaar',
+    pauseNone: 'Nog geen pet', pauseEquip: 'Uitrusten · {name}',
+    pauseCycle: 'Wissel · {name}', pauseActive: '{name} volgt',
+    listLocked: '{cur}/{need} · {cost} PC', ready: 'klaar',
+    emptyFilterAct: 'Toon alle', emptyFirst: 'Tem via kills of koop met PC',
+    emptyEggFirst: 'Open het dag-ei', pauseNoneHint: 'Nog geen pet · jaag of koop',
+  });
+  if (!I18N.nl.hub) I18N.nl.hub = {};
+  Object.assign(I18N.nl.hub, { pets: 'Pets', petsSub: 'Tem · koop · dag-ei' });
   if (!I18N.nl.missionsUi) I18N.nl.missionsUi = {};
   Object.assign(I18N.nl.missionsUi, {
     flowDone: '✓ Dag rond',
@@ -1348,6 +1362,17 @@ function mergeI18nCatalogs() {
 }
 
 const CATALOG_EN = {
+  hub: { pets: 'Pets', petsSub: 'Tame · buy · daily egg' },
+  pets: {
+    crackEgg: 'Open daily egg', crackEggSub: 'Free arcade pull',
+    nextEgg: 'Daily egg ready', hubEggReady: 'Daily egg ready',
+    pauseNone: 'No pet yet', pauseEquip: 'Equip · {name}',
+    pauseCycle: 'Swap · {name}', pauseActive: '{name} follows',
+    listLocked: '{cur}/{need} · {cost} PC', listTamed: 'Tamed', listActive: 'On',
+    ready: 'ready',
+    emptyFilterAct: 'Show all', emptyFirst: 'Tame via kills or buy with PC',
+    emptyEggFirst: 'Open the daily egg', pauseNoneHint: 'No pet yet · hunt or buy',
+  },
   gear: {
     hubStat: '{n}/5',
     summarySlots: '<b>{n}</b>/5',
@@ -1782,6 +1807,7 @@ const CATALOG_EN = {
     petNone: 'No active pet',
     petFollow: '{name} follows you now!',
     petNoCoins: 'Not enough pet coins',
+    petNoClaim: 'Not enough kills yet',
     petBought: '{name} bought! Follows you now.',
     eggAlreadyOpened: 'Daily egg already opened — try tomorrow',
     eggDuplicateUi: 'Duplicate egg: {name} (+10 XP)',
@@ -1821,6 +1847,7 @@ const CATALOG_EN = {
     ritualCtaSummon: 'Open summons',
     ritualCtaMission: 'Play mission',
     ritualCtaAdv: 'Play adventure',
+    ritualCtaEgg: 'Open daily egg',
     ritualDismiss: 'Close',
     ritualReopen: 'Day overview',
     resetIn: 'Resets in {reset}',

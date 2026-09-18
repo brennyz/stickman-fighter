@@ -140,13 +140,24 @@ function eggDailyStatusLine() {
   return t('egg.tomorrow');
 }
 
+function eggLabel(def, field) {
+  if (!def) return '';
+  const key = field === 'perk' ? ('pets.eggPerk.' + def.id) : ('pets.eggName.' + def.id);
+  const fallback = field === 'perk' ? (def.perk || '') : (def.name || def.id);
+  if (typeof tOr === 'function') {
+    const s = tOr(key, fallback);
+    return s || fallback;
+  }
+  return fallback;
+}
+
 function eggProgressSummary() {
   const owned = eggOwnedCount();
   const active = activeEggPetDef();
   return {
     owned,
     total: EGG_ROSTER.length,
-    activeName: active ? eggPetName(active) : t('ui.petNone'),
+    activeName: active ? eggLabel(active, 'name') : t('ui.petNone'),
     daily: eggDailyStatusLine(),
   };
 }

@@ -61,6 +61,7 @@
   "src/ui/season-overlay.js",
   "src/ui/ui.js",
   "src/ui/buildings-ui.js",
+  "src/ui/pets-ui.js",
   "src/boot/start.js",
   "src/boot/loop.js"
 ]
