@@ -1,3 +1,13 @@
+| 2026-09-18 | **PLAYTEST LEAD FREEZE** | #343 first-30s PASS. 10 sprint lanes locked + MERGE #342. Draft. Niet main. |
+| 2026-09-18 | **PLAYTEST LEAD #344** | Juice PASS soft. J-001 first-kill toast XOR banner. Plan frozen to 10 bots. Draft. Niet main. |
+| 2026-09-18 | **PLAYTEST LEAD #337** | Death-retry PASS (~720ms fat gold). P2 heat pile + dice lecture — no bot. Draft. Niet main. |
+| 2026-09-18 | **PLAYTEST LEAD #342** | TF-001 merge-first (sticky vlieger tip fixed on draft). TF-002/003 P1 bots 6/5. Density unchanged. Draft. Niet main. |
+| 2026-09-18 | **PLAYTEST LEAD #341** | Landscape combat PASS (camera/floor/pads). LC-001/002 P2 hop asymmetry — no bot. Draft. Niet main. |
+| 2026-09-18 | **PLAYTEST LEAD #339 PERF** | PERF-01–06 ingested. Bots 3–4: spawnLite on touch whole fight; gate juiceKillSnap + hitStop freeze. Draft. Niet main. |
+| 2026-09-18 | **PLAYTEST LEAD #340 land** | MM-010/011/012 briefs: 844 doll-only · 0 pet cards · Open kist clip. Bots 10/14/15. Skip tablet-834. Draft. Niet main. |
+| 2026-09-18 | **PLAYTEST LEAD #338 EX-036** | Landscape HOME visibility PASS. P1: FOMO `inert` + `pointer-events:none` blocks Avontuur while sheet open. × recover PASS. Bot 2 brief tightened. Draft. Niet main. |
+| 2026-09-18 | **PLAYTEST LEAD #340 MM-001–005** | Deepened gear 4k / pets fold / factories smoke / 2.2s blank / FOMO cover. Wave-2 bots 11–13. Draft. **v1.18.190 / SW 400**. Niet main. |
+| 2026-09-18 | **PLAYTEST LEAD FROZEN** | Board `PLAYTEST-REPORT-2026-09-18.md` + 10-bot `IMPROVEMENT-PLAN.md`. Ingested #336 EX-034 dead+rotate P1 + #337–#344. No gameplay. Draft. **v1.18.190 / SW 400**. speel.html. Niet main. |
 | 2026-09-18 | **MEGA-MERGE 20m drafts → main** | Landed #333 visibility (`drawCombatants` + recover), #325 landscape camera/floor, #334 pauseG HUD + named hits, #329 HOME two-col SPELEN + FOMO left dock, #332 telegraph (keep #314 density 0.50), #331 landscape touch, #328 first-30s teach, #330 combat juice, #326 fat gold retry, #327 fxLite. SKIP #324. Leave #311 (conflicts). **v1.18.190 / SW 400**. speel.html. Playtest swarm. |
 | 2026-09-18 | **P0 invisible fighters** | Combat ran (haptics) while stickman/mobs vanished on cyber night stages. Isolate actor draw, pin bodies after rotate, contrast-lift dark styles, recover combatants on draw-error (no bg-only wipe). **v1.18.190 / SW 400**. Draft. speel.html. |
 | 2026-09-18 | **MEGA-MERGE leftover #318+#322 → main** | #318 chrome only (`--ui-rail`, toast-under-title, is-fomo/`_syncFomoHubLock`). Keep #321 `hudSafeLayout` + #323 `restartAdventureInstant`/`#resRetrySafe`. Then #322 Vandaag 40/48vh + HOME toast dock. SKIP #324. Leave #311 (conflicts). **v1.18.189 / SW 399**. speel.html. |
