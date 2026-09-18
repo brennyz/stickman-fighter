@@ -1,0 +1,146 @@
+{
+  "build": {
+    "app": "1.18.190",
+    "sw": 400,
+    "shaHint": "c9a29fc"
+  },
+  "viewport": {
+    "w": 390,
+    "h": 844,
+    "dpr": 2.2,
+    "touch": true
+  },
+  "touchCaps": {
+    "particles": 100,
+    "floaters": 20,
+    "projectiles": 34,
+    "banners": 2,
+    "afterimages": 8
+  },
+  "spawnLiteAtFrame0": true,
+  "fxLiteAtFrame0": false,
+  "touchDevice": true,
+  "spawnLiteAfter90Tier0": false,
+  "fxLiteAfter90Tier0": false,
+  "spawnLiteTier1": true,
+  "fxLiteTier1": false,
+  "spawnLiteTier2": true,
+  "fxLiteTier2": true,
+  "liteCaps": {
+    "particles": 58,
+    "floaters": 11,
+    "projectiles": 20,
+    "banners": 2,
+    "afterimages": 5
+  },
+  "fxLiteWhenSettingOn": true,
+  "spawnLiteWhenSettingOn": true,
+  "perfTierWhenLite": 0,
+  "deskCaps": {
+    "particles": 100,
+    "floaters": 20,
+    "projectiles": 34,
+    "banners": 2,
+    "afterimages": 8
+  },
+  "wave1Elite": {
+    "spawnLite": true,
+    "particles": 4,
+    "freezeT": 0
+  },
+  "lateEliteTier0": {
+    "spawnLite": false,
+    "particles": 26,
+    "freezeT": 0.1
+  },
+  "lateColossalTier0": {
+    "spawnLite": false,
+    "particles": 48,
+    "freezeT": 0.22
+  },
+  "eliteWithLiteFx": {
+    "spawnLite": true,
+    "particles": 4,
+    "freezeT": 0
+  },
+  "killSnapLiteCommon": 0.058,
+  "killSnapLiteElite": 0.075,
+  "hitStopPunch": 0.034,
+  "hitStopHeavy": 0.072,
+  "hitStopPunchLite": 0.034,
+  "longSession": {
+    "cycles": 24,
+    "okStarts": 24,
+    "maxParticles": 21,
+    "maxPool": 27,
+    "maxScenery": 2,
+    "maxMonsters": 0,
+    "endPool": 48,
+    "endParticles": 0,
+    "snaps": [
+      {
+        "i": 0,
+        "mode": "training",
+        "particles": 21,
+        "pool": 27,
+        "scenery": 2,
+        "freezeT": 0.075
+      },
+      {
+        "i": 11,
+        "mode": "training",
+        "particles": 21,
+        "pool": 27,
+        "scenery": 2,
+        "freezeT": 0.058
+      },
+      {
+        "i": 23,
+        "mode": "training",
+        "particles": 21,
+        "pool": 27,
+        "scenery": 2,
+        "freezeT": 0.058
+      }
+    ]
+  },
+  "liteBurst34": 18,
+  "findings": [
+    {
+      "id": "PERF-01",
+      "sev": "P1",
+      "title": "Elite/boss intro hitch returns after first ~90 frames on mid-phone",
+      "detail": "After Perf.frames>=90 and tier 0, spawnLite=false, particles=26, freezeT=0.1s. Wave 2+ on a still-smooth mid-phone dumps full intro + freeze."
+    },
+    {
+      "id": "PERF-02",
+      "sev": "P1",
+      "title": "Colossal / super-boss intro still 100ms+ freeze when spawnLite is off",
+      "detail": "particles=48, freezeT=0.22s."
+    },
+    {
+      "id": "PERF-03",
+      "sev": "P1",
+      "title": "juiceKillSnap freeze is not gated by liteFx / spawnLite",
+      "detail": "Lite FX still applies freezeT 0.058s (common) / 0.075s (elite) on every kill before the shake rate-limit."
+    },
+    {
+      "id": "PERF-04",
+      "sev": "P2",
+      "title": "applyHitStop ignore liteFx — punch/kick freeze stays on mid-phone",
+      "detail": "punch=0.034s heavy=0.072s litePunch=0.034s. Only motionReduced skips it."
+    },
+    {
+      "id": "PERF-05",
+      "sev": "P2",
+      "title": "Mid-phone after opener is full-fat FX until EMA climbs to tier 1/2",
+      "detail": "fxLite() is liteFx OR tier>=2 OR reduced-motion. After 90 frames at tier 0, neither spawnLite nor fxLite is on — death bursts, crit rings, hit-stop are desktop-weight."
+    },
+    {
+      "id": "PERF-06",
+      "sev": "P3",
+      "title": "Long session: pool + scenery stay bounded; UI canvases are the leftover leak risk",
+      "detail": "24 startGame cycles: maxPool=27 endPool=48 maxParticles=21 maxScenery=2. Particle pool recycles. SceneryArt evicts. UI.js still news 64px canvases on each upgrades/pets/gear paint."
+    }
+  ]
+}
