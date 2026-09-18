@@ -17,6 +17,8 @@ Deaths should feel like Flappy: you saw the pipe. A charge, slam, shot, fire, or
 
 HUD: 2 bars on tall screens, 1 +N on short landscape. Imminent (<0.22s) flashes white on a darker plate. Compact rings scale **1.22×**.
 
+Fail tip (`lastFailTele`) is the **killing hit**, not a leftover chip and not another alive flyer. Hop/slime contact has no cue (body is the pipe). Swim ink is not CHARGE.
+
 ## What stays with #314
 
 Scale **0.50 / 1.00**, max alive, interval ×1.55, batch 1, gap 64, opener clamps, tablet mid-band. This PR does not retune horde size.

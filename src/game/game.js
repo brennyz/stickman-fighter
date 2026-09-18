@@ -107,9 +107,11 @@ function ensureAdventureFailTele(game) {
   if (h) {
     if (h.slam) { game.lastFailTele = 'slam'; return; }
     if (h.fly) { game.lastFailTele = 'flyer'; return; }
-    if (h.type === 'charge' || h.type === 'swim') { game.lastFailTele = 'charge'; return; }
+    if (h.type === 'charge') { game.lastFailTele = 'charge'; return; }
     if (h.type === 'shoot') { game.lastFailTele = 'shoot'; return; }
     if (h.type === 'dragon') { game.lastFailTele = 'fire'; return; }
+    // swim: shark dash already tagged charge on the hit; ink/octo is shoot. Never
+    // stamp every swim as CHARGE (that lied after an ink blob).
   }
   if (typeof notePlayerFailTele === 'function') {
     try { notePlayerFailTele(game, {}); } catch (_) {}

@@ -309,9 +309,11 @@ const tipGame = { lastFailTele: 'slam' };
 must(iso.combatFailRetryTip(tipGame).indexOf('SLAM') >= 0, 'fail tip names the cue', iso.combatFailRetryTip(tipGame));
 must(iso.combatFailRetryTip(tipGame).indexOf('Nog één keer') >= 0, 'fail tip points at retry', iso.combatFailRetryTip(tipGame));
 must(iso.combatFailRetryTip({ lastFailTele: null }, '') === '', 'no cue → empty tip');
-const rec = { mode: 'adventure', lastFailTele: null, monsters: [{ alive: true, flying: true, sp: { type: 'fly' } }] };
-iso.notePlayerFailTele(rec, {});
-must(rec.lastFailTele === 'flyer', 'notePlayerFailTele infers flyer', rec.lastFailTele);
+const rec = { mode: 'adventure', lastFailTele: 'flyer', monsters: [{ alive: true, flying: true, sp: { type: 'fly' } }] };
+iso.notePlayerFailTele(rec, { attacker: { flying: false, sp: { type: 'hop', art: 'slime' } } });
+must(rec.lastFailTele === '', 'slime kill must not keep leftover flyer', rec.lastFailTele);
+iso.notePlayerFailTele(rec, { attacker: { flying: true, sp: { type: 'fly' } } });
+must(rec.lastFailTele === 'flyer', 'real flyer hit still tags flyer', rec.lastFailTele);
 iso.notePlayerFailTele(rec, { failKind: 'slam' });
 must(rec.lastFailTele === 'slam', 'notePlayerFailTele records slam', rec.lastFailTele);
 
