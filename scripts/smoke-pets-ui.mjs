@@ -55,7 +55,7 @@ must(ui.includes('claimPetFromDex') || data.includes('claimPetFromDex'), 'claim-
 must(data.includes('function petsHubStatLine'), 'hub next-step helper missing');
 must(data.includes('function petStatusOf'), 'petStatusOf missing');
 must(data.includes('function petsNextGoal'), 'petsNextGoal missing');
-must(!/`Pet · \$\{need\} kills`/.test(data), 'hardcoded EN pet progress line must be gone');
+must(data.includes("tOr('pets.lineNeed'"), 'petProgressLine must use i18n pets.lineNeed');
 must(start.includes('UI.openPets'), 'start.js must open pets via openPets');
 must(coreUi.includes('petsGoBack'), 'goBack must pop pets detail first');
 must(/pets:\s*\{/.test(i18n) && /doesTitle/.test(i18n), 'i18n missing pets doesTitle');

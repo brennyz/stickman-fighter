@@ -182,9 +182,18 @@ if (typeof UI === 'object' && UI) {
       cc.scale(1.15, 1.15);
       if (def && sp && typeof drawMonsterArt === 'function') {
         drawMonsterArt(cc, sp, sp.size, t, false, false);
-      } else if (typeof drawMonsterArt === 'function' && typeof SPECIES !== 'undefined' && SPECIES.slymo) {
-        cc.globalAlpha = 0.35;
-        drawMonsterArt(cc, Object.assign({}, SPECIES.slymo, { c1: '#20242e', c2: '#14161e' }), SPECIES.slymo.size, t, false, false);
+      } else {
+        cc.strokeStyle = 'rgba(124,245,255,.45)';
+        cc.lineWidth = 2;
+        cc.setLineDash([5, 4]);
+        cc.beginPath();
+        cc.arc(0, -8, 28, 0, Math.PI * 2);
+        cc.stroke();
+        cc.setLineDash([]);
+        cc.fillStyle = 'rgba(232,240,255,.55)';
+        cc.font = '800 13px Nunito, sans-serif';
+        cc.textAlign = 'center';
+        cc.fillText('?', 0, -2);
       }
       cc.restore();
     }
@@ -265,9 +274,6 @@ if (typeof UI === 'object' && UI) {
     }
     const sumEl = document.getElementById('petSummary');
     if (sumEl) {
-      const tamed = (typeof petTamedCount === 'function') ? petTamedCount() : 0;
-      const active = (typeof activePetDef === 'function') ? activePetDef() : null;
-      const wallet = (typeof petCoinsBalance === 'function') ? petCoinsBalance() : 0;
       const pBr = (typeof petRarityBreakdown === 'function') ? petRarityBreakdown() : {};
       const pTotals = (typeof petRarityTotals === 'function') ? petRarityTotals() : {};
       const petChips = (typeof RARITIES !== 'undefined')
@@ -277,20 +283,18 @@ if (typeof UI === 'object' && UI) {
           const tot = pTotals[rid] || 0;
           if (!tot) return '';
           return '<span class="rar-pill" style="color:' + petsEscape(rar.color) + ';border-color:'
-            + petsEscape(rar.color) + ';margin:2px">' + petsEscape((typeof rarityLabel === 'function') ? rarityLabel(rid) : rid)
+            + petsEscape(rar.color) + '">' + petsEscape((typeof rarityLabel === 'function') ? rarityLabel(rid) : rid)
             + ' ' + n + '/' + tot + '</span>';
         }).filter(Boolean).join(' ')
         : '';
-      sumEl.style.display = 'block';
-      sumEl.innerHTML =
-        petsTxt('ui.petSummaryTamed', 'Tamed <b>{tamed}/{total}</b> · active <b>{active}</b> · <b>{wallet} pet coins</b>', {
-          tamed,
-          total: PET_ROSTER.length,
-          active: active ? petsSpeciesName(active) : petsTxt('ui.petNone', 'none'),
-          wallet,
-        })
-        + (petChips ? '<div class="pets-rar-row">' + petChips + '</div>' : '')
-        + '<div class="pets-tip">' + petsTxt('ui.petCoinTip', 'Play coin bonus for pet coins. Buy here, or tame via monster-book kills.') + '</div>';
+      if (petChips) {
+        sumEl.style.display = 'block';
+        sumEl.className = 'pets-rar-strip';
+        sumEl.innerHTML = petChips;
+      } else {
+        sumEl.style.display = 'none';
+        sumEl.innerHTML = '';
+      }
     }
     const list = document.getElementById('petList');
     if (!list) return;
@@ -342,8 +346,8 @@ if (typeof UI === 'object' && UI) {
     if (sp && typeof drawMonsterArt === 'function') {
       if (st.tamed) drawMonsterArt(cc, sp, sp.size, 1.2, false, false);
       else {
-        cc.globalAlpha = 0.45;
-        drawMonsterArt(cc, Object.assign({}, sp, { c1: '#20242e', c2: '#14161e' }), sp.size, 1.2, false, false);
+        cc.globalAlpha = 0.72;
+        drawMonsterArt(cc, sp, sp.size, 1.2, false, false);
       }
     }
     const info = document.createElement('div');
@@ -602,8 +606,8 @@ if (typeof UI === 'object' && UI) {
       cc.scale(0.85, 0.85);
       if (st.tamed) drawMonsterArt(cc, sp, sp.size, 1.2, false, false);
       else {
-        cc.globalAlpha = 0.5;
-        drawMonsterArt(cc, Object.assign({}, sp, { c1: '#20242e', c2: '#14161e' }), sp.size, 1.2, false, false);
+        cc.globalAlpha = 0.72;
+        drawMonsterArt(cc, sp, sp.size, 1.2, false, false);
       }
     }
     this.bindPetsDetailActs(detail, 'dex', rosterDef.id);

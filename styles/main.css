@@ -3981,6 +3981,16 @@
     opacity: .85;
   }
   #petScreen .pets-rar-row { margin-top: 6px; line-height: 1.7; }
+  #petScreen .pets-rar-strip {
+    width: min(94vw, 480px);
+    margin: 0 auto 8px;
+    padding: 0;
+    border: 0;
+    background: none;
+    box-shadow: none;
+    text-align: center;
+    line-height: 1.6;
+  }
   #petScreen .pets-empty {
     text-align: center;
     font-weight: 800;
@@ -4004,9 +4014,11 @@
   body.big-touch #petScreen .pets-wallet-chip { min-height: 36px; }
   body.big-touch #petScreen .pets-card { min-height: max(60px, var(--touch-min)); }
   body.big-touch #petScreen .pets-filter-btn { min-height: max(48px, var(--touch-min)); }
-  @media (max-width: 380px) {
-    #petScreen .pets-hero-canvas { width: 72px; height: 72px; }
+  @media (max-width: 480px) {
+    #petScreen .pets-hero { padding: 8px 10px; gap: 10px; }
+    #petScreen .pets-hero-canvas { width: 64px; height: 64px; }
     #petScreen .pets-hero-name { font-size: 14px; }
+    #petScreen .pets-next { margin-bottom: 6px; }
   }
   @media (min-width: 720px) and (orientation: landscape) {
     #petScreen .pets-screen-head,
@@ -4015,7 +4027,8 @@
     #petScreen .pets-next,
     #petScreen .pets-tab-bar,
     #petScreen .pets-filter-bar,
-    #petScreen .pets-filter-count { width: min(94vw, 860px); }
+    #petScreen .pets-filter-count,
+    #petScreen .pets-rar-strip { width: min(94vw, 860px); }
     #petScreen .pets-body {
       width: min(94vw, 860px);
       display: grid;

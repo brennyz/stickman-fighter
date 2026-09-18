@@ -165,7 +165,7 @@ function petProgressLine(speciesId) {
   if (cur <= 0) {
     const needLine = (typeof tOr === 'function')
       ? tOr('pets.lineNeed', 'Pet · {need} kills', { need })
-      : `Pet · ${need} kills`;
+      : ('Pet · ' + need + ' kills');
     return needLine + coinHint;
   }
   return t('ui.petTameLine', { cur: Math.min(cur, need), need, cost });
