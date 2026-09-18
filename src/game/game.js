@@ -297,8 +297,11 @@ class Game {
   }
 
   onResize() {
-    this.ground = playfieldGroundY(H, W);
-    this.maxX = W - 40;
+    if (typeof alignCombatPlayfield === 'function') alignCombatPlayfield(this);
+    else {
+      this.ground = playfieldGroundY(H, W);
+      this.maxX = W - 40;
+    }
     if (this.mode === 'versus' && this.p2) {
       applyVsArenaBounds(this);
       Input.dualMode = true;

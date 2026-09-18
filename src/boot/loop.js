@@ -1034,6 +1034,8 @@ function bootGame() {
     } : null,
     hudSafeLayout: typeof hudSafeLayout === 'function' ? hudSafeLayout : null,
     hudPhoneCompact: typeof hudPhoneCompact === 'function' ? hudPhoneCompact : null,
+    combatViewAlign: typeof combatViewAlign === 'function' ? combatViewAlign : null,
+    alignCombatPlayfield: typeof alignCombatPlayfield === 'function' ? alignCombatPlayfield : null,
     previewTop20Spawn: () => {
       try { AudioSys.init(); AudioSys.sfx('top20Spawn'); } catch (_) {}
       try { if (game && typeof game.shake === 'function') game.shake(4, 0.16); } catch (_) {}

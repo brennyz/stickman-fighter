@@ -19,14 +19,26 @@ function releaseCanvasPointer(id) {
   Input.onUp(id);
 }
 
+function pinCanvasCssBox(vp) {
+  if (!canvas || !vp) return;
+  canvas.style.left = (vp.offsetX || 0) + 'px';
+  canvas.style.top = (vp.offsetY || 0) + 'px';
+  canvas.style.width = vp.w + 'px';
+  canvas.style.height = vp.h + 'px';
+}
+
 function resize() {
   const vp = viewportGameSize();
   syncViewportCssVars(vp);
   const newDpr = Math.min(devicePixelRatio || 1, maxCanvasDpr());
   // Do NOT include Perf.tier — tier bumps must not recreate/blank the canvas mid-fight
   // (that + skipHeavyDraw caused adventure backgrounds to vanish for a frame).
-  const sizeKey = vp.w + 'x' + vp.h + '@' + newDpr;
-  if (sizeKey === lastResizeKey) return;
+  // Offset belongs in the key: visualViewport scroll/rotate can keep w×h and still shift the box.
+  const sizeKey = vp.w + 'x' + vp.h + '@' + newDpr + '+' + (vp.offsetX || 0) + ',' + (vp.offsetY || 0);
+  if (sizeKey === lastResizeKey) {
+    pinCanvasCssBox(vp);
+    return;
+  }
   lastResizeKey = sizeKey;
   try { if (typeof menuBgCacheInvalidate === 'function') menuBgCacheInvalidate(); } catch (_) {}
   DPR = newDpr;
@@ -34,10 +46,7 @@ function resize() {
   H = vp.h;
   canvas.width = W * DPR;
   canvas.height = H * DPR;
-  canvas.style.left = vp.offsetX + 'px';
-  canvas.style.top = vp.offsetY + 'px';
-  canvas.style.width = W + 'px';
-  canvas.style.height = H + 'px';
+  pinCanvasCssBox(vp);
   ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
   Input.layout(W, H);
   try { if (typeof refreshSatanCombatScale === 'function' && typeof game !== 'undefined') refreshSatanCombatScale(game); } catch (_) {}

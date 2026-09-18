@@ -50,6 +50,14 @@
   },
   "userWishlist": [
     {
+      "id": "w-20260918T153730",
+      "from": "user",
+      "text": "P0 FIX — landscape COMBAT canvas/camera/world scale. Companion to invisible fighters. Screenshot: landscape fight empty stage, city BG, clipped right building, pause visible. Fix landscape resize so world, camera, floor, and entities align with visible canvas; no empty dead zone. Coordinate: render visibility is another PR — focus camera/canvas/CSS size. Prove 844×390 + portrait. Draft PR only. No Versus. speel.html. No merge main.",
+      "status": "in-progress",
+      "updated": "2026-09-18",
+      "notes": "Branch cursor/landscape-combat-camera-6526. After #321 HUD mega-merge."
+    },
+    {
       "id": "w-20260918T141700",
       "from": "user",
       "text": "MEGA-MERGE Stickman Fighter examinator sprint to main. Brendon said «merge main». Merge examinator-sprint draft PRs into main in order: #317 i18n, #323 Flappy retry, #320 Examinator, #314 density + #321 HUD, SKIP #324 if #314 has tablet midband, #312 factories, #315 gear, #313 summons, #319 pets, #316 juice, #318 UI layout, #322 FOMO Vandaag, optionally #311 harden. Share URL speel.html. Versus retired. No secrets. No force-push.",
