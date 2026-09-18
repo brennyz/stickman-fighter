@@ -44,7 +44,10 @@ async function runViewport(browser, base, vp) {
     const g = game;
     if (!g || !g.player) return { ok: false, why: 'no game' };
     const dens = (typeof combatDensityProfile === 'function') ? combatDensityProfile() : null;
-    g.lastFailTele = 'slam';
+    g.lastFailTele = 'flyer';
+    if (typeof notePlayerFailTele === 'function') {
+      notePlayerFailTele(g, { attacker: { flying: false, dashT: 0, sp: { type: 'hop', art: 'slime', name: 'Bubbel' } } });
+    }
     const t0 = performance.now();
     try { g.finishAdventure(false); } catch (e) { return { ok: false, why: String(e) }; }
     return {
@@ -87,6 +90,9 @@ async function runViewport(browser, base, vp) {
   if (vp.mobile && ui.againH < 64) fail(vp.id + ' retry button not fat enough', ui);
   if (!/SLAM|CHARGE|vlieger|flyer|Nog één keer|One more time/i.test(ui.tip)) {
     fail(vp.id + ' tip must name fail cue or retry', ui);
+  }
+  if (/^(vlieger|flyer|Flieger|volant|volador)\s*→/i.test((ui.tip || '').trim())) {
+    fail(vp.id + ' TF-001 slime killing hit must not lead with leftover flyer telegraph', ui);
   }
   if (ui.fomo) fail(vp.id + ' FOMO should hide on result', ui);
 

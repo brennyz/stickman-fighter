@@ -110,7 +110,7 @@ Kick sits on the inner column of the right cluster (closest strike to the joy). 
 | Wave size + boss pad | `buildLevel` in `src/data/monsters.js` |
 | Live alive-cap + spacing + opener hold | `updateAdventure` / `nextWave` / `initAdventure` in `src/game/game.js` |
 | Punch/kick prefer-strike | `claimTouchStrike` in `src/systems/input.js` |
-| Fail telegraph record | `notePlayerFailTele` from `Fighter.takeDamage` |
+| Fail telegraph record | `notePlayerFailTele` from `Fighter.takeDamage` — **this hit only** (no leftover / no steal from another alive flyer) |
 | Test hook | `window.__sf.combatDensity` |
 | Proof smoke | `npm run smoke:combat-density` |
 
@@ -121,6 +121,7 @@ Live cap (`adventureMaxAliveNow`) follows the current viewport so rotate-to-land
 ```bash
 npm run smoke:combat-density
 npm run smoke:lose-retry
+npm run smoke:telegraph-read
 npm run smoke:adventure
 ```
 

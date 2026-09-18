@@ -500,7 +500,7 @@ function combatFailTeleKind(src) {
   const kind = src.kind || src.failKind || '';
   if (kind === 'slam' || kind === 'charge' || kind === 'flyer' || kind === 'fire') return kind;
   if (kind === 'laser' || kind === 'orb' || kind === 'ink' || kind === 'shoot') return 'shoot';
-  const attacker = src.attacker || src;
+  const attacker = src.attacker || src.srcMon || src;
   const sp = attacker.sp || {};
   if (sp.type === 'tank') return 'slam';
   if (sp.type === 'charge' || (sp.type === 'swim' && sp.art === 'shark')) return 'charge';
@@ -524,28 +524,14 @@ function combatFailCueLabel(kind) {
   return (typeof tOr === 'function') ? tOr(pair[0], pair[1]) : pair[1];
 }
 
-/** Record last readable fail cue on player hurt (Adventure). */
+/**
+ * Record the fail cue for THIS hit (Adventure). Always write — a slime
+ * kill must not keep a leftover "vlieger" from an earlier bat chip, and
+ * must not steal another alive flyer's label.
+ */
 function notePlayerFailTele(game, src) {
   if (!game || game.mode !== 'adventure') return;
-  let kind = combatFailTeleKind(src);
-  if (!kind && game.monsters && game.monsters.length) {
-    const teles = (typeof adventureTelegraphHuds === 'function')
-      ? adventureTelegraphHuds(game.monsters)
-      : [];
-    if (teles[0] && teles[0].kind) {
-      kind = teles[0].kind === 'fire' ? 'fire' : (teles[0].kind === 'shoot' ? 'shoot' : teles[0].kind);
-    } else {
-      for (let i = 0; i < game.monsters.length; i++) {
-        const m = game.monsters[i];
-        if (!m || !m.alive) continue;
-        if (m.flying || (m.sp && (m.sp.type === 'fly' || m.sp.type === 'dragon'))) {
-          kind = 'flyer';
-          break;
-        }
-      }
-    }
-  }
-  if (kind) game.lastFailTele = kind;
+  game.lastFailTele = combatFailTeleKind(src) || '';
 }
 
 /** One-line tip: "SLAM → Nog één keer". Empty when no cue (caller falls back). */

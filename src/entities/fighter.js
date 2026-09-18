@@ -602,6 +602,9 @@ class Fighter {
       this.hpGhostT = 0.45;
       if (this.isPlayer && game) {
         try { notePlayerHurtSource(game, opts.attacker || opts.srcMon); } catch (_) {}
+        if (game.mode === 'adventure' && typeof notePlayerFailTele === 'function') {
+          try { notePlayerFailTele(game, opts); } catch (_) {}
+        }
       }
       return dmg;
     }
