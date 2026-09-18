@@ -168,6 +168,7 @@ Schrijf **1–3 regels** per sessie: datum, d#, wat, versie.
 
 | Datum (UTC) | d# | Update |
 |-------------|-----|--------|
+| 2026-09-18 | — | **PLAYTEST BOT 2/9** landscape HOME/BEGIN 844×390 on LIVE `c9a29fc` v1.18.190/SW400. SPELEN+Avontuur visible ≥44px; FOMO left-dock does not cover play. **P1:** Vandaag `inert` blocks Avontuur pointer-tap. Draft findings, geen main. speel.html. |
 | 2026-09-18 | **5** | Mid-phone fxLite: caps + particle pool + spawnLite (no freeze hitch). Fighters always draw. Draft, geen main. **v1.18.190 / SW 400**. speel.html. |
 | 2026-09-18 | — | **death→retry feel:** after mega-merge, restore 84px Nog één keer + `SLAM → retry` tip + `#resKiller`. Keep `restartAdventureInstant` / `#resRetrySafe`. No dock rebuild. **v1.18.190 / SW 400**. Draft. |
 | 2026-09-18 | — | **#325 DONE:** mid-fight rotate + cyber 844×390 letterbox=0. Pixel-visibility sibling. Draft, geen main. **v1.18.190 / SW 400**. |

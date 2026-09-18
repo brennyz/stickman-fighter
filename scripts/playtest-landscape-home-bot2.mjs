@@ -246,35 +246,72 @@ async function forceFomo(page) {
   }, { timeout: 4000 }).catch(() => {});
 }
 
-async function tapAdventure(page) {
-  const before = await page.evaluate(() => ({
-    menu: !!(document.getElementById('menuScreen') && document.getElementById('menuScreen').classList.contains('active')),
-    level: !!(document.getElementById('levelScreen') && document.getElementById('levelScreen').classList.contains('active')),
-    fomo: (() => {
-      const el = document.getElementById('fomoRitual');
-      return !!(el && !el.hidden);
-    })(),
-  }));
-  await page.evaluate(() => {
-    const play = document.getElementById('btnAdventure');
-    if (play) play.click();
+async function playState(page) {
+  return page.evaluate(() => {
+    const menu = document.getElementById('menuScreen');
+    const splash = document.getElementById('sfSplash');
+    const fomo = document.getElementById('fomoRitual');
+    const playing = !!(document.body.classList.contains('is-playing')
+      || document.body.dataset.state === 'play');
+    const level = !!(document.getElementById('levelScreen') && document.getElementById('levelScreen').classList.contains('active'));
+    const island = !!(document.getElementById('islandScreen') && document.getElementById('islandScreen').classList.contains('active'));
+    return {
+      menu: !!(menu && menu.classList.contains('active')),
+      splashGone: !splash || splash.classList.contains('is-done') || !document.body.contains(splash),
+      playing,
+      level,
+      island,
+      fomo: !!(fomo && !fomo.hidden),
+    };
   });
-  await new Promise((r) => setTimeout(r, 250));
-  const after = await page.evaluate(() => ({
-    menu: !!(document.getElementById('menuScreen') && document.getElementById('menuScreen').classList.contains('active')),
-    level: !!(document.getElementById('levelScreen') && document.getElementById('levelScreen').classList.contains('active')),
-    island: !!(document.getElementById('islandScreen') && document.getElementById('islandScreen').classList.contains('active')),
-    fomo: (() => {
-      const el = document.getElementById('fomoRitual');
-      return !!(el && !el.hidden);
-    })(),
-  }));
+}
+
+async function tapAdventure(page) {
+  const before = await playState(page);
+  const target = await page.evaluate(() => {
+    const play = document.getElementById('btnAdventure');
+    if (!play) return null;
+    const r = play.getBoundingClientRect();
+    return { x: r.left + r.width / 2, y: r.top + Math.min(22, r.height / 2) };
+  });
+  if (target) {
+    try { await page.mouse.click(target.x, target.y, { delay: 40 }); } catch (_) {}
+  }
+  await new Promise((r) => setTimeout(r, 450));
+  const after = await playState(page);
   return {
     before,
     after,
-    openedPlay: !!(!after.menu && (after.level || after.island)),
-    stayedOnHome: !!(after.menu && !after.level && !after.island),
+    openedPlay: !!(after.playing || after.level || after.island),
+    stayedOnHome: !!(after.menu && !after.playing && !after.level && !after.island),
+    pointer: target,
   };
+}
+
+async function enterHomeQuiet(page) {
+  await page.evaluate(() => {
+    try {
+      if (typeof enterHubFromTitle === 'function') enterHubFromTitle({});
+      else if (typeof dismissSplashOverlay === 'function') dismissSplashOverlay();
+    } catch (_) {}
+    const splash = document.getElementById('sfSplash');
+    if (splash) {
+      splash.classList.add('is-done');
+      try { splash.remove(); } catch (_) { splash.style.display = 'none'; }
+    }
+    document.querySelectorAll('.screen').forEach((el) => el.classList.remove('active'));
+    const menu = document.getElementById('menuScreen');
+    if (menu) menu.classList.add('active');
+    if (typeof UI === 'object' && UI && typeof UI.renderMenu === 'function') {
+      try { UI.renderMenu(); } catch (_) {}
+    }
+    if (typeof UI === 'object' && UI) {
+      UI._fomoRitualHide = true;
+      UI._fomoRitualForce = false;
+      if (UI.hideFomoRitual) UI.hideFomoRitual();
+    }
+  });
+  await page.waitForSelector('#menuScreen.active', { timeout: 8000 });
 }
 
 async function runGame(browser, baseUrl, label) {
@@ -286,28 +323,23 @@ async function runGame(browser, baseUrl, label) {
   const begin = await measureBegin(page);
   const beginShot = await shot(page, `${label}-begin.png`);
   const beginTap = await tapBeginSpelen(page);
+  await enterHomeQuiet(page);
   const homeAfterTap = await measureHome(page);
   const homeShot = await shot(page, `${label}-home.png`);
-  const homeTapQuiet = homeAfterTap.fomoOpen ? null : await tapAdventure(page);
-  if (homeTapQuiet && homeTapQuiet.openedPlay) {
-    await page.evaluate(() => {
-      try {
-        if (typeof UI === 'object' && UI.show) UI.show('menuScreen');
-        else {
-          document.querySelectorAll('.screen').forEach((el) => el.classList.remove('active'));
-          const menu = document.getElementById('menuScreen');
-          if (menu) menu.classList.add('active');
-        }
-        if (typeof UI === 'object' && UI.renderMenu) UI.renderMenu();
-      } catch (_) {}
-    });
-    await page.waitForSelector('#menuScreen.active', { timeout: 4000 }).catch(() => {});
-  }
   await forceFomo(page);
   const fomo = await measureHome(page);
   const fomoShot = await shot(page, `${label}-fomo.png`);
   const fomoTap = await tapAdventure(page);
   const fomoAfterTapShot = await shot(page, `${label}-fomo-after-avontuur-tap.png`);
+  await page.evaluate(() => {
+    try {
+      if (typeof dismissFomoRitual === 'function') dismissFomoRitual();
+      else if (typeof UI === 'object' && UI.hideFomoRitual) UI.hideFomoRitual();
+    } catch (_) {}
+  });
+  await new Promise((r) => setTimeout(r, 150));
+  const homeTapQuiet = await tapAdventure(page);
+  const playShot = await shot(page, `${label}-avontuur-tap.png`);
   await page.close();
   return {
     label,
@@ -334,6 +366,7 @@ async function runGame(browser, baseUrl, label) {
         tapOpenedPlay: homeTapQuiet && homeTapQuiet.openedPlay,
       }),
       tap: homeTapQuiet,
+      playShot,
     },
     fomo: {
       ...fomo,
@@ -394,17 +427,16 @@ function findingsFrom(local, live, speelLocal, speelLive) {
     } else if (pack.fomo.verdict && !pack.fomo.verdict.visible) {
       note('P0', id + '-fomo-clip', 'Avontuur not fully visible while FOMO is open', pack.fomo);
     }
-    if (pack.fomo.chromeInert || pack.fomo.playClosestInert || pack.fomo.landingPE === 'none') {
+    const locked = !!(pack.fomo.chromeInert || pack.fomo.playClosestInert || pack.fomo.landingPE === 'none');
+    const pointerOpened = !!(pack.fomo.tap && pack.fomo.tap.openedPlay);
+    if (locked && !pointerOpened) {
       note('P1', id + '-fomo-inert',
-        'FOMO leaves Avontuur painted but not tappable (inert / pointer-events:none on HOME chrome)',
+        'FOMO leaves Avontuur painted but a real pointer tap does not start play (inert / pointer-events:none)',
         pack.fomo);
-    }
-    if (pack.fomo.tap && pack.fomo.tap.openedPlay) {
-      /* unexpected but good — tile still activated */
-    } else if (pack.fomo.cta && pack.fomo.cta.painted && pack.fomo.cta.h >= 44) {
-      note('P2', id + '-fomo-cta-only',
-        'Play path while FOMO open is the Vandaag CTA, not the Avontuur tile (tile inert)',
-        { cta: pack.fomo.cta, tap: pack.fomo.tap });
+    } else if (locked && pointerOpened) {
+      note('P3', id + '-fomo-inert-attr',
+        'FOMO sets inert on HOME chrome but a pointer tap still starts Avontuur',
+        pack.fomo);
     }
   };
   checkFomo(local, 'local');

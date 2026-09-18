@@ -1,0 +1,861 @@
+{
+  "bot": "2/9",
+  "focus": "LANDSCAPE HOME/BEGIN 844×390",
+  "target": "LIVE main c9a29fc v1.18.190 SW400",
+  "at": "2026-09-18T16:14:17.283Z",
+  "findings": {
+    "issues": [
+      {
+        "sev": "P1",
+        "id": "local-fomo-inert",
+        "text": "FOMO leaves Avontuur painted but a real pointer tap does not start play (inert / pointer-events:none)",
+        "extra": {
+          "vw": 844,
+          "vh": 390,
+          "play": {
+            "top": 10,
+            "left": 244,
+            "right": 796,
+            "bottom": 70,
+            "w": 552,
+            "h": 60,
+            "display": "flex",
+            "visibility": "visible",
+            "opacity": 1,
+            "pointerEvents": "none",
+            "painted": true
+          },
+          "homeTitle": {
+            "top": 6,
+            "left": 12,
+            "right": 232,
+            "bottom": 68,
+            "w": 220,
+            "h": 62,
+            "display": "block",
+            "visibility": "hidden",
+            "opacity": 1,
+            "pointerEvents": "none",
+            "painted": false
+          },
+          "sheet": {
+            "top": 30,
+            "left": 12,
+            "right": 212,
+            "bottom": 396,
+            "w": 200,
+            "h": 366,
+            "display": "flex",
+            "visibility": "visible",
+            "opacity": 0,
+            "pointerEvents": "auto",
+            "painted": false
+          },
+          "cta": {
+            "top": 291,
+            "left": 26,
+            "right": 198,
+            "bottom": 379,
+            "w": 172,
+            "h": 88,
+            "display": "flex",
+            "visibility": "visible",
+            "opacity": 1,
+            "pointerEvents": "auto",
+            "painted": true
+          },
+          "fomoOpen": true,
+          "fomoPointer": "none",
+          "landingVis": "visible",
+          "landingPE": "none",
+          "chromeInert": true,
+          "playClosestInert": true,
+          "hitTag": "menuScreen",
+          "hitIsPlay": false,
+          "overlapPlay": false,
+          "versus": false,
+          "bodyFomo": true,
+          "shot": "local-fomo.png",
+          "afterTapShot": "local-fomo-after-avontuur-tap.png",
+          "verdict": {
+            "visible": true,
+            "tallEnough": true,
+            "clearOfRightGutter": true,
+            "tappableGeom": true,
+            "hitIsPlay": false,
+            "chromeInert": true,
+            "playClosestInert": true,
+            "overlapPlay": false,
+            "fomoOpen": true,
+            "landingVis": "visible",
+            "landingPE": "none",
+            "tapOpenedPlay": false,
+            "stayedOnHome": true
+          },
+          "tap": {
+            "before": {
+              "menu": true,
+              "splashGone": true,
+              "playing": false,
+              "level": false,
+              "island": false,
+              "fomo": true
+            },
+            "after": {
+              "menu": true,
+              "splashGone": true,
+              "playing": false,
+              "level": false,
+              "island": false,
+              "fomo": true
+            },
+            "openedPlay": false,
+            "stayedOnHome": true,
+            "pointer": {
+              "x": 519.7578125,
+              "y": 32
+            }
+          }
+        }
+      },
+      {
+        "sev": "P1",
+        "id": "live-fomo-inert",
+        "text": "FOMO leaves Avontuur painted but a real pointer tap does not start play (inert / pointer-events:none)",
+        "extra": {
+          "vw": 844,
+          "vh": 390,
+          "play": {
+            "top": 10,
+            "left": 244,
+            "right": 796,
+            "bottom": 70,
+            "w": 552,
+            "h": 60,
+            "display": "flex",
+            "visibility": "visible",
+            "opacity": 1,
+            "pointerEvents": "none",
+            "painted": true
+          },
+          "homeTitle": {
+            "top": 6,
+            "left": 12,
+            "right": 232,
+            "bottom": 68,
+            "w": 220,
+            "h": 62,
+            "display": "block",
+            "visibility": "hidden",
+            "opacity": 1,
+            "pointerEvents": "none",
+            "painted": false
+          },
+          "sheet": {
+            "top": 30,
+            "left": 12,
+            "right": 212,
+            "bottom": 396,
+            "w": 200,
+            "h": 366,
+            "display": "flex",
+            "visibility": "visible",
+            "opacity": 0,
+            "pointerEvents": "auto",
+            "painted": false
+          },
+          "cta": {
+            "top": 291,
+            "left": 26,
+            "right": 198,
+            "bottom": 379,
+            "w": 172,
+            "h": 88,
+            "display": "flex",
+            "visibility": "visible",
+            "opacity": 1,
+            "pointerEvents": "auto",
+            "painted": true
+          },
+          "fomoOpen": true,
+          "fomoPointer": "none",
+          "landingVis": "visible",
+          "landingPE": "none",
+          "chromeInert": true,
+          "playClosestInert": true,
+          "hitTag": "menuScreen",
+          "hitIsPlay": false,
+          "overlapPlay": false,
+          "versus": false,
+          "bodyFomo": true,
+          "shot": "live-fomo.png",
+          "afterTapShot": "live-fomo-after-avontuur-tap.png",
+          "verdict": {
+            "visible": true,
+            "tallEnough": true,
+            "clearOfRightGutter": true,
+            "tappableGeom": true,
+            "hitIsPlay": false,
+            "chromeInert": true,
+            "playClosestInert": true,
+            "overlapPlay": false,
+            "fomoOpen": true,
+            "landingVis": "visible",
+            "landingPE": "none",
+            "tapOpenedPlay": false,
+            "stayedOnHome": true
+          },
+          "tap": {
+            "before": {
+              "menu": true,
+              "splashGone": true,
+              "playing": false,
+              "level": false,
+              "island": false,
+              "fomo": true
+            },
+            "after": {
+              "menu": true,
+              "splashGone": true,
+              "playing": false,
+              "level": false,
+              "island": false,
+              "fomo": true
+            },
+            "openedPlay": false,
+            "stayedOnHome": true,
+            "pointer": {
+              "x": 519.7578125,
+              "y": 32
+            }
+          }
+        }
+      }
+    ],
+    "p0": 0,
+    "p1": 2,
+    "verdict": "FAIL-P1"
+  },
+  "speelLocal": {
+    "label": "local-speel",
+    "url": "http://127.0.0.1:8798/speel.html",
+    "shot": "local-speel.png",
+    "data": {
+      "vw": 844,
+      "vh": 390,
+      "href": "./index.html",
+      "play": {
+        "top": 258,
+        "left": 308,
+        "right": 536,
+        "bottom": 340,
+        "w": 229,
+        "h": 82,
+        "display": "block",
+        "visibility": "visible",
+        "opacity": 1,
+        "pointerEvents": "auto",
+        "painted": true
+      },
+      "hitIsPlay": true,
+      "versus": false
+    },
+    "verdict": {
+      "visible": true,
+      "tallEnough": true,
+      "clearOfRightGutter": true,
+      "tappableGeom": true,
+      "hitIsPlay": true,
+      "href": "./index.html",
+      "versus": false
+    }
+  },
+  "speelLive": {
+    "label": "live-speel",
+    "url": "https://brennyz.github.io/stickman-fighter/speel.html",
+    "shot": "live-speel.png",
+    "data": {
+      "vw": 844,
+      "vh": 390,
+      "href": "./index.html",
+      "play": {
+        "top": 258,
+        "left": 308,
+        "right": 536,
+        "bottom": 340,
+        "w": 229,
+        "h": 82,
+        "display": "block",
+        "visibility": "visible",
+        "opacity": 1,
+        "pointerEvents": "auto",
+        "painted": true
+      },
+      "hitIsPlay": true,
+      "versus": false
+    },
+    "verdict": {
+      "visible": true,
+      "tallEnough": true,
+      "clearOfRightGutter": true,
+      "tappableGeom": true,
+      "hitIsPlay": true,
+      "href": "./index.html",
+      "versus": false
+    }
+  },
+  "local": {
+    "label": "local",
+    "url": "http://127.0.0.1:8798/index.html",
+    "begin": {
+      "vw": 844,
+      "vh": 390,
+      "app": "1.18.190",
+      "sw": 400,
+      "splashTitle": true,
+      "start": {
+        "top": 52,
+        "left": 458,
+        "right": 796,
+        "bottom": 143,
+        "w": 338,
+        "h": 91,
+        "display": "flex",
+        "visibility": "visible",
+        "opacity": 1,
+        "pointerEvents": "auto",
+        "painted": true
+      },
+      "title": {
+        "top": 8,
+        "left": 458,
+        "right": 796,
+        "bottom": 39,
+        "w": 338,
+        "h": 31,
+        "display": "block",
+        "visibility": "visible",
+        "opacity": 1,
+        "pointerEvents": "auto",
+        "painted": true
+      },
+      "fomoShown": false,
+      "versus": false,
+      "hitIsStart": true,
+      "shot": "local-begin.png",
+      "verdict": {
+        "visible": true,
+        "tallEnough": true,
+        "clearOfRightGutter": true,
+        "tappableGeom": true,
+        "hitIsStart": true,
+        "fomoShownOnGate": false,
+        "versus": false,
+        "tapOpenedHome": true
+      },
+      "tap": {
+        "before": {
+          "splash": true,
+          "splashDone": false,
+          "menu": true
+        },
+        "after": {
+          "splash": true,
+          "splashDone": true,
+          "menu": true,
+          "play": true
+        },
+        "openedHome": true
+      }
+    },
+    "home": {
+      "vw": 844,
+      "vh": 390,
+      "play": {
+        "top": 10,
+        "left": 244,
+        "right": 796,
+        "bottom": 70,
+        "w": 552,
+        "h": 60,
+        "display": "flex",
+        "visibility": "visible",
+        "opacity": 1,
+        "pointerEvents": "auto",
+        "painted": true
+      },
+      "homeTitle": {
+        "top": 6,
+        "left": 12,
+        "right": 232,
+        "bottom": 68,
+        "w": 220,
+        "h": 62,
+        "display": "block",
+        "visibility": "visible",
+        "opacity": 1,
+        "pointerEvents": "auto",
+        "painted": true
+      },
+      "sheet": {
+        "top": 0,
+        "left": 0,
+        "right": 0,
+        "bottom": 0,
+        "w": 0,
+        "h": 0,
+        "display": "flex",
+        "visibility": "visible",
+        "opacity": 1,
+        "pointerEvents": "auto",
+        "painted": true
+      },
+      "cta": {
+        "top": 0,
+        "left": 0,
+        "right": 0,
+        "bottom": 0,
+        "w": 0,
+        "h": 0,
+        "display": "flex",
+        "visibility": "visible",
+        "opacity": 1,
+        "pointerEvents": "auto",
+        "painted": true
+      },
+      "fomoOpen": false,
+      "fomoPointer": "none",
+      "landingVis": "visible",
+      "landingPE": "auto",
+      "chromeInert": false,
+      "playClosestInert": false,
+      "hitTag": "btnAdventure",
+      "hitIsPlay": true,
+      "overlapPlay": false,
+      "versus": false,
+      "bodyFomo": false,
+      "shot": "local-home.png",
+      "verdict": {
+        "visible": true,
+        "tallEnough": true,
+        "clearOfRightGutter": true,
+        "tappableGeom": true,
+        "hitIsPlay": true,
+        "chromeInert": false,
+        "fomoOpen": false,
+        "versus": false,
+        "tapOpenedPlay": true
+      },
+      "tap": {
+        "before": {
+          "menu": true,
+          "splashGone": true,
+          "playing": false,
+          "level": false,
+          "island": false,
+          "fomo": false
+        },
+        "after": {
+          "menu": false,
+          "splashGone": true,
+          "playing": true,
+          "level": false,
+          "island": false,
+          "fomo": false
+        },
+        "openedPlay": true,
+        "stayedOnHome": false,
+        "pointer": {
+          "x": 519.7578125,
+          "y": 32
+        }
+      },
+      "playShot": "local-avontuur-tap.png"
+    },
+    "fomo": {
+      "vw": 844,
+      "vh": 390,
+      "play": {
+        "top": 10,
+        "left": 244,
+        "right": 796,
+        "bottom": 70,
+        "w": 552,
+        "h": 60,
+        "display": "flex",
+        "visibility": "visible",
+        "opacity": 1,
+        "pointerEvents": "none",
+        "painted": true
+      },
+      "homeTitle": {
+        "top": 6,
+        "left": 12,
+        "right": 232,
+        "bottom": 68,
+        "w": 220,
+        "h": 62,
+        "display": "block",
+        "visibility": "hidden",
+        "opacity": 1,
+        "pointerEvents": "none",
+        "painted": false
+      },
+      "sheet": {
+        "top": 30,
+        "left": 12,
+        "right": 212,
+        "bottom": 396,
+        "w": 200,
+        "h": 366,
+        "display": "flex",
+        "visibility": "visible",
+        "opacity": 0,
+        "pointerEvents": "auto",
+        "painted": false
+      },
+      "cta": {
+        "top": 291,
+        "left": 26,
+        "right": 198,
+        "bottom": 379,
+        "w": 172,
+        "h": 88,
+        "display": "flex",
+        "visibility": "visible",
+        "opacity": 1,
+        "pointerEvents": "auto",
+        "painted": true
+      },
+      "fomoOpen": true,
+      "fomoPointer": "none",
+      "landingVis": "visible",
+      "landingPE": "none",
+      "chromeInert": true,
+      "playClosestInert": true,
+      "hitTag": "menuScreen",
+      "hitIsPlay": false,
+      "overlapPlay": false,
+      "versus": false,
+      "bodyFomo": true,
+      "shot": "local-fomo.png",
+      "afterTapShot": "local-fomo-after-avontuur-tap.png",
+      "verdict": {
+        "visible": true,
+        "tallEnough": true,
+        "clearOfRightGutter": true,
+        "tappableGeom": true,
+        "hitIsPlay": false,
+        "chromeInert": true,
+        "playClosestInert": true,
+        "overlapPlay": false,
+        "fomoOpen": true,
+        "landingVis": "visible",
+        "landingPE": "none",
+        "tapOpenedPlay": false,
+        "stayedOnHome": true
+      },
+      "tap": {
+        "before": {
+          "menu": true,
+          "splashGone": true,
+          "playing": false,
+          "level": false,
+          "island": false,
+          "fomo": true
+        },
+        "after": {
+          "menu": true,
+          "splashGone": true,
+          "playing": false,
+          "level": false,
+          "island": false,
+          "fomo": true
+        },
+        "openedPlay": false,
+        "stayedOnHome": true,
+        "pointer": {
+          "x": 519.7578125,
+          "y": 32
+        }
+      }
+    }
+  },
+  "live": {
+    "label": "live",
+    "url": "https://brennyz.github.io/stickman-fighter/index.html",
+    "begin": {
+      "vw": 844,
+      "vh": 390,
+      "app": "1.18.190",
+      "sw": 400,
+      "splashTitle": true,
+      "start": {
+        "top": 52,
+        "left": 458,
+        "right": 796,
+        "bottom": 143,
+        "w": 338,
+        "h": 91,
+        "display": "flex",
+        "visibility": "visible",
+        "opacity": 1,
+        "pointerEvents": "auto",
+        "painted": true
+      },
+      "title": {
+        "top": 8,
+        "left": 458,
+        "right": 796,
+        "bottom": 39,
+        "w": 338,
+        "h": 31,
+        "display": "block",
+        "visibility": "visible",
+        "opacity": 1,
+        "pointerEvents": "auto",
+        "painted": true
+      },
+      "fomoShown": false,
+      "versus": false,
+      "hitIsStart": true,
+      "shot": "live-begin.png",
+      "verdict": {
+        "visible": true,
+        "tallEnough": true,
+        "clearOfRightGutter": true,
+        "tappableGeom": true,
+        "hitIsStart": true,
+        "fomoShownOnGate": false,
+        "versus": false,
+        "tapOpenedHome": true
+      },
+      "tap": {
+        "before": {
+          "splash": true,
+          "splashDone": false,
+          "menu": true
+        },
+        "after": {
+          "splash": true,
+          "splashDone": true,
+          "menu": true,
+          "play": true
+        },
+        "openedHome": true
+      }
+    },
+    "home": {
+      "vw": 844,
+      "vh": 390,
+      "play": {
+        "top": 10,
+        "left": 244,
+        "right": 796,
+        "bottom": 70,
+        "w": 552,
+        "h": 60,
+        "display": "flex",
+        "visibility": "visible",
+        "opacity": 1,
+        "pointerEvents": "auto",
+        "painted": true
+      },
+      "homeTitle": {
+        "top": 6,
+        "left": 12,
+        "right": 232,
+        "bottom": 68,
+        "w": 220,
+        "h": 62,
+        "display": "block",
+        "visibility": "visible",
+        "opacity": 1,
+        "pointerEvents": "auto",
+        "painted": true
+      },
+      "sheet": {
+        "top": 0,
+        "left": 0,
+        "right": 0,
+        "bottom": 0,
+        "w": 0,
+        "h": 0,
+        "display": "flex",
+        "visibility": "visible",
+        "opacity": 1,
+        "pointerEvents": "auto",
+        "painted": true
+      },
+      "cta": {
+        "top": 0,
+        "left": 0,
+        "right": 0,
+        "bottom": 0,
+        "w": 0,
+        "h": 0,
+        "display": "flex",
+        "visibility": "visible",
+        "opacity": 1,
+        "pointerEvents": "auto",
+        "painted": true
+      },
+      "fomoOpen": false,
+      "fomoPointer": "none",
+      "landingVis": "visible",
+      "landingPE": "auto",
+      "chromeInert": false,
+      "playClosestInert": false,
+      "hitTag": "btnAdventure",
+      "hitIsPlay": true,
+      "overlapPlay": false,
+      "versus": false,
+      "bodyFomo": false,
+      "shot": "live-home.png",
+      "verdict": {
+        "visible": true,
+        "tallEnough": true,
+        "clearOfRightGutter": true,
+        "tappableGeom": true,
+        "hitIsPlay": true,
+        "chromeInert": false,
+        "fomoOpen": false,
+        "versus": false,
+        "tapOpenedPlay": true
+      },
+      "tap": {
+        "before": {
+          "menu": true,
+          "splashGone": true,
+          "playing": false,
+          "level": false,
+          "island": false,
+          "fomo": false
+        },
+        "after": {
+          "menu": false,
+          "splashGone": true,
+          "playing": true,
+          "level": false,
+          "island": false,
+          "fomo": false
+        },
+        "openedPlay": true,
+        "stayedOnHome": false,
+        "pointer": {
+          "x": 519.7578125,
+          "y": 32
+        }
+      },
+      "playShot": "live-avontuur-tap.png"
+    },
+    "fomo": {
+      "vw": 844,
+      "vh": 390,
+      "play": {
+        "top": 10,
+        "left": 244,
+        "right": 796,
+        "bottom": 70,
+        "w": 552,
+        "h": 60,
+        "display": "flex",
+        "visibility": "visible",
+        "opacity": 1,
+        "pointerEvents": "none",
+        "painted": true
+      },
+      "homeTitle": {
+        "top": 6,
+        "left": 12,
+        "right": 232,
+        "bottom": 68,
+        "w": 220,
+        "h": 62,
+        "display": "block",
+        "visibility": "hidden",
+        "opacity": 1,
+        "pointerEvents": "none",
+        "painted": false
+      },
+      "sheet": {
+        "top": 30,
+        "left": 12,
+        "right": 212,
+        "bottom": 396,
+        "w": 200,
+        "h": 366,
+        "display": "flex",
+        "visibility": "visible",
+        "opacity": 0,
+        "pointerEvents": "auto",
+        "painted": false
+      },
+      "cta": {
+        "top": 291,
+        "left": 26,
+        "right": 198,
+        "bottom": 379,
+        "w": 172,
+        "h": 88,
+        "display": "flex",
+        "visibility": "visible",
+        "opacity": 1,
+        "pointerEvents": "auto",
+        "painted": true
+      },
+      "fomoOpen": true,
+      "fomoPointer": "none",
+      "landingVis": "visible",
+      "landingPE": "none",
+      "chromeInert": true,
+      "playClosestInert": true,
+      "hitTag": "menuScreen",
+      "hitIsPlay": false,
+      "overlapPlay": false,
+      "versus": false,
+      "bodyFomo": true,
+      "shot": "live-fomo.png",
+      "afterTapShot": "live-fomo-after-avontuur-tap.png",
+      "verdict": {
+        "visible": true,
+        "tallEnough": true,
+        "clearOfRightGutter": true,
+        "tappableGeom": true,
+        "hitIsPlay": false,
+        "chromeInert": true,
+        "playClosestInert": true,
+        "overlapPlay": false,
+        "fomoOpen": true,
+        "landingVis": "visible",
+        "landingPE": "none",
+        "tapOpenedPlay": false,
+        "stayedOnHome": true
+      },
+      "tap": {
+        "before": {
+          "menu": true,
+          "splashGone": true,
+          "playing": false,
+          "level": false,
+          "island": false,
+          "fomo": true
+        },
+        "after": {
+          "menu": true,
+          "splashGone": true,
+          "playing": false,
+          "level": false,
+          "island": false,
+          "fomo": true
+        },
+        "openedPlay": false,
+        "stayedOnHome": true,
+        "pointer": {
+          "x": 519.7578125,
+          "y": 32
+        }
+      }
+    }
+  }
+}
