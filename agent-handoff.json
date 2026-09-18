@@ -17,10 +17,10 @@
     "swCache": "stickfighter-app-v400",
     "gameJsQuery": "game.js?v=400",
     "cssQuery": "styles/main.css?v=400",
-    "featureBranch": "main",
+    "featureBranch": "cursor/equip-look-hat-zorder-209b",
     "pushBlocked": null,
     "shareUrl": "https://brennyz.github.io/stickman-fighter/speel.html",
-    "note": "20m MEGA-MERGE LIVE. #333 #325 #334 #329 #332 #331 #328 #330 #326 #327. SKIP #324. Leave #311. v1.18.190 / SW 400. speel.html. Pages ~1–3 min then Verse versie. Playtest swarm.",
+    "note": "Draft #357 equip-look hat z-order off main. v1.18.191 / SW 401. No Versus. No main merge. speel.html.",
     "updated": "2026-09-18T16:06:11Z",
     "localMainHead": "aa80d25c5f708549af287716914c2016228a2a46",
     "remoteMainHead": "aa80d25c5f708549af287716914c2016228a2a46"
@@ -45,6 +45,10 @@
         "pr": 324,
         "title": "Tablet midband (SKIP — already in #314)",
         "skip": true
+      },
+      {
+        "pr": 357,
+        "title": "equip-look hat z-order (draft, no main)"
       }
     ]
   },
@@ -53,7 +57,7 @@
       "id": "w-20260918T164800",
       "from": "user",
       "text": "FIX — Stickman Fighter EQUIP LOOK / stickman doll layering. Off main. Draft PR only. No Versus. speel.html. Until ~19:10 Amsterdam if possible. User screenshot: yellow baseball CAP draws BEHIND the head circle (z-order wrong). Also review chest/boots/cape/weapon/pet draw order so equipped cosmetics sit correctly on the stickman in menu AND combat if shared. Fix layer order/offsets for headgear (and other slots if broken). Sibling agent owns gear screen layout — this run owns draw order / equip look pixels. Prove with before/after screenshots of doll with hat. Smoke:equip-look if exists. No main merge.",
-      "status": "in-progress",
+      "status": "done-in-code",
       "updated": "2026-09-18",
       "notes": "Branch cursor/equip-look-hat-zorder-209b. Doll _paintGearOverlay used stale T-pose cap at x=0 while ready-stance lean shifts head; hats mapped to helmet. Shared EquipLook + hat kind + bone-locked doll."
     },
@@ -1239,6 +1243,10 @@
   ],
   "sessionLog": [
     {
+      "at": "2026-09-18T16:57:06Z",
+      "summary": "Equip-look hat z-order: doll uses Fighter+EquipLook; brim sits on the head (draft #357). No Versus. No main."
+    },
+    {
       "at": "2026-09-18T16:06:11Z",
       "summary": "MEGA-MERGE 20m drafts #333–#327 onto main. v1.18.190 / SW 400. Playtest swarm. SKIP #324. Leave #311."
     },
@@ -1333,10 +1341,6 @@
     {
       "at": "2026-09-18T12:31:56Z",
       "summary": "LANGUAGE: factory desc + nameShort, FOMO/HUD locale, export gear/fabriek i18n. Draft #317, geen main."
-    },
-    {
-      "at": "2026-09-18T12:30:17Z",
-      "summary": "LANGUAGE worker: layout-safe NL/EN/DE/FR/ES copy (factory desc, FOMO, HUD telegraphs). Draft, geen main."
     }
   ],
   "implementedFeaturesSummary": "d18 char select deel 1+2 (v1.11.1-2); Mats coinrun + shuriken mik/vliegers + anti-spam (v1.12.0); speel.html (v1.12.2+). Zie HANDOFF-ZOEKINDEX.md en improvement-d20-bag.json userFeatureLog.",
