@@ -96,6 +96,8 @@ Status: `open` · `pass` · `fixed-on-draft` · `DELEGATED` · `out`
 | EX-026 | out | IAP |
 | PERF-06 | open | Menu UI canvases leftover |
 | Versus | retired | Do not revive |
+| LH-dock | P3 · #338 | Landscape HOME meta-dock under 390 fold — play tile above fold |
+| LH-copy | P3 · #338 | “Naar / oproepen” wrap · NL “power-ups” on mission row |
 
 ### #338 landscape HOME (canonical)
 
