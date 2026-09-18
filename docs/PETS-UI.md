@@ -14,6 +14,7 @@ Feel-only — assist damage and cooldown numbers unchanged.
 
 - Shared `companionFollow`: exp smoothing + player vx/vy predict + face-flip / dash / jump snap
 - Assist **telegraph** (ring + dashed intent + chevron) in the last ~0.28s of CD; hit still fires on the old beat
+- Training: CD ticks during the intro lock (ready at the bell) and reach covers the ring on desktop PWA
 - Missed range no longer burns a full CD
 - Light juice: lunge + extra sparks on hit, ring on pet kill, stretch while catching up, bigger sparkles on pause-equip
 - Egg companion uses the same chase

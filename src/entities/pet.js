@@ -35,6 +35,13 @@ function companionFollow(ent, p, opts) {
   return { tx, ty, gap, flipped };
 }
 
+function petAssistRange(g) {
+  if (g && g.mode === 'training' && typeof W === 'number') {
+    return Math.max(420, W * 0.58);
+  }
+  return 420;
+}
+
 function petPickAssistTarget(g, p) {
   const inAdv = g.mode === 'adventure';
   const inTrain = g.mode === 'training';
@@ -94,7 +101,7 @@ class Pet {
 
     const inAdv = g.mode === 'adventure';
     const inTrain = g.mode === 'training';
-    if ((!inAdv && !inTrain) || g.over || g.inputLocked) {
+    if ((!inAdv && !inTrain) || g.over) {
       this.windT = 0;
       return;
     }
@@ -104,18 +111,21 @@ class Pet {
     this.assistT -= dt;
     const windWin = (typeof motionReduced === 'function' && motionReduced()) ? 0.12 : 0.28;
     const pick = petPickAssistTarget(g, p);
-    if (this.assistT > 0) {
-      if (this.assistT <= windWin && pick.tgt && pick.dist <= 420) {
-        this.windT = 1 - (this.assistT / windWin);
+    const reach = petAssistRange(g);
+    const canStrike = !g.inputLocked;
+    if (this.assistT > 0 || !canStrike) {
+      if (this.assistT <= 0 && !canStrike) this.assistT = 0.02;
+      if (this.assistT <= windWin && pick.tgt && pick.dist <= reach) {
+        this.windT = 1 - (Math.max(this.assistT, 0.01) / windWin);
         this.windX = pick.tgt.x;
         this.face = Math.sign(pick.tgt.x - this.x) || this.face;
       } else {
         this.windT = 0;
       }
-      return;
+      if (this.assistT > 0 || !canStrike) return;
     }
 
-    if (!pick.tgt || pick.dist > 420) {
+    if (!pick.tgt || pick.dist > reach) {
       this.assistT = 0.1;
       this.windT = 0;
       return;

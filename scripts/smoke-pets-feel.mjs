@@ -29,6 +29,7 @@ must(petSrc.includes('flipped'), 'face-flip snap missing');
 must(petSrc.includes('this.windT'), 'assist telegraph windT missing');
 must(petSrc.includes('setLineDash'), 'telegraph intent dash missing');
 must(petSrc.includes('petPickAssistTarget'), 'shared assist target pick missing');
+must(petSrc.includes('petAssistRange'), 'training-wide assist range missing');
 must(petSrc.includes('this.lungeT'), 'hit lunge juice missing');
 must(petSrc.includes('fromEquip'), 'equip juice hook missing');
 must(!/dt \* follow/.test(petSrc) || petSrc.includes('companionFollow'), 'old lerp follow still on combat pet');
@@ -77,6 +78,7 @@ async function runBrowser() {
       save.pets = save.pets || {};
       save.pets.pet_slymo = { at: Date.now(), kills: 12 };
       save.activePet = 'pet_slymo';
+      save.reducedMotion = false;
       if (typeof persist === 'function') persist();
       startGame('training');
       const g = game;
@@ -108,12 +110,28 @@ async function runBrowser() {
       }
       p.vy = 0;
       p.onGround = true;
-      g.pet.assistT = 0.2;
-      g.pet.update(1 / 60);
-      if (!(g.pet.windT > 0.05)) return { ok: false, why: 'telegraph did not wind', windT: g.pet.windT };
+      g.over = false;
+      g.inputLocked = false;
+      g.phase = 'fight';
       if (g.robot) {
         g.robot.alive = true;
-        g.robot.x = p.x + 900;
+        g.robot.x = p.x + 80;
+      }
+      g.pet.assistT = 0.08;
+      g.pet.update(1 / 60);
+      if (!(g.pet.windT > 0.05)) {
+        return {
+          ok: false,
+          why: 'telegraph did not wind',
+          windT: g.pet.windT,
+          assistT: g.pet.assistT,
+          locked: g.inputLocked,
+          mode: g.mode,
+        };
+      }
+      if (g.robot) {
+        g.robot.alive = true;
+        g.robot.x = p.x + 2400;
         g.pet.assistT = 0;
         g.pet.assistCd = 5;
         g.pet.update(1 / 60);
