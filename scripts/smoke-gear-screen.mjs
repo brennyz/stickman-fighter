@@ -152,6 +152,18 @@ async function run() {
       const titleEl = cards[0] && cards[0].querySelector('.gear-slot-title');
       const subEl = cards[0] && cards[0].querySelector('.gear-slot-sub');
       if (!titleEl || !subEl) return { ok: false, why: 'slot title/sub missing' };
+      const headClear = document.querySelector('#gearSlotList [data-gear-unequip="head"]');
+      const headCard = document.querySelector('#gearSlotList [data-slot="head"]');
+      if (headClear && headCard && !headClear.hidden) {
+        const cb = headCard.getBoundingClientRect();
+        const ub = headClear.getBoundingClientRect();
+        if (ub.top > cb.bottom + 8) {
+          return { ok: false, why: 'slot unequip wrapped under card', cardBottom: cb.bottom, clearTop: ub.top };
+        }
+        if (ub.left < cb.right - 4) {
+          return { ok: false, why: 'slot unequip must sit beside card', cardRight: cb.right, clearLeft: ub.left };
+        }
+      }
       const titleBox = titleEl.getBoundingClientRect();
       const subBox = subEl.getBoundingClientRect();
       if (Math.abs(titleBox.top - subBox.top) < 8) {
