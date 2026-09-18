@@ -167,6 +167,7 @@ Schrijf **1–3 regels** per sessie: datum, d#, wat, versie.
 
 | Datum (UTC) | d# | Update |
 |-------------|-----|--------|
+| 2026-09-18 | — | **P0 invisible fighters:** combat ran (haptics) while stickman/mobs vanished. `drawCombatants` + pin after rotate + contrast-lift + recover re-paints actors. Chrome 844×390 + 390×844 cyber city. Draft **#333**. **v1.18.190 / SW 400**. speel.html. Niet mergen. |
 | 2026-09-18 | — | **Leftover stack:** #318 UI chrome + #322 FOMO 390px onto main. Keep #321 HUD + #323 retry. SKIP #324. Leave #311 (not clean). Smokes menu/hud-phone/flappy-retry/adventure OK. **v1.18.189 / SW 399**. speel.html. |
 | 2026-09-18 | — | **MEGA-MERGE continue:** #315 gear + #313 summons + #319 pets + #316 juice onto main. Keep #323 retry + #321 HUD + #314 density. SKIP #318 this pass (HUD/retry/gear-sheet conflicts). Leftover #318 #322 #311. **v1.18.188 / SW 398**. |
 | 2026-09-18 | **MEGA-MERGE #312** | Factories overview→detail→upgrade onto main. Keep factory ids + #317 nameShort. |

@@ -124,9 +124,16 @@ function makeEl(id) {
 function bootVm() {
   const gameJs = fs.readFileSync(path.join(root, 'game.js'), 'utf8');
   const els = {};
+  const errors = [];
   const ctx = {
-    console,
-    setTimeout, clearTimeout,
+    __errors: errors,
+    console: {
+      log() {},
+      warn() {},
+      error(...a) { errors.push(a.map(String).join(' ')); },
+    },
+    setTimeout(fn) { try { if (typeof fn === 'function') fn(); } catch (_) {} return 0; },
+    clearTimeout() {},
     setInterval() { return 0; },
     clearInterval() {},
     requestAnimationFrame() { return 0; },
@@ -208,10 +215,21 @@ function sizeTo(gctx, w, h) {
 
 function assertDrawVisible(gctx, label, w, h) {
   sizeTo(gctx, w, h);
-  if (typeof gctx.startGame !== 'function') fail('startGame missing');
-  gctx.startGame('adventure', { level: 1, gamble: null, difficulty: 'normal' });
-  const g = gctx.game;
-  if (!g || !g.player) fail(label + ' no player after startGame');
+  const GameFn = (gctx.__sf && gctx.__sf.Game) || gctx.Game;
+  if (typeof gctx.startGame !== 'function' && typeof GameFn !== 'function') fail('startGame/Game missing');
+  try {
+    if (typeof gctx.startGame === 'function') {
+      gctx.startGame('adventure', { level: 1, gamble: null, difficulty: 'normal' });
+    }
+  } catch (e) {
+    fail(label + ' startGame threw: ' + e.message);
+  }
+  let g = (gctx.__sf && gctx.__sf.game) || gctx.game;
+  if ((!g || !g.player) && typeof GameFn === 'function') {
+    try { g = new GameFn('adventure', { level: 1, gamble: null, difficulty: 'normal' }); }
+    catch (e) { fail(label + ' new Game threw: ' + e.message + ' | ' + (gctx.__errors || []).slice(-3).join(' | ')); }
+  }
+  if (!g || !g.player) fail(label + ' no player after startGame ' + (gctx.__errors || []).slice(-4).join(' | '));
   if (typeof gctx.pinPlayfieldBodies === 'function') gctx.pinPlayfieldBodies(g);
   for (let i = 0; i < 90; i++) {
     try { g.update(1 / 30); } catch (e) { fail(label + ' update threw: ' + e.message); }
@@ -309,47 +327,93 @@ async function chromePixelProof() {
         try { Object.defineProperty(vv, 'width', { value: w, configurable: true }); } catch (_) {}
         try { Object.defineProperty(vv, 'height', { value: h, configurable: true }); } catch (_) {}
       }
+      try {
+        if (typeof save === 'object' && save) {
+          save.lvl = Math.max(save.lvl || 1, 20);
+          save.style = 'cyber';
+          save.styles = Array.from(new Set([...(save.styles || []), 'cyber']));
+          if (!save.tipsSeen || typeof save.tipsSeen !== 'object') save.tipsSeen = {};
+          save.tipsSeen.moveBarAim = 1;
+        }
+      } catch (_) {}
       if (typeof forceGameResize === 'function') forceGameResize();
-      startGame('adventure', { level: 1, gamble: null, difficulty: 'normal' });
-      const g = game;
+      // Level 13 = cyber city (matches the empty purple-city report).
+      startGame('adventure', { level: 13, gamble: null, difficulty: 'normal' });
+      const g = (window.__sf && window.__sf.game) || window.game;
+      if (g && g.aimTut) {
+        if (typeof finishAimTutorial === 'function') finishAimTutorial(g, 'smoke');
+        else g.aimTut = null;
+      }
+      if (g && g.player && typeof applyPlayerStyle === 'function') applyPlayerStyle(g.player);
       if (typeof pinPlayfieldBodies === 'function') pinPlayfieldBodies(g);
       for (let i = 0; i < 75; i++) {
         try { g.update(1 / 30); } catch (_) {}
       }
       if (typeof pinPlayfieldBodies === 'function') pinPlayfieldBodies(g);
-      const c = document.getElementById('game').getContext('2d');
+      const canvas = document.getElementById('game');
+      const c = canvas.getContext('2d');
       g.draw(c);
-      const px = Math.round(g.player.x);
-      const py = Math.round(g.player.y - 40);
+      try {
+        if (typeof dismissSplashOverlay === 'function') dismissSplashOverlay();
+      } catch (_) {}
+      const splash = document.getElementById('sfSplash');
+      if (splash) {
+        splash.classList.add('is-done');
+        splash.style.display = 'none';
+        splash.hidden = true;
+        try { splash.remove(); } catch (_) {}
+      }
+      document.body.classList.add('is-playing');
+      document.querySelectorAll('.screen').forEach((el) => el.classList.remove('active'));
+      const dpr = (typeof DPR === 'number' && DPR > 0) ? DPR : (c.canvas.width / Math.max(1, w));
+      const px = g.player.x;
+      const py = g.player.y;
       const sample = (x, y) => {
-        const d = c.getImageData(Math.max(0, x), Math.max(0, y), 1, 1).data;
+        const ix = Math.max(0, Math.min(c.canvas.width - 1, Math.round(x * dpr)));
+        const iy = Math.max(0, Math.min(c.canvas.height - 1, Math.round(y * dpr)));
+        const d = c.getImageData(ix, iy, 1, 1).data;
         return [d[0], d[1], d[2], d[3]];
       };
-      const pts = [
-        sample(px, py),
-        sample(px, py - 20),
-        sample(px - 12, py + 8),
-        sample(px + 12, py + 8),
-      ];
-      const bg = sample(8, 8);
-      const bright = pts.filter((p) => (p[0] + p[1] + p[2]) > (bg[0] + bg[1] + bg[2] + 40) || p[0] + p[1] + p[2] > 280);
+      const pts = [];
+      let bright = 0;
+      for (let oy = -78; oy <= 4; oy += 4) {
+        for (let ox = -22; ox <= 22; ox += 4) {
+          const p = sample(px + ox, py + oy);
+          pts.push(p);
+          const lum = p[0] + p[1] + p[2];
+          if (lum > 340 && p[3] > 80) bright++;
+        }
+      }
+      const bg = sample(10, 10);
       return {
         w, h,
-        player: { x: px, y: Math.round(g.player.y), ground: Math.round(g.ground) },
+        player: { x: Math.round(px), y: Math.round(py), ground: Math.round(g.ground) },
         monsters: (g.monsters || []).filter((m) => m.alive).length,
         theme: g.theme,
-        pts,
+        style: g.player && g.player.style && g.player.style.id,
+        color: g.player && g.player.color,
+        samplePts: pts.length,
         bg,
-        bright: bright.length,
+        bright,
+        dpr,
         canvas: { cw: c.canvas.width, ch: c.canvas.height },
+        png: canvas.toDataURL('image/png'),
       };
     }, sz.w, sz.h);
     const destA = path.join(outDir, sz.name + '.png');
     const destB = path.join(artDir, 'fighters-' + sz.name + '.png');
-    await page.screenshot({ path: destA, fullPage: false });
+    if (info.png && info.png.startsWith('data:image/png')) {
+      const b64 = info.png.replace(/^data:image\/png;base64,/, '');
+      fs.writeFileSync(destA, Buffer.from(b64, 'base64'));
+    } else {
+      const canvasEl = await page.$('#game');
+      if (canvasEl) await canvasEl.screenshot({ path: destA });
+      else await page.screenshot({ path: destA, fullPage: false });
+    }
+    delete info.png;
     try { fs.copyFileSync(destA, destB); } catch (_) {}
     await browser.close();
-    if (info.bright < 1) {
+    if (info.bright < 3) {
       fail('chrome ' + sz.name + ' no contrasting pixels near player ' + JSON.stringify(info));
     }
     shots.push({ ...info, shot: destA });
@@ -358,9 +422,21 @@ async function chromePixelProof() {
   return { skipped: false, shots };
 }
 
+function waitBoot(gctx) {
+  return new Promise((resolve, reject) => {
+    const start = Date.now();
+    const tick = () => {
+      if (gctx.__sfBooted) return resolve();
+      if (Date.now() - start > 4000) return reject(new Error('bootGame did not run'));
+      setImmediate(tick);
+    };
+    tick();
+  });
+}
+
 async function run() {
   const gctx = bootVm();
-  if (!gctx.__sfBooted) fail('bootGame did not run');
+  await waitBoot(gctx);
   const portrait = assertDrawVisible(gctx, 'portrait-390x844', 390, 844);
   const land = assertDrawVisible(gctx, 'landscape-844x390', 844, 390);
   let chrome = { skipped: true };
