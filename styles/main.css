@@ -3101,6 +3101,13 @@
   }
   #buildingsWallet .buildings-wallet-amt { font-size: 15px; color: #e8f0ff; line-height: 1.1; }
   #buildingsWallet .buildings-wallet-hint { font-size: 9px; color: #7cfc8a; font-weight: 700; opacity: .9; }
+  #buildingsWallet .buildings-wallet-hint.is-full,
+  #buildingsWallet .buildings-wallet-chip.is-full .buildings-wallet-hint { color: #ffd75e; }
+  #buildingsWallet .buildings-wallet-hint.is-plus { color: #7cfc8a; font-size: 11px; }
+  #buildingsWallet .buildings-wallet-chip.is-full {
+    border-color: rgba(255, 215, 94, .55);
+  }
+  #buildingsScreen .buildings-stock-lbl.is-full { color: #ffd75e; }
   #buildingsOverview { width: min(92vw, 520px); margin: 0 auto; }
   #buildingsList.buildings-list { display: flex; flex-direction: column; gap: 10px; width: 100%; }
   #buildingsScreen .buildings-card {
@@ -3148,6 +3155,9 @@
   }
   #buildingsScreen .buildings-res-pill.is-collect {
     color: #0a1218; background: #7cfc8a; border-color: #4ecf6a;
+  }
+  #buildingsScreen .buildings-res-pill.is-collect.is-full {
+    background: #ffd75e; border-color: #c97a20; color: #0a1218;
   }
   #buildingsScreen .buildings-res-pill.is-empty { opacity: .78; }
   #buildingsScreen .buildings-res-pill.is-locked { opacity: .62; cursor: pointer; }

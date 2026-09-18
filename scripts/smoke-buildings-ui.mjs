@@ -54,6 +54,7 @@ must(/data-buildings-pane/.test(css) || /buildings-pane-detail/.test(css), 'list
 must(/buildings-cta-stack/.test(css), 'collect/upgrade must stack, not mash in one grid');
 must(/buildings-res-pill/.test(css), 'resource collect pill CSS missing');
 must(/buildings-card-does/.test(css), 'does-line card CSS missing');
+must(/is-full/.test(css), 'hopper-full pill/wallet CSS missing');
 must(!/\.screen\s*\{\s*display:\s*none\s*!important/.test(css), 'nuclear .screen hide forbidden');
 
 must(bridge.includes('BuildingsStub'), 'bridge must ship a stub');
@@ -78,6 +79,9 @@ must(ui.includes('data-factory-id'), 'rows must bind data-factory-id');
 must(ui.includes('data-buildings-collect'), 'one-tap collect pill missing');
 must(ui.includes('doesLine') || ui.includes('buildingsDoesLine'), 'does-line missing');
 must(ui.includes('buildingsGoAdventure') || ui.includes('goAdventure'), 'locked factory must have adventure next-step');
+must(ui.includes('collectCap') || ui.includes('hopper vol') || ui.includes('pillFull'), 'cap collect feedback missing');
+must(ui.includes('_buildingsCollectBusy'), 'collect race lock missing');
+must(!/doBuildingCollect[\s\S]{0,900}buildingsShowDetail\(id\)/.test(ui), 'empty collect must not open detail');
 must(ui.includes('buildingDescModel'), 'UI must consume systems buildingDescModel');
 must(ui.includes('buildingWalletModel'), 'UI must consume systems buildingWalletModel');
 must(ui.includes('buildingArtSrc'), 'UI must consume systems buildingArtSrc');
@@ -186,17 +190,28 @@ async function runBrowser() {
         save.buildings.schema = 1;
         save.buildings.factories = save.buildings.factories || {};
         save.buildings.wallet = save.buildings.wallet || {};
-        save.buildings.factories.stick_lighter = { level: 3, lastTickAt: Date.now() - 4 * 3600000, stored: 12 };
+        save.buildings.factories.stick_lighter = { level: 3, lastTickAt: Date.now() - 20 * 3600000, stored: 999 };
         if (typeof persist === 'function') persist();
       }
       if (typeof UI.renderBuildings === 'function') UI.renderBuildings();
       const collectAfter = document.getElementById('btnBuildingCollect');
       const upgradeAfter = document.getElementById('btnBuildingUpgrade');
+      const fullPill = document.querySelector('[data-factory-id="stick_lighter"] [data-buildings-collect]');
+      const hopperFull = !!(fullPill && fullPill.classList.contains('is-full'));
+      const walletFull = !!document.querySelector('#buildingsWallet .is-full');
+      const doesShort = doesLines.every((d) => d.length <= 42 && !/Kracht rank|Power rank|hopper max/i.test(d));
+      const paneBeforeCollect = scr && scr.getAttribute('data-buildings-pane');
       const sparkBefore = (typeof buildingWallet === 'function') ? Number(buildingWallet('spark') || 0) : 0;
       if (typeof UI.doBuildingCollect === 'function') UI.doBuildingCollect('stick_lighter');
       const sparkAfter = (typeof buildingWallet === 'function') ? Number(buildingWallet('spark') || 0) : 0;
       const collected = sparkAfter > sparkBefore;
-      const flash = !!document.querySelector('.buildings-collect-flash, .buildings-wallet-chip.is-flash');
+      const flash = !!document.querySelector('.buildings-collect-flash, .buildings-wallet-chip.is-flash, .buildings-wallet-hint.is-plus');
+      const capToast = !!(UI.buildingsFlash && UI.buildingsFlash.capped);
+      const paneAfterCollect = scr && scr.getAttribute('data-buildings-pane');
+      if (typeof UI.doBuildingCollect === 'function') UI.doBuildingCollect('stick_lighter');
+      if (typeof UI.buildingsShowDetail === 'function') UI.buildingsShowDetail('stick_lighter');
+      const paneAfterRace = scr && scr.getAttribute('data-buildings-pane');
+      const noCollectRace = paneAfterRace === paneAfterCollect && paneAfterCollect === paneBeforeCollect;
       if (typeof UI.buildingsShowUpgradeStep === 'function') UI.buildingsShowUpgradeStep();
       const upgradeConfirm = document.getElementById('btnBuildingUpgradeConfirm');
       const collectStaysOnSheet = !!document.getElementById('btnBuildingCollect');
@@ -228,6 +243,7 @@ async function runBrowser() {
           && collected && flash && upgradeConfirm && collectStaysOnSheet && backToList
           && sheet && sheetOpen && sheetClose && usesArt && usesDesc && usesWallet
           && overviewPills.length === 5 && hasDoes && detailDoes && detailPill
+          && hopperFull && walletFull && capToast && noCollectRace && doesShort
           && echoPlayLocked && echoOpen
           && versusGone
           && apiLive),
@@ -256,6 +272,11 @@ async function runBrowser() {
         overviewPills: overviewPills.length,
         hasDoes,
         detailDoes: !!(detailDoes && (detailDoes.textContent || '').trim()),
+        hopperFull,
+        walletFull,
+        capToast,
+        noCollectRace,
+        doesShort,
         echoPlayLocked,
         echoPlay: !!echoPlay,
         head: (document.getElementById('buildingsScreenHead') || {}).textContent || '',

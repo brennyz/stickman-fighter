@@ -323,9 +323,9 @@ const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const VERSION_UPDATE_SAVE_KEY = 'stickfighter_version_update_save_v1';
 const VERSION_UPDATE_FLAG_KEY = 'stickfighter_version_update_flag_v1';
 const SAVE_EXPORT_SCHEMA = 3;
-const APP_VERSION = '1.18.173';
+const APP_VERSION = '1.18.174';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 383;
+const SW_CACHE_REV = 384;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', petCoins: 0, dex: {}, summons: {}, pets: {}, activePet: null,
   eggPets: {}, activeEggPet: null, eggDaily: null,
   chestDaily: null, chestWeapons: {},
@@ -2549,6 +2549,7 @@ const I18N = {
       sheetClose: 'Sluiten',
       pillReady: 'Oogst {n}',
       pillWait: '{n}/{cap}',
+      pillFull: 'Vol {n}',
       pillLocked: 'Slot',
       pillBuild: 'Bouw',
       goAdventure: 'Naar Avontuur',
@@ -2556,16 +2557,21 @@ const I18N = {
       maxHint: 'Dit werk is klaar — oogst blijft lopen',
       brokeHint: 'Mis {cost} — speel of oogst eerst',
       walletRate: '+{n}/u',
+      walletFull: 'VOL',
+      walletPlus: '+{n}',
+      storedFull: '{n}/{cap} VOL',
+      collectCap: '+{n} {res} · hopper vol ({cap})',
+      lockedWorldNamed: '{name} (eiland {n})',
       desc: {
-        produceLocked: 'Gaat {res} maken na unlock + bouwen.',
-        produceUnbuilt: 'Bouwen: maakt daarna {res} ({n}/uur).',
-        produce: 'Maakt {res}: {n}/uur · hopper max {cap}.',
-        powerOn: 'Kracht rank {rank}: {label} — {blurb}',
-        powerNone: 'Geen kracht tot de fabriek gebouwd is.',
-        doesUnbuilt: 'Maakt {res} · bouw om te starten',
-        does: '{res} {n}/uur · {power}',
-        nextPower: ' · nieuwe kracht: {label}',
-        nextLv: 'Lv {n}: {res} {rate}/uur · cap {cap}{power}',
+        produceLocked: '{res} na eiland',
+        produceUnbuilt: 'Bouw: {res} {n}/u',
+        produce: '{n}/u · hopper {cap}',
+        powerOn: 'R{rank} {label}',
+        powerNone: 'Bouw voor kracht',
+        doesUnbuilt: '{res} · bouw',
+        does: '{res} {n}/u · {power}',
+        nextPower: ' · {label}',
+        nextLv: 'Lv{n} {rate}/u · {cap}{power}',
       },
       build: 'Bouwen', buildHint: 'Bouwen als eiland open is',
       lockedWorld: 'Unlock: eiland {n}',
@@ -2858,6 +2864,7 @@ const I18N = {
       sheetClose: 'Close',
       pillReady: 'Collect {n}',
       pillWait: '{n}/{cap}',
+      pillFull: 'Full {n}',
       pillLocked: 'Locked',
       pillBuild: 'Build',
       goAdventure: 'Go to Adventure',
@@ -2865,16 +2872,21 @@ const I18N = {
       maxHint: 'This factory is maxed — collect still runs',
       brokeHint: 'Need {cost} — play or collect first',
       walletRate: '+{n}/h',
+      walletFull: 'FULL',
+      walletPlus: '+{n}',
+      storedFull: '{n}/{cap} FULL',
+      collectCap: '+{n} {res} · hopper full ({cap})',
+      lockedWorldNamed: '{name} (island {n})',
       desc: {
-        produceLocked: 'Will make {res} after unlock + build.',
-        produceUnbuilt: 'Build: then makes {res} ({n}/hr).',
-        produce: 'Makes {res}: {n}/hr · hopper max {cap}.',
-        powerOn: 'Power rank {rank}: {label} — {blurb}',
-        powerNone: 'No power until the factory is built.',
-        doesUnbuilt: 'Makes {res} · build to start',
-        does: '{res} {n}/hr · {power}',
-        nextPower: ' · new power: {label}',
-        nextLv: 'Lv {n}: {res} {rate}/hr · cap {cap}{power}',
+        produceLocked: '{res} after island',
+        produceUnbuilt: 'Build: {res} {n}/h',
+        produce: '{n}/h · hopper {cap}',
+        powerOn: 'R{rank} {label}',
+        powerNone: 'Build for power',
+        doesUnbuilt: '{res} · build',
+        does: '{res} {n}/h · {power}',
+        nextPower: ' · {label}',
+        nextLv: 'Lv{n} {rate}/h · {cap}{power}',
       },
       build: 'Build', buildHint: 'Build once the island is open',
       lockedWorld: 'Unlock: island {n}',
@@ -3004,6 +3016,7 @@ const I18N = {
       sheetClose: 'Schließen',
       pillReady: 'Ernte {n}',
       pillWait: '{n}/{cap}',
+      pillFull: 'Voll {n}',
       pillLocked: 'Sperre',
       pillBuild: 'Bauen',
       goAdventure: 'Zum Abenteuer',
@@ -3011,16 +3024,21 @@ const I18N = {
       maxHint: 'Max erreicht — Ernte läuft weiter',
       brokeHint: 'Dir fehlen {cost} — erst spielen oder ernten',
       walletRate: '+{n}/h',
+      walletFull: 'VOLL',
+      walletPlus: '+{n}',
+      storedFull: '{n}/{cap} VOLL',
+      collectCap: '+{n} {res} · Hopper voll ({cap})',
+      lockedWorldNamed: '{name} (Insel {n})',
       desc: {
-        produceLocked: 'Macht {res} nach Freischalten + Bauen.',
-        produceUnbuilt: 'Bauen: macht danach {res} ({n}/Std).',
-        produce: 'Macht {res}: {n}/Std · Hopper max {cap}.',
-        powerOn: 'Power-Rang {rank}: {label} — {blurb}',
-        powerNone: 'Keine Power, bis das Werk gebaut ist.',
-        doesUnbuilt: 'Macht {res} · bauen zum Start',
-        does: '{res} {n}/Std · {power}',
-        nextPower: ' · neue Power: {label}',
-        nextLv: 'Lv {n}: {res} {rate}/Std · Cap {cap}{power}',
+        produceLocked: '{res} nach Insel',
+        produceUnbuilt: 'Bau: {res} {n}/h',
+        produce: '{n}/h · Hopper {cap}',
+        powerOn: 'R{rank} {label}',
+        powerNone: 'Bauen für Power',
+        doesUnbuilt: '{res} · bauen',
+        does: '{res} {n}/h · {power}',
+        nextPower: ' · {label}',
+        nextLv: 'Lv{n} {rate}/h · {cap}{power}',
       },
       build: 'Bauen', buildHint: 'Bauen, wenn die Insel offen ist',
       lockedWorld: 'Frei: Insel {n}',
@@ -3305,6 +3323,7 @@ const I18N = {
       sheetClose: 'Fermer',
       pillReady: 'Récolte {n}',
       pillWait: '{n}/{cap}',
+      pillFull: 'Plein {n}',
       pillLocked: 'Verrou',
       pillBuild: 'Bâtir',
       goAdventure: 'Vers l’Aventure',
@@ -3312,16 +3331,21 @@ const I18N = {
       maxHint: 'Niveau max — la récolte continue',
       brokeHint: 'Il manque {cost} — joue ou récolte d’abord',
       walletRate: '+{n}/h',
+      walletFull: 'PLEIN',
+      walletPlus: '+{n}',
+      storedFull: '{n}/{cap} PLEIN',
+      collectCap: '+{n} {res} · trémie pleine ({cap})',
+      lockedWorldNamed: '{name} (île {n})',
       desc: {
-        produceLocked: 'Fera du {res} après déblocage + construction.',
-        produceUnbuilt: 'Construire : ensuite {res} ({n}/h).',
-        produce: 'Fait du {res} : {n}/h · trémie max {cap}.',
-        powerOn: 'Pouvoir rang {rank} : {label} — {blurb}',
-        powerNone: 'Aucun pouvoir tant que l’usine n’est pas bâtie.',
-        doesUnbuilt: 'Fait du {res} · construire pour démarrer',
+        produceLocked: '{res} après île',
+        produceUnbuilt: 'Bâtir : {res} {n}/h',
+        produce: '{n}/h · trémie {cap}',
+        powerOn: 'R{rank} {label}',
+        powerNone: 'Bâtir pour pouvoir',
+        doesUnbuilt: '{res} · bâtir',
         does: '{res} {n}/h · {power}',
-        nextPower: ' · nouveau pouvoir : {label}',
-        nextLv: 'Nv {n} : {res} {rate}/h · cap {cap}{power}',
+        nextPower: ' · {label}',
+        nextLv: 'Nv{n} {rate}/h · {cap}{power}',
       },
       build: 'Construire', buildHint: 'Construire une fois l’île ouverte',
       lockedWorld: 'Déblocage : île {n}',
@@ -3587,6 +3611,7 @@ const I18N = {
       sheetClose: 'Cerrar',
       pillReady: 'Cosecha {n}',
       pillWait: '{n}/{cap}',
+      pillFull: 'Lleno {n}',
       pillLocked: 'Bloqueo',
       pillBuild: 'Construir',
       goAdventure: 'A Aventura',
@@ -3594,16 +3619,21 @@ const I18N = {
       maxHint: 'Nivel máx. — la cosecha sigue',
       brokeHint: 'Faltan {cost} — juega o cosecha primero',
       walletRate: '+{n}/h',
+      walletFull: 'LLENO',
+      walletPlus: '+{n}',
+      storedFull: '{n}/{cap} LLENO',
+      collectCap: '+{n} {res} · tolva llena ({cap})',
+      lockedWorldNamed: '{name} (isla {n})',
       desc: {
-        produceLocked: 'Hará {res} tras desbloqueo + construir.',
-        produceUnbuilt: 'Construir: luego {res} ({n}/h).',
-        produce: 'Hace {res}: {n}/h · tolva máx {cap}.',
-        powerOn: 'Poder rango {rank}: {label} — {blurb}',
-        powerNone: 'Sin poder hasta construir la fábrica.',
-        doesUnbuilt: 'Hace {res} · construye para empezar',
+        produceLocked: '{res} tras isla',
+        produceUnbuilt: 'Construir: {res} {n}/h',
+        produce: '{n}/h · tolva {cap}',
+        powerOn: 'R{rank} {label}',
+        powerNone: 'Construye para poder',
+        doesUnbuilt: '{res} · construir',
         does: '{res} {n}/h · {power}',
-        nextPower: ' · poder nuevo: {label}',
-        nextLv: 'Nv {n}: {res} {rate}/h · cap {cap}{power}',
+        nextPower: ' · {label}',
+        nextLv: 'Nv{n} {rate}/h · {cap}{power}',
       },
       build: 'Construir', buildHint: 'Construye cuando la isla esté abierta',
       lockedWorld: 'Desbloqueo: isla {n}',
@@ -12701,36 +12731,36 @@ function buildingDescModel(id, st) {
   const lv0 = def && def.resource && def.resource.perHour ? (def.resource.perHour[0] || 0) : 0;
   const unlockLine = tip.unlocked
     ? ''
-    : buildingTxt('buildings.lockedWorldNamed', 'Nog dicht — speel {name} (eiland {n}) vrij.', {
+    : buildingTxt('buildings.lockedWorldNamed', '{name} (eiland {n})', {
       name: islandName, n: tip.worldUnlock,
     });
   let produceLine;
   if (!tip.unlocked) {
-    produceLine = buildingTxt('buildings.desc.produceLocked', 'Gaat {res} maken na unlock + bouwen.', {
+    produceLine = buildingTxt('buildings.desc.produceLocked', '{res} na eiland', {
       res: tip.resourceName,
     });
   } else if (!tip.built) {
-    produceLine = buildingTxt('buildings.desc.produceUnbuilt', 'Bouwen: maakt daarna {res} ({n}/uur).', {
+    produceLine = buildingTxt('buildings.desc.produceUnbuilt', 'Bouw: {res} {n}/u', {
       res: tip.resourceName, n: lv0,
     });
   } else {
-    produceLine = buildingTxt('buildings.desc.produce', 'Maakt {res}: {n}/uur · hopper max {cap}.', {
+    produceLine = buildingTxt('buildings.desc.produce', '{n}/u · hopper {cap}', {
       res: tip.resourceName, n: tip.outputRate, cap: tip.storageCap,
     });
   }
   const currentPower = (def.powers || []).filter((p) => tip.powerRank >= p.rank).pop() || null;
   const powerLine = currentPower
-    ? buildingTxt('buildings.desc.powerOn', 'Kracht rank {rank}: {label} — {blurb}', {
+    ? buildingTxt('buildings.desc.powerOn', 'R{rank} {label}', {
       rank: tip.powerRank,
       label: buildingPowerLabel(currentPower),
       blurb: buildingPowerBlurb(currentPower),
     })
-    : buildingTxt('buildings.desc.powerNone', 'Geen kracht tot de fabriek gebouwd is.');
+    : buildingTxt('buildings.desc.powerNone', 'Bouw voor kracht');
   const doesLine = !tip.unlocked
     ? unlockLine
     : !tip.built
-      ? buildingTxt('buildings.desc.doesUnbuilt', 'Maakt {res} · bouw om te starten', { res: tip.resourceName })
-      : buildingTxt('buildings.desc.does', '{res} {n}/uur · {power}', {
+      ? buildingTxt('buildings.desc.doesUnbuilt', '{res} · bouw', { res: tip.resourceName })
+      : buildingTxt('buildings.desc.does', '{res} {n}/u · {power}', {
         res: tip.resourceName,
         n: tip.outputRate,
         power: currentPower ? buildingPowerLabel(currentPower) : '—',
@@ -12742,9 +12772,9 @@ function buildingDescModel(id, st) {
     const nextRank = buildingPowerRank(nextLv);
     const newPower = (def.powers || []).find((p) => p.rank === nextRank && nextRank > tip.powerRank) || null;
     const powerBit = newPower
-      ? buildingTxt('buildings.desc.nextPower', ' · nieuwe kracht: {label}', { label: buildingPowerLabel(newPower) })
+      ? buildingTxt('buildings.desc.nextPower', ' · {label}', { label: buildingPowerLabel(newPower) })
       : '';
-    nextLine = buildingTxt('buildings.desc.nextLv', 'Lv {n}: {res} {rate}/uur · cap {cap}{power}', {
+    nextLine = buildingTxt('buildings.desc.nextLv', 'Lv{n} {rate}/u · {cap}{power}', {
       n: nextLv, res: tip.resourceName, rate: nextOut.perHour, cap: nextOut.cap, power: powerBit,
     });
   } else if (tip.built && tip.level >= tip.maxLevel) {
@@ -12753,9 +12783,9 @@ function buildingDescModel(id, st) {
     const firstOut = buildingOutputAtLevel(def, 1);
     const firstPower = (def.powers || []).find((p) => p.rank === 0) || null;
     const powerBit = firstPower
-      ? buildingTxt('buildings.desc.nextPower', ' · nieuwe kracht: {label}', { label: buildingPowerLabel(firstPower) })
+      ? buildingTxt('buildings.desc.nextPower', ' · {label}', { label: buildingPowerLabel(firstPower) })
       : '';
-    nextLine = buildingTxt('buildings.desc.nextLv', 'Lv {n}: {res} {rate}/uur · cap {cap}{power}', {
+    nextLine = buildingTxt('buildings.desc.nextLv', 'Lv{n} {rate}/u · {cap}{power}', {
       n: 1, res: tip.resourceName, rate: firstOut.perHour, cap: firstOut.cap, power: powerBit,
     });
   }
@@ -51501,6 +51531,21 @@ function buildingsBrokeHint(view) {
   return buildingsTxt('buildings.brokeHint', 'Mis {cost} — speel of oogst eerst', { cost: missing.join(' + ') });
 }
 
+function buildingsHopperFull(view) {
+  return !!(view && !view.locked && view.capacity > 0 && view.pending >= view.capacity);
+}
+
+function buildingsFmtAmt(n) {
+  const v = Math.max(0, Math.floor(Number(n) || 0));
+  if (v >= 10000) return Math.floor(v / 1000) + 'k';
+  return String(v);
+}
+
+function buildingsCollectLocked(id) {
+  const lock = UI && UI._buildingsCollectBusy;
+  return !!(lock && lock.until > Date.now() && (!id || lock.id === id));
+}
+
 function buildingsEta(view) {
   if (!view || view.locked || view.pending >= view.capacity || !(view.nextMs > 0)) return '';
   const t = (typeof buildingsFormatEta === 'function') ? buildingsFormatEta(view.nextMs) : '';
@@ -51512,14 +51557,17 @@ function buildingsPillHtml(view, opts) {
   const ready = !!view.canCollect;
   const locked = !!view.locked;
   const unbuilt = buildingsIsUnbuilt(view);
+  const full = buildingsHopperFull(view);
   const cls = 'buildings-res-pill'
     + (ready ? ' is-collect' : ' is-empty')
     + (locked ? ' is-locked' : '')
-    + (unbuilt && !ready ? ' is-build' : '');
+    + (unbuilt && !ready ? ' is-build' : '')
+    + (full ? ' is-full' : '');
   let label;
   if (locked) label = buildingsTxt('buildings.pillLocked', 'Slot');
   else if (unbuilt) label = buildingsTxt('buildings.pillBuild', 'Bouw');
-  else if (ready) label = buildingsTxt('buildings.pillReady', 'Oogst {n}', { n: view.pending });
+  else if (full) label = buildingsTxt('buildings.pillFull', 'Vol {n}', { n: buildingsFmtAmt(view.pending) });
+  else if (ready) label = buildingsTxt('buildings.pillReady', 'Oogst {n}', { n: buildingsFmtAmt(view.pending) });
   else label = buildingsTxt('buildings.pillWait', '{n}/{cap}', { n: view.pending || 0, cap: view.capacity || 0 });
   const idAttr = (opts && opts.id) ? ' id="' + buildingsEscape(opts.id) + '"' : '';
   return '<button type="button" class="' + cls + '"' + idAttr
@@ -51536,6 +51584,7 @@ if (typeof UI === 'object' && UI) {
   UI.buildingsFlash = null;
   UI._buildingsDetailKey = '';
   UI._buildingsDelegates = false;
+  UI._buildingsCollectBusy = null;
 
   UI.openBuildings = function openBuildings() {
     this.buildingsPane = 'list';
@@ -51580,11 +51629,12 @@ if (typeof UI === 'object' && UI) {
       const pill = e.target && e.target.closest && e.target.closest('[data-buildings-collect]');
       if (pill) {
         const id = pill.getAttribute('data-buildings-collect');
+        if (buildingsCollectLocked(id)) return;
         if (pill.classList.contains('is-collect')) {
           UI.doBuildingCollect(id);
         } else if (fromDetail && pill.classList.contains('is-build')) {
           UI.buildingsShowUpgradeStep();
-        } else {
+        } else if (pill.classList.contains('is-locked') || pill.classList.contains('is-build')) {
           UI.buildingsShowDetail(id);
         }
         return;
@@ -51602,6 +51652,7 @@ if (typeof UI === 'object' && UI) {
       if (!card || card.closest('#buildingsDetail')) return;
       const id = card.getAttribute('data-factory-id');
       if (id) {
+        if (buildingsCollectLocked(id)) return;
         if (typeof AudioSys !== 'undefined') { try { AudioSys.sfx('select'); } catch (_) {} }
         UI.buildingsShowDetail(id);
       }
@@ -51624,6 +51675,7 @@ if (typeof UI === 'object' && UI) {
   };
 
   UI.buildingsShowDetail = function buildingsShowDetail(id) {
+    if (buildingsCollectLocked(id)) return;
     if (typeof buildingsSelect === 'function') buildingsSelect(id);
     this.buildingsPane = 'detail';
     this.buildingsView = 'detail';
@@ -51675,26 +51727,43 @@ if (typeof UI === 'object' && UI) {
     try { this.show('levelScreen'); this.renderLevels(); } catch (_) {}
   };
 
-  UI.paintBuildingsWallet = function paintBuildingsWallet(flashRes) {
+  UI.paintBuildingsWallet = function paintBuildingsWallet(flashRes, rows) {
     const walletEl = document.getElementById('buildingsWallet');
     if (!walletEl) return;
     const model = buildingsWalletSnap();
+    const hopper = {};
+    for (const view of (rows || [])) {
+      if (view && view.resourceId) hopper[view.resourceId] = view;
+    }
     const chips = [];
     chips.push(
       '<span class="buildings-wallet-chip buildings-wallet-pc buildings-wallet-pill" data-res="petCoins">'
       + '<span class="buildings-wallet-lbl buildings-wallet-name">' + buildingsEscape(buildingsTxt('buildings.walletPc', 'PC')) + '</span>'
-      + '<span class="buildings-wallet-amt">' + buildingsEscape(model.petCoins) + '</span></span>'
+      + '<span class="buildings-wallet-amt">' + buildingsEscape(buildingsFmtAmt(model.petCoins)) + '</span></span>'
     );
     const pills = (model.resources || []).map((row) => {
+      const site = hopper[row.id];
+      const full = buildingsHopperFull(site);
       const flash = flashRes && flashRes === row.id ? ' is-flash' : '';
-      const rate = row.rate > 0
-        ? '<span class="buildings-wallet-hint">' + buildingsEscape(buildingsTxt('buildings.walletRate', '+{n}/u', { n: row.rate })) + '</span>'
-        : '';
-      return '<span class="buildings-wallet-chip buildings-wallet-pill' + flash + '" data-res="' + buildingsEscape(row.id)
+      const plus = (this.buildingsFlash && this.buildingsFlash.resId === row.id && this.buildingsFlash.until > Date.now())
+        ? this.buildingsFlash.amount : 0;
+      let hint = '';
+      let hintCls = 'buildings-wallet-hint';
+      if (plus > 0) {
+        hint = buildingsTxt('buildings.walletPlus', '+{n}', { n: buildingsFmtAmt(plus) });
+        hintCls += ' is-plus';
+      } else if (full) {
+        hint = buildingsTxt('buildings.walletFull', 'VOL');
+        hintCls += ' is-full';
+      } else if (row.rate > 0) {
+        hint = buildingsTxt('buildings.walletRate', '+{n}/u', { n: row.rate });
+      }
+      const hintHtml = hint ? '<span class="' + hintCls + '">' + buildingsEscape(hint) + '</span>' : '';
+      return '<span class="buildings-wallet-chip buildings-wallet-pill' + flash + (full ? ' is-full' : '') + '" data-res="' + buildingsEscape(row.id)
         + '" data-res-id="' + buildingsEscape(row.id) + '">'
         + '<span class="buildings-wallet-lbl buildings-wallet-name">' + buildingsEscape(row.label) + '</span>'
-        + '<span class="buildings-wallet-amt">' + buildingsEscape(row.amount) + '</span>'
-        + rate + '</span>';
+        + '<span class="buildings-wallet-amt">' + buildingsEscape(buildingsFmtAmt(row.amount)) + '</span>'
+        + hintHtml + '</span>';
     });
     walletEl.classList.add('buildings-wallet');
     walletEl.innerHTML =
@@ -51728,8 +51797,8 @@ if (typeof UI === 'object' && UI) {
     } else if (this.buildingsFlash) {
       this.buildingsFlash = null;
     }
-    this.paintBuildingsWallet(flashRes);
     const rows = (typeof buildingsList === 'function') ? buildingsList() : [];
+    this.paintBuildingsWallet(flashRes, rows);
     let sel = (typeof buildingsSelectedId === 'function') ? buildingsSelectedId() : (rows[0] && rows[0].id);
     if (this.buildingsFocusId && rows.some((r) => r.id === this.buildingsFocusId)) sel = this.buildingsFocusId;
     if (!rows.some((r) => r.id === sel)) sel = rows[0] && rows[0].id;
@@ -51827,17 +51896,6 @@ if (typeof UI === 'object' && UI) {
     bits.push('<div class="buildings-effect" data-buildings-effect="' + buildingsEscape(view && view.id) + '">');
     bits.push('<div class="buildings-effect-kicker">' + buildingsEscape(buildingsTxt('buildings.whatItDoes', 'Wat doet dit?')) + '</div>');
     if (does) bits.push('<p class="buildings-effect-does buildings-card-does">' + buildingsEscape(does) + '</p>');
-    if (desc.blurb && desc.blurb !== does) {
-      bits.push('<p class="buildings-effect-blurb">' + buildingsEscape(desc.blurb) + '</p>');
-    }
-    if (desc.produceLine) bits.push('<p class="buildings-effect-now">' + buildingsEscape(desc.produceLine) + '</p>');
-    if (desc.powerLine) bits.push('<p class="buildings-effect-now">' + buildingsEscape(desc.powerLine) + '</p>');
-    else if (desc.currentPowerLabel) {
-      bits.push('<p class="buildings-effect-now">' + buildingsEscape(buildingsTxt(
-        'buildings.powerNow', '{label} — {blurb}',
-        { label: desc.currentPowerLabel, blurb: desc.currentPowerBlurb || '' }
-      )) + '</p>');
-    }
     if (desc.nextLine) bits.push('<p class="buildings-effect-next">' + buildingsEscape(desc.nextLine) + '</p>');
     bits.push('</div>');
     return bits.join('');
@@ -51906,8 +51964,10 @@ if (typeof UI === 'object' && UI) {
           + buildingsPillHtml(view, { id: 'btnBuildingCollect' })
           + '<div class="buildings-stock-bar" role="progressbar" aria-valuenow="' + view.pending + '" aria-valuemax="' + view.capacity + '">'
           + '<span style="width:' + pct + '%"></span></div>'
-          + '<div class="buildings-stock-lbl">'
-          + buildingsEscape(buildingsTxt('buildings.stored', '{n}/{cap} opgeslagen', { n: view.pending, cap: view.capacity }))
+          + '<div class="buildings-stock-lbl' + (buildingsHopperFull(view) ? ' is-full' : '') + '">'
+          + buildingsEscape(buildingsHopperFull(view)
+            ? buildingsTxt('buildings.storedFull', '{n}/{cap} VOL', { n: view.pending, cap: view.capacity })
+            : buildingsTxt('buildings.stored', '{n}/{cap} opgeslagen', { n: view.pending, cap: view.capacity }))
           + (eta ? ' · ' + buildingsEscape(eta) : '')
           + '</div></div>')
       + flash
@@ -51941,8 +52001,8 @@ if (typeof UI === 'object' && UI) {
       '<button type="button" class="buildings-sheet-backdrop" data-buildings-sheet-close></button>'
       + '<div class="buildings-sheet-panel" role="dialog" aria-modal="true">'
       + '<h3>' + buildingsEscape(buildingsTxt('buildings.upgradeTitle', 'Upgrade {name}', { name: view.name })) + '</h3>'
-      + (desc.doesLine ? '<p class="buildings-sheet-now">' + buildingsEscape(desc.doesLine) + '</p>' : '')
-      + (desc.nextLine ? '<p class="buildings-sheet-now buildings-next">' + buildingsEscape(desc.nextLine) + '</p>' : '')
+      + (desc.nextLine ? '<p class="buildings-sheet-now buildings-next">' + buildingsEscape(desc.nextLine) + '</p>'
+        : (desc.doesLine ? '<p class="buildings-sheet-now">' + buildingsEscape(desc.doesLine) + '</p>' : ''))
       + '<p class="buildings-upgrade-ask buildings-sheet-why">' + buildingsEscape(atMax
         ? buildingsTxt('buildings.upgradeMax', 'Max level')
         : ask) + '</p>'
@@ -51978,7 +52038,10 @@ if (typeof UI === 'object' && UI) {
     if (bar) bar.style.width = pct + '%';
     if (lbl) {
       const eta = buildingsEta(view);
-      lbl.textContent = buildingsTxt('buildings.stored', '{n}/{cap} opgeslagen', { n: view.pending, cap: view.capacity })
+      lbl.classList.toggle('is-full', buildingsHopperFull(view));
+      lbl.textContent = (buildingsHopperFull(view)
+        ? buildingsTxt('buildings.storedFull', '{n}/{cap} VOL', { n: view.pending, cap: view.capacity })
+        : buildingsTxt('buildings.stored', '{n}/{cap} opgeslagen', { n: view.pending, cap: view.capacity }))
         + (eta ? ' · ' + eta : '');
     }
     if (pill) {
@@ -51996,27 +52059,38 @@ if (typeof UI === 'object' && UI) {
   };
 
   UI.doBuildingCollect = function doBuildingCollect(id) {
+    const now = Date.now();
+    if (this._buildingsCollectBusy && this._buildingsCollectBusy.until > now) return;
+    this._buildingsCollectBusy = { id, until: now + 480 };
     if (typeof AudioSys !== 'undefined') { try { AudioSys.init(); AudioSys.sfx('claim'); } catch (_) { try { AudioSys.sfx('select'); } catch (__) {} } }
+    const before = (typeof buildingsGet === 'function') ? buildingsGet(id) : null;
+    const cap = before && before.capacity ? before.capacity : 0;
+    const wasFull = buildingsHopperFull(before);
     const res = (typeof buildingsCollect === 'function') ? buildingsCollect(id) : { ok: false };
-    if (res && res.ok) {
+    const amount = Math.max(0, Math.floor(Number(res && res.amount) || 0));
+    const ok = !!(res && res.ok && amount > 0);
+    if (ok) {
       const label = (typeof buildingsResourceLabel === 'function')
         ? buildingsResourceLabel(res.resourceId)
         : (res.resourceId || '');
+      const capped = wasFull || (cap > 0 && amount >= cap);
       this.buildingsFlash = {
         id,
         resId: res.resourceId,
         resLabel: label,
-        amount: res.amount || 0,
-        until: Date.now() + 1800,
+        amount,
+        capped,
+        cap,
+        until: now + 2200,
       };
-      try {
-        this.toast(res.message || buildingsTxt('buildings.collectDone', '+{n} {res}', { n: res.amount || 0, res: label }), 2400, { tone: 'ok' });
-      } catch (_) {}
+      const msg = capped
+        ? buildingsTxt('buildings.collectCap', '+{n} {res} · hopper vol ({cap})', { n: amount, res: label, cap })
+        : (res.message || buildingsTxt('buildings.collectDone', '+{n} {res}', { n: amount, res: label }));
+      try { this.toast(msg, capped ? 2800 : 2400, { tone: 'ok' }); } catch (_) {}
     } else {
       try {
         this.toast((res && res.message) || buildingsTxt('buildings.collectEmpty', 'Nog niks klaar'), 2200, { tone: 'warn' });
       } catch (_) {}
-      if (id) this.buildingsShowDetail(id);
     }
     this._buildingsDetailKey = '';
     this.renderBuildings();

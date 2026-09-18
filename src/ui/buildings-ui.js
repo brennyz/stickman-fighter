@@ -157,6 +157,21 @@ function buildingsBrokeHint(view) {
   return buildingsTxt('buildings.brokeHint', 'Mis {cost} — speel of oogst eerst', { cost: missing.join(' + ') });
 }
 
+function buildingsHopperFull(view) {
+  return !!(view && !view.locked && view.capacity > 0 && view.pending >= view.capacity);
+}
+
+function buildingsFmtAmt(n) {
+  const v = Math.max(0, Math.floor(Number(n) || 0));
+  if (v >= 10000) return Math.floor(v / 1000) + 'k';
+  return String(v);
+}
+
+function buildingsCollectLocked(id) {
+  const lock = UI && UI._buildingsCollectBusy;
+  return !!(lock && lock.until > Date.now() && (!id || lock.id === id));
+}
+
 function buildingsEta(view) {
   if (!view || view.locked || view.pending >= view.capacity || !(view.nextMs > 0)) return '';
   const t = (typeof buildingsFormatEta === 'function') ? buildingsFormatEta(view.nextMs) : '';
@@ -168,14 +183,17 @@ function buildingsPillHtml(view, opts) {
   const ready = !!view.canCollect;
   const locked = !!view.locked;
   const unbuilt = buildingsIsUnbuilt(view);
+  const full = buildingsHopperFull(view);
   const cls = 'buildings-res-pill'
     + (ready ? ' is-collect' : ' is-empty')
     + (locked ? ' is-locked' : '')
-    + (unbuilt && !ready ? ' is-build' : '');
+    + (unbuilt && !ready ? ' is-build' : '')
+    + (full ? ' is-full' : '');
   let label;
   if (locked) label = buildingsTxt('buildings.pillLocked', 'Slot');
   else if (unbuilt) label = buildingsTxt('buildings.pillBuild', 'Bouw');
-  else if (ready) label = buildingsTxt('buildings.pillReady', 'Oogst {n}', { n: view.pending });
+  else if (full) label = buildingsTxt('buildings.pillFull', 'Vol {n}', { n: buildingsFmtAmt(view.pending) });
+  else if (ready) label = buildingsTxt('buildings.pillReady', 'Oogst {n}', { n: buildingsFmtAmt(view.pending) });
   else label = buildingsTxt('buildings.pillWait', '{n}/{cap}', { n: view.pending || 0, cap: view.capacity || 0 });
   const idAttr = (opts && opts.id) ? ' id="' + buildingsEscape(opts.id) + '"' : '';
   return '<button type="button" class="' + cls + '"' + idAttr
@@ -192,6 +210,7 @@ if (typeof UI === 'object' && UI) {
   UI.buildingsFlash = null;
   UI._buildingsDetailKey = '';
   UI._buildingsDelegates = false;
+  UI._buildingsCollectBusy = null;
 
   UI.openBuildings = function openBuildings() {
     this.buildingsPane = 'list';
@@ -236,11 +255,12 @@ if (typeof UI === 'object' && UI) {
       const pill = e.target && e.target.closest && e.target.closest('[data-buildings-collect]');
       if (pill) {
         const id = pill.getAttribute('data-buildings-collect');
+        if (buildingsCollectLocked(id)) return;
         if (pill.classList.contains('is-collect')) {
           UI.doBuildingCollect(id);
         } else if (fromDetail && pill.classList.contains('is-build')) {
           UI.buildingsShowUpgradeStep();
-        } else {
+        } else if (pill.classList.contains('is-locked') || pill.classList.contains('is-build')) {
           UI.buildingsShowDetail(id);
         }
         return;
@@ -258,6 +278,7 @@ if (typeof UI === 'object' && UI) {
       if (!card || card.closest('#buildingsDetail')) return;
       const id = card.getAttribute('data-factory-id');
       if (id) {
+        if (buildingsCollectLocked(id)) return;
         if (typeof AudioSys !== 'undefined') { try { AudioSys.sfx('select'); } catch (_) {} }
         UI.buildingsShowDetail(id);
       }
@@ -280,6 +301,7 @@ if (typeof UI === 'object' && UI) {
   };
 
   UI.buildingsShowDetail = function buildingsShowDetail(id) {
+    if (buildingsCollectLocked(id)) return;
     if (typeof buildingsSelect === 'function') buildingsSelect(id);
     this.buildingsPane = 'detail';
     this.buildingsView = 'detail';
@@ -331,26 +353,43 @@ if (typeof UI === 'object' && UI) {
     try { this.show('levelScreen'); this.renderLevels(); } catch (_) {}
   };
 
-  UI.paintBuildingsWallet = function paintBuildingsWallet(flashRes) {
+  UI.paintBuildingsWallet = function paintBuildingsWallet(flashRes, rows) {
     const walletEl = document.getElementById('buildingsWallet');
     if (!walletEl) return;
     const model = buildingsWalletSnap();
+    const hopper = {};
+    for (const view of (rows || [])) {
+      if (view && view.resourceId) hopper[view.resourceId] = view;
+    }
     const chips = [];
     chips.push(
       '<span class="buildings-wallet-chip buildings-wallet-pc buildings-wallet-pill" data-res="petCoins">'
       + '<span class="buildings-wallet-lbl buildings-wallet-name">' + buildingsEscape(buildingsTxt('buildings.walletPc', 'PC')) + '</span>'
-      + '<span class="buildings-wallet-amt">' + buildingsEscape(model.petCoins) + '</span></span>'
+      + '<span class="buildings-wallet-amt">' + buildingsEscape(buildingsFmtAmt(model.petCoins)) + '</span></span>'
     );
     const pills = (model.resources || []).map((row) => {
+      const site = hopper[row.id];
+      const full = buildingsHopperFull(site);
       const flash = flashRes && flashRes === row.id ? ' is-flash' : '';
-      const rate = row.rate > 0
-        ? '<span class="buildings-wallet-hint">' + buildingsEscape(buildingsTxt('buildings.walletRate', '+{n}/u', { n: row.rate })) + '</span>'
-        : '';
-      return '<span class="buildings-wallet-chip buildings-wallet-pill' + flash + '" data-res="' + buildingsEscape(row.id)
+      const plus = (this.buildingsFlash && this.buildingsFlash.resId === row.id && this.buildingsFlash.until > Date.now())
+        ? this.buildingsFlash.amount : 0;
+      let hint = '';
+      let hintCls = 'buildings-wallet-hint';
+      if (plus > 0) {
+        hint = buildingsTxt('buildings.walletPlus', '+{n}', { n: buildingsFmtAmt(plus) });
+        hintCls += ' is-plus';
+      } else if (full) {
+        hint = buildingsTxt('buildings.walletFull', 'VOL');
+        hintCls += ' is-full';
+      } else if (row.rate > 0) {
+        hint = buildingsTxt('buildings.walletRate', '+{n}/u', { n: row.rate });
+      }
+      const hintHtml = hint ? '<span class="' + hintCls + '">' + buildingsEscape(hint) + '</span>' : '';
+      return '<span class="buildings-wallet-chip buildings-wallet-pill' + flash + (full ? ' is-full' : '') + '" data-res="' + buildingsEscape(row.id)
         + '" data-res-id="' + buildingsEscape(row.id) + '">'
         + '<span class="buildings-wallet-lbl buildings-wallet-name">' + buildingsEscape(row.label) + '</span>'
-        + '<span class="buildings-wallet-amt">' + buildingsEscape(row.amount) + '</span>'
-        + rate + '</span>';
+        + '<span class="buildings-wallet-amt">' + buildingsEscape(buildingsFmtAmt(row.amount)) + '</span>'
+        + hintHtml + '</span>';
     });
     walletEl.classList.add('buildings-wallet');
     walletEl.innerHTML =
@@ -384,8 +423,8 @@ if (typeof UI === 'object' && UI) {
     } else if (this.buildingsFlash) {
       this.buildingsFlash = null;
     }
-    this.paintBuildingsWallet(flashRes);
     const rows = (typeof buildingsList === 'function') ? buildingsList() : [];
+    this.paintBuildingsWallet(flashRes, rows);
     let sel = (typeof buildingsSelectedId === 'function') ? buildingsSelectedId() : (rows[0] && rows[0].id);
     if (this.buildingsFocusId && rows.some((r) => r.id === this.buildingsFocusId)) sel = this.buildingsFocusId;
     if (!rows.some((r) => r.id === sel)) sel = rows[0] && rows[0].id;
@@ -483,17 +522,6 @@ if (typeof UI === 'object' && UI) {
     bits.push('<div class="buildings-effect" data-buildings-effect="' + buildingsEscape(view && view.id) + '">');
     bits.push('<div class="buildings-effect-kicker">' + buildingsEscape(buildingsTxt('buildings.whatItDoes', 'Wat doet dit?')) + '</div>');
     if (does) bits.push('<p class="buildings-effect-does buildings-card-does">' + buildingsEscape(does) + '</p>');
-    if (desc.blurb && desc.blurb !== does) {
-      bits.push('<p class="buildings-effect-blurb">' + buildingsEscape(desc.blurb) + '</p>');
-    }
-    if (desc.produceLine) bits.push('<p class="buildings-effect-now">' + buildingsEscape(desc.produceLine) + '</p>');
-    if (desc.powerLine) bits.push('<p class="buildings-effect-now">' + buildingsEscape(desc.powerLine) + '</p>');
-    else if (desc.currentPowerLabel) {
-      bits.push('<p class="buildings-effect-now">' + buildingsEscape(buildingsTxt(
-        'buildings.powerNow', '{label} — {blurb}',
-        { label: desc.currentPowerLabel, blurb: desc.currentPowerBlurb || '' }
-      )) + '</p>');
-    }
     if (desc.nextLine) bits.push('<p class="buildings-effect-next">' + buildingsEscape(desc.nextLine) + '</p>');
     bits.push('</div>');
     return bits.join('');
@@ -562,8 +590,10 @@ if (typeof UI === 'object' && UI) {
           + buildingsPillHtml(view, { id: 'btnBuildingCollect' })
           + '<div class="buildings-stock-bar" role="progressbar" aria-valuenow="' + view.pending + '" aria-valuemax="' + view.capacity + '">'
           + '<span style="width:' + pct + '%"></span></div>'
-          + '<div class="buildings-stock-lbl">'
-          + buildingsEscape(buildingsTxt('buildings.stored', '{n}/{cap} opgeslagen', { n: view.pending, cap: view.capacity }))
+          + '<div class="buildings-stock-lbl' + (buildingsHopperFull(view) ? ' is-full' : '') + '">'
+          + buildingsEscape(buildingsHopperFull(view)
+            ? buildingsTxt('buildings.storedFull', '{n}/{cap} VOL', { n: view.pending, cap: view.capacity })
+            : buildingsTxt('buildings.stored', '{n}/{cap} opgeslagen', { n: view.pending, cap: view.capacity }))
           + (eta ? ' · ' + buildingsEscape(eta) : '')
           + '</div></div>')
       + flash
@@ -597,8 +627,8 @@ if (typeof UI === 'object' && UI) {
       '<button type="button" class="buildings-sheet-backdrop" data-buildings-sheet-close></button>'
       + '<div class="buildings-sheet-panel" role="dialog" aria-modal="true">'
       + '<h3>' + buildingsEscape(buildingsTxt('buildings.upgradeTitle', 'Upgrade {name}', { name: view.name })) + '</h3>'
-      + (desc.doesLine ? '<p class="buildings-sheet-now">' + buildingsEscape(desc.doesLine) + '</p>' : '')
-      + (desc.nextLine ? '<p class="buildings-sheet-now buildings-next">' + buildingsEscape(desc.nextLine) + '</p>' : '')
+      + (desc.nextLine ? '<p class="buildings-sheet-now buildings-next">' + buildingsEscape(desc.nextLine) + '</p>'
+        : (desc.doesLine ? '<p class="buildings-sheet-now">' + buildingsEscape(desc.doesLine) + '</p>' : ''))
       + '<p class="buildings-upgrade-ask buildings-sheet-why">' + buildingsEscape(atMax
         ? buildingsTxt('buildings.upgradeMax', 'Max level')
         : ask) + '</p>'
@@ -634,7 +664,10 @@ if (typeof UI === 'object' && UI) {
     if (bar) bar.style.width = pct + '%';
     if (lbl) {
       const eta = buildingsEta(view);
-      lbl.textContent = buildingsTxt('buildings.stored', '{n}/{cap} opgeslagen', { n: view.pending, cap: view.capacity })
+      lbl.classList.toggle('is-full', buildingsHopperFull(view));
+      lbl.textContent = (buildingsHopperFull(view)
+        ? buildingsTxt('buildings.storedFull', '{n}/{cap} VOL', { n: view.pending, cap: view.capacity })
+        : buildingsTxt('buildings.stored', '{n}/{cap} opgeslagen', { n: view.pending, cap: view.capacity }))
         + (eta ? ' · ' + eta : '');
     }
     if (pill) {
@@ -652,27 +685,38 @@ if (typeof UI === 'object' && UI) {
   };
 
   UI.doBuildingCollect = function doBuildingCollect(id) {
+    const now = Date.now();
+    if (this._buildingsCollectBusy && this._buildingsCollectBusy.until > now) return;
+    this._buildingsCollectBusy = { id, until: now + 480 };
     if (typeof AudioSys !== 'undefined') { try { AudioSys.init(); AudioSys.sfx('claim'); } catch (_) { try { AudioSys.sfx('select'); } catch (__) {} } }
+    const before = (typeof buildingsGet === 'function') ? buildingsGet(id) : null;
+    const cap = before && before.capacity ? before.capacity : 0;
+    const wasFull = buildingsHopperFull(before);
     const res = (typeof buildingsCollect === 'function') ? buildingsCollect(id) : { ok: false };
-    if (res && res.ok) {
+    const amount = Math.max(0, Math.floor(Number(res && res.amount) || 0));
+    const ok = !!(res && res.ok && amount > 0);
+    if (ok) {
       const label = (typeof buildingsResourceLabel === 'function')
         ? buildingsResourceLabel(res.resourceId)
         : (res.resourceId || '');
+      const capped = wasFull || (cap > 0 && amount >= cap);
       this.buildingsFlash = {
         id,
         resId: res.resourceId,
         resLabel: label,
-        amount: res.amount || 0,
-        until: Date.now() + 1800,
+        amount,
+        capped,
+        cap,
+        until: now + 2200,
       };
-      try {
-        this.toast(res.message || buildingsTxt('buildings.collectDone', '+{n} {res}', { n: res.amount || 0, res: label }), 2400, { tone: 'ok' });
-      } catch (_) {}
+      const msg = capped
+        ? buildingsTxt('buildings.collectCap', '+{n} {res} · hopper vol ({cap})', { n: amount, res: label, cap })
+        : (res.message || buildingsTxt('buildings.collectDone', '+{n} {res}', { n: amount, res: label }));
+      try { this.toast(msg, capped ? 2800 : 2400, { tone: 'ok' }); } catch (_) {}
     } else {
       try {
         this.toast((res && res.message) || buildingsTxt('buildings.collectEmpty', 'Nog niks klaar'), 2200, { tone: 'warn' });
       } catch (_) {}
-      if (id) this.buildingsShowDetail(id);
     }
     this._buildingsDetailKey = '';
     this.renderBuildings();

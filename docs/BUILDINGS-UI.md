@@ -93,7 +93,7 @@ When `BUILDING_IDS` + `buildingCollect` are present, the HOME screen binds that 
 3. Portrait starts on the **list** (5 factories: Stick-Lighter … Echo-Whistle Mill). Stick-Lighter is unlocked; others lock until that island is open.
 4. Wallet chips under the title always show **PC + Vonken / Lijm / Snippers / Stoom / Echo** (readable amounts, including 0).
 5. Tap a factory → **detail**: does-line + produce/power, hopper, **collect pill**. Upgrade… opens the sheet — not a twin collect button.
-6. One-tap pill credits spark / glue / chip / steam / echo; toast `+N` and the matching wallet pill flashes. Empty pill still opens detail (ETA / next step), never a dead disabled wall.
+6. One-tap pill credits spark / glue / chip / steam / echo; toast `+N` and the matching wallet pill flashes `+N`. Hopper at cap: gold **VOL** on pill + wallet (rate paused) and toast `+N · hopper vol (cap)`. Empty collect never opens detail (no double-tap race).
 7. Upgrade… → sheet with does/next + cost. Unbuilt uses **Bouwen…**. Not enough currency: sheet explains what’s missing + Sluiten. Locked factory: **Naar Avontuur** (no disabled dead CTA). Max: status line, harvest still runs.
 8. ← Overzicht or Back closes sheet → detail → list; Back on the list returns to KIES JE PAD. Versus tile must stay gone.
 
