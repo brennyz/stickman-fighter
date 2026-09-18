@@ -36,14 +36,21 @@
     "lastChecked": "2026-09-16T12:31:58Z",
     "lastAsked": "2026-08-17T14:01:21Z",
     "pendingUpload": [],
-    "pendingMerge": []
+    "pendingMerge": [
+      {
+        "pr": 318,
+        "url": "https://github.com/brennyz/stickman-fighter/pull/318",
+        "branch": "cursor/ui-layout-polish-7643",
+        "note": "Layout polish draft — wait for «merge main»"
+      }
+    ]
   },
   "userWishlist": [
     {
       "id": "w-20260918T122300",
       "from": "user",
       "text": "WORKER lane: UI/UX LAYOUT — texts/buttons stacking over each other, safe areas, z-index, sheets, sticky wallets, overflow on ~390px and desktop. Polish HOME, Collectie, factories, gear, summons, pets screens. No Versus. Draft PR only. speel.html.",
-      "status": "in-progress",
+      "status": "done-in-code",
       "updated": "2026-09-18",
       "notes": "Lane owns layout only (overflow, safe-area, z-index, sheets, sticky wallets). No Versus. Draft PR."
     },
@@ -1066,6 +1073,10 @@
   ],
   "sessionLog": [
     {
+      "at": "2026-09-18T12:59:17Z",
+      "summary": "Layout polish draft #318: HOME/Collectie/fabrieken/gear/summons/pets — geen overlapping teksten/knoppen, sticky wallets onder back, sheets/safe-area, overflow 390+desktop. Versus off. speel.html."
+    },
+    {
       "at": "2026-09-16T12:33:04Z",
       "summary": "Mega-merge leftover GitHub PRs #297 #300 #302 #307 #308 #309 closed — content already on origin/main 0044b2e (v1.18.172 / SW 382). Pages live."
     },
@@ -1160,10 +1171,6 @@
     {
       "at": "2026-09-14T12:44:05Z",
       "summary": "Toast-wachtrij: één tegelijk, Android Chrome/TWA zelfde HTML onder statusbalk · v1.18.156 / SW 366"
-    },
-    {
-      "at": "2026-09-14T12:41:28Z",
-      "summary": "Start toast-wachtrij: één tegelijk, Android Chrome/TWA"
     }
   ],
   "implementedFeaturesSummary": "d18 char select deel 1+2 (v1.11.1-2); Mats coinrun + shuriken mik/vliegers + anti-spam (v1.12.0); speel.html (v1.12.2+). Zie HANDOFF-ZOEKINDEX.md en improvement-d20-bag.json userFeatureLog.",
