@@ -3829,6 +3829,17 @@
     .hub-tile-sub, .hub-tile-stat { display: none; }
     .settings-home-tile .hub-tile-sub,
     .settings-home-tile .hub-tile-stat { display: block; }
+    #gearScreen .gear-slot-sub,
+    #gearScreen .gear-slot-pills,
+    #gearScreen .gear-slot-pills.hub-tile-stat,
+    #gearScreen .gear-weapon-aside .hub-tile-sub,
+    #gearScreen .gear-weapon-aside .hub-tile-stat {
+      display: flex;
+    }
+    #gearScreen .gear-slot-sub,
+    #gearScreen .gear-weapon-aside .hub-tile-sub {
+      display: -webkit-box;
+    }
     .hub-tile { min-height: 56px; padding: 7px 32px 7px 10px; }
     .hub-tile-ico { width: 1.5em; height: 1.5em; }
     .hub-tile-ico img { width: 22px; height: 22px; }
@@ -4286,30 +4297,45 @@
     margin: 0 auto;
     display: flex;
     flex-direction: column;
-    gap: 10px;
+    gap: 8px;
   }
+  /* Doll | 5 slots on first paint. Equip-look sibling owns canvas pixels. */
   #gearScreen .gear-loadout {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
+    display: grid;
+    grid-template-columns: minmax(118px, 34%) minmax(0, 1fr);
+    grid-template-areas:
+      "hero slots"
+      "aside aside"
+      "unequip unequip";
+    gap: 8px;
+    align-items: start;
   }
+  #gearScreen .gear-hero { grid-area: hero; }
+  #gearScreen #gearSlotList { grid-area: slots; }
+  #gearScreen #gearWeaponAside { grid-area: aside; }
+  #gearScreen #gearUnequipAll { grid-area: unequip; }
   #gearScreen .gear-screen-head {
     width: min(94vw, 420px);
-    margin: 0 auto 8px;
+    margin: 0 auto 4px;
     text-align: center;
   }
   #gearScreen .head {
     text-align: center;
-    margin: 2px 0 4px;
-    font-size: clamp(26px, 7.4vw, 36px);
+    margin: 0 0 2px;
+    font-size: clamp(22px, 6.4vw, 32px);
     color: #ffd75e;
   }
   #gearScreen .subtitle {
     text-align: center;
-    margin: 0 0 8px;
+    margin: 0;
     color: var(--menu-ink-muted);
-    font-size: 13px;
+    font-size: 12px;
     font-weight: 700;
+    line-height: 1.25;
+    display: -webkit-box;
+    -webkit-line-clamp: 1;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
   }
   #gearScreen > .back-btn {
     position: sticky;
@@ -4331,17 +4357,18 @@
   }
   .gear-hero {
     width: 100%; margin: 0;
-    background: var(--menu-tile-solid);
-    border: 1px solid var(--menu-edge);
-    border-radius: 16px;
-    box-shadow: 0 4px 0 rgba(0, 0, 0, 0.28), inset 0 1px 0 rgba(255, 255, 255, 0.06);
-    padding: 12px 12px 10px;
-    display: flex; flex-direction: column; align-items: center; gap: 8px;
+    background: transparent;
+    border: 0;
+    border-radius: 0;
+    box-shadow: none;
+    padding: 0;
+    display: flex; flex-direction: column; align-items: center; gap: 6px;
   }
   .gear-doll-canvas {
-    width: min(72vw, 220px);
-    height: min(46vw, 260px);
-    max-height: 280px;
+    width: min(34vw, 148px);
+    height: min(48vw, 188px);
+    min-height: 172px;
+    max-height: 200px;
     display: block; pointer-events: none;
   }
   .gear-summary {
@@ -4359,28 +4386,36 @@
     display: none;
   }
   .gear-hunt-cta {
-    width: min(94vw, 420px);
-    margin: 0 auto 10px;
-    padding: 10px 12px;
-    border-radius: 14px;
+    width: 100%;
+    margin: 0;
+    padding: 8px 10px;
+    border-radius: 12px;
     border: 1px solid rgba(255, 215, 94, .45);
     background: linear-gradient(135deg, rgba(255, 215, 94, 0.14), transparent 55%), var(--menu-tile-solid);
     box-shadow: 0 3px 0 rgba(0, 0, 0, 0.28);
     display: flex;
-    flex-direction: column;
+    flex-direction: row;
+    align-items: center;
     gap: 8px;
   }
   .gear-hunt-cta[hidden] { display: none !important; }
   .gear-hunt-copy {
     margin: 0;
-    font-size: 13px;
+    flex: 1;
+    min-width: 0;
+    font-size: 12px;
     font-weight: 700;
-    line-height: 1.35;
+    line-height: 1.3;
     color: var(--menu-ink);
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
   }
   .gear-hunt-btn {
-    min-height: max(48px, var(--touch-min));
-    padding: 10px 14px;
+    flex: 0 0 auto;
+    min-height: max(44px, var(--touch-min));
+    padding: 8px 12px;
     border-radius: 12px;
     border: 1px solid rgba(124, 245, 255, .5);
     background: #1c2940;
@@ -4396,7 +4431,7 @@
   .gear-hunt-btn:active { transform: translateY(2px); box-shadow: 0 1px 0 rgba(0,0,0,.26); }
   .gear-unequip-all {
     width: 100%;
-    margin: 12px 0 0;
+    margin: 0;
     min-height: max(44px, var(--touch-min));
     padding: 8px 12px;
     border-radius: 12px;
@@ -4416,21 +4451,31 @@
   }
   .gear-pill {
     display: inline-flex; align-items: center; gap: 4px;
-    font-size: 10px; font-weight: 900; letter-spacing: .06em;
-    padding: 4px 8px; border-radius: 999px;
+    font-size: 11px; font-weight: 900; letter-spacing: .04em;
+    padding: 5px 9px; border-radius: 999px;
     border: 1px solid var(--menu-edge);
     background: #0c1422;
     color: #e8f0ff;
-    min-height: 22px;
+    min-height: 26px;
+  }
+  .gear-stat-chip {
+    font-size: 12px;
+    letter-spacing: .03em;
+    padding: 6px 10px;
+    min-height: 28px;
   }
   .gear-pill-vanity { color: #c8d0dc; border-color: rgba(200, 208, 220, .55); }
-  .gear-pill-stat { color: #ffd75e; border-color: rgba(255, 215, 94, .65); }
+  .gear-pill-stat {
+    color: #ffd75e;
+    border-color: rgba(255, 215, 94, .75);
+    background: rgba(255, 215, 94, .14);
+  }
   .gear-pill-lock { color: #e8f0ff; border-color: rgba(232, 240, 255, .4); background: #121a28; }
   .gear-pill-empty { color: #c8d0dc; border-color: rgba(200, 208, 220, .35); }
   .gear-pill-on { color: #7cf5ff; border-color: rgba(124, 245, 255, .55); }
   .gear-slot-list {
     width: 100%; margin: 0;
-    display: flex; flex-direction: column; gap: 8px;
+    display: flex; flex-direction: column; gap: 6px;
   }
   .gear-slot-row {
     display: block; width: 100%;
@@ -4439,8 +4484,8 @@
   .gear-slot-card {
     display: flex; flex-direction: row; align-items: center; gap: 10px;
     width: 100%; min-height: max(56px, var(--touch-min));
-    padding: 10px 28px 10px 12px; text-align: left;
-    border-radius: 14px; cursor: pointer;
+    padding: 8px 10px; text-align: left;
+    border-radius: 12px; cursor: pointer;
     background: var(--menu-tile-solid);
     border: 1px solid var(--menu-edge);
     color: var(--menu-ink);
@@ -4468,12 +4513,12 @@
   .gear-slot-row .gear-slot-card.hub-tile,
   .gear-slot-row .gear-slot-card {
     width: 100%;
-    padding-right: 14px;
+    padding-right: 10px;
   }
   .gear-slot-row .gear-slot-card::after { display: none; }
   .gear-slot-card .hub-tile-ico,
   .gear-slot-swatch {
-    width: 36px; height: 36px; min-width: 36px; border-radius: 10px;
+    width: 32px; height: 32px; min-width: 32px; border-radius: 9px;
     background: #0c1422;
     box-shadow: inset 0 0 0 1px rgba(255,255,255,.16);
     pointer-events: none;
@@ -4487,37 +4532,63 @@
   .gear-slot-title,
   .gear-slot-card .hub-tile-title {
     display: -webkit-box; width: 100%; max-width: 100%;
-    font-weight: 900; font-size: 15px; line-height: 1.2;
+    font-weight: 900; font-size: 14px; line-height: 1.15;
     color: var(--menu-ink);
-    -webkit-line-clamp: 2; -webkit-box-orient: vertical;
+    -webkit-line-clamp: 1; -webkit-box-orient: vertical;
     overflow: hidden; word-break: break-word;
   }
   .gear-slot-sub,
   .gear-slot-card .hub-tile-sub {
     display: -webkit-box; width: 100%; max-width: 100%;
-    font-size: 12px; color: var(--menu-ink-muted); line-height: 1.25;
-    -webkit-line-clamp: 2; -webkit-box-orient: vertical;
+    font-size: 11px; color: var(--menu-ink-muted); line-height: 1.2;
+    -webkit-line-clamp: 1; -webkit-box-orient: vertical;
     overflow: hidden; word-break: break-word;
     opacity: 1; font-weight: 600;
   }
   .gear-weapon-aside .hub-tile-sub {
     white-space: normal; overflow-wrap: anywhere;
   }
-  .gear-slot-pills { display: flex; flex-wrap: wrap; gap: 4px; margin-right: 4px; }
-  .gear-slot-card .gear-pill { flex-shrink: 0; }
+  .gear-slot-pills,
+  .gear-slot-pills.hub-tile-stat {
+    display: flex; flex-wrap: wrap; gap: 4px; margin: 0;
+    font-size: 12px;
+    background: transparent;
+    padding: 0;
+    letter-spacing: 0;
+  }
+  .gear-slot-card .gear-pill { flex-shrink: 0; font-size: 12px; }
   .gear-slot-clear { display: none; }
   .gear-weapon-aside.hub-tile,
   .gear-weapon-aside {
+    display: flex; flex-direction: row; align-items: center; gap: 10px;
     width: 100%; margin: 0;
-    min-height: max(72px, var(--touch-min));
-    padding: 12px 28px 11px 13px;
+    min-height: max(56px, var(--touch-min));
+    padding: 8px 10px;
     background: linear-gradient(135deg, rgba(199, 146, 255, 0.16), transparent 45%), var(--menu-tile-solid);
     border: 1px solid rgba(199, 146, 255, 0.32);
-    border-radius: 14px;
+    border-radius: 12px;
     color: var(--menu-ink);
-    box-shadow: 0 4px 0 rgba(0, 0, 0, 0.28), inset 0 1px 0 rgba(255, 255, 255, 0.06);
+    box-shadow: 0 3px 0 rgba(0, 0, 0, 0.28), inset 0 1px 0 rgba(255, 255, 255, 0.06);
     text-align: left;
     font-family: inherit;
+  }
+  .gear-weapon-aside .hub-tile-ico {
+    width: 32px; height: 32px; min-width: 32px;
+  }
+  .gear-weapon-aside .hub-tile-title {
+    flex: 0 0 auto;
+    font-size: 14px;
+  }
+  .gear-weapon-aside .hub-tile-sub {
+    flex: 1; min-width: 0;
+    -webkit-line-clamp: 1;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    display: -webkit-box;
+  }
+  .gear-weapon-aside .hub-tile-stat {
+    flex-shrink: 0;
+    margin-left: auto;
   }
   .gear-weapon-aside .hub-tile-title { color: var(--menu-ink); }
   .gear-weapon-aside .hub-tile-sub { color: var(--menu-ink-muted); opacity: 1; }
@@ -4786,30 +4857,69 @@
     .gear-slot-pills .gear-pill-on,
     .gear-slot-open { display: none; }
     .gear-card-name .gear-pill-on { display: none; }
-    .gear-summary { gap: 4px; }
-    .gear-pill { padding: 3px 7px; }
+    .gear-summary { gap: 5px; }
+    .gear-pill { padding: 5px 9px; font-size: 11px; }
+    .gear-pill-stat,
+    .gear-stat-chip {
+      font-size: 12px;
+      padding: 6px 10px;
+      min-height: 28px;
+    }
+    .gear-hunt-copy { display: none; }
+    .gear-hunt-btn { width: 100%; }
   }
   @media (max-width: 380px) {
-    .gear-doll-canvas { width: min(78vw, 200px); height: min(50vw, 240px); }
-    .gear-slot-title { font-size: 14px; }
+    .gear-doll-canvas { width: min(36vw, 140px); height: min(48vw, 188px); min-height: 172px; }
+    .gear-slot-title { font-size: 13px; }
     .gear-card-action { min-width: 64px; font-size: 10px; }
   }
   @media (min-width: 900px) {
-    #gearScreen .gear-screen-head,
-    #gearScreen .gear-hunt-cta { width: min(96vw, 1040px); }
+    #gearScreen .gear-screen-head { width: min(96vw, 1040px); }
     #gearScreen .gear-layout {
       width: min(96vw, 1040px);
       display: grid;
-      grid-template-columns: minmax(300px, 380px) minmax(380px, 1fr);
+      grid-template-columns: minmax(300px, 400px) minmax(380px, 1fr);
+      grid-template-areas:
+        "loadout inv"
+        "hunt inv";
       align-items: start;
       gap: 16px;
     }
+    #gearScreen .gear-loadout { grid-area: loadout; }
+    #gearScreen #gearHuntCta { grid-area: hunt; width: 100%; }
+    #gearScreen .gear-inv { grid-area: inv; }
     #gearScreen .gear-loadout {
       position: sticky;
       top: max(56px, calc(env(safe-area-inset-top) + 48px));
     }
     #gearScreen .gear-sheet-tools { top: max(56px, calc(env(safe-area-inset-top) + 48px)); }
-    .gear-doll-canvas { width: min(28vw, 240px); height: min(36vw, 280px); }
+    .gear-doll-canvas { width: min(18vw, 168px); height: min(24vw, 200px); min-height: 172px; }
+  }
+  @media (orientation: landscape) and (max-height: 420px) {
+    #gearScreen.gear-screen { padding-bottom: 12px; }
+    #gearScreen > .back-btn { margin-bottom: 4px; }
+    #gearScreen .gear-screen-head { margin-bottom: 2px; }
+    #gearScreen .subtitle { display: none; }
+    #gearScreen .head { font-size: 20px; margin: 0; }
+    #gearScreen .gear-layout { width: min(96vw, 1040px); gap: 6px; }
+    #gearScreen .gear-loadout {
+      grid-template-columns: 128px minmax(0, 1fr) minmax(0, 1fr);
+      grid-template-areas:
+        "hero slots slots"
+        "hero aside unequip";
+      gap: 6px;
+    }
+    #gearScreen #gearSlotList {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 6px;
+    }
+    .gear-doll-canvas { width: 118px; height: 172px; min-height: 172px; }
+    .gear-hunt-copy { display: none; }
+    .gear-hunt-cta { padding: 6px 8px; }
+    .gear-hunt-btn { min-height: 44px; width: auto; }
+    .gear-slot-card.hub-tile,
+    .gear-slot-card { padding: 6px 8px; }
   }
 
   /* Buildings HOME screen — Android-first list → detail */
@@ -5098,7 +5208,18 @@
       line-height: 1.2;
     }
     .gear-summary { gap: 5px; }
-    .gear-pill { font-size: 9px; padding: 3px 6px; letter-spacing: .04em; }
+    #gearScreen .gear-pill {
+      font-size: 12px;
+      padding: 6px 10px;
+      letter-spacing: .03em;
+      min-height: 28px;
+    }
+    #gearScreen .gear-pill-stat,
+    #gearScreen .gear-stat-chip,
+    #gearScreen .gear-slot-pills.hub-tile-stat {
+      font-size: 12px;
+      margin-top: 0;
+    }
     .summon-stage { max-height: min(34vh, 220px); aspect-ratio: 16 / 10; }
     .summon-where { display: none; }
     .summon-pull-btn { min-height: 52px; }
@@ -5915,28 +6036,15 @@
 
   @media (min-width: 860px) {
     #gearScreen.gear-screen.active {
-      display: grid;
-      grid-template-columns: minmax(280px, 360px) minmax(320px, 1fr);
-      grid-template-areas:
-        "back back"
-        "head head"
-        "hero slots"
-        "hero aside"
-        "inv inv"
-        "home home";
-      justify-content: center;
-      column-gap: 16px;
-      row-gap: 8px;
+      display: flex;
+      flex-direction: column;
+      align-items: stretch;
       padding-left: max(20px, env(safe-area-inset-left));
       padding-right: max(20px, env(safe-area-inset-right));
     }
-    #gearScreen > .back-btn { grid-area: back; width: auto; }
-    #gearScreen .gear-screen-head { grid-area: head; width: 100%; }
-    #gearScreen .gear-hero { grid-area: hero; width: 100%; }
-    #gearScreen #gearWeaponAside { grid-area: aside; width: 100%; }
-    #gearScreen #gearSlotList { grid-area: slots; width: 100%; }
-    #gearScreen .gear-inv { grid-area: inv; width: 100%; max-width: none; }
-    #gearScreen .sub-home-bar { grid-area: home; width: 100%; }
+    #gearScreen > .back-btn { width: auto; }
+    #gearScreen .gear-screen-head { width: min(96vw, 1040px); }
+    #gearScreen .gear-layout { width: min(96vw, 1040px); }
     #buildingsScreen .buildings-wallet,
     #buildingsWallet.buildings-wallet { width: min(94vw, 860px); }
     #summonScreen .summon-rail { width: min(var(--ui-rail-wide), 720px); }

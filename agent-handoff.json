@@ -50,6 +50,14 @@
   },
   "userWishlist": [
     {
+      "id": "w-20260918T164800",
+      "from": "user",
+      "text": "FIX — Stickman Fighter gear/loadout SCREEN UX. Off main. Draft PR only. No Versus. speel.html. Until ~19:10 Amsterdam if possible. Mega clunky loadout UI: nested box-in-box doll card, long scroll, cramped chips, cluttered slots. First paint ~390px: doll + all 5 slots (or clear primary actions) without endless scroll. Cleaner hierarchy, less nested chrome, readable STAT chips. Coordinate with sibling equip-look (they own pixel offsets/layers). This run owns CSS/layout/HTML. Prove 390 + optional 844 landscape. No main merge.",
+      "status": "in-progress",
+      "updated": "2026-09-18",
+      "notes": "Layout/HTML/CSS only. Equip-look sibling bc-e8e4255d owns doll pixel offsets/layers. Sibling #348 first-fold exists — this PR owns hierarchy/chrome/chips."
+    },
+    {
       "id": "w-20260918T155700",
       "from": "user",
       "text": "MEGA-MERGE Stickman 20m-session drafts to main. Brendon wants playtest swarm on a fixed build next. Priority: #333 invisible fighters, #325 landscape combat camera/floor, #334 examinator feel (keep pauseG), #329 landscape begin/HOME SPELEN + FOMO dock, #332 telegraph readability (keep #314 density), #331 landscape touch, #328 first-30s teach, #330 combat juice, #326 death-retry polish, #327 fxLite if mergeable. No Versus. speel.html. No force-push. Conflict: keep #333 drawCombatants+recover, #325 viewport/floor, #334 pauseG HUD, #329 two-col SPELEN + FOMO left dock, #323/#326 fat gold Nog één keer + restartAdventureInstant.",
