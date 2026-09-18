@@ -45,6 +45,12 @@
         "pr": 324,
         "title": "Tablet midband (SKIP — already in #314)",
         "skip": true
+      },
+      {
+        "pr": 340,
+        "title": "Draft: 390 meta-menu playtest findings (LIVE v1.18.190)",
+        "draft": true,
+        "note": "Findings only. Do not merge main."
       }
     ]
   },
