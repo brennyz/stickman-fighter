@@ -26,7 +26,7 @@ Fix bots launch from **`IMPROVEMENT-PLAN.md`** (10 lanes). This file is the boar
 | Fair telegraph | CHARGE HUD readable | #342 CHARGE PASS | **P1 TF-002/003** · TF-001 fixed on #342 |
 | Feel | Punch snap + named floater | #344 soft PASS | **P1** first-kill toast+banner |
 | Perf | (lead: no hitch on L1) | #339 P1 after ~90 frames | **PERF-01…03** |
-| Meta menus | (not lead-owned) | #340 MM-001…012 | P1 scroll / blank / cover |
+| Meta menus | (not lead-owned) | **#340 ingested** | **MM-001–005 P1** + landscape 010–012 |
 
 ---
 
@@ -64,11 +64,11 @@ Status: `open` · `pass` · `fixed-on-draft` · `DELEGATED` · `out`
 | **TF-002** | open | telegraph | Hop/fly have no wind-up. L1 deaths are contact; body is the pipe. | #342 |
 | **TF-003** | open | telegraph | CHARGE world ring washes out on day sky; HUD bar does the work. | #342 |
 | **J-001** | open | juice | First Avontuur kill: `toast.dexDiscover` **and** `banner.newDex` stack on the KO snap. | #344 |
-| **MM-001** | open | gear | 390 catalog one-page ~3668–4285 px scroll. | #340 |
-| **MM-002** | open | pets | 390: list below fold, triple egg. | #340 |
-| **MM-003** | open | factories | Phone wallet = unlabeled dots. LIVE `smoke:buildings-ui` still fails. | #340 |
-| **MM-004** | open | summons | ~2.2s then dark card; name only in log. | #340 |
-| **MM-005** | open | FOMO | Portrait Vandaag covers meta tiles. Landscape dock OK (#329). | #340 |
+| **MM-001** | open · **#340** | gear / EX-011 | 390 one-page catalog **3668–4285 px** (~4–5 viewports). Doll + 5 slots + 14 filter chips + 27 locked rows. Filters are mid-page (`#gearSheetTools` 248 px), not a sheet. Tablet 834 still **3843 px** / no 900 dual-pane. Slot tap = chip wall (`Alles27 Look15`). | #340 |
+| **MM-002** | open · **#340** | pets | 390 chrome stack ≈530 px (wallet + hero + triple “Dag-ei klaar” + 84 px crack). Dex list top ≈716 — **below the fold**. Detail CTAs y≈931. Softens on 834 (5 cards visible). | #340 |
+| **MM-003** | open · **#340** | factories / EX-016 | 390 wallet = unlabeled dots (`PC 0` + five `0`s). Lock lines wrap `(eiland n)`. Upgrade sheet repeats “Mis 20 PC” / full factory name. **LIVE `smoke:buildings-ui` fails** (`doesShort`, `toastShort`). Labeled on 834/844 — phone-only. | #340 |
+| **MM-004** | open · **#340** | summons / EX-010 | Pull **2208 ms**; stage is a dark card in rings; name only in the log (`Schroot`). Tut strip still on first open. Stage/CTA ratio 2.2. | #340 |
+| **MM-005** | open · **#340** | FOMO / #322 | Veteran HOME: Vandaag covers Fabrieken / Uitrusting / Pets / Oproepen (`getBoundingClientRect` empty). Only “Naar oproepen”. Landscape left-dock keeps tiles (#329). | #340 |
 | **MM-010** | open | gear | 844×390 first paint = doll only (slots y≈594). | #340 |
 | **MM-011** | open | pets | 844×390: 0 dex cards on the fold. | #340 |
 | **MM-012** | open | summons | 844×390: gold `Open kist` clipped. | #340 |
@@ -97,6 +97,20 @@ Status: `open` · `pass` · `fixed-on-draft` · `DELEGATED` · `out`
 | PERF-06 | open | Menu UI canvases leftover |
 | Versus | retired | Do not revive |
 
+### #340 MM-001–005 (390 meta — canonical)
+
+Source: `docs/PLAYTEST-META-MENUS-390.md` on `cursor/playtest-meta-menus-a006`. Fresh + veteran. Open 14–37 ms. Versus gone. Factory ids locked.
+
+| ID | 390 | 834 tablet | 844 land | Bot |
+|----|-----|------------|----------|-----|
+| MM-001 gear scroll | **4285 / 3668 px** · 27 rows · chip wall | 3843 px · 5 slots visible · still 1 col | doll-only = MM-010 | **11** (scroll) · 10 (land paint) |
+| MM-002 pets fold | chrome ≈530 · list y≈716 · triple egg | **5 cards** on fold | 0 cards = MM-011 | **12** |
+| MM-003 factories | unlabeled dots · `smoke:buildings-ui` **FAIL** | labeled · fits | labeled | **13** |
+| MM-004 summon blank | pull **2208 ms** · dark card · `Schroot` in log | pull ~1.6 s · tall stage | CTA clip = MM-012 | **8** |
+| MM-005 FOMO cover | Vandaag covers 4 meta tiles | covers tiles | **left dock PASS** | **9** |
+
+P2 from same PR (do not steal P1 bots): MM-006 factory toast parks on back; MM-007 filter label jam (`Alles27`); MM-008 egg chip 74×36; MM-009 pity copy.
+
 Older EX-001…032 stay on `EXAMINATOR.md`. Do not re-file.
 
 ---
@@ -109,7 +123,7 @@ Older EX-001…032 stay on `EXAMINATOR.md`. Do not re-file.
 | **#337** | death-retry | **PASS.** P2 heat / dice lecture / unused 650ms. |
 | **#338** | landscape HOME | Visible PASS. **EX-036 P1** FOMO inert. |
 | **#339** | mid-phone perf | **PERF-01…03 P1.** Keep spawnLite; gate freezes. |
-| **#340** | meta menus | MM-001…005 + 010…012 P1. Skip tablet-834 lane. |
+| **#340** | meta menus | **MM-001–005 P1 ingested** (gear scroll, pets fold, factories smoke, 2.2s blank, FOMO cover). Landscape 010–012 P1. Skip tablet-834 as new owner. Open times 14–37 ms — clunk is chrome/scroll, not JS. |
 | **#341** | landscape combat | **PASS.** P2 hop asymmetry only. |
 | **#342** | telegraph | **TF-001 fixed here (land).** TF-002/003 open P1. Density unchanged. |
 | **#343** | first-30s | **PASS.** P2 lang / Continue / FOMO flake. |
@@ -126,6 +140,7 @@ Older EX-001…032 stay on `EXAMINATOR.md`. Do not re-file.
 | 18:13–18:20 | 390×844 | speel → SPELEN → Avontuur → punch → die → retry | Fighters visible · `Tik slaan` · fat gold · rematch paints |
 | 18:17–18:20 | 844×390 | HOME → fight → die | Floor under feet · pads fire · CHARGE HUD · gold CTA |
 | 18:40 | — | Ingest #336–#344 · **FREEZE** | Board + 10-bot plan |
+| 18:42 | — | **#340 deepen MM-001–005** | Gear 4k scroll · pets fold · factories smoke fail · summon 2.2s blank · FOMO cover. Wave-2 bots 11–13. |
 
 Lead evidence: `/opt/cursor/artifacts/playtest_adventure_390_and_844_first_pass.mp4`
 
@@ -149,4 +164,4 @@ Lead evidence: `/opt/cursor/artifacts/playtest_adventure_390_and_844_first_pass.
 1. One lane per bot. Lowest open ID in your lane. Do not steal a `fixed-on-draft`.
 2. Adventure only. 390×844 and/or 844×390. No Versus. No IAP. No `main`.
 3. Prove with a smoke or a 30-second rotate/die path. Then STOP.
-4. Launch list = `IMPROVEMENT-PLAN.md` bots 1–10.
+4. Launch list = `IMPROVEMENT-PLAN.md` bots 1–10, then wave-2 **11–13** (#340 MM-001–003).

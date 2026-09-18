@@ -25,7 +25,17 @@ Each bot = **one 30-min slice**. Branch `cursor/<lane>-9e0e`. Smoke + 390 or 844
 | **9** | MM-005 | P1 | FOMO | Portrait sheet must not cover meta tiles |
 | **10** | MM-010 | P1 | gear | 844 first paint shows slots, not doll-only |
 
-Bots 1–7 are the fight loop. Bots 8–10 are meta. Do not start P2s until these ten are claimed.
+Bots 1–7 are the fight loop. Bots 8–10 are the first meta slice (#340 MM-004/005/010).
+
+**Wave 2 (launch next — #340 MM-001–003, now fully briefed):**
+
+| Bot | ID | P | Lane | One-liner |
+|-----|----|---|------|-----------|
+| **11** | MM-001 | P1 | gear / EX-011 | Kill the 4k px one-page catalog (bottom sheet) |
+| **12** | MM-002 | P1 | pets | First screen = list, not triple-egg chrome |
+| **13** | MM-003 | P1 | factories / EX-016 | Label 390 wallet + pass `smoke:buildings-ui` |
+
+Do not start P2s (MM-006…009, F30-*, DR-*) until 1–13 are claimed. Skip tablet-834 as a new owner.
 
 ---
 
@@ -138,43 +148,85 @@ Bots 1–7 are the fight loop. Bots 8–10 are meta. Do not start P2s until thes
 
 ## Bot 8 — MM-004 summon blank (summons)
 
-**Source:** #340. Adjacent EX-010 / #313.  
+**Source:** #340 · EX-010 still live after #313.  
 **Files:** `src/ui/ui.js` `openSummonHub` / pull timers · `.summon-stage`.  
-**Do not:** rebuild the video path. Landscape clip = leftover MM-012 (not this bot unless easy).
+**Do not:** rebuild the video path. Landscape clip = MM-012 (bot leftover, not this slice unless easy). Skip tut-hide if it fights first-30s.
 
-**Bug:** Tap pull → ~2.2s blank/dark card; name appears in the log first.
+**Bug:** Timed pull **2208 ms**. At that frame `cardShow` is false — stage is a **dark card in rings**, no name. Quota becomes `9/10`. Reward name only under the fold (`Nieuwste · Schroot`). First-open tut still shows. Stage 209 px vs CTA 94 px (ratio 2.2). Open itself is fast (23–37 ms).
 
-**Fix:** Show name/rarity plate immediately; video can finish after. Target ready ≤2–3s (`#313` contract).
+**Fix:** Paint name + rarity on the stage in **&lt;1 s**. Video may finish after. Hide tut after first visit (`tipsSeen.summonChest`).
 
-**Prove:** 390 summons → first card has a name before 1s. `npm run smoke:summon`.
+**Prove:** 390 Oproepen → pull → name on stage before 1s. `npm run smoke:summon`.
 
 ---
 
 ## Bot 9 — MM-005 FOMO cover (FOMO)
 
-**Source:** #340. Adjacent EX-021 / #322.  
+**Source:** #340 · #322 / EX-021. Veteran HOME (`veteran-00-home.png`).  
 **Files:** `#fomoRitual` portrait height · HOME tiles.  
-**Do not:** restage landscape left dock (#329). Do not steal bot 2 (`inert`).
+**Do not:** restage landscape left dock (#329 PASS). Do not steal bot 2 (`inert` / pointer-events — that is 844).
 
-**Bug:** Portrait Vandaag sheet covers Collectie / Fabrieken / Pets tiles. Landscape dock keeps tiles.
+**Bug:** Returning player: Vandaag sheet covers **Fabrieken / Uitrusting / Pets / Oproepen**. Tile `getBoundingClientRect` empty until dismiss. Only “Naar oproepen” is reachable. 834 tablet also covers. 844 left-dock keeps tiles.
 
-**Fix:** Portrait sheet ≤40–48vh (existing #322 cap) and/or dock under title so hub tiles stay tappable while open.
+**Fix:** Portrait sheet ≤40–48vh and/or dock under title so the four meta tiles stay painted **and** tappable, or one-tap × then tile (document it). Do not use nuclear `display:none` on `.screen`.
 
-**Prove:** 390 HOME + Vandaag open → Fabrieken/Pets tap works **or** sheet is clearly modal with one × and tiles visible after. `npm run smoke:fomo-pra`.
+**Prove:** Veteran 390 HOME + Vandaag open → at least Fabrieken tap works, or × is the only blocker and tiles show after. `npm run smoke:fomo-pra`.
 
 ---
 
 ## Bot 10 — MM-010 gear landscape first paint (gear)
 
-**Source:** #340. MM-001 (4000px scroll) is the same lane — **first paint first**, scroll if time.  
+**Source:** #340 extra pass. **MM-001 scroll is bot 11** — do not steal the 4k catalog rewrite.  
 **Files:** `src/ui/ui.js` `renderGear` · `#gearScreen`.  
-**Do not:** tablet-834 dual-pane (skip). Do not restage equip API.
+**Do not:** tablet-834 dual-pane (`min-width: 900` — skip as new owner). Do not restage equip API.
 
-**Bug:** 844×390 first paint = doll only; slots sit at y≈594 (below the fold).
+**Bug:** 844×390 first paint = **doll only**. Slots start y≈594. Scroll still **3804 px**. Dual-pane CSS needs 900 px so 834 and 844 stay one column.
 
-**Fix:** On short landscape, slot row / sheet must paint in the first viewport (scroll the doll, not the slots).
+**Fix:** On short landscape (`max-height: 520px`), slot row / sheet in the **first viewport** (scroll the doll, not the slots).
 
-**Prove:** 844×390 Uitrusting → ≥1 slot visible without scroll. Optional: 390 catalog no longer a 4000px single page (filter-first). `npm run smoke:gear-screen`.
+**Prove:** 844×390 Uitrusting → ≥1 slot visible without scroll. `npm run smoke:gear-screen`.
+
+---
+
+## Bot 11 — MM-001 gear 4k catalog (gear / EX-011)
+
+**Source:** #340 strongest 390 miss. Same lane as bot 10 — **this bot owns scroll**, 10 owns landscape first paint.  
+**Files:** `src/ui/ui.js` `renderGear` · `#gearScreen` · `#gearSheetTools`.  
+**Do not:** dual-pane at 834. Do not restage save.gear schema.
+
+**Bug:** Fresh scrollHeight **4285 px**, veteran **3668 px**, tablet **3843 px**. One page = doll + hunt + weapon + 5 slots + 5 look-filters + 9 rarity chips + search + **27 head rows**. `#gearFilterDock` does not exist — tools are 248 px mid-page. Slot tap: `Alles27 Look15 Stats12 Slot26 Van jou1` then rarity wrap, then locked Hell rows first. `renderGear` itself is 7 ms (not a JS hitch).
+
+**Fix:** Slot tap opens a **bottom sheet** (filters + owned-first rows). Kill the 4k page. Owned-first; lock Hell/Nightmare behind the fold.
+
+**Prove:** 390 Uitrusting scrollHeight **&lt; 1600 px** (or sheet, not page). Slot tap shows rows without a chip wall. `npm run smoke:gear-screen`.
+
+---
+
+## Bot 12 — MM-002 pets fold (pets)
+
+**Source:** #340. Unique leftover vs examinator EX-003 (combat follow — do not retest).  
+**Files:** pets screen chrome · `src/ui` pets render.  
+**Do not:** restage combat pet lerp. Landscape 0-cards = MM-011 (same lane if time).
+
+**Bug:** Chrome to y≈530: title + Kist + wallet + hero + next-goal + 84 px `Dag-ei openen`. **Dex list not on first screen** (first card top ≈716). `Dag-ei klaar` said **three times**. Detail CTA y≈931–950 — “detail” shot looks like the list. Egg chip 74×36 is P2 MM-008. Tablet 834 already shows 5 cards.
+
+**Fix:** One egg CTA. List visible under tabs on first paint. Detail **replaces** the chrome stack, not appends below it.
+
+**Prove:** 390 Pets → ≥1 roster card on screen without scroll. `npm run smoke:pets-ui`.
+
+---
+
+## Bot 13 — MM-003 factories smoke (factories / EX-016)
+
+**Source:** #340. LIVE `smoke:buildings-ui` **fails** (`doesShort: false`, `toastShort: false`).  
+**Files:** `src/ui/buildings-ui.js` · wallet chips · does/toast copy.  
+**Do not:** change factory ids (`stick_lighter` … `echo_whistle`). Do not restore landscape dual-pane (list XOR detail holds).
+
+**Bug:** 390 wallet = six tiny columns: `PC 0` + five unlabeled `0`s. Veteran has rates (`+12/u`) but **no names**. Lock lines wrap `Dicht — speel Vuur-eiland (eiland 2) vrij`. Sheet repeats `Mis 20 PC` + full `Bouw Stok-Aansteker Fabriek?`. Collect toast `+96 Vonken · hopper vol (96)` fails `toastShort`; does-lines fail `doesShort` (length / “Kracht rank”). 834/844 already labeled.
+
+**Fix:** Short wallet labels on 390 (name or 1–2 letter). Short does + toast so **`npm run smoke:buildings-ui` passes**.
+
+**Prove:** 390 Fabrieken — each hopper chip has a name. Smoke green on this pin.
 
 ---
 
@@ -186,7 +238,8 @@ Bots 1–7 are the fight loop. Bots 8–10 are meta. Do not start P2s until thes
 | LC-001/002 | P2 hop-rotate asymmetry — #341 PASS |
 | EX-033 / DR-* | Retry **PASS**; delay contract / heat pile are P2 |
 | F30-* | First-30s **PASS**; lang/Continue/FOMO flake are P2 |
-| MM-002/003/011/012 | P1 leftovers after bots 8–10 |
+| MM-006…009 | P2 from #340 (toast park, `Alles27`, egg 74×36, pity copy) |
+| MM-011/012 | P1 leftovers after bots 12 / 8 (0 pet cards land · Open kist clip) |
 | EX-020 / IAP / Versus | Out of scope |
 | #324 tablet midband | SKIP (already in #314) |
 | #311 harden | Conflicts — leave |

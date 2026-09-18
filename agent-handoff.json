@@ -1279,6 +1279,10 @@
   ],
   "sessionLog": [
     {
+      "at": "2026-09-18T16:44:20Z",
+      "summary": "Ingested #340 MM-001–005 into board + wave-2 bots 11–13 (gear scroll, pets fold, factories smoke)."
+    },
+    {
       "at": "2026-09-18T16:06:11Z",
       "summary": "MEGA-MERGE 20m drafts #333–#327 onto main. v1.18.190 / SW 400. Playtest swarm. SKIP #324. Leave #311."
     },
@@ -1373,10 +1377,6 @@
     {
       "at": "2026-09-18T12:31:56Z",
       "summary": "LANGUAGE: factory desc + nameShort, FOMO/HUD locale, export gear/fabriek i18n. Draft #317, geen main."
-    },
-    {
-      "at": "2026-09-18T12:30:17Z",
-      "summary": "LANGUAGE worker: layout-safe NL/EN/DE/FR/ES copy (factory desc, FOMO, HUD telegraphs). Draft, geen main."
     }
   ],
   "implementedFeaturesSummary": "d18 char select deel 1+2 (v1.11.1-2); Mats coinrun + shuriken mik/vliegers + anti-spam (v1.12.0); speel.html (v1.12.2+). Zie HANDOFF-ZOEKINDEX.md en improvement-d20-bag.json userFeatureLog.",
