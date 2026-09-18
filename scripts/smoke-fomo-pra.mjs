@@ -158,6 +158,7 @@ must(!ach.test({ stats: { dailyBonusCount: 99, dailyStreakBest: 6 } }), 'daily7 
 must(!!ach.test({ stats: { dailyBonusCount: 1, dailyStreakBest: 7 } }), 'daily7 unlocks on best consecutive ≥7');
 
 g(`save = sanitizeSave(Object.assign({}, DEFAULT_SAVE, {
+  feltFirstPunch: true,
   chestDaily: { date: todayKey(), left: 10, pulls: [] },
   stats: Object.assign({}, DEFAULT_SAVE.stats, { advWins: 0, dailyStreak: 0, dailyStreakBest: 0, dailyBonusCount: 0 }),
   fomo: defaultFomoBag(),
