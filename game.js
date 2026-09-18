@@ -323,9 +323,9 @@ const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const VERSION_UPDATE_SAVE_KEY = 'stickfighter_version_update_save_v1';
 const VERSION_UPDATE_FLAG_KEY = 'stickfighter_version_update_flag_v1';
 const SAVE_EXPORT_SCHEMA = 3;
-const APP_VERSION = '1.18.173';
+const APP_VERSION = '1.18.174';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 383;
+const SW_CACHE_REV = 384;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', petCoins: 0, dex: {}, summons: {}, pets: {}, activePet: null,
   eggPets: {}, activeEggPet: null, eggDaily: null,
   chestDaily: null, chestWeapons: {},
@@ -4030,6 +4030,7 @@ function applyLangStaticScreens() {
   setText('summonScreenHead', 'ui.summonHead');
   setText('summonScreenSub', 'ui.summonSub');
   setText('summonWhereStrip', 'ui.summonWhere');
+  setText('summonOdds', 'ui.summonGlanceOdds', { nice: 14, mid: 30 });
   setText('summonStageHint', 'ui.summonHint');
   setText('summonRevealText', 'ui.summonReveal');
   setText('summonSkipHint', 'ui.summonSkip');
@@ -20288,6 +20289,35 @@ function sanitizeChestWeapons(raw) {
   return clean;
 }
 
+/** Display-only glance. Does not change rolls (F2 pity stays off). */
+function chestGlanceState() {
+  const d = typeof ensureChestDaily === 'function' ? ensureChestDaily() : null;
+  const left = typeof chestSummonsLeft === 'function' ? chestSummonsLeft() : 0;
+  const pulls = (d && Array.isArray(d.pulls)) ? d.pulls : [];
+  let dudRun = 0;
+  for (let i = pulls.length - 1; i >= 0; i--) {
+    const typ = pulls[i] && pulls[i].type;
+    if (typ === 'coins' || typ === 'xp' || typ === 'junk') dudRun++;
+    else break;
+  }
+  const used = pulls.length;
+  const pipMax = Math.max(
+    CHEST_DAILY_TOTAL,
+    Math.min(CHEST_DAILY_LEFT_CAP, Math.max(left, left + used))
+  );
+  return {
+    left,
+    total: CHEST_DAILY_TOTAL,
+    pipMax,
+    nicePct: Math.round((CHEST_NICE_CHANCE || 0) * 100),
+    midPct: Math.round((CHEST_GOOD_CHANCE || 0) * 100),
+    pity: false,
+    niceToday: pulls.some((p) => p && p.nice),
+    dudRun,
+    empty: left <= 0,
+  };
+}
+
 function chestResultName(res) {
   if (!res) return '';
   if (res.name) return String(res.name);
@@ -21495,6 +21525,8 @@ function seedNlGameStrings() {
     summonWhere: 'Buit landt in Collectie',
     summonQuota: 'Vandaag: {left}/{total}',
     summonQuotaShort: '{left}/{total}',
+    summonGlanceOdds: '✦{nice}% · mid {mid}% · geen pity',
+    summonEmptyHint: 'Morgen weer',
     summonPull: 'Open kist',
     summonPullLeft: '{n} over',
     summonPullEmpty: 'Op',
@@ -22669,6 +22701,8 @@ const CATALOG_EN = {
     summonWhere: 'Loot lands in Collection',
     summonQuota: 'Today: {left}/{total}',
     summonQuotaShort: '{left}/{total}',
+    summonGlanceOdds: '✦{nice}% · mid {mid}% · no pity',
+    summonEmptyHint: 'Again tomorrow',
     summonPull: 'Open chest',
     summonPullLeft: '{n} left',
     summonPullEmpty: 'Done',
@@ -24288,6 +24322,8 @@ const CATALOG_DE_CHROME = {
     summonWhere: 'Beute landet in der Sammlung',
     summonQuota: 'Heute: {left}/{total}',
     summonQuotaShort: '{left}/{total}',
+    summonGlanceOdds: '✦{nice}% · mid {mid}% · kein Pity',
+    summonEmptyHint: 'Morgen wieder',
     summonLeft: '{n} übrig',
     summonDone: 'Leer',
     summonOpen: 'Kiste öffnen',
@@ -24828,6 +24864,8 @@ overlayI18nCatalog(CATALOG_FR, {
     summonWhere: 'Le butin va dans la Collection',
     summonQuota: 'Aujourd’hui : {left}/{total}',
     summonQuotaShort: '{left}/{total}',
+    summonGlanceOdds: '✦{nice}% · mid {mid}% · pas de pity',
+    summonEmptyHint: 'Demain encore',
     summonPull: 'Ouvrir le coffre',
     summonPullLeft: '{n} restants',
     summonPullEmpty: 'Vide',
@@ -25379,6 +25417,8 @@ overlayI18nCatalog(CATALOG_ES, {
     summonWhere: 'El botín va a Colección',
     summonQuota: 'Hoy: {left}/{total}',
     summonQuotaShort: '{left}/{total}',
+    summonGlanceOdds: '✦{nice}% · mid {mid}% · sin pity',
+    summonEmptyHint: 'Mañana otra vez',
     summonPull: 'Abrir cofre',
     summonPullLeft: '{n} restantes',
     summonPullEmpty: 'Hecho',
@@ -48567,11 +48607,40 @@ const UI = {
       }
       if (typeof state !== 'undefined' && state === 'play' && !game) state = 'menu';
       ensureChestDaily();
-      const left = typeof chestSummonsLeft === 'function' ? chestSummonsLeft() : 0;
+      const glance = (typeof chestGlanceState === 'function')
+        ? chestGlanceState()
+        : { left: (typeof chestSummonsLeft === 'function' ? chestSummonsLeft() : 0), total: CHEST_DAILY_TOTAL, pipMax: CHEST_DAILY_TOTAL, nicePct: 14, midPct: 30, pity: false, empty: false };
+      const left = glance.left;
+      const empty = !!glance.empty || left <= 0;
+      const err = !!this._summonLastError;
+      const glanceEl = document.getElementById('summonGlance');
+      if (glanceEl) {
+        glanceEl.classList.toggle('is-empty', empty);
+        glanceEl.classList.toggle('is-error', err);
+      }
+      const pips = document.getElementById('summonPips');
+      if (pips) {
+        pips.textContent = '';
+        const n = Math.max(1, Math.min(12, glance.pipMax || glance.total || 10));
+        for (let i = 0; i < n; i++) {
+          const pip = document.createElement('i');
+          pip.className = 'summon-pip' + (i < left ? ' is-on' : '');
+          pips.appendChild(pip);
+        }
+      }
       const quota = document.getElementById('summonQuota');
       if (quota) {
-        quota.textContent = tOr('ui.summonQuotaShort', '{left}/{total}', { left, total: CHEST_DAILY_TOTAL });
-        quota.classList.toggle('is-empty', left <= 0);
+        quota.textContent = empty
+          ? tOr('ui.summonDoneToday', 'op voor vandaag')
+          : tOr('ui.summonQuotaShort', '{left}/{total}', { left, total: glance.total || CHEST_DAILY_TOTAL });
+        quota.classList.toggle('is-empty', empty);
+      }
+      const odds = document.getElementById('summonOdds');
+      if (odds) {
+        odds.textContent = tOr('ui.summonGlanceOdds', '✦{nice}% · mid {mid}% · geen pity', {
+          nice: glance.nicePct,
+          mid: glance.midPct,
+        });
       }
       const skipReady = !!this._summonSkipReady && !!this._chestPullBusy;
       const pullBtn = document.getElementById('btnChestPull');
@@ -48579,10 +48648,10 @@ const UI = {
       if (pullLbl) {
         pullLbl.textContent = skipReady
           ? (left > 0 ? tOr('ui.summonSkip', 'Tik om verder') : t('ui.summonPullEmpty'))
-          : (left > 0 ? t('ui.summonPullLeft', { n: left }) : t('ui.summonPullEmpty'));
+          : (empty ? tOr('ui.summonEmptyHint', 'Morgen weer') : t('ui.summonPullLeft', { n: left }));
       }
       if (pullBtn) {
-        pullBtn.disabled = skipReady ? false : (left <= 0 || !!this._chestPullBusy);
+        pullBtn.disabled = skipReady ? false : (empty || !!this._chestPullBusy);
         const titleEl = pullBtn.querySelector('div');
         if (titleEl) {
           const small = titleEl.querySelector('small');
@@ -48602,6 +48671,8 @@ const UI = {
       if (stage) {
         const canPull = left > 0 && !this._chestPullBusy;
         stage.classList.toggle('is-pullable', canPull || skipReady);
+        stage.classList.toggle('is-empty', empty && !skipReady);
+        stage.classList.toggle('is-error', err && !skipReady);
         stage.setAttribute('aria-disabled', (canPull || skipReady) ? 'false' : 'true');
         stage.setAttribute('aria-label', skipReady
           ? tOr('ui.summonSkip', 'Tik om verder')
@@ -48612,8 +48683,10 @@ const UI = {
       }
       const hint = document.getElementById('summonStageHint');
       if (hint) {
-        hint.textContent = tOr('ui.summonHint', 'Tik kist om te openen');
-        hint.style.display = (left > 0 && !this._chestPullBusy) ? '' : 'none';
+        hint.textContent = empty
+          ? tOr('ui.summonEmptyHint', 'Morgen weer')
+          : tOr('ui.summonHint', 'Tik kist om te openen');
+        hint.style.display = (!this._chestPullBusy && (left > 0 || empty)) ? '' : 'none';
       }
       const skipHint = document.getElementById('summonSkipHint');
       if (skipHint) {
@@ -48622,9 +48695,12 @@ const UI = {
       }
       const revealText = document.getElementById('summonRevealText');
       if (revealText && !this._chestPullBusy) {
-        revealText.textContent = left > 0
-          ? tOr('ui.summonReveal', 'Tik de kist — wapen of pet')
-          : tOr('ui.summonNoMore', 'Geen summons meer vandaag');
+        revealText.classList.toggle('is-idle', !empty && !err);
+        revealText.classList.toggle('is-empty', empty && !err);
+        revealText.classList.toggle('is-error', err);
+        if (err) revealText.textContent = this._summonLastError;
+        else if (empty) revealText.textContent = tOr('ui.summonNoMore', 'Geen summons meer vandaag');
+        else revealText.textContent = '';
       }
 
       const logEl = document.getElementById('summonLog');
@@ -48701,6 +48777,8 @@ const UI = {
       this.clearSummonRevealTimers();
       this._chestPullBusy = false;
       this._summonSkipReady = false;
+      this._summonLastError = '';
+      this._summonPullLock = false;
       this._chestPullLeftSnap = null;
       try { if (typeof _summonVideoOk !== 'undefined') _summonVideoOk = null; } catch (_) {}
       this.safeOpen('summonScreen', () => {
@@ -48822,7 +48900,12 @@ const UI = {
     nameEl.textContent = (typeof chestResultTitle === 'function') ? chestResultTitle(res) : title;
     if (rarEl) {
       rarEl.textContent = typeof rarityLabel === 'function' ? rarityLabel(rarId) : rarId;
-      rarEl.style.color = rar.color || '#9db1e3';
+      const col = rar.color || '#9db1e3';
+      rarEl.style.background = col;
+      rarEl.style.color = (rarId === 'legendary' || rarId === 'uncommon' || rarId === 'mythic')
+        ? '#0a0d14'
+        : '#0a0d14';
+      rarEl.style.boxShadow = '0 0 0 1px rgba(0,0,0,.35)';
     }
     if (skEl) {
       skEl.textContent = skill || '';
@@ -49004,11 +49087,19 @@ const UI = {
 
   doChestPull(kind) {
     try {
+      const now = Date.now();
+      if (this._summonPullLock || now < (this._summonGuardUntil || 0)) return;
       if (this._chestPullBusy && this._summonSkipReady) {
         const leftNow = typeof chestSummonsLeft === 'function' ? chestSummonsLeft() : 0;
+        this._summonPullLock = true;
+        this._summonGuardUntil = now + 380;
         this.finishSummonReveal();
+        this._summonPullLock = false;
         if (leftNow <= 0) return;
       } else if (this._chestPullBusy) return;
+      this._summonPullLock = true;
+      this._summonGuardUntil = now + 380;
+      this._summonLastError = '';
       if (state === 'play' && game) {
         UI.toast(t('toast.notDuringCombat'), 2000, { tone: 'warn' });
         return;
@@ -49038,22 +49129,37 @@ const UI = {
         this._chestPullBusy = false;
         this._chestPullLeftSnap = null;
         this._summonPendingMsg = null;
+        this._summonPullLock = false;
+        this._summonLastError = (res && res.reason === 'empty')
+          ? tOr('ui.summonNoMore', 'Geen summons meer vandaag')
+          : msg;
         try {
           const sc = document.getElementById('summonScreen');
           if (sc) sc.classList.remove('is-pulling');
         } catch (_) {}
-        try { UI.toast(msg, 2200); } catch (_) {}
+        if (res && res.reason === 'empty') {
+          if (!this._summonEmptyToast) {
+            this._summonEmptyToast = true;
+            try { UI.toast(this._summonLastError, 2200, { tone: 'warn' }); } catch (_) {}
+          }
+        } else {
+          try { UI.toast(msg, 2200, { tone: 'warn' }); } catch (_) {}
+        }
         try { this.renderSummon(); } catch (_) {}
         try { this.renderMenu(); } catch (_) {}
         return;
       }
 
+      this._summonEmptyToast = false;
       this.runSummonRevealTimeline(res);
+      this._summonPullLock = false;
       try { this.renderMenu(); } catch (_) {}
       try { syncPlayLayer(); } catch (_) {}
     } catch (err) {
       this._chestPullBusy = false;
+      this._summonPullLock = false;
       this._summonPendingMsg = null;
+      this._summonLastError = tOr('ui.summonFail', 'Summon mislukt — probeer opnieuw');
       this.clearSummonRevealTimers();
       sfReportError('doChestPull', err, 'Summon mislukt');
       try { ensureVisibleScreen(); } catch (_) {}

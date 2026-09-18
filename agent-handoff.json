@@ -53,7 +53,7 @@
       "text": "WORKER lane SUMMON systems: summons confusing + ugly. Clarify flow, clean visuals, readable UI, snappy feedback, less clutter on mobile. Keep share URL speel.html. No Versus. Draft PR only.",
       "status": "done-in-code",
       "updated": "2026-09-18",
-      "notes": "Lane: chest-summons flow + summon screen chrome. Drop odds unchanged. Versus untouched."
+      "notes": "Draft #313 P0 follow-up: glance remaining/odds/no-pity, empty+spam guards, chest/card contrast. Versus + speel.html untouched."
     },
     {
       "id": "w-20260916T121500",

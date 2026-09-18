@@ -745,6 +745,8 @@ const CATALOG_DE_CHROME = {
     summonWhere: 'Beute landet in der Sammlung',
     summonQuota: 'Heute: {left}/{total}',
     summonQuotaShort: '{left}/{total}',
+    summonGlanceOdds: '✦{nice}% · mid {mid}% · kein Pity',
+    summonEmptyHint: 'Morgen wieder',
     summonLeft: '{n} übrig',
     summonDone: 'Leer',
     summonOpen: 'Kiste öffnen',

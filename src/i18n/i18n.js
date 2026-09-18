@@ -1733,6 +1733,7 @@ function applyLangStaticScreens() {
   setText('summonScreenHead', 'ui.summonHead');
   setText('summonScreenSub', 'ui.summonSub');
   setText('summonWhereStrip', 'ui.summonWhere');
+  setText('summonOdds', 'ui.summonGlanceOdds', { nice: 14, mid: 30 });
   setText('summonStageHint', 'ui.summonHint');
   setText('summonRevealText', 'ui.summonReveal');
   setText('summonSkipHint', 'ui.summonSkip');

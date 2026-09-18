@@ -75,6 +75,11 @@ async function run() {
         fullH: rect ? Math.round(rect.height) : 0,
         hasPull: !!document.getElementById('btnChestPull'),
         hasSkip: !!document.getElementById('summonSkipHint'),
+        hasGlance: !!document.getElementById('summonGlance'),
+        glanceOdds: (document.getElementById('summonOdds') || {}).textContent || '',
+        pipOn: document.querySelectorAll('#summonPips .summon-pip.is-on').length,
+        pipAll: document.querySelectorAll('#summonPips .summon-pip').length,
+        glanceFn: typeof chestGlanceState === 'function',
         logHelper: typeof chestPullLogLine === 'function',
         logJunk: (typeof chestPullLogLine === 'function')
           ? chestPullLogLine({ kind: 'weapon', type: 'junk', nice: false })
@@ -92,6 +97,11 @@ async function run() {
     must(openSnap.where && openSnap.centerCard, 'missing where-strip or center card');
     must(openSnap.left === 10, 'expected 10 summons, got ' + openSnap.left);
     
+    must(openSnap.hasGlance && openSnap.glanceFn, 'missing summon glance strip / chestGlanceState');
+    must(/14%/.test(openSnap.glanceOdds) && /30%/.test(openSnap.glanceOdds),
+      'odds not one-glance: ' + openSnap.glanceOdds);
+    must(/pity/i.test(openSnap.glanceOdds), 'pity status missing from glance: ' + openSnap.glanceOdds);
+    must(openSnap.pipAll === 10 && openSnap.pipOn === 10, 'expected 10/10 pips, got ' + JSON.stringify(openSnap));
     must(openSnap.hasPull, 'missing btnChestPull');
     must(openSnap.hasSkip, 'missing summonSkipHint');
     must(openSnap.logHelper, 'missing chestPullLogLine');
@@ -153,13 +163,37 @@ async function run() {
 
     must(openSnap.fullW >= 360 && openSnap.fullH >= 700, 'summon screen not fullscreen-ish: ' + JSON.stringify(openSnap));
 
+    const emptySnap = await page.evaluate(() => {
+      const d = ensureChestDaily();
+      const prev = d.left;
+      d.left = 0;
+      UI._chestPullBusy = false;
+      UI._summonSkipReady = false;
+      UI.renderSummon();
+      const btn = document.getElementById('btnChestPull');
+      const stage = document.getElementById('summonStage');
+      const snap = {
+        disabled: !!(btn && btn.disabled),
+        emptyStage: !!(stage && stage.classList.contains('is-empty')),
+        pipOn: document.querySelectorAll('#summonPips .summon-pip.is-on').length,
+        quota: (document.getElementById('summonQuota') || {}).textContent || '',
+      };
+      d.left = prev;
+      UI.renderSummon();
+      return snap;
+    });
+    must(emptySnap.disabled && emptySnap.emptyStage && emptySnap.pipOn === 0,
+      'empty state missing: ' + JSON.stringify(emptySnap));
+
     const pullStart = await page.evaluate(() => {
       const before = chestSummonsLeft();
+      UI.doChestPull('random');
+      UI.doChestPull('random');
       UI.doChestPull('random');
       return { before, afterPull: chestSummonsLeft() };
     });
     must(pullStart.afterPull === pullStart.before - 1,
-      'counter did not drop on pull: ' + JSON.stringify(pullStart));
+      'duplicate tap spam changed leftover: ' + JSON.stringify(pullStart));
 
     const pullSnap = await page.evaluate(async (before) => {
       const toastBefore = (document.getElementById('toastHost') || {}).textContent || '';

@@ -463,6 +463,35 @@ function sanitizeChestWeapons(raw) {
   return clean;
 }
 
+/** Display-only glance. Does not change rolls (F2 pity stays off). */
+function chestGlanceState() {
+  const d = typeof ensureChestDaily === 'function' ? ensureChestDaily() : null;
+  const left = typeof chestSummonsLeft === 'function' ? chestSummonsLeft() : 0;
+  const pulls = (d && Array.isArray(d.pulls)) ? d.pulls : [];
+  let dudRun = 0;
+  for (let i = pulls.length - 1; i >= 0; i--) {
+    const typ = pulls[i] && pulls[i].type;
+    if (typ === 'coins' || typ === 'xp' || typ === 'junk') dudRun++;
+    else break;
+  }
+  const used = pulls.length;
+  const pipMax = Math.max(
+    CHEST_DAILY_TOTAL,
+    Math.min(CHEST_DAILY_LEFT_CAP, Math.max(left, left + used))
+  );
+  return {
+    left,
+    total: CHEST_DAILY_TOTAL,
+    pipMax,
+    nicePct: Math.round((CHEST_NICE_CHANCE || 0) * 100),
+    midPct: Math.round((CHEST_GOOD_CHANCE || 0) * 100),
+    pity: false,
+    niceToday: pulls.some((p) => p && p.nice),
+    dudRun,
+    empty: left <= 0,
+  };
+}
+
 function chestResultName(res) {
   if (!res) return '';
   if (res.name) return String(res.name);

@@ -145,6 +145,7 @@ Schrijf **1–3 regels** per sessie: datum, d#, wat, versie.
 
 | Datum (UTC) | d# | Update |
 |-------------|-----|--------|
+| 2026-09-18 | — | **Summon P0 #313:** één glance (pips + leftover + ✦14%/mid 30%/geen pity), empty/error + tap-spam guard, kist/kaart contrast + rarity-badge. F2 pity-rolls blijven UIT. **v1.18.174 / SW 384**. Draft, niet main. |
 | 2026-09-18 | — | **Summon systems:** flow verduidelijkt (kist → kaart → tik/Volgende), leesbare pull-log, 2.0s reveal + skip na kaart, minder mobiele chrome. Odds ongewijzigd. Versus ongemoeid. Deel-URL speel.html. **v1.18.173 / SW 383**. Draft, niet main. |
 | 2026-09-16 | — | **MEGA-MERGE → main** Grok wave #295–#309 (i18n → systems → UI → pixels → polish). Feature-base PRs (#297/#300/#307/#309) cherry-picked. **v1.18.172 / SW 382**. speel.html na Pages. |
 | 2026-09-16 | — | Gear UI ↔ #295 equip-API: sheets via gearSlotInventory, tap via gearEquipItem(id,{expectSlot}), states ok/vanity-ok/already-equipped/locked/not-owned/wrong-slot/unknown. DOM/schema 1 ongewijzigd. v1.18.171 / SW 381. Draft, niet main. |
