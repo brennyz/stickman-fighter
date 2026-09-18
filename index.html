@@ -111,7 +111,7 @@
       <div class="arcade-pre" id="menuArcadePre" hidden>KIES JE PAD</div>
       <h1 class="title arcade-logo">STICKMAN<span>FIGHTER</span></h1>
       <p class="press-start" id="pressStartLine" hidden>insert coin</p>
-      <div class="subtitle menu-ver-line" id="menuVerLine">v1.18.177</div>
+      <div class="subtitle menu-ver-line" id="menuVerLine">v1.18.186</div>
       <p class="season-menu-blurb" id="seasonMenuBlurb" hidden></p>
     </header>
     <div class="arcade-menu-body menu-landing-body">
@@ -654,7 +654,7 @@
       <a class="btn tog" id="btnPrivacy" href="privacy.html" target="_blank" rel="noopener" style="margin-top:8px;text-decoration:none"><span class="tog-ico"><img src="assets/buttons/chrome/external.svg" alt="" width="24" height="24" decoding="async" draggable="false"></span>Privacy</a>
       <div id="settingsDiagBlock" class="settings-diag-block" hidden>
         <div id="settingsHelpTitle" style="font-weight:900;color:#ffd75e;margin:12px 0 6px">Vast op een oude versie?</div>
-        <div id="setAppVersion" style="font-size:12px;opacity:.7;margin-bottom:8px">v1.18.177</div>
+        <div id="setAppVersion" style="font-size:12px;opacity:.7;margin-bottom:8px">v1.18.186</div>
         <div id="settingsHelpDesc" style="font-size:12px;opacity:.85;margin-bottom:8px;line-height:1.4">Leegt de cache en laadt opnieuw. Alleen nodig als het spel niet meekomt.</div>
         <button type="button" class="btn tog" id="btnForceFresh"><span class="tog-ico"><img src="assets/buttons/chrome/refresh.svg" alt="" width="24" height="24" decoding="async" draggable="false"></span>Verse versie</button>
         <div id="settingsFreshHint" style="font-size:11px;opacity:.72;margin:6px 0 10px;line-height:1.4">Menu reageert niet? Tik hier voor de nieuwste versie.</div>
@@ -768,6 +768,7 @@
 </div>
 
 <div id="resultScreen" class="screen">
+  <button type="button" id="resRetrySafe" class="result-retry-safe" aria-label="Nog één keer"></button>
   <div class="bigres" id="resTitle">GEWONNEN!</div>
   <div class="stars-big" id="resStars"></div>
   <div class="detail" id="resDetail"></div>
@@ -775,10 +776,11 @@
   <div class="detail" id="resXp"></div>
   <div class="detail" id="resTip" style="color:#7cf5ff;opacity:.9;margin-top:6px"></div>
   <p class="season-story-beat" id="seasonResultBeat" hidden></p>
-  <div style="height:14px"></div>
-  <button class="btn mode-btn b-adventure" id="resAgain"><span class="ico"><img src="assets/buttons/chrome/refresh.svg" alt="" width="28" height="28" decoding="async" draggable="false"></span><div>Opnieuw</div></button>
-  <button class="btn mode-btn b-training" id="resNext" style="display:none"><span class="ico"><img src="assets/buttons/chrome/next.svg" alt="" width="28" height="28" decoding="async" draggable="false"></span><div>Volgend level</div></button>
-  <button class="btn mode-btn b-gray" id="resMenu"><span class="ico"><img src="assets/buttons/chrome/home.svg" alt="" width="28" height="28" decoding="async" draggable="false"></span><div>Hoofdmenu</div></button>
+  <div class="result-cta-dock" id="resCtaDock">
+    <button class="btn mode-btn b-adventure result-cta-primary" id="resAgain" type="button"><span class="ico"><img src="assets/buttons/chrome/refresh.svg" alt="" width="28" height="28" decoding="async" draggable="false"></span><div id="resAgainLbl">Nog één keer</div></button>
+    <button class="btn mode-btn b-training" id="resNext" type="button" style="display:none"><span class="ico"><img src="assets/buttons/chrome/next.svg" alt="" width="28" height="28" decoding="async" draggable="false"></span><div>Volgend level</div></button>
+    <button class="btn result-cta-quiet" id="resMenu" type="button"><span class="ico"><img src="assets/buttons/chrome/home.svg" alt="" width="18" height="18" decoding="async" draggable="false"></span><div>Menu</div></button>
+  </div>
 </div>
 
 <div id="pauseScreen" class="screen">

@@ -67,7 +67,7 @@ const I18N = {
       audioHint: 'Volume in pauze — sliders sync met Instellingen',
       audioMuteAll: 'Alles uit', audioRestore: 'Standaard', audioSfxOnly: 'Alleen geluid',
     },
-    result: { again: 'Opnieuw', next: 'Volgend level', menu: 'Hoofdmenu', menuArcade: 'Arcade', rematch: 'Rematch', rematchSub: 'Zelfde vechters',
+    result: { again: 'Opnieuw', onceMore: 'Nog één keer', next: 'Volgend level', menu: 'Hoofdmenu', menuArcade: 'Arcade', rematch: 'Rematch', rematchSub: 'Zelfde vechters',
       trainAgainSub: 'vs RabbitRobot',
       advWin: 'GEWONNEN!', advLose: 'VERLOREN', trainWin: 'KAMPIOEN!', trainLose: 'ROBOT WINT...',
       advLoseKeep: 'XP en buit van deze ronde blijven',
@@ -400,7 +400,7 @@ const I18N = {
       audioHint: 'Volume in pause — sliders sync with Settings',
       audioMuteAll: 'Mute all', audioRestore: 'Default', audioSfxOnly: 'SFX only',
     },
-    result: { again: 'Again', next: 'Next level', menu: 'Main menu', menuArcade: 'Arcade', rematch: 'Rematch', rematchSub: 'Same fighters',
+    result: { again: 'Again', onceMore: 'One more go', next: 'Next level', menu: 'Main menu', menuArcade: 'Arcade', rematch: 'Rematch', rematchSub: 'Same fighters',
       trainAgainSub: 'vs RabbitRobot',
       advWin: 'VICTORY!', advLose: 'YOU LOSE', trainWin: 'CHAMPION!', trainLose: 'ROBOT WINS...',
       advLoseKeep: 'XP and loot from this run stay',
@@ -827,7 +827,7 @@ const I18N = {
       audioHint: 'Lautstärke in Pause — Regler wie in Einstellungen',
       audioMuteAll: 'Alles aus', audioRestore: 'Standard', audioSfxOnly: 'Nur Ton',
     },
-    result: { again: 'Nochmal', next: 'Nächstes Level', menu: 'Hauptmenü', menuArcade: 'Arcade', rematch: 'Revanche', rematchSub: 'Gleiche Kämpfer',
+    result: { again: 'Nochmal', onceMore: 'Noch einmal', next: 'Nächstes Level', menu: 'Hauptmenü', menuArcade: 'Arcade', rematch: 'Revanche', rematchSub: 'Gleiche Kämpfer',
       trainAgainSub: 'vs RabbitRobot',
       advWin: 'GEWONNEN!', advLose: 'VERLOREN', trainWin: 'MEISTER!', trainLose: 'ROBOT GEWINNT…',
       advLoseKeep: 'XP und Beute von diesem Lauf bleiben',
@@ -1151,7 +1151,7 @@ const I18N = {
       audioHint: 'Volume en pause — comme dans Options',
       audioMuteAll: 'Tout couper', audioRestore: 'Par défaut', audioSfxOnly: 'Son seulement',
     },
-    result: { again: 'Rejouer', next: 'Niveau suivant', menu: 'Menu principal', menuArcade: 'Arcade', rematch: 'Revanche', rematchSub: 'Mêmes combattants',
+    result: { again: 'Rejouer', onceMore: 'Encore une fois', next: 'Niveau suivant', menu: 'Menu principal', menuArcade: 'Arcade', rematch: 'Revanche', rematchSub: 'Mêmes combattants',
       trainAgainSub: 'vs RabbitRobot',
       advWin: 'VICTOIRE !', advLose: 'DÉFAITE', trainWin: 'CHAMPION !', trainLose: 'LE ROBOT GAGNE…',
       advLoseKeep: 'XP et butin de cette partie restent',
@@ -1478,7 +1478,7 @@ const I18N = {
       audioHint: 'Volumen en pausa — igual que en Opciones',
       audioMuteAll: 'Todo apagado', audioRestore: 'Predeterminado', audioSfxOnly: 'Solo sonido',
     },
-    result: { again: 'Otra vez', next: 'Siguiente nivel', menu: 'Menú principal', menuArcade: 'Arcade', rematch: 'Revancha', rematchSub: 'Mismos luchadores',
+    result: { again: 'Otra vez', onceMore: 'Una más', next: 'Siguiente nivel', menu: 'Menú principal', menuArcade: 'Arcade', rematch: 'Revancha', rematchSub: 'Mismos luchadores',
       trainAgainSub: 'vs RabbitRobot',
       advWin: '¡VICTORIA!', advLose: 'DERROTA', trainWin: '¡CAMPEÓN!', trainLose: 'EL ROBOT GANA…',
       advLoseKeep: 'XP y botín de esta partida se quedan',
@@ -2101,7 +2101,13 @@ function applyLangStaticScreens() {
   const resAgain = document.getElementById('resAgain');
   if (resAgain) {
     const d = resAgain.querySelector('div');
-    if (d) d.textContent = t('result.again');
+    if (d && typeof paintResultRetryLabel === 'function' && typeof UI !== 'undefined' && UI.lastResult) {
+      paintResultRetryLabel(d, UI.lastResult);
+    } else if (d) {
+      d.textContent = t('result.onceMore');
+    }
+    const safe = document.getElementById('resRetrySafe');
+    if (safe) safe.setAttribute('aria-label', (d && d.textContent) || t('result.onceMore'));
   }
   const resNext = document.getElementById('resNext');
   if (resNext) {

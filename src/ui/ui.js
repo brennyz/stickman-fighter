@@ -5024,6 +5024,9 @@ const UI = {
     try {
     this.lastResult = data;
     try { this.clearToasts(); } catch (_) {}
+    try { this.hideFomoRitual(); } catch (_) {}
+    try { if (typeof this.hideGambleRollFlash === 'function') this.hideGambleRollFlash(); } catch (_) {}
+    try { if (typeof dismissSplashOverlay === 'function') dismissSplashOverlay(); } catch (_) {}
     const title = document.getElementById('resTitle');
     if (!title) throw new Error('result DOM missing');
     const titleKey = data.titleKey || (data.mode === 'training'
@@ -5093,17 +5096,29 @@ const UI = {
       }
     }
     const nextBtn = document.getElementById('resNext');
+    const showNext = !!(win && data.mode === 'adventure' && data.level < MAX_LEVEL);
     if (nextBtn) {
-      nextBtn.style.display = (win && data.mode === 'adventure' && data.level < MAX_LEVEL) ? 'flex' : 'none';
+      nextBtn.style.display = showNext ? 'flex' : 'none';
+      nextBtn.classList.toggle('result-cta-primary', showNext);
     }
     const again = document.getElementById('resAgain');
+    const retryFirst = !showNext && data.mode !== 'versus';
     if (again) {
       const label = again.querySelector('div');
-      if (label) {
-        if (data.mode === 'versus') label.innerHTML = t('result.rematch') + '<small>' + t('result.rematchSub') + '</small>';
-        else if (data.mode === 'training') label.innerHTML = t('result.again') + '<small>' + tOr('result.trainAgainSub', 'vs RabbitRobot') + '</small>';
-        else label.textContent = t('result.again');
+      again.classList.toggle('result-cta-primary', retryFirst);
+      again.classList.toggle('result-cta-secondary', !!(win && showNext));
+      if (label && typeof paintResultRetryLabel === 'function') paintResultRetryLabel(label, data);
+      else if (label) {
+        label.textContent = (!win || data.mode === 'training' || data.mode === 'wall' || data.mode === 'coinrun')
+          ? t('result.onceMore') : t('result.again');
       }
+      again.setAttribute('aria-label', (label && label.textContent) || t('result.onceMore'));
+    }
+    const safe = document.getElementById('resRetrySafe');
+    if (safe) {
+      const lab = (again && again.getAttribute('aria-label')) || t('result.onceMore');
+      safe.setAttribute('aria-label', lab);
+      safe.hidden = data.mode === 'versus';
     }
     const menuBtn = document.getElementById('resMenu');
     if (menuBtn) {
@@ -5111,6 +5126,14 @@ const UI = {
       if (label) {
         label.textContent = hubForPlayMode(data.mode) === 'arcade' ? t('result.menuArcade') : t('result.menu');
       }
+      menuBtn.classList.toggle('result-cta-quiet', retryFirst);
+    }
+    const screen = document.getElementById('resultScreen');
+    if (screen) {
+      screen.classList.toggle('is-win', !!win);
+      screen.classList.toggle('is-lose', !win);
+      screen.classList.toggle('is-adventure', data.mode === 'adventure');
+      screen.classList.toggle('is-retry-first', retryFirst);
     }
     state = 'result';
     scheduleResize();

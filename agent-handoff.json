@@ -17,11 +17,11 @@
     "swCache": "stickfighter-app-v396",
     "gameJsQuery": "game.js?v=396",
     "cssQuery": "styles/main.css?v=396",
-    "featureBranch": "cursor/i18n-layout-copy-f2a3",
+    "featureBranch": "main",
     "pushBlocked": null,
     "shareUrl": "https://brennyz.github.io/stickman-fighter/speel.html",
-    "note": "LANGUAGE examiner #317 DONE: pets/summons/gear empty-state keys (DE overlay + FR/ES summonNoPulls). v1.18.186 / SW 396. Versus ongemoeid. Draft, no main merge. STOP.",
-    "updated": "2026-09-18T14:45:00Z",
+    "note": "MEGA-MERGE in progress: #317 i18n + #323 Flappy retry on main. v1.18.186 / SW 396. speel.html.",
+    "updated": "2026-09-18T14:20:00Z",
     "localMainHead": "a18fc9e67633773cb18b638c64c9a86916d02d27",
     "remoteMainHead": "a18fc9e67633773cb18b638c64c9a86916d02d27"
   },
@@ -39,6 +39,28 @@
     "pendingMerge": []
   },
   "userWishlist": [
+    {
+      "id": "w-20260918T132400",
+      "from": "user",
+      "text": "#323 looks solid. Final: document DONE + shared hooks with #318 on PR body. Stop at P3. No main.",
+      "status": "done-in-code",
+      "updated": "2026-09-18",
+      "notes": "Landed on main via mega-merge after #317."
+    },
+    {
+      "id": "w-20260918T131800",
+      "from": "user",
+      "text": "Good — #323 draft. KEEP IMPROVING on same branch: (1) Training / other modes same <3s primary retry if missing. (2) Tap-anywhere-safe zone so mistaps don’t open Menu. (3) i18n for Nog één keer in EN/DE/FR/ES. Re-smoke flappy-retry. No Versus, no payments, no main.",
+      "status": "done-in-code",
+      "updated": "2026-09-18"
+    },
+    {
+      "id": "w-20260918T131100",
+      "from": "user",
+      "text": "#313 DONE. NEW draft branch preferred. Flappy-feel P0 for Stickman Adventure: (1) Death → primary retry/next CTA visible in <~3s, huge tap on 390px. (2) No menu maze after die; one clear “nog één keer”. (3) Don’t fight FOMO/sheets. Coordinate with #316 juice if overlapping — don’t re-dupe. Draft only, speel.html, no Versus, no payments, no main.",
+      "status": "done-in-code",
+      "updated": "2026-09-18"
+    },
     {
       "id": "w-20260918T135600",
       "from": "user",

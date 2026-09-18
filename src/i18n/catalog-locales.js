@@ -32,7 +32,7 @@ overlayI18nCatalog(CATALOG_FR, {
   },
   pickup: { heal: '+PV', rage: 'RAGE', energy: 'ÉNERGIE', shield: 'BOUCLIER' },
   result: {
-    advWin: 'VICTOIRE !', advLose: 'DÉFAITE', trainWin: 'CHAMPION !', trainLose: 'LE ROBOT GAGNE…',
+    advWin: 'VICTOIRE !', advLose: 'DÉFAITE', onceMore: 'Encore une fois', trainWin: 'CHAMPION !', trainLose: 'LE ROBOT GAGNE…',
     advLoseKeep: 'XP et butin de cette partie restent',
     trainDetailWin: 'RabbitRobot à terre ({p}-{r}) · combo max ×{combo} · {wins}× gagné',
     trainDetailLose: 'RabbitRobot trop fort ({p}-{r}) · combo max ×{combo}',
@@ -685,7 +685,7 @@ overlayI18nCatalog(CATALOG_ES, {
   },
   pickup: { heal: '+PV', rage: 'RAGE', energy: 'ENERGÍA', shield: 'ESCUDO' },
   result: {
-    advWin: '¡VICTORIA!', advLose: 'DERROTA', trainWin: '¡CAMPEÓN!', trainLose: 'EL ROBOT GANA…',
+    advWin: '¡VICTORIA!', advLose: 'DERROTA', onceMore: 'Una más', trainWin: '¡CAMPEÓN!', trainLose: 'EL ROBOT GANA…',
     advLoseKeep: 'XP y botín de esta partida se quedan',
     trainDetailWin: 'RabbitRobot caído ({p}-{r}) · combo máx ×{combo} · {wins}× ganado',
     trainDetailLose: 'RabbitRobot demasiado fuerte ({p}-{r}) · combo máx ×{combo}',
@@ -1357,7 +1357,7 @@ overlayI18nCatalog(CATALOG_DE, {
   },
   pickup: { heal: '+HP', rage: 'RAGE', energy: 'ENERGY', shield: 'SCHILD' },
   result: {
-    advWin: 'GEWONNEN!', advLose: 'VERLOREN', trainWin: 'MEISTER!', trainLose: 'ROBOT GEWINNT…',
+    advWin: 'GEWONNEN!', advLose: 'VERLOREN', onceMore: 'Noch einmal', trainWin: 'MEISTER!', trainLose: 'ROBOT GEWINNT…',
     advLoseKeep: 'XP und Beute von diesem Lauf bleiben',
     trainDetailWin: 'RabbitRobot besiegt ({p}-{r}) · max Combo ×{combo} · {wins}× gewonnen',
     trainDetailLose: 'RabbitRobot war zu stark ({p}-{r}) · max Combo ×{combo}',
