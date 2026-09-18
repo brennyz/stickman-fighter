@@ -1,0 +1,360 @@
+#!/usr/bin/env node
+/**
+ * Layout lane: HOME / Collectie / factories / gear / summons / pets
+ * must not stack texts/buttons, keep sticky wallets under back, honor
+ * safe-area tokens, and stay inside ~390px + desktop. No Versus.
+ */
+import fs from 'fs';
+import path from 'path';
+import { spawn } from 'child_process';
+import { fileURLToPath } from 'url';
+import { ensureSmokeServer, smokeBaseUrl } from './smoke-static-server.mjs';
+
+const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
+
+function must(cond, msg) {
+  if (!cond) {
+    console.error('SMOKE_FAIL', msg);
+    process.exit(1);
+  }
+}
+
+const css = fs.readFileSync(path.join(root, 'styles/main.css'), 'utf8');
+const html = fs.readFileSync(path.join(root, 'index.html'), 'utf8');
+const storage = fs.readFileSync(path.join(root, 'src/core/storage.js'), 'utf8');
+const sw = fs.readFileSync(path.join(root, 'sw.js'), 'utf8');
+
+must(/--z-back:/.test(css) && /--z-sticky:/.test(css) && /--z-sheet:/.test(css),
+  'missing layout z-index tokens');
+must(/--sticky-under-back:/.test(css), 'missing --sticky-under-back token');
+must(/\.hub-tile \{[\s\S]*?overflow:\s*hidden/.test(css), 'hub tiles must clip overflow');
+must(/-webkit-line-clamp:\s*2/.test(css), 'hub tile titles/subs must clamp');
+must(/#buildingsScreen \.buildings-wallet[\s\S]{0,220}var\(--sticky-under-back\)/.test(css)
+  || /#buildingsWallet\.buildings-wallet[\s\S]{0,180}var\(--sticky-under-back\)/.test(css),
+  'factory wallet must stick under the back button');
+must(/#buildingsUpgradeSheet[\s\S]{0,160}var\(--z-sheet\)/.test(css),
+  'factory upgrade sheet must use --z-sheet');
+must(/gear-filter-dock/.test(css) && /id="gearFilterDock"/.test(html),
+  'gear filter dock wrapper required so chips do not stack at the same sticky top');
+must(/#petTabBar[\s\S]{0,180}var\(--sticky-under-back\)/.test(css),
+  'pets tabs must stick under back');
+must(!/data-hub="versus"/.test(html), 'versus hub tile must stay retired');
+must(/id="menuScreen"/.test(html) && /id="modeHubScreen"/.test(html), 'HOME + Collectie hubs missing');
+must(/id="buildingsScreen"/.test(html) && /id="gearScreen"/.test(html), 'factories/gear screens missing');
+must(/id="summonScreen"/.test(html) && /id="petScreen"/.test(html), 'summons/pets screens missing');
+must(/id="buildingsWallet"/.test(html), 'sticky factory wallet missing');
+must(/id="buildingsUpgradeSheet"/.test(html), 'factory sheet missing');
+must(!/\.screen\s*\{\s*display:\s*none\s*!important/.test(css), 'nuclear .screen hide forbidden');
+must(/@media \(max-width: 420px\)/.test(css), 'phone ~390 layout breakpoint missing');
+must(/@media \(min-width: 860px\)/.test(css), 'desktop gear/factory layout breakpoint missing');
+
+const rev = storage.match(/SW_CACHE_REV\s*=\s*(\d+)/);
+const cache = sw.match(/stickfighter-app-v(\d+)/);
+must(rev && cache && rev[1] === cache[1], `SW mismatch storage=${rev && rev[1]} sw=${cache && cache[1]}`);
+
+const chrome = ['/usr/local/bin/google-chrome', '/usr/bin/google-chrome'].find((p) => fs.existsSync(p));
+if (!chrome) {
+  console.log('SMOKE_OK layout-screens (static only, no chrome)');
+  process.exit(0);
+}
+
+const outDir = '/tmp/sf-layout-ui';
+fs.mkdirSync(outDir, { recursive: true });
+
+async function getPuppeteer() {
+  try { return await import('puppeteer-core'); } catch (_) {
+    await new Promise((res, rej) => {
+      const p = spawn('npm', ['install', '--no-save', 'puppeteer-core@23'], { cwd: outDir, stdio: 'inherit' });
+      p.on('exit', (c) => (c === 0 ? res() : rej(new Error('npm'))));
+    });
+    return import(path.join(outDir, 'node_modules/puppeteer-core/lib/esm/puppeteer/puppeteer-core.js'));
+  }
+}
+
+function overlapPairs(page, selectors) {
+  return page.evaluate((sels) => {
+    const hits = [];
+    const vw = window.innerWidth;
+    const vh = window.innerHeight;
+    const visBox = (el) => {
+      let r = el.getBoundingClientRect();
+      let clip = { left: r.left, right: r.right, top: r.top, bottom: r.bottom };
+      let p = el.parentElement;
+      while (p && p !== document.body) {
+        const st = getComputedStyle(p);
+        if (/(auto|scroll|hidden)/.test((st.overflow || '') + (st.overflowY || '') + (st.overflowX || ''))) {
+          const pr = p.getBoundingClientRect();
+          clip = {
+            left: Math.max(clip.left, pr.left),
+            right: Math.min(clip.right, pr.right),
+            top: Math.max(clip.top, pr.top),
+            bottom: Math.min(clip.bottom, pr.bottom),
+          };
+        }
+        p = p.parentElement;
+      }
+      clip.left = Math.max(clip.left, 0);
+      clip.top = Math.max(clip.top, 0);
+      clip.right = Math.min(clip.right, vw);
+      clip.bottom = Math.min(clip.bottom, window.innerHeight);
+      if (clip.right - clip.left < 2 || clip.bottom - clip.top < 2) return null;
+      return clip;
+    };
+    const nodes = [];
+    for (const sel of sels) {
+      document.querySelectorAll(sel).forEach((el) => {
+        if (el.hidden || el.getAttribute('aria-hidden') === 'true') return;
+        const st = getComputedStyle(el);
+        if (st.display === 'none' || st.visibility === 'hidden' || Number(st.opacity) === 0) return;
+        const r = visBox(el);
+        if (!r) return;
+        nodes.push({ sel, el, r });
+      });
+    }
+    const overflow = nodes.filter(({ r }) => r.left < -2 || r.right > vw + 2).map(({ sel, r }) => ({
+      sel, left: Math.round(r.left), right: Math.round(r.right), vw,
+    }));
+    const overlap = [];
+    for (let i = 0; i < nodes.length; i++) {
+      for (let j = i + 1; j < nodes.length; j++) {
+        const a = nodes[i];
+        const b = nodes[j];
+        if (a.el.contains(b.el) || b.el.contains(a.el)) continue;
+        const ar = a.r;
+        const br = b.r;
+        const slop = 3;
+        const hit = ar.left < br.right - slop && ar.right > br.left + slop
+          && ar.top < br.bottom - slop && ar.bottom > br.top + slop;
+        if (!hit) continue;
+        const ix = Math.min(ar.right, br.right) - Math.max(ar.left, br.left);
+        const iy = Math.min(ar.bottom, br.bottom) - Math.max(ar.top, br.top);
+        if (ix * iy < 36) continue;
+        overlap.push({
+          a: a.sel, b: b.sel,
+          ix: Math.round(ix), iy: Math.round(iy),
+        });
+      }
+    }
+    return { overflow, overlap, vh };
+  }, selectors);
+}
+
+async function openQuietHome(page) {
+  await page.evaluate(() => {
+    const fomo = document.getElementById('fomoRitual');
+    if (fomo) { fomo.hidden = true; fomo.setAttribute('hidden', ''); }
+    const splash = document.getElementById('sfSplash');
+    if (splash) {
+      splash.classList.add('is-done');
+      splash.setAttribute('hidden', '');
+      try { splash.remove(); } catch (_) {}
+    }
+    document.querySelectorAll('.screen').forEach((el) => el.classList.remove('active'));
+    const menu = document.getElementById('menuScreen');
+    if (menu) menu.classList.add('active');
+    if (typeof UI === 'object' && UI && typeof UI.renderMenu === 'function') {
+      try { UI.renderMenu(); } catch (_) {}
+    }
+  });
+}
+
+async function runAt(browser, width, height, label) {
+  const page = await browser.newPage();
+  await page.setViewport({ width, height, isMobile: width <= 420, hasTouch: width <= 420 });
+  await page.goto(smokeBaseUrl(port) + '?nosplash=1', { waitUntil: 'load', timeout: 60000 });
+  await page.waitForFunction(() => window.__sfBooted, { timeout: 45000 });
+  await openQuietHome(page);
+
+  const report = { label, width, fails: [] };
+
+  const home = await overlapPairs(page, [
+    '#menuScreen .hub-tile',
+    '#menuScreen .menu-dock .btn.tog',
+    '#menuScreen .menu-title-glass',
+  ]);
+  if (home.overflow.length) report.fails.push({ where: 'HOME overflow', home });
+  const homeTileHits = home.overlap.filter((p) => p.a.includes('hub-tile') && p.b.includes('hub-tile'));
+  if (homeTileHits.length) report.fails.push({ where: 'HOME tiles overlap', homeTileHits });
+
+  await page.evaluate(() => {
+    if (typeof UI === 'object' && UI.openModeHub) UI.openModeHub('collect');
+  });
+  const collect = await overlapPairs(page, [
+    '#modeHubScreen .hub-tile',
+    '#modeHubScreen .back-btn',
+    '#modeHubScreen .mode-hub-head',
+  ]);
+  const collectTileHits = collect.overlap.filter((p) => p.a.includes('hub-tile') && p.b.includes('hub-tile'));
+  if (collect.overflow.length) report.fails.push({ where: 'Collectie overflow', collect });
+  if (collectTileHits.length) report.fails.push({ where: 'Collectie tiles overlap', collectTileHits });
+
+  await page.evaluate(() => {
+    if (typeof UI === 'object' && UI.openBuildings) UI.openBuildings();
+  });
+  const buildings = await page.evaluate(() => {
+    const back = document.querySelector('#buildingsScreen .back-btn');
+    const wallet = document.getElementById('buildingsWallet');
+    const chips = wallet ? [...wallet.querySelectorAll('.buildings-wallet-chip')] : [];
+    const rows = [...document.querySelectorAll('#buildingsList .buildings-row')];
+    const br = back && back.getBoundingClientRect();
+    const wr = wallet && wallet.getBoundingClientRect();
+    const vs = !document.querySelector('[data-hub="versus"]');
+    const chipOverflow = chips.filter((c) => {
+      const r = c.getBoundingClientRect();
+      return r.right > window.innerWidth + 2 || r.left < -2;
+    }).length;
+    const rowHits = [];
+    for (let i = 0; i < rows.length; i++) {
+      for (let j = i + 1; j < rows.length; j++) {
+        const a = rows[i].getBoundingClientRect();
+        const b = rows[j].getBoundingClientRect();
+        if (a.left < b.right - 3 && a.right > b.left + 3 && a.top < b.bottom - 3 && a.bottom > b.top + 3) {
+          rowHits.push([rows[i].dataset.factoryId, rows[j].dataset.factoryId]);
+        }
+      }
+    }
+    const walletUnderBack = !!(br && wr && wr.top + 1 >= br.bottom);
+    if (typeof UI.buildingsShowUpgradeStep === 'function') UI.buildingsShowUpgradeStep();
+    const sheet = document.getElementById('buildingsUpgradeSheet');
+    const sheetOpen = !!(sheet && !sheet.hidden);
+    const panel = sheet && sheet.querySelector('.buildings-sheet-panel');
+    const pr = panel && panel.getBoundingClientRect();
+    const sheetOverflow = !!(pr && (pr.right > window.innerWidth + 2 || pr.left < -2));
+    if (typeof UI.buildingsShowList === 'function') UI.buildingsShowList();
+    return {
+      chips: chips.length,
+      chipOverflow,
+      rowHits,
+      walletUnderBack,
+      vs,
+      sheetOpen,
+      sheetOverflow,
+      walletTop: wr && Math.round(wr.top),
+      backBottom: br && Math.round(br.bottom),
+    };
+  });
+  if (!buildings.vs) report.fails.push({ where: 'versus tile returned' });
+  if (buildings.chips < 6) report.fails.push({ where: 'wallet chips', buildings });
+  if (buildings.chipOverflow) report.fails.push({ where: 'wallet chip overflow', buildings });
+  if (buildings.rowHits.length) report.fails.push({ where: 'factory rows overlap', buildings });
+  if (!buildings.walletUnderBack) report.fails.push({ where: 'wallet stacked on back', buildings });
+  if (!buildings.sheetOpen) report.fails.push({ where: 'upgrade sheet did not open', buildings });
+  if (buildings.sheetOverflow) report.fails.push({ where: 'upgrade sheet overflow', buildings });
+
+  await page.evaluate(() => {
+    if (typeof UI === 'object' && UI.safeOpen) UI.safeOpen('gearScreen', () => UI.renderGear());
+  });
+  const gear = await page.evaluate(() => {
+    const back = document.querySelector('#gearScreen .back-btn');
+    const dock = document.getElementById('gearFilterDock');
+    const slots = [...document.querySelectorAll('#gearSlotList [data-slot]')];
+    const br = back && back.getBoundingClientRect();
+    const dr = dock && dock.getBoundingClientRect();
+    const slotHits = [];
+    for (let i = 0; i < slots.length; i++) {
+      for (let j = i + 1; j < slots.length; j++) {
+        const a = slots[i].getBoundingClientRect();
+        const b = slots[j].getBoundingClientRect();
+        if (a.left < b.right - 3 && a.right > b.left + 3 && a.top < b.bottom - 3 && a.bottom > b.top + 3) {
+          slotHits.push([slots[i].getAttribute('data-slot'), slots[j].getAttribute('data-slot')]);
+        }
+      }
+    }
+    const overflow = [back, dock, ...slots].filter(Boolean).some((el) => {
+      const r = el.getBoundingClientRect();
+      return r.right > window.innerWidth + 2 || r.left < -2;
+    });
+    const dockUnderBack = !!(br && dr && dr.top + 1 >= br.bottom);
+    const doll = document.getElementById('gearDollCanvas');
+    const dh = doll && doll.getBoundingClientRect().height;
+    return {
+      slots: slots.length,
+      slotHits,
+      overflow,
+      dockUnderBack,
+      dollH: dh && Math.round(dh),
+    };
+  });
+  if (gear.slots !== 5) report.fails.push({ where: 'gear slots', gear });
+  if (gear.slotHits.length) report.fails.push({ where: 'gear slots overlap', gear });
+  if (gear.overflow) report.fails.push({ where: 'gear overflow', gear });
+  if (!gear.dockUnderBack) report.fails.push({ where: 'gear filters stacked on back', gear });
+  if (!(gear.dollH >= 170)) report.fails.push({ where: 'gear doll too small', gear });
+
+  await page.evaluate(() => {
+    if (typeof UI === 'object' && UI.openSummonHub) UI.openSummonHub();
+  });
+  const summon = await overlapPairs(page, [
+    '#summonScreen .back-btn',
+    '#summonScreen .head',
+    '#btnChestPull',
+    '#btnSummonGotoWeapons',
+    '#btnSummonGotoPets',
+    '#summonScreen .sub-home-bar',
+  ]);
+  if (summon.overflow.length) report.fails.push({ where: 'summon overflow', summon });
+  if (summon.overlap.length) report.fails.push({ where: 'summon controls overlap', summon });
+
+  await page.evaluate(() => {
+    if (typeof UI === 'object' && UI.safeOpen) UI.safeOpen('petScreen', () => UI.renderPets());
+  });
+  const pets = await page.evaluate(() => {
+    const back = document.querySelector('#petScreen .back-btn');
+    const tabs = document.getElementById('petTabBar');
+    const cards = [...document.querySelectorAll('#petList .card')].slice(0, 8);
+    const br = back && back.getBoundingClientRect();
+    const tr = tabs && tabs.getBoundingClientRect();
+    const overflow = [back, tabs, ...cards].filter(Boolean).some((el) => {
+      const r = el.getBoundingClientRect();
+      return r.right > window.innerWidth + 2 || r.left < -2;
+    });
+    const cardHits = [];
+    for (let i = 0; i < cards.length; i++) {
+      for (let j = i + 1; j < cards.length; j++) {
+        const a = cards[i].getBoundingClientRect();
+        const b = cards[j].getBoundingClientRect();
+        if (a.left < b.right - 3 && a.right > b.left + 3 && a.top < b.bottom - 3 && a.bottom > b.top + 3) {
+          cardHits.push(i + '/' + j);
+        }
+      }
+    }
+    const tabsUnderBack = !!(br && tr && tr.top + 1 >= br.bottom);
+    return { cards: cards.length, overflow, cardHits, tabsUnderBack };
+  });
+  if (pets.overflow) report.fails.push({ where: 'pets overflow', pets });
+  if (pets.cardHits.length) report.fails.push({ where: 'pet cards overlap', pets });
+  if (!pets.tabsUnderBack) report.fails.push({ where: 'pet tabs stacked on back', pets });
+
+  await page.close();
+  return report;
+}
+
+const port = Number(process.env.SF_LAYOUT_PORT || 8794);
+
+async function run() {
+  let server = null;
+  try { server = await ensureSmokeServer(port); } catch (_) {}
+  const puppeteer = await getPuppeteer();
+  const browser = await puppeteer.default.launch({
+    executablePath: chrome, headless: 'new',
+    args: ['--no-sandbox', '--disable-gpu', '--window-size=1280,800'],
+  });
+  try {
+    const phone = await runAt(browser, 390, 844, 'phone390');
+    const desktop = await runAt(browser, 1280, 800, 'desktop');
+    const fails = [...phone.fails, ...desktop.fails];
+    if (fails.length) {
+      console.error('SMOKE_FAIL layout', JSON.stringify({ phone, desktop }, null, 2));
+      process.exit(1);
+    }
+    console.log('SMOKE_OK layout-screens 390 + desktop (HOME/Collectie/factories/gear/summons/pets)');
+  } finally {
+    await browser.close();
+    if (server) try { server.close(); } catch (_) {}
+  }
+}
+
+run().catch((err) => {
+  console.error('SMOKE_FAIL layout', err);
+  process.exit(1);
+});
