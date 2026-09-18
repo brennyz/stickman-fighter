@@ -12,6 +12,7 @@ const CATALOG_DE_CHROME = {
     ritualCtaSummon: 'Zu Summons',
     ritualCtaMission: 'Mission spielen',
     ritualCtaAdv: 'Abenteuer',
+    ritualCtaEgg: 'Zum Tages-Ei',
     ritualDismiss: 'Schließen',
     ritualReopen: 'Tagesüberblick',
     resetIn: 'Neu in {reset}',

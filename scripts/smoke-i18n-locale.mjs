@@ -138,6 +138,8 @@ const missions = fs.readFileSync(path.join(root, 'src/systems/missions.js'), 'ut
 if (/boek \$\{dexCountFromSave/.test(missions) || /\$\{[^}]+\} prestaties/.test(missions)) fail('save export summary still hardcodes Dutch');
 if (/Volgende prestatie/.test(missions)) fail('dex next achievement still hardcodes Dutch');
 if (!/pets\.crackEgg/.test(ui)) fail('egg crack must use pets.crackEgg');
+if (!/pets\.listLocked/.test(ui)) fail('locked dex cards must use pets.listLocked');
+if (!/fomo\.ritualCtaEgg/.test(ui)) fail('FOMO egg CTA must use fomo.ritualCtaEgg');
 if (!/egg\.dailyReady/.test(fs.readFileSync(path.join(root, 'src/data/egg-pets.js'), 'utf8'))) {
   fail('egg daily status must use egg.* keys');
 }

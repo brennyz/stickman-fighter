@@ -323,9 +323,9 @@ const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const VERSION_UPDATE_SAVE_KEY = 'stickfighter_version_update_save_v1';
 const VERSION_UPDATE_FLAG_KEY = 'stickfighter_version_update_flag_v1';
 const SAVE_EXPORT_SCHEMA = 3;
-const APP_VERSION = '1.18.173';
+const APP_VERSION = '1.18.174';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 383;
+const SW_CACHE_REV = 384;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', petCoins: 0, dex: {}, summons: {}, pets: {}, activePet: null,
   eggPets: {}, activeEggPet: null, eggDaily: null,
   chestDaily: null, chestWeapons: {},
@@ -2485,6 +2485,7 @@ const I18N = {
       ritualCtaSummon: 'Naar oproepen',
       ritualCtaMission: 'Speel missie',
       ritualCtaAdv: 'Naar avontuur',
+      ritualCtaEgg: 'Naar dag-ei',
       ritualDismiss: 'Sluiten',
       ritualReopen: 'Dagoverzicht',
       resetIn: 'Nieuw over {reset}',
@@ -2527,6 +2528,11 @@ const I18N = {
       upPassive: 'passief ×{n}', upAssist: 'assist ×{n}', upCd: 'CD ×{n}', upMax: 'MAX',
       upPreview: 'passief +10% · assist +8% · CD −7%',
       eggLockedCta: 'Komt uit een dag-ei',
+      listLocked: '{cur}/{need} · {cost} PC', listTamed: 'Getemd', listActive: 'Aan',
+      tabEggShort: 'Ei · {n}/{total}', heroEmptyShort: 'Geen pet', heroTap: 'Tik een rij',
+      eggSumShort: '{owned}/{total} · {daily}',
+      pauseNone: 'Nog geen pet', pauseEquip: 'Uitrusten · {name}',
+      pauseCycle: 'Wissel · {name}', pauseActive: '{name} volgt',
       eggName: {
         egg_pebble: 'Kiezel', egg_moss: 'Mosbal', egg_candy: 'Snoep', egg_cloud: 'Wolkje',
         egg_star: 'Sterretje', egg_flame: 'Vlammetje', egg_crystal: 'Kristal', egg_moon: 'Maanei',
@@ -2817,6 +2823,7 @@ const I18N = {
       ritualCtaSummon: 'Open summons',
       ritualCtaMission: 'Play mission',
       ritualCtaAdv: 'Play adventure',
+      ritualCtaEgg: 'Open daily egg',
       ritualDismiss: 'Close',
       ritualReopen: 'Day overview',
       resetIn: 'Resets in {reset}',
@@ -2859,6 +2866,11 @@ const I18N = {
       upPassive: 'passive ×{n}', upAssist: 'assist ×{n}', upCd: 'CD ×{n}', upMax: 'MAX',
       upPreview: 'passive +10% · assist +8% · CD −7%',
       eggLockedCta: 'Hatch from daily egg',
+      listLocked: '{cur}/{need} · {cost} PC', listTamed: 'Tamed', listActive: 'On',
+      tabEggShort: 'Egg · {n}/{total}', heroEmptyShort: 'No pet', heroTap: 'Tap a row',
+      eggSumShort: '{owned}/{total} · {daily}',
+      pauseNone: 'No pet yet', pauseEquip: 'Equip · {name}',
+      pauseCycle: 'Swap · {name}', pauseActive: '{name} follows',
       eggName: {
         egg_pebble: 'Pebble', egg_moss: 'Mossball', egg_candy: 'Candy', egg_cloud: 'Cloudlet',
         egg_star: 'Spark', egg_flame: 'Ember', egg_crystal: 'Crystal', egg_moon: 'Moon egg',
@@ -3204,7 +3216,7 @@ const I18N = {
       achievements: 'Erfolge' },
     fomo: {
       ritualTitle: 'Heute', ritualCtaSummon: 'Zu Beschwörungen', ritualCtaMission: 'Mission spielen',
-      ritualCtaAdv: 'Ins Abenteuer', ritualDismiss: 'Schließen', ritualReopen: 'Tagesübersicht',
+      ritualCtaAdv: 'Ins Abenteuer', ritualCtaEgg: 'Zum Tages-Ei', ritualDismiss: 'Schließen', ritualReopen: 'Tagesübersicht',
       resetIn: 'Neu in {reset}', rowSummons: 'Beschwörungen {left}/{total}',
       rowEggReady: 'Tages-Ei bereit', rowEggDone: 'Tages-Ei schon offen',
       streakReward3: '+1 Beschwörung', streakReward7: '+Ei oder Beschwörungen', streakReward14: '+120 XP',
@@ -3241,6 +3253,11 @@ const I18N = {
       upPassive: 'passiv ×{n}', upAssist: 'Assist ×{n}', upCd: 'CD ×{n}', upMax: 'MAX',
       upPreview: 'passiv +10% · Assist +8% · CD −7%',
       eggLockedCta: 'Schlüpft aus dem Tages-Ei',
+      listLocked: '{cur}/{need} · {cost} PC', listTamed: 'Gezähmt', listActive: 'An',
+      tabEggShort: 'Ei · {n}/{total}', heroEmptyShort: 'Kein Pet', heroTap: 'Tippe eine Reihe',
+      eggSumShort: '{owned}/{total} · {daily}',
+      pauseNone: 'Noch kein Pet', pauseEquip: 'Ausrüsten · {name}',
+      pauseCycle: 'Wechseln · {name}', pauseActive: '{name} folgt',
       eggName: {
         egg_pebble: 'Kiesel', egg_moss: 'Moosball', egg_candy: 'Bonbon', egg_cloud: 'Wölkchen',
         egg_star: 'Sternchen', egg_flame: 'Flämmchen', egg_crystal: 'Kristall', egg_moon: 'Mond-Ei',
@@ -3511,6 +3528,7 @@ const I18N = {
       ritualCtaSummon: 'Vers les summons',
       ritualCtaMission: 'Jouer une mission',
       ritualCtaAdv: 'Vers l’aventure',
+      ritualCtaEgg: 'Vers l\'œuf du jour',
       ritualDismiss: 'Fermer',
       ritualReopen: 'Aperçu du jour',
       resetIn: 'Nouveau dans {reset}',
@@ -3553,6 +3571,11 @@ const I18N = {
       upPassive: 'passif ×{n}', upAssist: 'assist ×{n}', upCd: 'CD ×{n}', upMax: 'MAX',
       upPreview: 'passif +10% · assist +8% · CD −7%',
       eggLockedCta: 'Éclot de l\'œuf du jour',
+      listLocked: '{cur}/{need} · {cost} PC', listTamed: 'Apprivoisé', listActive: 'On',
+      tabEggShort: 'Œuf · {n}/{total}', heroEmptyShort: 'Aucun pet', heroTap: 'Touche une ligne',
+      eggSumShort: '{owned}/{total} · {daily}',
+      pauseNone: 'Pas encore de pet', pauseEquip: 'Équiper · {name}',
+      pauseCycle: 'Changer · {name}', pauseActive: '{name} te suit',
       eggName: {
         egg_pebble: 'Galet', egg_moss: 'Mousse', egg_candy: 'Bonbon', egg_cloud: 'Nuage',
         egg_star: 'Étoile', egg_flame: 'Flamme', egg_crystal: 'Cristal', egg_moon: 'Œuf-lune',
@@ -3815,6 +3838,7 @@ const I18N = {
       ritualCtaSummon: 'A summons',
       ritualCtaMission: 'Jugar misión',
       ritualCtaAdv: 'A la aventura',
+      ritualCtaEgg: 'Al huevo diario',
       ritualDismiss: 'Cerrar',
       ritualReopen: 'Resumen del día',
       resetIn: 'Nuevo en {reset}',
@@ -3857,6 +3881,11 @@ const I18N = {
       upPassive: 'pasivo ×{n}', upAssist: 'asist ×{n}', upCd: 'CD ×{n}', upMax: 'MAX',
       upPreview: 'pasivo +10% · asist +8% · CD −7%',
       eggLockedCta: 'Sale del huevo diario',
+      listLocked: '{cur}/{need} · {cost} PC', listTamed: 'Domado', listActive: 'On',
+      tabEggShort: 'Huevo · {n}/{total}', heroEmptyShort: 'Sin pet', heroTap: 'Toca una fila',
+      eggSumShort: '{owned}/{total} · {daily}',
+      pauseNone: 'Aún no hay pet', pauseEquip: 'Equipar · {name}',
+      pauseCycle: 'Cambiar · {name}', pauseActive: '{name} te sigue',
       eggName: {
         egg_pebble: 'Guijarro', egg_moss: 'Musgo', egg_candy: 'Caramelo', egg_cloud: 'Nubecita',
         egg_star: 'Estrellita', egg_flame: 'Llamita', egg_crystal: 'Cristal', egg_moon: 'Huevo luna',
@@ -4030,6 +4059,8 @@ function applyLangStaticScreens() {
     ['.hub-tile-buildings .hub-tile-sub', 'menu.buildingsSub'],
     ['#btnGearHome .hub-tile-title', 'hub.gear'],
     ['#btnGearHome .hub-tile-sub', 'hub.gearSub'],
+    ['#btnPetsHome .hub-tile-title', 'hub.pets'],
+    ['#btnPetsHome .hub-tile-sub', 'hub.petsSub'],
     ['.hub-tile-summon .hub-tile-title', 'menu.summons'],
     ['.hub-tile-summon .hub-tile-sub', 'menu.summonsSub'],
   ];
@@ -4101,6 +4132,7 @@ function applyLangStaticScreens() {
     ['btnMatsCoins', 'hub.mats', 'hub.matsSub'],
     ['btnWeapons', 'hub.weapons', 'hub.weaponsSub'],
     ['btnPets', 'hub.pets', 'hub.petsSub'],
+    ['btnPetsHome', 'hub.pets', 'hub.petsSub'],
     ['btnStyle', 'hub.style', 'hub.styleSub'],
     ['btnGear', 'hub.gear', 'hub.gearSub'],
     ['btnSkills', 'hub.skills', 'hub.skillsSub'],
@@ -4437,6 +4469,7 @@ function applyLang() {
     else if (active === 'gambleScreen' && typeof UI.renderGamble === 'function' && pendingAdvLevel) {
       UI.renderGamble(pendingAdvLevel);
     } else if (active === 'petScreen' && typeof UI.renderPets === 'function') UI.renderPets();
+    else if (active === 'pauseScreen' && typeof UI.paintPausePetChip === 'function') UI.paintPausePetChip();
     else if (active === 'dexScreen' && typeof UI.renderDex === 'function') UI.renderDex();
     else if (active === 'skillScreen' && typeof UI.renderSkills === 'function') UI.renderSkills();
     else if (active === 'modeHubScreen') UI.renderModeHub();
@@ -17995,6 +18028,25 @@ function petTamedCount() {
   return Object.keys(save.pets || {}).filter(k => PET_BY_ID[k]).length;
 }
 
+function tamedPetIds() {
+  if (typeof PET_ROSTER === 'undefined' || !PET_ROSTER) return [];
+  return PET_ROSTER.filter((d) => isPetTamed(d.id)).map((d) => d.id);
+}
+
+function cycleCombatPet() {
+  const ids = tamedPetIds();
+  if (!ids.length) return { kind: 'none' };
+  const cur = save.activePet && ids.indexOf(save.activePet) >= 0 ? save.activePet : null;
+  if (!cur) {
+    equipPet(ids[0]);
+    return { kind: 'equip', id: ids[0], def: petDef(ids[0]) };
+  }
+  if (ids.length === 1) return { kind: 'same', id: cur, def: petDef(cur) };
+  const next = ids[(ids.indexOf(cur) + 1) % ids.length];
+  equipPet(next);
+  return { kind: 'cycle', id: next, def: petDef(next) };
+}
+
 function activePetDef() {
   const id = save.activePet;
   if (!id || !isPetTamed(id)) return null;
@@ -21365,6 +21417,7 @@ function seedNlGameStrings() {
     ritualCtaSummon: 'Naar summons',
     ritualCtaMission: 'Speel missie',
     ritualCtaAdv: 'Naar avontuur',
+    ritualCtaEgg: 'Naar dag-ei',
     ritualDismiss: 'Sluiten',
     ritualReopen: 'Dagoverzicht',
     resetIn: 'Nieuw over {reset}',
@@ -22606,6 +22659,7 @@ const CATALOG_EN = {
     ritualCtaSummon: 'Open summons',
     ritualCtaMission: 'Play mission',
     ritualCtaAdv: 'Play adventure',
+    ritualCtaEgg: 'Open daily egg',
     ritualDismiss: 'Close',
     ritualReopen: 'Day overview',
     resetIn: 'Resets in {reset}',
@@ -23849,6 +23903,7 @@ const CATALOG_DE_CHROME = {
     ritualCtaSummon: 'Zu Summons',
     ritualCtaMission: 'Mission spielen',
     ritualCtaAdv: 'Abenteuer',
+    ritualCtaEgg: 'Zum Tages-Ei',
     ritualDismiss: 'Schließen',
     ritualReopen: 'Tagesüberblick',
     resetIn: 'Neu in {reset}',
@@ -25111,6 +25166,7 @@ overlayI18nCatalog(CATALOG_FR, {
     ritualCtaSummon: 'Vers les summons',
     ritualCtaMission: 'Jouer une mission',
     ritualCtaAdv: 'Vers l’aventure',
+    ritualCtaEgg: 'Vers l\'œuf du jour',
     ritualDismiss: 'Fermer',
     ritualReopen: 'Aperçu du jour',
     resetIn: 'Nouveau dans {reset}',
@@ -25629,6 +25685,7 @@ overlayI18nCatalog(CATALOG_ES, {
     ritualCtaSummon: 'A summons',
     ritualCtaMission: 'Jugar misión',
     ritualCtaAdv: 'A la aventura',
+    ritualCtaEgg: 'Al huevo diario',
     ritualDismiss: 'Cerrar',
     ritualReopen: 'Resumen del día',
     resetIn: 'Nuevo en {reset}',
@@ -26161,6 +26218,7 @@ overlayI18nCatalog(CATALOG_DE, {
     ritualCtaSummon: 'Zu Summons',
     ritualCtaMission: 'Mission spielen',
     ritualCtaAdv: 'Abenteuer',
+    ritualCtaEgg: 'Zum Tages-Ei',
     ritualDismiss: 'Schließen',
     ritualReopen: 'Tagesüberblick',
     resetIn: 'Neu in {reset}',
@@ -47414,6 +47472,12 @@ function hubTileStatLine(hub) {
       const n = typeof gearEquippedCount === 'function' ? gearEquippedCount() : 0;
       return typeof tOr === 'function' ? tOr('gear.hubStat', '{n}/5', { n }) : (n + '/5');
     }
+    case 'pets':
+      try {
+        return (typeof petsHubStatLine === 'function') ? petsHubStatLine() : '';
+      } catch (_) {
+        return '';
+      }
     default:
       return '';
   }
@@ -47690,6 +47754,7 @@ const UI = {
       sub.textContent = this.pauseSubDefault;
     }
     this.renderPauseRunLoot();
+    try { if (typeof this.paintPausePetChip === 'function') this.paintPausePetChip(); } catch (_) {}
   },
 
   renderPauseRunLoot() {
@@ -48594,6 +48659,13 @@ const UI = {
         el.removeAttribute('data-hub-badge');
       }
     });
+    try {
+      const petsHome = document.getElementById('btnPetsHome');
+      if (petsHome && typeof canCrackDailyEgg === 'function' && canCrackDailyEgg()
+        && !petsHome.getAttribute('data-hub-badge')) {
+        petsHome.setAttribute('data-hub-badge', tOr('pets.ready', 'ready').toUpperCase());
+      }
+    } catch (_) {}
     document.querySelectorAll('[data-hub-stat]').forEach((el) => {
       // hubTileStatLine may include SVG_COIN_ICON <img> — must be HTML, not textContent
       el.innerHTML = hubTileStatLine(el.dataset.hubStat);
@@ -48715,20 +48787,30 @@ const UI = {
         html += `<div class="fomo-ritual-row">${text}<small>${task.progress}/${def.goal}</small></div>`;
       }
     } catch (_) {}
+    let eggReady = false;
     if (typeof fomoRitualEggVisible === 'function' && fomoRitualEggVisible()) {
-      let eggReady = false;
       try { eggReady = typeof canCrackDailyEgg === 'function' && canCrackDailyEgg(); } catch (_) {}
-      html += `<div class="fomo-ritual-row">${eggReady
+      html += `<button type="button" class="fomo-ritual-row${eggReady ? ' is-ready' : ''}" data-fomo-row="egg">${eggReady
         ? tOr('fomo.rowEggReady', 'Dag-ei klaar')
-        : tOr('fomo.rowEggDone', 'Dag-ei al open')}</div>`;
+        : tOr('fomo.rowEggDone', 'Dag-ei al open')}</button>`;
     }
     const streak = typeof dailyStreakLine === 'function' ? dailyStreakLine() : '';
     if (streak) html += `<div class="fomo-ritual-row">${streak}</div>`;
-    if (rows) rows.innerHTML = html;
+    if (rows) {
+      rows.innerHTML = html;
+      rows.querySelectorAll('[data-fomo-row]').forEach((btn) => {
+        if (typeof bindPress !== 'function') return;
+        bindPress(btn, () => {
+          this._fomoRitualCta = btn.getAttribute('data-fomo-row') || 'egg';
+          this.runFomoRitualCta();
+        });
+      });
+    }
     const resetLine = typeof dailyResetCountdown === 'function' ? dailyResetCountdown() : '';
     if (reset) reset.textContent = tOr('fomo.resetIn', 'Nieuw over {reset}', { reset: resetLine });
     let ctaKind = 'adv';
     if (left > 0) ctaKind = 'summon';
+    else if (eggReady) ctaKind = 'egg';
     else {
       try {
         if (typeof ensureDaily === 'function') ensureDaily();
@@ -48740,9 +48822,11 @@ const UI = {
     if (ctaLbl) {
       ctaLbl.textContent = ctaKind === 'summon'
         ? tOr('fomo.ritualCtaSummon', 'Naar summons')
-        : (ctaKind === 'mission'
-          ? tOr('fomo.ritualCtaMission', 'Speel missie')
-          : tOr('fomo.ritualCtaAdv', 'Naar avontuur'));
+        : (ctaKind === 'egg'
+          ? tOr('fomo.ritualCtaEgg', 'Naar dag-ei')
+          : (ctaKind === 'mission'
+            ? tOr('fomo.ritualCtaMission', 'Speel missie')
+            : tOr('fomo.ritualCtaAdv', 'Naar avontuur')));
     }
     const dismiss = document.getElementById('fomoRitualDismiss');
     if (dismiss) dismiss.setAttribute('aria-label', tOr('fomo.ritualDismiss', 'Sluiten'));
@@ -48755,6 +48839,10 @@ const UI = {
     else this.hideFomoRitual();
     if (kind === 'summon') {
       this.openSummonHub();
+      return;
+    }
+    if (kind === 'egg') {
+      if (typeof this.openPets === 'function') this.openPets('egg', { from: 'fomo' });
       return;
     }
     if (kind === 'mission') {
@@ -51218,6 +51306,7 @@ const UI = {
       statusEl.textContent = line;
     }
     try { if (typeof renderAudioThemeSwitch === 'function') renderAudioThemeSwitch(); } catch (_) {}
+    try { if (typeof this.paintPausePetChip === 'function') this.paintPausePetChip(); } catch (_) {}
   },
 
   hideVersionUpdateDialog() {
@@ -52059,6 +52148,15 @@ function petsSpeciesName(def) {
   return (sp && sp.name) || def.id;
 }
 
+function petsIsNarrow() {
+  try {
+    return typeof window !== 'undefined' && window.matchMedia
+      && window.matchMedia('(max-width: 480px)').matches;
+  } catch (_) {
+    return false;
+  }
+}
+
 function petsRarityPill(rid) {
   const rar = (typeof rarityOf === 'function') ? rarityOf(rid) : { color: '#8fa3d9' };
   const label = (typeof rarityLabel === 'function') ? rarityLabel(rid) : rid;
@@ -52076,10 +52174,25 @@ if (typeof UI === 'object' && UI) {
   UI._petsHeroRaf = 0;
   UI._petsHeroT = 0;
 
-  UI.openPets = function openPets(tab) {
+  UI.openPets = function openPets(tab, opts) {
+    if (tab && typeof tab === 'object' && !Array.isArray(tab)) {
+      opts = tab;
+      tab = opts.tab || opts.kind || null;
+    }
+    opts = opts || {};
     this.petTab = tab || this.petTab || 'dex';
     this.petsPane = 'list';
     this.petsSelId = null;
+    if (opts.from === 'home' || opts.from === 'equip') {
+      const active = (typeof activePetDef === 'function') ? activePetDef() : null;
+      const firstId = (typeof tamedPetIds === 'function' && tamedPetIds()[0]) || null;
+      const pick = active || ((typeof petDef === 'function' && firstId) ? petDef(firstId) : null);
+      if (pick) {
+        this.petsSelKind = 'dex';
+        this.petsSelId = pick.id;
+        if (opts.from === 'equip') this.petsPane = 'detail';
+      }
+    }
     this.safeOpen('petScreen', () => this.renderPets(), {
       msg: petsTxt('ui.errLoadScreen', 'Could not load screen'),
     });
@@ -52144,23 +52257,142 @@ if (typeof UI === 'object' && UI) {
       + '<span class="pets-wallet-lbl">' + petsEscape(lbl) + '</span>'
       + '<span class="pets-wallet-amt">' + petsEscape(amt) + '</span></span>';
     const eggChip = w.dailyReady
-      ? chip('pets-wallet-egg is-ready', petsTxt('pets.walletEggReady', 'Egg'), petsTxt('pets.ready', 'ready'))
+      ? '<button type="button" class="pets-wallet-chip pets-wallet-egg is-ready" data-pets-wallet="egg">'
+        + '<span class="pets-wallet-lbl">' + petsEscape(petsTxt('pets.walletEggReady', 'Egg')) + '</span>'
+        + '<span class="pets-wallet-amt">' + petsEscape(petsTxt('pets.ready', 'ready')) + '</span></button>'
       : chip('pets-wallet-egg', petsTxt('pets.walletEgg', 'Egg'), w.eggs + '/' + w.eggTotal);
     el.classList.add('pets-wallet');
     el.innerHTML =
       chip('pets-wallet-pc', petsTxt('pets.walletPc', 'PC'), w.petCoins)
       + chip('pets-wallet-dex', petsTxt('pets.walletDex', 'Dex'), w.tamed + '/' + w.total)
       + eggChip;
+    const eggAct = el.querySelector('[data-pets-wallet="egg"]');
+    if (eggAct && typeof bindPress === 'function') {
+      bindPress(eggAct, () => {
+        try { AudioSys.sfx('select'); } catch (_) {}
+        UI.doCrackDailyEgg();
+      });
+    }
   };
 
   UI.paintPetsNext = function paintPetsNext() {
     const el = document.getElementById('petsNext');
     if (!el) return;
+    const goal = (typeof petsNextGoal === 'function') ? petsNextGoal() : null;
     const line = (typeof petsNextGoalLine === 'function')
       ? petsNextGoalLine()
       : petsTxt('pets.nextHint', 'Hunt in the monster book or play coin bonus');
     el.textContent = line;
     el.hidden = !line;
+    const act = !!(goal && (goal.kind === 'egg' || goal.kind === 'claim' || goal.kind === 'buy'));
+    el.classList.toggle('is-act', act);
+    el.disabled = !act;
+    el.dataset.petsNext = (goal && goal.kind) || '';
+    el.dataset.petsNextId = (goal && goal.id) || '';
+    if (!el.dataset.bound && typeof bindPress === 'function') {
+      el.dataset.bound = '1';
+      bindPress(el, () => {
+        if (el.disabled) return;
+        try { AudioSys.sfx('select'); } catch (_) {}
+        const kind = el.dataset.petsNext;
+        const id = el.dataset.petsNextId;
+        if (kind === 'egg') {
+          UI.doCrackDailyEgg();
+          return;
+        }
+        if ((kind === 'claim' || kind === 'buy') && id) {
+          UI.petTab = 'dex';
+          UI.petsShowDetail('dex', id);
+        }
+      });
+    }
+  };
+
+  UI.paintPetsCrackCta = function paintPetsCrackCta() {
+    const crackBtn = document.getElementById('eggCrackBtn');
+    if (!crackBtn) return;
+    if (typeof ensureEggDaily === 'function') {
+      try { ensureEggDaily(); } catch (_) {}
+    }
+    const ready = (typeof canCrackDailyEgg === 'function') ? canCrackDailyEgg() : false;
+    crackBtn.hidden = !ready;
+    crackBtn.disabled = !ready;
+    crackBtn.classList.toggle('is-ready', ready);
+    crackBtn.classList.toggle('is-wait', !ready);
+    if (ready) {
+      crackBtn.innerHTML =
+        '<span class="ico"><img src="assets/buttons/chrome/egg.svg" alt="" width="28" height="28" decoding="async" draggable="false"></span>'
+        + '<div>' + petsEscape(petsTxt('pets.crackEgg', 'Open daily egg'))
+        + '<small>' + petsEscape(petsTxt('pets.crackEggSub', 'Free arcade pull')) + '</small></div>';
+    }
+    if (!crackBtn.dataset.bound && typeof bindPress === 'function') {
+      crackBtn.dataset.bound = '1';
+      bindPress(crackBtn, () => UI.doCrackDailyEgg());
+    }
+  };
+
+  UI.doCrackDailyEgg = function doCrackDailyEgg() {
+    const run = () => {
+      const ready = (typeof canCrackDailyEgg === 'function') ? canCrackDailyEgg() : false;
+      if (!ready) {
+        UI.petTab = 'egg';
+        UI.petsPane = 'list';
+        UI.renderPets();
+        return;
+      }
+      const res = (typeof crackDailyEgg === 'function') ? crackDailyEgg() : null;
+      if (!res) {
+        UI.toast(petsTxt('toast.eggAlreadyOpened', 'Egg already opened today'), 2200);
+        UI.renderPets();
+        return;
+      }
+      try { AudioSys.sfx('diceRoll'); } catch (_) {}
+      const name = (typeof eggLabel === 'function') ? eggLabel(res.def, 'name') : res.def.name;
+      UI.toast(res.duplicate
+        ? petsTxt('toast.eggDuplicateUi', 'Duplicate egg: {name} (+10 XP)', { name })
+        : petsTxt('toast.eggHatch', 'Hatched {name} · {rarity}', {
+          name,
+          rarity: (typeof rarityLabel === 'function') ? rarityLabel(res.def.rarity) : res.def.rarity,
+        }), 3600);
+      UI.petTab = 'egg';
+      UI.petsSelKind = 'egg';
+      UI.petsSelId = res.def.id;
+      UI.petsPane = 'detail';
+      UI.renderPets();
+      if (typeof UI.renderMenu === 'function') UI.renderMenu();
+    };
+    if (typeof safeUiAction === 'function') {
+      safeUiAction(run, 'crackDailyEgg', petsTxt('ui.errEggCrack', 'Could not open egg'));
+    } else run();
+  };
+
+  UI.paintPausePetChip = function paintPausePetChip() {
+    const chip = document.getElementById('pausePetChip');
+    const lbl = document.getElementById('pausePetChipLbl');
+    if (!chip) return;
+    if (typeof game !== 'undefined' && game && game.mode === 'versus') {
+      chip.hidden = true;
+      return;
+    }
+    chip.hidden = false;
+    const ids = (typeof tamedPetIds === 'function') ? tamedPetIds() : [];
+    const active = (typeof activePetDef === 'function') ? activePetDef() : null;
+    if (!ids.length) {
+      chip.disabled = true;
+      chip.classList.add('is-empty');
+      if (lbl) lbl.textContent = petsTxt('pets.pauseNone', 'No pet yet');
+      return;
+    }
+    chip.disabled = false;
+    chip.classList.remove('is-empty');
+    const name = petsSpeciesName(active || ((typeof petDef === 'function') ? petDef(ids[0]) : null));
+    if (!active) {
+      if (lbl) lbl.textContent = petsTxt('pets.pauseEquip', 'Equip · {name}', { name });
+    } else if (ids.length > 1) {
+      if (lbl) lbl.textContent = petsTxt('pets.pauseCycle', 'Swap · {name}', { name });
+    } else {
+      if (lbl) lbl.textContent = petsTxt('pets.pauseActive', '{name} follows', { name });
+    }
   };
 
   UI.paintPetsHero = function paintPetsHero(quiet) {
@@ -52172,12 +52404,13 @@ if (typeof UI === 'object' && UI) {
     const t = this._petsHeroT || 1.2;
     if (tab === 'egg') {
       const def = (typeof activeEggPetDef === 'function') ? activeEggPetDef() : null;
+      const narrowEgg = petsIsNarrow();
       if (nameEl) nameEl.textContent = def
         ? ((typeof eggLabel === 'function') ? eggLabel(def, 'name') : def.name)
-        : petsTxt('pets.heroEmptyEgg', 'No egg companion');
+        : petsTxt(narrowEgg ? 'pets.heroEmptyShort' : 'pets.heroEmptyEgg', 'No egg');
       if (perkEl) perkEl.textContent = def
         ? ((typeof eggLabel === 'function') ? eggLabel(def, 'perk') : (def.perk || ''))
-        : petsTxt('pets.heroEggHint', 'Cosmetic — floats beside you');
+        : petsTxt(narrowEgg ? 'pets.heroTap' : 'pets.heroEggHint', 'Tap a row');
       if (bonusEl) bonusEl.textContent = def
         ? petsTxt('pets.eggCosmeticHero', 'Look only — no combat boost')
         : '';
@@ -52195,12 +52428,13 @@ if (typeof UI === 'object' && UI) {
     }
     const def = (typeof activePetDef === 'function') ? activePetDef() : null;
     const sp = def && typeof SPECIES !== 'undefined' ? SPECIES[def.speciesId] : null;
+    const narrow = petsIsNarrow();
     if (nameEl) nameEl.textContent = def && sp
       ? sp.name
-      : petsTxt('pets.heroEmpty', 'No pet equipped');
+      : petsTxt(narrow ? 'pets.heroEmptyShort' : 'pets.heroEmpty', 'No pet');
     if (perkEl) perkEl.textContent = def
       ? ((typeof petPerkLine === 'function') ? petPerkLine(def) : (def.perk || ''))
-      : petsTxt('pets.heroFollows', 'Follows you in adventure & training');
+      : petsTxt(narrow ? 'pets.heroTap' : 'pets.heroFollows', 'Tap a row');
     if (bonusEl) {
       bonusEl.textContent = def
         ? ((typeof petLiveBonusLine === 'function') ? petLiveBonusLine(def) : '')
@@ -52246,11 +52480,12 @@ if (typeof UI === 'object' && UI) {
       const eggs = (typeof eggOwnedCount === 'function') ? eggOwnedCount() : 0;
       const petTotal = (typeof PET_ROSTER !== 'undefined') ? PET_ROSTER.length : 0;
       const eggTotal = (typeof EGG_ROSTER !== 'undefined') ? EGG_ROSTER.length : 0;
+      const narrowTabs = petsIsNarrow();
       bar.innerHTML =
         '<button type="button" class="dex-filter-btn' + (tab === 'dex' ? ' active' : '') + '" data-pet-tab="dex" role="tab" aria-selected="' + (tab === 'dex' ? 'true' : 'false') + '">'
         + petsEscape(petsTxt('pets.tabDex', 'Dex · {n}/{total}', { n: tamed, total: petTotal })) + '</button>'
         + '<button type="button" class="dex-filter-btn' + (tab === 'egg' ? ' active' : '') + '" data-pet-tab="egg" role="tab" aria-selected="' + (tab === 'egg' ? 'true' : 'false') + '">'
-        + petsEscape(petsTxt('pets.tabEgg', 'Egg arcade · {n}/{total}', { n: eggs, total: eggTotal })) + '</button>';
+        + petsEscape(petsTxt(narrowTabs ? 'pets.tabEggShort' : 'pets.tabEgg', 'Egg · {n}/{total}', { n: eggs, total: eggTotal })) + '</button>';
       bar.querySelectorAll('[data-pet-tab]').forEach((btn) => {
         if (typeof bindPress === 'function') {
           bindPress(btn, () => {
@@ -52270,6 +52505,7 @@ if (typeof UI === 'object' && UI) {
     if (eggPanel) eggPanel.style.display = tab === 'egg' ? '' : 'none';
     this.paintPetsWallet();
     this.paintPetsNext();
+    this.paintPetsCrackCta();
     this.paintPetsHero(false);
     if (tab === 'egg') this.renderEggPets();
     else this.renderDexPets();
@@ -52397,20 +52633,24 @@ if (typeof UI === 'object' && UI) {
     const chestPetBadge = chestPetSk
       ? ' <span class="rar-pill" style="color:#ffd75e;border-color:#ffd75e">' + petsEscape(petsTxt('ui.weaponChestBadge', 'Chest')) + '</span>'
       : '';
-    const perk = (typeof petPerkLine === 'function') ? petPerkLine(def) : (def.perk || '');
     let statusLine;
-    if (st.tamed) statusLine = petsTxt('ui.petTamedAssist', 'Tamed · assist in adventure');
-    else if (st.canClaim) statusLine = petsTxt('pets.claimLine', 'Ready to tame · {cur}/{need} kills', { cur: st.kills, need: st.need });
-    else if (st.canBuy) statusLine = petsTxt('ui.petBuyLine', 'Buy: {cost} pet coins', { cost: st.cost });
-    else statusLine = petsTxt('ui.petTameLine', 'Tame: {cur}/{need} kills · or {cost}', {
-      cur: Math.min(st.kills, st.need), need: st.need, cost: st.cost,
-    });
+    if (st.tamed) {
+      statusLine = st.active
+        ? petsTxt('pets.listActive', 'On')
+        : petsTxt('pets.listTamed', 'Tamed');
+    } else if (st.canClaim) {
+      statusLine = petsTxt('pets.claim', 'tame');
+    } else if (st.canBuy) {
+      statusLine = petsTxt('pets.buyCta', 'Buy · {cost} PC', { cost: st.cost });
+    } else {
+      statusLine = petsTxt('pets.listLocked', '{cur}/{need} · {cost} PC', {
+        cur: Math.min(st.kills, st.need), need: st.need, cost: st.cost,
+      });
+    }
     const barPct = st.tamed ? 100 : st.pct;
     info.innerHTML =
       '<div class="cname">' + petsEscape(sp ? sp.name : def.id) + ' '
       + petsRarityPill(sp ? sp.rarity : 'common') + badge + chestPetBadge + upBadge + '</div>'
-      + '<div class="cinfo">' + petsEscape(perk) + '</div>'
-      + (chestPetSk ? '<div class="cinfo pets-chest-skill">✦ ' + petsEscape(chestPetSk) + '</div>' : '')
       + '<div class="cinfo pets-status">' + statusLine + '</div>'
       + '<div class="pets-bar" aria-hidden="true"><span style="width:' + barPct + '%"></span></div>';
     const right = document.createElement('div');
@@ -52451,52 +52691,18 @@ if (typeof UI === 'object' && UI) {
     const sumEl = document.getElementById('eggSummary');
     if (sumEl) {
       sumEl.style.display = 'block';
-      sumEl.innerHTML =
-        petsTxt('ui.eggSummary', 'Collected {owned}/{total} · active {active} · {daily}', {
+      if (petsIsNarrow()) {
+        sumEl.innerHTML = petsTxt('pets.eggSumShort', '{owned}/{total} · {daily}', {
           owned: '<b>' + sum.owned + '</b>', total: '<b>' + sum.total + '</b>',
-          active: '<b>' + petsEscape(sum.activeName) + '</b>', daily: '<b>' + petsEscape(sum.daily) + '</b>',
-        })
-        + '<div class="pets-tip">' + petsTxt('ui.eggSummaryHint', 'Cosmetic — no combat boost. 1 daily egg + bonus egg after your first adventure win today.') + '</div>';
-    }
-    const crackBtn = document.getElementById('eggCrackBtn');
-    if (crackBtn) {
-      const ready = (typeof canCrackDailyEgg === 'function') ? canCrackDailyEgg() : false;
-      crackBtn.style.display = '';
-      crackBtn.disabled = !ready;
-      crackBtn.classList.toggle('is-ready', ready);
-      crackBtn.classList.toggle('is-wait', !ready);
-      crackBtn.innerHTML =
-        '<span class="ico"><img src="assets/buttons/chrome/egg.svg" alt="" width="28" height="28" decoding="async" draggable="false"></span>'
-        + '<div>' + petsEscape(ready ? petsTxt('pets.crackEgg', 'Open daily egg') : petsTxt('pets.crackWait', 'Again tomorrow'))
-        + '<small>' + petsEscape(ready ? petsTxt('pets.crackEggSub', 'Free arcade pull') : petsTxt('pets.crackWaitSub', '1× per day + bonus after an adventure win')) + '</small></div>';
-      if (!crackBtn.dataset.bound) {
-        crackBtn.dataset.bound = '1';
-        if (typeof bindPress === 'function') {
-          bindPress(crackBtn, () => {
-            if (typeof safeUiAction === 'function') {
-              safeUiAction(() => {
-                const res = (typeof crackDailyEgg === 'function') ? crackDailyEgg() : null;
-                if (!res) {
-                  UI.toast(petsTxt('toast.eggAlreadyOpened', 'Egg already opened today'), 2200);
-                  return;
-                }
-                try { AudioSys.sfx('diceRoll'); } catch (_) {}
-                const name = (typeof eggLabel === 'function') ? eggLabel(res.def, 'name') : res.def.name;
-                UI.toast(res.duplicate
-                  ? petsTxt('toast.eggDuplicateUi', 'Duplicate egg: {name} (+10 XP)', { name })
-                  : petsTxt('toast.eggHatch', 'Hatched {name} · {rarity}', {
-                    name,
-                    rarity: (typeof rarityLabel === 'function') ? rarityLabel(res.def.rarity) : res.def.rarity,
-                  }), 3600);
-                UI.petsSelKind = 'egg';
-                UI.petsSelId = res.def.id;
-                UI.petsPane = 'detail';
-                UI.renderPets();
-                UI.renderMenu();
-              }, 'crackDailyEgg', petsTxt('ui.errEggCrack', 'Could not open egg'));
-            }
-          });
-        }
+          daily: '<b>' + petsEscape(sum.daily) + '</b>',
+        });
+      } else {
+        sumEl.innerHTML =
+          petsTxt('ui.eggSummary', 'Collected {owned}/{total} · active {active} · {daily}', {
+            owned: '<b>' + sum.owned + '</b>', total: '<b>' + sum.total + '</b>',
+            active: '<b>' + petsEscape(sum.activeName) + '</b>', daily: '<b>' + petsEscape(sum.daily) + '</b>',
+          })
+          + '<div class="pets-tip">' + petsTxt('ui.eggSummaryHint', 'Cosmetic — no combat boost. 1 daily egg + bonus egg after your first adventure win today.') + '</div>';
       }
     }
     const list = document.getElementById('eggList');
@@ -52540,10 +52746,9 @@ if (typeof UI === 'object' && UI) {
       : '';
     info.innerHTML =
       '<div class="cname">' + petsEscape(name) + ' ' + petsRarityPill(def.rarity) + badge + '</div>'
-      + '<div class="cinfo">' + petsEscape(owned ? perk : '???') + '</div>'
       + '<div class="cinfo pets-status">' + petsEscape(owned
-        ? petsTxt('ui.eggCosmetic', 'Cosmetic companion')
-        : petsTxt('ui.eggUnhatched', 'Not hatched yet')) + '</div>';
+        ? perk
+        : petsTxt('ui.eggUnhatched', '???')) + '</div>';
     const right = document.createElement('div');
     right.className = 'right';
     if (owned) {
@@ -52891,6 +53096,9 @@ document.querySelectorAll('[data-hub]').forEach((el) => {
       if (typeof UI.openBuildings === 'function') UI.openBuildings();
     } else if (hub === 'gear') {
       openGearScreen('home');
+    } else if (hub === 'pets') {
+      if (typeof UI !== 'undefined' && UI.openPets) UI.openPets(null, { from: 'home' });
+      else openCollectionScreen('petScreen', () => UI.renderPets());
     } else {
       UI.openModeHub(hub);
     }
@@ -53482,6 +53690,34 @@ bindPauseAudioPreset('pauseAudioSfxOnly', () => {
   AudioSys.setMusicOn(false);
   AudioSys.setSfxOn(true);
   if ((Number(save.sfxVol) || 0) < 0.5) save.sfxVol = 1;
+});
+bindPress(document.getElementById('pausePetChip'), () => {
+  if (typeof state !== 'undefined' && state !== 'pause') return;
+  if (typeof game !== 'undefined' && game && game.mode === 'versus') return;
+  AudioSys.sfx('select');
+  const run = () => {
+    const res = (typeof cycleCombatPet === 'function') ? cycleCombatPet() : { kind: 'none' };
+    if (res.kind === 'none') {
+      UI.toast(typeof tOr === 'function' ? tOr('pets.pauseNone', 'No pet yet') : 'No pet yet', 1800);
+      return;
+    }
+    if (typeof spawnGamePet === 'function' && typeof game !== 'undefined' && game) {
+      try { spawnGamePet(game); } catch (_) {}
+    }
+    const name = (typeof petsSpeciesName === 'function') ? petsSpeciesName(res.def) : (res.id || '');
+    if (res.kind === 'equip') {
+      UI.toast(typeof tOr === 'function'
+        ? tOr('toast.petFollow', '{name} follows you', { name })
+        : (name + ' follows you'), 1800);
+    } else if (res.kind === 'cycle') {
+      UI.toast(typeof tOr === 'function'
+        ? tOr('toast.petFollow', '{name} follows you', { name })
+        : (name + ' follows you'), 1800);
+    }
+    if (typeof UI.paintPausePetChip === 'function') UI.paintPausePetChip();
+  };
+  if (typeof safeUiAction === 'function') safeUiAction(run, 'pausePetChip', t('ui.errPetPick'));
+  else run();
 });
 bindPress(document.getElementById('pauseResume'), () => {
   state = 'play';

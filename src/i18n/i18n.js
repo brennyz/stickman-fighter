@@ -188,6 +188,7 @@ const I18N = {
       ritualCtaSummon: 'Naar oproepen',
       ritualCtaMission: 'Speel missie',
       ritualCtaAdv: 'Naar avontuur',
+      ritualCtaEgg: 'Naar dag-ei',
       ritualDismiss: 'Sluiten',
       ritualReopen: 'Dagoverzicht',
       resetIn: 'Nieuw over {reset}',
@@ -230,6 +231,11 @@ const I18N = {
       upPassive: 'passief ×{n}', upAssist: 'assist ×{n}', upCd: 'CD ×{n}', upMax: 'MAX',
       upPreview: 'passief +10% · assist +8% · CD −7%',
       eggLockedCta: 'Komt uit een dag-ei',
+      listLocked: '{cur}/{need} · {cost} PC', listTamed: 'Getemd', listActive: 'Aan',
+      tabEggShort: 'Ei · {n}/{total}', heroEmptyShort: 'Geen pet', heroTap: 'Tik een rij',
+      eggSumShort: '{owned}/{total} · {daily}',
+      pauseNone: 'Nog geen pet', pauseEquip: 'Uitrusten · {name}',
+      pauseCycle: 'Wissel · {name}', pauseActive: '{name} volgt',
       eggName: {
         egg_pebble: 'Kiezel', egg_moss: 'Mosbal', egg_candy: 'Snoep', egg_cloud: 'Wolkje',
         egg_star: 'Sterretje', egg_flame: 'Vlammetje', egg_crystal: 'Kristal', egg_moon: 'Maanei',
@@ -520,6 +526,7 @@ const I18N = {
       ritualCtaSummon: 'Open summons',
       ritualCtaMission: 'Play mission',
       ritualCtaAdv: 'Play adventure',
+      ritualCtaEgg: 'Open daily egg',
       ritualDismiss: 'Close',
       ritualReopen: 'Day overview',
       resetIn: 'Resets in {reset}',
@@ -562,6 +569,11 @@ const I18N = {
       upPassive: 'passive ×{n}', upAssist: 'assist ×{n}', upCd: 'CD ×{n}', upMax: 'MAX',
       upPreview: 'passive +10% · assist +8% · CD −7%',
       eggLockedCta: 'Hatch from daily egg',
+      listLocked: '{cur}/{need} · {cost} PC', listTamed: 'Tamed', listActive: 'On',
+      tabEggShort: 'Egg · {n}/{total}', heroEmptyShort: 'No pet', heroTap: 'Tap a row',
+      eggSumShort: '{owned}/{total} · {daily}',
+      pauseNone: 'No pet yet', pauseEquip: 'Equip · {name}',
+      pauseCycle: 'Swap · {name}', pauseActive: '{name} follows',
       eggName: {
         egg_pebble: 'Pebble', egg_moss: 'Mossball', egg_candy: 'Candy', egg_cloud: 'Cloudlet',
         egg_star: 'Spark', egg_flame: 'Ember', egg_crystal: 'Crystal', egg_moon: 'Moon egg',
@@ -907,7 +919,7 @@ const I18N = {
       achievements: 'Erfolge' },
     fomo: {
       ritualTitle: 'Heute', ritualCtaSummon: 'Zu Beschwörungen', ritualCtaMission: 'Mission spielen',
-      ritualCtaAdv: 'Ins Abenteuer', ritualDismiss: 'Schließen', ritualReopen: 'Tagesübersicht',
+      ritualCtaAdv: 'Ins Abenteuer', ritualCtaEgg: 'Zum Tages-Ei', ritualDismiss: 'Schließen', ritualReopen: 'Tagesübersicht',
       resetIn: 'Neu in {reset}', rowSummons: 'Beschwörungen {left}/{total}',
       rowEggReady: 'Tages-Ei bereit', rowEggDone: 'Tages-Ei schon offen',
       streakReward3: '+1 Beschwörung', streakReward7: '+Ei oder Beschwörungen', streakReward14: '+120 XP',
@@ -944,6 +956,11 @@ const I18N = {
       upPassive: 'passiv ×{n}', upAssist: 'Assist ×{n}', upCd: 'CD ×{n}', upMax: 'MAX',
       upPreview: 'passiv +10% · Assist +8% · CD −7%',
       eggLockedCta: 'Schlüpft aus dem Tages-Ei',
+      listLocked: '{cur}/{need} · {cost} PC', listTamed: 'Gezähmt', listActive: 'An',
+      tabEggShort: 'Ei · {n}/{total}', heroEmptyShort: 'Kein Pet', heroTap: 'Tippe eine Reihe',
+      eggSumShort: '{owned}/{total} · {daily}',
+      pauseNone: 'Noch kein Pet', pauseEquip: 'Ausrüsten · {name}',
+      pauseCycle: 'Wechseln · {name}', pauseActive: '{name} folgt',
       eggName: {
         egg_pebble: 'Kiesel', egg_moss: 'Moosball', egg_candy: 'Bonbon', egg_cloud: 'Wölkchen',
         egg_star: 'Sternchen', egg_flame: 'Flämmchen', egg_crystal: 'Kristall', egg_moon: 'Mond-Ei',
@@ -1214,6 +1231,7 @@ const I18N = {
       ritualCtaSummon: 'Vers les summons',
       ritualCtaMission: 'Jouer une mission',
       ritualCtaAdv: 'Vers l’aventure',
+      ritualCtaEgg: 'Vers l\'œuf du jour',
       ritualDismiss: 'Fermer',
       ritualReopen: 'Aperçu du jour',
       resetIn: 'Nouveau dans {reset}',
@@ -1256,6 +1274,11 @@ const I18N = {
       upPassive: 'passif ×{n}', upAssist: 'assist ×{n}', upCd: 'CD ×{n}', upMax: 'MAX',
       upPreview: 'passif +10% · assist +8% · CD −7%',
       eggLockedCta: 'Éclot de l\'œuf du jour',
+      listLocked: '{cur}/{need} · {cost} PC', listTamed: 'Apprivoisé', listActive: 'On',
+      tabEggShort: 'Œuf · {n}/{total}', heroEmptyShort: 'Aucun pet', heroTap: 'Touche une ligne',
+      eggSumShort: '{owned}/{total} · {daily}',
+      pauseNone: 'Pas encore de pet', pauseEquip: 'Équiper · {name}',
+      pauseCycle: 'Changer · {name}', pauseActive: '{name} te suit',
       eggName: {
         egg_pebble: 'Galet', egg_moss: 'Mousse', egg_candy: 'Bonbon', egg_cloud: 'Nuage',
         egg_star: 'Étoile', egg_flame: 'Flamme', egg_crystal: 'Cristal', egg_moon: 'Œuf-lune',
@@ -1518,6 +1541,7 @@ const I18N = {
       ritualCtaSummon: 'A summons',
       ritualCtaMission: 'Jugar misión',
       ritualCtaAdv: 'A la aventura',
+      ritualCtaEgg: 'Al huevo diario',
       ritualDismiss: 'Cerrar',
       ritualReopen: 'Resumen del día',
       resetIn: 'Nuevo en {reset}',
@@ -1560,6 +1584,11 @@ const I18N = {
       upPassive: 'pasivo ×{n}', upAssist: 'asist ×{n}', upCd: 'CD ×{n}', upMax: 'MAX',
       upPreview: 'pasivo +10% · asist +8% · CD −7%',
       eggLockedCta: 'Sale del huevo diario',
+      listLocked: '{cur}/{need} · {cost} PC', listTamed: 'Domado', listActive: 'On',
+      tabEggShort: 'Huevo · {n}/{total}', heroEmptyShort: 'Sin pet', heroTap: 'Toca una fila',
+      eggSumShort: '{owned}/{total} · {daily}',
+      pauseNone: 'Aún no hay pet', pauseEquip: 'Equipar · {name}',
+      pauseCycle: 'Cambiar · {name}', pauseActive: '{name} te sigue',
       eggName: {
         egg_pebble: 'Guijarro', egg_moss: 'Musgo', egg_candy: 'Caramelo', egg_cloud: 'Nubecita',
         egg_star: 'Estrellita', egg_flame: 'Llamita', egg_crystal: 'Cristal', egg_moon: 'Huevo luna',
@@ -1733,6 +1762,8 @@ function applyLangStaticScreens() {
     ['.hub-tile-buildings .hub-tile-sub', 'menu.buildingsSub'],
     ['#btnGearHome .hub-tile-title', 'hub.gear'],
     ['#btnGearHome .hub-tile-sub', 'hub.gearSub'],
+    ['#btnPetsHome .hub-tile-title', 'hub.pets'],
+    ['#btnPetsHome .hub-tile-sub', 'hub.petsSub'],
     ['.hub-tile-summon .hub-tile-title', 'menu.summons'],
     ['.hub-tile-summon .hub-tile-sub', 'menu.summonsSub'],
   ];
@@ -1804,6 +1835,7 @@ function applyLangStaticScreens() {
     ['btnMatsCoins', 'hub.mats', 'hub.matsSub'],
     ['btnWeapons', 'hub.weapons', 'hub.weaponsSub'],
     ['btnPets', 'hub.pets', 'hub.petsSub'],
+    ['btnPetsHome', 'hub.pets', 'hub.petsSub'],
     ['btnStyle', 'hub.style', 'hub.styleSub'],
     ['btnGear', 'hub.gear', 'hub.gearSub'],
     ['btnSkills', 'hub.skills', 'hub.skillsSub'],
@@ -2140,6 +2172,7 @@ function applyLang() {
     else if (active === 'gambleScreen' && typeof UI.renderGamble === 'function' && pendingAdvLevel) {
       UI.renderGamble(pendingAdvLevel);
     } else if (active === 'petScreen' && typeof UI.renderPets === 'function') UI.renderPets();
+    else if (active === 'pauseScreen' && typeof UI.paintPausePetChip === 'function') UI.paintPausePetChip();
     else if (active === 'dexScreen' && typeof UI.renderDex === 'function') UI.renderDex();
     else if (active === 'skillScreen' && typeof UI.renderSkills === 'function') UI.renderSkills();
     else if (active === 'modeHubScreen') UI.renderModeHub();

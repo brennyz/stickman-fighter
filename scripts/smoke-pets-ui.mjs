@@ -36,6 +36,10 @@ must(/id="petDetail"/.test(html), 'missing #petDetail');
 must(/id="petFilterBar"/.test(html), 'missing #petFilterBar');
 must(/id="petList"/.test(html) && /id="eggList"/.test(html), 'missing pet/egg lists');
 must(/id="eggCrackBtn"/.test(html), 'missing #eggCrackBtn');
+must(html.indexOf('id="eggCrackBtn"') < html.indexOf('id="petEggPanel"'),
+  'daily-egg CTA must sit in pets chrome, not inside the egg panel');
+must(/id="btnPetsHome"/.test(html) && /data-hub="pets"/.test(html), 'HOME pets tile missing');
+must(/id="pausePetChip"/.test(html), 'pause pet chip missing');
 must(html.indexOf('id="petDetail"') < html.indexOf('id="petList"'),
   'detail must sit above the list on Android');
 must(/id="btnPets"/.test(html) && /hub-tile-pets/.test(html), 'collection pets tile missing');
@@ -51,15 +55,24 @@ must(ui.includes('openPets') && ui.includes('renderPets'), 'pets-ui missing open
 must(ui.includes('petsShowDetail') && ui.includes('petsShowList'), 'list→detail flow missing');
 must(ui.includes('paintPetsWallet') && ui.includes('paintPetsHero'), 'wallet/hero painters missing');
 must(ui.includes('paintPetsNext'), 'next-goal strip missing');
+must(ui.includes('paintPetsCrackCta') && ui.includes('doCrackDailyEgg'), 'chrome daily-egg CTA missing');
+must(ui.includes('paintPausePetChip'), 'pause equip chip painter missing');
+must(ui.includes('listLocked') || data.includes('listLocked'), 'short locked-list i18n missing');
 must(ui.includes('claimPetFromDex') || data.includes('claimPetFromDex'), 'claim-if-kills-ready missing');
 must(data.includes('function petsHubStatLine'), 'hub next-step helper missing');
 must(data.includes('function petStatusOf'), 'petStatusOf missing');
 must(data.includes('function petsNextGoal'), 'petsNextGoal missing');
+must(data.includes('function cycleCombatPet') && data.includes('function tamedPetIds'),
+  'pause cycle helpers missing');
 must(data.includes("tOr('pets.lineNeed'"), 'petProgressLine must use i18n pets.lineNeed');
 must(start.includes('UI.openPets'), 'start.js must open pets via openPets');
+must(start.includes("hub === 'pets'") && start.includes('pausePetChip'),
+  'HOME hub pets + pause chip binds missing');
 must(coreUi.includes('petsGoBack'), 'goBack must pop pets detail first');
 must(/pets:\s*\{/.test(i18n) && /doesTitle/.test(i18n), 'i18n missing pets doesTitle');
 must(/filterReady/.test(i18n) && /crackWait/.test(i18n), 'i18n missing filter/crack-wait copy');
+must(/listLocked/.test(i18n) && /pauseEquip/.test(i18n) && /ritualCtaEgg/.test(i18n),
+  'i18n missing locked-list / pause / FOMO egg CTA');
 must(manifest.includes('src/ui/pets-ui.js'), 'manifest missing pets-ui');
 must(/No Versus/.test(docs), 'docs must keep Versus retired');
 must(/speel\.html/.test(docs), 'docs must keep speel.html share URL');
@@ -106,6 +119,8 @@ async function runBrowser() {
       }
       const tile = document.getElementById('btnPets');
       if (!tile) return { ok: false, why: 'btnPets missing' };
+      if (!document.getElementById('btnPetsHome')) return { ok: false, why: 'HOME pets tile missing' };
+      if (!document.getElementById('pausePetChip')) return { ok: false, why: 'pause pet chip missing' };
       UI.openPets();
       const screen = document.getElementById('petScreen');
       if (!screen || !screen.classList.contains('active')) return { ok: false, why: 'petScreen not active' };
@@ -121,6 +136,16 @@ async function runBrowser() {
       if (cards.length < 12) return { ok: false, why: 'need 12 dex pets', n: cards.length };
       const tooSmall = cards.filter((c) => c.getBoundingClientRect().height < 44);
       if (tooSmall.length) return { ok: false, why: 'touch <44', h: tooSmall[0].getBoundingClientRect().height };
+      const perkOnList = cards.some((c) => c.querySelector('.cinfo:not(.pets-status)'));
+      if (perkOnList) return { ok: false, why: 'list cards still show perk wall' };
+      const crack = document.getElementById('eggCrackBtn');
+      if (!crack) return { ok: false, why: 'eggCrackBtn missing' };
+      if (crack.closest('#petEggPanel')) return { ok: false, why: 'egg CTA still buried in egg panel' };
+      const eggReady = typeof canCrackDailyEgg === 'function' && canCrackDailyEgg();
+      if (eggReady && crack.hidden) return { ok: false, why: 'egg CTA hidden when ready' };
+      if (eggReady && crack.getBoundingClientRect().height < 40) {
+        return { ok: false, why: 'egg CTA not visible', h: crack.getBoundingClientRect().height };
+      }
       const first = cards[0];
       first.click();
       if (screen.getAttribute('data-pets-pane') !== 'detail') return { ok: false, why: 'tap did not open detail' };

@@ -74,6 +74,25 @@ function petTamedCount() {
   return Object.keys(save.pets || {}).filter(k => PET_BY_ID[k]).length;
 }
 
+function tamedPetIds() {
+  if (typeof PET_ROSTER === 'undefined' || !PET_ROSTER) return [];
+  return PET_ROSTER.filter((d) => isPetTamed(d.id)).map((d) => d.id);
+}
+
+function cycleCombatPet() {
+  const ids = tamedPetIds();
+  if (!ids.length) return { kind: 'none' };
+  const cur = save.activePet && ids.indexOf(save.activePet) >= 0 ? save.activePet : null;
+  if (!cur) {
+    equipPet(ids[0]);
+    return { kind: 'equip', id: ids[0], def: petDef(ids[0]) };
+  }
+  if (ids.length === 1) return { kind: 'same', id: cur, def: petDef(cur) };
+  const next = ids[(ids.indexOf(cur) + 1) % ids.length];
+  equipPet(next);
+  return { kind: 'cycle', id: next, def: petDef(next) };
+}
+
 function activePetDef() {
   const id = save.activePet;
   if (!id || !isPetTamed(id)) return null;

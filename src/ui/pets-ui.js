@@ -27,6 +27,15 @@ function petsSpeciesName(def) {
   return (sp && sp.name) || def.id;
 }
 
+function petsIsNarrow() {
+  try {
+    return typeof window !== 'undefined' && window.matchMedia
+      && window.matchMedia('(max-width: 480px)').matches;
+  } catch (_) {
+    return false;
+  }
+}
+
 function petsRarityPill(rid) {
   const rar = (typeof rarityOf === 'function') ? rarityOf(rid) : { color: '#8fa3d9' };
   const label = (typeof rarityLabel === 'function') ? rarityLabel(rid) : rid;
@@ -44,10 +53,25 @@ if (typeof UI === 'object' && UI) {
   UI._petsHeroRaf = 0;
   UI._petsHeroT = 0;
 
-  UI.openPets = function openPets(tab) {
+  UI.openPets = function openPets(tab, opts) {
+    if (tab && typeof tab === 'object' && !Array.isArray(tab)) {
+      opts = tab;
+      tab = opts.tab || opts.kind || null;
+    }
+    opts = opts || {};
     this.petTab = tab || this.petTab || 'dex';
     this.petsPane = 'list';
     this.petsSelId = null;
+    if (opts.from === 'home' || opts.from === 'equip') {
+      const active = (typeof activePetDef === 'function') ? activePetDef() : null;
+      const firstId = (typeof tamedPetIds === 'function' && tamedPetIds()[0]) || null;
+      const pick = active || ((typeof petDef === 'function' && firstId) ? petDef(firstId) : null);
+      if (pick) {
+        this.petsSelKind = 'dex';
+        this.petsSelId = pick.id;
+        if (opts.from === 'equip') this.petsPane = 'detail';
+      }
+    }
     this.safeOpen('petScreen', () => this.renderPets(), {
       msg: petsTxt('ui.errLoadScreen', 'Could not load screen'),
     });
@@ -112,23 +136,142 @@ if (typeof UI === 'object' && UI) {
       + '<span class="pets-wallet-lbl">' + petsEscape(lbl) + '</span>'
       + '<span class="pets-wallet-amt">' + petsEscape(amt) + '</span></span>';
     const eggChip = w.dailyReady
-      ? chip('pets-wallet-egg is-ready', petsTxt('pets.walletEggReady', 'Egg'), petsTxt('pets.ready', 'ready'))
+      ? '<button type="button" class="pets-wallet-chip pets-wallet-egg is-ready" data-pets-wallet="egg">'
+        + '<span class="pets-wallet-lbl">' + petsEscape(petsTxt('pets.walletEggReady', 'Egg')) + '</span>'
+        + '<span class="pets-wallet-amt">' + petsEscape(petsTxt('pets.ready', 'ready')) + '</span></button>'
       : chip('pets-wallet-egg', petsTxt('pets.walletEgg', 'Egg'), w.eggs + '/' + w.eggTotal);
     el.classList.add('pets-wallet');
     el.innerHTML =
       chip('pets-wallet-pc', petsTxt('pets.walletPc', 'PC'), w.petCoins)
       + chip('pets-wallet-dex', petsTxt('pets.walletDex', 'Dex'), w.tamed + '/' + w.total)
       + eggChip;
+    const eggAct = el.querySelector('[data-pets-wallet="egg"]');
+    if (eggAct && typeof bindPress === 'function') {
+      bindPress(eggAct, () => {
+        try { AudioSys.sfx('select'); } catch (_) {}
+        UI.doCrackDailyEgg();
+      });
+    }
   };
 
   UI.paintPetsNext = function paintPetsNext() {
     const el = document.getElementById('petsNext');
     if (!el) return;
+    const goal = (typeof petsNextGoal === 'function') ? petsNextGoal() : null;
     const line = (typeof petsNextGoalLine === 'function')
       ? petsNextGoalLine()
       : petsTxt('pets.nextHint', 'Hunt in the monster book or play coin bonus');
     el.textContent = line;
     el.hidden = !line;
+    const act = !!(goal && (goal.kind === 'egg' || goal.kind === 'claim' || goal.kind === 'buy'));
+    el.classList.toggle('is-act', act);
+    el.disabled = !act;
+    el.dataset.petsNext = (goal && goal.kind) || '';
+    el.dataset.petsNextId = (goal && goal.id) || '';
+    if (!el.dataset.bound && typeof bindPress === 'function') {
+      el.dataset.bound = '1';
+      bindPress(el, () => {
+        if (el.disabled) return;
+        try { AudioSys.sfx('select'); } catch (_) {}
+        const kind = el.dataset.petsNext;
+        const id = el.dataset.petsNextId;
+        if (kind === 'egg') {
+          UI.doCrackDailyEgg();
+          return;
+        }
+        if ((kind === 'claim' || kind === 'buy') && id) {
+          UI.petTab = 'dex';
+          UI.petsShowDetail('dex', id);
+        }
+      });
+    }
+  };
+
+  UI.paintPetsCrackCta = function paintPetsCrackCta() {
+    const crackBtn = document.getElementById('eggCrackBtn');
+    if (!crackBtn) return;
+    if (typeof ensureEggDaily === 'function') {
+      try { ensureEggDaily(); } catch (_) {}
+    }
+    const ready = (typeof canCrackDailyEgg === 'function') ? canCrackDailyEgg() : false;
+    crackBtn.hidden = !ready;
+    crackBtn.disabled = !ready;
+    crackBtn.classList.toggle('is-ready', ready);
+    crackBtn.classList.toggle('is-wait', !ready);
+    if (ready) {
+      crackBtn.innerHTML =
+        '<span class="ico"><img src="assets/buttons/chrome/egg.svg" alt="" width="28" height="28" decoding="async" draggable="false"></span>'
+        + '<div>' + petsEscape(petsTxt('pets.crackEgg', 'Open daily egg'))
+        + '<small>' + petsEscape(petsTxt('pets.crackEggSub', 'Free arcade pull')) + '</small></div>';
+    }
+    if (!crackBtn.dataset.bound && typeof bindPress === 'function') {
+      crackBtn.dataset.bound = '1';
+      bindPress(crackBtn, () => UI.doCrackDailyEgg());
+    }
+  };
+
+  UI.doCrackDailyEgg = function doCrackDailyEgg() {
+    const run = () => {
+      const ready = (typeof canCrackDailyEgg === 'function') ? canCrackDailyEgg() : false;
+      if (!ready) {
+        UI.petTab = 'egg';
+        UI.petsPane = 'list';
+        UI.renderPets();
+        return;
+      }
+      const res = (typeof crackDailyEgg === 'function') ? crackDailyEgg() : null;
+      if (!res) {
+        UI.toast(petsTxt('toast.eggAlreadyOpened', 'Egg already opened today'), 2200);
+        UI.renderPets();
+        return;
+      }
+      try { AudioSys.sfx('diceRoll'); } catch (_) {}
+      const name = (typeof eggLabel === 'function') ? eggLabel(res.def, 'name') : res.def.name;
+      UI.toast(res.duplicate
+        ? petsTxt('toast.eggDuplicateUi', 'Duplicate egg: {name} (+10 XP)', { name })
+        : petsTxt('toast.eggHatch', 'Hatched {name} · {rarity}', {
+          name,
+          rarity: (typeof rarityLabel === 'function') ? rarityLabel(res.def.rarity) : res.def.rarity,
+        }), 3600);
+      UI.petTab = 'egg';
+      UI.petsSelKind = 'egg';
+      UI.petsSelId = res.def.id;
+      UI.petsPane = 'detail';
+      UI.renderPets();
+      if (typeof UI.renderMenu === 'function') UI.renderMenu();
+    };
+    if (typeof safeUiAction === 'function') {
+      safeUiAction(run, 'crackDailyEgg', petsTxt('ui.errEggCrack', 'Could not open egg'));
+    } else run();
+  };
+
+  UI.paintPausePetChip = function paintPausePetChip() {
+    const chip = document.getElementById('pausePetChip');
+    const lbl = document.getElementById('pausePetChipLbl');
+    if (!chip) return;
+    if (typeof game !== 'undefined' && game && game.mode === 'versus') {
+      chip.hidden = true;
+      return;
+    }
+    chip.hidden = false;
+    const ids = (typeof tamedPetIds === 'function') ? tamedPetIds() : [];
+    const active = (typeof activePetDef === 'function') ? activePetDef() : null;
+    if (!ids.length) {
+      chip.disabled = true;
+      chip.classList.add('is-empty');
+      if (lbl) lbl.textContent = petsTxt('pets.pauseNone', 'No pet yet');
+      return;
+    }
+    chip.disabled = false;
+    chip.classList.remove('is-empty');
+    const name = petsSpeciesName(active || ((typeof petDef === 'function') ? petDef(ids[0]) : null));
+    if (!active) {
+      if (lbl) lbl.textContent = petsTxt('pets.pauseEquip', 'Equip · {name}', { name });
+    } else if (ids.length > 1) {
+      if (lbl) lbl.textContent = petsTxt('pets.pauseCycle', 'Swap · {name}', { name });
+    } else {
+      if (lbl) lbl.textContent = petsTxt('pets.pauseActive', '{name} follows', { name });
+    }
   };
 
   UI.paintPetsHero = function paintPetsHero(quiet) {
@@ -140,12 +283,13 @@ if (typeof UI === 'object' && UI) {
     const t = this._petsHeroT || 1.2;
     if (tab === 'egg') {
       const def = (typeof activeEggPetDef === 'function') ? activeEggPetDef() : null;
+      const narrowEgg = petsIsNarrow();
       if (nameEl) nameEl.textContent = def
         ? ((typeof eggLabel === 'function') ? eggLabel(def, 'name') : def.name)
-        : petsTxt('pets.heroEmptyEgg', 'No egg companion');
+        : petsTxt(narrowEgg ? 'pets.heroEmptyShort' : 'pets.heroEmptyEgg', 'No egg');
       if (perkEl) perkEl.textContent = def
         ? ((typeof eggLabel === 'function') ? eggLabel(def, 'perk') : (def.perk || ''))
-        : petsTxt('pets.heroEggHint', 'Cosmetic — floats beside you');
+        : petsTxt(narrowEgg ? 'pets.heroTap' : 'pets.heroEggHint', 'Tap a row');
       if (bonusEl) bonusEl.textContent = def
         ? petsTxt('pets.eggCosmeticHero', 'Look only — no combat boost')
         : '';
@@ -163,12 +307,13 @@ if (typeof UI === 'object' && UI) {
     }
     const def = (typeof activePetDef === 'function') ? activePetDef() : null;
     const sp = def && typeof SPECIES !== 'undefined' ? SPECIES[def.speciesId] : null;
+    const narrow = petsIsNarrow();
     if (nameEl) nameEl.textContent = def && sp
       ? sp.name
-      : petsTxt('pets.heroEmpty', 'No pet equipped');
+      : petsTxt(narrow ? 'pets.heroEmptyShort' : 'pets.heroEmpty', 'No pet');
     if (perkEl) perkEl.textContent = def
       ? ((typeof petPerkLine === 'function') ? petPerkLine(def) : (def.perk || ''))
-      : petsTxt('pets.heroFollows', 'Follows you in adventure & training');
+      : petsTxt(narrow ? 'pets.heroTap' : 'pets.heroFollows', 'Tap a row');
     if (bonusEl) {
       bonusEl.textContent = def
         ? ((typeof petLiveBonusLine === 'function') ? petLiveBonusLine(def) : '')
@@ -214,11 +359,12 @@ if (typeof UI === 'object' && UI) {
       const eggs = (typeof eggOwnedCount === 'function') ? eggOwnedCount() : 0;
       const petTotal = (typeof PET_ROSTER !== 'undefined') ? PET_ROSTER.length : 0;
       const eggTotal = (typeof EGG_ROSTER !== 'undefined') ? EGG_ROSTER.length : 0;
+      const narrowTabs = petsIsNarrow();
       bar.innerHTML =
         '<button type="button" class="dex-filter-btn' + (tab === 'dex' ? ' active' : '') + '" data-pet-tab="dex" role="tab" aria-selected="' + (tab === 'dex' ? 'true' : 'false') + '">'
         + petsEscape(petsTxt('pets.tabDex', 'Dex · {n}/{total}', { n: tamed, total: petTotal })) + '</button>'
         + '<button type="button" class="dex-filter-btn' + (tab === 'egg' ? ' active' : '') + '" data-pet-tab="egg" role="tab" aria-selected="' + (tab === 'egg' ? 'true' : 'false') + '">'
-        + petsEscape(petsTxt('pets.tabEgg', 'Egg arcade · {n}/{total}', { n: eggs, total: eggTotal })) + '</button>';
+        + petsEscape(petsTxt(narrowTabs ? 'pets.tabEggShort' : 'pets.tabEgg', 'Egg · {n}/{total}', { n: eggs, total: eggTotal })) + '</button>';
       bar.querySelectorAll('[data-pet-tab]').forEach((btn) => {
         if (typeof bindPress === 'function') {
           bindPress(btn, () => {
@@ -238,6 +384,7 @@ if (typeof UI === 'object' && UI) {
     if (eggPanel) eggPanel.style.display = tab === 'egg' ? '' : 'none';
     this.paintPetsWallet();
     this.paintPetsNext();
+    this.paintPetsCrackCta();
     this.paintPetsHero(false);
     if (tab === 'egg') this.renderEggPets();
     else this.renderDexPets();
@@ -365,20 +512,24 @@ if (typeof UI === 'object' && UI) {
     const chestPetBadge = chestPetSk
       ? ' <span class="rar-pill" style="color:#ffd75e;border-color:#ffd75e">' + petsEscape(petsTxt('ui.weaponChestBadge', 'Chest')) + '</span>'
       : '';
-    const perk = (typeof petPerkLine === 'function') ? petPerkLine(def) : (def.perk || '');
     let statusLine;
-    if (st.tamed) statusLine = petsTxt('ui.petTamedAssist', 'Tamed · assist in adventure');
-    else if (st.canClaim) statusLine = petsTxt('pets.claimLine', 'Ready to tame · {cur}/{need} kills', { cur: st.kills, need: st.need });
-    else if (st.canBuy) statusLine = petsTxt('ui.petBuyLine', 'Buy: {cost} pet coins', { cost: st.cost });
-    else statusLine = petsTxt('ui.petTameLine', 'Tame: {cur}/{need} kills · or {cost}', {
-      cur: Math.min(st.kills, st.need), need: st.need, cost: st.cost,
-    });
+    if (st.tamed) {
+      statusLine = st.active
+        ? petsTxt('pets.listActive', 'On')
+        : petsTxt('pets.listTamed', 'Tamed');
+    } else if (st.canClaim) {
+      statusLine = petsTxt('pets.claim', 'tame');
+    } else if (st.canBuy) {
+      statusLine = petsTxt('pets.buyCta', 'Buy · {cost} PC', { cost: st.cost });
+    } else {
+      statusLine = petsTxt('pets.listLocked', '{cur}/{need} · {cost} PC', {
+        cur: Math.min(st.kills, st.need), need: st.need, cost: st.cost,
+      });
+    }
     const barPct = st.tamed ? 100 : st.pct;
     info.innerHTML =
       '<div class="cname">' + petsEscape(sp ? sp.name : def.id) + ' '
       + petsRarityPill(sp ? sp.rarity : 'common') + badge + chestPetBadge + upBadge + '</div>'
-      + '<div class="cinfo">' + petsEscape(perk) + '</div>'
-      + (chestPetSk ? '<div class="cinfo pets-chest-skill">✦ ' + petsEscape(chestPetSk) + '</div>' : '')
       + '<div class="cinfo pets-status">' + statusLine + '</div>'
       + '<div class="pets-bar" aria-hidden="true"><span style="width:' + barPct + '%"></span></div>';
     const right = document.createElement('div');
@@ -419,52 +570,18 @@ if (typeof UI === 'object' && UI) {
     const sumEl = document.getElementById('eggSummary');
     if (sumEl) {
       sumEl.style.display = 'block';
-      sumEl.innerHTML =
-        petsTxt('ui.eggSummary', 'Collected {owned}/{total} · active {active} · {daily}', {
+      if (petsIsNarrow()) {
+        sumEl.innerHTML = petsTxt('pets.eggSumShort', '{owned}/{total} · {daily}', {
           owned: '<b>' + sum.owned + '</b>', total: '<b>' + sum.total + '</b>',
-          active: '<b>' + petsEscape(sum.activeName) + '</b>', daily: '<b>' + petsEscape(sum.daily) + '</b>',
-        })
-        + '<div class="pets-tip">' + petsTxt('ui.eggSummaryHint', 'Cosmetic — no combat boost. 1 daily egg + bonus egg after your first adventure win today.') + '</div>';
-    }
-    const crackBtn = document.getElementById('eggCrackBtn');
-    if (crackBtn) {
-      const ready = (typeof canCrackDailyEgg === 'function') ? canCrackDailyEgg() : false;
-      crackBtn.style.display = '';
-      crackBtn.disabled = !ready;
-      crackBtn.classList.toggle('is-ready', ready);
-      crackBtn.classList.toggle('is-wait', !ready);
-      crackBtn.innerHTML =
-        '<span class="ico"><img src="assets/buttons/chrome/egg.svg" alt="" width="28" height="28" decoding="async" draggable="false"></span>'
-        + '<div>' + petsEscape(ready ? petsTxt('pets.crackEgg', 'Open daily egg') : petsTxt('pets.crackWait', 'Again tomorrow'))
-        + '<small>' + petsEscape(ready ? petsTxt('pets.crackEggSub', 'Free arcade pull') : petsTxt('pets.crackWaitSub', '1× per day + bonus after an adventure win')) + '</small></div>';
-      if (!crackBtn.dataset.bound) {
-        crackBtn.dataset.bound = '1';
-        if (typeof bindPress === 'function') {
-          bindPress(crackBtn, () => {
-            if (typeof safeUiAction === 'function') {
-              safeUiAction(() => {
-                const res = (typeof crackDailyEgg === 'function') ? crackDailyEgg() : null;
-                if (!res) {
-                  UI.toast(petsTxt('toast.eggAlreadyOpened', 'Egg already opened today'), 2200);
-                  return;
-                }
-                try { AudioSys.sfx('diceRoll'); } catch (_) {}
-                const name = (typeof eggLabel === 'function') ? eggLabel(res.def, 'name') : res.def.name;
-                UI.toast(res.duplicate
-                  ? petsTxt('toast.eggDuplicateUi', 'Duplicate egg: {name} (+10 XP)', { name })
-                  : petsTxt('toast.eggHatch', 'Hatched {name} · {rarity}', {
-                    name,
-                    rarity: (typeof rarityLabel === 'function') ? rarityLabel(res.def.rarity) : res.def.rarity,
-                  }), 3600);
-                UI.petsSelKind = 'egg';
-                UI.petsSelId = res.def.id;
-                UI.petsPane = 'detail';
-                UI.renderPets();
-                UI.renderMenu();
-              }, 'crackDailyEgg', petsTxt('ui.errEggCrack', 'Could not open egg'));
-            }
-          });
-        }
+          daily: '<b>' + petsEscape(sum.daily) + '</b>',
+        });
+      } else {
+        sumEl.innerHTML =
+          petsTxt('ui.eggSummary', 'Collected {owned}/{total} · active {active} · {daily}', {
+            owned: '<b>' + sum.owned + '</b>', total: '<b>' + sum.total + '</b>',
+            active: '<b>' + petsEscape(sum.activeName) + '</b>', daily: '<b>' + petsEscape(sum.daily) + '</b>',
+          })
+          + '<div class="pets-tip">' + petsTxt('ui.eggSummaryHint', 'Cosmetic — no combat boost. 1 daily egg + bonus egg after your first adventure win today.') + '</div>';
       }
     }
     const list = document.getElementById('eggList');
@@ -508,10 +625,9 @@ if (typeof UI === 'object' && UI) {
       : '';
     info.innerHTML =
       '<div class="cname">' + petsEscape(name) + ' ' + petsRarityPill(def.rarity) + badge + '</div>'
-      + '<div class="cinfo">' + petsEscape(owned ? perk : '???') + '</div>'
       + '<div class="cinfo pets-status">' + petsEscape(owned
-        ? petsTxt('ui.eggCosmetic', 'Cosmetic companion')
-        : petsTxt('ui.eggUnhatched', 'Not hatched yet')) + '</div>';
+        ? perk
+        : petsTxt('ui.eggUnhatched', '???')) + '</div>';
     const right = document.createElement('div');
     right.className = 'right';
     if (owned) {

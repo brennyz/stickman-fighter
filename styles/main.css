@@ -389,6 +389,12 @@
       var(--menu-tile-solid);
     border-color: rgba(255, 215, 94, 0.32);
   }
+  #menuScreen.menu-video-overhaul .hub-tile-pets {
+    background:
+      linear-gradient(135deg, rgba(78, 207, 106, 0.16), transparent 45%),
+      var(--menu-tile-solid);
+    border-color: rgba(78, 207, 106, 0.28);
+  }
   #menuScreen.menu-video-overhaul .hub-tile-summon {
     background:
       linear-gradient(135deg, rgba(255, 215, 94, 0.2), transparent 45%),
@@ -2135,6 +2141,13 @@
     background: rgba(255,255,255,.05); border: 1px solid rgba(255,255,255,.1);
     border-radius: 12px; padding: 10px 12px; font-size: 14px; line-height: 1.4; font-weight: 700;
   }
+  button.fomo-ritual-row {
+    width: 100%; text-align: left; font: inherit; color: inherit;
+    cursor: pointer; appearance: none; -webkit-appearance: none;
+  }
+  .fomo-ritual-row.is-ready {
+    border-color: rgba(124, 252, 138, .45); color: #7cfc8a;
+  }
   .fomo-ritual-row small { display: block; margin-top: 2px; font-size: 12px; font-weight: 600; color: #9db1e3; }
   .fomo-ritual-reset { margin: 0 0 12px; font-size: 12px; font-weight: 700; color: #7cf5ff; }
   .fomo-ritual-cta { width: 100%; justify-content: center; margin: 0; }
@@ -2347,6 +2360,9 @@
       background:rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.1); border-radius:14px; font-size:14px; color:#c8d4f0; }
   .pause-audio-vol label { display:flex; justify-content:space-between; align-items:center; gap:10px; margin:6px 0; flex-wrap:wrap; }
   .pause-audio-vol input[type=range] { flex:1; min-width:100px; accent-color:#7cf5ff; }
+  .pause-pet-chip { width:min(92vw,420px); margin:0 auto 10px; justify-content:center; }
+  .pause-pet-chip.is-empty { opacity:.72; }
+  .pause-pet-chip[disabled] { pointer-events:none; }
   .pause-perf-strip { width:min(92vw,420px); margin:-4px auto 12px; padding:6px 10px; font-size:11px; line-height:1.4;
       text-align:center; color:#9ec8ff; background:rgba(20,28,48,.55); border:1px solid rgba(124,245,255,.18); border-radius:8px; }
   .pause-audio-hint { font-size:11px; opacity:.72; line-height:1.4; margin:8px 0 2px; text-align:center; color:#a8b8e8; }
@@ -3787,6 +3803,8 @@
   #petScreen .pets-wallet-pc .pets-wallet-amt { color: #ffd75e; }
   #petScreen .pets-wallet-egg.is-ready {
     border-color: rgba(124, 252, 138, .55);
+    cursor: pointer;
+    font: inherit;
   }
   #petScreen .pets-wallet-egg.is-ready .pets-wallet-amt { color: #7cfc8a; }
   #petScreen .pets-hero {
@@ -3831,7 +3849,19 @@
     font-weight: 800;
     color: #ffd75e;
     text-align: center;
+    appearance: none;
+    -webkit-appearance: none;
+    border: 0;
+    background: none;
+    font-family: inherit;
+    cursor: default;
   }
+  #petScreen .pets-next.is-act {
+    cursor: pointer;
+    text-decoration: underline;
+    text-underline-offset: 3px;
+  }
+  #petScreen .pets-crack-btn[hidden] { display: none !important; }
   #petScreen .pets-tab-bar,
   #petScreen .pets-filter-bar {
     width: min(94vw, 480px);
@@ -3998,8 +4028,8 @@
     padding: 18px 8px;
   }
   #petScreen .pets-crack-btn {
-    width: min(92vw, 420px);
-    margin: 0 auto 14px;
+    width: min(94vw, 480px);
+    margin: 0 auto 10px;
   }
   #petScreen .pets-crack-btn.is-wait { opacity: .72; }
   #petScreen .pets-crack-btn.is-ready {
@@ -4019,12 +4049,18 @@
     #petScreen .pets-hero-canvas { width: 64px; height: 64px; }
     #petScreen .pets-hero-name { font-size: 14px; }
     #petScreen .pets-next { margin-bottom: 6px; }
+    #petScreen .pets-filter-count { display: none; }
+    #petScreen .pets-tip { display: none; }
+    #petScreen .pets-hero-bonus:empty { display: none; }
+    #petScreen .pets-card .cinfo:not(.pets-status) { display: none; }
+    #petScreen .pets-crack-btn { width: min(94vw, 480px); margin-bottom: 8px; }
   }
   @media (min-width: 720px) and (orientation: landscape) {
     #petScreen .pets-screen-head,
     #petScreen .pets-wallet,
     #petScreen .pets-hero,
     #petScreen .pets-next,
+    #petScreen .pets-crack-btn,
     #petScreen .pets-tab-bar,
     #petScreen .pets-filter-bar,
     #petScreen .pets-filter-count,

@@ -898,6 +898,12 @@ function hubTileStatLine(hub) {
       const n = typeof gearEquippedCount === 'function' ? gearEquippedCount() : 0;
       return typeof tOr === 'function' ? tOr('gear.hubStat', '{n}/5', { n }) : (n + '/5');
     }
+    case 'pets':
+      try {
+        return (typeof petsHubStatLine === 'function') ? petsHubStatLine() : '';
+      } catch (_) {
+        return '';
+      }
     default:
       return '';
   }
@@ -1174,6 +1180,7 @@ const UI = {
       sub.textContent = this.pauseSubDefault;
     }
     this.renderPauseRunLoot();
+    try { if (typeof this.paintPausePetChip === 'function') this.paintPausePetChip(); } catch (_) {}
   },
 
   renderPauseRunLoot() {
@@ -2078,6 +2085,13 @@ const UI = {
         el.removeAttribute('data-hub-badge');
       }
     });
+    try {
+      const petsHome = document.getElementById('btnPetsHome');
+      if (petsHome && typeof canCrackDailyEgg === 'function' && canCrackDailyEgg()
+        && !petsHome.getAttribute('data-hub-badge')) {
+        petsHome.setAttribute('data-hub-badge', tOr('pets.ready', 'ready').toUpperCase());
+      }
+    } catch (_) {}
     document.querySelectorAll('[data-hub-stat]').forEach((el) => {
       // hubTileStatLine may include SVG_COIN_ICON <img> — must be HTML, not textContent
       el.innerHTML = hubTileStatLine(el.dataset.hubStat);
@@ -2199,20 +2213,30 @@ const UI = {
         html += `<div class="fomo-ritual-row">${text}<small>${task.progress}/${def.goal}</small></div>`;
       }
     } catch (_) {}
+    let eggReady = false;
     if (typeof fomoRitualEggVisible === 'function' && fomoRitualEggVisible()) {
-      let eggReady = false;
       try { eggReady = typeof canCrackDailyEgg === 'function' && canCrackDailyEgg(); } catch (_) {}
-      html += `<div class="fomo-ritual-row">${eggReady
+      html += `<button type="button" class="fomo-ritual-row${eggReady ? ' is-ready' : ''}" data-fomo-row="egg">${eggReady
         ? tOr('fomo.rowEggReady', 'Dag-ei klaar')
-        : tOr('fomo.rowEggDone', 'Dag-ei al open')}</div>`;
+        : tOr('fomo.rowEggDone', 'Dag-ei al open')}</button>`;
     }
     const streak = typeof dailyStreakLine === 'function' ? dailyStreakLine() : '';
     if (streak) html += `<div class="fomo-ritual-row">${streak}</div>`;
-    if (rows) rows.innerHTML = html;
+    if (rows) {
+      rows.innerHTML = html;
+      rows.querySelectorAll('[data-fomo-row]').forEach((btn) => {
+        if (typeof bindPress !== 'function') return;
+        bindPress(btn, () => {
+          this._fomoRitualCta = btn.getAttribute('data-fomo-row') || 'egg';
+          this.runFomoRitualCta();
+        });
+      });
+    }
     const resetLine = typeof dailyResetCountdown === 'function' ? dailyResetCountdown() : '';
     if (reset) reset.textContent = tOr('fomo.resetIn', 'Nieuw over {reset}', { reset: resetLine });
     let ctaKind = 'adv';
     if (left > 0) ctaKind = 'summon';
+    else if (eggReady) ctaKind = 'egg';
     else {
       try {
         if (typeof ensureDaily === 'function') ensureDaily();
@@ -2224,9 +2248,11 @@ const UI = {
     if (ctaLbl) {
       ctaLbl.textContent = ctaKind === 'summon'
         ? tOr('fomo.ritualCtaSummon', 'Naar summons')
-        : (ctaKind === 'mission'
-          ? tOr('fomo.ritualCtaMission', 'Speel missie')
-          : tOr('fomo.ritualCtaAdv', 'Naar avontuur'));
+        : (ctaKind === 'egg'
+          ? tOr('fomo.ritualCtaEgg', 'Naar dag-ei')
+          : (ctaKind === 'mission'
+            ? tOr('fomo.ritualCtaMission', 'Speel missie')
+            : tOr('fomo.ritualCtaAdv', 'Naar avontuur')));
     }
     const dismiss = document.getElementById('fomoRitualDismiss');
     if (dismiss) dismiss.setAttribute('aria-label', tOr('fomo.ritualDismiss', 'Sluiten'));
@@ -2239,6 +2265,10 @@ const UI = {
     else this.hideFomoRitual();
     if (kind === 'summon') {
       this.openSummonHub();
+      return;
+    }
+    if (kind === 'egg') {
+      if (typeof this.openPets === 'function') this.openPets('egg', { from: 'fomo' });
       return;
     }
     if (kind === 'mission') {
@@ -4702,6 +4732,7 @@ const UI = {
       statusEl.textContent = line;
     }
     try { if (typeof renderAudioThemeSwitch === 'function') renderAudioThemeSwitch(); } catch (_) {}
+    try { if (typeof this.paintPausePetChip === 'function') this.paintPausePetChip(); } catch (_) {}
   },
 
   hideVersionUpdateDialog() {
