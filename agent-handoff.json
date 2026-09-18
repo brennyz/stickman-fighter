@@ -38,6 +38,11 @@
     "pendingUpload": [],
     "pendingMerge": [
       {
+        "pr": 326,
+        "title": "Death→retry feel: fat Nog één keer + killer tip after mega-merge",
+        "draft": true
+      },
+      {
         "pr": 311,
         "title": "playtest-harden-cycles"
       },
@@ -53,9 +58,9 @@
       "id": "w-20260918T153500",
       "from": "user",
       "text": "MASTERGAME — Stickman Fighter death→retry feel polish. Off main. Draft PR. No Versus. speel.html. Until ~17:54 Amsterdam. Keep <3s retry / Nog één keer path solid after mega-merge (#323). Polish only if regress: fat CTA, instant rematch, killer tip. Don't rebuild dock ownership. Draft only.",
-      "status": "in-progress",
+      "status": "done-in-code",
       "updated": "2026-09-18",
-      "notes": "Lane owns retry feel only. Keep #323 restartAdventureInstant / #resRetrySafe / #resCtaDock. No Versus."
+      "notes": "DONE at 17:54 Amsterdam. Draft #326. Fat 84px Nog één keer, SLAM→retry + #resKiller, instant rematch. Dock untouched. No main."
     },
     {
       "id": "w-20260918T141700",
@@ -1184,6 +1189,10 @@
   ],
   "sessionLog": [
     {
+      "at": "2026-09-18T15:54:36Z",
+      "summary": "Death→retry feel DONE on draft #326: 84px Nog één keer, SLAM→retry + #resKiller, instant rematch. No main."
+    },
+    {
       "at": "2026-09-18T15:01:24Z",
       "summary": "Leftover stack: #318 UI chrome + #322 FOMO 390px on main. Keep #321 HUD + #323 retry. SKIP #324. Leave #311."
     },
@@ -1278,10 +1287,6 @@
     {
       "at": "2026-09-18T12:30:17Z",
       "summary": "LANGUAGE worker: layout-safe NL/EN/DE/FR/ES copy (factory desc, FOMO, HUD telegraphs). Draft, geen main."
-    },
-    {
-      "at": "2026-09-16T12:33:04Z",
-      "summary": "Mega-merge leftover GitHub PRs #297 #300 #302 #307 #308 #309 closed — content already on origin/main 0044b2e (v1.18.172 / SW 382). Pages live."
     }
   ],
   "implementedFeaturesSummary": "d18 char select deel 1+2 (v1.11.1-2); Mats coinrun + shuriken mik/vliegers + anti-spam (v1.12.0); speel.html (v1.12.2+). Zie HANDOFF-ZOEKINDEX.md en improvement-d20-bag.json userFeatureLog.",
