@@ -43,7 +43,7 @@
       "id": "w-20260918T130200",
       "from": "user",
       "text": "KEEP IMPROVING as EXAMINATOR (draft #320, no main). Siblings own #312–#319 — do not duplicate. Mark those EX as DELEGATED. Fix unique leftovers EX-013–015 i18n + EX-021 FOMO sheet. Re-playtest 390px. Expand smoke:examinator. APK out of scope. speel.html, no Versus.",
-      "status": "in-progress",
+      "status": "done-in-code",
       "updated": "2026-09-18",
       "notes": "HUD density stays on #314. This PR owns leftover i18n + compact FOMO sheet."
     },
@@ -1074,6 +1074,10 @@
   ],
   "sessionLog": [
     {
+      "at": "2026-09-18T13:22:45Z",
+      "summary": "EXAMINATOR leftover #320: sibling EX DELEGATED; unique EX-013–015 i18n + EX-021 compact 390 FOMO (tiles tappable). v1.18.174/SW384. Draft only."
+    },
+    {
       "at": "2026-09-18T12:59:08Z",
       "summary": "EXAMINATOR P0: phone horde + i18n/pet/factory on draft #320 (v1.18.173/SW383). Open EX-010+ in EXAMINATOR.md."
     },
@@ -1168,10 +1172,6 @@
     {
       "at": "2026-09-14T12:45:42Z",
       "summary": "P1 entry: Android-first landing — geen iPad-blok op Android"
-    },
-    {
-      "at": "2026-09-14T12:44:05Z",
-      "summary": "Toast-wachtrij: één tegelijk, Android Chrome/TWA zelfde HTML onder statusbalk · v1.18.156 / SW 366"
     }
   ],
   "implementedFeaturesSummary": "d18 char select deel 1+2 (v1.11.1-2); Mats coinrun + shuriken mik/vliegers + anti-spam (v1.12.0); speel.html (v1.12.2+). Zie HANDOFF-ZOEKINDEX.md en improvement-d20-bag.json userFeatureLog.",
