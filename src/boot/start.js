@@ -23,6 +23,12 @@ function startGame(mode, opts) {
   Input.dualMode = false;
   try { dismissTunnelOverlayIfStatic(); } catch (_) {}
   try { if (game) game._resultToken = (game._resultToken || 0) + 1; } catch (_) {}
+  // Pin W/H + canvas CSS to the visual viewport BEFORE spawn so landscape
+  // 844×390 does not inherit a portrait floor (fighters in a dead zone).
+  try {
+    if (typeof forceGameResize === 'function') forceGameResize();
+    else if (typeof resize === 'function') resize();
+  } catch (_) {}
   try {
     game = new Game(mode, opts);
   } catch (err) {

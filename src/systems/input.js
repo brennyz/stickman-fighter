@@ -919,22 +919,134 @@ function hudRightReserve() {
 }
 
 function playfieldGroundY(H, W) {
-  const portrait = H > W * 1.02;
+  const hh = Math.max(1, Number(H) || 0);
+  const ww = Math.max(1, Number(W) || hh);
+  const portrait = hh > ww * 1.02;
   const dualVs = typeof Input !== 'undefined' && Input.dualMode;
+  let gy;
   if (dualVs && portrait) {
-    if (H < 520) return H * 0.63;
-    if (H < 640) return H * 0.65;
-    return H * 0.66;
+    if (hh < 520) gy = hh * 0.63;
+    else if (hh < 640) gy = hh * 0.65;
+    else gy = hh * 0.66;
+  } else if (portrait && hh < 480) gy = hh * 0.68;
+  else if (portrait && hh < 520) gy = hh * 0.7;
+  else if (portrait && hh < 640) gy = hh * 0.72;
+  else if (portrait) gy = hh * 0.73;
+  else if (hh <= 430) gy = Math.min(hh * 0.80, hh - 52);
+  else gy = hh * 0.78;
+  // Floor must sit inside the visible canvas — never in a CSS/camera dead zone.
+  const lo = Math.max(hh * 0.42, 48);
+  const hi = Math.max(lo + 8, hh - 8);
+  return clamp(gy, lo, hi);
+}
+
+/** Canvas box vs visual viewport vs world floor — used by resize + smoke. */
+function combatViewAlign(g) {
+  const vp = (typeof viewportGameSize === 'function')
+    ? viewportGameSize()
+    : { w: W, h: H, offsetX: 0, offsetY: 0 };
+  let cssW = 0, cssH = 0, cssL = 0, cssT = 0;
+  try {
+    if (typeof canvas !== 'undefined' && canvas && typeof canvas.getBoundingClientRect === 'function') {
+      const r = canvas.getBoundingClientRect();
+      cssW = r.width; cssH = r.height; cssL = r.left; cssT = r.top;
+    }
+  } catch (_) {}
+  const ground = g && g.ground != null ? g.ground : playfieldGroundY(H, W);
+  const player = g && g.player ? { x: g.player.x, y: g.player.y } : null;
+  const cssOk = !(cssW > 2 && cssH > 2)
+    || (Math.abs(cssW - vp.w) <= 3 && Math.abs(cssH - vp.h) <= 3);
+  const worldOk = ground > 8 && ground < H
+    && (!player || (player.x >= 0 && player.x <= W && player.y > 8 && player.y <= H + 1));
+  const letterbox = {
+    dx: Math.abs((cssW || 0) - (vp.w || 0)),
+    dy: Math.abs((cssH || 0) - (vp.h || 0)),
+    ox: Math.abs((cssL || 0) - (vp.offsetX || 0)),
+    oy: Math.abs((cssT || 0) - (vp.offsetY || 0)),
+  };
+  letterbox.dead = letterbox.dx > 3 || letterbox.dy > 3 || letterbox.ox > 3 || letterbox.oy > 3;
+  return {
+    w: W, h: H,
+    vpW: vp.w, vpH: vp.h,
+    offsetX: vp.offsetX || 0, offsetY: vp.offsetY || 0,
+    cssW, cssH, cssL, cssT,
+    ground,
+    player,
+    letterbox,
+    aligned: Math.abs(W - vp.w) <= 2 && Math.abs(H - vp.h) <= 2 && cssOk && worldOk && !letterbox.dead,
+  };
+}
+
+function _alignCombatBodyX(x, pad) {
+  const p = pad != null ? pad : 24;
+  return clamp(Number(x) || 0, p, Math.max(p + 8, W - p));
+}
+
+function _alignCombatKeepAbove(body, prevGround, nextGround, size) {
+  if (!body || body.y == null) return;
+  const sz = size || 0;
+  if (Number.isFinite(prevGround) && Math.abs(nextGround - prevGround) > 0.5) {
+    body.y = nextGround - (prevGround - body.y);
   }
-  if (portrait && H < 480) return H * 0.68;
-  if (portrait && H < 520) return H * 0.7;
-  if (portrait && H < 640) return H * 0.72;
-  if (portrait) return H * 0.73;
-  // Landscape phone (~844×390): keep a full stickman above the fold.
-  const raw = H * 0.72;
-  const minY = Math.min(H - 28, Math.max(96, H * 0.58));
-  const maxY = Math.max(minY, H - 28);
-  return raw < minY ? minY : (raw > maxY ? maxY : raw);
+  const minY = Math.max(16, sz * 0.35);
+  const maxY = Math.min(H - 4, nextGround - (sz > 0 ? Math.min(sz * 0.2, 36) : 0));
+  body.y = clamp(body.y, minY, Math.max(minY, maxY));
+}
+
+/**
+ * After rotate / HUD resize: world, floor, and entities follow the visible canvas.
+ * Does not draw fighters (render-visibility is a sibling PR).
+ */
+function alignCombatPlayfield(g) {
+  if (!g || !(W > 8) || !(H > 8)) return null;
+  const prevGround = Number(g.ground);
+  const nextGround = playfieldGroundY(H, W);
+  g.ground = nextGround;
+  g.minX = 40;
+  g.maxX = Math.max(80, W - 40);
+
+  const snapFighter = (f) => {
+    if (!f) return;
+    f.x = (typeof clampFighterX === 'function') ? clampFighterX(f, g, f.x) : _alignCombatBodyX(f.x, 40);
+    const airborne = f.onGround === false && (f.vy || 0) < -20 && f.y < nextGround - 8;
+    if (!airborne || f.y > nextGround || f.y > H - 2 || f.y < 8) {
+      f.y = nextGround;
+      if ((f.vy || 0) > 0) f.vy = 0;
+      f.onGround = true;
+    } else {
+      _alignCombatKeepAbove(f, prevGround, nextGround, 0);
+    }
+  };
+
+  snapFighter(g.player);
+  if (g.robot) snapFighter(g.robot);
+  if (g.p2) snapFighter(g.p2);
+
+  if (g.pet) {
+    g.pet.x = _alignCombatBodyX(g.pet.x, 12);
+    _alignCombatKeepAbove(g.pet, prevGround, nextGround, g.pet.size || 10);
+  }
+  if (g.eggPet) {
+    g.eggPet.x = _alignCombatBodyX(g.eggPet.x, 12);
+    _alignCombatKeepAbove(g.eggPet, prevGround, nextGround, g.eggPet.size || 10);
+  }
+  if (Array.isArray(g.monsters)) {
+    for (const m of g.monsters) {
+      if (!m) continue;
+      const pad = Math.max(16, (m.size || 20) * 0.45);
+      m.x = _alignCombatBodyX(m.x, pad);
+      if (m.flying) _alignCombatKeepAbove(m, prevGround, nextGround, m.size || 20);
+      else m.y = nextGround - (m.size || 0);
+    }
+  }
+  if (Array.isArray(g.pickups)) {
+    for (const p of g.pickups) {
+      if (!p) continue;
+      p.x = _alignCombatBodyX(p.x, 16);
+      if (p.y != null) p.y = clamp(p.y + (Number.isFinite(prevGround) ? (nextGround - prevGround) : 0), 12, nextGround);
+    }
+  }
+  return combatViewAlign(g);
 }
 
 function pointerGameCoords(clientX, clientY) {

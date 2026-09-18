@@ -51,7 +51,7 @@ function makeEl(id) {
       return {
         fillRect() {}, clearRect() {}, beginPath() {}, arc() {}, fill() {}, stroke() {},
         moveTo() {}, lineTo() {}, closePath() {}, save() {}, restore() {}, translate() {},
-        scale() {}, rotate() {}, fillText() {}, strokeText() {}, measureText: (t) => ({ width: String(t).length * 7 }),
+        scale() {}, rotate() {}, setTransform() {}, fillText() {}, strokeText() {}, measureText: (t) => ({ width: String(t).length * 7 }),
         createLinearGradient() { return { addColorStop() {} }; },
         createRadialGradient() { return { addColorStop() {} }; },
         drawImage() {}, setLineDash() {}, quadraticCurveTo() {}, ellipse() {},

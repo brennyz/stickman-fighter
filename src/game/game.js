@@ -297,8 +297,11 @@ class Game {
   }
 
   onResize() {
-    this.ground = playfieldGroundY(H, W);
-    this.maxX = W - 40;
+    if (typeof alignCombatPlayfield === 'function') alignCombatPlayfield(this);
+    else {
+      this.ground = playfieldGroundY(H, W);
+      this.maxX = W - 40;
+    }
     if (typeof pinPlayfieldBodies === 'function') pinPlayfieldBodies(this);
     if (this.mode === 'versus' && this.p2) {
       applyVsArenaBounds(this);
@@ -5260,7 +5263,6 @@ class Game {
         const hpPct = p.hp / Math.max(1, p.maxhp);
         const proj = starsFromHpPct(hpPct);
         const prevBest = this.advPrevStars || 0;
-        const star0 = W - rightPad - 46;
         for (let i = 0; i < 3; i++) {
           const ghost = prevBest > 0 && i < prevBest && i >= proj;
           drawStarShape(c, starX0 + 6 + i * 19, starY, 8, ghost ? 'rgba(255,215,94,.22)' : '#ffd75e', !ghost && i < proj);
@@ -5336,7 +5338,7 @@ class Game {
         c.font = '700 11px sans-serif';
         c.fillStyle = 'rgba(255,255,255,.7)';
         const hpLine = t('hud.hpPct', { pct, hint: starHint });
-        const hpMax = Math.max(140, W - rightPad - 24);
+        const hpMax = Math.max(140, W - pauseG - 24);
         if (typeof fillHudWrapped === 'function') {
           const used = fillHudWrapped(c, hpLine, W / 2, hy, {
             fill: 'rgba(255,255,255,.7)', maxW: hpMax, maxLines: 2, lineH: 13,
