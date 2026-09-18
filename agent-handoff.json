@@ -1279,6 +1279,10 @@
   ],
   "sessionLog": [
     {
+      "at": "2026-09-18T16:45:30Z",
+      "summary": "Ingested #338: landscape HOME visibility PASS; EX-036 FOMO inert+pointer-events blocks Avontuur. Bot 2 tightened."
+    },
+    {
       "at": "2026-09-18T16:44:20Z",
       "summary": "Ingested #340 MM-001–005 into board + wave-2 bots 11–13 (gear scroll, pets fold, factories smoke)."
     },
@@ -1373,10 +1377,6 @@
     {
       "at": "2026-09-18T12:36:17Z",
       "summary": "examiner P0: pets/gear locale + 390px overflow (start)"
-    },
-    {
-      "at": "2026-09-18T12:31:56Z",
-      "summary": "LANGUAGE: factory desc + nameShort, FOMO/HUD locale, export gear/fabriek i18n. Draft #317, geen main."
     }
   ],
   "implementedFeaturesSummary": "d18 char select deel 1+2 (v1.11.1-2); Mats coinrun + shuriken mik/vliegers + anti-spam (v1.12.0); speel.html (v1.12.2+). Zie HANDOFF-ZOEKINDEX.md en improvement-d20-bag.json userFeatureLog.",

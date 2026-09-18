@@ -56,7 +56,7 @@ Status: `open` · `pass` · `fixed-on-draft` · `DELEGATED` · `out`
 | ID | Status | Owner lane | Repro | Source |
 |----|--------|------------|-------|--------|
 | **EX-034** | **open · #336 H** | **visibility** | Die in portrait (corpse visible) → rotate to 844×390 **before** VERLOREN sheet → player body gone, tiny enemy remains. `pinPlayfieldBodies` / `onResize` must keep a **dead** player on the painted floor. | #336 |
-| **EX-036** | open | landscape-begin / FOMO | 844×390: Vandaag sheet open → Avontuur is painted but `inert` + `pointer-events:none` on `.menu-chrome`. Tap does not start play. × dismiss restores. | #338 |
+| **EX-036** | open · **#338** | landscape-begin / FOMO | **Visibility PASS** (SPELEN 338×91 · Avontuur 552×60 · `overlapPlay: false` · sheet left ~200 px). **P1:** pointer-tap Avontuur while Vandaag open does **not** start play. `#318` hub lock (`inert` + `pointer-events: none` on `.menu-chrome`) still applies on short landscape after `#329` restored paint. × (48×48) → `inert` off → next tap starts L1 (local + live). `smoke:landscape-begin` is geometry only. | #338 |
 | **PERF-01** | open | fxLite | After first ~90 frames / `Perf.tier` still 0, `fxSpawnLite` drops → elite intro 26 particles + ~100ms freeze. | #339 |
 | **PERF-02** | open | fxLite | Colossal / super-boss 48 particles + ~220ms freeze when spawnLite off. Same bot as PERF-01. | #339 |
 | **PERF-03** | open | juice | `juiceKillSnap` freeze 58–75ms ignores Lite FX. | #339 |
@@ -97,6 +97,26 @@ Status: `open` · `pass` · `fixed-on-draft` · `DELEGATED` · `out`
 | PERF-06 | open | Menu UI canvases leftover |
 | Versus | retired | Do not revive |
 
+### #338 landscape HOME (canonical)
+
+Source: `docs/playtest/bot2-landscape-home.md` on `cursor/playtest-landscape-home-147f`. 844×390. `smoke:landscape-begin` **SMOKE_OK** (geometry).
+
+| Check | Result |
+|-------|--------|
+| `speel.html` SPELEN | PASS 229×82 |
+| Title-gate SPELEN | PASS 2-col 338×91 · FOMO hidden on gate · right edge 796 ≤ 808 gutter |
+| HOME Avontuur paint | PASS 552×60 featured + SPEEL · first in right column |
+| FOMO vs paint | PASS sheet left ~200 px · `overlapPlay: false` · `landingVis: visible` |
+| Avontuur tap, FOMO **closed** | PASS → L1 `body.is-playing` |
+| Avontuur tap, FOMO **open** | **FAIL P1 EX-036** — HOME stays |
+| × then Avontuur | PASS — `inert` cleared, `pointer-events: auto`, L1 local + live |
+| Portrait 390 begin/HOME | PASS no-regress |
+| Versus | absent |
+
+**Why:** `_syncFomoHubLock` sets `inert` on `.menu-chrome`. Landscape CSS restores `visibility` on `.menu-landing-body` but **not** `pointer-events` and does not skip `inert`. Portrait #318 lock stays correct.
+
+P3 (leave): meta-dock under 390 fold · SPELEN subtitle tight · “Naar / oproepen” wrap · offline toast on Avontuur after × (tap still started L1).
+
 ### #340 MM-001–005 (390 meta — canonical)
 
 Source: `docs/PLAYTEST-META-MENUS-390.md` on `cursor/playtest-meta-menus-a006`. Fresh + veteran. Open 14–37 ms. Versus gone. Factory ids locked.
@@ -121,7 +141,7 @@ Older EX-001…032 stay on `EXAMINATOR.md`. Do not re-file.
 |----|------|-------------|
 | **#336** | invisible / draw | **EX-034 P1** dead+rotate. Alive PASS. |
 | **#337** | death-retry | **PASS.** P2 heat / dice lecture / unused 650ms. |
-| **#338** | landscape HOME | Visible PASS. **EX-036 P1** FOMO inert. |
+| **#338** | landscape HOME | **Visibility PASS** (SPELEN/Avontuur ≥44 px, left dock, no overlap). **EX-036 P1** `#318` `inert` + `pointer-events:none` while sheet open. × recover PASS. Keep portrait hub lock. |
 | **#339** | mid-phone perf | **PERF-01…03 P1.** Keep spawnLite; gate freezes. |
 | **#340** | meta menus | **MM-001–005 P1 ingested** (gear scroll, pets fold, factories smoke, 2.2s blank, FOMO cover). Landscape 010–012 P1. Skip tablet-834 as new owner. Open times 14–37 ms — clunk is chrome/scroll, not JS. |
 | **#341** | landscape combat | **PASS.** P2 hop asymmetry only. |
@@ -141,6 +161,7 @@ Older EX-001…032 stay on `EXAMINATOR.md`. Do not re-file.
 | 18:17–18:20 | 844×390 | HOME → fight → die | Floor under feet · pads fire · CHARGE HUD · gold CTA |
 | 18:40 | — | Ingest #336–#344 · **FREEZE** | Board + 10-bot plan |
 | 18:42 | — | **#340 deepen MM-001–005** | Gear 4k scroll · pets fold · factories smoke fail · summon 2.2s blank · FOMO cover. Wave-2 bots 11–13. |
+| 18:44 | — | **#338 deepen EX-036** | Landscape HOME visibility PASS. P1: FOMO `inert` + `pointer-events:none` blocks Avontuur while sheet open. × recover PASS. |
 
 Lead evidence: `/opt/cursor/artifacts/playtest_adventure_390_and_844_first_pass.mp4`
 

@@ -60,19 +60,22 @@ Do not start P2s (MM-006…009, F30-*, DR-*) until 1–13 are claimed. Skip tabl
 
 ## Bot 2 — EX-036 FOMO inert (landscape-begin)
 
-**Source:** #338.  
-**Files:** `src/ui/ui.js` `_syncFomoHubLock` · FOMO CSS (`body.is-fomo` / `.menu-chrome`).  
-**Do not:** restage #329 two-col SPELEN or left dock. Do not touch combat camera.
+**Source:** #338 · `docs/playtest/bot2-landscape-home.md`. Adjacent #318 hub lock / #329 paint.  
+**Files:** `src/ui/ui.js` `_syncFomoHubLock` · landscape FOMO CSS (`.menu-landing-body` visibility vs `pointer-events`).  
+**Do not:** restage #329 two-col SPELEN or left dock. Do not unlock the **portrait 390** hub lock. Do not steal bot 9 (MM-005 portrait cover). Do not touch combat camera.
 
-**Bug:** 844×390 Vandaag sheet docks left (visibility PASS) but sets `inert` on `.menu-chrome`. Avontuur looks tappable; pointer tap does nothing. × dismiss clears `inert` → play starts.
+**Visibility PASS (do not “fix” paint):** SPELEN 338×91 · Avontuur 552×60 · sheet left ~200 px · `overlapPlay: false`. × (48×48) recover is already clean — next tap starts L1 on local + live.
 
-**Fix (pick one, short landscape only):**
+**Bug:** While Vandaag is open, pointer-tap Avontuur does **not** start play. `#318` sets `inert` + `pointer-events: none` on `.menu-chrome`. `#329` restored `visibility` on `.menu-landing-body` only. `smoke:landscape-begin` does **not** pointer-tap through FOMO (geometry only).
 
-- Do **not** set `inert` on `.menu-chrome` when the sheet is a left dock (`max-height: 520px` landscape), **or**
-- Keep inert but make Avontuur a non-inert exception, **or**
-- Pointer-tap on the painted Avontuur dismisses then starts (one gesture).
+**Fix (short landscape only — `(orientation: landscape) and (max-height: 520px)`):**
 
-**Prove:** 844×390 · FOMO open · pointer-tap Avontuur starts L1 (or documented one-tap dismiss+play). `npm run smoke:landscape-begin`.
+- Skip `inert` on `.menu-chrome` when the sheet is a left dock, **and**
+- Set `pointer-events: auto` on `.menu-landing-body` / `.hub-tile-adventure`.
+
+Keep portrait `inert` lock.
+
+**Prove:** 844×390 · FOMO open · **pointer-tap** Avontuur starts L1 (no × first). Portrait 390 FOMO still blocks hub chrome. Extend harness `scripts/playtest-fomo-dismiss-avontuur.mjs` or add a tap-through case to `smoke:landscape-begin`.
 
 ---
 
