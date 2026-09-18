@@ -1509,12 +1509,20 @@
   body.reduced-motion .summon-reveal.is-shake .summon-stage-fallback,
   body.reduced-motion .summon-reveal.is-shake .summon-chest-lid,
   body.reduced-motion .summon-reveal.is-shake .summon-rarity-rays,
-  body.reduced-motion .summon-reveal.is-card-show .summon-rarity-rays {
+  body.reduced-motion .summon-reveal.is-card-show .summon-rarity-rays,
+  body.lite-fx .summon-reveal.is-shake .summon-chest-visual,
+  body.lite-fx .summon-reveal.is-shake .summon-stage-fallback,
+  body.lite-fx .summon-reveal.is-shake .summon-chest-lid,
+  body.lite-fx .summon-reveal.is-shake .summon-rarity-rays,
+  body.lite-fx .summon-reveal.is-card-show .summon-rarity-rays {
     animation: none;
   }
-  body.reduced-motion .summon-center-card { transition: none; }
+  body.reduced-motion .summon-center-card,
+  body.lite-fx .summon-center-card { transition: none; }
   body.reduced-motion .summon-video,
-  body.reduced-motion .summon-screen.is-pulling.has-video .summon-video {
+  body.reduced-motion .summon-screen.is-pulling.has-video .summon-video,
+  body.lite-fx .summon-video,
+  body.lite-fx .summon-screen.is-pulling.has-video .summon-video {
     display: none !important;
   }
   @media (prefers-reduced-motion: reduce) {
@@ -2463,6 +2471,11 @@
 
   body:has(#summonScreen.active) #fomoRitual,
   body:has(#modeHubScreen.active) #fomoRitual {
+    display: none !important;
+  }
+  body.fomo-open #summonTut,
+  body:has(#fomoRitual:not([hidden])) #summonTut,
+  #summonScreen:not(.active) #summonTut {
     display: none !important;
   }
   body.fomo-open #menuScreen .menu-landing-body,

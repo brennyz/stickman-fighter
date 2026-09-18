@@ -48,6 +48,14 @@
   },
   "userWishlist": [
     {
+      "id": "w-20260918T130500",
+      "from": "user",
+      "text": "Lane is solid. One more optional polish on #313 draft: (1) Video/chest still clunky (examinator EX-010) — shorten or skip more aggressively on low-end/fxLite. (2) Ensure tip doesn’t fight FOMO sheet. (3) Stop when remaining EX are P3-only; document DONE on PR. No Versus, no main.",
+      "status": "in-progress",
+      "updated": "2026-09-18",
+      "notes": "Draft #313: skip reveal on liteFx/low-end; tip hidden while FOMO open; remaining EX P3-only."
+    },
+    {
       "id": "w-20260918T125900",
       "from": "user",
       "text": "Keep #313 draft. One more pass: (1) First-time tutorial tip for summons (1 line, dismissible) if missing. (2) DE/FR/ES copy for Nieuwste/Stop/Volgende via t() not hardcoded NL. (3) Smoke summon in EN+DE at 390px. No Versus, no main.",

@@ -97,6 +97,8 @@ async function run() {
         weaponsJump: !!document.getElementById('btnWeaponsGotoSummon'),
         petsJump: !!document.getElementById('btnPetsGotoSummon'),
         skipFn: typeof summonRevealShouldSkip === 'function',
+        tutShowFn: typeof summonTutShouldShow === 'function',
+        fomoTipFn: typeof summonFomoSheetOpen === 'function',
         hasCancel: !!document.getElementById('btnSummonCancel'),
         hasLogHead: !!document.getElementById('summonLogHead'),
         noX10: !document.getElementById('btnChestPull10') && !document.querySelector('[data-pull="x10"]'),
@@ -132,6 +134,7 @@ async function run() {
       'HOME/Collectie summons entry missing: ' + JSON.stringify(openSnap));
     must(openSnap.weaponsJump && openSnap.petsJump, 'weapon/pet Kist jumps missing');
     must(openSnap.skipFn, 'missing summonRevealShouldSkip');
+    must(openSnap.tutShowFn && openSnap.fomoTipFn, 'missing tip-vs-FOMO helpers');
     must(openSnap.hasCancel && openSnap.noX10, 'expected Stop, no x10 batch: ' + JSON.stringify(openSnap));
     must(openSnap.hasLogHead && openSnap.logNewestFn && openSnap.logCap === 4 && openSnap.storeCap === 5,
       'log cap / newest helper missing: ' + JSON.stringify(openSnap));
@@ -487,6 +490,35 @@ async function run() {
     must(!reducedSnap.hasVideo && reducedSnap.vidDisplay !== 'block',
       'reduced-motion should skip reveal video: ' + JSON.stringify(reducedSnap));
 
+    const liteSnap = await page.evaluate(async () => {
+      if (typeof save !== 'undefined') {
+        save.reducedMotion = false;
+        save.liteFx = true;
+      }
+      try { if (typeof syncA11yClasses === 'function') syncA11yClasses(); } catch (_) {}
+      UI.finishSummonReveal();
+      UI.doChestPull('random');
+      await new Promise((r) => setTimeout(r, 50));
+      const reveal = document.getElementById('summonReveal');
+      const screen = document.getElementById('summonScreen');
+      const vid = document.getElementById('summonVideo');
+      return {
+        shouldSkip: typeof summonRevealShouldSkip === 'function' && summonRevealShouldSkip(),
+        cardShow: !!(reveal && reveal.classList.contains('is-card-show')),
+        skipReady: !!(screen && screen.classList.contains('is-skip-ready')),
+        shake: !!(reveal && reveal.classList.contains('is-shake')),
+        hasVideo: !!(screen && screen.classList.contains('has-video')),
+        vidDisplay: vid ? getComputedStyle(vid).display : null,
+        bodyLite: document.body.classList.contains('lite-fx'),
+      };
+    });
+    must(liteSnap.shouldSkip && liteSnap.bodyLite, 'liteFx should trip summon skip: ' + JSON.stringify(liteSnap));
+    must(liteSnap.cardShow && liteSnap.skipReady,
+      'liteFx should land card immediately: ' + JSON.stringify(liteSnap));
+    must(!liteSnap.shake, 'liteFx should skip chest shake: ' + JSON.stringify(liteSnap));
+    must(!liteSnap.hasVideo && liteSnap.vidDisplay !== 'block',
+      'liteFx should skip reveal video: ' + JSON.stringify(liteSnap));
+
     const navSnap = await page.evaluate(() => {
       UI.finishSummonReveal();
       UI.goMenu();
@@ -537,6 +569,44 @@ async function run() {
     must(fomoSnap.onMenu.open && fomoSnap.onMenu.body, 'FOMO sheet should open on HOME: ' + JSON.stringify(fomoSnap));
     must(fomoSnap.hiddenOnSummon && fomoSnap.summonActive && !fomoSnap.bodyOpen && !fomoSnap.overlap,
       'FOMO must not overlap summon chrome: ' + JSON.stringify(fomoSnap));
+
+    const tipVsFomo = await page.evaluate(() => {
+      if (typeof save !== 'undefined') {
+        if (!save.tipsSeen || typeof save.tipsSeen !== 'object') save.tipsSeen = {};
+        save.tipsSeen.summonHub = 0;
+      }
+      UI.goMenu();
+      document.getElementById('menuScreen')?.classList.add('active');
+      UI._fomoRitualHide = false;
+      UI._fomoRitualForce = true;
+      UI.showFomoRitual(true);
+      try { UI.renderSummon(); } catch (_) {}
+      const tip = document.getElementById('summonTut');
+      const fomo = document.getElementById('fomoRitual');
+      const onFomo = {
+        fomoOpen: !!(fomo && !fomo.hidden),
+        body: document.body.classList.contains('fomo-open'),
+        sheetFn: typeof summonFomoSheetOpen === 'function' && summonFomoSheetOpen(),
+        tipHidden: !!(tip && tip.hidden),
+        tipDisp: tip ? getComputedStyle(tip).display : null,
+        showFn: typeof summonTutShouldShow === 'function' && summonTutShouldShow(false),
+      };
+      UI.openSummonHub();
+      const after = {
+        fomoHidden: !!(fomo && fomo.hidden),
+        body: document.body.classList.contains('fomo-open'),
+        tipVisible: !!(tip && !tip.hidden),
+        tipDisp: tip ? getComputedStyle(tip).display : null,
+        showFn: typeof summonTutShouldShow === 'function' && summonTutShouldShow(false),
+      };
+      return { onFomo, after };
+    });
+    must(tipVsFomo.onFomo.fomoOpen && tipVsFomo.onFomo.body && tipVsFomo.onFomo.sheetFn,
+      'FOMO should be open for tip-vs-sheet check: ' + JSON.stringify(tipVsFomo));
+    must(tipVsFomo.onFomo.tipHidden && tipVsFomo.onFomo.tipDisp === 'none' && !tipVsFomo.onFomo.showFn,
+      'summon tip must not fight FOMO sheet: ' + JSON.stringify(tipVsFomo));
+    must(tipVsFomo.after.fomoHidden && !tipVsFomo.after.body && tipVsFomo.after.tipVisible && tipVsFomo.after.showFn,
+      'tip may show on summon after FOMO closes: ' + JSON.stringify(tipVsFomo));
 
     const playSnap = await page.evaluate(() => {
       UI.goMenu();

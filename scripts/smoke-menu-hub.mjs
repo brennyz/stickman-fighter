@@ -47,6 +47,10 @@ must(!/id="btnChestPull10"|id="btnSummonx10"|data-pull="x10"/.test(html),
 must(/body:has\(#summonScreen\.active\) #fomoRitual/.test(css),
   'FOMO must hide while summon screen is active');
 must(/body\.fomo-open/.test(css), 'missing fomo-open chrome hide');
+must(/body\.fomo-open #summonTut/.test(css), 'summon tip must hide while FOMO is open');
+must(/body\.lite-fx \.summon-video/.test(css), 'lite-fx must skip summon video');
+must(/summonTutShouldShow|summonFomoSheetOpen|summonRevealLowEnd/.test(fs.readFileSync(path.join(root, 'src/data/chest-summons.js'), 'utf8')),
+  'missing liteFx skip / tip-vs-FOMO helpers');
 must(/id="summonWhereStrip"/.test(html), 'missing summon where-strip');
 must(/summon-center-card/.test(css), 'missing summon-center-card CSS');
 must(/data-kind="weapon"/.test(css) && /data-kind="egg"/.test(css), 'missing egg vs weapon card chrome');

@@ -20,7 +20,7 @@ const CHEST_SKILL_MAX = 48;
 /** Reveal timeline: snappy Android clip (~2.0s); card last ~0.8s. Tap skips after card. */
 const SUMMON_REVEAL_TOTAL_MS = 2000;
 const SUMMON_CARD_LAST_MS = 800;
-/** Reduced-motion: skip video/lid/shake — card lands immediately, brief hold. */
+/** Reduced-motion / Lite FX / low-end: skip video/lid/shake — card lands immediately. */
 const SUMMON_REVEAL_REDUCED_MS = 400;
 const SUMMON_VIDEO_SRC = 'assets/summon/reveal.mp4';
 let _summonVideoOk = null;
@@ -36,6 +36,7 @@ function summonVideoUrl() {
 /** Warm the mp4 while the hub is open so pull isn't racing a cold download. */
 function ensureSummonVideoPreloaded() {
   try {
+    if (typeof summonRevealShouldSkip === 'function' && summonRevealShouldSkip()) return;
     const vid = document.getElementById('summonVideo');
     if (!vid) return;
     vid.muted = true;
@@ -668,8 +669,52 @@ function chestKindLabel(kind) {
   return (typeof tOr === 'function') ? tOr(pair[0], pair[1]) : pair[1];
 }
 
+/** Low-end / data-saver heuristic — EX-010 still felt clunky when only motionReduced skipped. */
+function summonRevealLowEnd() {
+  try {
+    if (typeof Perf !== 'undefined' && Perf && Number(Perf.tier) >= 2) return true;
+    if (typeof navigator !== 'undefined') {
+      const mem = Number(navigator.deviceMemory);
+      if (mem && mem <= 2) return true;
+      const conn = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
+      if (conn && conn.saveData) return true;
+    }
+  } catch (_) {}
+  return false;
+}
+
+/** Skip 2s mp4 + lid/shake on reduced-motion, Lite FX, or low-end. */
 function summonRevealShouldSkip() {
-  return typeof motionReduced === 'function' && motionReduced();
+  try {
+    if (typeof motionReduced === 'function' && motionReduced()) return true;
+    if (typeof save !== 'undefined' && save && save.liteFx) return true;
+    if (typeof fxLite === 'function' && fxLite()) return true;
+    if (summonRevealLowEnd()) return true;
+  } catch (_) {}
+  return false;
+}
+
+/** FOMO sheet is on-screen — tip must stay hidden so the two don't fight. */
+function summonFomoSheetOpen() {
+  try {
+    if (typeof document === 'undefined') return false;
+    if (document.body && document.body.classList.contains('fomo-open')) return true;
+    const el = document.getElementById('fomoRitual');
+    return !!(el && !el.hidden);
+  } catch (_) { return false; }
+}
+
+function summonTutShouldShow(busy) {
+  if (busy) return false;
+  try {
+    if (typeof summonTutSeen === 'function' && summonTutSeen()) return false;
+  } catch (_) { return false; }
+  try {
+    const screen = document.getElementById('summonScreen');
+    if (!screen || !screen.classList.contains('active')) return false;
+  } catch (_) { return false; }
+  if (summonFomoSheetOpen()) return false;
+  return true;
 }
 
 function summonRevealTotalMs() {

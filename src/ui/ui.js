@@ -2259,6 +2259,10 @@ const UI = {
     if (dismiss) dismiss.setAttribute('aria-label', tOr('fomo.ritualDismiss', 'Sluiten'));
     el.hidden = false;
     try { document.body.classList.add('fomo-open'); } catch (_) {}
+    try {
+      const tut = document.getElementById('summonTut');
+      if (tut) tut.hidden = true;
+    } catch (_) {}
   },
 
   runFomoRitualCta() {
@@ -2368,7 +2372,11 @@ const UI = {
       const tut = document.getElementById('summonTut');
       const tutLine = document.getElementById('summonTutLine');
       const tutX = document.getElementById('btnSummonTutDismiss');
-      const showTut = !this._chestPullBusy && typeof summonTutSeen === 'function' && !summonTutSeen();
+      const showTut = typeof summonTutShouldShow === 'function'
+        ? summonTutShouldShow(!!this._chestPullBusy)
+        : (!this._chestPullBusy
+          && typeof summonTutSeen === 'function' && !summonTutSeen()
+          && !(document.body && document.body.classList.contains('fomo-open')));
       if (tutLine) tutLine.textContent = t('ui.summonTut');
       if (tutX) tutX.setAttribute('aria-label', t('ui.summonTutDismiss'));
       if (tut) tut.hidden = !showTut;
