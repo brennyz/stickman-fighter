@@ -73,7 +73,7 @@ for (const ns of ['ui:', 'hud:', 'combat:', 'toast:', 'missionsUi:']) {
 if (!/lang !== 'en'/.test(i18n) || !/lang !== 'nl'/.test(i18n)) fail('t() must prefer EN over NL when locale is not Dutch');
 if (!/Non-NL missing keys fall back to EN first/.test(i18n)) fail('t() must fall back to EN before NL for non-NL');
 if (!/order = lang === 'nl' \? \['nl', 'en'\] : \[lang, 'en', 'nl'\]/.test(catalog)) fail('i18nList must prefer EN over NL for non-NL');
-if (!/summons: 'Summons'/.test(i18n) || !/summonsSub: 'Tägliche Kiste/.test(i18n)) {
+if (!/summons: 'Beschwörungen'/.test(i18n) || !/summonsSub: '10× am Tag/.test(i18n)) {
   fail('DE menu.summons chrome missing');
 }
 if (!/setText\('summonScreenHead', 'ui\.summonHead'\)/.test(i18n)) fail('applyLang must set summon chrome');
@@ -143,8 +143,8 @@ if (/Gratis Pull/.test(i18n)) fail('DE pets.crackEggSub still has leftover Dutch
 
 if (!/updateReady: 'Nouvelle version prête/.test(i18n)) fail('FR net chrome missing');
 if (!/updateReady: 'Nueva versión lista/.test(i18n)) fail('ES net chrome missing');
-if (!/summons: 'Summons', summonsSub: 'Coffre du jour/.test(i18n)) fail('FR summons chrome missing');
-if (!/summons: 'Summons', summonsSub: 'Cofre diario/.test(i18n)) fail('ES summons chrome missing');
+if (!/summons: 'Summons', summonsSub: '10× par jour/.test(i18n)) fail('FR summons chrome missing');
+if (!/summons: 'Summons', summonsSub: '10× al día/.test(i18n)) fail('ES summons chrome missing');
 if (/teens\+/.test(i18nEs)) fail('ES ageHint still has English teens+');
 if (/Version fraîche/.test(i18n)) fail('FR still has calque Version fraîche');
 
