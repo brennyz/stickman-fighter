@@ -1,4 +1,4 @@
-| 2026-09-18 | **MEGA-MERGE examinator sprint → main** | Landed #317 i18n, #323 Flappy retry, #320 Examinator, #314 density+tablet 834, #321 HUD keep-out, #312 factories. SKIP #324 (already in #314). Leftover open: #315 #313 #319 #316 #318 #322 #311. **v1.18.187 / SW 397**. speel.html. |
+| 2026-09-18 | **MEGA-MERGE examinator sprint → main** | Landed #317 i18n, #323 Flappy retry, #320 Examinator, #314 density+tablet 834, #321 HUD, #312 factories, #315 gear UX, #313 summons, #319 pets, #316 juice. SKIP #324. Leftover: #318 layout, #322 FOMO, #311 harden. **v1.18.188 / SW 398**. speel.html. |
 | 2026-09-18 | **MEGA-MERGE #321** | Phone HUD keep-out (`hudSafeLayout` / pause gutter) onto main. Density stays #314. Retry stays #323. |
 | 2026-09-18 | **MEGA-MERGE #320** | Examinator unique P0 (first-punch, killer tip, speciesLabel) onto main after #317+#323. Retry stays #323. |
 | 2026-09-18 | **i18n tips Power-ups** | Examiner #317 sprint DONE (P3): DE/FR/ES Tips `Power-ups:` → Funde/Orbes. Versus ongemoeid. **v1.18.182 / SW v392**. Draft. |
@@ -165,6 +165,7 @@ Schrijf **1–3 regels** per sessie: datum, d#, wat, versie.
 
 | Datum (UTC) | d# | Update |
 |-------------|-----|--------|
+| 2026-09-18 | — | **MEGA-MERGE continue:** #315 gear + #313 summons + #319 pets + #316 juice onto main. Keep #323 retry + #321 HUD + #314 density. SKIP #318 this pass (HUD/retry/gear-sheet conflicts). Leftover #318 #322 #311. **v1.18.188 / SW 398**. |
 | 2026-09-18 | **MEGA-MERGE #312** | Factories overview→detail→upgrade onto main. Keep factory ids + #317 nameShort. |
 | 2026-09-18 | — | **MEGA-MERGE #314:** phone 0.50 + tablet 834 mid-band onto main. Desktop 1.0 kept. Retry stays #323. |
 | 2026-09-18 | — | **MEGA-MERGE:** #317 i18n + #323 Flappy retry onto main (keep #317 copy + #323 onceMore/`restartAdventureInstant`/`#resRetrySafe`). |
