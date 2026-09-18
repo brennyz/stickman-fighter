@@ -54,6 +54,7 @@ must(/hud\.teleInk/.test(gameSrc), 'HUD ink cue missing');
 must(/hud\.teleTech/.test(gameSrc), 'HUD technique cue missing');
 must(/remain\.toFixed\(1\)/.test(gameSrc), 'HUD must show seconds remaining');
 must(/imminent/.test(gameSrc), 'HUD imminent flash missing');
+must(!/\brightPad\b/.test(gameSrc), 'adventure HUD must not reference undefined rightPad (draw crash)');
 
 must(!/combatTelegraphReadScale/.test(versusSrc), 'versus.js must not use telegraph read scale');
 must(!/applyCombatTelegraphWind/.test(versusSrc), 'versus.js must not use telegraph wind');
