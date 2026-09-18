@@ -2014,6 +2014,14 @@ function ensureVisibleScreen() {
   ensureMenuScreenActive();
 }
 
+const RESULT_SHOW_WIN_MS = 1400;
+const RESULT_SHOW_LOSE_MS = 700;
+function adventureResultDelayMs(win) {
+  const rm = typeof motionReduced === 'function' && motionReduced();
+  if (win) return rm ? 400 : RESULT_SHOW_WIN_MS;
+  return rm ? 160 : RESULT_SHOW_LOSE_MS;
+}
+
 /** Veilig resultaat na gevecht — voorkomt ReferenceError + zwart scherm. */
 function scheduleGameResult(gameRef, delayMs, showFn) {
   if (!gameRef || typeof showFn !== 'function') return;

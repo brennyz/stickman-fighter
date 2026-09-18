@@ -145,7 +145,7 @@ Schrijf **1–3 regels** per sessie: datum, d#, wat, versie.
 
 | Datum (UTC) | d# | Update |
 |-------------|-----|--------|
-| 2026-09-18 | — | **#318 P0** FOMO Vandaag vs HOME (EX-021 z-index/inert/safe dismiss) · Settings/stijl overflow · hub ›/badge split. Layout+menu smoke. Geen Versus, geen main. **v1.18.174 / SW 384**. speel.html. |
+| 2026-09-18 | — | **#318** Flappy result dock (84px Nog één keer, 700ms lose) · toast onder factory-titel · landscape 844×390 hub. Compatibel met #323 IDs, geen instant-restart (die lane). Geen Versus, geen main. **v1.18.175 / SW 385**. speel.html. |
 | 2026-09-18 | — | **UI layout polish** (WORKER): HOME/Collectie/fabrieken/gear/summons/pets — geen overlapping teksten/knoppen, safe-area, z-index, sheets, sticky wallets, overflow ~390 + desktop. Geen Versus. Draft. **v1.18.173 / SW 383**. speel.html. |
 | 2026-09-16 | — | **MEGA-MERGE → main** Grok wave #295–#309 (i18n → systems → UI → pixels → polish). Feature-base PRs (#297/#300/#307/#309) cherry-picked. **v1.18.172 / SW 382**. speel.html na Pages. |
 | 2026-09-16 | — | Gear UI ↔ #295 equip-API: sheets via gearSlotInventory, tap via gearEquipItem(id,{expectSlot}), states ok/vanity-ok/already-equipped/locked/not-owned/wrong-slot/unknown. DOM/schema 1 ongewijzigd. v1.18.171 / SW 381. Draft, niet main. |

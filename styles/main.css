@@ -2112,6 +2112,37 @@
   #resultScreen .stars-big { font-size:min(10vw,42px); color:#ffd75e; letter-spacing:6px; margin:8px 0 14px;
       text-shadow:0 3px 0 #a86818; }
   #resultScreen .btn { margin-top:8px; }
+  #resultScreen.screen.active {
+    flex-direction: column; align-items: center;
+    padding-bottom: max(16px, env(safe-area-inset-bottom, 0px));
+  }
+  #resultScreen .result-cta-dock {
+    width: min(var(--ui-rail), 420px); max-width: 100%; margin-top: auto; padding-top: 12px;
+    display: flex; flex-direction: column; align-items: center; gap: 8px;
+    position: sticky; bottom: max(10px, env(safe-area-inset-bottom, 0px));
+    z-index: 6;
+  }
+  #resultScreen .result-cta-primary {
+    width: 100%; min-height: 84px; justify-content: center;
+    font-size: clamp(20px, 6.2vw, 26px); font-weight: 900;
+    letter-spacing: .02em; margin-top: 0;
+  }
+  #resultScreen .result-cta-primary div { font-size: inherit; font-weight: 900; }
+  #resultScreen.is-lose.is-adventure #resAgain.result-cta-primary {
+    background: linear-gradient(180deg, #ffd75e 0%, #e8a820 55%, #c97a20 100%);
+    border: 2px solid rgba(255,255,255,.22); color: #1a1208;
+    box-shadow: 0 6px 0 #7a4a10, 0 10px 22px rgba(0,0,0,.35);
+  }
+  #resultScreen.is-lose.is-adventure #resAgain.result-cta-primary div { color: #1a1208; }
+  #resultScreen .result-cta-quiet,
+  #resultScreen.is-lose.is-adventure #resMenu.result-cta-quiet {
+    min-height: 44px; width: auto; margin-top: 2px;
+    background: transparent; box-shadow: none; border-color: transparent;
+    font-size: 14px; opacity: .72;
+  }
+  #resultScreen.is-lose .run-loot-panel { max-height: min(22vh, 160px); }
+  #resultScreen.is-lose .detail { font-size: 14px; }
+  body:has(#resultScreen.active) #fomoRitual { display: none; }
 
   /* Android Chrome/TWA: HTML-toast onder statusbalk. Queue + toon (ok/warn/danger) van #260. */
   #toastHost { position:fixed; left:50%; top:max(12px, calc(env(safe-area-inset-top, 0px) + 10px));
@@ -2120,6 +2151,10 @@
       width:min(92vw, 420px); max-width:calc(100vw - 24px); }
   body:not(.is-playing) #toastHost { top:max(70px, calc(env(safe-area-inset-top, 0px) + 56px)); }
   body.is-playing #toastHost { top:max(86px, calc(env(safe-area-inset-top, 0px) + 70px)); }
+  /* Welcome / collect toasts must sit under back + title (factories, settings, style). */
+  body:not(.is-playing):has(.screen.active:not(#menuScreen):not(#resultScreen)) #toastHost {
+    top: max(118px, calc(var(--sticky-under-back) + 54px));
+  }
   .toast { background:rgba(10,14,28,.94); border:1.5px solid rgba(255,215,94,.55); color:#fff;
       padding:12px 16px; border-radius:14px; font-weight:800; font-size:15px; line-height:1.35;
       box-shadow:0 10px 28px rgba(0,0,0,.5); animation: toastIn .28s ease; width:100%; box-sizing:border-box;
@@ -4117,5 +4152,36 @@
     #buildingsScreen .buildings-wallet,
     #buildingsWallet.buildings-wallet { width: min(94vw, 860px); }
     #summonScreen .summon-rail { width: min(var(--ui-rail-wide), 720px); }
+  }
+
+  /* Landscape phone (844×390): drop vista, shrink hub so tiles+dock stay on-screen. */
+  @media (orientation: landscape) and (max-height: 420px) {
+    #menuScreen.menu-video-overhaul .menu-stage {
+      height: 0;
+      display: none;
+    }
+    #menuScreen.menu-video-overhaul .menu-title-glass {
+      margin: 0 auto 4px;
+      padding: 2px 10px 4px;
+    }
+    #menuScreen.menu-video-overhaul h1.title.arcade-logo {
+      font-size: clamp(18px, 4vw, 24px);
+    }
+    #menuScreen.menu-video-overhaul .menu-landing-footer {
+      padding-top: 2px;
+      padding-bottom: max(4px, env(safe-area-inset-bottom));
+    }
+    .hub-tile-grid { gap: 6px; }
+    .hub-tile,
+    .hub-tile-adventure,
+    #menuScreen.menu-video-overhaul .hub-tile {
+      min-height: 48px;
+      padding: 6px 32px 6px 10px;
+    }
+    .menu-dock .btn.tog { min-height: 36px; font-size: 8px; padding: 4px 2px 3px; }
+    #resultScreen .bigres { margin: 8px 0 4px; font-size: min(8vw, 40px); }
+    #resultScreen .result-cta-primary { min-height: 56px; font-size: 18px; }
+    #resultScreen .stars-big { margin: 4px 0 6px; font-size: min(6vw, 28px); }
+    #resultScreen .result-cta-dock { padding-top: 6px; }
   }
 

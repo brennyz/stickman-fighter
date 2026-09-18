@@ -32,7 +32,7 @@ overlayI18nCatalog(CATALOG_FR, {
   },
   pickup: { heal: '+PV', rage: 'RAGE', energy: 'ÉNERGIE', shield: 'BOUCLIER' },
   result: {
-    advWin: 'VICTOIRE !', advLose: 'DÉFAITE', trainWin: 'CHAMPION !', trainLose: 'LE ROBOT GAGNE…',
+    advWin: 'VICTOIRE !', advLose: 'DÉFAITE', onceMore: 'Encore une fois', trainWin: 'CHAMPION !', trainLose: 'LE ROBOT GAGNE…',
     trainDetailWin: 'RabbitRobot à terre ({p}-{r}) · combo max ×{combo} · {wins}× gagné',
     trainDetailLose: 'RabbitRobot trop fort ({p}-{r}) · combo max ×{combo}',
     vsP1Win: 'JOUEUR 1 GAGNE !', vsP2Win: 'JOUEUR 2 GAGNE !', wallRecord: 'NOUVEAU RECORD !', wallTime: 'TEMPS ÉCOULÉ !',
@@ -549,7 +549,7 @@ overlayI18nCatalog(CATALOG_ES, {
   },
   pickup: { heal: '+PV', rage: 'RAGE', energy: 'ENERGÍA', shield: 'ESCUDO' },
   result: {
-    advWin: '¡VICTORIA!', advLose: 'DERROTA', trainWin: '¡CAMPEÓN!', trainLose: 'EL ROBOT GANA…',
+    advWin: '¡VICTORIA!', advLose: 'DERROTA', onceMore: 'Una más', trainWin: '¡CAMPEÓN!', trainLose: 'EL ROBOT GANA…',
     trainDetailWin: 'RabbitRobot caído ({p}-{r}) · combo máx ×{combo} · {wins}× ganado',
     trainDetailLose: 'RabbitRobot demasiado fuerte ({p}-{r}) · combo máx ×{combo}',
     vsP1Win: '¡JUGADOR 1 GANA!', vsP2Win: '¡JUGADOR 2 GANA!', wallRecord: '¡NUEVO RÉCORD!', wallTime: '¡SE ACABÓ EL TIEMPO!',
@@ -1079,7 +1079,7 @@ overlayI18nCatalog(CATALOG_DE, {
   },
   pickup: { heal: '+HP', rage: 'RAGE', energy: 'ENERGY', shield: 'SCHILD' },
   result: {
-    advWin: 'GEWONNEN!', advLose: 'VERLOREN', trainWin: 'MEISTER!', trainLose: 'ROBOT GEWINNT…',
+    advWin: 'GEWONNEN!', advLose: 'VERLOREN', onceMore: 'Noch einmal', trainWin: 'MEISTER!', trainLose: 'ROBOT GEWINNT…',
     trainDetailWin: 'RabbitRobot besiegt ({p}-{r}) · max Combo ×{combo} · {wins}× gewonnen',
     trainDetailLose: 'RabbitRobot war zu stark ({p}-{r}) · max Combo ×{combo}',
     vsP1Win: 'SPIELER 1 GEWINNT!', vsP2Win: 'SPIELER 2 GEWINNT!', wallRecord: 'NEUER REKORD!', wallTime: 'ZEIT UM!',

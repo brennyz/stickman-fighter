@@ -1234,6 +1234,9 @@ const UI = {
           return;
         }
         target.classList.add('active');
+        if (id !== 'menuScreen') {
+          try { this._dismissWelcomeToast(); } catch (_) {}
+        }
       }
       for (const s of this.screens) {
         if (id && s === id) continue;
@@ -1485,6 +1488,16 @@ const UI = {
     }
     if (tone !== 'ok' && tone !== 'warn' && tone !== 'danger') tone = 'info';
     return { ms: duration, tone };
+  },
+
+  _dismissWelcomeToast() {
+    let welcome = '';
+    try { welcome = (typeof t === 'function') ? t('toast.welcome') : ''; } catch (_) {}
+    const els = (this._toastEls || []).slice();
+    for (const el of els) {
+      if (!el) continue;
+      if (welcome && el.textContent === welcome) this._dismissToast(el);
+    }
   },
 
   toast(msg, ms, opts) {
@@ -5046,6 +5059,7 @@ const UI = {
     try {
     this.lastResult = data;
     try { this.clearToasts(); } catch (_) {}
+    try { this.hideFomoRitual(); } catch (_) {}
     const title = document.getElementById('resTitle');
     if (!title) throw new Error('result DOM missing');
     const titleKey = data.titleKey || (data.mode === 'training'
@@ -5117,8 +5131,10 @@ const UI = {
       }
     }
     const nextBtn = document.getElementById('resNext');
+    const showNext = !!(win && data.mode === 'adventure' && data.level < MAX_LEVEL);
     if (nextBtn) {
-      nextBtn.style.display = (win && data.mode === 'adventure' && data.level < MAX_LEVEL) ? 'flex' : 'none';
+      nextBtn.style.display = showNext ? 'flex' : 'none';
+      nextBtn.classList.toggle('result-cta-primary', showNext);
     }
     const again = document.getElementById('resAgain');
     if (again) {
@@ -5126,8 +5142,15 @@ const UI = {
       if (label) {
         if (data.mode === 'versus') label.innerHTML = t('result.rematch') + '<small>' + t('result.rematchSub') + '</small>';
         else if (data.mode === 'training') label.innerHTML = t('result.again') + '<small>' + tOr('result.trainAgainSub', 'vs RabbitRobot') + '</small>';
+        else if (!win && data.mode === 'adventure') label.textContent = tOr('result.onceMore', tOr('result.again', 'Nog één keer'));
         else label.textContent = t('result.again');
       }
+      again.classList.toggle('result-cta-primary', !(showNext));
+    }
+    const screen = document.getElementById('resultScreen');
+    if (screen) {
+      screen.classList.toggle('is-lose', !win);
+      screen.classList.toggle('is-adventure', data.mode === 'adventure');
     }
     const menuBtn = document.getElementById('resMenu');
     if (menuBtn) {

@@ -36,6 +36,14 @@ must(/\.settings-home-tile[\s\S]{0,160}minmax\(0,\s*1fr\)/.test(css),
 must(/\.style-card-tip[\s\S]{0,80}-webkit-line-clamp:\s*3/.test(css),
   'style card copy must clamp instead of overflowing');
 must(/EX-021/.test(css), 'EX-021 FOMO overlay contract missing from CSS');
+must(/id="resCtaDock"/.test(html) && /result-cta-primary/.test(css) && /min-height:\s*84px/.test(css),
+  'result Flappy retry dock / 84px primary missing');
+must(/RESULT_SHOW_LOSE_MS = 700/.test(fs.readFileSync(path.join(root, 'src/systems/missions.js'), 'utf8')),
+  'lose result delay must be 700ms (<3s)');
+must(/sticky-under-back\) \+ 54px/.test(css), 'toast must sit under factory/settings titles');
+must(/orientation: landscape\) and \(max-height: 420px\)/.test(css),
+  'landscape 844×390 hub breakpoint missing');
+must(!/data-hub="versus"/.test(html), 'versus hub tile must stay retired');
 must(/--sticky-under-back:/.test(css), 'missing --sticky-under-back token');
 must(/\.hub-tile \{[\s\S]*?overflow:\s*hidden/.test(css), 'hub tiles must clip overflow');
 must(/-webkit-line-clamp:\s*2/.test(css), 'hub tile titles/subs must clamp');
@@ -459,8 +467,99 @@ async function runAt(browser, width, height, label) {
   if (style.hits.length) report.fails.push({ where: 'style cards overlap', style });
   if (!(style.cards >= 4)) report.fails.push({ where: 'style cards missing', style });
 
+  await page.evaluate(() => {
+    document.querySelectorAll('.screen').forEach((el) => el.classList.remove('active'));
+    if (typeof UI === 'object' && UI.showResult) {
+      UI.showResult(false, {
+        mode: 'adventure', level: 1, win: false, xp: 0, stars: 0,
+        titleKey: 'result.advLose', title: 'VERLOREN',
+      });
+    }
+  });
+  const result = await page.evaluate(() => {
+    const screen = document.getElementById('resultScreen');
+    const again = document.getElementById('resAgain');
+    const dock = document.getElementById('resCtaDock');
+    const ar = again && again.getBoundingClientRect();
+    const overflow = [screen, again, dock].filter(Boolean).some((el) => {
+      const r = el.getBoundingClientRect();
+      return r.right > window.innerWidth + 2 || r.left < -2;
+    });
+    return {
+      active: !!(screen && screen.classList.contains('active')),
+      lose: !!(screen && screen.classList.contains('is-lose') && screen.classList.contains('is-adventure')),
+      againH: ar && Math.round(ar.height),
+      dock: !!(dock && !dock.hidden),
+      overflow,
+      label: again && (again.querySelector('div') || again).textContent,
+    };
+  });
+  if (!result.active || !result.lose) report.fails.push({ where: 'result lose screen', result });
+  if (width <= 420 && !(result.againH >= 72)) report.fails.push({ where: 'result CTA not huge', result });
+  if (result.overflow) report.fails.push({ where: 'result overflow', result });
+
+  await page.evaluate(() => {
+    if (typeof UI === 'object' && UI.openBuildings) UI.openBuildings();
+    if (typeof UI === 'object' && UI.toast) UI.toast('Welkom — tik een melding weg · Tips in het menu', 8000);
+  });
+  const toastTitle = await page.evaluate(() => {
+    const toast = document.querySelector('#toastHost .toast');
+    const head = document.getElementById('buildingsScreenHead')
+      || document.querySelector('#buildingsScreen .head');
+    const tr = toast && toast.getBoundingClientRect();
+    const hr = head && head.getBoundingClientRect();
+    const overlap = !!(tr && hr
+      && tr.left < hr.right - 2 && tr.right > hr.left + 2
+      && tr.top < hr.bottom - 2 && tr.bottom > hr.top + 2);
+    return {
+      hasToast: !!toast,
+      hasHead: !!head,
+      overlap,
+      toastTop: tr && Math.round(tr.top),
+      headBottom: hr && Math.round(hr.bottom),
+    };
+  });
+  if (toastTitle.hasToast && toastTitle.hasHead && toastTitle.overlap) {
+    report.fails.push({ where: 'welcome toast covers factory title', toastTitle });
+  }
+
   await page.close();
   return report;
+}
+
+async function runLandscapeHub(browser) {
+  const page = await browser.newPage();
+  await page.setViewport({ width: 844, height: 390, isMobile: true, hasTouch: true });
+  await page.goto(smokeBaseUrl(port) + '?nosplash=1', { waitUntil: 'load', timeout: 60000 });
+  await page.waitForFunction(() => window.__sfBooted, { timeout: 45000 });
+  await openQuietHome(page);
+  const hub = await page.evaluate(() => {
+    const tiles = [...document.querySelectorAll('#menuScreen .hub-tile')];
+    const footer = document.querySelector('#menuScreen .menu-landing-footer, #menuScreen .menu-dock');
+    const title = document.querySelector('#menuScreen .menu-title-glass, #menuScreen h1.title');
+    const nodes = [...tiles, footer, title].filter(Boolean);
+    const overflow = nodes.filter((el) => {
+      const r = el.getBoundingClientRect();
+      return r.right > window.innerWidth + 2 || r.left < -2
+        || r.bottom > window.innerHeight + 2 || r.top < -2;
+    }).map((el) => el.id || el.className);
+    const versus = !!document.querySelector('[data-hub="versus"]');
+    return {
+      tiles: tiles.length,
+      overflow,
+      versus,
+      scrollW: document.documentElement.scrollWidth,
+      vh: window.innerHeight,
+      vw: window.innerWidth,
+    };
+  });
+  await page.close();
+  const fails = [];
+  if (hub.versus) fails.push({ where: 'versus tile on landscape hub', hub });
+  if (hub.overflow.length) fails.push({ where: 'landscape 844×390 hub overflow', hub });
+  if (hub.scrollW > 846) fails.push({ where: 'landscape page scroll width', hub });
+  if (!(hub.tiles >= 4)) fails.push({ where: 'landscape hub tiles missing', hub });
+  return { label: 'land844x390', width: 844, fails };
 }
 
 const port = Number(process.env.SF_LAYOUT_PORT || 8794);
@@ -476,12 +575,13 @@ async function run() {
   try {
     const phone = await runAt(browser, 390, 844, 'phone390');
     const desktop = await runAt(browser, 1280, 800, 'desktop');
-    const fails = [...phone.fails, ...desktop.fails];
+    const land = await runLandscapeHub(browser);
+    const fails = [...phone.fails, ...desktop.fails, ...land.fails];
     if (fails.length) {
-      console.error('SMOKE_FAIL layout', JSON.stringify({ phone, desktop }, null, 2));
+      console.error('SMOKE_FAIL layout', JSON.stringify({ phone, desktop, land }, null, 2));
       process.exit(1);
     }
-    console.log('SMOKE_OK layout-screens 390 + desktop (HOME/Collectie/factories/gear/summons/pets)');
+    console.log('SMOKE_OK layout-screens 390 + desktop + land844 (HOME/Collectie/factories/gear/summons/pets)');
   } finally {
     await browser.close();
     if (server) try { server.close(); } catch (_) {}

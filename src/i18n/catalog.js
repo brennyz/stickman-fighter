@@ -86,7 +86,7 @@ function seedNlGameStrings() {
   });
   if (!I18N.nl.result) I18N.nl.result = {};
   Object.assign(I18N.nl.result, {
-    advWin: 'GEWONNEN!', advLose: 'VERLOREN', trainWin: 'KAMPIOEN!', trainLose: 'ROBOT WINT...',
+    advWin: 'GEWONNEN!', advLose: 'VERLOREN', onceMore: 'Nog één keer', trainWin: 'KAMPIOEN!', trainLose: 'ROBOT WINT...',
     advLoseKeep: 'XP en loot van deze run blijven',
     trainAgainSub: 'vs RabbitRobot',
     wavesStart: 'begin',
@@ -1351,7 +1351,7 @@ const CATALOG_EN = {
   },
   pickup: { heal: '+HP', rage: 'RAGE', energy: 'ENERGY', shield: 'SHIELD' },
   result: {
-    advWin: 'VICTORY!', advLose: 'YOU LOSE', trainWin: 'CHAMPION!', trainLose: 'ROBOT WINS...',
+    advWin: 'VICTORY!', advLose: 'YOU LOSE', onceMore: 'One more go', trainWin: 'CHAMPION!', trainLose: 'ROBOT WINS...',
     advLoseKeep: 'XP and loot from this run stay',
     trainAgainSub: 'vs RabbitRobot',
     wavesStart: 'start',
@@ -2444,7 +2444,7 @@ const CATALOG_DE = {
     tome: { name: 'Buchmeister', hint: 'Hälfte des Buches', tooltip: 'Monsterbuch auf dem Rücken.', bonus: '+4 max HP · Buchweisheit' },
   },
   result: {
-    advWin: 'GEWONNEN!', advLose: 'VERLOREN', trainWin: 'MEISTER!', trainLose: 'ROBOT GEWINNT...',
+    advWin: 'GEWONNEN!', advLose: 'VERLOREN', onceMore: 'Noch einmal', trainWin: 'MEISTER!', trainLose: 'ROBOT GEWINNT...',
     advLoseKeep: 'XP und Beute von diesem Lauf bleiben',
     trainAgainSub: 'vs RabbitRobot',
     wavesStart: 'Start',
@@ -2553,7 +2553,7 @@ const CATALOG_FR = {
     tome: { name: 'Maître du livre', hint: 'Moitié du bestiaire', tooltip: 'Bestiaire sur le dos.', bonus: '+4 PV max · sagesse' },
   },
   result: {
-    advWin: 'VICTOIRE !', advLose: 'DÉFAITE...', trainWin: 'CHAMPION !', trainLose: 'ROBOT GAGNE...',
+    advWin: 'VICTOIRE !', advLose: 'DÉFAITE...', onceMore: 'Encore une fois', trainWin: 'CHAMPION !', trainLose: 'ROBOT GAGNE...',
     advLoseKeep: 'XP et butin de cette run restent',
     trainAgainSub: 'vs RabbitRobot',
     wavesStart: 'début',
@@ -2662,7 +2662,7 @@ const CATALOG_ES = {
     tome: { name: 'Maestro del libro', hint: 'Mitad del bestiario', tooltip: 'Libro en la espalda.', bonus: '+4 HP máx · sabiduría' },
   },
   result: {
-    advWin: '¡VICTORIA!', advLose: 'DERROTA...', trainWin: '¡CAMPEÓN!', trainLose: 'ROBOT GANA...',
+    advWin: '¡VICTORIA!', advLose: 'DERROTA...', onceMore: 'Una más', trainWin: '¡CAMPEÓN!', trainLose: 'ROBOT GANA...',
     advLoseKeep: 'XP y botín de esta run se quedan',
     trainAgainSub: 'vs RabbitRobot',
     wavesStart: 'inicio',

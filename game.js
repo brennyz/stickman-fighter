@@ -323,9 +323,9 @@ const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const VERSION_UPDATE_SAVE_KEY = 'stickfighter_version_update_save_v1';
 const VERSION_UPDATE_FLAG_KEY = 'stickfighter_version_update_flag_v1';
 const SAVE_EXPORT_SCHEMA = 3;
-const APP_VERSION = '1.18.174';
+const APP_VERSION = '1.18.175';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 384;
+const SW_CACHE_REV = 385;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', petCoins: 0, dex: {}, summons: {}, pets: {}, activePet: null,
   eggPets: {}, activeEggPet: null, eggDaily: null,
   chestDaily: null, chestWeapons: {},
@@ -2364,7 +2364,7 @@ const I18N = {
       audioHint: 'Volume in pauze — sliders sync met Instellingen',
       audioMuteAll: 'Alles uit', audioRestore: 'Standaard', audioSfxOnly: 'Alleen geluid',
     },
-    result: { again: 'Opnieuw', next: 'Volgend level', menu: 'Hoofdmenu', menuArcade: 'Arcade', rematch: 'Rematch', rematchSub: 'Zelfde vechters',
+    result: { again: 'Opnieuw', onceMore: 'Nog één keer', next: 'Volgend level', menu: 'Hoofdmenu', menuArcade: 'Arcade', rematch: 'Rematch', rematchSub: 'Zelfde vechters',
       trainAgainSub: 'vs RabbitRobot',
       advWin: 'GEWONNEN!', advLose: 'VERLOREN', trainWin: 'KAMPIOEN!', trainLose: 'ROBOT WINT...',
       advLoseKeep: 'XP en loot van deze run blijven',
@@ -2655,7 +2655,7 @@ const I18N = {
     },
     result: { again: 'Again', next: 'Next level', menu: 'Main menu', menuArcade: 'Arcade', rematch: 'Rematch', rematchSub: 'Same fighters',
       trainAgainSub: 'vs RabbitRobot',
-      advWin: 'VICTORY!', advLose: 'YOU LOSE', trainWin: 'CHAMPION!', trainLose: 'ROBOT WINS...',
+      advWin: 'VICTORY!', advLose: 'YOU LOSE', onceMore: 'One more go', trainWin: 'CHAMPION!', trainLose: 'ROBOT WINS...',
       advLoseKeep: 'XP and loot from this run stay',
       wavesStart: 'start',
       xp: '+{xp} XP earned · now Lv {lvl} ({cur}/{need} XP)' },
@@ -3002,7 +3002,7 @@ const I18N = {
     },
     result: { again: 'Nochmal', next: 'Nächstes Level', menu: 'Hauptmenü', menuArcade: 'Arcade', rematch: 'Revanche', rematchSub: 'Gleiche Kämpfer',
       trainAgainSub: 'vs RabbitRobot',
-      advWin: 'GEWONNEN!', advLose: 'VERLOREN', trainWin: 'MEISTER!', trainLose: 'ROBOT GEWINNT...',
+      advWin: 'GEWONNEN!', advLose: 'VERLOREN', onceMore: 'Noch einmal', trainWin: 'MEISTER!', trainLose: 'ROBOT GEWINNT...',
       advLoseKeep: 'XP und Beute von diesem Lauf bleiben',
       wavesStart: 'Start',
       xp: '+{xp} XP · jetzt Lv {lvl} ({cur}/{need} XP)' },
@@ -3281,7 +3281,7 @@ const I18N = {
     },
     result: { again: 'Rejouer', next: 'Niveau suivant', menu: 'Menu principal', menuArcade: 'Arcade', rematch: 'Revanche', rematchSub: 'Mêmes combattants',
       trainAgainSub: 'vs RabbitRobot',
-      advWin: 'VICTOIRE !', advLose: 'DÉFAITE', trainWin: 'CHAMPION !', trainLose: 'ROBOT GAGNE...',
+      advWin: 'VICTOIRE !', advLose: 'DÉFAITE', onceMore: 'Encore une fois', trainWin: 'CHAMPION !', trainLose: 'ROBOT GAGNE...',
       advLoseKeep: 'XP et butin de cette run restent',
       wavesStart: 'début',
       xp: '+{xp} XP · Lv {lvl} ({cur}/{need} XP)' },
@@ -3541,7 +3541,7 @@ const I18N = {
     },
     result: { again: 'Otra vez', next: 'Siguiente nivel', menu: 'Menú principal', menuArcade: 'Arcade', rematch: 'Revancha', rematchSub: 'Mismos luchadores',
       trainAgainSub: 'vs RabbitRobot',
-      advWin: '¡VICTORIA!', advLose: 'DERROTA', trainWin: '¡CAMPEÓN!', trainLose: 'ROBOT GANA...',
+      advWin: '¡VICTORIA!', advLose: 'DERROTA', onceMore: 'Una más', trainWin: '¡CAMPEÓN!', trainLose: 'ROBOT GANA...',
       advLoseKeep: 'XP y botín de esta run se quedan',
       wavesStart: 'inicio',
       xp: '+{xp} XP · Lv {lvl} ({cur}/{need} XP)' },
@@ -6394,6 +6394,14 @@ function ensureVisibleScreen() {
     return;
   }
   ensureMenuScreenActive();
+}
+
+const RESULT_SHOW_WIN_MS = 1400;
+const RESULT_SHOW_LOSE_MS = 700;
+function adventureResultDelayMs(win) {
+  const rm = typeof motionReduced === 'function' && motionReduced();
+  if (win) return rm ? 400 : RESULT_SHOW_WIN_MS;
+  return rm ? 160 : RESULT_SHOW_LOSE_MS;
 }
 
 /** Veilig resultaat na gevecht — voorkomt ReferenceError + zwart scherm. */
@@ -20640,7 +20648,7 @@ function seedNlGameStrings() {
   });
   if (!I18N.nl.result) I18N.nl.result = {};
   Object.assign(I18N.nl.result, {
-    advWin: 'GEWONNEN!', advLose: 'VERLOREN', trainWin: 'KAMPIOEN!', trainLose: 'ROBOT WINT...',
+    advWin: 'GEWONNEN!', advLose: 'VERLOREN', onceMore: 'Nog één keer', trainWin: 'KAMPIOEN!', trainLose: 'ROBOT WINT...',
     advLoseKeep: 'XP en loot van deze run blijven',
     trainAgainSub: 'vs RabbitRobot',
     wavesStart: 'begin',
@@ -21905,7 +21913,7 @@ const CATALOG_EN = {
   },
   pickup: { heal: '+HP', rage: 'RAGE', energy: 'ENERGY', shield: 'SHIELD' },
   result: {
-    advWin: 'VICTORY!', advLose: 'YOU LOSE', trainWin: 'CHAMPION!', trainLose: 'ROBOT WINS...',
+    advWin: 'VICTORY!', advLose: 'YOU LOSE', onceMore: 'One more go', trainWin: 'CHAMPION!', trainLose: 'ROBOT WINS...',
     advLoseKeep: 'XP and loot from this run stay',
     trainAgainSub: 'vs RabbitRobot',
     wavesStart: 'start',
@@ -22998,7 +23006,7 @@ const CATALOG_DE = {
     tome: { name: 'Buchmeister', hint: 'Hälfte des Buches', tooltip: 'Monsterbuch auf dem Rücken.', bonus: '+4 max HP · Buchweisheit' },
   },
   result: {
-    advWin: 'GEWONNEN!', advLose: 'VERLOREN', trainWin: 'MEISTER!', trainLose: 'ROBOT GEWINNT...',
+    advWin: 'GEWONNEN!', advLose: 'VERLOREN', onceMore: 'Noch einmal', trainWin: 'MEISTER!', trainLose: 'ROBOT GEWINNT...',
     advLoseKeep: 'XP und Beute von diesem Lauf bleiben',
     trainAgainSub: 'vs RabbitRobot',
     wavesStart: 'Start',
@@ -23107,7 +23115,7 @@ const CATALOG_FR = {
     tome: { name: 'Maître du livre', hint: 'Moitié du bestiaire', tooltip: 'Bestiaire sur le dos.', bonus: '+4 PV max · sagesse' },
   },
   result: {
-    advWin: 'VICTOIRE !', advLose: 'DÉFAITE...', trainWin: 'CHAMPION !', trainLose: 'ROBOT GAGNE...',
+    advWin: 'VICTOIRE !', advLose: 'DÉFAITE...', onceMore: 'Encore une fois', trainWin: 'CHAMPION !', trainLose: 'ROBOT GAGNE...',
     advLoseKeep: 'XP et butin de cette run restent',
     trainAgainSub: 'vs RabbitRobot',
     wavesStart: 'début',
@@ -23216,7 +23224,7 @@ const CATALOG_ES = {
     tome: { name: 'Maestro del libro', hint: 'Mitad del bestiario', tooltip: 'Libro en la espalda.', bonus: '+4 HP máx · sabiduría' },
   },
   result: {
-    advWin: '¡VICTORIA!', advLose: 'DERROTA...', trainWin: '¡CAMPEÓN!', trainLose: 'ROBOT GANA...',
+    advWin: '¡VICTORIA!', advLose: 'DERROTA...', onceMore: 'Una más', trainWin: '¡CAMPEÓN!', trainLose: 'ROBOT GANA...',
     advLoseKeep: 'XP y botín de esta run se quedan',
     trainAgainSub: 'vs RabbitRobot',
     wavesStart: 'inicio',
@@ -23465,7 +23473,7 @@ const CATALOG_DE_CHROME = {
     petCoinsLine: '+{n} Pet-Coins',
   },
   result: {
-    advWin: 'GEWONNEN!', advLose: 'VERLOREN', trainWin: 'MEISTER!', trainLose: 'ROBOT GEWINNT...',
+    advWin: 'GEWONNEN!', advLose: 'VERLOREN', onceMore: 'Noch einmal', trainWin: 'MEISTER!', trainLose: 'ROBOT GEWINNT...',
     trainDetailWin: 'RabbitRobot besiegt ({p}-{r}) · max Combo ×{combo} · {wins}× gewonnen',
     trainDetailLose: 'RabbitRobot war zu stark ({p}-{r}) · max Combo ×{combo}',
     vsP1Win: 'SPIELER 1 GEWINNT!', vsP2Win: 'SPIELER 2 GEWINNT!', wallRecord: 'NEUER REKORD!', wallTime: 'ZEIT UM!',
@@ -24369,7 +24377,7 @@ overlayI18nCatalog(CATALOG_FR, {
   },
   pickup: { heal: '+PV', rage: 'RAGE', energy: 'ÉNERGIE', shield: 'BOUCLIER' },
   result: {
-    advWin: 'VICTOIRE !', advLose: 'DÉFAITE', trainWin: 'CHAMPION !', trainLose: 'LE ROBOT GAGNE…',
+    advWin: 'VICTOIRE !', advLose: 'DÉFAITE', onceMore: 'Encore une fois', trainWin: 'CHAMPION !', trainLose: 'LE ROBOT GAGNE…',
     trainDetailWin: 'RabbitRobot à terre ({p}-{r}) · combo max ×{combo} · {wins}× gagné',
     trainDetailLose: 'RabbitRobot trop fort ({p}-{r}) · combo max ×{combo}',
     vsP1Win: 'JOUEUR 1 GAGNE !', vsP2Win: 'JOUEUR 2 GAGNE !', wallRecord: 'NOUVEAU RECORD !', wallTime: 'TEMPS ÉCOULÉ !',
@@ -24886,7 +24894,7 @@ overlayI18nCatalog(CATALOG_ES, {
   },
   pickup: { heal: '+PV', rage: 'RAGE', energy: 'ENERGÍA', shield: 'ESCUDO' },
   result: {
-    advWin: '¡VICTORIA!', advLose: 'DERROTA', trainWin: '¡CAMPEÓN!', trainLose: 'EL ROBOT GANA…',
+    advWin: '¡VICTORIA!', advLose: 'DERROTA', onceMore: 'Una más', trainWin: '¡CAMPEÓN!', trainLose: 'EL ROBOT GANA…',
     trainDetailWin: 'RabbitRobot caído ({p}-{r}) · combo máx ×{combo} · {wins}× ganado',
     trainDetailLose: 'RabbitRobot demasiado fuerte ({p}-{r}) · combo máx ×{combo}',
     vsP1Win: '¡JUGADOR 1 GANA!', vsP2Win: '¡JUGADOR 2 GANA!', wallRecord: '¡NUEVO RÉCORD!', wallTime: '¡SE ACABÓ EL TIEMPO!',
@@ -25416,7 +25424,7 @@ overlayI18nCatalog(CATALOG_DE, {
   },
   pickup: { heal: '+HP', rage: 'RAGE', energy: 'ENERGY', shield: 'SCHILD' },
   result: {
-    advWin: 'GEWONNEN!', advLose: 'VERLOREN', trainWin: 'MEISTER!', trainLose: 'ROBOT GEWINNT…',
+    advWin: 'GEWONNEN!', advLose: 'VERLOREN', onceMore: 'Noch einmal', trainWin: 'MEISTER!', trainLose: 'ROBOT GEWINNT…',
     trainDetailWin: 'RabbitRobot besiegt ({p}-{r}) · max Combo ×{combo} · {wins}× gewonnen',
     trainDetailLose: 'RabbitRobot war zu stark ({p}-{r}) · max Combo ×{combo}',
     vsP1Win: 'SPIELER 1 GEWINNT!', vsP2Win: 'SPIELER 2 GEWINNT!', wallRecord: 'NEUER REKORD!', wallTime: 'ZEIT UM!',
@@ -40914,8 +40922,11 @@ class Game {
       AudioSys.sfx('lose');
       this.banner(t('banner.lost'), 2, '#ff6b6b', 50);
     }
-    // Resultaat-scherm altijd tonen (Volgende level / Opnieuw) — niet stil naar menu
-    scheduleGameResult(this, win ? 1600 : 1400, () => UI.showResult(win, {
+    // Resultaat-scherm altijd tonen (Volgende / Nog één keer) — niet stil naar menu
+    const resultDelay = (typeof adventureResultDelayMs === 'function')
+      ? adventureResultDelayMs(win)
+      : (win ? 1400 : 700);
+    scheduleGameResult(this, resultDelay, () => UI.showResult(win, {
       titleKey: win ? 'result.advWin' : 'result.advLose',
       title: win ? t('result.advWin') : t('result.advLose'),
       detailKey: win ? 'result.advDetailWin' : 'result.advDetailLose',
@@ -47335,6 +47346,9 @@ const UI = {
           return;
         }
         target.classList.add('active');
+        if (id !== 'menuScreen') {
+          try { this._dismissWelcomeToast(); } catch (_) {}
+        }
       }
       for (const s of this.screens) {
         if (id && s === id) continue;
@@ -47586,6 +47600,16 @@ const UI = {
     }
     if (tone !== 'ok' && tone !== 'warn' && tone !== 'danger') tone = 'info';
     return { ms: duration, tone };
+  },
+
+  _dismissWelcomeToast() {
+    let welcome = '';
+    try { welcome = (typeof t === 'function') ? t('toast.welcome') : ''; } catch (_) {}
+    const els = (this._toastEls || []).slice();
+    for (const el of els) {
+      if (!el) continue;
+      if (welcome && el.textContent === welcome) this._dismissToast(el);
+    }
   },
 
   toast(msg, ms, opts) {
@@ -51147,6 +51171,7 @@ const UI = {
     try {
     this.lastResult = data;
     try { this.clearToasts(); } catch (_) {}
+    try { this.hideFomoRitual(); } catch (_) {}
     const title = document.getElementById('resTitle');
     if (!title) throw new Error('result DOM missing');
     const titleKey = data.titleKey || (data.mode === 'training'
@@ -51218,8 +51243,10 @@ const UI = {
       }
     }
     const nextBtn = document.getElementById('resNext');
+    const showNext = !!(win && data.mode === 'adventure' && data.level < MAX_LEVEL);
     if (nextBtn) {
-      nextBtn.style.display = (win && data.mode === 'adventure' && data.level < MAX_LEVEL) ? 'flex' : 'none';
+      nextBtn.style.display = showNext ? 'flex' : 'none';
+      nextBtn.classList.toggle('result-cta-primary', showNext);
     }
     const again = document.getElementById('resAgain');
     if (again) {
@@ -51227,8 +51254,15 @@ const UI = {
       if (label) {
         if (data.mode === 'versus') label.innerHTML = t('result.rematch') + '<small>' + t('result.rematchSub') + '</small>';
         else if (data.mode === 'training') label.innerHTML = t('result.again') + '<small>' + tOr('result.trainAgainSub', 'vs RabbitRobot') + '</small>';
+        else if (!win && data.mode === 'adventure') label.textContent = tOr('result.onceMore', tOr('result.again', 'Nog één keer'));
         else label.textContent = t('result.again');
       }
+      again.classList.toggle('result-cta-primary', !(showNext));
+    }
+    const screen = document.getElementById('resultScreen');
+    if (screen) {
+      screen.classList.toggle('is-lose', !win);
+      screen.classList.toggle('is-adventure', data.mode === 'adventure');
     }
     const menuBtn = document.getElementById('resMenu');
     if (menuBtn) {
