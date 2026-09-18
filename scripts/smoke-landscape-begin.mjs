@@ -32,6 +32,10 @@ must(/--sf-land-gutter-right:/.test(css),
   'missing --sf-land-gutter-right token');
 must(/#menuScreen\.menu-video-overhaul \.menu-chrome \{[\s\S]{0,220}grid-template-columns:\s*minmax\(140px,\s*28%\)/.test(css),
   'HOME landscape must put title left + Play tiles right');
+must(/P0 landscape FOMO: dock Vandaag/.test(css),
+  'landscape FOMO must dock left and leave SPELEN/Avontuur clear');
+must(/body:has\(#sfSplash\.is-title\) #menuScreen #fomoRitual/.test(css),
+  'FOMO must hide while the Begin SPELEN gate is up');
 must(/id="sfTitleStart"/.test(html) && /id="btnAdventure"/.test(html),
   'SPELEN gate + HOME Avontuur missing');
 must(!/data-hub="versus"/.test(html), 'versus hub tile must stay retired');
@@ -187,8 +191,62 @@ async function runAt(browser, width, height, label) {
     fails.push({ where: `${label} HOME title clipped`, home });
   }
 
+  const fomo = await page.evaluate(() => {
+    const splash = document.getElementById('sfSplash');
+    if (splash) {
+      splash.classList.add('is-done');
+      try { splash.remove(); } catch (_) {}
+    }
+    if (typeof UI === 'object' && UI) {
+      UI._fomoRitualHide = false;
+      UI._fomoRitualForce = true;
+      if (UI.showFomoRitual) UI.showFomoRitual(true);
+    }
+    const overlay = document.getElementById('fomoRitual');
+    const sheet = overlay && overlay.querySelector('.fomo-ritual-sheet');
+    const play = document.getElementById('btnAdventure');
+    const start = document.getElementById('sfTitleStart');
+    const box = (el) => {
+      if (!el) return null;
+      const r = el.getBoundingClientRect();
+      return { top: r.top, left: r.left, right: r.right, bottom: r.bottom, w: r.width, h: r.height };
+    };
+    const a = box(sheet);
+    const b = box(play);
+    const s = start && document.getElementById('sfSplash') && !document.getElementById('sfSplash').classList.contains('is-done')
+      ? box(start) : null;
+    const hit = (x, y) => {
+      const n = document.elementFromPoint(x, y);
+      return !!(n && (n === play || (play && play.contains(n))));
+    };
+    const overlap = (p, q) => !!(p && q
+      && p.left < q.right - 3 && p.right > q.left + 3
+      && p.top < q.bottom - 3 && p.bottom > q.top + 3);
+    const playCs = play ? getComputedStyle(play) : null;
+    const playPainted = !!(playCs && playCs.visibility !== 'hidden' && playCs.display !== 'none'
+      && Number(playCs.opacity) > 0.2);
+    return {
+      open: !!(overlay && !overlay.hidden && getComputedStyle(overlay).display !== 'none'),
+      sheet: a,
+      play: b,
+      start: s,
+      overlapPlay: overlap(a, b),
+      overlapStart: overlap(a, s),
+      playVisible: !!(b && b.h >= 44 && b.top >= -2 && b.bottom <= window.innerHeight + 2 && playPainted),
+      playPainted,
+      playHit: !!(b && hit(b.left + b.w / 2, b.top + Math.min(20, b.h / 2))),
+    };
+  });
+  await shot(page, `${label}-fomo.png`);
+  if (land) {
+    if (!fomo.open) fails.push({ where: `${label} FOMO did not open`, fomo });
+    if (fomo.overlapPlay) fails.push({ where: `${label} FOMO sheet covers Avontuur`, fomo });
+    if (fomo.overlapStart) fails.push({ where: `${label} FOMO sheet covers SPELEN`, fomo });
+    if (!fomo.playVisible) fails.push({ where: `${label} Avontuur hidden under FOMO`, fomo });
+  }
+
   await page.close();
-  return { label, width, height, fails, begin, home };
+  return { label, width, height, fails, begin, home, fomo };
 }
 
 const port = Number(process.env.SF_LANDSCAPE_BEGIN_PORT || 8796);

@@ -1187,6 +1187,10 @@
   ],
   "sessionLog": [
     {
+      "at": "2026-09-18T15:47:07Z",
+      "summary": "DONE #329: landscape FOMO docks left — does not cover SPELEN/Avontuur. Draft, no main."
+    },
+    {
       "at": "2026-09-18T15:42:38Z",
       "summary": "P0 landscape begin/HOME: SPELEN + Avontuur fully visible on 844×390, 48px nav gutter. Draft #329, no main. v1.18.190 / SW 400."
     },
@@ -1281,10 +1285,6 @@
     {
       "at": "2026-09-18T12:31:56Z",
       "summary": "LANGUAGE: factory desc + nameShort, FOMO/HUD locale, export gear/fabriek i18n. Draft #317, geen main."
-    },
-    {
-      "at": "2026-09-18T12:30:17Z",
-      "summary": "LANGUAGE worker: layout-safe NL/EN/DE/FR/ES copy (factory desc, FOMO, HUD telegraphs). Draft, geen main."
     }
   ],
   "implementedFeaturesSummary": "d18 char select deel 1+2 (v1.11.1-2); Mats coinrun + shuriken mik/vliegers + anti-spam (v1.12.0); speel.html (v1.12.2+). Zie HANDOFF-ZOEKINDEX.md en improvement-d20-bag.json userFeatureLog.",

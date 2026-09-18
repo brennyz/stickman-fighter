@@ -5792,6 +5792,51 @@
       max(32px, calc(env(safe-area-inset-bottom, 0px) + 24px)) max(12px, env(safe-area-inset-left));
     padding-bottom: max(32px, calc(env(safe-area-inset-bottom, 0px) + 24px));
   }
+  /* Never paint Vandaag over the Begin SPELEN gate. */
+  body:has(#sfSplash.is-title) #menuScreen #fomoRitual,
+  body:has(#sfSplash:not(.is-done)) #menuScreen #fomoRitual {
+    display: none;
+  }
+  /* P0 landscape FOMO: dock Vandaag in the title column — do not cover SPELEN/Avontuur. */
+  @media (orientation: landscape) and (max-height: 520px) {
+    #menuScreen.menu-video-overhaul > #fomoRitual,
+    #menuScreen #fomoRitual {
+      align-items: stretch;
+      justify-content: flex-start;
+      padding:
+        max(8px, env(safe-area-inset-top, 0px))
+        max(48px, env(safe-area-inset-right, 0px))
+        max(12px, calc(env(safe-area-inset-bottom, 0px) + 8px))
+        max(12px, env(safe-area-inset-left, 0px));
+      pointer-events: none;
+    }
+    #menuScreen #fomoRitual .fomo-ritual-backdrop {
+      top: 0;
+      bottom: 0;
+      left: 0;
+      right: auto;
+      width: min(26%, 210px);
+      height: auto;
+      pointer-events: auto;
+      background: linear-gradient(90deg, rgba(6, 10, 22, .5) 0%, rgba(6, 10, 22, .1) 72%, transparent 100%);
+    }
+    #menuScreen #fomoRitual .fomo-ritual-sheet {
+      pointer-events: auto;
+      align-self: stretch;
+      width: min(24vw, 200px);
+      max-width: min(26%, 200px);
+      max-height: calc(100dvh - 24px);
+      margin: 0;
+      box-sizing: border-box;
+    }
+    body.fomo-open #menuScreen .menu-landing-body,
+    body.fomo-open #menuScreen .menu-game-grid {
+      visibility: visible;
+    }
+    body.fomo-open #menuScreen.menu-video-overhaul .menu-title-glass {
+      visibility: hidden;
+    }
+  }
   .fomo-ritual-title { margin-right: 48px; }
   .fomo-ritual-x {
     top: 4px;
