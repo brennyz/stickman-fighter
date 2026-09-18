@@ -323,9 +323,9 @@ const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const VERSION_UPDATE_SAVE_KEY = 'stickfighter_version_update_save_v1';
 const VERSION_UPDATE_FLAG_KEY = 'stickfighter_version_update_flag_v1';
 const SAVE_EXPORT_SCHEMA = 3;
-const APP_VERSION = '1.18.174';
+const APP_VERSION = '1.18.175';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 384;
+const SW_CACHE_REV = 385;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', petCoins: 0, dex: {}, summons: {}, pets: {}, activePet: null,
   eggPets: {}, activeEggPet: null, eggDaily: null,
   chestDaily: null, chestWeapons: {},
@@ -3571,7 +3571,7 @@ const I18N = {
       upPassive: 'passif ×{n}', upAssist: 'assist ×{n}', upCd: 'CD ×{n}', upMax: 'MAX',
       upPreview: 'passif +10% · assist +8% · CD −7%',
       eggLockedCta: 'Éclot de l\'œuf du jour',
-      listLocked: '{cur}/{need} · {cost} PC', listTamed: 'Apprivoisé', listActive: 'On',
+      listLocked: '{cur}/{need} · {cost} PC', listTamed: 'Apprivoisé', listActive: 'Actif',
       tabEggShort: 'Œuf · {n}/{total}', heroEmptyShort: 'Aucun pet', heroTap: 'Touche une ligne',
       eggSumShort: '{owned}/{total} · {daily}',
       pauseNone: 'Pas encore de pet', pauseEquip: 'Équiper · {name}',
@@ -3881,7 +3881,7 @@ const I18N = {
       upPassive: 'pasivo ×{n}', upAssist: 'asist ×{n}', upCd: 'CD ×{n}', upMax: 'MAX',
       upPreview: 'pasivo +10% · asist +8% · CD −7%',
       eggLockedCta: 'Sale del huevo diario',
-      listLocked: '{cur}/{need} · {cost} PC', listTamed: 'Domado', listActive: 'On',
+      listLocked: '{cur}/{need} · {cost} PC', listTamed: 'Domado', listActive: 'Activo',
       tabEggShort: 'Huevo · {n}/{total}', heroEmptyShort: 'Sin pet', heroTap: 'Toca una fila',
       eggSumShort: '{owned}/{total} · {daily}',
       pauseNone: 'Aún no hay pet', pauseEquip: 'Equipar · {name}',
@@ -4243,6 +4243,7 @@ function applyLangStaticScreens() {
     const d = eggBtn.querySelector('div');
     if (d) d.innerHTML = t('pets.crackEgg') + '<small>' + t('pets.crackEggSub') + '</small>';
   }
+  try { if (typeof UI !== 'undefined' && UI.paintPausePetChip) UI.paintPausePetChip(); } catch (_) {}
 
   setText('dexScreenHead', 'dex.title');
   setText('dexScreenSub', 'dex.sub', typeof SPECIES_ORDER !== 'undefined' ? { n: SPECIES_ORDER.length } : undefined);
@@ -4478,6 +4479,7 @@ function applyLang() {
       try { UI.showResult(!!UI.lastResult.win, UI.lastResult); } catch (_) {}
     }
     UI.syncBackLabels();
+    try { if (typeof UI.paintPausePetChip === 'function') UI.paintPausePetChip(); } catch (_) {}
   }
   try { if (typeof syncTitleGateCopy === 'function') syncTitleGateCopy(); } catch (_) {}
   try { if (typeof updateNetStatus === 'function') updateNetStatus(); } catch (_) {}
@@ -21428,6 +21430,16 @@ function seedNlGameStrings() {
     streakReward7: '+ei of summons',
     streakReward14: '+120 XP',
   });
+  if (!I18N.nl.pets) I18N.nl.pets = {};
+  Object.assign(I18N.nl.pets, {
+    crackEgg: 'Dag-ei openen', crackEggSub: 'Gratis arcade-pull',
+    nextEgg: 'Dag-ei klaar', hubEggReady: 'Dag-ei klaar',
+    pauseNone: 'Nog geen pet', pauseEquip: 'Uitrusten · {name}',
+    pauseCycle: 'Wissel · {name}', pauseActive: '{name} volgt',
+    listLocked: '{cur}/{need} · {cost} PC', ready: 'klaar',
+  });
+  if (!I18N.nl.hub) I18N.nl.hub = {};
+  Object.assign(I18N.nl.hub, { pets: 'Pets', petsSub: 'Tem · koop · dag-ei' });
   if (!I18N.nl.missionsUi) I18N.nl.missionsUi = {};
   Object.assign(I18N.nl.missionsUi, {
     flowDone: '✓ Dag rond',
@@ -22227,6 +22239,15 @@ function mergeI18nCatalogs() {
 }
 
 const CATALOG_EN = {
+  hub: { pets: 'Pets', petsSub: 'Tame · buy · daily egg' },
+  pets: {
+    crackEgg: 'Open daily egg', crackEggSub: 'Free arcade pull',
+    nextEgg: 'Daily egg ready', hubEggReady: 'Daily egg ready',
+    pauseNone: 'No pet yet', pauseEquip: 'Equip · {name}',
+    pauseCycle: 'Swap · {name}', pauseActive: '{name} follows',
+    listLocked: '{cur}/{need} · {cost} PC', listTamed: 'Tamed', listActive: 'On',
+    ready: 'ready',
+  },
   gear: {
     hubStat: '{n}/5',
     summarySlots: '<b>{n}</b>/5',
@@ -23914,6 +23935,15 @@ const CATALOG_DE_CHROME = {
     streakReward7: '+Ei oder Summons',
     streakReward14: '+120 XP',
   },
+  hub: { pets: 'Pets', petsSub: 'Zähmen · kaufen · Tages-Ei' },
+  pets: {
+    crackEgg: 'Tages-Ei öffnen', crackEggSub: 'Kostenloser Arcade-Zug',
+    nextEgg: 'Tages-Ei bereit', hubEggReady: 'Tages-Ei bereit',
+    pauseNone: 'Noch kein Pet', pauseEquip: 'Ausrüsten · {name}',
+    pauseCycle: 'Wechseln · {name}', pauseActive: '{name} folgt',
+    listLocked: '{cur}/{need} · {cost} PC', listTamed: 'Gezähmt', listActive: 'An',
+    ready: 'bereit',
+  },
   runLoot: {
     head: 'Dieser Lauf · Beute neben XP',
     headAdv: 'Dieser Lauf · Beute neben XP',
@@ -25177,6 +25207,17 @@ overlayI18nCatalog(CATALOG_FR, {
     streakReward7: '+œuf ou summons',
     streakReward14: '+120 XP',
   },
+  pets: {
+    crackEgg: 'Ouvrir l\'œuf du jour', crackEggSub: 'Tir gratuit',
+    nextEgg: 'Œuf du jour prêt', hubEggReady: 'Œuf du jour prêt',
+    pauseNone: 'Pas encore de pet', pauseEquip: 'Équiper · {name}',
+    pauseCycle: 'Changer · {name}', pauseActive: '{name} te suit',
+    listLocked: '{cur}/{need} · {cost} PC', listTamed: 'Apprivoisé', listActive: 'Actif',
+    ready: 'prêt',
+  },
+  hub: {
+    pets: 'Pets', petsSub: 'Apprivoiser · acheter · œuf',
+  },
   fighter: { energyEmpty: 'Énergie pas pleine !', subst: 'Substitution !', dash: 'Dash !', shield: 'Bouclier !', parry: 'PARRY !', block: 'BLOC !', miss: 'RATÉ !' },
   egg: { dailyReady: 'Œuf du jour prêt', advBonus: 'Œuf bonus : gagne 1× aventure', tomorrow: 'Œuf demain' },
   pet: { active: 'Pet · actif', tamed: 'Pet · apprivoisé', buy: 'Pet · acheter {cost} PC', killsNeed: 'Pet · {need} kills', killsProgress: 'Pet · {cur}/{need} kills' },
@@ -25695,6 +25736,17 @@ overlayI18nCatalog(CATALOG_ES, {
     streakReward3: '+1 summon',
     streakReward7: '+huevo o summons',
     streakReward14: '+120 XP',
+  },
+  pets: {
+    crackEgg: 'Abrir huevo diario', crackEggSub: 'Tirada gratis',
+    nextEgg: 'Huevo diario listo', hubEggReady: 'Huevo diario listo',
+    pauseNone: 'Aún no hay pet', pauseEquip: 'Equipar · {name}',
+    pauseCycle: 'Cambiar · {name}', pauseActive: '{name} te sigue',
+    listLocked: '{cur}/{need} · {cost} PC', listTamed: 'Domado', listActive: 'Activo',
+    ready: 'listo',
+  },
+  hub: {
+    pets: 'Pets', petsSub: 'Domar · comprar · huevo',
   },
   fighter: { energyEmpty: '¡Energía incompleta!', subst: '¡Sustitución!', dash: '¡Dash!', shield: '¡Escudo!', parry: '¡PARRY!', block: '¡BLOQUEO!', miss: '¡FALLO!' },
   egg: { dailyReady: 'Huevo diario listo', advBonus: 'Huevo extra: gana 1× aventura', tomorrow: 'Huevo otra vez mañana' },
@@ -26228,6 +26280,17 @@ overlayI18nCatalog(CATALOG_DE, {
     streakReward3: '+1 Summon',
     streakReward7: '+Ei oder Summons',
     streakReward14: '+120 XP',
+  },
+  pets: {
+    crackEgg: 'Tages-Ei öffnen', crackEggSub: 'Kostenloser Arcade-Zug',
+    nextEgg: 'Tages-Ei bereit', hubEggReady: 'Tages-Ei bereit',
+    pauseNone: 'Noch kein Pet', pauseEquip: 'Ausrüsten · {name}',
+    pauseCycle: 'Wechseln · {name}', pauseActive: '{name} folgt',
+    listLocked: '{cur}/{need} · {cost} PC', listTamed: 'Gezähmt', listActive: 'An',
+    ready: 'bereit',
+  },
+  hub: {
+    pets: 'Pets', petsSub: 'Zähmen · kaufen · Tages-Ei',
   },
   fighter: { energyEmpty: 'Energy nicht voll!', subst: 'Substitution!', dash: 'Dash!', shield: 'Schild!', parry: 'PARRY!', block: 'BLOCK!', miss: 'DANEBEN!' },
   egg: { dailyReady: 'Tages-Ei bereit', advBonus: 'Bonus-Ei: 1× Abenteuer gewinnen', tomorrow: 'Ei morgen wieder' },

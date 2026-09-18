@@ -68,19 +68,42 @@ async function run() {
       const sfxName = txt('setSfxVolName');
       const profileAria = (document.getElementById('menuProfileBar') || {}).getAttribute('aria-label') || '';
       const summons = (document.querySelector('.hub-tile-summon .hub-tile-title') || {}).textContent || '';
-      const leftover = [adv, collect, weapons, settings, dexSum, dexTypes, eggBtn, exportHint, musicName, sfxName, profileAria].join(' ');
-      return { lang, adv, collect, help, weapons, settings, dexSum, dexTypes, eggBtn, exportHint, musicName, sfxName, profileAria, summons, tAdv, tHud, leftover };
+      const petsHomeTitle = (document.querySelector('#btnPetsHome .hub-tile-title') || {}).textContent || '';
+      const petsHomeSub = (document.querySelector('#btnPetsHome .hub-tile-sub') || {}).textContent || '';
+      try { if (UI.paintPausePetChip) UI.paintPausePetChip(); } catch (_) {}
+      const pauseChip = txt('pausePetChipLbl');
+      const tEggCta = typeof t === 'function' ? t('fomo.ritualCtaEgg') : '';
+      const leftover = [adv, collect, weapons, settings, dexSum, dexTypes, eggBtn, exportHint, musicName, sfxName, profileAria, petsHomeSub, pauseChip, tEggCta].join(' ');
+      return {
+        lang, adv, collect, help, weapons, settings, dexSum, dexTypes, eggBtn, exportHint,
+        musicName, sfxName, profileAria, summons, tAdv, tHud, leftover,
+        petsHomeTitle, petsHomeSub, pauseChip, tEggCta,
+      };
     }
     const en = snap('en');
     const de = snap('de');
     const nl = snap('nl');
+    const fr = snap('fr');
+    const es = snap('es');
+    const petsEn = /Tame|daily egg/i.test(en.petsHomeSub) && /No pet yet/i.test(en.pauseChip)
+      && /Open daily egg/i.test(en.eggBtn) && /Open daily egg|Daily egg/i.test(en.tEggCta)
+      && !DUTCH.test([en.petsHomeSub, en.pauseChip, en.eggBtn, en.tEggCta].join(' '));
+    const petsDe = /Zähmen|Tages-Ei/i.test(de.petsHomeSub) && /Noch kein Pet/i.test(de.pauseChip)
+      && /Tages-Ei/i.test(de.eggBtn + de.tEggCta)
+      && !DUTCH.test([de.petsHomeSub, de.pauseChip, de.eggBtn, de.tEggCta].join(' '));
+    const petsFr = /Apprivoiser|œuf/i.test(fr.petsHomeSub) && /Pas encore de pet/i.test(fr.pauseChip)
+      && /œuf/i.test(fr.eggBtn + fr.tEggCta)
+      && !DUTCH.test([fr.petsHomeSub, fr.pauseChip, fr.eggBtn, fr.tEggCta].join(' '));
+    const petsEs = /Domar|huevo/i.test(es.petsHomeSub) && /Aún no hay pet/i.test(es.pauseChip)
+      && /huevo/i.test(es.eggBtn + es.tEggCta)
+      && !DUTCH.test([es.petsHomeSub, es.pauseChip, es.eggBtn, es.tEggCta].join(' '));
     const enOk = /Adventure/i.test(en.adv) && /Collection/i.test(en.collect)
       && /Weapons/i.test(en.weapons) && /Settings|Options/i.test(en.settings)
       && /Tips/i.test(en.help) && !DUTCH.test(en.leftover)
       && /Wave/.test(en.tHud) && !/Golf/.test(en.tHud)
       && /Book|All types|All biomes/i.test(en.dexSum + ' ' + en.dexTypes)
       && /Music/i.test(en.musicName) && /Effect/i.test(en.sfxName)
-      && /Profile/i.test(en.profileAria);
+      && /Profile/i.test(en.profileAria) && petsEn;
     const deOk = /Abenteuer/i.test(de.adv) && /Sammlung/i.test(de.collect)
       && /Waffen/i.test(de.weapons) && /Einstellungen/i.test(de.settings)
       && /Tipp/i.test(de.help) && !DUTCH.test(de.leftover)
@@ -88,12 +111,15 @@ async function run() {
       && /Buch|Alle Typen|Alle Biome/i.test(de.dexSum + ' ' + de.dexTypes)
       && /Musik/i.test(de.musicName) && /Effekt/i.test(de.sfxName)
       && /Profil/i.test(de.profileAria)
-      && /Beschwörung/i.test(de.summons);
+      && /Beschwörung/i.test(de.summons) && petsDe;
     const nlOk = /Avontuur/.test(nl.adv) && /Collectie/.test(nl.collect)
       && /Wapens/.test(nl.weapons) && /Instellingen/.test(nl.settings)
       && /Tips/.test(nl.help) && /Boek|Alle types/.test(nl.dexSum + ' ' + nl.dexTypes)
-      && /Oproepen/.test(nl.summons);
-    return { ok: !!(enOk && deOk && nlOk), en, de, nl, enOk, deOk, nlOk };
+      && /Oproepen/.test(nl.summons)
+      && /Tem|dag-ei/i.test(nl.petsHomeSub) && /Nog geen pet/i.test(nl.pauseChip);
+    const frOk = petsFr;
+    const esOk = petsEs;
+    return { ok: !!(enOk && deOk && nlOk && frOk && esOk), en, de, nl, fr, es, enOk, deOk, nlOk, frOk, esOk, petsEn, petsDe, petsFr, petsEs };
   });
 
   await browser.close();

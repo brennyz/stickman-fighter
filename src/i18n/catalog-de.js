@@ -23,6 +23,15 @@ const CATALOG_DE_CHROME = {
     streakReward7: '+Ei oder Summons',
     streakReward14: '+120 XP',
   },
+  hub: { pets: 'Pets', petsSub: 'Zähmen · kaufen · Tages-Ei' },
+  pets: {
+    crackEgg: 'Tages-Ei öffnen', crackEggSub: 'Kostenloser Arcade-Zug',
+    nextEgg: 'Tages-Ei bereit', hubEggReady: 'Tages-Ei bereit',
+    pauseNone: 'Noch kein Pet', pauseEquip: 'Ausrüsten · {name}',
+    pauseCycle: 'Wechseln · {name}', pauseActive: '{name} folgt',
+    listLocked: '{cur}/{need} · {cost} PC', listTamed: 'Gezähmt', listActive: 'An',
+    ready: 'bereit',
+  },
   runLoot: {
     head: 'Dieser Lauf · Beute neben XP',
     headAdv: 'Dieser Lauf · Beute neben XP',

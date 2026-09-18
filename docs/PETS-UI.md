@@ -6,6 +6,8 @@ collection screen up to that bar.
 
 Share / playtest URL stays **`speel.html`**. **No Versus.**
 
+**P3 DONE** (draft #319, not on main): HOME Pets tile, pause chip, and daily-egg CTAs are i18n’d in EN / DE / FR / ES / NL.
+
 ## What this ships
 
 - **HOME 1-tap Pets** tile (same pattern as gear) + Collection tile

@@ -413,6 +413,16 @@ function seedNlGameStrings() {
     streakReward7: '+ei of summons',
     streakReward14: '+120 XP',
   });
+  if (!I18N.nl.pets) I18N.nl.pets = {};
+  Object.assign(I18N.nl.pets, {
+    crackEgg: 'Dag-ei openen', crackEggSub: 'Gratis arcade-pull',
+    nextEgg: 'Dag-ei klaar', hubEggReady: 'Dag-ei klaar',
+    pauseNone: 'Nog geen pet', pauseEquip: 'Uitrusten · {name}',
+    pauseCycle: 'Wissel · {name}', pauseActive: '{name} volgt',
+    listLocked: '{cur}/{need} · {cost} PC', ready: 'klaar',
+  });
+  if (!I18N.nl.hub) I18N.nl.hub = {};
+  Object.assign(I18N.nl.hub, { pets: 'Pets', petsSub: 'Tem · koop · dag-ei' });
   if (!I18N.nl.missionsUi) I18N.nl.missionsUi = {};
   Object.assign(I18N.nl.missionsUi, {
     flowDone: '✓ Dag rond',
@@ -1212,6 +1222,15 @@ function mergeI18nCatalogs() {
 }
 
 const CATALOG_EN = {
+  hub: { pets: 'Pets', petsSub: 'Tame · buy · daily egg' },
+  pets: {
+    crackEgg: 'Open daily egg', crackEggSub: 'Free arcade pull',
+    nextEgg: 'Daily egg ready', hubEggReady: 'Daily egg ready',
+    pauseNone: 'No pet yet', pauseEquip: 'Equip · {name}',
+    pauseCycle: 'Swap · {name}', pauseActive: '{name} follows',
+    listLocked: '{cur}/{need} · {cost} PC', listTamed: 'Tamed', listActive: 'On',
+    ready: 'ready',
+  },
   gear: {
     hubStat: '{n}/5',
     summarySlots: '<b>{n}</b>/5',

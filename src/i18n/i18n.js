@@ -1274,7 +1274,7 @@ const I18N = {
       upPassive: 'passif ×{n}', upAssist: 'assist ×{n}', upCd: 'CD ×{n}', upMax: 'MAX',
       upPreview: 'passif +10% · assist +8% · CD −7%',
       eggLockedCta: 'Éclot de l\'œuf du jour',
-      listLocked: '{cur}/{need} · {cost} PC', listTamed: 'Apprivoisé', listActive: 'On',
+      listLocked: '{cur}/{need} · {cost} PC', listTamed: 'Apprivoisé', listActive: 'Actif',
       tabEggShort: 'Œuf · {n}/{total}', heroEmptyShort: 'Aucun pet', heroTap: 'Touche une ligne',
       eggSumShort: '{owned}/{total} · {daily}',
       pauseNone: 'Pas encore de pet', pauseEquip: 'Équiper · {name}',
@@ -1584,7 +1584,7 @@ const I18N = {
       upPassive: 'pasivo ×{n}', upAssist: 'asist ×{n}', upCd: 'CD ×{n}', upMax: 'MAX',
       upPreview: 'pasivo +10% · asist +8% · CD −7%',
       eggLockedCta: 'Sale del huevo diario',
-      listLocked: '{cur}/{need} · {cost} PC', listTamed: 'Domado', listActive: 'On',
+      listLocked: '{cur}/{need} · {cost} PC', listTamed: 'Domado', listActive: 'Activo',
       tabEggShort: 'Huevo · {n}/{total}', heroEmptyShort: 'Sin pet', heroTap: 'Toca una fila',
       eggSumShort: '{owned}/{total} · {daily}',
       pauseNone: 'Aún no hay pet', pauseEquip: 'Equipar · {name}',
@@ -1946,6 +1946,7 @@ function applyLangStaticScreens() {
     const d = eggBtn.querySelector('div');
     if (d) d.innerHTML = t('pets.crackEgg') + '<small>' + t('pets.crackEggSub') + '</small>';
   }
+  try { if (typeof UI !== 'undefined' && UI.paintPausePetChip) UI.paintPausePetChip(); } catch (_) {}
 
   setText('dexScreenHead', 'dex.title');
   setText('dexScreenSub', 'dex.sub', typeof SPECIES_ORDER !== 'undefined' ? { n: SPECIES_ORDER.length } : undefined);
@@ -2181,6 +2182,7 @@ function applyLang() {
       try { UI.showResult(!!UI.lastResult.win, UI.lastResult); } catch (_) {}
     }
     UI.syncBackLabels();
+    try { if (typeof UI.paintPausePetChip === 'function') UI.paintPausePetChip(); } catch (_) {}
   }
   try { if (typeof syncTitleGateCopy === 'function') syncTitleGateCopy(); } catch (_) {}
   try { if (typeof updateNetStatus === 'function') updateNetStatus(); } catch (_) {}
