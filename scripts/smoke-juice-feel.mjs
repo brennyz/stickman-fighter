@@ -65,6 +65,9 @@ must(/return win \? 900 : 700/.test(missions), 'result delay must be 900/700 not
 must(/function juiceRetryAdventure/.test(missions), 'juice retry must skip dice via startGame');
 must(/gamble: null/.test(missions) && /juiceRetryAdventure/.test(start), 'result Again/Next must call juice retry');
 must(!/function restartAdventureInstant/.test(missions) && !/id="resRetrySafe"/.test(html), 'must not clone rematch-lane ids');
+must(!/result-cta-dock/.test(html) && !/id="resCtaDock"/.test(html), 'must not clone #318/#323 result dock');
+must(!/lose-retry/.test(html) && !/lose-retry/.test(css), 'must not clone #314 lose-retry class');
+must(/#323 owns/.test(missions) && /Lose CTA ownership/.test(ui), 'complementary hook comments missing');
 must(/function juiceFirstPlayPending/.test(missions), 'first-play FOMO gate missing');
 must(/juiceFirstPlayPending\(\)/.test(missions) && /fomoRitualHubReady/.test(missions), 'FOMO sheet must wait for first play');
 must(/g\._juiceTeach = true/.test(missions), 'onboarding must teach by doing, not 8s wall');

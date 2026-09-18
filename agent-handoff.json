@@ -36,7 +36,9 @@
     "lastChecked": "2026-09-16T12:31:58Z",
     "lastAsked": "2026-08-17T14:01:21Z",
     "pendingUpload": [],
-    "pendingMerge": ["#316 juice/feel draft"]
+    "pendingMerge": [
+      "#316 juice/feel draft"
+    ]
   },
   "userWishlist": [
     {
@@ -1068,6 +1070,13 @@
       "status": "done-in-code",
       "updated": "2026-09-18",
       "notes": "v1.18.176 / SW 386. juice-cta-primary gold, juiceRetryAdventure skips dice, juiceResultDelayMs 700/900, first-play hide FOMO + no welcome wall, 30s Tik slaan. Draft #316, no main."
+    },
+    {
+      "id": "w-20260918T135300",
+      "from": "user",
+      "text": "Strong Flappy-feel pass on #316 (gold Opnieuw/Volgend, <3s retry, Tik slaan). KEEP until ~16:30 Amsterdam: (1) Coordinate with #314/#318/#323 — document complementary hooks on PR (no duplicate lose CTA ownership); (2) one more juice pass: hit/kill feedback only if still thin, no UI spam; (3) if P0 feel bar is met, STOP and mark DONE. Draft only, speel.html, no Versus, no main, no IAP.",
+      "status": "done-in-code",
+      "updated": "2026-09-18"
     }
   ],
   "agentRules": [
@@ -1080,6 +1089,10 @@
     "GitHub-sync: na wijzigingen vragen of we naar main moeten; pendingUpload in githubSync bijhouden tot origin/main gelijk is."
   ],
   "sessionLog": [
+    {
+      "at": "2026-09-18T13:53:56Z",
+      "summary": "DONE #316 P0 feel-bar. Documented complementary hooks vs #323/#318/#314. Hit/kill already one KO+rate-limit — no extra spam. v1.18.176/SW 386. Draft no main."
+    },
     {
       "at": "2026-09-18T13:51:31Z",
       "summary": "Feel-bar #316: one gold CTA, juice retry skips dice <3s, first-play no welcome/FOMO, 30s Tik slaan. v1.18.176/SW 386. Draft no main."
@@ -1175,10 +1188,6 @@
     {
       "at": "2026-09-14T13:00:52Z",
       "summary": "Training hit-reg: capsule + face-naar-robot; W-aim J/K chippen RabbitRobot. Floaters niet links clippen. Resultaat VERLOREN/YOU LOST. v1.18.158 / SW 368."
-    },
-    {
-      "at": "2026-09-14T12:46:48Z",
-      "summary": "P1 entry: Android-first landing — één install-blok, geen iPad op Android · v1.18.157 / SW 367"
     }
   ],
   "implementedFeaturesSummary": "d18 char select deel 1+2 (v1.11.1-2); Mats coinrun + shuriken mik/vliegers + anti-spam (v1.12.0); speel.html (v1.12.2+). Zie HANDOFF-ZOEKINDEX.md en improvement-d20-bag.json userFeatureLog.",

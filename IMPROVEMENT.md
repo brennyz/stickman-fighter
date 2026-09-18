@@ -145,6 +145,7 @@ Schrijf **1–3 regels** per sessie: datum, d#, wat, versie.
 
 | Datum (UTC) | d# | Update |
 |-------------|-----|--------|
+| 2026-09-18 | — | **#316 DONE** P0 feel-bar met. Hooks vs #323/#318/#314 op PR. Hit/kill blijft één KO + rate-limit (niet dun → geen extra spam). **v1.18.176 / SW 386**. Draft, niet main. |
 | 2026-09-18 | — | **Feel-bar #316** één gold CTA (Opnieuw/Volgend), die→retry zonder dobbel (`juiceRetryAdventure`, 700/900ms), één self-blame tip, geen welcome/FOMO-muur, 30s «Tik slaan». Geen #323/#314-dupe. **v1.18.176 / SW 386**. Draft, niet main. |
 | 2026-09-18 | — | **Juice P0 #316** combat KO + rate-limit hit, pets/boek empty-CTA, empty book hides 0/N chips, HOME gear `starter · 0 drops` (niet 5/5), reduced-motion skip pulse/exit. **v1.18.175 / SW 385**. Draft, niet main. |
 | 2026-09-18 | — | **Juice/feel A–Z** na mega-merge: één toast + exit, HOME ready/empty, gear empty-CTA, FOMO-sheet, pickup/equip/collect haptic. Android-first, geen Versus. **v1.18.173 / SW 383**. Draft, niet main. |

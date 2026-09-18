@@ -6488,7 +6488,8 @@ function ensureVisibleScreen() {
   ensureMenuScreenActive();
 }
 
-/** Die → result in under 3s. Complementary to the rematch lane (juice-named hooks only). */
+/** #316 delay helper (700 lose / 900 win). Complementary — do not replace
+ *  #323 `resultShowDelayMs` / `RESULT_SHOW_LOSE_MS` or #314 phone 675ms. */
 function juiceResultDelayMs(win) {
   try {
     if (typeof motionReduced === 'function' && motionReduced()) return win ? 280 : 200;
@@ -6496,7 +6497,8 @@ function juiceResultDelayMs(win) {
   return win ? 900 : 700;
 }
 
-/** Result retry/next skips dice flash — startGame already accepts { level, gamble: null }. */
+/** #316 dice-skip retry via existing startGame({ gamble: null }).
+ *  #323 owns `restartAdventureInstant` + `#resRetrySafe`. Do not clone those names. */
 function juiceRetryAdventure(level, difficulty) {
   const cap = (typeof MAX_LEVEL === 'number' && MAX_LEVEL > 0) ? MAX_LEVEL : 99;
   const lv = Math.max(1, Math.min(cap, Number(level) || 1));
@@ -46324,6 +46326,11 @@ function juiceEggsNeedHatch() {
   try { return typeof eggOwnedCount === 'function' && eggOwnedCount() <= 0; } catch (_) { return true; }
 }
 
+/** #316 juice result paint — complementary classes only.
+ *  Lose CTA ownership: #323 (`restartAdventureInstant`, `#resRetrySafe`, `result.onceMore`,
+ *  `.result-cta-primary` / `#resCtaDock`) and #314 (`#resultScreen.lose-retry`).
+ *  Win dock chrome: #318 (`#resultScreen.is-win.is-adventure`).
+ *  This lane never clones those IDs. Merge: keep sibling lose/win dock; keep juice-* if both land. */
 function juicePaintResultCtas(win, data) {
   data = data || {};
   const again = document.getElementById('resAgain');

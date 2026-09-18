@@ -42,6 +42,11 @@ function juiceEggsNeedHatch() {
   try { return typeof eggOwnedCount === 'function' && eggOwnedCount() <= 0; } catch (_) { return true; }
 }
 
+/** #316 juice result paint — complementary classes only.
+ *  Lose CTA ownership: #323 (`restartAdventureInstant`, `#resRetrySafe`, `result.onceMore`,
+ *  `.result-cta-primary` / `#resCtaDock`) and #314 (`#resultScreen.lose-retry`).
+ *  Win dock chrome: #318 (`#resultScreen.is-win.is-adventure`).
+ *  This lane never clones those IDs. Merge: keep sibling lose/win dock; keep juice-* if both land. */
 function juicePaintResultCtas(win, data) {
   data = data || {};
   const again = document.getElementById('resAgain');
