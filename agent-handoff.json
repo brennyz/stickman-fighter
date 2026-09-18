@@ -20,8 +20,8 @@
     "featureBranch": "cursor/examinator-p0-bb6c",
     "pushBlocked": null,
     "shareUrl": "https://brennyz.github.io/stickman-fighter/speel.html",
-    "note": "EXAMINATOR draft PR #320 — v1.18.178 / SW 388. Hold until ~16:30 Amsterdam. EX-028 resKiller. Do not merge without «merge main».",
-    "updated": "2026-09-18T13:55:25Z",
+    "note": "EXAMINATOR #320 FROZEN 15:58 CEST — v1.18.178 / SW 388. Unique-P0 board clean. Ready-for-merge after «merge main». Do not push main without that trigger.",
+    "updated": "2026-09-18T13:58:30Z",
     "localMainHead": "a18fc9e67633773cb18b638c64c9a86916d02d27",
     "remoteMainHead": "a18fc9e67633773cb18b638c64c9a86916d02d27"
   },
@@ -39,6 +39,14 @@
     "pendingMerge": []
   },
   "userWishlist": [
+    {
+      "id": "w-20260918T135600",
+      "from": "user",
+      "text": "KEEP until ~16:30 Amsterdam: (1) One more 390 playtest pass — only unique P0s not owned by #312–#323. (2) If board is clean of unique P0s, freeze EXAMINATOR.md mega-merge table and STOP (mark ready-for-merge after «merge main»). (3) Do not touch sibling lanes. Draft #320 only. speel.html. No Versus, no main, no payments.",
+      "status": "done-in-code",
+      "updated": "2026-09-18",
+      "notes": "uniqueP0=[]. Table frozen 15:58 CEST. STOP. Ready after «merge main»."
+    },
     {
       "id": "w-20260918T135140",
       "from": "user",
@@ -83,9 +91,9 @@
       "id": "w-20260918T122517",
       "from": "user",
       "text": "EXAMINATOR playtest + P0 fixes (Klöpping conductor): desktop + mobile ~390px, rank P0–P3 (i18n, text overlap, mobile monster density, factories/gear, lagging pets, messy summons, A–Z feel). Draft PR only, no Versus, keep factory ids, speel.html. Native APK out of scope.",
-      "status": "in-progress",
+      "status": "done-in-code",
       "updated": "2026-09-18",
-      "notes": "Owner priorities. Living EXAMINATOR.md + P0 fix round on draft PR. Do not merge main."
+      "notes": "Board FROZEN 15:58 CEST. Unique P0s clean. Ready-for-merge after «merge main»."
     },
     {
       "id": "w-20260916T121500",
@@ -1106,6 +1114,10 @@
   ],
   "sessionLog": [
     {
+      "at": "2026-09-18T13:59:30Z",
+      "summary": "FROZEN 15:58 CEST: unique-P0 390 pass clean. Mega-merge table frozen. #320 ready-for-merge after «merge main». STOP."
+    },
+    {
       "at": "2026-09-18T13:55:25Z",
       "summary": "390 sibling retest: welcome-on-Avontuur DELEGATED #316/#318. Unique P1 EX-028 #resKiller under VERLOREN. Mega-merge order refreshed. v1.18.178/SW388. Draft only."
     },
@@ -1200,10 +1212,6 @@
     {
       "at": "2026-09-14T13:44:04Z",
       "summary": "Arcade pick-mode restyle + i18n chrome volgt game-taal"
-    },
-    {
-      "at": "2026-09-14T13:22:45Z",
-      "summary": "MERGE MAIN: #259 + #260 → v1.18.159/SW369. Hit-reg gehouden. #261 closed. #256 overgeslagen. speel.html LIVE na Pages."
     }
   ],
   "implementedFeaturesSummary": "d18 char select deel 1+2 (v1.11.1-2); Mats coinrun + shuriken mik/vliegers + anti-spam (v1.12.0); speel.html (v1.12.2+). Zie HANDOFF-ZOEKINDEX.md en improvement-d20-bag.json userFeatureLog.",

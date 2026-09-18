@@ -8,43 +8,43 @@
 **This sprint:** mobile **web** viewport only. Native Android APK / TWA / Play upload = **out of scope** (see bottom).
 
 **Baseline playtested:** v1.18.172 / SW 382 (`origin/main` `a7a4b74`)  
-**This draft PR:** v1.18.178 / SW 388 · branch `cursor/examinator-p0-bb6c` · **#320 — hold draft until ~16:30 Amsterdam — do not merge to main**
+**This draft PR:** v1.18.178 / SW 388 · branch `cursor/examinator-p0-bb6c` · **#320 — FROZEN 15:58 CEST · ready-for-merge after «merge main»**
 
 How to pick work: take the **lowest open EX-id** in your lane. Mark `in-progress` / `done` / `DELEGATED #PR` here when you start/finish. Do not steal a `done` or `DELEGATED` item unless the owner asks to change it.
 
 ---
 
-## Mega-merge hold (~16:30 Amsterdam, 2026-09-18)
+## Mega-merge FROZEN (15:58 CEST, 2026-09-18)
 
-All feature drafts stay **open / draft**. #320 stays draft until that window. No silent `main`.
+**STOP.** Unique-P0 390 pass is clean. No more #320 feature work. Stay draft until Brendon says **«merge main»**. No silent `main`. Sibling lanes untouched.
 
-| PR | Lane | Mergeable (15:51 CEST) | EX / note |
+| PR | Lane | Mergeable (15:58 CEST) | EX / note |
 |----|------|-----------|-----------|
-| **#320** | EXAMINATOR (this) | MERGEABLE | Unique leftovers + FEEL 023/024/027/028. Retry stripped for #323. |
-| **#323** | Flappy retry | MERGEABLE | **EX-022** — `Nog één keer` / `restartAdventureInstant` / ~700ms / `#resRetrySafe` |
-| **#314** | density / HUD | MERGEABLE | **EX-012** · horde remainder. Title also mentions retry — **do not fight #323** |
-| **#324** | tablet mid-band | UNKNOWN / draft | Follow-up on #314 cadence |
+| **#320** | EXAMINATOR (this) | MERGEABLE · **ready-for-merge after «merge main»** | Unique leftovers + FEEL 023/024/027/028. Retry stripped for #323. |
+| **#323** | Flappy retry | MERGEABLE · DONE | **EX-022** — `Nog één keer` / `restartAdventureInstant` / ~700ms / `#resRetrySafe` |
+| **#314** | density / HUD | MERGEABLE · DONE | **EX-012** · horde remainder. Title also mentions retry — **do not fight #323** |
+| **#324** | tablet mid-band | **CONFLICTING** / draft · DONE title | Follow-up on #314 cadence — rebase before merge |
 | **#321** | HUD keep-out | MERGEABLE | Phone pause/bars/sheets — density cousin of **EX-012** |
 | **#313** | summons | MERGEABLE · DONE | **EX-010** · EX-006 remainder |
 | **#315** | gear | MERGEABLE | **EX-011** · **EX-019** |
 | **#319** | pets | MERGEABLE | Pets collection + combat feel (EX-003 follow already on #320) |
-| **#312** | factories | MERGEABLE · near-DONE | **EX-016** · sheet UX (EX-004 list XOR on #320) |
+| **#312** | factories | MERGEABLE · DONE | **EX-016** · sheet UX (EX-004 list XOR on #320) |
 | **#317** | i18n layout | MERGEABLE · DONE | factories/FOMO/HUD/gear **layout** copy — not EX-013/014/015/024/027/028 |
-| **#316** | juice | MERGEABLE | **EX-025** + first-HOME welcome kill. Retry API stays **#323**. Do not restage welcome here. |
-| **#318** | UI | MERGEABLE | **EX-017** · **EX-018** · HOME/Collectie chrome · welcome-vs-FOMO stack |
+| **#316** | juice | MERGEABLE · DONE | **EX-025** + first-HOME welcome kill. Retry API stays **#323**. Do not restage welcome here. |
+| **#318** | UI | MERGEABLE · DONE | **EX-017** · **EX-018** · HOME/Collectie chrome · welcome-vs-FOMO stack |
 | **#322** | FOMO cover | MERGEABLE | Also working EX-021 HOME cover. #320 compact sheet already landed |
 | **#311** | playtest-harden | MERGEABLE | Older harden cycle — not a FEEL owner |
 
-Suggested merge order if Brendon says **«merge main»** after 16:30: i18n #317 → retry #323 → examinator #320 → density #314/#321 then #324 (if mergeable) → factories #312 → gear #315 → summons #313 → pets #319 → juice #316 → UI #318 → FOMO #322. Versus stays retired.
+Suggested merge order if Brendon says **«merge main»**: i18n #317 → retry #323 → examinator #320 → density #314/#321 → skip #324 until rebase (CONFLICTING) → factories #312 → gear #315 → summons #313 → pets #319 → juice #316 → UI #318 → FOMO #322. Versus stays retired.
 
-**390 sibling-retest (this branch, 15:51 CEST) — no new unique P0 to steal:**
+**390 unique-P0 freeze pass (this branch, 15:58 CEST) — uniqueP0 = []:**
 
 | Seen on 390 | Rank | Owner |
 |-------------|------|--------|
-| Welcome toast overlaps logo (22px) + Avontuur tile (16px) | P1 (near-P0 first tap) | **DELEGATED #316** (kills welcome) / **#318** (don’t stack on FOMO). Do not restage. |
-| Lose Opnieuw + Hoofdmenu same height (89px) | P0 feel retry | **DELEGATED #323** |
-| Pause chip visible in fight | HUD keep-out | **DELEGATED #321** |
-| Named lose `VERLOREN · {long name}` wraps in Bangers | P1 fair-fail | **#320 EX-028** (this PR) |
+| Welcome toast overlaps Avontuur | P1 (near-P0 first tap) | **DELEGATED #316** (kills welcome) / **#318**. Not unique. |
+| Lose Opnieuw + Hoofdmenu same height (89px) | P0 feel retry | **DELEGATED #323**. Not unique. |
+| Pause chip in fight | HUD keep-out | **DELEGATED #321**. Not unique. |
+| First Avontuur → lv1, FOMO off, short VERLOREN + `#resKiller` + killer tip | — | **#320 held** (EX-023/024/027/028). Pass. |
 
 ---
 
@@ -144,7 +144,7 @@ Phone 390×844 Puppeteer (fresh `localStorage`) + computer-use. Versus tile abse
 | HOME fresh | tiles tappable; **no FOMO** while `firstPunchPending` | none |
 | Avontuur first tap | `state=play` lv1, `gamble: null`, no island | none |
 | First 4s fight | 2 mobs, HP 100, 1.35s spawn grace | no instant-death on 390 (desktop one-shot earlier was desk + walk-in) |
-| Lose title | `VERLOREN · Kip op Hol` | none |
+| Lose title | short `VERLOREN` + `#resKiller` (EX-028) | none |
 | Lose tip (pre-027) | gamble lecture **buried** the flyer tip | **P1 — fixed EX-027** |
 | After `feltFirstPunch` | FOMO may return; Avontuur → **Kies een eiland** | intended, not a regress |
 | Continue banner | shows after a run | **EX-018 / #318** — not ours |
@@ -163,7 +163,7 @@ No P0 regression from EX-023/024. Unique leftover FEEL P1 was the first-loss gam
 2. Do not rename factory ids.  
 3. No secrets. Do not commit tunnel `health.json` / `hosting.json` / `LIVE-LINK.txt`.  
 4. Edit `src/`, then `npm run build` → committed `game.js`.  
-5. Draft PR only unless the owner says **«merge main»**. Hold #320 until ~16:30 Amsterdam.  
+5. Draft PR only unless the owner says **«merge main»**. #320 is **FROZEN** / ready-for-merge after that trigger.  
 6. Share URL stays `https://brennyz.github.io/stickman-fighter/speel.html`.
 
 ---
