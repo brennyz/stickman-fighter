@@ -3797,6 +3797,18 @@
     #menuScreen.menu-video-overhaul .hub-tile-adventure {
       min-height: 48px;
     }
+    #menuScreen.menu-video-overhaul .menu-landing-inner,
+    #menuScreen.menu-video-overhaul .hub-tile-grid,
+    #menuScreen.menu-video-overhaul .menu-utility-row {
+      width: 100%;
+      max-width: 100%;
+    }
+    #menuScreen.menu-video-overhaul .menu-landing-footer {
+      position: static;
+    }
+    #menuScreen.menu-video-overhaul .menu-profile-bar {
+      display: none;
+    }
     #menuScreen.menu-video-overhaul h1.title.arcade-logo {
       font-size: clamp(20px, 4.8vw, 28px);
     }
@@ -5927,6 +5939,15 @@
     #menuScreen.menu-video-overhaul .hub-tile-featured,
     #menuScreen.menu-video-overhaul .hub-tile-adventure {
       min-height: 48px;
+    }
+    #menuScreen.menu-video-overhaul .menu-landing-inner,
+    #menuScreen.menu-video-overhaul .hub-tile-grid,
+    #menuScreen.menu-video-overhaul .menu-utility-row {
+      width: 100%;
+      max-width: 100%;
+    }
+    #menuScreen.menu-video-overhaul .menu-landing-footer {
+      position: static;
     }
     .menu-dock .btn.tog { min-height: 36px; font-size: 8px; padding: 4px 2px 3px; }
     #resultScreen .bigres { margin: 8px 0 4px; font-size: min(8vw, 40px); }

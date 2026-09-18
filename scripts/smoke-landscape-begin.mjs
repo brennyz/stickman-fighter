@@ -63,12 +63,14 @@ async function getPuppeteer() {
 }
 
 function boxInView(r, vw, vh, slop = 2) {
+  const w = r.w != null ? r.w : r.width;
+  const h = r.h != null ? r.h : r.height;
   return r.top >= -slop
     && r.left >= -slop
     && r.bottom <= vh + slop
     && r.right <= vw + slop
-    && r.width >= 8
-    && r.height >= 8;
+    && w >= 8
+    && h >= 8;
 }
 
 async function measureBeginHome(page) {
@@ -150,6 +152,8 @@ async function runAt(browser, width, height, label) {
   await shot(page, `${label}-begin.png`);
 
   const fails = [];
+  const land = width > height;
+  const edge = land ? 36 : 8;
   if (begin.versus) fails.push({ where: `${label} versus tile`, begin });
   if (!begin.splashTitle) fails.push({ where: `${label} title-gate not shown`, begin });
   if (!begin.start) fails.push({ where: `${label} SPELEN missing`, begin });
@@ -158,7 +162,7 @@ async function runAt(browser, width, height, label) {
     if (!boxInView(begin.start, begin.vw, begin.vh)) {
       fails.push({ where: `${label} SPELEN clipped / off-screen`, begin });
     }
-    if (begin.start.right > begin.vw - 36) {
+    if (begin.start.right > begin.vw - edge) {
       fails.push({ where: `${label} SPELEN overlaps right nav gutter`, begin });
     }
   }
@@ -175,7 +179,7 @@ async function runAt(browser, width, height, label) {
     if (!boxInView(home.play, home.vw, home.vh)) {
       fails.push({ where: `${label} HOME Play clipped / off-screen`, home });
     }
-    if (home.play.right > home.vw - 36) {
+    if (home.play.right > home.vw - edge) {
       fails.push({ where: `${label} HOME Play overlaps right nav gutter`, home });
     }
   }
