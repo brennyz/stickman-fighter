@@ -65,6 +65,12 @@ if (!/\bfomo:/.test(storage) || !/lastDayBonusDate/.test(storage)) {
 if (!/showFomoRitual/.test(ui) || !/lastOpenDate/.test(ui)) {
   fail('F1 renderMenu ritual / lastOpenDate missing');
 }
+if (!/hideFomoRitual\(\)/.test(ui) || !/fomo-open/.test(ui)) {
+  fail('FOMO hide / fomo-open class missing — sheet can overlap summon');
+}
+if (!/body:has\(#summonScreen\.active\) #fomoRitual/.test(fs.readFileSync(path.join(root, 'styles/main.css'), 'utf8'))) {
+  fail('CSS must hide FOMO while summonScreen is active');
+}
 
 function makeEl(id) {
   return {

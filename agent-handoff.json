@@ -48,6 +48,14 @@
   },
   "userWishlist": [
     {
+      "id": "w-20260918T125500",
+      "from": "user",
+      "text": "Keep #313 draft. Next: (1) Pull history/log cap + clearer newest-first. (2) Multi-pull x10 if present: progress + cancel on 390px. (3) Final pass: no overlapping chrome with FOMO sheet. Re-smoke summon + menu + FOMO. No Versus, no main.",
+      "status": "in-progress",
+      "updated": "2026-09-18",
+      "notes": "Same PR #313. Versus + speel.html untouched."
+    },
+    {
       "id": "w-20260918T124800",
       "from": "user",
       "text": "Keep #313 draft. Next: (1) Collection ↔ summons navigation — one clear entry from HOME/Collectie. (2) Egg vs weapon pull distinction visually obvious. (3) A11y: large tap targets, reduced-motion skips long chest anim. Re-smoke summon + menu + FOMO. No Versus, no main.",

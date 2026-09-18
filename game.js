@@ -323,9 +323,9 @@ const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const VERSION_UPDATE_SAVE_KEY = 'stickfighter_version_update_save_v1';
 const VERSION_UPDATE_FLAG_KEY = 'stickfighter_version_update_flag_v1';
 const SAVE_EXPORT_SCHEMA = 3;
-const APP_VERSION = '1.18.175';
+const APP_VERSION = '1.18.176';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 385;
+const SW_CACHE_REV = 386;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', petCoins: 0, dex: {}, summons: {}, pets: {}, activePet: null,
   eggPets: {}, activeEggPet: null, eggDaily: null,
   chestDaily: null, chestWeapons: {},
@@ -4049,6 +4049,8 @@ function applyLangStaticScreens() {
   }
   setText('btnSummonGotoWeapons', 'ui.summonGotoWeapons');
   setText('btnSummonGotoPets', 'ui.summonGotoPets');
+  setText('btnSummonCancel', 'ui.summonCancel');
+  setText('summonLogHead', 'ui.summonLogNewest');
   setText('btnWeaponsGotoSummon', 'ui.summonGotoChest');
   setText('btnPetsGotoSummon', 'ui.summonGotoChest');
 
@@ -19845,7 +19847,9 @@ const CHEST_DAILY_LEFT_CAP = 12;
 const CHEST_NICE_CHANCE = 0.14;
 /** Op non-jackpot: kans op mid-tier unlock i.p.v. alleen coins/junk. */
 const CHEST_GOOD_CHANCE = 0.30;
-const CHEST_PULL_LOG_MAX = 12;
+const CHEST_PULL_LOG_MAX = 5;
+/** UI shows newest-first; keep this ≤ store cap so the strip stays quiet on 390px. */
+const SUMMON_LOG_SHOW = 4;
 const CHEST_SKILL_MAX = 48;
 /** Reveal timeline: snappy Android clip (~2.0s); card last ~0.8s. Tap skips after card. */
 const SUMMON_REVEAL_TOTAL_MS = 2000;
@@ -20393,6 +20397,18 @@ function chestPullKindName(p) {
 }
 
 /** One readable line for today's pull log — never raw type ids. */
+/** Newest-first view for the on-screen log (capped). */
+function chestPullLogNewest(limit) {
+  const n = Math.max(1, Math.min(
+    (typeof SUMMON_LOG_SHOW === 'number') ? SUMMON_LOG_SHOW : 4,
+    Number(limit) || ((typeof SUMMON_LOG_SHOW === 'number') ? SUMMON_LOG_SHOW : 4)
+  ));
+  const pulls = (typeof save !== 'undefined' && save && save.chestDaily && Array.isArray(save.chestDaily.pulls))
+    ? save.chestDaily.pulls
+    : [];
+  return pulls.slice().reverse().slice(0, n);
+}
+
 function chestPullLogLine(p) {
   if (!p || typeof p !== 'object') {
     return (typeof tOr === 'function') ? tOr('ui.summonLogJunk', 'Schroot') : 'Schroot';
@@ -21581,6 +21597,9 @@ function seedNlGameStrings() {
     summonReveal: 'Tik de kist — wapen of pet',
     summonSkip: 'Tik om verder',
     summonNext: 'Volgende',
+    summonNextProgress: 'Volgende · {left}/{total}',
+    summonCancel: 'Stop',
+    summonLogNewest: 'Nieuwste',
     summonGotoWeapons: 'Wapens',
     summonGotoPets: 'Pets',
     summonGotoChest: 'Kist',
@@ -22758,6 +22777,9 @@ const CATALOG_EN = {
     summonReveal: 'Tap the chest — weapon or pet',
     summonSkip: 'Tap to continue',
     summonNext: 'Next',
+    summonNextProgress: 'Next · {left}/{total}',
+    summonCancel: 'Stop',
+    summonLogNewest: 'Newest',
     summonGotoWeapons: 'Weapons',
     summonGotoPets: 'Pets',
     summonGotoChest: 'Chest',
@@ -24388,6 +24410,9 @@ const CATALOG_DE_CHROME = {
     summonReveal: 'Kiste tippen — Waffe oder Pet',
     summonSkip: 'Tippen zum Weiter',
     summonNext: 'Weiter',
+    summonNextProgress: 'Weiter · {left}/{total}',
+    summonCancel: 'Stop',
+    summonLogNewest: 'Neueste',
     summonGotoWeapons: 'Waffen',
     summonGotoPets: 'Pets',
     summonGotoChest: 'Kiste',
@@ -24923,6 +24948,9 @@ overlayI18nCatalog(CATALOG_FR, {
     summonReveal: 'Touche le coffre — arme ou pet',
     summonSkip: 'Touche pour continuer',
     summonNext: 'Suivant',
+    summonNextProgress: 'Suivant · {left}/{total}',
+    summonCancel: 'Stop',
+    summonLogNewest: 'Plus récent',
     summonGotoWeapons: 'Armes',
     summonGotoPets: 'Pets',
     summonGotoChest: 'Coffre',
@@ -25477,6 +25505,9 @@ overlayI18nCatalog(CATALOG_ES, {
     summonReveal: 'Toca el cofre — arma o pet',
     summonSkip: 'Toca para seguir',
     summonNext: 'Siguiente',
+    summonNextProgress: 'Siguiente · {left}/{total}',
+    summonCancel: 'Parar',
+    summonLogNewest: 'Más reciente',
     summonGotoWeapons: 'Armas',
     summonGotoPets: 'Pets',
     summonGotoChest: 'Cofre',
@@ -47623,6 +47654,9 @@ const UI = {
           return;
         }
         target.classList.add('active');
+        if (id !== 'menuScreen') {
+          try { this.hideFomoRitual(); } catch (_) {}
+        }
       }
       for (const s of this.screens) {
         if (id && s === id) continue;
@@ -48570,14 +48604,26 @@ const UI = {
   hideFomoRitual() {
     const el = document.getElementById('fomoRitual');
     if (el) el.hidden = true;
+    try { document.body.classList.remove('fomo-open'); } catch (_) {}
   },
 
   showFomoRitual(force) {
     const el = document.getElementById('fomoRitual');
     if (!el) return;
-    if (!force && this._fomoRitualHide) { el.hidden = true; return; }
+    const menu = document.getElementById('menuScreen');
+    if (!menu || !menu.classList.contains('active')) {
+      el.hidden = true;
+      try { document.body.classList.remove('fomo-open'); } catch (_) {}
+      return;
+    }
+    if (!force && this._fomoRitualHide) {
+      el.hidden = true;
+      try { document.body.classList.remove('fomo-open'); } catch (_) {}
+      return;
+    }
     if (!force && typeof fomoRitualPending === 'function' && !fomoRitualPending()) {
       el.hidden = true;
+      try { document.body.classList.remove('fomo-open'); } catch (_) {}
       return;
     }
     const rows = document.getElementById('fomoRitualRows');
@@ -48632,6 +48678,7 @@ const UI = {
     const dismiss = document.getElementById('fomoRitualDismiss');
     if (dismiss) dismiss.setAttribute('aria-label', tOr('fomo.ritualDismiss', 'Sluiten'));
     el.hidden = false;
+    try { document.body.classList.add('fomo-open'); } catch (_) {}
   },
 
   runFomoRitualCta() {
@@ -48706,7 +48753,9 @@ const UI = {
       const pullLbl = document.getElementById('chestPullLbl');
       if (pullLbl) {
         pullLbl.textContent = skipReady
-          ? (left > 0 ? tOr('ui.summonSkip', 'Tik om verder') : t('ui.summonPullEmpty'))
+          ? (left > 0
+            ? tOr('ui.summonNextProgress', 'Volgende · {left}/{total}', { left, total: glance.total || CHEST_DAILY_TOTAL })
+            : t('ui.summonPullEmpty'))
           : (empty ? tOr('ui.summonEmptyHint', 'Morgen weer') : t('ui.summonPullLeft', { n: left }));
       }
       if (pullBtn) {
@@ -48717,14 +48766,24 @@ const UI = {
           titleEl.textContent = '';
           titleEl.appendChild(document.createTextNode(
             skipReady
-              ? (left > 0 ? tOr('ui.summonNext', 'Volgende') : tOr('ui.summonOpen', 'Open kist'))
+              ? (left > 0
+                ? tOr('ui.summonNextProgress', 'Volgende · {left}/{total}', { left, total: glance.total || CHEST_DAILY_TOTAL })
+                : tOr('ui.summonOpen', 'Open kist'))
               : tOr('ui.summonOpen', 'Open kist')
           ));
           if (small) titleEl.appendChild(small);
         }
         pullBtn.setAttribute('aria-label', skipReady
-          ? (left > 0 ? tOr('ui.summonNext', 'Volgende') : t('ui.summonAriaEmpty'))
+          ? (left > 0
+            ? tOr('ui.summonNextProgress', 'Volgende · {left}/{total}', { left, total: glance.total || CHEST_DAILY_TOTAL })
+            : t('ui.summonAriaEmpty'))
           : (left > 0 ? t('ui.summonAriaPull', { n: left }) : t('ui.summonAriaEmpty')));
+      }
+      const cancelBtn = document.getElementById('btnSummonCancel');
+      if (cancelBtn) {
+        cancelBtn.textContent = tOr('ui.summonCancel', 'Stop');
+        cancelBtn.hidden = !this._chestPullBusy;
+        cancelBtn.setAttribute('aria-label', tOr('ui.summonCancel', 'Stop'));
       }
       const stage = document.getElementById('summonStage');
       if (stage) {
@@ -48763,21 +48822,31 @@ const UI = {
       }
 
       const logEl = document.getElementById('summonLog');
+      const logHead = document.getElementById('summonLogHead');
       if (logEl) {
-        const pulls = (save.chestDaily && Array.isArray(save.chestDaily.pulls))
-          ? save.chestDaily.pulls.slice().reverse() : [];
+        const cap = (typeof SUMMON_LOG_SHOW === 'number') ? SUMMON_LOG_SHOW : 4;
+        const pulls = (typeof chestPullLogNewest === 'function')
+          ? chestPullLogNewest(cap)
+          : ((save.chestDaily && Array.isArray(save.chestDaily.pulls))
+            ? save.chestDaily.pulls.slice().reverse().slice(0, cap) : []);
         logEl.textContent = '';
+        if (logHead) {
+          logHead.textContent = tOr('ui.summonLogNewest', 'Nieuwste');
+          logHead.hidden = !pulls.length;
+        }
         if (!pulls.length) {
           const empty = document.createElement('div');
           empty.className = 'summon-log-empty';
           empty.textContent = t('ui.summonLogEmpty');
           logEl.appendChild(empty);
         } else {
-          pulls.slice(0, 6).forEach((p) => {
+          pulls.forEach((p, i) => {
             const chip = document.createElement('div');
             const kind = (typeof chestPullKindId === 'function') ? chestPullKindId(p) : '';
-            chip.className = 'summon-log-chip' + (p.nice ? ' is-nice' : '') + (kind ? ' is-' + kind : '');
+            chip.className = 'summon-log-chip' + (i === 0 ? ' is-newest' : '')
+              + (p.nice ? ' is-nice' : '') + (kind ? ' is-' + kind : '');
             if (kind) chip.setAttribute('data-kind', kind);
+            if (i === 0) chip.setAttribute('data-newest', '1');
             chip.textContent = (typeof chestPullLogLine === 'function')
               ? chestPullLogLine(p)
               : ((p.nice ? '✦ ' : '') + (p.kind || ''));
@@ -48841,6 +48910,7 @@ const UI = {
       this._summonLastError = '';
       this._summonPullLock = false;
       this._chestPullLeftSnap = null;
+      try { this.hideFomoRitual(); } catch (_) {}
       try { if (typeof _summonVideoOk !== 'undefined') _summonVideoOk = null; } catch (_) {}
       this.safeOpen('summonScreen', () => {
         this.renderSummon();
@@ -52510,6 +52580,12 @@ bindPress(document.getElementById('btnPets'), () => {
 bindPress(document.getElementById('btnChestPull'), () => {
   AudioSys.init();
   UI.doChestPull('random');
+});
+bindPress(document.getElementById('btnSummonCancel'), () => {
+  if (!UI._chestPullBusy) return;
+  AudioSys.init();
+  AudioSys.sfx('select');
+  UI.finishSummonReveal();
 });
 bindPress(document.getElementById('summonStage'), () => {
   if (UI._chestPullBusy && UI._summonSkipReady) {

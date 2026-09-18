@@ -38,6 +38,13 @@ must(/id="btnWeaponsGotoSummon"/.test(html) && /id="btnPetsGotoSummon"/.test(htm
 must(/id="summonScreen"/.test(html), 'missing summonScreen');
 must(/id="summonCenterCard"/.test(html), 'missing summon center card');
 must(/id="summonCardKind"/.test(html), 'missing summon kind badge');
+must(/id="btnSummonCancel"/.test(html), 'missing summon cancel/stop');
+must(/id="summonLogHead"/.test(html), 'missing newest-first log head');
+must(!/id="btnChestPull10"|id="btnSummonx10"|data-pull="x10"/.test(html),
+  'unexpected x10 multi-pull button — keep sequential leftover + Stop');
+must(/body:has\(#summonScreen\.active\) #fomoRitual/.test(css),
+  'FOMO must hide while summon screen is active');
+must(/body\.fomo-open/.test(css), 'missing fomo-open chrome hide');
 must(/id="summonWhereStrip"/.test(html), 'missing summon where-strip');
 must(/summon-center-card/.test(css), 'missing summon-center-card CSS');
 must(/data-kind="weapon"/.test(css) && /data-kind="egg"/.test(css), 'missing egg vs weapon card chrome');

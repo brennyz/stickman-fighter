@@ -214,6 +214,12 @@ bindPress(document.getElementById('btnChestPull'), () => {
   AudioSys.init();
   UI.doChestPull('random');
 });
+bindPress(document.getElementById('btnSummonCancel'), () => {
+  if (!UI._chestPullBusy) return;
+  AudioSys.init();
+  AudioSys.sfx('select');
+  UI.finishSummonReveal();
+});
 bindPress(document.getElementById('summonStage'), () => {
   if (UI._chestPullBusy && UI._summonSkipReady) {
     AudioSys.init();

@@ -97,6 +97,12 @@ async function run() {
         weaponsJump: !!document.getElementById('btnWeaponsGotoSummon'),
         petsJump: !!document.getElementById('btnPetsGotoSummon'),
         skipFn: typeof summonRevealShouldSkip === 'function',
+        hasCancel: !!document.getElementById('btnSummonCancel'),
+        hasLogHead: !!document.getElementById('summonLogHead'),
+        noX10: !document.getElementById('btnChestPull10') && !document.querySelector('[data-pull="x10"]'),
+        logCap: (typeof SUMMON_LOG_SHOW === 'number') ? SUMMON_LOG_SHOW : 0,
+        storeCap: (typeof CHEST_PULL_LOG_MAX === 'number') ? CHEST_PULL_LOG_MAX : 0,
+        logNewestFn: typeof chestPullLogNewest === 'function',
       };
     });
     must(openSnap.summonActive, 'summonScreen not active: ' + JSON.stringify(openSnap.active));
@@ -126,6 +132,9 @@ async function run() {
       'HOME/Collectie summons entry missing: ' + JSON.stringify(openSnap));
     must(openSnap.weaponsJump && openSnap.petsJump, 'weapon/pet Kist jumps missing');
     must(openSnap.skipFn, 'missing summonRevealShouldSkip');
+    must(openSnap.hasCancel && openSnap.noX10, 'expected Stop, no x10 batch: ' + JSON.stringify(openSnap));
+    must(openSnap.hasLogHead && openSnap.logNewestFn && openSnap.logCap === 4 && openSnap.storeCap === 5,
+      'log cap / newest helper missing: ' + JSON.stringify(openSnap));
     const btnTxt = await page.evaluate(() => (document.getElementById('btnChestPull') || {}).textContent || '');
     must(/open kist/i.test(btnTxt), 'expected Open kist CTA, got: ' + btnTxt);
     const chrome = await page.evaluate(() => {
@@ -208,6 +217,38 @@ async function run() {
     });
     must(emptySnap.disabled && emptySnap.emptyStage && emptySnap.pipOn === 0,
       'empty state missing: ' + JSON.stringify(emptySnap));
+
+    const logSnap = await page.evaluate(() => {
+      const d = ensureChestDaily();
+      const prev = (d.pulls || []).slice();
+      d.pulls = [
+        { type: 'junk', kind: 'weapon' },
+        { type: 'coins', amount: 4 },
+        { type: 'egg', id: 'egg_cloud', rarity: 'uncommon' },
+        { type: 'weapon_unlock', id: 'knuppel', rarity: 'rare' },
+        { type: 'pet_unlock', id: 'slymo', rarity: 'epic', nice: true },
+        { type: 'xp', amount: 20 },
+      ];
+      UI.renderSummon();
+      const chips = [...document.querySelectorAll('#summonLog .summon-log-chip')];
+      const newest = chips[0];
+      const snap = {
+        n: chips.length,
+        first: newest ? newest.textContent : '',
+        newestMark: !!(newest && newest.classList.contains('is-newest')),
+        head: (document.getElementById('summonLogHead') || {}).textContent || '',
+        helperN: (typeof chestPullLogNewest === 'function') ? chestPullLogNewest(4).length : -1,
+        helperFirst: (typeof chestPullLogNewest === 'function' && chestPullLogNewest(4)[0])
+          ? chestPullLogNewest(4)[0].type : '',
+      };
+      d.pulls = prev;
+      UI.renderSummon();
+      return snap;
+    });
+    must(logSnap.n === 4, 'log should cap at 4 newest: ' + JSON.stringify(logSnap));
+    must(logSnap.helperFirst === 'xp' && logSnap.newestMark,
+      'newest-first missing: ' + JSON.stringify(logSnap));
+    must(/nieuw/i.test(logSnap.head), 'log head should say newest: ' + logSnap.head);
 
     const pullStart = await page.evaluate(() => {
       const before = chestSummonsLeft();
@@ -301,6 +342,14 @@ async function run() {
         logRaw: ((document.getElementById('summonLog') || {}).textContent || ''),
         cardKind: card ? (card.getAttribute('data-kind') || '') : '',
         kindBadge: (document.getElementById('summonCardKind') || {}).textContent || '',
+        cancelVis: (() => {
+          const b = document.getElementById('btnSummonCancel');
+          if (!b) return false;
+          const r = b.getBoundingClientRect();
+          return !b.hidden && r.width >= 44 && r.height >= 44;
+        })(),
+        logChipN: document.querySelectorAll('#summonLog .summon-log-chip').length,
+        newestChip: !!document.querySelector('#summonLog .summon-log-chip.is-newest'),
       };
     }, pullStart.before);
     must(pullSnap.after === pullStart.afterPull,
@@ -312,6 +361,9 @@ async function run() {
     must(pullSnap.skipReady, 'expected is-skip-ready after card lands');
     must(pullSnap.cardKind.length > 0, 'card missing data-kind: ' + JSON.stringify(pullSnap));
     must(pullSnap.kindBadge.length > 0, 'kind badge empty after pull');
+    must(pullSnap.cancelVis, 'Stop cancel not visible during pull: ' + JSON.stringify(pullSnap));
+    must(pullSnap.logChipN >= 1 && pullSnap.logChipN <= 4 && pullSnap.newestChip,
+      'pull log should be newest-first and capped: ' + JSON.stringify(pullSnap));
     must(!/weapon_unlock|pet_unlock|weapon_ascend/.test(pullSnap.logRaw),
       'pull log still raw type ids: ' + pullSnap.logRaw);
     must(!/egg_/.test(pullSnap.logRaw), 'egg log still uses raw id: ' + pullSnap.logRaw);
@@ -383,6 +435,38 @@ async function run() {
     must(navSnap.collectActive && navSnap.panelVisible && navSnap.tile && navSnap.featured,
       'Collectie missing one clear Summons entry: ' + JSON.stringify(navSnap));
     must(navSnap.home, 'HOME Summons tile missing after collect hub');
+
+    const fomoSnap = await page.evaluate(() => {
+      UI.goMenu();
+      document.getElementById('menuScreen')?.classList.add('active');
+      UI._fomoRitualHide = false;
+      UI._fomoRitualForce = true;
+      UI.showFomoRitual(true);
+      const onMenu = {
+        open: !document.getElementById('fomoRitual')?.hidden,
+        body: document.body.classList.contains('fomo-open'),
+      };
+      UI.openSummonHub();
+      const fomo = document.getElementById('fomoRitual');
+      const summon = document.getElementById('summonScreen');
+      let overlap = false;
+      if (fomo && !fomo.hidden && summon && summon.classList.contains('active')) {
+        const a = fomo.getBoundingClientRect();
+        const b = summon.getBoundingClientRect();
+        overlap = a.width > 2 && a.height > 2 && !(a.right < b.left || a.left > b.right || a.bottom < b.top || a.top > b.bottom);
+      }
+      return {
+        onMenu,
+        hiddenOnSummon: !!(fomo && fomo.hidden),
+        summonActive: !!(summon && summon.classList.contains('active')),
+        bodyOpen: document.body.classList.contains('fomo-open'),
+        overlap,
+        fomoDisp: fomo ? getComputedStyle(fomo).display : null,
+      };
+    });
+    must(fomoSnap.onMenu.open && fomoSnap.onMenu.body, 'FOMO sheet should open on HOME: ' + JSON.stringify(fomoSnap));
+    must(fomoSnap.hiddenOnSummon && fomoSnap.summonActive && !fomoSnap.bodyOpen && !fomoSnap.overlap,
+      'FOMO must not overlap summon chrome: ' + JSON.stringify(fomoSnap));
 
     const playSnap = await page.evaluate(() => {
       UI.goMenu();

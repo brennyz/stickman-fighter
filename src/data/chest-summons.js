@@ -13,7 +13,9 @@ const CHEST_DAILY_LEFT_CAP = 12;
 const CHEST_NICE_CHANCE = 0.14;
 /** Op non-jackpot: kans op mid-tier unlock i.p.v. alleen coins/junk. */
 const CHEST_GOOD_CHANCE = 0.30;
-const CHEST_PULL_LOG_MAX = 12;
+const CHEST_PULL_LOG_MAX = 5;
+/** UI shows newest-first; keep this ≤ store cap so the strip stays quiet on 390px. */
+const SUMMON_LOG_SHOW = 4;
 const CHEST_SKILL_MAX = 48;
 /** Reveal timeline: snappy Android clip (~2.0s); card last ~0.8s. Tap skips after card. */
 const SUMMON_REVEAL_TOTAL_MS = 2000;
@@ -561,6 +563,18 @@ function chestPullKindName(p) {
 }
 
 /** One readable line for today's pull log — never raw type ids. */
+/** Newest-first view for the on-screen log (capped). */
+function chestPullLogNewest(limit) {
+  const n = Math.max(1, Math.min(
+    (typeof SUMMON_LOG_SHOW === 'number') ? SUMMON_LOG_SHOW : 4,
+    Number(limit) || ((typeof SUMMON_LOG_SHOW === 'number') ? SUMMON_LOG_SHOW : 4)
+  ));
+  const pulls = (typeof save !== 'undefined' && save && save.chestDaily && Array.isArray(save.chestDaily.pulls))
+    ? save.chestDaily.pulls
+    : [];
+  return pulls.slice().reverse().slice(0, n);
+}
+
 function chestPullLogLine(p) {
   if (!p || typeof p !== 'object') {
     return (typeof tOr === 'function') ? tOr('ui.summonLogJunk', 'Schroot') : 'Schroot';
