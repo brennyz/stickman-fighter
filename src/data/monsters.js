@@ -462,7 +462,8 @@ Object.assign(UNLOCK_AT, (MONSTER_CATALOG_W2_EXPANDED && MONSTER_CATALOG_W2_EXPA
 /** Avontuur horde: 6× meer spawns + reuzen + volledig monsterboek (W2 catalog ≈ 2× roster). */
 const ADVENTURE_HORDE_MUL = 6;
 const ADVENTURE_HORDE_MAX_PER_WAVE = 36;
-const ADVENTURE_MAX_ALIVE = IS_TOUCH ? 54 : 78;
+/** Desktop ceiling. Live cap is `adventureMaxAliveNow()` (viewport density). */
+const ADVENTURE_MAX_ALIVE = 78;
 const GIANT_SPAWN_CHANCE = 0.15;
 const GIANT_SIZE_MUL = 1.52;
 const GIANT_HP_MUL = 1.34;
@@ -851,11 +852,14 @@ function maxRarityForAdvLevel(n, diff) {
   return maxRarity;
 }
 
-function buildLevel(n, diffId) {
+function buildLevel(n, diffId, densityOpts) {
   const diff = typeof advDiffMeta === 'function' ? advDiffMeta(diffId) : {
     id: 'normal', order: 0, hpMul: 1, dmgMul: 1, rarityBoost: 0, eliteBonus: 0, giantBonus: 0,
     theme: null, speedMul: 1, enrageMul: 1, enrageAt: 0.5, hordeMul: 1, model: '1.0',
   };
+  const dens = (typeof combatDensityProfile === 'function')
+    ? combatDensityProfile(densityOpts || {})
+    : { scale: 1, maxAlive: ADVENTURE_MAX_ALIVE, w: 1100, h: 620 };
   const hpMul = (1 + (n - 1) * 0.14) * (diff.hpMul || 1);
   const dmgMul = (1 + (n - 1) * 0.08) * (diff.dmgMul || 1);
   const maxRarity = maxRarityForAdvLevel(n, diff.id);
@@ -875,10 +879,13 @@ function buildLevel(n, diffId) {
   const waveCount = Math.min(2 + Math.floor(n / 5) + (diff.order >= 2 ? 1 : 0), 6);
   const basePerWave = 2 + Math.floor(n / 4);
   const hordeScale = (diff.hordeMul || 1);
-  const perWave = Math.min(
+  const rawPerWave = Math.min(
     Math.max(2, Math.ceil(basePerWave * ADVENTURE_HORDE_MUL * hordeScale)),
     ADVENTURE_HORDE_MAX_PER_WAVE
   );
+  const perWave = (typeof scaleAdventurePerWave === 'function')
+    ? scaleAdventurePerWave(rawPerWave, dens)
+    : rawPerWave;
   for (let w = 0; w < waveCount; w++) {
     const list = [];
     for (let i = 0; i < perWave; i++) {
@@ -1036,7 +1043,10 @@ function buildLevel(n, diffId) {
   }
   if (BOSS_AT[n]) {
     const bossWave = BOSS_AT[n].map(x => Object.assign({}, x, { bossCore: !!x.elite }));
-    const hordePad = Math.min(3 + Math.floor(n / 8) + (diff.order || 0) * 2, 12);
+    const hordePadRaw = Math.min(3 + Math.floor(n / 8) + (diff.order || 0) * 2, 12);
+    const hordePad = (typeof scaleAdventureHordePad === 'function')
+      ? scaleAdventureHordePad(hordePadRaw, dens)
+      : hordePadRaw;
     for (let i = 0; i < hordePad; i++) {
       const elite = Math.random() < (0.1 + (diff.eliteBonus || 0) * 0.5);
       const bsp = weightedPick(pool, n, rarityBias);
@@ -1055,6 +1065,12 @@ function buildLevel(n, diffId) {
     model: diff.model || '1.0',
     enrageMul: diff.enrageMul || 1,
     enrageAt: diff.enrageAt != null ? diff.enrageAt : 0.5,
+    combatDensity: {
+      scale: dens.scale,
+      maxAlive: dens.maxAlive,
+      w: dens.w,
+      h: dens.h,
+    },
   };
 }
 

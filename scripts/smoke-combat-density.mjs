@@ -1,0 +1,256 @@
+#!/usr/bin/env node
+/**
+ * Mobile combat density — phone must get fewer simultaneous threats than desktop,
+ * desktop cadence/counts must stay at the legacy 1.0 profile, Versus stays out.
+ */
+import fs from 'fs';
+import path from 'path';
+import vm from 'vm';
+import { fileURLToPath } from 'url';
+
+const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
+
+function fail(msg, extra) {
+  console.error('SMOKE_FAIL', msg);
+  if (extra !== undefined) console.error(extra);
+  process.exit(1);
+}
+
+function must(cond, msg, extra) {
+  if (!cond) fail(msg, extra);
+}
+
+const densSrc = fs.readFileSync(path.join(root, 'src/systems/combat-density.js'), 'utf8');
+const monstersSrc = fs.readFileSync(path.join(root, 'src/data/monsters.js'), 'utf8');
+const gameSrc = fs.readFileSync(path.join(root, 'src/game/game.js'), 'utf8');
+const versusSrc = fs.readFileSync(path.join(root, 'src/systems/versus.js'), 'utf8');
+const manifest = JSON.parse(fs.readFileSync(path.join(root, 'src/manifest.json'), 'utf8'));
+const built = fs.existsSync(path.join(root, 'game.js'))
+  ? fs.readFileSync(path.join(root, 'game.js'), 'utf8')
+  : '';
+
+must(manifest.includes('src/systems/combat-density.js'), 'manifest missing combat-density.js');
+must(/function combatDensityProfile\(/.test(densSrc), 'combatDensityProfile missing');
+must(/function adventureSpawnCadence\(/.test(densSrc), 'adventureSpawnCadence missing');
+must(/function scaleAdventurePerWave\(/.test(densSrc), 'scaleAdventurePerWave missing');
+must(/COMBAT_DENSITY_MIN = 0\.60/.test(densSrc), 'phone floor must stay 0.60 (still a horde)');
+must(/COMBAT_DENSITY_WIDE_W = 960/.test(densSrc), 'wide-screen lock missing');
+must(/Versus/.test(densSrc) && /untouched/.test(densSrc), 'density module must document Versus-out');
+
+must(/combatDensityProfile\(/.test(monstersSrc), 'buildLevel must read combatDensityProfile');
+must(/scaleAdventurePerWave\(/.test(monstersSrc), 'buildLevel must scale per-wave counts');
+must(/scaleAdventureHordePad\(/.test(monstersSrc), 'buildLevel must scale boss horde pad');
+must(/n === 1 \? 2 : 3/.test(monstersSrc), 'level 1 wave 1 soft-cap (2) must stay');
+must(/waves\[1\]\.slice\(0, 4\)/.test(monstersSrc), 'level 1 wave 2 soft-cap (4) must stay');
+
+must(/opener \? 1 :/.test(gameSrc), 'opener must stay single-file');
+must(/adventureMaxAliveNow\(/.test(gameSrc), 'spawn loop must use live alive cap');
+must(/adventureSpawnCadence\(/.test(gameSrc), 'spawn loop must use density cadence');
+must(/dens && dens\.gapPx/.test(gameSrc) || /gapPx/.test(gameSrc), 'spawn loop must use density gap');
+
+must(!/combatDensity/.test(versusSrc), 'versus.js must not call combat density');
+must(!/adventureMaxAliveNow/.test(versusSrc), 'versus.js must not use adventure alive cap');
+must(!/scaleAdventurePerWave/.test(versusSrc), 'versus.js must not scale adventure waves');
+
+if (built) {
+  must(/function combatDensityProfile\(/.test(built), 'built game.js missing combatDensityProfile');
+  must(/__sf[\s\S]*combatDensity/.test(built), 'built game.js must expose __sf.combatDensity');
+}
+
+/* ---- isolated profile math ---- */
+const iso = {
+  IS_TOUCH: false,
+  clamp(v, a, b) { return v < a ? a : (v > b ? b : v); },
+  W: 1280,
+  H: 800,
+  innerWidth: 1280,
+  innerHeight: 800,
+};
+vm.runInNewContext(densSrc, iso);
+
+const VIEWPORTS = [
+  { id: 'desktop-mouse', w: 1280, h: 800, touch: false },
+  { id: 'desktop-touch', w: 1280, h: 800, touch: true },
+  { id: 'ipad-landscape', w: 1180, h: 820, touch: true },
+  { id: 'ipad-portrait', w: 834, h: 1194, touch: true },
+  { id: 'phone-landscape', w: 844, h: 390, touch: true },
+  { id: 'phone-portrait', w: 390, h: 844, touch: true },
+  { id: 'android-small', w: 360, h: 800, touch: true },
+];
+
+function profileAt(vp) {
+  iso.IS_TOUCH = !!vp.touch;
+  return iso.combatDensityProfile({ w: vp.w, h: vp.h });
+}
+
+const table = VIEWPORTS.map((vp) => {
+  const p = profileAt(vp);
+  return { id: vp.id, w: vp.w, h: vp.h, touch: !!vp.touch, ...p };
+});
+console.log('COMBAT_DENSITY_TABLE');
+console.log(JSON.stringify(table.map((r) => ({
+  id: r.id, w: r.w, h: r.h, scale: Number(r.scale.toFixed(3)),
+  maxAlive: r.maxAlive, interval: r.spawnIntervalMul, batch: r.spawnBatchMax, gap: r.spawnGapPx,
+})), null, 2));
+
+const desk = profileAt({ w: 1280, h: 800, touch: false });
+must(desk.scale === 1, 'desktop scale must be 1.0', desk);
+must(desk.maxAlive === 78, 'desktop mouse maxAlive must stay 78', desk);
+must(desk.spawnIntervalMul === 1, 'desktop interval mul must stay 1', desk);
+must(desk.spawnBatchMax === 3, 'desktop batch max must stay 3', desk);
+must(desk.spawnGapPx === 32, 'desktop gap must stay 32', desk);
+must(desk.compact === false, 'desktop must not be compact', desk);
+
+const deskTouch = profileAt({ w: 1280, h: 800, touch: true });
+must(deskTouch.scale === 1, 'touch-laptop scale must stay 1.0', deskTouch);
+must(deskTouch.maxAlive === 54, 'touch-laptop maxAlive must stay legacy 54', deskTouch);
+
+const phone = profileAt({ w: 390, h: 844, touch: true });
+must(phone.scale === 0.6, 'phone portrait scale must sit on 0.60 floor', phone);
+must(phone.maxAlive <= 20 && phone.maxAlive >= 10, 'phone maxAlive should be ~10–20', phone);
+must(phone.spawnBatchMax === 1, 'phone must spawn single-file', phone);
+must(phone.spawnGapPx >= 48, 'phone spawn gap must be wider than desktop 32', phone);
+must(phone.spawnIntervalMul > 1.2, 'phone spawn interval must be slower', phone);
+must(phone.maxAlive < desk.maxAlive, 'phone maxAlive must be below desktop');
+must(phone.scale < desk.scale, 'phone scale must be below desktop');
+
+const phoneLand = profileAt({ w: 844, h: 390, touch: true });
+must(phoneLand.scale < 1 && phoneLand.scale >= 0.6, 'phone landscape in (0.60, 1)', phoneLand);
+must(phoneLand.maxAlive < deskTouch.maxAlive, 'phone landscape maxAlive < large-touch 54', phoneLand);
+must(phoneLand.maxAlive > phone.maxAlive, 'landscape phone may host more than portrait', phoneLand);
+
+iso.IS_TOUCH = false;
+const deskCad = iso.adventureSpawnCadence(30, false, false, 1, desk);
+must(deskCad.batch === 3, 'legacy batch 3 when queue>28 on desktop', deskCad);
+must(Math.abs(deskCad.interval - 0.38 * 0.72) < 1e-9, 'legacy interval 0.38*0.72 on desktop', deskCad);
+must(deskCad.gapPx === 32, 'legacy gap 32', deskCad);
+
+const phoneCad = iso.adventureSpawnCadence(30, false, false, 1, phone);
+must(phoneCad.batch === 1, 'phone batch capped at 1 even with long queue', phoneCad);
+must(phoneCad.interval > deskCad.interval, 'phone interval slower than desktop', phoneCad);
+must(phoneCad.gapPx > deskCad.gapPx, 'phone spawn gap wider than desktop', phoneCad);
+
+const openCad = iso.adventureSpawnCadence(8, true, false, 1, phone);
+must(openCad.batch === 1, 'opener always single-file', openCad);
+
+must(iso.scaleAdventurePerWave(24, desk) === 24, 'desktop per-wave 24 stays 24');
+must(iso.scaleAdventurePerWave(24, phone) === 15, 'phone per-wave 24 → 15 (ceil 24*0.6)');
+must(iso.scaleAdventurePerWave(36, phone) === 22, 'phone cap-36 → 22');
+must(iso.scaleAdventureHordePad(4, desk) === 4, 'desktop boss pad unchanged');
+must(iso.scaleAdventureHordePad(4, phone) === 2, 'phone boss pad 4 → 2');
+
+/* ---- buildLevel with explicit viewports (full bundle) ---- */
+if (!built) fail('game.js missing — run npm run build first');
+
+function makeEl(id) {
+  return {
+    id, tagName: id === 'game' ? 'CANVAS' : 'DIV',
+    classList: { s: new Set(), add(x) { this.s.add(x); }, remove(x) { this.s.delete(x); }, contains(x) { return this.s.has(x); }, toggle() {} },
+    style: {}, hidden: false, dataset: {}, disabled: false, textContent: '', innerHTML: '', value: '',
+    children: [], parentElement: null, closest() { return this; },
+    addEventListener() {}, removeEventListener() {}, appendChild() {}, remove() {}, focus() {},
+    querySelector() { return null; }, querySelectorAll() { return []; },
+    clientWidth: 320, clientHeight: 480,
+    getBoundingClientRect() { return { left: 0, top: 0, width: 100, height: 40 }; },
+    setAttribute() {}, removeAttribute() {}, getAttribute() { return null; },
+    getContext() {
+      return new Proxy({}, {
+        get: (_t, p) => (p === 'createLinearGradient' || p === 'createRadialGradient'
+          ? () => ({ addColorStop() {} }) : () => undefined),
+      });
+    },
+  };
+}
+const byId = new Map();
+const get = (id) => { if (!byId.has(id)) byId.set(id, makeEl(id)); return byId.get(id); };
+[
+  'menuScreen', 'levelScreen', 'gambleScreen', 'game', 'toastHost', 'pauseBtn',
+  'resultScreen', 'pauseScreen', 'settingsScreen',
+].forEach(get);
+get('menuScreen').classList.add('active');
+
+const ctx = {
+  document: {
+    getElementById: get, querySelector() { return null; },
+    querySelectorAll(sel) {
+      if (sel === '.screen') return [...byId.values()].filter((e) => String(e.id).endsWith('Screen'));
+      return [];
+    },
+    body: get('body'), createElement: (t) => makeEl(t),
+    addEventListener() {}, dispatchEvent() {},
+  },
+  addEventListener() {},
+  matchMedia: () => ({ matches: false, addEventListener() {}, addListener() {} }),
+  innerWidth: 1280, innerHeight: 800, devicePixelRatio: 1,
+  requestAnimationFrame: () => 0, cancelAnimationFrame() {},
+  getComputedStyle() { return { display: 'flex', visibility: 'visible', opacity: '1', animationName: 'none', zIndex: '20', pointerEvents: 'auto' }; },
+  setInterval() { return 0; }, clearInterval() {},
+  setTimeout(fn) { try { fn(); } catch (_) {} return 0; }, clearTimeout() {},
+  performance: { now: () => 0 },
+  console,
+  location: { href: 'https://brennyz.github.io/stickman-fighter/', hostname: 'brennyz.github.io', protocol: 'https:', search: '', pathname: '/stickman-fighter/', origin: 'https://brennyz.github.io' },
+  navigator: { onLine: true, userAgent: 'Chrome', maxTouchPoints: 0, platform: 'Linux', vibrate() {} },
+  localStorage: { store: {}, getItem(k) { return this.store[k] ?? null; }, setItem(k, v) { this.store[k] = String(v); }, removeItem(k) { delete this.store[k]; } },
+  sfTunnelBoot: Promise.resolve(),
+  dispatchEvent() {},
+  AudioContext: class {
+    constructor() { this.state = 'running'; this.destination = {}; this.currentTime = 0; this.sampleRate = 44100; }
+    createGain() { return { connect() { return this; }, gain: { value: 1, setValueAtTime() {}, exponentialRampToValueAtTime() {} } }; }
+    createOscillator() { return { connect() { return this; }, start() {}, stop() {}, type: 'sine', frequency: { value: 440, setValueAtTime() {}, exponentialRampToValueAtTime() {} } }; }
+    createBuffer() { return { getChannelData: () => new Float32Array(8) }; }
+    createBufferSource() { return { connect() { return this; }, start() {}, buffer: null }; }
+    createBiquadFilter() { return { connect() { return this; }, type: '', frequency: { value: 0 } }; }
+    resume() { return Promise.resolve(); }
+    suspend() { return Promise.resolve(); }
+  },
+};
+ctx.window = ctx;
+ctx.globalThis = ctx;
+ctx.self = ctx;
+ctx.webkitAudioContext = ctx.AudioContext;
+
+try {
+  vm.runInContext(built, vm.createContext(ctx), { filename: 'game.js' });
+} catch (e) {
+  fail('game.js vm load', e && e.message);
+}
+
+must(typeof ctx.buildLevel === 'function', 'buildLevel not in vm scope');
+must(typeof ctx.combatDensityProfile === 'function', 'combatDensityProfile not in vm scope');
+
+const lv = 12;
+const deskLv = ctx.buildLevel(lv, 'normal', { w: 1280, h: 800 });
+const phoneLv = ctx.buildLevel(lv, 'normal', { w: 390, h: 844 });
+const deskBudget = deskLv.waves.reduce((s, w) => s + w.length, 0);
+const phoneBudget = phoneLv.waves.reduce((s, w) => s + w.length, 0);
+
+must(deskLv.combatDensity && deskLv.combatDensity.scale === 1, 'buildLevel desktop scale 1', deskLv.combatDensity);
+must(phoneLv.combatDensity && phoneLv.combatDensity.scale === 0.6, 'buildLevel phone scale 0.6', phoneLv.combatDensity);
+must(deskLv.waves.length === phoneLv.waves.length, 'wave COUNT must match (do not shorten stages)', {
+  desk: deskLv.waves.length, phone: phoneLv.waves.length,
+});
+must(phoneBudget < deskBudget, 'phone mid-level spawn budget must be below desktop', {
+  phoneBudget, deskBudget, phoneWaves: phoneLv.waves.map((w) => w.length), deskWaves: deskLv.waves.map((w) => w.length),
+});
+must(phoneLv.waves[0].length <= deskLv.waves[0].length, 'phone wave 1 must not exceed desktop');
+
+const lv1desk = ctx.buildLevel(1, 'normal', { w: 1280, h: 800 });
+const lv1phone = ctx.buildLevel(1, 'normal', { w: 390, h: 844 });
+must(lv1desk.waves[0].length === 2, 'desktop lv1 wave1 stays 2 (playtest P1)', lv1desk.waves[0].length);
+must(lv1phone.waves[0].length === 2, 'phone lv1 wave1 stays 2 (do not gut opener)', lv1phone.waves[0].length);
+must(lv1desk.waves[1].length <= 4 && lv1phone.waves[1].length <= 4, 'lv1 wave2 cap 4');
+
+const hellDesk = ctx.buildLevel(20, 'hell', { w: 1280, h: 800 });
+const hellPhone = ctx.buildLevel(20, 'hell', { w: 390, h: 844 });
+const hellDeskN = hellDesk.waves.reduce((s, w) => s + w.length, 0);
+const hellPhoneN = hellPhone.waves.reduce((s, w) => s + w.length, 0);
+must(hellPhoneN < hellDeskN, 'Hell 3.0 phone still below desktop (not gutted to 1v1)', { hellPhoneN, hellDeskN });
+must(hellPhoneN >= 20, 'Hell phone still a horde', hellPhoneN);
+
+console.log('BUILDLEVEL', {
+  lv12: { deskBudget, phoneBudget, waves: deskLv.waves.length, deskW0: deskLv.waves[0].length, phoneW0: phoneLv.waves[0].length },
+  hell20: { hellDeskN, hellPhoneN },
+  lv1: { desk: lv1desk.waves.map((w) => w.length), phone: lv1phone.waves.map((w) => w.length) },
+});
+
+console.log('SMOKE_OK combat-density');

@@ -394,7 +394,8 @@ class Game {
     const bossWave = isBossWave(this.level, this.waveIdx);
     this.spawnQueue = wave.slice();
     this.waveTotal = wave.length;
-    this.spawnTimer = bossWave ? 1.0 : 0.45;
+    const densStart = (typeof combatDensityProfile === 'function') ? combatDensityProfile() : null;
+    this.spawnTimer = (bossWave ? 1.0 : 0.45) * ((densStart && densStart.spawnIntervalMul) || 1);
     this.wavePause = 0;
     if (this.stageShieldPerWave > 0 && this.player) {
       this.playerShieldT = Math.max(this.playerShieldT, this.stageShieldPerWave);
@@ -729,21 +730,30 @@ class Game {
       // Satan / tide-beloning: geen normale golven tot duel klaar
     } else if (this.spawnQueue.length) {
       const alive = this.monsters.filter((m) => m.alive).length;
+      const aliveCap = (typeof adventureMaxAliveNow === 'function')
+        ? adventureMaxAliveNow()
+        : ADVENTURE_MAX_ALIVE;
       this.spawnTimer -= dt;
-      if (this.spawnTimer <= 0 && alive < ADVENTURE_MAX_ALIVE) {
+      if (this.spawnTimer <= 0 && alive < aliveCap) {
         const bossWave = isBossWave(this.level, this.waveIdx);
         const meta = this.level.waveMeta && this.level.waveMeta[this.waveIdx];
         const spawnMul = (meta && meta.spawnMul) || 1;
         const queueLeft = this.spawnQueue.length;
         const opener = this.level && this.level.n <= 2 && this.waveIdx === 0;
-        const batch = opener ? 1 : (queueLeft > 28 ? 3 : queueLeft > 14 ? 2 : 1);
+        const dens = (typeof adventureSpawnCadence === 'function')
+          ? adventureSpawnCadence(queueLeft, opener, bossWave, spawnMul)
+          : null;
+        const batch = opener ? 1 : (dens ? dens.batch : (queueLeft > 28 ? 3 : queueLeft > 14 ? 2 : 1));
         const intervalMul = opener ? 1.55 : (queueLeft > 20 ? 0.72 : queueLeft > 10 ? 0.86 : 1);
-        this.spawnTimer = (bossWave ? 0.92 : (opener ? 0.78 : 0.38)) * spawnMul * intervalMul;
-        for (let b = 0; b < batch && this.spawnQueue.length && this.monsters.filter((m) => m.alive).length < ADVENTURE_MAX_ALIVE; b++) {
+        this.spawnTimer = dens
+          ? dens.interval
+          : (bossWave ? 0.92 : (opener ? 0.78 : 0.38)) * spawnMul * intervalMul;
+        const gapPx = (dens && dens.gapPx) || 32;
+        for (let b = 0; b < batch && this.spawnQueue.length && this.monsters.filter((m) => m.alive).length < aliveCap; b++) {
           const def = this.spawnQueue.shift();
           if (!def || !def.sp || !SPECIES[def.sp]) continue;
           const side = Math.random() < 0.75 ? 1 : -1;
-          const x = (side > 0 ? W + 40 : -40) + b * side * 32;
+          const x = (side > 0 ? W + 40 : -40) + b * side * gapPx;
           const mon = new Monster(def.sp, x, this, {
             elite: !!(def.elite || def.superBoss),
             superBoss: !!def.superBoss,
@@ -769,7 +779,7 @@ class Game {
             this.floater(mon.x, mon.y - mon.size - 28, t('combat.giant'), '#ffd75e', 13);
           }
         }
-      } else if (alive >= ADVENTURE_MAX_ALIVE) {
+      } else if (alive >= aliveCap) {
         this.spawnTimer = Math.min(this.spawnTimer, 0.12);
       }
     } else if (this.waveIdx >= 0 && this.monsters.every(m => !m.alive) && this.player?.alive) {

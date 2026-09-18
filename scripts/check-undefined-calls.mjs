@@ -30,6 +30,7 @@ const REGRESSION_MUST_DEFINE = [
   'gearEquipItem', 'gearEquipState', 'gearSlotInventory', 'gearTooltipModel', 'gearRenderDescriptor',
   'tickBuildingResources', 'collectBuildingResource', 'applyBuildingPowersToPlayer', 'buildingPowerBonus',
   'applyBuildingCombatHook', 'tickBuildingCombat',
+  'combatDensityProfile', 'combatDensityScale', 'adventureMaxAliveNow', 'adventureSpawnCadence',
 ];
 
 /** Consts / values that must appear in the bundle (not only functions). */

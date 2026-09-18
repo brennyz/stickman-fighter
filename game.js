@@ -323,9 +323,9 @@ const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const VERSION_UPDATE_SAVE_KEY = 'stickfighter_version_update_save_v1';
 const VERSION_UPDATE_FLAG_KEY = 'stickfighter_version_update_flag_v1';
 const SAVE_EXPORT_SCHEMA = 3;
-const APP_VERSION = '1.18.172';
+const APP_VERSION = '1.18.173';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 382;
+const SW_CACHE_REV = 383;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', petCoins: 0, dex: {}, summons: {}, pets: {}, activePet: null,
   eggPets: {}, activeEggPet: null, eggDaily: null,
   chestDaily: null, chestWeapons: {},
@@ -16302,7 +16302,8 @@ Object.assign(UNLOCK_AT, (MONSTER_CATALOG_W2_EXPANDED && MONSTER_CATALOG_W2_EXPA
 /** Avontuur horde: 6× meer spawns + reuzen + volledig monsterboek (W2 catalog ≈ 2× roster). */
 const ADVENTURE_HORDE_MUL = 6;
 const ADVENTURE_HORDE_MAX_PER_WAVE = 36;
-const ADVENTURE_MAX_ALIVE = IS_TOUCH ? 54 : 78;
+/** Desktop ceiling. Live cap is `adventureMaxAliveNow()` (viewport density). */
+const ADVENTURE_MAX_ALIVE = 78;
 const GIANT_SPAWN_CHANCE = 0.15;
 const GIANT_SIZE_MUL = 1.52;
 const GIANT_HP_MUL = 1.34;
@@ -16691,11 +16692,14 @@ function maxRarityForAdvLevel(n, diff) {
   return maxRarity;
 }
 
-function buildLevel(n, diffId) {
+function buildLevel(n, diffId, densityOpts) {
   const diff = typeof advDiffMeta === 'function' ? advDiffMeta(diffId) : {
     id: 'normal', order: 0, hpMul: 1, dmgMul: 1, rarityBoost: 0, eliteBonus: 0, giantBonus: 0,
     theme: null, speedMul: 1, enrageMul: 1, enrageAt: 0.5, hordeMul: 1, model: '1.0',
   };
+  const dens = (typeof combatDensityProfile === 'function')
+    ? combatDensityProfile(densityOpts || {})
+    : { scale: 1, maxAlive: ADVENTURE_MAX_ALIVE, w: 1100, h: 620 };
   const hpMul = (1 + (n - 1) * 0.14) * (diff.hpMul || 1);
   const dmgMul = (1 + (n - 1) * 0.08) * (diff.dmgMul || 1);
   const maxRarity = maxRarityForAdvLevel(n, diff.id);
@@ -16715,10 +16719,13 @@ function buildLevel(n, diffId) {
   const waveCount = Math.min(2 + Math.floor(n / 5) + (diff.order >= 2 ? 1 : 0), 6);
   const basePerWave = 2 + Math.floor(n / 4);
   const hordeScale = (diff.hordeMul || 1);
-  const perWave = Math.min(
+  const rawPerWave = Math.min(
     Math.max(2, Math.ceil(basePerWave * ADVENTURE_HORDE_MUL * hordeScale)),
     ADVENTURE_HORDE_MAX_PER_WAVE
   );
+  const perWave = (typeof scaleAdventurePerWave === 'function')
+    ? scaleAdventurePerWave(rawPerWave, dens)
+    : rawPerWave;
   for (let w = 0; w < waveCount; w++) {
     const list = [];
     for (let i = 0; i < perWave; i++) {
@@ -16876,7 +16883,10 @@ function buildLevel(n, diffId) {
   }
   if (BOSS_AT[n]) {
     const bossWave = BOSS_AT[n].map(x => Object.assign({}, x, { bossCore: !!x.elite }));
-    const hordePad = Math.min(3 + Math.floor(n / 8) + (diff.order || 0) * 2, 12);
+    const hordePadRaw = Math.min(3 + Math.floor(n / 8) + (diff.order || 0) * 2, 12);
+    const hordePad = (typeof scaleAdventureHordePad === 'function')
+      ? scaleAdventureHordePad(hordePadRaw, dens)
+      : hordePadRaw;
     for (let i = 0; i < hordePad; i++) {
       const elite = Math.random() < (0.1 + (diff.eliteBonus || 0) * 0.5);
       const bsp = weightedPick(pool, n, rarityBias);
@@ -16895,6 +16905,12 @@ function buildLevel(n, diffId) {
     model: diff.model || '1.0',
     enrageMul: diff.enrageMul || 1,
     enrageAt: diff.enrageAt != null ? diff.enrageAt : 0.5,
+    combatDensity: {
+      scale: dens.scale,
+      maxAlive: dens.maxAlive,
+      w: dens.w,
+      h: dens.h,
+    },
   };
 }
 
@@ -29817,6 +29833,147 @@ addEventListener('keyup', e => {
   }
 });
 
+/* --- src/systems/combat-density.js --- */
+/**
+ * Adventure combat density — viewport / safe-playfield scale.
+ *
+ * Phone playfields are ~1/3 the width of desktop, but used the same horde
+ * counts (`ADVENTURE_HORDE_MUL` × wave size, up to 36, 54–78 alive). That
+ * piles threats on top of the player. Scale spawn *counts*, *spacing*, and
+ * *simultaneous alive* by playfield size.
+ *
+ * Rules:
+ * - Desktop / wide tablets (width ≥ 960) stay at 1.0 — do not gut PC.
+ * - Phone stays a horde (scale floor 0.60), just not a pile-on.
+ * - Versus / training / wall / coinrun are untouched.
+ * - Wave *count* (stage length) is not shortened.
+ */
+const COMBAT_DENSITY_REF_W = 1100;
+const COMBAT_DENSITY_REF_H = 620;
+const COMBAT_DENSITY_WIDE_W = 960;
+const COMBAT_DENSITY_MIN = 0.60;
+const COMBAT_DENSITY_MAX = 1;
+const COMBAT_DENSITY_SLOT_PX = 55;
+const ADVENTURE_MAX_ALIVE_DESKTOP = 78;
+const ADVENTURE_MAX_ALIVE_TOUCH = 54;
+
+function combatDensityClamp(v, a, b) {
+  if (typeof clamp === 'function') return clamp(v, a, b);
+  return v < a ? a : (v > b ? b : v);
+}
+
+function combatPlayfieldSize(opts) {
+  opts = opts || {};
+  let w = Number(opts.w);
+  let h = Number(opts.h);
+  if (!(w > 0)) {
+    if (typeof W === 'number' && W > 80) w = W;
+    else if (typeof viewportGameSize === 'function') w = viewportGameSize().w;
+    else if (typeof innerWidth === 'number' && innerWidth > 0) w = innerWidth;
+    else w = COMBAT_DENSITY_REF_W;
+  }
+  if (!(h > 0)) {
+    if (typeof H === 'number' && H > 80) h = H;
+    else if (typeof viewportGameSize === 'function') h = viewportGameSize().h;
+    else if (typeof innerHeight === 'number' && innerHeight > 0) h = innerHeight;
+    else h = COMBAT_DENSITY_REF_H;
+  }
+  return { w: Math.max(1, Math.round(w)), h: Math.max(1, Math.round(h)) };
+}
+
+/** True when the fight strip is phone-small (portrait or short landscape). */
+function combatDensityIsCompact(w, h) {
+  return w < 520 || h < 430 || (w < 820 && h < 500);
+}
+
+function combatDensityIsTablet(w, h) {
+  return !combatDensityIsCompact(w, h) && w < COMBAT_DENSITY_WIDE_W;
+}
+
+/**
+ * 0.60–1.00 density factor. Width-weighted: side-spawns walk in across W.
+ * Wide screens (≥960) always return 1 so desktop math is unchanged.
+ */
+function combatDensityScale(wOrOpts, h) {
+  const sz = (wOrOpts && typeof wOrOpts === 'object')
+    ? combatPlayfieldSize(wOrOpts)
+    : combatPlayfieldSize({ w: wOrOpts, h: h });
+  if (sz.w >= COMBAT_DENSITY_WIDE_W) return COMBAT_DENSITY_MAX;
+  const widthRatio = sz.w / COMBAT_DENSITY_REF_W;
+  const areaRatio = (sz.w * Math.min(sz.h, 780)) / (COMBAT_DENSITY_REF_W * COMBAT_DENSITY_REF_H);
+  const raw = widthRatio * 0.78 + Math.sqrt(Math.max(0.18, areaRatio)) * 0.22;
+  return combatDensityClamp(raw, COMBAT_DENSITY_MIN, COMBAT_DENSITY_MAX);
+}
+
+function combatDensityTouchCeil() {
+  return (typeof IS_TOUCH !== 'undefined' && IS_TOUCH)
+    ? ADVENTURE_MAX_ALIVE_TOUCH
+    : ADVENTURE_MAX_ALIVE_DESKTOP;
+}
+
+function combatDensityProfile(wOrOpts, h) {
+  const sz = (wOrOpts && typeof wOrOpts === 'object')
+    ? combatPlayfieldSize(wOrOpts)
+    : combatPlayfieldSize({ w: wOrOpts, h: h });
+  const scale = combatDensityScale(sz);
+  const compact = combatDensityIsCompact(sz.w, sz.h);
+  const tablet = combatDensityIsTablet(sz.w, sz.h);
+  const touchCeil = combatDensityTouchCeil();
+  const slots = Math.max(4, Math.floor(sz.w / COMBAT_DENSITY_SLOT_PX));
+  const layers = compact ? 2 : (tablet ? 2.4 : 3);
+  const offscreen = compact ? 3 : (tablet ? 6 : 10);
+  const fromSlots = Math.round(slots * layers + offscreen);
+  const fromLegacy = Math.round(touchCeil * scale);
+  let maxAlive;
+  if (scale >= 0.98) {
+    maxAlive = touchCeil;
+  } else {
+    maxAlive = Math.min(fromSlots, fromLegacy);
+    maxAlive = combatDensityClamp(maxAlive, compact ? 10 : 14, touchCeil);
+  }
+  return {
+    w: sz.w,
+    h: sz.h,
+    scale,
+    compact: !!compact,
+    tablet: !!tablet,
+    maxAlive,
+    spawnIntervalMul: compact ? 1.38 : (tablet ? 1.12 : 1),
+    spawnGapPx: compact ? 56 : (tablet ? 42 : 32),
+    spawnBatchMax: compact ? 1 : (tablet ? 2 : 3),
+  };
+}
+
+function scaleAdventurePerWave(basePerWave, profile) {
+  profile = profile || combatDensityProfile();
+  const n = Math.ceil(Number(basePerWave) * (profile.scale || 1));
+  return Math.max(2, n);
+}
+
+function scaleAdventureHordePad(basePad, profile) {
+  profile = profile || combatDensityProfile();
+  return Math.max(1, Math.round(Number(basePad) * (profile.scale || 1)));
+}
+
+function adventureMaxAliveNow(profile) {
+  profile = profile || combatDensityProfile();
+  return profile.maxAlive || combatDensityTouchCeil();
+}
+
+/** Cadence used by Adventure spawn loop. Desktop profile == legacy 0.38 / batch 3 / gap 32. */
+function adventureSpawnCadence(queueLeft, opener, bossWave, spawnMul, profile) {
+  profile = profile || combatDensityProfile();
+  const batchWish = opener ? 1 : (queueLeft > 28 ? 3 : queueLeft > 14 ? 2 : 1);
+  const batch = Math.max(1, Math.min(batchWish, profile.spawnBatchMax || 3));
+  const pace = opener ? 1.55 : (queueLeft > 20 ? 0.72 : queueLeft > 10 ? 0.86 : 1);
+  const base = bossWave ? 0.92 : (opener ? 0.78 : 0.38);
+  const interval = base * (spawnMul || 1) * pace * (profile.spawnIntervalMul || 1);
+  return {
+    batch: opener ? 1 : batch,
+    interval,
+    gapPx: profile.spawnGapPx || 32,
+  };
+}
 /* --- src/systems/fighter-move.js --- */
 /* ========================== FIGHTER MOVE ========================== */
 /**
@@ -40349,7 +40506,8 @@ class Game {
     const bossWave = isBossWave(this.level, this.waveIdx);
     this.spawnQueue = wave.slice();
     this.waveTotal = wave.length;
-    this.spawnTimer = bossWave ? 1.0 : 0.45;
+    const densStart = (typeof combatDensityProfile === 'function') ? combatDensityProfile() : null;
+    this.spawnTimer = (bossWave ? 1.0 : 0.45) * ((densStart && densStart.spawnIntervalMul) || 1);
     this.wavePause = 0;
     if (this.stageShieldPerWave > 0 && this.player) {
       this.playerShieldT = Math.max(this.playerShieldT, this.stageShieldPerWave);
@@ -40684,21 +40842,30 @@ class Game {
       // Satan / tide-beloning: geen normale golven tot duel klaar
     } else if (this.spawnQueue.length) {
       const alive = this.monsters.filter((m) => m.alive).length;
+      const aliveCap = (typeof adventureMaxAliveNow === 'function')
+        ? adventureMaxAliveNow()
+        : ADVENTURE_MAX_ALIVE;
       this.spawnTimer -= dt;
-      if (this.spawnTimer <= 0 && alive < ADVENTURE_MAX_ALIVE) {
+      if (this.spawnTimer <= 0 && alive < aliveCap) {
         const bossWave = isBossWave(this.level, this.waveIdx);
         const meta = this.level.waveMeta && this.level.waveMeta[this.waveIdx];
         const spawnMul = (meta && meta.spawnMul) || 1;
         const queueLeft = this.spawnQueue.length;
         const opener = this.level && this.level.n <= 2 && this.waveIdx === 0;
-        const batch = opener ? 1 : (queueLeft > 28 ? 3 : queueLeft > 14 ? 2 : 1);
+        const dens = (typeof adventureSpawnCadence === 'function')
+          ? adventureSpawnCadence(queueLeft, opener, bossWave, spawnMul)
+          : null;
+        const batch = opener ? 1 : (dens ? dens.batch : (queueLeft > 28 ? 3 : queueLeft > 14 ? 2 : 1));
         const intervalMul = opener ? 1.55 : (queueLeft > 20 ? 0.72 : queueLeft > 10 ? 0.86 : 1);
-        this.spawnTimer = (bossWave ? 0.92 : (opener ? 0.78 : 0.38)) * spawnMul * intervalMul;
-        for (let b = 0; b < batch && this.spawnQueue.length && this.monsters.filter((m) => m.alive).length < ADVENTURE_MAX_ALIVE; b++) {
+        this.spawnTimer = dens
+          ? dens.interval
+          : (bossWave ? 0.92 : (opener ? 0.78 : 0.38)) * spawnMul * intervalMul;
+        const gapPx = (dens && dens.gapPx) || 32;
+        for (let b = 0; b < batch && this.spawnQueue.length && this.monsters.filter((m) => m.alive).length < aliveCap; b++) {
           const def = this.spawnQueue.shift();
           if (!def || !def.sp || !SPECIES[def.sp]) continue;
           const side = Math.random() < 0.75 ? 1 : -1;
-          const x = (side > 0 ? W + 40 : -40) + b * side * 32;
+          const x = (side > 0 ? W + 40 : -40) + b * side * gapPx;
           const mon = new Monster(def.sp, x, this, {
             elite: !!(def.elite || def.superBoss),
             superBoss: !!def.superBoss,
@@ -40724,7 +40891,7 @@ class Game {
             this.floater(mon.x, mon.y - mon.size - 28, t('combat.giant'), '#ffd75e', 13);
           }
         }
-      } else if (alive >= ADVENTURE_MAX_ALIVE) {
+      } else if (alive >= aliveCap) {
         this.spawnTimer = Math.min(this.spawnTimer, 0.12);
       }
     } else if (this.waveIdx >= 0 && this.monsters.every(m => !m.alive) && this.player?.alive) {
@@ -53653,6 +53820,13 @@ function bootGame() {
     top20Ids: () => (typeof speciesTop20Ranked === 'function' ? speciesTop20Ranked().slice() : []),
     isTop20: (id) => (typeof isTop20StrongestSpecies === 'function' ? isTop20StrongestSpecies(id) : false),
     spawnTop20: (id) => (typeof spawnTop20ForTest === 'function' ? spawnTop20ForTest(game, id) : null),
+    combatDensity: (typeof combatDensityProfile === 'function') ? {
+      scale: combatDensityScale,
+      profile: combatDensityProfile,
+      maxAlive: adventureMaxAliveNow,
+      cadence: adventureSpawnCadence,
+      perWave: scaleAdventurePerWave,
+    } : null,
     previewTop20Spawn: () => {
       try { AudioSys.init(); AudioSys.sfx('top20Spawn'); } catch (_) {}
       try { if (game && typeof game.shake === 'function') game.shake(4, 0.16); } catch (_) {}

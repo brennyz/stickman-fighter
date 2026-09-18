@@ -145,6 +145,7 @@ Schrijf **1–3 regels** per sessie: datum, d#, wat, versie.
 
 | Datum (UTC) | d# | Update |
 |-------------|-----|--------|
+| 2026-09-18 | — | **Mobile combat density:** Adventure spawn counts / gap / max-alive scale by viewport. Phone portrait 0.60 / ~17 alive / single-file; desktop 1.0 / 78 unchanged. Versus out. **v1.18.173 / SW 383**. Draft, niet main. Docs: `docs/COMBAT-DENSITY.md`. |
 | 2026-09-16 | — | **MEGA-MERGE → main** Grok wave #295–#309 (i18n → systems → UI → pixels → polish). Feature-base PRs (#297/#300/#307/#309) cherry-picked. **v1.18.172 / SW 382**. speel.html na Pages. |
 | 2026-09-16 | — | Gear UI ↔ #295 equip-API: sheets via gearSlotInventory, tap via gearEquipItem(id,{expectSlot}), states ok/vanity-ok/already-equipped/locked/not-owned/wrong-slot/unknown. DOM/schema 1 ongewijzigd. v1.18.171 / SW 381. Draft, niet main. |
 | 2026-09-16 | — | Gear UX pass: HOME-sibling (1-tap Uitrusting, grotere hero + overlays, slot/wapen HOME-cards, tap=aan/uit, safe Back, één page-scroll). Schema ongewijzigd. v1.18.170 / SW 380. Draft, niet main. |
