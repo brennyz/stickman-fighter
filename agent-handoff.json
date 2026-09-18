@@ -57,7 +57,7 @@
       "id": "w-20260918T154404",
       "from": "user",
       "text": "Strong #325. Until ~17:54 Amsterdam: (1) Coordinate note on PR: pixel-visibility may still be sibling — retest landscape after rotate mid-fight once more. (2) Any leftover clipped building / letterbox dead zone on 844×390? (3) If solid, mark DONE and stop. Draft only, speel.html, no Versus, no main.",
-      "status": "in-progress",
+      "status": "done-in-code",
       "updated": "2026-09-18",
       "notes": "Keep on #325 until 17:54 CEST."
     },
@@ -1196,6 +1196,14 @@
   ],
   "sessionLog": [
     {
+      "at": "2026-09-18T15:45:22Z",
+      "summary": "#325 DONE: mid-fight rotate + cyber letterbox=0. Pixel-visibility sibling. Stop."
+    },
+    {
+      "at": "2026-09-18T15:45:14Z",
+      "summary": "#325 DONE: mid-fight rotate 390→844×390 + cyber city letterbox=0. Pixel-visibility sibling. Draft, geen main."
+    },
+    {
       "at": "2026-09-18T15:41:26Z",
       "summary": "P0 landscape combat camera: #game follows visual viewport; resize-before-spawn; alignCombatPlayfield snaps floor+entities on 844×390 / 390×844. rightPad HUD leftover fixed. Draft #325. No main."
     },
@@ -1286,14 +1294,6 @@
     {
       "at": "2026-09-18T12:36:17Z",
       "summary": "examiner P0: pets/gear locale + 390px overflow (start)"
-    },
-    {
-      "at": "2026-09-18T12:31:56Z",
-      "summary": "LANGUAGE: factory desc + nameShort, FOMO/HUD locale, export gear/fabriek i18n. Draft #317, geen main."
-    },
-    {
-      "at": "2026-09-18T12:30:17Z",
-      "summary": "LANGUAGE worker: layout-safe NL/EN/DE/FR/ES copy (factory desc, FOMO, HUD telegraphs). Draft, geen main."
     }
   ],
   "implementedFeaturesSummary": "d18 char select deel 1+2 (v1.11.1-2); Mats coinrun + shuriken mik/vliegers + anti-spam (v1.12.0); speel.html (v1.12.2+). Zie HANDOFF-ZOEKINDEX.md en improvement-d20-bag.json userFeatureLog.",
