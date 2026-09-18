@@ -79,6 +79,9 @@ async function run() {
         logJunk: (typeof chestPullLogLine === 'function')
           ? chestPullLogLine({ kind: 'weapon', type: 'junk', nice: false })
           : '',
+        logEgg: (typeof chestPullLogLine === 'function')
+          ? chestPullLogLine({ kind: 'pet', type: 'egg', id: 'egg_cloud', rarity: 'uncommon' })
+          : '',
       };
     });
     must(openSnap.summonActive, 'summonScreen not active: ' + JSON.stringify(openSnap.active));
@@ -94,8 +97,45 @@ async function run() {
     must(openSnap.logHelper, 'missing chestPullLogLine');
     must(openSnap.logJunk && !/weapon_unlock|junk/i.test(openSnap.logJunk),
       'log line still raw: ' + openSnap.logJunk);
+    must(openSnap.logEgg && /wolkje/i.test(openSnap.logEgg) && !/egg_cloud/.test(openSnap.logEgg),
+      'egg log should use display name: ' + openSnap.logEgg);
     const btnTxt = await page.evaluate(() => (document.getElementById('btnChestPull') || {}).textContent || '');
     must(/open kist/i.test(btnTxt), 'expected Open kist CTA, got: ' + btnTxt);
+    const chrome = await page.evaluate(() => {
+      const sub = document.getElementById('summonScreenSub');
+      const where = document.getElementById('summonWhereStrip');
+      const home = document.querySelector('#summonScreen > .sub-home-bar');
+      const goto = document.querySelector('.summon-goto-row');
+      const fatGoto = !!(goto && goto.querySelector('.btn.mode-btn'));
+      const cs = (el) => {
+        if (!el) return null;
+        const s = getComputedStyle(el);
+        return { display: s.display, vis: s.visibility, w: Math.round(el.getBoundingClientRect().width) };
+      };
+      return {
+        sub: cs(sub),
+        where: cs(where),
+        home: cs(home),
+        fatGoto,
+        gotoText: goto ? (goto.textContent || '').replace(/\s+/g, ' ').trim() : '',
+        vw: window.innerWidth,
+      };
+    });
+    must(chrome.vw <= 400, 'expected phone viewport, got ' + chrome.vw);
+    must(chrome.sub && chrome.sub.display === 'none', 'subtitle should hide on phone: ' + JSON.stringify(chrome.sub));
+    must(chrome.where && (chrome.where.display === 'none' || chrome.where.w <= 2),
+      'where-strip should be visually hidden: ' + JSON.stringify(chrome.where));
+    must(chrome.home && chrome.home.display === 'none', 'home bar should hide on summon: ' + JSON.stringify(chrome.home));
+    must(!chrome.fatGoto, 'collection jumps must be text links, not fat mode buttons');
+    must(/wapens/i.test(chrome.gotoText) && /pets/i.test(chrome.gotoText),
+      'expected Wapens · Pets links, got: ' + chrome.gotoText);
+    await page.evaluate(() => {
+      const splash = document.getElementById('sfSplash');
+      if (splash) { splash.hidden = true; splash.style.display = 'none'; }
+      const fomo = document.getElementById('fomoRitual');
+      if (fomo) fomo.hidden = true;
+    });
+    await page.screenshot({ path: path.join(outDir, 'summon-idle-phone.png') });
     const polish = await page.evaluate(() => {
       const css = [...document.styleSheets].flatMap(s => {
         try { return [...s.cssRules].map(r => r.cssText); } catch (_) { return []; }
@@ -212,6 +252,8 @@ async function run() {
     must(pullSnap.skipReady, 'expected is-skip-ready after card lands');
     must(!/weapon_unlock|pet_unlock|weapon_ascend/.test(pullSnap.logRaw),
       'pull log still raw type ids: ' + pullSnap.logRaw);
+    must(!/egg_/.test(pullSnap.logRaw), 'egg log still uses raw id: ' + pullSnap.logRaw);
+    await page.screenshot({ path: path.join(outDir, 'summon-card-phone.png') });
     if (pullSnap.cardCenter) {
       must(pullSnap.cardCenter.dx <= 12, 'reward card not horizontally centered: ' + JSON.stringify(pullSnap.cardCenter));
       must(pullSnap.cardCenter.dy <= 18, 'reward card not vertically centered: ' + JSON.stringify(pullSnap.cardCenter));

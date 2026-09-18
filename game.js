@@ -20343,6 +20343,10 @@ function chestPullKindName(p) {
     const sp = def && typeof SPECIES !== 'undefined' ? SPECIES[def.speciesId] : null;
     if (sp && sp.name) return sp.name;
   }
+  if (p.id && (p.type === 'egg' || String(p.id).indexOf('egg_') === 0) && typeof eggDef === 'function') {
+    const egg = eggDef(p.id);
+    if (egg && egg.name) return egg.name;
+  }
   if (p.id && p.type === 'gear' && typeof gearLabel === 'function') {
     try { return gearLabel({ id: p.id, name: p.id }) || p.id; } catch (_) { return p.id; }
   }
