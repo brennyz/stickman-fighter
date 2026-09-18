@@ -141,12 +141,13 @@ Lite FX setting is the only player-facing escape. The auto hint waits for **tier
 
 ## Browser / mid-phone notes
 
-- **390×844 portrait:** HOME + Training start. Fighters visible. First spawn not a freeze. `#327` opener feels honest.
-- **844×390 landscape:** `W` is 844 so `W<720` is false; guard still trips via `IS_TOUCH`. Same 90-frame cliff.
-- **Lite FX toggle** in Instellingen is labeled and explained. Default is **off** — mid-phone users only get the 90-frame window unless FPS already dropped.
-- Versus not opened (`startGame('versus')` toasts retired).
+- **390×844 portrait:** HOME hub paints (not black/blue). Training: player + RabbitRobot both draw, HUD + pads up, first second not frozen. Matches #327 opener.
+- **844×390 landscape:** fight layer up, pads reachable. `W` is 844 so `W<720` is false; guard still trips via `IS_TOUCH`. Same 90-frame cliff. One shot showed only the robot in frame (player maybe off-camera left) — camera/#325, not an FX dump.
+- **Pause audio chips** (Klassiek / Jungle / …) are **not** Lite FX. Lite FX lives under Instellingen. Default **off**.
+- Console: AudioContext + `navigator.vibrate` gated until gesture — expected. No fight crash.
+- Versus not opened.
 
-This VM/desktop Chrome is **not** a mid-SoC Android. PERF-01/02 are **code-path** hitches (freezeT + particle dump). On a real mid-phone they will read as a stutter; on this host they are a 1–2 frame pause.
+This VM/desktop Chrome is **not** a mid-SoC Android. PERF-01/02 are **code-path** hitches (`freezeT` + particle dump). On a real mid-phone they read as a stutter; here they are a 1–2 frame pause.
 
 ---
 
