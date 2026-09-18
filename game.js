@@ -323,9 +323,9 @@ const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const VERSION_UPDATE_SAVE_KEY = 'stickfighter_version_update_save_v1';
 const VERSION_UPDATE_FLAG_KEY = 'stickfighter_version_update_flag_v1';
 const SAVE_EXPORT_SCHEMA = 3;
-const APP_VERSION = '1.18.172';
+const APP_VERSION = '1.18.173';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 382;
+const SW_CACHE_REV = 383;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', petCoins: 0, dex: {}, summons: {}, pets: {}, activePet: null,
   eggPets: {}, activeEggPet: null, eggDaily: null,
   chestDaily: null, chestWeapons: {},
@@ -2323,7 +2323,7 @@ const I18N = {
       buildings: 'Fabrieken', buildingsSub: 'Werken · oogst · upgrade',
       options: 'Opties', tips: 'Tips', fresh: 'Verse versie', install: 'Zet in app-lade', installSub: 'Één icoon, zoals een echte app',
       profileAria: 'Profiel en missies',
-      pressStart: 'insert coin', missionReady: 'missie klaar', dayBonus: 'Dagbonus',
+      pressStart: 'gooi een munt', missionReady: 'missie klaar', dayBonus: 'Dagbonus',
       choosePath: 'KIES JE PAD', lastPlayed: 'LAATST', playHere: 'SPEEL', saveSync: 'save OK',
       startGame: 'SPELEN', startSub: 'Start het gevecht',
       titleName: 'Naam — hoeft niet', titleNamePh: 'Bijnaam (optioneel)',
@@ -2504,6 +2504,8 @@ const I18N = {
       flagVanity: 'Alleen look — geen stats', flagStats: '+ stats', flagArmour: 'Pantser',
       needLvl: 'Vrij vanaf Lv {n}', needDays: 'Vrij vanaf dag {n}',
       equip: 'Uitrusten', equipped: 'Aan', empty: 'Leeg',
+      wearing: 'aan',
+      pillVanity: 'SIER', pillStat: 'STAT', pillLock: 'VAST',
       slot: { head: 'Hoofd', chest: 'Borst', hands: 'Handen', legs: 'Benen', back: 'Rug' },
     },
     install: { title: 'Zet in app-lade', sub: 'Één icoon, zoals een echte app' },
@@ -2793,6 +2795,8 @@ const I18N = {
       flagVanity: 'Look only — no stats', flagStats: '+ stats', flagArmour: 'Armour',
       needLvl: 'Unlocks at Lv {n}', needDays: 'Unlocks on day {n}',
       equip: 'Equip', equipped: 'On', empty: 'Empty',
+      wearing: 'on',
+      pillVanity: 'LOOK', pillStat: 'STAT', pillLock: 'LOCK',
       slot: { head: 'Head', chest: 'Chest', hands: 'Hands', legs: 'Legs', back: 'Back' },
     },
     install: { title: 'Add as app', sub: 'One icon, like a real app' },
@@ -3131,6 +3135,8 @@ const I18N = {
       flagVanity: 'Nur Look — keine Stats', flagStats: '+ Stats', flagArmour: 'Rüstung',
       needLvl: 'Frei ab Lv {n}', needDays: 'Frei ab Tag {n}',
       equip: 'Anlegen', equipped: 'An', empty: 'Leer',
+      wearing: 'an',
+      pillVanity: 'OPTIK', pillStat: 'STAT', pillLock: 'SPERRE',
       slot: { head: 'Kopf', chest: 'Brust', hands: 'Hände', legs: 'Beine', back: 'Rücken' },
     },
     install: { title: 'Als App speichern', sub: 'Ein Icon, wie eine echte App' },
@@ -3399,6 +3405,8 @@ const I18N = {
       flagVanity: 'Look seulement — pas de stats', flagStats: '+ stats', flagArmour: 'Armure',
       needLvl: 'Libre dès Lv {n}', needDays: 'Libre dès le jour {n}',
       equip: 'Équiper', equipped: 'Sur toi', empty: 'Vide',
+      wearing: 'sur toi',
+      pillVanity: 'LOOK', pillStat: 'STAT', pillLock: 'VERROU',
       slot: { head: 'Tête', chest: 'Torse', hands: 'Mains', legs: 'Jambes', back: 'Dos' },
     },
     install: { title: 'Ajouter comme app', sub: 'Une icône, comme une vraie app' },
@@ -3659,6 +3667,8 @@ const I18N = {
       flagVanity: 'Solo look — sin stats', flagStats: '+ stats', flagArmour: 'Armadura',
       needLvl: 'Libre desde Lv {n}', needDays: 'Libre desde el día {n}',
       equip: 'Equipar', equipped: 'Puesto', empty: 'Vacío',
+      wearing: 'puesto',
+      pillVanity: 'LOOK', pillStat: 'STAT', pillLock: 'BLOQ',
       slot: { head: 'Cabeza', chest: 'Pecho', hands: 'Manos', legs: 'Piernas', back: 'Espalda' },
     },
     install: { title: 'Añadir como app', sub: 'Un icono, como una app real' },
@@ -16299,10 +16309,61 @@ const UNLOCK_AT = {
 
 };
 Object.assign(UNLOCK_AT, (MONSTER_CATALOG_W2_EXPANDED && MONSTER_CATALOG_W2_EXPANDED.unlockAt) || {});
-/** Avontuur horde: 6× meer spawns + reuzen + volledig monsterboek (W2 catalog ≈ 2× roster). */
+/** Avontuur horde: 6× meer spawns + reuzen + volledig monsterboek (W2 catalog ≈ 2× roster).
+ *  Desktop keeps the big-horde feel. Phone (~390px) must not use the same live count. */
 const ADVENTURE_HORDE_MUL = 6;
 const ADVENTURE_HORDE_MAX_PER_WAVE = 36;
-const ADVENTURE_MAX_ALIVE = IS_TOUCH ? 54 : 78;
+const ADVENTURE_MAX_ALIVE_DESK = 78;
+const ADVENTURE_MAX_ALIVE_TOUCH_WIDE = 54;
+
+function adventureViewportW() {
+  if (typeof W === 'number' && W > 0) return W;
+  try {
+    if (typeof innerWidth === 'number' && innerWidth > 0) return innerWidth;
+  } catch (_) {}
+  return 800;
+}
+
+/** Viewport band for spawn density. Phone must feel playable; desk keeps the horde. */
+function adventureHordeProfile() {
+  const w = adventureViewportW();
+  const touch = typeof IS_TOUCH !== 'undefined' && IS_TOUCH;
+  if (w <= 440) {
+    return {
+      band: 'phone',
+      mul: 2.15,
+      maxPerWave: 12,
+      maxAlive: 8,
+      spawnIntervalMul: 1.28,
+      openerCapMul: 0.85,
+    };
+  }
+  if (w <= 780) {
+    return {
+      band: 'tablet',
+      mul: 3.6,
+      maxPerWave: 20,
+      maxAlive: 16,
+      spawnIntervalMul: 1.12,
+      openerCapMul: 0.92,
+    };
+  }
+  return {
+    band: 'desk',
+    mul: ADVENTURE_HORDE_MUL,
+    maxPerWave: ADVENTURE_HORDE_MAX_PER_WAVE,
+    maxAlive: touch ? ADVENTURE_MAX_ALIVE_TOUCH_WIDE : ADVENTURE_MAX_ALIVE_DESK,
+    spawnIntervalMul: 1,
+    openerCapMul: 1,
+  };
+}
+
+function adventureMaxAlive() {
+  return adventureHordeProfile().maxAlive;
+}
+
+/** Legacy alias — prefer adventureMaxAlive() so phone/tablet scale. */
+const ADVENTURE_MAX_ALIVE = (typeof IS_TOUCH !== 'undefined' && IS_TOUCH) ? 54 : 78;
 const GIANT_SPAWN_CHANCE = 0.15;
 const GIANT_SIZE_MUL = 1.52;
 const GIANT_HP_MUL = 1.34;
@@ -16715,9 +16776,12 @@ function buildLevel(n, diffId) {
   const waveCount = Math.min(2 + Math.floor(n / 5) + (diff.order >= 2 ? 1 : 0), 6);
   const basePerWave = 2 + Math.floor(n / 4);
   const hordeScale = (diff.hordeMul || 1);
+  const horde = (typeof adventureHordeProfile === 'function')
+    ? adventureHordeProfile()
+    : { mul: ADVENTURE_HORDE_MUL, maxPerWave: ADVENTURE_HORDE_MAX_PER_WAVE, openerCapMul: 1 };
   const perWave = Math.min(
-    Math.max(2, Math.ceil(basePerWave * ADVENTURE_HORDE_MUL * hordeScale)),
-    ADVENTURE_HORDE_MAX_PER_WAVE
+    Math.max(2, Math.ceil(basePerWave * (horde.mul || ADVENTURE_HORDE_MUL) * hordeScale)),
+    horde.maxPerWave || ADVENTURE_HORDE_MAX_PER_WAVE
   );
   for (let w = 0; w < waveCount; w++) {
     const list = [];
@@ -16850,15 +16914,17 @@ function buildLevel(n, diffId) {
   }
   // Soft live A3 + playtest P1: golf 1 milder — opener niet omsingelen.
   if (waves[0] && waves[0].length) {
+    const openerMul = horde.openerCapMul || 1;
     const softCap = n <= 2
       ? (n === 1 ? 2 : 3)
       : n <= 3
-        ? Math.max(3, Math.ceil(perWave * 0.38))
+        ? Math.max(2, Math.ceil(perWave * 0.38 * openerMul))
         : n <= 8
-          ? Math.max(5, Math.ceil(perWave * 0.55))
-          : Math.max(6, Math.ceil(perWave * 0.72));
+          ? Math.max(4, Math.ceil(perWave * 0.55 * openerMul))
+          : Math.max(5, Math.ceil(perWave * 0.72 * openerMul));
     if (waves[0].length > softCap) waves[0] = waves[0].slice(0, softCap);
     if (n === 1 && waves[1] && waves[1].length > 4) waves[1] = waves[1].slice(0, 4);
+    if (horde.band === 'phone' && n === 1 && waves[1] && waves[1].length > 3) waves[1] = waves[1].slice(0, 3);
     if (n <= 5) {
       for (let i = 0; i < waves[0].length; i++) {
         waves[0][i].elite = false;
@@ -16876,7 +16942,7 @@ function buildLevel(n, diffId) {
   }
   if (BOSS_AT[n]) {
     const bossWave = BOSS_AT[n].map(x => Object.assign({}, x, { bossCore: !!x.elite }));
-    const hordePad = Math.min(3 + Math.floor(n / 8) + (diff.order || 0) * 2, 12);
+    const hordePad = Math.min(3 + Math.floor(n / 8) + (diff.order || 0) * 2, horde.band === 'phone' ? 4 : 12);
     for (let i = 0; i < hordePad; i++) {
       const elite = Math.random() < (0.1 + (diff.eliteBonus || 0) * 0.5);
       const bsp = weightedPick(pool, n, rarityBias);
@@ -21417,6 +21483,12 @@ function seedNlGameStrings() {
     summonGotoPets: 'Naar pets',
     summonGotoSub: 'Collectie',
     summonLogEmpty: 'Nog geen pulls vandaag.',
+    summonLoadFail: 'Oproepen laden mislukt',
+    summonEgg: 'Ei · {name}',
+    summonEggPlain: 'Ei',
+    summonCoins: '+{n} pet coins',
+    summonXp: '+{n} XP',
+    summonNothing: 'Niks bijzonders',
     summonLeftToday: '{n} over vandaag',
     summonDoneToday: 'op voor vandaag',
     sharePlayLinkOk: '✓ Speel-link — deel met vrienden (Android)',
@@ -21700,9 +21772,9 @@ function seedNlFromRuntime() {
   Object.assign(I18N.nl.gear, {
     hubStat: '{n}/5',
     summarySlots: '<b>{n}</b>/5',
-    pillVanity: 'LOOK',
+    pillVanity: 'SIER',
     pillStat: 'STAT',
-    pillLock: 'LOCK',
+    pillLock: 'VAST',
     empty: 'Leeg',
     pickHint: 'Tik een item om aan of uit te doen.',
     invKicker: '{slot}',
@@ -21771,6 +21843,7 @@ const CATALOG_EN = {
     pillStat: 'STAT',
     pillLock: 'LOCK',
     empty: 'empty',
+    wearing: 'on',
     pickHint: 'Tap an item to equip or remove.',
     invKicker: '{slot}',
     weaponOpen: 'Weapons',
@@ -22577,6 +22650,12 @@ const CATALOG_EN = {
     summonGotoPets: 'To pets',
     summonGotoSub: 'Collection',
     summonLogEmpty: 'No pulls today yet.',
+    summonLoadFail: 'Could not load summons',
+    summonEgg: 'Egg · {name}',
+    summonEggPlain: 'Egg',
+    summonCoins: '+{n} pet coins',
+    summonXp: '+{n} XP',
+    summonNothing: 'Nothing special',
     summonLeftToday: '{n} left today',
     summonDoneToday: 'done for today',
     sharePlayLinkOk: '✓ Play link — share with friends (Android)',
@@ -24190,6 +24269,12 @@ const CATALOG_DE_CHROME = {
     summonGotoPets: 'Zu Pets',
     summonGotoSub: 'Sammlung',
     summonLogEmpty: 'Heute noch keine Pulls.',
+    summonLoadFail: 'Beschwörungen laden fehlgeschlagen',
+    summonEgg: 'Ei · {name}',
+    summonEggPlain: 'Ei',
+    summonCoins: '+{n} Pet-Coins',
+    summonXp: '+{n} XP',
+    summonNothing: 'Nichts Besonderes',
     summonLeftToday: '{n} übrig heute',
     summonDoneToday: 'für heute leer',
     sharePlayLinkOk: '✓ Spiel-Link — mit Freunden teilen (Android)',
@@ -24316,7 +24401,7 @@ const CATALOG_DE_CHROME = {
     filterOwned: 'Deins',
     filterAria: 'Filter',
     rarityAria: 'Seltenheit',
-    pillVanity: 'LOOK',
+    pillVanity: 'OPTIK',
     pillStat: 'STAT',
     pillLock: 'SPERRE',
     empty: 'Leer',
@@ -25912,6 +25997,24 @@ function applyLocaleOverlays() {
   if (typeof CATALOG_FR === 'object') deepMergeI18n(I18N.fr, CATALOG_FR);
   if (typeof CATALOG_ES === 'object') deepMergeI18n(I18N.es, CATALOG_ES);
   if (typeof CATALOG_DE === 'object') deepMergeI18n(I18N.de, CATALOG_DE);
+  deepMergeI18n(I18N.fr, {
+    ui: {
+      summonLoadFail: 'Invocations introuvables',
+      summonEgg: 'Œuf · {name}', summonEggPlain: 'Œuf',
+      summonCoins: '+{n} pet coins', summonXp: '+{n} XP',
+      summonNothing: 'Rien de spécial',
+    },
+    gear: { pillVanity: 'LOOK', pillStat: 'STAT', pillLock: 'VERROU', wearing: 'sur toi' },
+  });
+  deepMergeI18n(I18N.es, {
+    ui: {
+      summonLoadFail: 'No se pudieron cargar las invocaciones',
+      summonEgg: 'Huevo · {name}', summonEggPlain: 'Huevo',
+      summonCoins: '+{n} pet coins', summonXp: '+{n} XP',
+      summonNothing: 'Nada especial',
+    },
+    gear: { pillVanity: 'LOOK', pillStat: 'STAT', pillLock: 'BLOQ', wearing: 'puesto' },
+  });
 }
 /* --- src/systems/audio-samples.js --- */
 /* ========================= ONLINE SFX SAMPLES (CC0) ======================
@@ -36217,9 +36320,11 @@ class Pet {
     const bob = Math.sin(this.t * 6) * 2;
     const tx = p.x - p.face * (IS_TOUCH ? 34 : 38);
     const ty = p.y - 6 + bob * 0.25;
-    const follow = g.traveling ? 11 : 8;
-    this.x += (tx - this.x) * Math.min(1, dt * follow);
-    this.y += (ty - this.y) * Math.min(1, dt * 10);
+    const follow = g.traveling ? 20 : 16;
+    const dx = tx - this.x;
+    if (Math.abs(dx) > 150) this.x = tx - Math.sign(dx || 1) * 40;
+    else this.x += dx * Math.min(1, dt * follow);
+    this.y += (ty - this.y) * Math.min(1, dt * 14);
     this.face = p.face || 1;
 
     const inAdv = g.mode === 'adventure';
@@ -36487,9 +36592,11 @@ class EggPet {
     const bob = Math.sin(this.t * 4.5) * 3;
     const tx = p.x + p.face * (IS_TOUCH ? 26 : 30);
     const ty = p.y - 46 + bob;
-    const follow = g.traveling ? 10 : 7;
-    this.x += (tx - this.x) * Math.min(1, dt * follow);
-    this.y += (ty - this.y) * Math.min(1, dt * 9);
+    const follow = g.traveling ? 18 : 15;
+    const dx = tx - this.x;
+    if (Math.abs(dx) > 150) this.x = tx - Math.sign(dx || 1) * 28;
+    else this.x += dx * Math.min(1, dt * follow);
+    this.y += (ty - this.y) * Math.min(1, dt * 13);
   }
 
   draw(c) {
@@ -40685,16 +40792,21 @@ class Game {
     } else if (this.spawnQueue.length) {
       const alive = this.monsters.filter((m) => m.alive).length;
       this.spawnTimer -= dt;
-      if (this.spawnTimer <= 0 && alive < ADVENTURE_MAX_ALIVE) {
+      const aliveCap = (typeof adventureMaxAlive === 'function') ? adventureMaxAlive() : ADVENTURE_MAX_ALIVE;
+      if (this.spawnTimer <= 0 && alive < aliveCap) {
         const bossWave = isBossWave(this.level, this.waveIdx);
         const meta = this.level.waveMeta && this.level.waveMeta[this.waveIdx];
         const spawnMul = (meta && meta.spawnMul) || 1;
         const queueLeft = this.spawnQueue.length;
         const opener = this.level && this.level.n <= 2 && this.waveIdx === 0;
-        const batch = opener ? 1 : (queueLeft > 28 ? 3 : queueLeft > 14 ? 2 : 1);
+        const band = (typeof adventureHordeProfile === 'function') ? adventureHordeProfile().band : 'desk';
+        const batch = opener ? 1 : (band === 'phone' ? 1 : (queueLeft > 28 ? 3 : queueLeft > 14 ? 2 : 1));
         const intervalMul = opener ? 1.55 : (queueLeft > 20 ? 0.72 : queueLeft > 10 ? 0.86 : 1);
-        this.spawnTimer = (bossWave ? 0.92 : (opener ? 0.78 : 0.38)) * spawnMul * intervalMul;
-        for (let b = 0; b < batch && this.spawnQueue.length && this.monsters.filter((m) => m.alive).length < ADVENTURE_MAX_ALIVE; b++) {
+        const viewMul = (typeof adventureHordeProfile === 'function')
+          ? (adventureHordeProfile().spawnIntervalMul || 1)
+          : 1;
+        this.spawnTimer = (bossWave ? 0.92 : (opener ? 0.78 : 0.38)) * spawnMul * intervalMul * viewMul;
+        for (let b = 0; b < batch && this.spawnQueue.length && this.monsters.filter((m) => m.alive).length < aliveCap; b++) {
           const def = this.spawnQueue.shift();
           if (!def || !def.sp || !SPECIES[def.sp]) continue;
           const side = Math.random() < 0.75 ? 1 : -1;
@@ -40724,7 +40836,7 @@ class Game {
             this.floater(mon.x, mon.y - mon.size - 28, t('combat.giant'), '#ffd75e', 13);
           }
         }
-      } else if (alive >= ADVENTURE_MAX_ALIVE) {
+      } else if (alive >= aliveCap) {
         this.spawnTimer = Math.min(this.spawnTimer, 0.12);
       }
     } else if (this.waveIdx >= 0 && this.monsters.every(m => !m.alive) && this.player?.alive) {
@@ -43767,24 +43879,42 @@ class Game {
       }
       c.font = '600 15px -apple-system, sans-serif';
       c.textAlign = 'center';
-      const tw = c.measureText(hintTxt).width;
+      const maxHintW = Math.max(160, W - 28);
+      const hintLines = [];
+      const words = String(hintTxt || '').split(/\s+/);
+      let cur = '';
+      for (const word of words) {
+        const tryLine = cur ? cur + ' ' + word : word;
+        if (cur && c.measureText(tryLine).width > maxHintW) {
+          hintLines.push(cur);
+          cur = word;
+        } else cur = tryLine;
+      }
+      if (cur) hintLines.push(cur);
+      const lines = hintLines.slice(0, 3);
+      const lineH = 18;
+      let tw = 0;
+      for (const ln of lines) tw = Math.max(tw, c.measureText(ln).width);
       const padX = 16;
+      const pillH = 14 + lines.length * lineH;
       const hintY = (this.mode === 'adventure' && this.advHudBottom > 0)
         ? Math.max(H * 0.2, this.advHudBottom + 20)
         : H * 0.2;
       const pillY = hintY - 24;
       c.fillStyle = 'rgba(6,10,24,.78)';
-      this.rr(c, W / 2 - tw / 2 - padX, pillY, tw + padX * 2, 30, 10);
+      this.rr(c, W / 2 - tw / 2 - padX, pillY, tw + padX * 2, pillH, 10);
       c.fill();
       c.strokeStyle = 'rgba(255,215,94,.35)';
       c.lineWidth = a11yHighContrast() ? 2.5 : 1.5;
-      this.rr(c, W / 2 - tw / 2 - padX, pillY, tw + padX * 2, 30, 10);
+      this.rr(c, W / 2 - tw / 2 - padX, pillY, tw + padX * 2, pillH, 10);
       c.stroke();
-      fillHudText(c, hintTxt, W / 2, hintY, {
-        fill: '#fff',
-        stroke: 'rgba(0,0,0,.85)',
-        strokeW: a11yHighContrast() ? 3.5 : 0,
-      });
+      for (let i = 0; i < lines.length; i++) {
+        fillHudText(c, lines[i], W / 2, hintY + i * lineH, {
+          fill: '#fff',
+          stroke: 'rgba(0,0,0,.85)',
+          strokeW: a11yHighContrast() ? 3.5 : 0,
+        });
+      }
       c.globalAlpha = 1;
     }
     try { if (typeof drawAimTutorial === 'function') drawAimTutorial(c, this); } catch (_) {}
@@ -48420,7 +48550,7 @@ const UI = {
       try { syncPlayLayer(); } catch (_) {}
       try { hardenButtonIcons(document.getElementById('summonScreen')); } catch (_) {}
     } catch (err) {
-      sfReportError('renderSummon', err, 'Summons laden mislukt');
+      sfReportError('renderSummon', err, tOr('ui.summonLoadFail', 'Summons laden mislukt'));
       try { this.goMenu(); } catch (_) { ensureVisibleScreen(); }
     }
   },
@@ -48473,7 +48603,7 @@ const UI = {
       this.safeOpen('summonScreen', () => {
         this.renderSummon();
         try { ensureSummonVideoPreloaded(); } catch (_) {}
-      }, { msg: 'Summons laden mislukt' });
+      }, { msg: tOr('ui.summonLoadFail', 'Summons laden mislukt') });
     } catch (err) {
       sfReportError('openSummonHub', err, 'Summons openen mislukt');
       try { this.goMenu(); } catch (_) {}
@@ -48557,7 +48687,9 @@ const UI = {
         cc.strokeStyle = 'rgba(0,0,0,.35)';
         cc.lineWidth = 3;
         cc.stroke();
-        title = res.name ? ('Ei · ' + res.name) : 'Ei';
+        title = res.name
+          ? tOr('ui.summonEgg', 'Ei · {name}', { name: res.name })
+          : tOr('ui.summonEggPlain', 'Ei');
       } else if (res && res.type === 'coins') {
         cc.fillStyle = '#ffd75e';
         cc.beginPath(); cc.arc(cx, cy, 34, 0, Math.PI * 2); cc.fill();
@@ -48569,19 +48701,19 @@ const UI = {
         cc.textAlign = 'center';
         cc.textBaseline = 'middle';
         cc.fillText('PC', cx, cy + 1);
-        title = '+' + (res.amount || 0) + ' pet coins';
+        title = tOr('ui.summonCoins', '+{n} pet coins', { n: res.amount || 0 });
       } else if (res && res.type === 'xp') {
         cc.fillStyle = '#7cf5ff';
         cc.font = 'bold 34px Nunito, sans-serif';
         cc.textAlign = 'center';
         cc.textBaseline = 'middle';
         cc.fillText('XP', cx, cy);
-        title = '+' + (res.amount || 0) + ' XP';
+        title = tOr('ui.summonXp', '+{n} XP', { n: res.amount || 0 });
       } else {
         cc.strokeStyle = '#9db1e3';
         cc.lineWidth = 3;
         cc.strokeRect(cx - 36, cy - 36, 72, 72);
-        title = (res && res.label) || 'Niks bijzonders';
+        title = (res && res.label) || tOr('ui.summonNothing', 'Niks bijzonders');
       }
     } catch (_) {
       title = (res && res.name) || 'Summon';
@@ -53653,6 +53785,8 @@ function bootGame() {
     top20Ids: () => (typeof speciesTop20Ranked === 'function' ? speciesTop20Ranked().slice() : []),
     isTop20: (id) => (typeof isTop20StrongestSpecies === 'function' ? isTop20StrongestSpecies(id) : false),
     spawnTop20: (id) => (typeof spawnTop20ForTest === 'function' ? spawnTop20ForTest(game, id) : null),
+    hordeProfile: () => (typeof adventureHordeProfile === 'function' ? adventureHordeProfile() : null),
+    maxAlive: () => (typeof adventureMaxAlive === 'function' ? adventureMaxAlive() : null),
     previewTop20Spawn: () => {
       try { AudioSys.init(); AudioSys.sfx('top20Spawn'); } catch (_) {}
       try { if (game && typeof game.shake === 'function') game.shake(4, 0.16); } catch (_) {}

@@ -161,9 +161,11 @@ class EggPet {
     const bob = Math.sin(this.t * 4.5) * 3;
     const tx = p.x + p.face * (IS_TOUCH ? 26 : 30);
     const ty = p.y - 46 + bob;
-    const follow = g.traveling ? 10 : 7;
-    this.x += (tx - this.x) * Math.min(1, dt * follow);
-    this.y += (ty - this.y) * Math.min(1, dt * 9);
+    const follow = g.traveling ? 18 : 15;
+    const dx = tx - this.x;
+    if (Math.abs(dx) > 150) this.x = tx - Math.sign(dx || 1) * 28;
+    else this.x += dx * Math.min(1, dt * follow);
+    this.y += (ty - this.y) * Math.min(1, dt * 13);
   }
 
   draw(c) {

@@ -3722,17 +3722,36 @@
   body.big-touch #buildingsScreen .buildings-wallet-chip {
     min-height: 36px;
   }
+  /* EX-004: list XOR detail on every viewport. Dual-pane duplicated copy and
+     cramped harvest pills (desktop landscape + phone-landscape). */
   @media (min-width: 720px) and (orientation: landscape) {
     #buildingsScreen .buildings-body {
-      width: min(94vw, 860px);
-      display: grid;
-      grid-template-columns: minmax(280px, 1fr) minmax(0, 1.1fr);
-      align-items: start;
+      width: min(94vw, 520px);
+      display: flex;
+      flex-direction: column;
     }
-    #buildingsScreen .buildings-wallet { width: min(94vw, 860px); }
-    #buildingsScreen .buildings-detail { order: 0; display: flex; }
-    #buildingsScreen .buildings-list { order: 1; display: flex; }
-    #buildingsScreen[data-buildings-pane="list"] .buildings-detail { display: flex; }
-    #buildingsScreen[data-buildings-pane="detail"] .buildings-list { display: flex; }
+    #buildingsScreen .buildings-wallet { width: min(94vw, 520px); }
+  }
+  @media (max-width: 430px) {
+    #buildingsScreen .buildings-wallet-chip {
+      min-width: 0;
+      flex: 1 1 calc(33.33% - 8px);
+      justify-content: center;
+      padding: 6px 6px;
+    }
+    #buildingsScreen .buildings-wallet-lbl { font-size: 10px; }
+    #buildingsScreen .buildings-wallet-amt { font-size: 14px; }
+    #buildingsScreen .hub-tile-title,
+    #buildingsScreen .buildings-card-name,
+    #buildingsScreen .buildings-detail-name {
+      overflow-wrap: anywhere;
+      line-height: 1.2;
+    }
+    .gear-summary { gap: 5px; }
+    .gear-pill { font-size: 9px; padding: 3px 6px; letter-spacing: .04em; }
+    .summon-stage { max-height: min(34vh, 220px); aspect-ratio: 16 / 10; }
+    .summon-where { display: none; }
+    .summon-pull-btn { min-height: 52px; }
+    .summon-log { max-height: 72px; overflow: auto; }
   }
 

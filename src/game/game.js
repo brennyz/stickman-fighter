@@ -730,16 +730,21 @@ class Game {
     } else if (this.spawnQueue.length) {
       const alive = this.monsters.filter((m) => m.alive).length;
       this.spawnTimer -= dt;
-      if (this.spawnTimer <= 0 && alive < ADVENTURE_MAX_ALIVE) {
+      const aliveCap = (typeof adventureMaxAlive === 'function') ? adventureMaxAlive() : ADVENTURE_MAX_ALIVE;
+      if (this.spawnTimer <= 0 && alive < aliveCap) {
         const bossWave = isBossWave(this.level, this.waveIdx);
         const meta = this.level.waveMeta && this.level.waveMeta[this.waveIdx];
         const spawnMul = (meta && meta.spawnMul) || 1;
         const queueLeft = this.spawnQueue.length;
         const opener = this.level && this.level.n <= 2 && this.waveIdx === 0;
-        const batch = opener ? 1 : (queueLeft > 28 ? 3 : queueLeft > 14 ? 2 : 1);
+        const band = (typeof adventureHordeProfile === 'function') ? adventureHordeProfile().band : 'desk';
+        const batch = opener ? 1 : (band === 'phone' ? 1 : (queueLeft > 28 ? 3 : queueLeft > 14 ? 2 : 1));
         const intervalMul = opener ? 1.55 : (queueLeft > 20 ? 0.72 : queueLeft > 10 ? 0.86 : 1);
-        this.spawnTimer = (bossWave ? 0.92 : (opener ? 0.78 : 0.38)) * spawnMul * intervalMul;
-        for (let b = 0; b < batch && this.spawnQueue.length && this.monsters.filter((m) => m.alive).length < ADVENTURE_MAX_ALIVE; b++) {
+        const viewMul = (typeof adventureHordeProfile === 'function')
+          ? (adventureHordeProfile().spawnIntervalMul || 1)
+          : 1;
+        this.spawnTimer = (bossWave ? 0.92 : (opener ? 0.78 : 0.38)) * spawnMul * intervalMul * viewMul;
+        for (let b = 0; b < batch && this.spawnQueue.length && this.monsters.filter((m) => m.alive).length < aliveCap; b++) {
           const def = this.spawnQueue.shift();
           if (!def || !def.sp || !SPECIES[def.sp]) continue;
           const side = Math.random() < 0.75 ? 1 : -1;
@@ -769,7 +774,7 @@ class Game {
             this.floater(mon.x, mon.y - mon.size - 28, t('combat.giant'), '#ffd75e', 13);
           }
         }
-      } else if (alive >= ADVENTURE_MAX_ALIVE) {
+      } else if (alive >= aliveCap) {
         this.spawnTimer = Math.min(this.spawnTimer, 0.12);
       }
     } else if (this.waveIdx >= 0 && this.monsters.every(m => !m.alive) && this.player?.alive) {
@@ -3812,24 +3817,42 @@ class Game {
       }
       c.font = '600 15px -apple-system, sans-serif';
       c.textAlign = 'center';
-      const tw = c.measureText(hintTxt).width;
+      const maxHintW = Math.max(160, W - 28);
+      const hintLines = [];
+      const words = String(hintTxt || '').split(/\s+/);
+      let cur = '';
+      for (const word of words) {
+        const tryLine = cur ? cur + ' ' + word : word;
+        if (cur && c.measureText(tryLine).width > maxHintW) {
+          hintLines.push(cur);
+          cur = word;
+        } else cur = tryLine;
+      }
+      if (cur) hintLines.push(cur);
+      const lines = hintLines.slice(0, 3);
+      const lineH = 18;
+      let tw = 0;
+      for (const ln of lines) tw = Math.max(tw, c.measureText(ln).width);
       const padX = 16;
+      const pillH = 14 + lines.length * lineH;
       const hintY = (this.mode === 'adventure' && this.advHudBottom > 0)
         ? Math.max(H * 0.2, this.advHudBottom + 20)
         : H * 0.2;
       const pillY = hintY - 24;
       c.fillStyle = 'rgba(6,10,24,.78)';
-      this.rr(c, W / 2 - tw / 2 - padX, pillY, tw + padX * 2, 30, 10);
+      this.rr(c, W / 2 - tw / 2 - padX, pillY, tw + padX * 2, pillH, 10);
       c.fill();
       c.strokeStyle = 'rgba(255,215,94,.35)';
       c.lineWidth = a11yHighContrast() ? 2.5 : 1.5;
-      this.rr(c, W / 2 - tw / 2 - padX, pillY, tw + padX * 2, 30, 10);
+      this.rr(c, W / 2 - tw / 2 - padX, pillY, tw + padX * 2, pillH, 10);
       c.stroke();
-      fillHudText(c, hintTxt, W / 2, hintY, {
-        fill: '#fff',
-        stroke: 'rgba(0,0,0,.85)',
-        strokeW: a11yHighContrast() ? 3.5 : 0,
-      });
+      for (let i = 0; i < lines.length; i++) {
+        fillHudText(c, lines[i], W / 2, hintY + i * lineH, {
+          fill: '#fff',
+          stroke: 'rgba(0,0,0,.85)',
+          strokeW: a11yHighContrast() ? 3.5 : 0,
+        });
+      }
       c.globalAlpha = 1;
     }
     try { if (typeof drawAimTutorial === 'function') drawAimTutorial(c, this); } catch (_) {}

@@ -2319,7 +2319,7 @@ const UI = {
       try { syncPlayLayer(); } catch (_) {}
       try { hardenButtonIcons(document.getElementById('summonScreen')); } catch (_) {}
     } catch (err) {
-      sfReportError('renderSummon', err, 'Summons laden mislukt');
+      sfReportError('renderSummon', err, tOr('ui.summonLoadFail', 'Summons laden mislukt'));
       try { this.goMenu(); } catch (_) { ensureVisibleScreen(); }
     }
   },
@@ -2372,7 +2372,7 @@ const UI = {
       this.safeOpen('summonScreen', () => {
         this.renderSummon();
         try { ensureSummonVideoPreloaded(); } catch (_) {}
-      }, { msg: 'Summons laden mislukt' });
+      }, { msg: tOr('ui.summonLoadFail', 'Summons laden mislukt') });
     } catch (err) {
       sfReportError('openSummonHub', err, 'Summons openen mislukt');
       try { this.goMenu(); } catch (_) {}
@@ -2456,7 +2456,9 @@ const UI = {
         cc.strokeStyle = 'rgba(0,0,0,.35)';
         cc.lineWidth = 3;
         cc.stroke();
-        title = res.name ? ('Ei · ' + res.name) : 'Ei';
+        title = res.name
+          ? tOr('ui.summonEgg', 'Ei · {name}', { name: res.name })
+          : tOr('ui.summonEggPlain', 'Ei');
       } else if (res && res.type === 'coins') {
         cc.fillStyle = '#ffd75e';
         cc.beginPath(); cc.arc(cx, cy, 34, 0, Math.PI * 2); cc.fill();
@@ -2468,19 +2470,19 @@ const UI = {
         cc.textAlign = 'center';
         cc.textBaseline = 'middle';
         cc.fillText('PC', cx, cy + 1);
-        title = '+' + (res.amount || 0) + ' pet coins';
+        title = tOr('ui.summonCoins', '+{n} pet coins', { n: res.amount || 0 });
       } else if (res && res.type === 'xp') {
         cc.fillStyle = '#7cf5ff';
         cc.font = 'bold 34px Nunito, sans-serif';
         cc.textAlign = 'center';
         cc.textBaseline = 'middle';
         cc.fillText('XP', cx, cy);
-        title = '+' + (res.amount || 0) + ' XP';
+        title = tOr('ui.summonXp', '+{n} XP', { n: res.amount || 0 });
       } else {
         cc.strokeStyle = '#9db1e3';
         cc.lineWidth = 3;
         cc.strokeRect(cx - 36, cy - 36, 72, 72);
-        title = (res && res.label) || 'Niks bijzonders';
+        title = (res && res.label) || tOr('ui.summonNothing', 'Niks bijzonders');
       }
     } catch (_) {
       title = (res && res.name) || 'Summon';

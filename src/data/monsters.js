@@ -459,10 +459,61 @@ const UNLOCK_AT = {
 
 };
 Object.assign(UNLOCK_AT, (MONSTER_CATALOG_W2_EXPANDED && MONSTER_CATALOG_W2_EXPANDED.unlockAt) || {});
-/** Avontuur horde: 6× meer spawns + reuzen + volledig monsterboek (W2 catalog ≈ 2× roster). */
+/** Avontuur horde: 6× meer spawns + reuzen + volledig monsterboek (W2 catalog ≈ 2× roster).
+ *  Desktop keeps the big-horde feel. Phone (~390px) must not use the same live count. */
 const ADVENTURE_HORDE_MUL = 6;
 const ADVENTURE_HORDE_MAX_PER_WAVE = 36;
-const ADVENTURE_MAX_ALIVE = IS_TOUCH ? 54 : 78;
+const ADVENTURE_MAX_ALIVE_DESK = 78;
+const ADVENTURE_MAX_ALIVE_TOUCH_WIDE = 54;
+
+function adventureViewportW() {
+  if (typeof W === 'number' && W > 0) return W;
+  try {
+    if (typeof innerWidth === 'number' && innerWidth > 0) return innerWidth;
+  } catch (_) {}
+  return 800;
+}
+
+/** Viewport band for spawn density. Phone must feel playable; desk keeps the horde. */
+function adventureHordeProfile() {
+  const w = adventureViewportW();
+  const touch = typeof IS_TOUCH !== 'undefined' && IS_TOUCH;
+  if (w <= 440) {
+    return {
+      band: 'phone',
+      mul: 2.15,
+      maxPerWave: 12,
+      maxAlive: 8,
+      spawnIntervalMul: 1.28,
+      openerCapMul: 0.85,
+    };
+  }
+  if (w <= 780) {
+    return {
+      band: 'tablet',
+      mul: 3.6,
+      maxPerWave: 20,
+      maxAlive: 16,
+      spawnIntervalMul: 1.12,
+      openerCapMul: 0.92,
+    };
+  }
+  return {
+    band: 'desk',
+    mul: ADVENTURE_HORDE_MUL,
+    maxPerWave: ADVENTURE_HORDE_MAX_PER_WAVE,
+    maxAlive: touch ? ADVENTURE_MAX_ALIVE_TOUCH_WIDE : ADVENTURE_MAX_ALIVE_DESK,
+    spawnIntervalMul: 1,
+    openerCapMul: 1,
+  };
+}
+
+function adventureMaxAlive() {
+  return adventureHordeProfile().maxAlive;
+}
+
+/** Legacy alias — prefer adventureMaxAlive() so phone/tablet scale. */
+const ADVENTURE_MAX_ALIVE = (typeof IS_TOUCH !== 'undefined' && IS_TOUCH) ? 54 : 78;
 const GIANT_SPAWN_CHANCE = 0.15;
 const GIANT_SIZE_MUL = 1.52;
 const GIANT_HP_MUL = 1.34;
@@ -875,9 +926,12 @@ function buildLevel(n, diffId) {
   const waveCount = Math.min(2 + Math.floor(n / 5) + (diff.order >= 2 ? 1 : 0), 6);
   const basePerWave = 2 + Math.floor(n / 4);
   const hordeScale = (diff.hordeMul || 1);
+  const horde = (typeof adventureHordeProfile === 'function')
+    ? adventureHordeProfile()
+    : { mul: ADVENTURE_HORDE_MUL, maxPerWave: ADVENTURE_HORDE_MAX_PER_WAVE, openerCapMul: 1 };
   const perWave = Math.min(
-    Math.max(2, Math.ceil(basePerWave * ADVENTURE_HORDE_MUL * hordeScale)),
-    ADVENTURE_HORDE_MAX_PER_WAVE
+    Math.max(2, Math.ceil(basePerWave * (horde.mul || ADVENTURE_HORDE_MUL) * hordeScale)),
+    horde.maxPerWave || ADVENTURE_HORDE_MAX_PER_WAVE
   );
   for (let w = 0; w < waveCount; w++) {
     const list = [];
@@ -1010,15 +1064,17 @@ function buildLevel(n, diffId) {
   }
   // Soft live A3 + playtest P1: golf 1 milder — opener niet omsingelen.
   if (waves[0] && waves[0].length) {
+    const openerMul = horde.openerCapMul || 1;
     const softCap = n <= 2
       ? (n === 1 ? 2 : 3)
       : n <= 3
-        ? Math.max(3, Math.ceil(perWave * 0.38))
+        ? Math.max(2, Math.ceil(perWave * 0.38 * openerMul))
         : n <= 8
-          ? Math.max(5, Math.ceil(perWave * 0.55))
-          : Math.max(6, Math.ceil(perWave * 0.72));
+          ? Math.max(4, Math.ceil(perWave * 0.55 * openerMul))
+          : Math.max(5, Math.ceil(perWave * 0.72 * openerMul));
     if (waves[0].length > softCap) waves[0] = waves[0].slice(0, softCap);
     if (n === 1 && waves[1] && waves[1].length > 4) waves[1] = waves[1].slice(0, 4);
+    if (horde.band === 'phone' && n === 1 && waves[1] && waves[1].length > 3) waves[1] = waves[1].slice(0, 3);
     if (n <= 5) {
       for (let i = 0; i < waves[0].length; i++) {
         waves[0][i].elite = false;
@@ -1036,7 +1092,7 @@ function buildLevel(n, diffId) {
   }
   if (BOSS_AT[n]) {
     const bossWave = BOSS_AT[n].map(x => Object.assign({}, x, { bossCore: !!x.elite }));
-    const hordePad = Math.min(3 + Math.floor(n / 8) + (diff.order || 0) * 2, 12);
+    const hordePad = Math.min(3 + Math.floor(n / 8) + (diff.order || 0) * 2, horde.band === 'phone' ? 4 : 12);
     for (let i = 0; i < hordePad; i++) {
       const elite = Math.random() < (0.1 + (diff.eliteBonus || 0) * 0.5);
       const bsp = weightedPick(pool, n, rarityBias);

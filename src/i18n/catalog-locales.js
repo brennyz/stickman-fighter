@@ -1575,4 +1575,22 @@ function applyLocaleOverlays() {
   if (typeof CATALOG_FR === 'object') deepMergeI18n(I18N.fr, CATALOG_FR);
   if (typeof CATALOG_ES === 'object') deepMergeI18n(I18N.es, CATALOG_ES);
   if (typeof CATALOG_DE === 'object') deepMergeI18n(I18N.de, CATALOG_DE);
+  deepMergeI18n(I18N.fr, {
+    ui: {
+      summonLoadFail: 'Invocations introuvables',
+      summonEgg: 'Œuf · {name}', summonEggPlain: 'Œuf',
+      summonCoins: '+{n} pet coins', summonXp: '+{n} XP',
+      summonNothing: 'Rien de spécial',
+    },
+    gear: { pillVanity: 'LOOK', pillStat: 'STAT', pillLock: 'VERROU', wearing: 'sur toi' },
+  });
+  deepMergeI18n(I18N.es, {
+    ui: {
+      summonLoadFail: 'No se pudieron cargar las invocaciones',
+      summonEgg: 'Huevo · {name}', summonEggPlain: 'Huevo',
+      summonCoins: '+{n} pet coins', summonXp: '+{n} XP',
+      summonNothing: 'Nada especial',
+    },
+    gear: { pillVanity: 'LOOK', pillStat: 'STAT', pillLock: 'BLOQ', wearing: 'puesto' },
+  });
 }
