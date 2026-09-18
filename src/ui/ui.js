@@ -1202,7 +1202,7 @@ const UI = {
   resetInnerScrolls(screenEl) {
     if (!screenEl) return;
     const scrollables = screenEl.querySelectorAll(
-      '.char-grid-scroll, .menu-landing-scroll, .mode-hub-body, .island-bar, .grid, #weaponList, .skill-grid-scroll, .gear-picker, [data-scroll-reset]'
+      '.char-grid-scroll, .menu-landing-scroll, .mode-hub-body, .island-bar, .grid, #weaponList, .skill-grid-scroll, .gear-picker, #pauseRunLoot, [data-scroll-reset]'
     );
     scrollables.forEach((el) => {
       try {
@@ -1293,6 +1293,7 @@ const UI = {
     if (html) {
       el.innerHTML = html;
       el.style.display = 'block';
+      try { el.scrollTop = 0; } catch (_) {}
     } else {
       el.innerHTML = '';
       el.style.display = 'none';

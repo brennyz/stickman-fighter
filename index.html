@@ -15,10 +15,10 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Bangers&family=Black+Ops+One&family=Nunito:wght@600;800;900&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="styles/main.css?v=400">
-<link rel="stylesheet" href="styles/seasons.css?v=400">
-<link rel="stylesheet" href="styles/season-overlays.css?v=400">
-<link rel="stylesheet" href="styles/season-motion.css?v=400">
+<link rel="stylesheet" href="styles/main.css?v=401">
+<link rel="stylesheet" href="styles/seasons.css?v=401">
+<link rel="stylesheet" href="styles/season-overlays.css?v=401">
+<link rel="stylesheet" href="styles/season-motion.css?v=401">
 
 
 
@@ -111,7 +111,7 @@
       <div class="arcade-pre" id="menuArcadePre" hidden>KIES JE PAD</div>
       <h1 class="title arcade-logo">STICKMAN<span>FIGHTER</span></h1>
       <p class="press-start" id="pressStartLine" hidden>insert coin</p>
-      <div class="subtitle menu-ver-line" id="menuVerLine">v1.18.190</div>
+      <div class="subtitle menu-ver-line" id="menuVerLine">v1.18.191</div>
       <p class="season-menu-blurb" id="seasonMenuBlurb" hidden></p>
     </header>
     <div class="arcade-menu-body menu-landing-body">
@@ -704,7 +704,7 @@
       <a class="btn tog" id="btnPrivacy" href="privacy.html" target="_blank" rel="noopener" style="margin-top:8px;text-decoration:none"><span class="tog-ico"><img src="assets/buttons/chrome/external.svg" alt="" width="24" height="24" decoding="async" draggable="false"></span>Privacy</a>
       <div id="settingsDiagBlock" class="settings-diag-block" hidden>
         <div id="settingsHelpTitle" style="font-weight:900;color:#ffd75e;margin:12px 0 6px">Vast op een oude versie?</div>
-        <div id="setAppVersion" style="font-size:12px;opacity:.7;margin-bottom:8px">v1.18.190</div>
+        <div id="setAppVersion" style="font-size:12px;opacity:.7;margin-bottom:8px">v1.18.191</div>
         <div id="settingsHelpDesc" style="font-size:12px;opacity:.85;margin-bottom:8px;line-height:1.4">Leegt de cache en laadt opnieuw. Alleen nodig als het spel niet meekomt.</div>
         <button type="button" class="btn tog" id="btnForceFresh"><span class="tog-ico"><img src="assets/buttons/chrome/refresh.svg" alt="" width="24" height="24" decoding="async" draggable="false"></span>Verse versie</button>
         <div id="settingsFreshHint" style="font-size:11px;opacity:.72;margin:6px 0 10px;line-height:1.4">Menu reageert niet? Tik hier voor de nieuwste versie.</div>
@@ -858,17 +858,20 @@
 <div id="pauseScreen" class="screen">
   <canvas id="pausePixelBg" class="pause-pixel-bg" width="480" height="720" aria-hidden="true"></canvas>
   <div class="pause-ui-layer">
-  <h2 class="head" id="pauseHead" style="margin-top:60px">Pauze</h2>
-  <div class="subtitle" id="pauseSub" style="margin-bottom:12px">Spiral Orb klaar — moto! · voortgang blijft op dit apparaat</div>
+  <div class="pause-main">
+  <h2 class="head" id="pauseHead">Pauze</h2>
+  <div class="subtitle" id="pauseSub">Spiral Orb klaar — moto! · voortgang blijft op dit apparaat</div>
   <div id="pauseOnboardLine" class="pause-onboard-line" style="display:none" aria-live="polite"></div>
-  <div id="pauseRunLoot" class="run-loot-panel pause-loot" style="display:none" aria-live="polite"></div>
   <div id="pausePerfStrip" class="pause-perf-strip" aria-live="polite" style="display:none"></div>
+  <div id="pauseRunLoot" class="run-loot-panel pause-loot" style="display:none" aria-live="polite"></div>
+  </div>
+  <div class="pause-actions">
   <button class="btn mode-btn b-adventure" id="pauseResume"><span class="ico"><img src="assets/buttons/chrome/play.svg" alt="" width="28" height="28" decoding="async" draggable="false"></span><div>Verder spelen</div></button>
   <button type="button" class="btn mode-btn b-dex big-touch pause-pet-chip" id="pausePetChip">
     <span class="ico"><img src="assets/buttons/modes/pets.svg" alt="" width="28" height="28" decoding="async" draggable="false"></span>
     <div id="pausePetChipLbl">Pet</div>
   </button>
-  <div class="toggles" style="margin:14px 0">
+  <div class="toggles pause-toggles">
     <button class="btn tog" id="pauseTogMusic" type="button"><span class="tog-ico"><img src="assets/buttons/chrome/music.svg" alt="" width="24" height="24" decoding="async" draggable="false"></span>Muziek</button>
     <button class="btn tog" id="pauseTogSfx" type="button"><span class="tog-ico"><img src="assets/buttons/chrome/sfx.svg" alt="" width="24" height="24" decoding="async" draggable="false"></span>Geluid</button>
   </div>
@@ -891,6 +894,7 @@
   <button class="btn mode-btn b-versus" id="pauseVsRestart" type="button" style="display:none;margin-bottom:8px"><span class="ico"><img src="assets/buttons/chrome/refresh.svg" alt="" width="28" height="28" decoding="async" draggable="false"></span><div>Herstart match<small>0-0 · zelfde vechters</small></div></button>
   <button class="btn mode-btn b-versus" id="pauseVsSwap" type="button" style="display:none;margin-bottom:8px"><span class="ico"><img src="assets/buttons/chrome/swap.svg" alt="" width="28" height="28" decoding="async" draggable="false"></span><div>Wissel kant<small>P1 ↔ P2 · zelfde score</small></div></button>
   <button class="btn mode-btn b-gray" id="pauseQuit"><span class="ico"><img src="assets/buttons/chrome/home.svg" alt="" width="28" height="28" decoding="async" draggable="false"></span><div>Stop &amp; hoofdmenu</div></button>
+  </div>
   </div>
 </div>
 
@@ -919,12 +923,12 @@
 
 <script>
 /* HTML↔JS handshake: als oude SW nog oude game.js serveert terwijl menu-HTML nieuw is. */
-window.__SF_EXPECT_REV = 400;
-window.__SF_EXPECT_APP = '1.18.190';
+window.__SF_EXPECT_REV = 401;
+window.__SF_EXPECT_APP = '1.18.191';
 </script>
-<script src="tunnel-check.js?v=400"></script>
-<script src="game.js?v=400"></script>
-<script src="install.js?v=400"></script>
+<script src="tunnel-check.js?v=401"></script>
+<script src="game.js?v=401"></script>
+<script src="install.js?v=401"></script>
 <script>
 (function () {
   function nukeStale(reason) {

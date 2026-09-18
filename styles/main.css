@@ -2613,6 +2613,15 @@
       radial-gradient(ellipse at 50% 0%, rgba(60,40,100,.35), transparent 55%),
       rgba(8,10,18,.88) !important;
     overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-height: 0;
+    padding-bottom: max(
+      16px,
+      var(--sheet-bottom-pad, 28px),
+      calc(env(safe-area-inset-bottom, 0px) + 16px)
+    );
   }
   .pause-pixel-bg {
     position: absolute; inset: 0; width: 100%; height: 100%;
@@ -2624,6 +2633,62 @@
     position: relative; z-index: 1;
     display: flex; flex-direction: column; align-items: center;
     width: 100%;
+    flex: 1 1 auto;
+    min-height: 0;
+    max-height: 100%;
+    overflow: hidden;
+  }
+  /* Pause sheet: dex/stats scroll; Resume + last action stay on-screen. */
+  #pauseScreen .pause-main {
+    flex: 1 1 auto;
+    min-height: 0;
+    min-width: 0;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    overflow: hidden;
+  }
+  #pauseScreen #pauseHead {
+    margin-top: 8px;
+    margin-bottom: 6px;
+    flex-shrink: 0;
+  }
+  #pauseScreen .subtitle {
+    margin-bottom: 8px;
+    flex-shrink: 0;
+    max-width: min(92vw, 420px);
+  }
+  #pauseScreen .pause-actions {
+    flex: 0 0 auto;
+    width: min(92vw, 420px);
+    max-width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding-bottom: 2px;
+  }
+  #pauseScreen .pause-actions .mode-btn,
+  #pauseScreen .pause-actions .tog {
+    flex-shrink: 0;
+    min-height: max(44px, var(--touch-min, 44px));
+  }
+  #pauseScreen .pause-actions .mode-btn,
+  #pauseScreen .pause-pet-chip,
+  #pauseScreen .pause-audio-vol {
+    width: 100%;
+    max-width: 100%;
+  }
+  #pauseScreen #pauseResume {
+    display: flex;
+  }
+  #pauseScreen .pause-toggles {
+    margin: 8px 0;
+    width: 100%;
+  }
+  #pauseScreen .pause-toggles .tog {
+    flex: 1 1 40%;
+    min-width: 120px;
   }
 
   .toggles { display:flex; gap:10px; margin-top:16px; flex-wrap:wrap; justify-content:center; }
@@ -2712,7 +2777,17 @@
   .run-loot-panel { width:min(92vw,480px); margin:10px auto 6px; padding:10px 12px 8px;
     background:rgba(8,12,28,.72); border:1px solid rgba(124,245,255,.22); border-radius:14px;
     text-align:left; max-height:min(42vh,280px); overflow-y:auto; -webkit-overflow-scrolling:touch; }
-  .run-loot-panel.pause-loot { margin:0 auto 14px; max-height:min(36vh,220px); }
+  .run-loot-panel.pause-loot {
+    margin: 0 auto 8px;
+    width: min(92vw, 420px);
+    max-width: 100%;
+    flex: 1 1 auto;
+    min-height: 0;
+    max-height: none;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior: contain;
+  }
   .run-loot-head { font-size:11px; font-weight:800; letter-spacing:.06em; text-transform:uppercase;
     color:rgba(255,215,94,.88); margin-bottom:8px; text-align:center; }
   .run-loot-row { display:flex; align-items:flex-start; gap:8px; font-size:13px; line-height:1.35;
@@ -3205,11 +3280,11 @@
   .aim-color-picker-lab { display:flex; align-items:center; justify-content:space-between; gap:12px; margin:6px 0 10px; }
   .aim-color-picker-lab input[type=color] { width:48px; height:36px; padding:0; border:1px solid rgba(255,255,255,.2);
     border-radius:8px; background:transparent; cursor:pointer; }
-  .pause-audio-vol { width:min(92vw,400px); margin:0 auto 10px; padding:10px 14px 6px;
+  .pause-audio-vol { width:min(92vw,400px); margin:0 auto 8px; padding:8px 12px 4px;
       background:rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.1); border-radius:14px; font-size:14px; color:#c8d4f0; }
-  .pause-audio-vol label { display:flex; justify-content:space-between; align-items:center; gap:10px; margin:6px 0; flex-wrap:wrap; }
+  .pause-audio-vol label { display:flex; justify-content:space-between; align-items:center; gap:10px; margin:4px 0; flex-wrap:wrap; }
   .pause-audio-vol input[type=range] { flex:1; min-width:100px; accent-color:#7cf5ff; }
-  .pause-pet-chip { width:min(92vw,420px); margin:0 auto 10px; justify-content:center; }
+  .pause-pet-chip { width:min(92vw,420px); margin:0 auto 8px; justify-content:center; }
   .pause-pet-chip.is-empty { opacity:.72; }
   .pause-pet-chip[disabled] { pointer-events:none; }
   .pause-perf-strip { width:min(92vw,420px); margin:-4px auto 12px; padding:6px 10px; font-size:11px; line-height:1.4;
@@ -3710,7 +3785,7 @@
     .char-grid-scroll { max-height: min(30vh, 220px); }
     .char-arena-featured { padding:6px 6px 4px; margin-bottom:4px; }
     .char-arena-actions { margin:4px 0; gap:6px; }
-    #pauseScreen .head { margin-top: 36px !important; }
+    #pauseScreen .head { margin-top: 4px !important; }
     .hub-tile { min-height: 78px; padding: 10px 28px 9px 11px; }
     .mode-hub-panel .hub-mode-row { min-height: 48px; padding-top: 10px; padding-bottom: 10px; }
     .char-saga-bar { gap: 6px; margin: 4px 0; }
@@ -3841,6 +3916,28 @@
     #modeHubScreen.mode-hub-home .mode-hub-step { margin-bottom: 4px; }
     .island-tab, .diff-tab { min-height: 44px; padding: 6px 6px; }
     #pauseScreen .mode-btn, #resultScreen .mode-btn { min-height: 44px; margin: 4px 0; }
+    #pauseScreen .pause-ui-layer {
+      flex-direction: row;
+      align-items: stretch;
+      justify-content: center;
+      gap: 10px;
+    }
+    #pauseScreen .pause-main {
+      flex: 1 1 48%;
+      max-width: 52%;
+    }
+    #pauseScreen .pause-actions {
+      flex: 1 1 46%;
+      max-width: 48%;
+      width: auto;
+      justify-content: center;
+    }
+    #pauseScreen .pause-audio-vol,
+    #pauseScreen .pause-audio-hint,
+    #pauseScreen .pause-audio-quick,
+    #pauseScreen .audio-theme-bar { display: none; }
+    #pauseScreen #pauseHead { margin-top: 0 !important; font-size: clamp(18px, 5vw, 28px); }
+    body.big-touch #pauseScreen .mode-btn { min-height: 44px; }
     #resultScreen .result-cta-primary { min-height: 64px; }
     .settings-card { padding: 10px 12px; margin: 6px 0; }
     .char-saga-bar button { min-height: 40px; padding: 6px 10px; }
@@ -5228,6 +5325,22 @@
     .summon-actions {
       bottom: var(--sheet-bottom-pad);
     }
+    #pauseScreen.active {
+      padding-bottom: max(18px, var(--sheet-bottom-pad), calc(env(safe-area-inset-bottom, 0px) + 18px));
+    }
+    #pauseScreen .pause-audio-hint,
+    #pauseScreen .pause-audio-quick,
+    #pauseScreen .audio-theme-bar { display: none; }
+    #pauseScreen .pause-audio-vol { padding: 4px 10px 2px; margin-bottom: 6px; }
+    body.big-touch #pauseScreen .mode-btn { min-height: 48px; }
+  }
+
+  @media (max-height: 760px) {
+    #pauseScreen .pause-audio-hint,
+    #pauseScreen .pause-audio-quick,
+    #pauseScreen .audio-theme-bar { display: none; }
+    #pauseScreen #pauseHead { margin-top: 4px; }
+    body.big-touch #pauseScreen .mode-btn { min-height: 48px; }
   }
 
   /* Pets HOME screen — wallet + hero + list → detail (gear/factory catch-up) */
