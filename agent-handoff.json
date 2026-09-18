@@ -53,7 +53,7 @@
       "id": "w-20260918T164240",
       "from": "user",
       "text": "FIX BOT 30m — Stickman. Off main. Draft only. Until ~19:10 Amsterdam. From #343 P2 + #338 FOMO: (1) FOMO auto-sheet flaky after first punch HOME return; (2) optional: Verder spelen should not permanently skip island beat for new players. Prefer reliable FOMO open XOR skip if sheet would block play. No Versus. No main.",
-      "status": "in-progress",
+      "status": "done-in-code",
       "updated": "2026-09-18",
       "notes": "Draft branch cursor/fomo-open-home-b00b. maybeAutoShowFomoRitual + islandPickPending."
     },
@@ -1239,6 +1239,10 @@
   ],
   "sessionLog": [
     {
+      "at": "2026-09-18T16:46:26Z",
+      "summary": "Draft #354: FOMO HOME flush after first punch XOR landscape skip; Verder spelen opens island until tipsSeen.islands"
+    },
+    {
       "at": "2026-09-18T16:42:40Z",
       "summary": "FIX BOT 30m: FOMO auto-sheet after first punch + island Continue"
     },
@@ -1333,10 +1337,6 @@
     {
       "at": "2026-09-18T12:36:17Z",
       "summary": "examiner P0: pets/gear locale + 390px overflow (start)"
-    },
-    {
-      "at": "2026-09-18T12:31:56Z",
-      "summary": "LANGUAGE: factory desc + nameShort, FOMO/HUD locale, export gear/fabriek i18n. Draft #317, geen main."
     }
   ],
   "implementedFeaturesSummary": "d18 char select deel 1+2 (v1.11.1-2); Mats coinrun + shuriken mik/vliegers + anti-spam (v1.12.0); speel.html (v1.12.2+). Zie HANDOFF-ZOEKINDEX.md en improvement-d20-bag.json userFeatureLog.",
