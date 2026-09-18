@@ -323,9 +323,9 @@ const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const VERSION_UPDATE_SAVE_KEY = 'stickfighter_version_update_save_v1';
 const VERSION_UPDATE_FLAG_KEY = 'stickfighter_version_update_flag_v1';
 const SAVE_EXPORT_SCHEMA = 3;
-const APP_VERSION = '1.18.189';
+const APP_VERSION = '1.18.190';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 399;
+const SW_CACHE_REV = 400;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', petCoins: 0, dex: {}, summons: {}, pets: {}, activePet: null,
   eggPets: {}, activeEggPet: null, eggDaily: null,
   chestDaily: null, chestWeapons: {},
@@ -31788,6 +31788,13 @@ function touchEdgeGuard() {
   return IS_TOUCH ? 24 : 6;
 }
 
+/** Phone landscape strip (844×390 / 568×320). Not iPad, not portrait. */
+function touchPhoneLandscape(W, H) {
+  const w = Number(W);
+  const h = Number(H);
+  return w > h * 1.04 && h <= 500 && w < 960;
+}
+
 function btnHitSlop() {
   // d9: iets ruimere hit-slop op touch (iPad mis-taps), bigTouch nog ruimer
   const base = (typeof save !== 'undefined' && save.bigTouch !== false) ? 16 : 11;
@@ -31917,17 +31924,21 @@ function shiftTouchButtons(buttons, dx) {
   for (const b of buttons) b.x += dx;
 }
 
-/** Knoppen mogen niet buiten de schermranden (of de gesture-strip) uitsteken. */
-function clampButtonsToScreen(buttons, H, guard) {
+/** Knoppen mogen niet buiten de schermranden (of de gesture-strip) uitsteken.
+ *  Use the layout W/H, not the last boot globals — rotate + smoke probes
+ *  call Input.layout(w, h) before resize() writes the lexical W. */
+function clampButtonsToScreen(buttons, width, height, guard) {
   const gy = guard != null ? guard : 4;
+  const WW = width > 0 ? width : W;
+  const HH = height > 0 ? height : H;
   let maxBy = -Infinity, maxBx = -Infinity;
   for (const b of buttons) {
     maxBy = Math.max(maxBy, b.y + b.r);
     maxBx = Math.max(maxBx, b.x + b.r);
   }
-  const overY = maxBy - (H - gy);
+  const overY = maxBy - (HH - gy);
   if (overY > 0) for (const b of buttons) b.y -= overY;
-  const overX = maxBx - (W - 2);
+  const overX = maxBx - (WW - 2);
   if (overX > 0) for (const b of buttons) b.x -= overX;
 }
 
@@ -31973,6 +31984,38 @@ function layoutTouchButtonCluster(W, H, ui, safe, opts) {
       const joyClear = joyHome.x + Math.round(50 * ui) + rSmall * 0.25;
       const minBx = Math.min(...buttons.map((b) => b.x - b.r));
       if (minBx < joyClear) shiftTouchButtons(buttons, joyClear - minBx);
+    } else if (touchPhoneLandscape(W, H)) {
+      // Short landscape 1P (844×390): portrait-style right-thumb cluster.
+      // Tablet 3×2 put jump too far left and parked the joy in the gesture bar.
+      // Versus/dual stays on the legacy path below. HUD pause (#321) is top-right.
+      const rSmall = Math.max(22, Math.round(28 * ui));
+      const rsSmall = Math.max(22, Math.round(24 * ui));
+      const gap = Math.max(8, Math.round(8 * ui));
+      const col = rSmall * 2 + gap;
+      const row = rSmall * 2 + gap;
+      const navKeep = Math.max(edgeGuard, 24, safe.bottom + 10);
+      const joyVisR = Math.max(rSmall, Math.round(52 * ui));
+      const by = H - navKeep - joyVisR;
+      const marginR = Math.max(12 + safe.right, 16);
+      const xJump = W - marginR - rsSmall;
+      const xMid = xJump - col;
+      const xFar = xMid - col;
+      buttons = [
+        touchBtn('jump', xJump, by, rsSmall),
+        touchBtn('punch', xMid, by, rSmall),
+        touchBtn('kick', xFar, by, rSmall),
+        touchBtn('special', xJump, by - row, rSmall),
+        touchBtn('weapon', xMid, by - row, rSmall),
+        touchBtn('subst', xFar, by - row, rsSmall),
+      ];
+      const swipeHi = W * 0.34;
+      const kickLeft = xFar - rSmall;
+      if (kickLeft < swipeHi + 10) shiftTouchButtons(buttons, (swipeHi + 10) - kickLeft);
+      joyHome.x = Math.max(safe.left + joyVisR + 8, Math.min(W * 0.12, 96));
+      joyHome.y = by;
+      const joyClear = joyHome.x + joyVisR + rSmall * 0.2;
+      const minBx = Math.min(...buttons.map((b) => b.x - b.r));
+      if (minBx < joyClear) shiftTouchButtons(buttons, joyClear - minBx);
     } else {
       // Nette 3×2 grid zonder overlap (fix: punch/jump lagen op elkaar,
       // waardoor jump onbereikbaar was — hitButton pakt de eerste match).
@@ -31996,7 +32039,14 @@ function layoutTouchButtonCluster(W, H, ui, safe, opts) {
       const minBx = Math.min(...buttons.map((b) => b.x - b.r));
       if (minBx < joyClear) shiftTouchButtons(buttons, joyClear - minBx);
     }
-    clampButtonsToScreen(buttons, H, bottomGuard);
+    const clampGuard = (!dual && touchPhoneLandscape(W, H))
+      ? Math.max(bottomGuard, 24, safe.bottom + 10)
+      : bottomGuard;
+    clampButtonsToScreen(buttons, W, H, clampGuard);
+    if (!dual && touchPhoneLandscape(W, H) && buttons.length) {
+      const lowest = Math.max(...buttons.map((b) => b.y));
+      if (lowest < joyHome.y) joyHome.y = lowest;
+    }
     return { joyHome, buttons };
   }
 
@@ -32065,7 +32115,7 @@ function layoutTouchButtonCluster(W, H, ui, safe, opts) {
       if (maxBx > joyClearR) shiftTouchButtons(buttons, joyClearR - maxBx);
     }
   }
-  clampButtonsToScreen(buttons, H, bottomGuard);
+  clampButtonsToScreen(buttons, W, H, bottomGuard);
   return { joyHome, buttons };
 }
 
@@ -32398,7 +32448,9 @@ function syncHudPhoneClass(W, H) {
   } catch (_) {}
 }
 
-/** Geometry for smoke + drawHUD: HP, pause, stars must not overlap on ~390×844. */
+/** Geometry for smoke + drawHUD: HP, pause, stars must not overlap on ~390×844.
+ *  Landscape touch pads (layoutTouchButtonCluster / touchPhoneLandscape) must
+ *  not change pauseGutter — #321 owns this keep-out. */
 function hudSafeLayout(W, H, mode) {
   const compact = hudPhoneCompact(W, H);
   const pauseG = hudPauseGutter(W, H);
@@ -33175,17 +33227,20 @@ function combatJumpSlopExtra(profile) {
 }
 
 /**
- * 1P compact: left-bottom playfield is a swipe/move pad so empty space after
- * a thinner horde is not a dead zone. Dual/Versus stays out.
- * Tightened to 34% × below 62% so the band does not steal punch/kick near-misses.
+ * 1P compact / short-landscape: left-bottom playfield is a swipe/move pad
+ * so empty space after a thinner horde is not a dead zone. Dual/Versus stays out.
+ * Portrait: 34% × below 62% so the band does not steal punch/kick near-misses.
+ * Short landscape (844×390): same 34% width, y>55% so the lifted joy stays in-pad.
  */
 function combatJoySwipeAccepts(x, y, w, h, profile) {
   profile = asCombatProfile(profile || { w: w, h: h });
-  if (!profile.compact) return false;
+  const shortLand = combatIsShort(profile);
+  if (!profile.compact && !shortLand) return false;
   if (typeof Input !== 'undefined' && Input && Input.dualMode) return false;
   const W0 = w > 0 ? w : profile.w;
   const H0 = h > 0 ? h : profile.h;
-  return x < W0 * 0.34 && y > H0 * 0.62;
+  const yCut = shortLand ? 0.55 : 0.62;
+  return x < W0 * 0.34 && y > H0 * yCut;
 }
 
 /**
@@ -59842,6 +59897,8 @@ function bootGame() {
     } : null,
     hudSafeLayout: typeof hudSafeLayout === 'function' ? hudSafeLayout : null,
     hudPhoneCompact: typeof hudPhoneCompact === 'function' ? hudPhoneCompact : null,
+    touchPhoneLandscape: typeof touchPhoneLandscape === 'function' ? touchPhoneLandscape : null,
+    Input: typeof Input !== 'undefined' ? Input : null,
     previewTop20Spawn: () => {
       try { AudioSys.init(); AudioSys.sfx('top20Spawn'); } catch (_) {}
       try { if (game && typeof game.shake === 'function') game.shake(4, 0.16); } catch (_) {}

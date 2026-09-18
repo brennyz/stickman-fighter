@@ -283,17 +283,20 @@ function combatJumpSlopExtra(profile) {
 }
 
 /**
- * 1P compact: left-bottom playfield is a swipe/move pad so empty space after
- * a thinner horde is not a dead zone. Dual/Versus stays out.
- * Tightened to 34% × below 62% so the band does not steal punch/kick near-misses.
+ * 1P compact / short-landscape: left-bottom playfield is a swipe/move pad
+ * so empty space after a thinner horde is not a dead zone. Dual/Versus stays out.
+ * Portrait: 34% × below 62% so the band does not steal punch/kick near-misses.
+ * Short landscape (844×390): same 34% width, y>55% so the lifted joy stays in-pad.
  */
 function combatJoySwipeAccepts(x, y, w, h, profile) {
   profile = asCombatProfile(profile || { w: w, h: h });
-  if (!profile.compact) return false;
+  const shortLand = combatIsShort(profile);
+  if (!profile.compact && !shortLand) return false;
   if (typeof Input !== 'undefined' && Input && Input.dualMode) return false;
   const W0 = w > 0 ? w : profile.w;
   const H0 = h > 0 ? h : profile.h;
-  return x < W0 * 0.34 && y > H0 * 0.62;
+  const yCut = shortLand ? 0.55 : 0.62;
+  return x < W0 * 0.34 && y > H0 * yCut;
 }
 
 /**

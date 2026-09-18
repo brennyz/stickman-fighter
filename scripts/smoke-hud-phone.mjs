@@ -147,6 +147,13 @@ Promise.resolve().then(() => {
   const desk = layFn(1280, 720, 'adventure');
   must(desk.compact === false, 'desktop should not be compact');
 
+  const landHud = layFn(844, 390, 'adventure');
+  must(landHud.compact === false, '844×390 HUD stays non-compact (#321)');
+  must(landHud.pauseGutter >= 58, 'landscape pause gutter must stay (#321) ' + landHud.pauseGutter);
+  must(!rectsOverlap(landHud.hp, landHud.pause, 1), 'land HP overlaps pause');
+  must(!rectsOverlap(landHud.stars, landHud.pause, 1), 'land stars overlap pause');
+  must(landHud.stars.x + landHud.stars.w <= landHud.pause.x + 1, 'land stars not left of pause');
+
   if (typeof ctx.startGame === 'function' && typeof ctx.W !== 'undefined') {
     try {
       ctx.W = 390; ctx.H = 844;

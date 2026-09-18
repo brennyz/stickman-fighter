@@ -226,6 +226,18 @@ must(iso.combatJoySwipeAccepts(80, 100, 390, 844, phone) === false, 'phone upper
 must(iso.combatJoySwipeAccepts(80, 400, 1280, 800, desk) === false, 'desktop has no extra swipe pad');
 must(iso.combatJoySwipeAccepts(150, 700, 390, 844, phone) === false, 'old 42% swipe band no longer steals mid-strip');
 must(iso.combatJoySwipeAccepts(80, 500, 390, 844, phone) === false, 'swipe starts lower (y>62%) so kick near-misses stay strikes');
+must(iso.combatJoySwipeAccepts(80, 320, 844, 390, phoneLand) === true, '844×390 left-bottom swipe is live');
+must(iso.combatJoySwipeAccepts(80, 200, 844, 390, phoneLand) === false, '844×390 swipe stays below mid (y>55%)');
+must(iso.combatJoySwipeAccepts(700, 320, 844, 390, phoneLand) === false, '844×390 right cluster is not a swipe pad');
+must(iso.combatJumpSlopExtra(phoneLand) === 10, 'short landscape jump slop +10');
+const landKick = { id: 'kick', x: 690, y: 326, r: 22 };
+const landPunch = { id: 'punch', x: 742, y: 326, r: 22 };
+const landJoy = { x: 90, y: 326 };
+must(iso.combatPreferStrike(660, 326, [landKick, landPunch], landJoy, phoneLand)
+  && iso.combatPreferStrike(660, 326, [landKick, landPunch], landJoy, phoneLand).id === 'kick',
+  '844×390 near-miss left of kick is a strike');
+must(iso.combatPreferStrike(90, 326, [landKick, landPunch], landJoy, phoneLand) === null,
+  '844×390 tap on joy is not a strike');
 
 const phoneOpenRaw = iso.adventureSpawnCadence(2, true, false, 1.55, phone);
 const phoneOpenSmooth = iso.adventureSpawnCadence(2, true, false, 1.55, phone, 0);

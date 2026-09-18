@@ -234,6 +234,51 @@ async function run() {
     Input.layout(realW, realH);
     const sweepBad = sweep.filter((s) => !s.ok).map((s) => s.label);
 
+    // Short landscape (844×390): punch/jump in the right thumb, swipe left,
+    // buttons above the system nav. Portrait 390×844 must keep jump rightmost.
+    const landFail = [];
+    const portraitLock = {};
+    try {
+      W = 390; H = 844;
+      Input.layout(390, 844);
+      const pBtns = Input.buttons || [];
+      const pJump = pBtns.find((b) => b.id === 'jump');
+      const pPunch = pBtns.find((b) => b.id === 'punch');
+      portraitLock.jumpX = pJump ? Math.round(pJump.x) : null;
+      portraitLock.punchX = pPunch ? Math.round(pPunch.x) : null;
+      if (!pJump || !pPunch || pJump.x <= pPunch.x) landFail.push('portrait-jump-not-rightmost');
+
+      W = 844; H = 390;
+      Input.layout(844, 390);
+      const lbs = Input.buttons || [];
+      const byId = (id) => lbs.find((b) => b.id === id);
+      const jump = byId('jump');
+      const punch = byId('punch');
+      const kick = byId('kick');
+      const special = byId('special');
+      if (!jump || !punch || !kick) landFail.push('land-missing-core');
+      if (jump && jump.r * 2 < 44) landFail.push('land-jump-small:' + Math.round(jump.r * 2));
+      if (punch && punch.r * 2 < 44) landFail.push('land-punch-small:' + Math.round(punch.r * 2));
+      if (jump && punch && jump.x <= punch.x) landFail.push('land-jump-not-right-of-punch');
+      if (punch && punch.x < 844 * 0.55) landFail.push('land-punch-not-right-thumb:' + Math.round(punch.x));
+      const landBottom = lbs.reduce((m, b) => Math.min(m, 390 - (b.y + b.r)), 999);
+      if (landBottom < 24) landFail.push('land-nav-collide:' + Math.round(landBottom));
+      const joy = Input.joyHome || {};
+      if (!(joy.y > 0) || joy.y + 40 > 390 - 18) landFail.push('land-joy-in-nav:' + Math.round(joy.y || 0));
+      if (kick && kick.x - kick.r < 844 * 0.34 + 8) landFail.push('land-kick-in-swipe');
+      if (special && special.y - special.r < 72) landFail.push('land-special-hits-pause');
+      const swipeOn = (typeof combatJoySwipeAccepts === 'function')
+        ? combatJoySwipeAccepts(80, 320, 844, 390) : false;
+      const swipeOff = (typeof combatJoySwipeAccepts === 'function')
+        ? combatJoySwipeAccepts(700, 320, 844, 390) : true;
+      if (!swipeOn) landFail.push('land-swipe-dead');
+      if (swipeOff) landFail.push('land-swipe-steals-punch');
+    } catch (e) {
+      landFail.push('land-threw:' + (e && e.message ? e.message : e));
+    }
+    W = realW; H = realH;
+    Input.layout(realW, realH);
+
     // Icon UX: punch/kick/weapon must draw distinct, high-ink glyphs (not empty/emoji fallback).
     const iconAudit = {};
     const iconFail = [];
@@ -292,6 +337,7 @@ async function run() {
       && offScreen.length === 0
       && overlaps.length === 0
       && sweepBad.length === 0
+      && landFail.length === 0
       && iconFail.length === 0
       && errors.length === 0
       && g.player.rosterId === 'hero';
@@ -318,6 +364,8 @@ async function run() {
       overlaps,
       sweep,
       sweepBad,
+      landFail,
+      portraitLock,
       uiScale: typeof touchUiScale === 'function' ? Number(touchUiScale(W, H).toFixed(3)) : null,
       viewport: { W, H },
       ids,
