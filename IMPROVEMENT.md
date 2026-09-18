@@ -1,3 +1,4 @@
+| 2026-09-18 | **mobile HUD** | Phone ~390×844: pause gutter (stars/HP/toasts), compact combat + wall/train/record stack, sheet bottoms + 44px dock. No Versus. **v1.18.173 / SW v383**. |
 | 2026-09-16 | **i18n spotcheck** | Main-spotcheck: EN YOU LOSE (niet VERLOREN); DE Hallo/Ton/Münze; FR/ES install-titel; fomo+buildings al in #299. **v1.18.169 / SW v379**. |
 | 2026-09-16 | **i18n alle talen** | Post-#283 factcheck Z→A (nl→fr→es→en→de): FOMO/fabrieken/wapens FR/ES/DE; speel.html i18n + #stepsIos; Versus ongemoeid. **v1.18.168 / SW v378**. |
 | 2026-09-14 | **i18n Z→A rebase** | #283 rebased on #273: coverage keys + FR/ES/DE overlays; polish wording wins. **v1.18.165 / SW v375**. |

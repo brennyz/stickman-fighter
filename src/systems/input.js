@@ -789,6 +789,85 @@ function hudInsetTop() {
   return Math.max(readSafeInsets().top, 6) + 10;
 }
 
+/** Phone portrait (~390×844). Combat + menu chrome use a compact keep-out. */
+function hudPhoneCompact(W, H) {
+  const w = W != null ? W : (typeof window !== 'undefined' ? window.innerWidth : 800);
+  const h = H != null ? H : (typeof window !== 'undefined' ? window.innerHeight : 600);
+  return w <= 430 && h > w * 1.05;
+}
+
+/** Right keep-out for HTML #pauseBtn (48–56px + margin + safe-area). */
+function hudPauseGutter(W, H) {
+  const compact = hudPhoneCompact(W, H);
+  let big = false;
+  try { big = !!(document.body && document.body.classList.contains('big-touch')); } catch (_) {}
+  const btn = big ? 56 : 48;
+  const pad = compact ? 10 : 12;
+  const safeR = (typeof readSafeInsets === 'function') ? readSafeInsets().right : 0;
+  return btn + pad + Math.max(4, safeR);
+}
+
+function hudChromeRowH(W, H) {
+  return hudPhoneCompact(W, H) ? 54 : 48;
+}
+
+function hudCenterTop(W, H) {
+  const top = hudInsetTop();
+  return hudPhoneCompact(W, H) ? top + hudChromeRowH(W, H) : Math.max(28, top + 4);
+}
+
+function hudPlayerBarWidth(W, H) {
+  if (hudPhoneCompact(W, H)) return Math.min(188, W * 0.48);
+  return Math.min(240, W * 0.32);
+}
+
+/** Y just above the touch-button cluster so countdown rings don't sit on punch/jump. */
+function hudTouchClearY(H) {
+  const hh = H != null ? H : (typeof window !== 'undefined' ? window.innerHeight : 600);
+  try {
+    if (typeof Input !== 'undefined' && Input.buttons && Input.buttons.length) {
+      let minY = hh;
+      for (const b of Input.buttons) {
+        if (b && typeof b.y === 'number') minY = Math.min(minY, b.y - (b.r || 0));
+      }
+      if (minY < hh) return Math.max(hh * 0.42, minY - 28);
+    }
+  } catch (_) {}
+  return hh - 140;
+}
+
+function syncHudPhoneClass(W, H) {
+  try {
+    if (document.body) document.body.classList.toggle('hud-phone', hudPhoneCompact(W, H));
+  } catch (_) {}
+}
+
+/** Geometry for smoke + drawHUD: HP, pause, stars must not overlap on ~390×844. */
+function hudSafeLayout(W, H, mode) {
+  const compact = hudPhoneCompact(W, H);
+  const pauseG = hudPauseGutter(W, H);
+  const top = hudInsetTop();
+  const hpW = hudPlayerBarWidth(W, H);
+  const safeL = (typeof readSafeInsets === 'function') ? readSafeInsets().left : 0;
+  const hpX = Math.max(12, safeL + 8);
+  const starW = 58;
+  const pause = { x: W - pauseG, y: Math.max(4, top - 8), w: pauseG, h: compact ? 52 : 56 };
+  const hp = { x: hpX, y: top, w: hpW, h: compact ? 46 : 52 };
+  const stars = { x: W - pauseG - starW, y: top, w: starW, h: 16 };
+  return {
+    compact,
+    pauseGutter: pauseG,
+    top,
+    chromeH: hudChromeRowH(W, H),
+    centerY: hudCenterTop(W, H),
+    touchClearY: hudTouchClearY(H),
+    hp,
+    pause,
+    stars,
+    mode: mode || null,
+  };
+}
+
 function playfieldGroundY(H, W) {
   const portrait = H > W * 1.02;
   const dualVs = typeof Input !== 'undefined' && Input.dualMode;
@@ -1172,6 +1251,7 @@ Object.assign(Input, {
 const InputP2 = makePad('p2');
 
 Input.layout = function (W, H) {
+  if (typeof syncHudPhoneClass === 'function') syncHudPhoneClass(W, H);
   if (Input.dualMode) {
     _padP1Methods.layout.call(Input, W, H);
     InputP2.layout(W, H);

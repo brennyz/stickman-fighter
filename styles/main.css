@@ -3706,7 +3706,7 @@
     position: relative;
     width: min(94vw, 420px);
     margin-bottom: 12px;
-    padding: 16px 14px 14px;
+    padding: 16px 14px max(18px, env(safe-area-inset-bottom));
     border-radius: 18px 18px 14px 14px;
     border: 1px solid var(--menu-edge);
     background: var(--menu-tile-solid);
@@ -3734,5 +3734,73 @@
     #buildingsScreen .buildings-list { order: 1; display: flex; }
     #buildingsScreen[data-buildings-pane="list"] .buildings-detail { display: flex; }
     #buildingsScreen[data-buildings-pane="detail"] .buildings-list { display: flex; }
+  }
+
+  /* —— Phone HUD / chrome safe (~390×844) —— */
+  @media (max-width: 430px) {
+    :root {
+      --hud-pause-gutter: 64px;
+      --sheet-bottom-pad: max(22px, calc(env(safe-area-inset-bottom) + 16px));
+      --touch-min: 44px;
+    }
+    #pauseBtn {
+      top: max(8px, calc(var(--vv-top, 0px) + env(safe-area-inset-top)));
+      right: max(8px, env(safe-area-inset-right));
+      width: 48px;
+      height: 48px;
+    }
+    body.big-touch #pauseBtn { width: 52px; height: 52px; }
+    body.is-playing #toastHost {
+      top: max(104px, calc(env(safe-area-inset-top, 0px) + 88px));
+      width: min(86vw, 360px);
+      max-width: calc(100vw - var(--hud-pause-gutter) - 16px);
+    }
+    body.is-playing.sf-offline #netStatus {
+      bottom: max(120px, calc(env(safe-area-inset-bottom) + 104px));
+    }
+    #netStatus { max-width: calc(100vw - 88px); }
+    .menu-landing-footer {
+      padding: 8px 10px var(--sheet-bottom-pad);
+    }
+    .menu-dock .btn.tog {
+      min-height: var(--touch-min);
+      min-width: 44px;
+      padding: 8px 3px 7px;
+      font-size: 10px;
+    }
+    #menuScreen #fomoRitual {
+      padding: 12px 10px var(--sheet-bottom-pad);
+      align-items: flex-end;
+    }
+    .fomo-ritual-sheet {
+      max-height: min(70vh, 560px);
+      padding: 14px 14px var(--sheet-bottom-pad);
+    }
+    .fomo-ritual-cta,
+    #btnGambleGooiStart,
+    #btnGambleSkip,
+    .menu-landing-inner > .btn.mode-btn.b-continue {
+      min-height: 48px;
+    }
+    #buildingsScreen .buildings-sheet-panel,
+    #buildingsUpgradeSheet .buildings-sheet-panel {
+      padding-bottom: var(--sheet-bottom-pad);
+      max-height: min(72vh, 580px);
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+    }
+    .sub-home-bar {
+      padding-bottom: var(--sheet-bottom-pad);
+    }
+    .screen:has(.sub-home-bar) {
+      padding-bottom: max(108px, calc(env(safe-area-inset-bottom) + 96px));
+    }
+    .version-update-overlay {
+      padding: max(12px, env(safe-area-inset-top)) 12px var(--sheet-bottom-pad);
+    }
+    .hub-tile { min-height: 84px; }
+    .summon-actions {
+      bottom: var(--sheet-bottom-pad);
+    }
   }
 
