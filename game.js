@@ -3351,7 +3351,7 @@ const I18N = {
       summons: 'Coffres', summonsSub: 'Coffre du jour · arme et pet',
       profileAria: 'Profil et missions',
       options: 'Options', tips: 'Astuces', fresh: 'Nouvelle version', install: 'Ajouter comme app', installSub: 'Une icône, comme une vraie app',
-      pressStart: 'insert coin', missionReady: 'mission prête', dayBonus: 'Bonus du jour',
+      pressStart: 'insère une pièce', missionReady: 'mission prête', dayBonus: 'Bonus du jour',
       choosePath: 'CHOISIS TON CHEMIN', lastPlayed: 'DERNIER', playHere: 'JOUER', saveSync: 'sauv. OK',
       startGame: 'JOUER', startSub: 'Lance le combat',
       titleName: 'Nom — pas obligatoire', titleNamePh: 'Surnom (optionnel)',
@@ -3680,7 +3680,7 @@ const I18N = {
       summons: 'Cofres', summonsSub: 'Cofre diario · arma y pet',
       profileAria: 'Perfil y misiones',
       options: 'Opciones', tips: 'Consejos', fresh: 'Versión nueva', install: 'Añadir como app', installSub: 'Un icono, como una app real',
-      pressStart: 'insert coin', missionReady: 'misión lista', dayBonus: 'Bonus diario',
+      pressStart: 'inserta una moneda', missionReady: 'misión lista', dayBonus: 'Bonus diario',
       choosePath: 'ELIGE TU CAMINO', lastPlayed: 'ÚLTIMO', playHere: 'JUEGA', saveSync: 'guardado OK',
       startGame: 'JUGAR', startSub: 'Empieza el combate',
       titleName: 'Nombre — no hace falta', titleNamePh: 'Apodo (opcional)',
@@ -49909,7 +49909,7 @@ const UI = {
       try { syncPlayLayer(); } catch (_) {}
       try { hardenButtonIcons(document.getElementById('summonScreen')); } catch (_) {}
     } catch (err) {
-      sfReportError('renderSummon', err, t('ui.errSummonLoad'));
+      sfReportError('renderSummon', err, tOr('ui.summonLoadFail', t('ui.errSummonLoad')));
       try { this.goMenu(); } catch (_) { ensureVisibleScreen(); }
     }
   },
@@ -49962,7 +49962,7 @@ const UI = {
       this.safeOpen('summonScreen', () => {
         this.renderSummon();
         try { ensureSummonVideoPreloaded(); } catch (_) {}
-      }, { msg: t('ui.errSummonLoad') });
+      }, { msg: tOr('ui.summonLoadFail', t('ui.errSummonLoad')) });
     } catch (err) {
       sfReportError('openSummonHub', err, t('ui.errSummonOpen'));
       try { this.goMenu(); } catch (_) {}

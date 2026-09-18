@@ -79,8 +79,7 @@ if (!/EX-026/.test(exam) || !/IAP out of scope/.test(exam)) fail('EXAMINATOR.md 
 if (/win \? 1600 : 380/.test(game) || /win \? 1400 : 380/.test(game)) {
   fail('lose 380ms retry belongs to #323 — do not keep EX-022 delays');
 }
-if (!/win \? 1600 : 1400/.test(game)) fail('adventure lose delay must restore 1400ms (#323 owns fast retry)');
-if (!/scheduleGameResult\(this, 1400/.test(game)) fail('training result delay must restore 1400ms');
+if (!/resultShowDelayMs/.test(game)) fail('adventure/training delay must defer to #323 resultShowDelayMs');
 if (/#resultScreen.is-lose #resAgain/.test(css) || /#resultScreen.is-lose #resMenu/.test(css)) {
   fail('is-lose Opnieuw/Menu CSS fights #323 — remove it');
 }

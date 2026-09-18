@@ -2319,7 +2319,7 @@ const UI = {
       try { syncPlayLayer(); } catch (_) {}
       try { hardenButtonIcons(document.getElementById('summonScreen')); } catch (_) {}
     } catch (err) {
-      sfReportError('renderSummon', err, t('ui.errSummonLoad'));
+      sfReportError('renderSummon', err, tOr('ui.summonLoadFail', t('ui.errSummonLoad')));
       try { this.goMenu(); } catch (_) { ensureVisibleScreen(); }
     }
   },
@@ -2372,7 +2372,7 @@ const UI = {
       this.safeOpen('summonScreen', () => {
         this.renderSummon();
         try { ensureSummonVideoPreloaded(); } catch (_) {}
-      }, { msg: t('ui.errSummonLoad') });
+      }, { msg: tOr('ui.summonLoadFail', t('ui.errSummonLoad')) });
     } catch (err) {
       sfReportError('openSummonHub', err, t('ui.errSummonOpen'));
       try { this.goMenu(); } catch (_) {}
