@@ -50,7 +50,7 @@
       "id": "w-20260918T131600",
       "from": "user",
       "text": "KEEP IMPROVING #318 (no main). Result/defeat: one huge primary retry CTA (<3s, Flappy bar) — fill gaps vs #316/#313/#323, do not fight. Toast-over-title (factories welcome). Landscape 844×390 hub overflow. Re-smoke layout + menu. speel.html, no Versus.",
-      "status": "doing",
+      "status": "done-in-code",
       "updated": "2026-09-18",
       "notes": "Continue draft PR #318. Compatible with #323 flappy-retry IDs/classes. Do not silent-merge main."
     },
@@ -1089,6 +1089,10 @@
   ],
   "sessionLog": [
     {
+      "at": "2026-09-18T13:23:03Z",
+      "summary": "Flappy result bar, toast-under-title, landscape 844×390 hub on #318. v1.18.175 / SW 385. Draft, no main."
+    },
+    {
       "at": "2026-09-18T13:15:30Z",
       "summary": "P0 on #318: FOMO Vandaag EX-021 lock, settings/style overflow, hub chevron/badge split. v1.18.174 / SW 384. Draft, no main."
     },
@@ -1183,10 +1187,6 @@
     {
       "at": "2026-09-14T12:46:48Z",
       "summary": "P1 entry: Android-first landing — één install-blok, geen iPad op Android · v1.18.157 / SW 367"
-    },
-    {
-      "at": "2026-09-14T12:45:42Z",
-      "summary": "P1 entry: Android-first landing — geen iPad-blok op Android"
     }
   ],
   "implementedFeaturesSummary": "d18 char select deel 1+2 (v1.11.1-2); Mats coinrun + shuriken mik/vliegers + anti-spam (v1.12.0); speel.html (v1.12.2+). Zie HANDOFF-ZOEKINDEX.md en improvement-d20-bag.json userFeatureLog.",
