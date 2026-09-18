@@ -541,6 +541,14 @@ overlayI18nCatalog(CATALOG_FR, {
     unequip: 'Enlever',
     wearing: 'sur toi',
     empty: 'Vide',
+    kindLook: 'Look seulement',
+    kindStat: 'Avec stats',
+    summaryLookOnly: '{n}/5 · look seulement',
+    summaryWithStats: '{n}/5 · {stat} avec stats',
+    huntCopy: 'Look de départ seulement. Trouve plus de pièces en Aventure.',
+    huntBtn: 'Aller en Aventure',
+    unequipAll: 'Tout enlever',
+    unequipAllConfirm: 'Tape encore',
   },
 });
 
@@ -1081,6 +1089,14 @@ overlayI18nCatalog(CATALOG_ES, {
     unequip: 'Quitar',
     wearing: 'puesto',
     empty: 'Vacío',
+    kindLook: 'Solo look',
+    kindStat: 'Con stats',
+    summaryLookOnly: '{n}/5 · solo look',
+    summaryWithStats: '{n}/5 · {stat} con stats',
+    huntCopy: 'Solo look inicial. Encuentra más piezas en Aventura.',
+    huntBtn: 'Ir a Aventura',
+    unequipAll: 'Quitar todo',
+    unequipAllConfirm: 'Toca otra vez',
   },
 });
 

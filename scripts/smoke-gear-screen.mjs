@@ -34,6 +34,7 @@ must(/id="gearDollCanvas"/.test(html), 'missing stickman preview');
 must(/id="gearFilterBar"/.test(html) && /id="gearFilterQ"/.test(html), 'filter bar + search required for large catalog');
 must(/id="gearRarityBar"/.test(html) && /id="gearFilterCount"/.test(html), 'rarity bar + result count required');
 must(/id="gearFilterClear"/.test(html) && /id="gearSheetHint"/.test(html) && /id="gearLayout"/.test(html), 'sheet tools + layout wrappers required');
+must(/id="gearHuntCta"/.test(html) && /id="btnGearHuntAdv"/.test(html) && /id="gearUnequipAll"/.test(html), 'hunt CTA + unequip-all required');
 must(!/data-gear-slot="arms"/.test(html) && !/data-gear-slot="aura"/.test(html), 'legacy arms/aura slots must not be in HTML');
 must(/hub-tile-gear/.test(html), 'Character tile must use HOME hub-tile chrome');
 
@@ -69,7 +70,7 @@ must(/function gearSortItems/.test(uiAdapt) && /function gearRaritiesInList/.tes
 must(/gearFilterItems\(items, filter, q, rarity\)/.test(uiAdapt) || /function gearFilterItems\(items, filter, q, rarity\)/.test(uiAdapt), 'gearFilterItems must take rarity');
 must(/isCosmetic/.test(uiAdapt) && /hasStats/.test(uiAdapt), 'contract item flags missing');
 must(/\.gear-filter-btn/.test(css), 'filter chips CSS missing');
-must(/\.gear-card-action/.test(css) && /\.gear-detail-actions/.test(css) && /\.gear-slot-clear/.test(css), 'equip/unequip/lock affordances CSS missing');
+must(/\.gear-card-action/.test(css) && /\.gear-detail-actions/.test(css) && /\.gear-unequip-all/.test(css) && /\.gear-hunt-cta/.test(css), 'equip/unequip/lock affordances CSS missing');
 must(!/\.gear-detail-actions\s*\{\s*display:\s*none/.test(css), 'detail actions must be visible');
 must(/min-width:\s*900px/.test(css) && /grid-template-columns/.test(css), 'desktop two-column gear layout missing');
 must(!/\.screen\s*\{\s*display:\s*none\s*!important/.test(css), 'nuclear display:none forbidden');
@@ -152,17 +153,28 @@ async function run() {
       const titleEl = cards[0] && cards[0].querySelector('.gear-slot-title');
       const subEl = cards[0] && cards[0].querySelector('.gear-slot-sub');
       if (!titleEl || !subEl) return { ok: false, why: 'slot title/sub missing' };
-      const headClear = document.querySelector('#gearSlotList [data-gear-unequip="head"]');
-      const headCard = document.querySelector('#gearSlotList [data-slot="head"]');
-      if (headClear && headCard && !headClear.hidden) {
-        const cb = headCard.getBoundingClientRect();
-        const ub = headClear.getBoundingClientRect();
-        if (ub.top > cb.bottom + 8) {
-          return { ok: false, why: 'slot unequip wrapped under card', cardBottom: cb.bottom, clearTop: ub.top };
-        }
-        if (ub.left < cb.right - 4) {
-          return { ok: false, why: 'slot unequip must sit beside card', cardRight: cb.right, clearLeft: ub.left };
-        }
+      if (document.querySelector('#gearSlotList [data-gear-unequip]:not([hidden])')) {
+        return { ok: false, why: 'per-slot unequip must not sit on slot rows (mistap)' };
+      }
+      const hunt = document.getElementById('gearHuntCta');
+      const huntBtn = document.getElementById('btnGearHuntAdv');
+      if (!hunt || hunt.hidden || !huntBtn) {
+        return { ok: false, why: 'starter-only hunt CTA to Adventure missing', hidden: hunt && hunt.hidden };
+      }
+      if (!/Avontuur|Adventure|Abenteuer|Aventure|Aventura/i.test((hunt.textContent || '') + (huntBtn.textContent || ''))) {
+        return { ok: false, why: 'hunt CTA must name Adventure', text: hunt.textContent };
+      }
+      if (typeof gearIsStarterOnly === 'function' && !gearIsStarterOnly(save)) {
+        return { ok: false, why: 'fresh save must be starter-only' };
+      }
+      const allOff = document.getElementById('gearUnequipAll');
+      if (!allOff || allOff.hidden) return { ok: false, why: 'unequip-all missing while starters are on' };
+      const sum = document.getElementById('gearSummary');
+      if (sum && /131/.test(sum.textContent || '')) {
+        return { ok: false, why: 'summary must not dump catalog N on phone', text: sum.textContent };
+      }
+      if (sum && !/look|Look|stats|Stats/i.test(sum.textContent || '')) {
+        return { ok: false, why: 'summary must say look vs stats', text: sum.textContent };
       }
       const titleBox = titleEl.getBoundingClientRect();
       const subBox = subEl.getBoundingClientRect();
@@ -261,6 +273,14 @@ async function run() {
       save.lvl = Math.max(save.lvl || 1, 20);
       save.createdAt = Math.min(save.createdAt || Date.now(), Date.now() - 90 * 86400000);
       save.gear.owned.head_visor_neon = save.gear.owned.head_visor_neon || { at: Date.now(), src: 'smoke' };
+      UI.renderGear();
+      const huntAfterDrop = document.getElementById('gearHuntCta');
+      if (huntAfterDrop && !huntAfterDrop.hidden) {
+        return { ok: false, why: 'hunt CTA must hide after a non-starter drop' };
+      }
+      if (typeof gearIsStarterOnly === 'function' && gearIsStarterOnly(save)) {
+        return { ok: false, why: 'visor drop must end starter-only' };
+      }
       const statOk = gearCanEquip('head_visor_neon', { expectSlot: 'head' });
       if (!statOk || statOk.state !== 'ok' || !statOk.canEquip) {
         return { ok: false, why: 'owned unlocked visor must be ok', statOk };
@@ -380,10 +400,32 @@ async function run() {
       if (!detailBox || detailBox.getBoundingClientRect().height < 36) {
         return { ok: false, why: 'detail actions not visible', h: detailBox && detailBox.getBoundingClientRect().height };
       }
-      const slotClear = document.querySelector('#gearSlotList [data-gear-unequip="head"]');
-      if (!slotClear || slotClear.hidden) return { ok: false, why: 'slot unequip control missing on filled head' };
-      slotClear.click();
-      if (save.gear.equipped.head) return { ok: false, why: 'slot unequip must clear head', head: save.gear.equipped.head };
+      const headOn = save.gear.equipped.head;
+      const chestBtn = document.querySelector('#gearSlotList [data-slot="chest"]');
+      if (!chestBtn) return { ok: false, why: 'chest slot missing for swap test' };
+      chestBtn.click();
+      if (save.gear.equipped.head !== headOn) {
+        return { ok: false, why: 'swapping slots must not unequip', head: save.gear.equipped.head };
+      }
+      if (UI.gearSlotPick !== 'chest') return { ok: false, why: 'chest tap must select chest', pick: UI.gearSlotPick };
+
+      UI.gearSlotPick = 'head';
+      UI.renderGear();
+      const allBtn = document.getElementById('gearUnequipAll');
+      if (!allBtn || allBtn.hidden) return { ok: false, why: 'unequip-all hidden while filled' };
+      allBtn.click();
+      if (!allBtn.classList.contains('is-armed') && !UI._gearUnequipAllArmed) {
+        return { ok: false, why: 'first unequip-all tap must arm, not strip' };
+      }
+      if (!save.gear.equipped.head) return { ok: false, why: 'first unequip-all tap stripped early' };
+      if (typeof unequipAllGear !== 'function') return { ok: false, why: 'unequipAllGear helper missing' };
+      unequipAllGear();
+      if (save.gear.equipped.head || save.gear.equipped.chest) {
+        return { ok: false, why: 'unequip-all must clear slots', eq: save.gear.equipped };
+      }
+      if (!save.gear.owned.head_wrap_cloth) {
+        return { ok: false, why: 'unequip-all must keep owned starters' };
+      }
 
       UI.gearFilter = 'lock';
       UI.gearFilterQ = '';

@@ -3286,7 +3286,63 @@
     font-size: 12px; font-weight: 800;
   }
   .gear-legend {
-    display: flex; flex-wrap: wrap; justify-content: center; gap: 6px;
+    display: none;
+  }
+  .gear-hunt-cta {
+    width: min(94vw, 420px);
+    margin: 0 auto 10px;
+    padding: 10px 12px;
+    border-radius: 14px;
+    border: 1px solid rgba(255, 215, 94, .45);
+    background: linear-gradient(135deg, rgba(255, 215, 94, 0.14), transparent 55%), var(--menu-tile-solid);
+    box-shadow: 0 3px 0 rgba(0, 0, 0, 0.28);
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .gear-hunt-cta[hidden] { display: none !important; }
+  .gear-hunt-copy {
+    margin: 0;
+    font-size: 13px;
+    font-weight: 700;
+    line-height: 1.35;
+    color: var(--menu-ink);
+  }
+  .gear-hunt-btn {
+    min-height: max(48px, var(--touch-min));
+    padding: 10px 14px;
+    border-radius: 12px;
+    border: 1px solid rgba(124, 245, 255, .5);
+    background: #1c2940;
+    color: #7cf5ff;
+    font-family: inherit;
+    font-weight: 900;
+    font-size: 14px;
+    cursor: pointer;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+    box-shadow: 0 3px 0 rgba(0, 0, 0, 0.28);
+  }
+  .gear-hunt-btn:active { transform: translateY(2px); box-shadow: 0 1px 0 rgba(0,0,0,.26); }
+  .gear-unequip-all {
+    width: 100%;
+    margin: 2px 0 0;
+    min-height: max(44px, var(--touch-min));
+    padding: 8px 12px;
+    border-radius: 12px;
+    border: 1px dashed rgba(255, 215, 94, .4);
+    background: transparent;
+    color: #ffd75e;
+    font-family: inherit;
+    font-weight: 800;
+    font-size: 13px;
+    cursor: pointer;
+    touch-action: manipulation;
+  }
+  .gear-unequip-all[hidden] { display: none !important; }
+  .gear-unequip-all.is-armed {
+    border-style: solid;
+    background: rgba(255, 215, 94, 0.12);
   }
   .gear-pill {
     display: inline-flex; align-items: center; gap: 4px;
@@ -3307,7 +3363,7 @@
     display: flex; flex-direction: column; gap: 8px;
   }
   .gear-slot-row {
-    display: flex; flex-wrap: nowrap; align-items: stretch; gap: 6px; width: 100%;
+    display: block; width: 100%;
   }
   .gear-slot-card.hub-tile,
   .gear-slot-card {
@@ -3341,10 +3397,8 @@
   .gear-slot-card:active { transform: translateY(2px); box-shadow: 0 1px 0 rgba(0,0,0,.26); }
   .gear-slot-row .gear-slot-card.hub-tile,
   .gear-slot-row .gear-slot-card {
-    flex: 1 1 auto;
-    width: auto;
-    min-width: 0;
-    padding-right: 12px;
+    width: 100%;
+    padding-right: 14px;
   }
   .gear-slot-row .gear-slot-card::after { display: none; }
   .gear-slot-card .hub-tile-ico,
@@ -3375,24 +3429,7 @@
   }
   .gear-slot-pills { display: flex; flex-wrap: wrap; gap: 4px; margin-right: 4px; }
   .gear-slot-card .gear-pill { flex-shrink: 0; }
-  .gear-slot-clear {
-    flex: 0 0 auto;
-    width: max(64px, var(--touch-min));
-    min-width: max(64px, var(--touch-min));
-    min-height: max(56px, var(--touch-min));
-    padding: 8px 6px;
-    border-radius: 14px;
-    border: 1px solid rgba(124, 245, 255, .45);
-    background: var(--menu-tile-solid);
-    color: #7cf5ff;
-    font-family: inherit; font-weight: 800; font-size: 11px; line-height: 1.15;
-    cursor: pointer;
-    touch-action: manipulation;
-    -webkit-tap-highlight-color: transparent;
-    box-shadow: 0 4px 0 rgba(0, 0, 0, 0.28);
-  }
-  .gear-slot-clear:active { transform: translateY(2px); box-shadow: 0 1px 0 rgba(0,0,0,.26); }
-  .gear-slot-clear[hidden] { display: none !important; }
+  .gear-slot-clear { display: none; }
   .gear-weapon-aside.hub-tile,
   .gear-weapon-aside {
     width: 100%; margin: 0;
@@ -3641,13 +3678,22 @@
   body.big-touch .gear-card,
   body.big-touch .gear-detail-btn { min-height: max(60px, var(--touch-min)); }
   body.big-touch .gear-filter-btn { min-height: max(48px, var(--touch-min)); }
+  @media (max-width: 420px) {
+    .gear-legend { display: none !important; }
+    .gear-slot-pills .gear-pill-on,
+    .gear-slot-open { display: none; }
+    .gear-card-name .gear-pill-on { display: none; }
+    .gear-summary { gap: 4px; }
+    .gear-pill { padding: 3px 7px; }
+  }
   @media (max-width: 380px) {
     .gear-doll-canvas { width: min(78vw, 200px); height: min(50vw, 240px); }
     .gear-slot-title { font-size: 14px; }
     .gear-card-action { min-width: 64px; font-size: 10px; }
   }
   @media (min-width: 900px) {
-    #gearScreen .gear-screen-head { width: min(96vw, 1040px); }
+    #gearScreen .gear-screen-head,
+    #gearScreen .gear-hunt-cta { width: min(96vw, 1040px); }
     #gearScreen .gear-layout {
       width: min(96vw, 1040px);
       display: grid;

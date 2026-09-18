@@ -40,6 +40,13 @@
   },
   "userWishlist": [
     {
+      "id": "w-20260918T125500",
+      "from": "user",
+      "text": "KEEP IMPROVING #315 (no main). P0: (1) first-time empty inventory CTA to Adventure still clear after starter cosmetics (2) vanity vs stats messaging on 390px without clutter (3) unequip-all / swap-between-slots mistaps. Re-smoke gear-screen + gear. Schema unchanged. speel.html, no Versus.",
+      "status": "in-progress",
+      "updated": "2026-09-18"
+    },
+    {
       "id": "w-20260918T122300",
       "from": "user",
       "text": "WORKER lane: GEAR screens UX. Uitrusting / slot sheets / tap-to-equip feel clunky. Make equip/unequip/filters/locks clear on mobile+desktop. Keep gear schema/equip API. No Versus. Draft PR only. speel.html.",

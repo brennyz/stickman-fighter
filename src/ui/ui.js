@@ -4369,26 +4369,48 @@ const UI = {
       this._gearPickerScroll = p ? p.scrollTop : 0;
     };
 
+    const filled = slots.filter((s) => eq[s.id]).length;
+    const statN = slots.reduce((n, s) => {
+      const it = typeof gearItemById === 'function' ? gearItemById(eq[s.id]) : null;
+      return n + (it && gearHasStats(it) ? 1 : 0);
+    }, 0);
     const sumEl = document.getElementById('gearSummary');
     if (!pickerOnly && sumEl) {
-      const filled = slots.filter((s) => eq[s.id]).length;
-      const statN = slots.reduce((n, s) => {
-        const it = typeof gearItemById === 'function' ? gearItemById(eq[s.id]) : null;
-        return n + (it && gearHasStats(it) ? 1 : 0);
-      }, 0);
-      const catalogN = (typeof GEAR_ITEMS !== 'undefined' && Array.isArray(GEAR_ITEMS)) ? GEAR_ITEMS.length : items.length;
+      const line = statN
+        ? tOr('gear.summaryWithStats', '{n}/5 · {stat} met stats', { n: filled, stat: statN })
+        : tOr('gear.summaryLookOnly', '{n}/5 · alleen look', { n: filled });
       sumEl.innerHTML =
-        `<span class="gear-pill gear-pill-on">${tOr('gear.summarySlots', '<b>{n}</b>/5', { n: filled })}</span>` +
-        `<span class="gear-pill gear-pill-stat">${esc(tOr('gear.pillStat', 'STAT'))} ${statN}</span>` +
-        `<span class="gear-pill gear-pill-vanity">${esc(tOr('gear.pillVanity', 'LOOK'))} ${Math.max(0, filled - statN)}</span>` +
-        `<span class="gear-pill">${esc(tOr('gear.catalogN', '{n} items', { n: catalogN }))}</span>`;
+        `<span class="gear-pill gear-pill-on">${esc(line)}</span>` +
+        (statN
+          ? `<span class="gear-pill gear-pill-stat">${esc(tOr('gear.kindStat', 'Met stats'))}</span>`
+          : `<span class="gear-pill gear-pill-vanity">${esc(tOr('gear.kindLook', 'Alleen look'))}</span>`);
     }
     const legend = document.getElementById('gearLegend');
     if (!pickerOnly && legend) {
       legend.innerHTML =
-        `<span class="gear-pill gear-pill-vanity">${esc(tOr('gear.pillVanity', 'LOOK'))}</span>` +
-        `<span class="gear-pill gear-pill-stat">${esc(tOr('gear.pillStat', 'STAT'))}</span>` +
-        `<span class="gear-pill gear-pill-lock">${esc(tOr('gear.pillLock', 'LOCK'))}</span>`;
+        `<span class="gear-pill gear-pill-vanity">${esc(tOr('gear.kindLook', 'Alleen look'))}</span>` +
+        `<span class="gear-pill gear-pill-stat">${esc(tOr('gear.kindStat', 'Met stats'))}</span>`;
+    }
+
+    const hunt = document.getElementById('gearHuntCta');
+    const huntCopy = document.getElementById('gearHuntCopy');
+    const huntBtn = document.getElementById('btnGearHuntAdv');
+    const starterOnly = typeof gearIsStarterOnly === 'function' ? gearIsStarterOnly(save) : true;
+    if (!pickerOnly && hunt) {
+      hunt.hidden = !starterOnly;
+      if (huntCopy) huntCopy.textContent = tOr('gear.huntCopy', 'Alleen start-look. Vind meer stukken in Avontuur.');
+      if (huntBtn) {
+        huntBtn.textContent = tOr('gear.huntBtn', 'Naar Avontuur');
+        if (!huntBtn.dataset.sfGearHunt) {
+          huntBtn.dataset.sfGearHunt = '1';
+          bindPress(huntBtn, () => {
+            safeUiAction(() => {
+              AudioSys.sfx('select');
+              this.safeOpen('levelScreen', () => this.renderLevels());
+            }, 'gearHuntAdv', tOr('gear.errSlot', 'Slot pick failed'));
+          });
+        }
+      }
     }
 
     const slotIco = (typeof GEAR_SLOT_ICONS !== 'undefined' && GEAR_SLOT_ICONS) ? GEAR_SLOT_ICONS : {
@@ -4428,9 +4450,6 @@ const UI = {
             ? (unlock.label || tOr('gear.pillLock', 'LOCK'))
             : (gearItemName(item) + (rar ? ' · ' + tOr('rarity.' + rar, tOr('gear.rar.' + rar, rar)) : '')));
         const ico = slotIco[sid] || 'assets/buttons/modes/gear.svg';
-        const openMark = sid === pickSlot
-          ? `<span class="gear-slot-open">${esc(tOr('gear.slotOpen', 'open'))}</span>`
-          : '';
         btn.innerHTML =
           `<span class="hub-tile-ico gear-slot-swatch" style="background:${esc(tint)}">` +
           `<img src="${esc(ico)}" alt="" width="22" height="22" decoding="async" draggable="false"></span>` +
@@ -4438,7 +4457,7 @@ const UI = {
           `<span class="hub-tile-title gear-slot-title">${esc(gearSlotName(sid))}</span>` +
           `<span class="hub-tile-sub gear-slot-sub">${esc(sub)}</span>` +
           `</span>` +
-          `<span class="gear-slot-pills hub-tile-stat">${pillFor(item, unlock, { on: !!item })}${openMark}</span>`;
+          `<span class="gear-slot-pills hub-tile-stat">${pillFor(item, unlock, { on: false })}</span>`;
         bindPress(btn, () => {
           safeUiAction(() => {
             this.gearSlotPick = sid;
@@ -4456,25 +4475,52 @@ const UI = {
           }, 'gearSlot/' + sid, tOr('gear.errSlot', 'Slot pick failed'));
         });
         row.appendChild(btn);
-        const clear = document.createElement('button');
-        clear.type = 'button';
-        clear.className = 'gear-slot-clear';
-        clear.setAttribute('data-gear-unequip', sid);
-        clear.textContent = tOr('gear.unequip', 'Uitdoen');
-        clear.setAttribute('aria-label', tOr('gear.clearSlot', '{slot} leegmaken', { slot: gearSlotName(sid) }));
-        if (!item) clear.hidden = true;
-        bindPress(clear, () => {
+        slotList.appendChild(row);
+      }
+    }
+
+    const allOff = document.getElementById('gearUnequipAll');
+    if (!pickerOnly && allOff) {
+      allOff.hidden = filled < 1;
+      allOff.classList.toggle('is-armed', !!this._gearUnequipAllArmed);
+      allOff.textContent = this._gearUnequipAllArmed
+        ? tOr('gear.unequipAllConfirm', 'Nog eens tikken')
+        : tOr('gear.unequipAll', 'Alles uitdoen');
+      if (!allOff.dataset.sfGearAllOff) {
+        allOff.dataset.sfGearAllOff = '1';
+        bindPress(allOff, () => {
           safeUiAction(() => {
-            if (!item) return;
-            this.gearSlotPick = sid;
-            this.gearItemPick = item.id;
-            takeOff(Object.assign({}, item, { slot: sid, slotId: sid }));
+            if (!this._gearUnequipAllArmed) {
+              this._gearUnequipAllArmed = true;
+              if (this._gearUnequipAllT) {
+                try { clearTimeout(this._gearUnequipAllT); } catch (_) {}
+              }
+              this._gearUnequipAllT = setTimeout(() => {
+                this._gearUnequipAllArmed = false;
+                this._gearUnequipAllT = null;
+                if (typeof this.renderGear === 'function') this.renderGear();
+              }, 2400);
+              AudioSys.sfx('select');
+              this.renderGear();
+              return;
+            }
+            this._gearUnequipAllArmed = false;
+            if (this._gearUnequipAllT) {
+              try { clearTimeout(this._gearUnequipAllT); } catch (_) {}
+              this._gearUnequipAllT = null;
+            }
+            const res = (typeof unequipAllGear === 'function')
+              ? unequipAllGear()
+              : { ok: true, n: (typeof listGearSlots === 'function' ? listGearSlots() : []).reduce((n, s) => {
+                if (typeof unequipGear === 'function') { unequipGear(s.id); return n + 1; }
+                return n;
+              }, 0) };
+            AudioSys.sfx('select');
+            UI.toast(tOr('toast.gearUnequipAll', 'Alles uitgedaan', { n: (res && res.n) || 0 }), 1400);
             this.renderGear();
             this.renderMenu();
-          }, 'gearUnequip/' + sid, tOr('gear.errSlot', 'Slot pick failed'));
+          }, 'gearUnequipAll', tOr('gear.errSlot', 'Slot pick failed'));
         });
-        row.appendChild(clear);
-        slotList.appendChild(row);
       }
     }
 
@@ -4735,7 +4781,7 @@ const UI = {
           : (unlock.label || tOr('gear.pillLock', 'LOCK'));
         el.innerHTML =
           `<span class="gear-card-swatch" style="background:${esc(tint)}"></span>` +
-          `<span class="gear-card-body"><span class="gear-card-name">${esc(gearItemName(it))} ${pillFor(it, unlock, { on: equippedHere })} ${rarPill}</span>` +
+          `<span class="gear-card-body"><span class="gear-card-name">${esc(gearItemName(it))} ${pillFor(it, unlock, { on: false })} ${rarPill}</span>` +
           `<span class="gear-card-meta">${esc(meta)}</span></span>` +
           `<span class="gear-card-action ${esc(action.key)}">${esc(action.label)}</span>`;
         bindPress(el, () => {

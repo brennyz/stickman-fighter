@@ -52,8 +52,8 @@ From `gearTooltipModel`: **LOOK** if vanity / `!appliesStats`. **STAT** if `appl
 
 ## Catalog UX
 
-131 items. Filter chips (all / Look / Stats / Lock / owned) + rarity + search + **Wis filters**. **One page-scroll** (no nested picker `max-height`). Desktop ≥900px: loadout sticky left, sheet right. Tap item = equip/unequip; sheet `#gearDetail` also has Aandoen / Uitdoen / lock reason. Slot row has sibling `[data-gear-unequip]`. HOME tile `#btnGearHome` (`data-hub="gear"`) is 1 tap from HOME.
+131 items. Filter chips (all / Look / Stats / Lock / owned) + rarity + search + **Wis filters**. **One page-scroll** (no nested picker `max-height`). Desktop ≥900px: loadout sticky left, sheet right. Tap item = equip/unequip; sheet `#gearDetail` has Aandoen / Uitdoen / lock reason. Slot rows are select-only (no per-row Uitdoen). `#gearUnequipAll` is a two-tap confirm. First-time starter-only loadout shows `#gearHuntCta` → Avontuur. HOME tile `#btnGearHome` (`data-hub="gear"`) is 1 tap from HOME.
 
 ## UI IDs
 
-`#gearScreen` · `#btnGear` · `#btnGearHome` · `#gearDollCanvas` · `#gearSlotList` (`data-slot`) · `#gearWeaponAside` · `#gearDetail` · `#gearFilterBar` · `#gearFilterQ` · `#gearFilterClear` · `#gearPicker` (`data-gear-id`) · `#gearSheetHint` · `[data-gear-action]` · `[data-gear-unequip]`
+`#gearScreen` · `#btnGear` · `#btnGearHome` · `#gearDollCanvas` · `#gearSlotList` (`data-slot`) · `#gearWeaponAside` · `#gearDetail` · `#gearFilterBar` · `#gearFilterQ` · `#gearFilterClear` · `#gearPicker` (`data-gear-id`) · `#gearSheetHint` · `#gearHuntCta` · `#btnGearHuntAdv` · `#gearUnequipAll` · `[data-gear-action]`
