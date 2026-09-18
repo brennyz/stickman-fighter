@@ -1066,7 +1066,8 @@
       "from": "user",
       "text": "Owner feel bar (Flappy Bird-class) on #316 draft: (1) instant readability — one primary CTA; (2) failures feel fair (readable telegraph, self-blame) — reinforce mobile density/HUD, don’t re-dupe #314; (3) min downtime — die → retry/next in <3s, big obvious button; (4) juice on hit/kill/equip not chrome spam, reduced-motion safe; (5) teach by doing in first 30s, not walls of text. No IAP. No Versus. No main.",
       "status": "done-in-code",
-      "updated": "2026-09-18"
+      "updated": "2026-09-18",
+      "notes": "v1.18.176 / SW 386. juice-cta-primary gold, juiceRetryAdventure skips dice, juiceResultDelayMs 700/900, first-play hide FOMO + no welcome wall, 30s Tik slaan. Draft #316, no main."
     }
   ],
   "agentRules": [
