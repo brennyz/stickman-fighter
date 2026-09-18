@@ -73,15 +73,18 @@ Measured `buildLevel` budgets (same wave **count**, fewer bodies on phone):
 
 Versus / dual pads are not used.
 
+## Colossal bosses on 390px (EX-1)
+
+Desktop colossal stays **size ×2.0**, uncapped. Phone uses **×1.38** then a playfield cap (`0.24 × strip`, min 64) so a Guvvedrak-scale body (~168 radius) fits ~94px and leaves **≥80px** of ground if centered. HP/damage muls are unchanged. Compact colossal winds floor at **0.46s**. Resize refits via `refreshAdventureBossScale` (Satan keeps its own scaler).
+
 ## Remaining mobile overwhelm (EX)
 
-Not fixed in this PR — still true after density + telegraph/touch:
+Still true after density + telegraph + colossal fit:
 
-1. **Colossal bosses** can still eat most of a 390px strip (size ×2). Readable telegraph, but little sidestep room — jump/i-frames remain the answer.
-2. **HUD shows one telegraph** (`adventureTelegraphHud` breaks on the first). Two elites winding at once = one bar. Density lowered the odds; it did not add a second lane.
-3. **Flyers / aim-up** on short landscape (844×390): vertical fight space is still tight. Aim tutorial + joy↑ unchanged.
-4. **Hell enrage walk speed** is not scaled — only the wind floor. Late Hell on a phone is still the hard lane.
-5. **Part-gate “hold right”** on portrait still asks for a long right-walk with the left stick; unrelated to horde size.
-6. **Pickup clutter** after a thinner wave is better, but gear + shards can still stack on the 390px floor.
+1. **HUD shows one telegraph** (`adventureTelegraphHud` breaks on the first). Two elites winding at once = one bar.
+2. **Flyers / aim-up** on short landscape (844×390): vertical fight space is still tight.
+3. **Hell enrage walk speed** is not scaled — only the wind floor. Late Hell on a phone is still the hard lane.
+4. **Part-gate “hold right”** on portrait still asks for a long right-walk with the left stick.
+5. **Pickup clutter** after a thinner wave is better, but gear + shards can still stack on the 390px floor.
 
 Re-check after play: `npm run smoke:combat-density && npm run smoke:adventure`.

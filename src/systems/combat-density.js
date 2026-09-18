@@ -157,14 +157,6 @@ function combatTelegraphMul(profile) {
   return 1;
 }
 
-/** Apply viewport mul + phone floor. Enraged 0.20s shark winds become readable on 390px. */
-function applyCombatTelegraphWind(baseWind, profile) {
-  profile = asCombatProfile(profile);
-  let w = Number(baseWind) * combatTelegraphMul(profile);
-  if (profile.compact) w = Math.max(w, COMBAT_TELEGRAPH_FLOOR);
-  return w;
-}
-
 /**
  * Charge/shark telegraph trigger distance. On a 390px strip the legacy 240px
  * cue starts off-screen (ring invisible). Keep the cue on the playfield.
@@ -213,4 +205,60 @@ function combatJoySwipeAccepts(x, y, w, h, profile) {
   const W0 = w > 0 ? w : profile.w;
   const H0 = h > 0 ? h : profile.h;
   return x < W0 * 0.42 && y > H0 * 0.55;
+}
+
+const COMBAT_COLOSSAL_MUL_DESKTOP = 2;
+const COMBAT_COLOSSAL_MUL_PHONE = 1.38;
+const COMBAT_COLOSSAL_CAP_FRAC = 0.24;
+const COMBAT_COLOSSAL_CAP_MIN = 64;
+
+/** Desktop stays 2.0. Phone keeps a "huge" boss without eating the 390px strip. */
+function combatColossalSizeMul(profile) {
+  profile = asCombatProfile(profile);
+  if (profile.compact) return COMBAT_COLOSSAL_MUL_PHONE;
+  return COMBAT_COLOSSAL_MUL_DESKTOP;
+}
+
+function combatBossSizeCap(profile) {
+  profile = asCombatProfile(profile);
+  if (!profile.compact) return Infinity;
+  const strip = Math.min(profile.w, Math.max(280, profile.h * 0.55));
+  return Math.max(COMBAT_COLOSSAL_CAP_MIN, Math.round(strip * COMBAT_COLOSSAL_CAP_FRAC));
+}
+
+function combatFitBossSize(rawSize, profile) {
+  profile = asCombatProfile(profile);
+  const s = Math.max(1, Number(rawSize) || 40);
+  if (!profile.compact) return Math.round(s);
+  return Math.round(Math.min(s, combatBossSizeCap(profile)));
+}
+
+/** Leftover ground (px) if a body of `size` stands at mid-strip. */
+function combatColossalFairLane(size, profile) {
+  profile = asCombatProfile(profile);
+  const contact = (Number(size) + 16) * 0.82;
+  return Math.max(0, Math.round(profile.w - 2 * contact));
+}
+
+function applyCombatTelegraphWind(baseWind, profile, flags) {
+  profile = asCombatProfile(profile);
+  let w = Number(baseWind) * combatTelegraphMul(profile);
+  if (profile.compact) w = Math.max(w, COMBAT_TELEGRAPH_FLOOR);
+  if (profile.compact && flags && flags.colossal) w = Math.max(w, 0.46);
+  return w;
+}
+
+/** Resize: keep baked colossal HP, refit radius to the current playfield. */
+function refreshAdventureBossScale(game) {
+  if (!game || game.mode !== 'adventure' || !game.monsters) return;
+  for (const m of game.monsters) {
+    if (!m || !m.alive || m.satanBoss) continue;
+    if (!m.colossal || !(m._fitSizeRaw > 0)) continue;
+    const next = combatFitBossSize(m._fitSizeRaw);
+    if (!(next > 0) || Math.abs(next - m.size) < 1) continue;
+    m.size = next;
+    try {
+      if (!m.flying && game.ground > 0) m.y = game.ground - m.size;
+    } catch (_) {}
+  }
 }

@@ -52,10 +52,15 @@ class Monster {
       }
       if (Math.random() < COLOSSAL_CHANCE) {
         this.colossal = true;
-        this.size = Math.round(this.size * COLOSSAL_SIZE_MUL);
+        const cMul = (typeof combatColossalSizeMul === 'function')
+          ? combatColossalSizeMul()
+          : COLOSSAL_SIZE_MUL;
+        this.size = Math.round(this.size * cMul);
         this.maxhp = Math.round(this.maxhp * COLOSSAL_HP_MUL);
         this.hp = this.maxhp;
         this.dmg = Math.round(this.dmg * COLOSSAL_DMG_MUL);
+        this._fitSizeRaw = this.size;
+        if (typeof combatFitBossSize === 'function') this.size = combatFitBossSize(this.size);
       }
     }
     if (opts.giant && !this.superBoss && !this.bossCore && !this.satanBoss) {
@@ -156,7 +161,9 @@ class Monster {
         const chargeDist = (typeof combatChargeTeleDist === 'function') ? combatChargeTeleDist(240) : 240;
         if (dist < chargeDist && this.atkCD <= 0) {
           let wind = (this.enraged ? 0.28 : (this.softTelegraph ? 0.88 : 0.45)) * (this.biomeTelegraphMul || 1);
-          if (typeof applyCombatTelegraphWind === 'function') wind = applyCombatTelegraphWind(wind);
+          if (typeof applyCombatTelegraphWind === 'function') {
+            wind = applyCombatTelegraphWind(wind, null, { colossal: !!this.colossal });
+          }
           this.telegraphT = wind;
           this.telegraphMax = wind;
           this.atkCD = rand(1.6, 2.6) / (this.enraged ? 1.25 : 1);
@@ -192,7 +199,9 @@ class Monster {
           : (this.size + 48);
         if (dist < tankReach && this.atkCD <= 0) {
           let wind = (this.softTelegraph ? 0.98 : 0.55) * (this.biomeTelegraphMul || 1);
-          if (typeof applyCombatTelegraphWind === 'function') wind = applyCombatTelegraphWind(wind);
+          if (typeof applyCombatTelegraphWind === 'function') {
+            wind = applyCombatTelegraphWind(wind, null, { colossal: !!this.colossal });
+          }
           this.telegraphT = wind;
           this.telegraphMax = wind;
           this.atkCD = 2.0;
@@ -232,7 +241,9 @@ class Monster {
           const sharkDist = (typeof combatChargeTeleDist === 'function') ? combatChargeTeleDist(230) : 230;
           if (dist < sharkDist && this.atkCD <= 0) {
             let wind = (this.enraged ? 0.2 : (this.softTelegraph ? 0.58 : 0.36)) * (this.biomeTelegraphMul || 1);
-            if (typeof applyCombatTelegraphWind === 'function') wind = applyCombatTelegraphWind(wind);
+            if (typeof applyCombatTelegraphWind === 'function') {
+              wind = applyCombatTelegraphWind(wind, null, { colossal: !!this.colossal });
+            }
             this.telegraphT = wind;
             this.telegraphMax = wind;
             this.atkCD = rand(1.35, 2.1) / (this.enraged ? 1.25 : 1);
@@ -283,7 +294,9 @@ class Monster {
     if (this.techniqueCD > 0 || dist < 130 || dist > 520) return;
     if (this.dashT > 0 || this.telegraphT > 0) return;
     let techWind = this.enemyTechnique === 'wave_cannon' ? 0.9 : 0.5;
-    if (typeof applyCombatTelegraphWind === 'function') techWind = applyCombatTelegraphWind(techWind);
+    if (typeof applyCombatTelegraphWind === 'function') {
+      techWind = applyCombatTelegraphWind(techWind, null, { colossal: !!this.colossal });
+    }
     this.techniqueTelegraphT = techWind;
     this.techniqueCD = rand(5, 8.5) / (this.enraged ? 1.2 : 1);
     try {

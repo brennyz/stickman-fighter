@@ -1008,6 +1008,9 @@ function bootGame() {
       introHolds: combatIntroHolds,
       jumpSlop: combatJumpSlopExtra,
       joySwipe: combatJoySwipeAccepts,
+      colossalMul: combatColossalSizeMul,
+      fitBossSize: combatFitBossSize,
+      fairLane: combatColossalFairLane,
     } : null,
     previewTop20Spawn: () => {
       try { AudioSys.init(); AudioSys.sfx('top20Spawn'); } catch (_) {}

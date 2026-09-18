@@ -323,9 +323,9 @@ const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const VERSION_UPDATE_SAVE_KEY = 'stickfighter_version_update_save_v1';
 const VERSION_UPDATE_FLAG_KEY = 'stickfighter_version_update_flag_v1';
 const SAVE_EXPORT_SCHEMA = 3;
-const APP_VERSION = '1.18.174';
+const APP_VERSION = '1.18.175';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 384;
+const SW_CACHE_REV = 385;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', petCoins: 0, dex: {}, summons: {}, pets: {}, activePet: null,
   eggPets: {}, activeEggPet: null, eggDaily: null,
   chestDaily: null, chestWeapons: {},
@@ -30003,14 +30003,6 @@ function combatTelegraphMul(profile) {
   return 1;
 }
 
-/** Apply viewport mul + phone floor. Enraged 0.20s shark winds become readable on 390px. */
-function applyCombatTelegraphWind(baseWind, profile) {
-  profile = asCombatProfile(profile);
-  let w = Number(baseWind) * combatTelegraphMul(profile);
-  if (profile.compact) w = Math.max(w, COMBAT_TELEGRAPH_FLOOR);
-  return w;
-}
-
 /**
  * Charge/shark telegraph trigger distance. On a 390px strip the legacy 240px
  * cue starts off-screen (ring invisible). Keep the cue on the playfield.
@@ -30059,6 +30051,62 @@ function combatJoySwipeAccepts(x, y, w, h, profile) {
   const W0 = w > 0 ? w : profile.w;
   const H0 = h > 0 ? h : profile.h;
   return x < W0 * 0.42 && y > H0 * 0.55;
+}
+
+const COMBAT_COLOSSAL_MUL_DESKTOP = 2;
+const COMBAT_COLOSSAL_MUL_PHONE = 1.38;
+const COMBAT_COLOSSAL_CAP_FRAC = 0.24;
+const COMBAT_COLOSSAL_CAP_MIN = 64;
+
+/** Desktop stays 2.0. Phone keeps a "huge" boss without eating the 390px strip. */
+function combatColossalSizeMul(profile) {
+  profile = asCombatProfile(profile);
+  if (profile.compact) return COMBAT_COLOSSAL_MUL_PHONE;
+  return COMBAT_COLOSSAL_MUL_DESKTOP;
+}
+
+function combatBossSizeCap(profile) {
+  profile = asCombatProfile(profile);
+  if (!profile.compact) return Infinity;
+  const strip = Math.min(profile.w, Math.max(280, profile.h * 0.55));
+  return Math.max(COMBAT_COLOSSAL_CAP_MIN, Math.round(strip * COMBAT_COLOSSAL_CAP_FRAC));
+}
+
+function combatFitBossSize(rawSize, profile) {
+  profile = asCombatProfile(profile);
+  const s = Math.max(1, Number(rawSize) || 40);
+  if (!profile.compact) return Math.round(s);
+  return Math.round(Math.min(s, combatBossSizeCap(profile)));
+}
+
+/** Leftover ground (px) if a body of `size` stands at mid-strip. */
+function combatColossalFairLane(size, profile) {
+  profile = asCombatProfile(profile);
+  const contact = (Number(size) + 16) * 0.82;
+  return Math.max(0, Math.round(profile.w - 2 * contact));
+}
+
+function applyCombatTelegraphWind(baseWind, profile, flags) {
+  profile = asCombatProfile(profile);
+  let w = Number(baseWind) * combatTelegraphMul(profile);
+  if (profile.compact) w = Math.max(w, COMBAT_TELEGRAPH_FLOOR);
+  if (profile.compact && flags && flags.colossal) w = Math.max(w, 0.46);
+  return w;
+}
+
+/** Resize: keep baked colossal HP, refit radius to the current playfield. */
+function refreshAdventureBossScale(game) {
+  if (!game || game.mode !== 'adventure' || !game.monsters) return;
+  for (const m of game.monsters) {
+    if (!m || !m.alive || m.satanBoss) continue;
+    if (!m.colossal || !(m._fitSizeRaw > 0)) continue;
+    const next = combatFitBossSize(m._fitSizeRaw);
+    if (!(next > 0) || Math.abs(next - m.size) < 1) continue;
+    m.size = next;
+    try {
+      if (!m.flying && game.ground > 0) m.y = game.ground - m.size;
+    } catch (_) {}
+  }
 }
 /* --- src/systems/fighter-move.js --- */
 /* ========================== FIGHTER MOVE ========================== */
@@ -31279,6 +31327,7 @@ function resize() {
   ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
   Input.layout(W, H);
   try { if (typeof refreshSatanCombatScale === 'function' && typeof game !== 'undefined') refreshSatanCombatScale(game); } catch (_) {}
+  try { if (typeof refreshAdventureBossScale === 'function' && typeof game !== 'undefined') refreshAdventureBossScale(game); } catch (_) {}
   if (game) game.onResize();
 }
 function scheduleResize() {
@@ -35563,10 +35612,15 @@ class Monster {
       }
       if (Math.random() < COLOSSAL_CHANCE) {
         this.colossal = true;
-        this.size = Math.round(this.size * COLOSSAL_SIZE_MUL);
+        const cMul = (typeof combatColossalSizeMul === 'function')
+          ? combatColossalSizeMul()
+          : COLOSSAL_SIZE_MUL;
+        this.size = Math.round(this.size * cMul);
         this.maxhp = Math.round(this.maxhp * COLOSSAL_HP_MUL);
         this.hp = this.maxhp;
         this.dmg = Math.round(this.dmg * COLOSSAL_DMG_MUL);
+        this._fitSizeRaw = this.size;
+        if (typeof combatFitBossSize === 'function') this.size = combatFitBossSize(this.size);
       }
     }
     if (opts.giant && !this.superBoss && !this.bossCore && !this.satanBoss) {
@@ -35667,7 +35721,9 @@ class Monster {
         const chargeDist = (typeof combatChargeTeleDist === 'function') ? combatChargeTeleDist(240) : 240;
         if (dist < chargeDist && this.atkCD <= 0) {
           let wind = (this.enraged ? 0.28 : (this.softTelegraph ? 0.88 : 0.45)) * (this.biomeTelegraphMul || 1);
-          if (typeof applyCombatTelegraphWind === 'function') wind = applyCombatTelegraphWind(wind);
+          if (typeof applyCombatTelegraphWind === 'function') {
+            wind = applyCombatTelegraphWind(wind, null, { colossal: !!this.colossal });
+          }
           this.telegraphT = wind;
           this.telegraphMax = wind;
           this.atkCD = rand(1.6, 2.6) / (this.enraged ? 1.25 : 1);
@@ -35703,7 +35759,9 @@ class Monster {
           : (this.size + 48);
         if (dist < tankReach && this.atkCD <= 0) {
           let wind = (this.softTelegraph ? 0.98 : 0.55) * (this.biomeTelegraphMul || 1);
-          if (typeof applyCombatTelegraphWind === 'function') wind = applyCombatTelegraphWind(wind);
+          if (typeof applyCombatTelegraphWind === 'function') {
+            wind = applyCombatTelegraphWind(wind, null, { colossal: !!this.colossal });
+          }
           this.telegraphT = wind;
           this.telegraphMax = wind;
           this.atkCD = 2.0;
@@ -35743,7 +35801,9 @@ class Monster {
           const sharkDist = (typeof combatChargeTeleDist === 'function') ? combatChargeTeleDist(230) : 230;
           if (dist < sharkDist && this.atkCD <= 0) {
             let wind = (this.enraged ? 0.2 : (this.softTelegraph ? 0.58 : 0.36)) * (this.biomeTelegraphMul || 1);
-            if (typeof applyCombatTelegraphWind === 'function') wind = applyCombatTelegraphWind(wind);
+            if (typeof applyCombatTelegraphWind === 'function') {
+              wind = applyCombatTelegraphWind(wind, null, { colossal: !!this.colossal });
+            }
             this.telegraphT = wind;
             this.telegraphMax = wind;
             this.atkCD = rand(1.35, 2.1) / (this.enraged ? 1.25 : 1);
@@ -35794,7 +35854,9 @@ class Monster {
     if (this.techniqueCD > 0 || dist < 130 || dist > 520) return;
     if (this.dashT > 0 || this.telegraphT > 0) return;
     let techWind = this.enemyTechnique === 'wave_cannon' ? 0.9 : 0.5;
-    if (typeof applyCombatTelegraphWind === 'function') techWind = applyCombatTelegraphWind(techWind);
+    if (typeof applyCombatTelegraphWind === 'function') {
+      techWind = applyCombatTelegraphWind(techWind, null, { colossal: !!this.colossal });
+    }
     this.techniqueTelegraphT = techWind;
     this.techniqueCD = rand(5, 8.5) / (this.enraged ? 1.2 : 1);
     try {
@@ -53936,6 +53998,9 @@ function bootGame() {
       introHolds: combatIntroHolds,
       jumpSlop: combatJumpSlopExtra,
       joySwipe: combatJoySwipeAccepts,
+      colossalMul: combatColossalSizeMul,
+      fitBossSize: combatFitBossSize,
+      fairLane: combatColossalFairLane,
     } : null,
     previewTop20Spawn: () => {
       try { AudioSys.init(); AudioSys.sfx('top20Spawn'); } catch (_) {}

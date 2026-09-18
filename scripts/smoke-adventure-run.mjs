@@ -33,6 +33,7 @@ async function run() {
     executablePath: chrome, headless: 'new', args: ['--no-sandbox', '--window-size=390,844'],
   });
   const page = await browser.newPage();
+  await page.setViewport({ width: 390, height: 844, deviceScaleFactor: 2, isMobile: true, hasTouch: true });
   const pageErrors = [];
   page.on('pageerror', (e) => pageErrors.push(String(e)));
   page.on('console', (msg) => {
@@ -93,6 +94,24 @@ async function run() {
     startGame('adventure', { level: lv, gamble: null });
     const g = game;
     if (!g || !g.player) return { ok: false, why: 'no game after start' };
+
+    const vp = {
+      w: (typeof W === 'number' && W > 0) ? W : 390,
+      h: (typeof H === 'number' && H > 0) ? H : 844,
+    };
+    const fit168 = (typeof combatFitBossSize === 'function') ? combatFitBossSize(168, vp) : null;
+    const colossalProbe = {
+      w: vp.w,
+      h: vp.h,
+      compact: (typeof combatDensityProfile === 'function') ? !!combatDensityProfile(vp).compact : null,
+      mul: (typeof combatColossalSizeMul === 'function') ? combatColossalSizeMul(vp) : null,
+      raw168: 168,
+      fit168,
+      lane: (typeof combatColossalFairLane === 'function' && fit168 != null)
+        ? combatColossalFairLane(fit168, vp) : null,
+      wind: (typeof applyCombatTelegraphWind === 'function')
+        ? applyCombatTelegraphWind(0.45, vp, { colossal: true }) : null,
+    };
 
     g.inputLocked = false;
     g.over = false;
@@ -172,11 +191,21 @@ async function run() {
       errors: errors.slice(0, 10),
       milestones,
       appVersion: typeof APP_VERSION !== 'undefined' ? APP_VERSION : '?',
+      colossalProbe,
     };
   }, levelN);
 
   result.pageErrors = pageErrors.slice(0, 10);
   if (result.pageErrors.length) result.ok = false;
+  const probe = result.colossalProbe || {};
+  if (!(probe.w > 0 && probe.w < 520) || probe.compact !== true) {
+    result.ok = false;
+    result.errors = (result.errors || []).concat(['colossal:viewport-not-compact ' + JSON.stringify(probe)]);
+  }
+  if (!(probe.fit168 > 0 && probe.fit168 < probe.raw168 && probe.lane >= 80 && probe.wind >= 0.46)) {
+    result.ok = false;
+    result.errors = (result.errors || []).concat(['colossal:fair-window ' + JSON.stringify(probe)]);
+  }
 
   await browser.close();
   if (server) server.close();

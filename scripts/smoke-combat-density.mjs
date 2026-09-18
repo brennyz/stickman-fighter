@@ -51,6 +51,12 @@ must(/combatJoySwipeAccepts\(/.test(fs.readFileSync(path.join(root, 'src/systems
   'compact joy swipe pad missing');
 must(/combatJumpSlopExtra\(/.test(fs.readFileSync(path.join(root, 'src/systems/input.js'), 'utf8')),
   'compact jump slop missing');
+must(/combatFitBossSize\(/.test(fs.readFileSync(path.join(root, 'src/entities/monster.js'), 'utf8')),
+  'colossal spawn must fit radius via combatFitBossSize');
+must(/combatColossalSizeMul\(/.test(fs.readFileSync(path.join(root, 'src/entities/monster.js'), 'utf8')),
+  'colossal spawn must use viewport size mul');
+must(/refreshAdventureBossScale\(/.test(fs.readFileSync(path.join(root, 'src/core/canvas.js'), 'utf8')),
+  'resize must refit adventure colossal radius');
 must(!/applyCombatTelegraphWind/.test(versusSrc), 'versus.js must not use telegraph density');
 
 must(/opener \? 1 :/.test(gameSrc), 'opener must stay single-file');
@@ -169,6 +175,19 @@ must(iso.combatJoySwipeAccepts(80, 700, 390, 844, phone) === true, 'phone left-b
 must(iso.combatJoySwipeAccepts(300, 700, 390, 844, phone) === false, 'phone right cluster stays buttons');
 must(iso.combatJoySwipeAccepts(80, 100, 390, 844, phone) === false, 'phone upper playfield is not a pad');
 must(iso.combatJoySwipeAccepts(80, 400, 1280, 800, desk) === false, 'desktop has no extra swipe pad');
+
+must(iso.combatColossalSizeMul(desk) === 2, 'desktop colossal mul stays 2.0');
+must(iso.combatColossalSizeMul(phone) === 1.38, 'phone colossal mul 1.38 (still huge)');
+must(iso.combatFitBossSize(180, desk) === 180, 'desktop colossal size uncapped');
+const phoneCol = iso.combatFitBossSize(180, phone);
+must(phoneCol <= iso.combatBossSizeCap(phone) && phoneCol >= 64, 'phone colossal capped', phoneCol);
+must(phoneCol < 180, 'phone colossal smaller than raw 180', phoneCol);
+const deskLane = iso.combatColossalFairLane(180, desk);
+const phoneLane = iso.combatColossalFairLane(phoneCol, phone);
+must(phoneLane > deskLane || phoneLane >= 80, 'phone leftover lane after colossal fit', { phoneLane, deskLane, phoneCol });
+must(iso.applyCombatTelegraphWind(0.45, phone, { colossal: true }) >= 0.46, 'phone colossal wind ≥ 0.46');
+must(iso.applyCombatTelegraphWind(0.45, desk, { colossal: true }) === 0.45, 'desktop colossal wind unchanged');
+must(typeof iso.refreshAdventureBossScale === 'function', 'resize refit helper missing');
 
 /* ---- buildLevel with explicit viewports (full bundle) ---- */
 if (!built) fail('game.js missing — run npm run build first');
@@ -296,6 +315,10 @@ must(ctx.combatIntroHolds({ w: 1280, h: 800 }) === false, 'vm desktop intro does
 must(ctx.combatBannerSize(68, { w: 390, h: 844 }) === 40, 'vm phone banner cap 40');
 must(ctx.combatJumpSlopExtra({ w: 390, h: 844 }) === 10, 'vm phone jump slop');
 must(ctx.combatJoySwipeAccepts(80, 700, 390, 844, { w: 390, h: 844 }) === true, 'vm swipe pad');
+must(ctx.combatColossalSizeMul({ w: 1280, h: 800 }) === 2, 'vm desktop colossal 2.0');
+must(ctx.combatFitBossSize(168, { w: 390, h: 844 }) < 168, 'vm phone fits guvve-scale colossal');
+must(ctx.combatColossalFairLane(ctx.combatFitBossSize(168, { w: 390, h: 844 }), { w: 390, h: 844 }) >= 80,
+  'vm phone colossal leaves ≥80px fair lane');
 
 console.log('TELEGRAPH_390', {
   phoneWind: ctx.applyCombatTelegraphWind(0.45, { w: 390, h: 844 }),
@@ -303,6 +326,19 @@ console.log('TELEGRAPH_390', {
   chargeDist: ctx.combatChargeTeleDist(240, { w: 390, h: 844 }),
   introHolds: ctx.combatIntroHolds({ w: 390, h: 844 }),
   banner: ctx.combatBannerSize(68, { w: 390, h: 844 }),
+});
+
+const phoneCap = ctx.combatBossSizeCap({ w: 390, h: 844 });
+const phoneFit = ctx.combatFitBossSize(168, { w: 390, h: 844 });
+console.log('COLOSSAL_390', {
+  deskMul: ctx.combatColossalSizeMul({ w: 1280, h: 800 }),
+  phoneMul: ctx.combatColossalSizeMul({ w: 390, h: 844 }),
+  phoneCap,
+  raw168: 168,
+  phoneFit,
+  phoneLane: ctx.combatColossalFairLane(phoneFit, { w: 390, h: 844 }),
+  deskFit: ctx.combatFitBossSize(168, { w: 1280, h: 800 }),
+  colossalWind: ctx.applyCombatTelegraphWind(0.45, { w: 390, h: 844 }, { colossal: true }),
 });
 
 console.log('SMOKE_OK combat-density');

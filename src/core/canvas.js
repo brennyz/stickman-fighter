@@ -41,6 +41,7 @@ function resize() {
   ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
   Input.layout(W, H);
   try { if (typeof refreshSatanCombatScale === 'function' && typeof game !== 'undefined') refreshSatanCombatScale(game); } catch (_) {}
+  try { if (typeof refreshAdventureBossScale === 'function' && typeof game !== 'undefined') refreshAdventureBossScale(game); } catch (_) {}
   if (game) game.onResize();
 }
 function scheduleResize() {
