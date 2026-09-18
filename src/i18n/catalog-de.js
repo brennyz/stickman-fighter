@@ -767,6 +767,7 @@ const CATALOG_DE_CHROME = {
     summonNext: 'Weiter',
     summonGotoWeapons: 'Waffen',
     summonGotoPets: 'Pets',
+    summonGotoChest: 'Kiste',
     summonGotoSub: 'Sammlung',
     summonLogEmpty: 'Heute noch keine Pulls.',
     summonLogCoins: 'Pet-Münzen',

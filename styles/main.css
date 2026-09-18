@@ -1341,12 +1341,63 @@
     background: #2a1018;
     border-color: #ff6b9d;
   }
+  .summon-card-kind {
+    display: inline-block;
+    margin: 0 auto 4px;
+    padding: 3px 10px;
+    border-radius: 999px;
+    font-size: clamp(11px, 2.8vw, 13px);
+    font-weight: 900;
+    letter-spacing: .06em;
+    text-transform: uppercase;
+    color: #0a0d14;
+    background: #9db1e3;
+  }
+  .summon-center-card[data-kind="weapon"] {
+    border-width: 4px;
+    border-style: solid;
+    border-color: #7eb0ff;
+    box-shadow: 0 10px 28px rgba(0,0,0,.55), inset 0 0 0 2px rgba(74,159,255,.35);
+  }
+  .summon-center-card[data-kind="weapon"] .summon-card-kind {
+    background: #4a9fff;
+    color: #061018;
+  }
+  .summon-center-card[data-kind="egg"] {
+    border-width: 4px;
+    border-radius: 22px 22px 14px 14px;
+    border-color: #ffe08a;
+    background: #2a2210;
+    box-shadow: 0 10px 28px rgba(0,0,0,.55), inset 0 0 0 2px rgba(255,215,94,.35);
+  }
+  .summon-center-card[data-kind="egg"] .summon-card-kind {
+    background: #ffd75e;
+    color: #1a1208;
+  }
+  .summon-center-card[data-kind="pet"] {
+    border-width: 4px;
+    border-color: #5ee0a8;
+    box-shadow: 0 10px 28px rgba(0,0,0,.55), inset 0 0 0 2px rgba(78,207,106,.32);
+  }
+  .summon-center-card[data-kind="pet"] .summon-card-kind {
+    background: #4ecf6a;
+    color: #06140a;
+  }
+  .summon-center-card[data-kind="coins"] .summon-card-kind,
+  .summon-center-card[data-kind="xp"] .summon-card-kind,
+  .summon-center-card[data-kind="junk"] .summon-card-kind,
+  .summon-center-card[data-kind="gear"] .summon-card-kind {
+    background: #c8d4f0;
+  }
   .summon-card-canvas {
     display: block;
     width: clamp(84px, 22vw, 112px);
     height: clamp(84px, 22vw, 112px);
     margin: 0 auto 6px;
     border-radius: 10px;
+  }
+  .summon-center-card[data-kind="egg"] .summon-card-canvas {
+    border-radius: 50% 50% 42% 42%;
   }
   .summon-card-name {
     font-size: clamp(14px, 3.8vw, 18px);
@@ -1415,6 +1466,21 @@
     animation: none;
   }
   body.reduced-motion .summon-center-card { transition: none; }
+  body.reduced-motion .summon-video,
+  body.reduced-motion .summon-screen.is-pulling.has-video .summon-video {
+    display: none !important;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .summon-reveal.is-shake .summon-chest-visual,
+    .summon-reveal.is-shake .summon-stage-fallback,
+    .summon-reveal.is-shake .summon-chest-lid,
+    .summon-reveal.is-shake .summon-rarity-rays,
+    .summon-reveal.is-card-show .summon-rarity-rays {
+      animation: none;
+    }
+    .summon-center-card { transition: none; }
+    .summon-video { display: none !important; }
+  }
   .summon-reveal-text {
     margin-top: 8px;
     font-size: clamp(12px, 3.2vw, 14px);
@@ -1436,16 +1502,18 @@
     appearance: none;
     background: none;
     border: none;
-    padding: 6px 4px;
-    min-height: 36px;
+    padding: 10px 12px;
+    min-height: 44px;
+    min-width: 88px;
     color: #7cf5ff;
     font: inherit;
-    font-size: clamp(12px, 3vw, 14px);
+    font-size: clamp(13px, 3.2vw, 15px);
     font-weight: 800;
     letter-spacing: .02em;
     cursor: pointer;
     text-decoration: underline;
     text-underline-offset: 3px;
+    touch-action: manipulation;
   }
   .summon-goto-link + .summon-goto-link::before {
     content: '·';
@@ -1487,6 +1555,27 @@
   .summon-log-chip.is-nice {
     border-color: rgba(255,215,94,.45);
     color: #ffd75e;
+  }
+  .summon-log-chip.is-weapon {
+    border-color: rgba(74,159,255,.45);
+    color: #9cc8ff;
+  }
+  .summon-log-chip.is-egg {
+    border-color: rgba(255,215,94,.5);
+    color: #ffe08a;
+  }
+  .summon-log-chip.is-pet {
+    border-color: rgba(78,207,106,.45);
+    color: #8ef0b0;
+  }
+  .collect-summon-jump {
+    display: flex;
+    justify-content: center;
+    margin: 0 auto 10px;
+  }
+  .collect-summon-jump-btn {
+    min-height: 44px;
+    min-width: 96px;
   }
   .summon-stage.is-pullable:active {
     transform: translateY(1px) scale(.992);
@@ -1611,6 +1700,12 @@
     background: linear-gradient(135deg, rgba(255, 176, 184, 0.14), transparent 45%), var(--menu-tile-solid);
     border-color: rgba(255, 176, 184, 0.24);
     grid-column: 1 / -1;
+  }
+  #modeHubScreen.mode-hub-home .hub-tile-summon {
+    background: linear-gradient(135deg, rgba(255, 215, 94, 0.2), transparent 42%), var(--menu-tile-solid);
+    border-color: rgba(255, 215, 94, 0.4);
+    grid-column: 1 / -1;
+    min-height: 96px;
   }
   #modeHubScreen.mode-hub-home .hub-tile-buildings {
     background: linear-gradient(135deg, rgba(255, 154, 77, 0.16), transparent 45%), var(--menu-tile-solid);

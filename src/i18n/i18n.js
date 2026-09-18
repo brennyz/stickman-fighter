@@ -21,7 +21,7 @@ const I18N = {
     menu: {
       continue: 'Verder spelen', adventure: 'Avontuur', adventureSub: 'Verhaal · eilanden · bazen',
       arcade: 'Arcade', arcadeSub: 'Training · Muur · Muntjes', versus: '2 spelers', versusSub: 'Lokaal',
-      collect: 'Collectie', collectSub: 'Wapens · figuur · boek', music: 'Muziek', missions: 'Missies',
+      collect: 'Collectie', collectSub: 'Wapens · kist · boek', music: 'Muziek', missions: 'Missies',
       summons: 'Oproepen', summonsSub: '10× per dag · wapen of pet',
       buildings: 'Fabrieken', buildingsSub: 'Werken · oogst · upgrade',
       options: 'Opties', tips: 'Tips', fresh: 'Verse versie', install: 'Zet in app-lade', installSub: 'Één icoon, zoals een echte app',
@@ -37,7 +37,7 @@ const I18N = {
     hub: {
       step: 'Stap 2 · Kies modus', solo: 'SOLO', collection: 'COLLECTIE',
       arcadeTitle: 'Arcade', arcadeSub: 'Snelle sessies · save blijft hier',
-      collectTitle: 'Collectie', collectSub: 'Uitrusting · wapens · pets · stijl',
+      collectTitle: 'Collectie', collectSub: 'Kist · wapens · pets · stijl',
       gear: 'Uitrusting', gearSub: '5 slots · look vs stats',
       training: 'Training', trainingSub: '1v1 · RabbitRobot · oefenen',
       wall: 'Muur Slopen', wallSub: '60 sec · combo = sneller',
@@ -310,7 +310,7 @@ const I18N = {
     menu: {
       continue: 'Continue', adventure: 'Adventure', adventureSub: 'Story · islands · bosses',
       arcade: 'Arcade', arcadeSub: 'Training · Wall · Coins', versus: '2 players', versusSub: 'Local',
-      collect: 'Collection', collectSub: 'Weapons · figure · book', music: 'Music', missions: 'Missions',
+      collect: 'Collection', collectSub: 'Weapons · chest · book', music: 'Music', missions: 'Missions',
       summons: 'Summons', summonsSub: '10× a day · weapon or pet',
       buildings: 'Buildings', buildingsSub: 'Factories · collect · upgrade',
       options: 'Settings', tips: 'Tips', fresh: 'Fresh version', install: 'Add as app', installSub: 'One icon, like a real app',
@@ -326,7 +326,7 @@ const I18N = {
     hub: {
       step: 'Step 2 · Pick mode', solo: 'SOLO', collection: 'COLLECTION',
       arcadeTitle: 'Arcade', arcadeSub: 'Quick sessions · save stays here',
-      collectTitle: 'Collection', collectSub: 'Gear · weapons · pets · style',
+      collectTitle: 'Collection', collectSub: 'Chest · weapons · pets · style',
       gear: 'Gear', gearSub: '5 slots · look vs stats',
       training: 'Training', trainingSub: '1v1 · RabbitRobot · practice',
       wall: 'Wall Smash', wallSub: '60 sec · combo = faster',
@@ -599,7 +599,7 @@ const I18N = {
     menu: {
       continue: 'Weiterspielen', adventure: 'Abenteuer', adventureSub: 'Story · Inseln · Bosse',
       arcade: 'Arcade', arcadeSub: 'Training · Mauer · Münzen', versus: '2 Spieler', versusSub: 'Lokal',
-      collect: 'Sammlung', collectSub: 'Waffen · Stil · Buch',
+      collect: 'Sammlung', collectSub: 'Waffen · Kiste · Buch',
       buildings: 'Fabriken', buildingsSub: 'Werke · ernten · upgrade',
       music: 'Musik', missions: 'Missionen',
       summons: 'Beschwörungen', summonsSub: '10× am Tag · Waffe oder Pet',
@@ -616,7 +616,7 @@ const I18N = {
     hub: {
       step: 'Schritt 2 · Modus wählen', solo: 'SOLO', collection: 'SAMMLUNG',
       arcadeTitle: 'Arcade', arcadeSub: 'Schnelle Runden · Save bleibt hier',
-      collectTitle: 'Sammlung', collectSub: 'Ausrüstung · Waffen · Pets · Stil',
+      collectTitle: 'Sammlung', collectSub: 'Kiste · Waffen · Pets · Stil',
       gear: 'Ausrüstung', gearSub: 'Slots · Look',
       training: 'Training', trainingSub: '1v1 · RabbitRobot · Üben',
       wall: 'Mauer', wallSub: '60 Sek · Combo = schneller',
@@ -881,7 +881,7 @@ const I18N = {
     menu: {
       continue: 'Continuer', adventure: 'Aventure', adventureSub: 'Histoire · îles · boss',
       arcade: 'Arcade', arcadeSub: 'Entraînement · Mur · Pièces', versus: '2 joueurs', versusSub: 'Local',
-      collect: 'Collection', collectSub: 'Armes · style · bestiaire',
+      collect: 'Collection', collectSub: 'Armes · coffre · bestiaire',
       buildings: 'Usines', buildingsSub: 'Usines · récolte · upgrade',
       music: 'Musique', missions: 'Missions',
       summons: 'Summons', summonsSub: '10× par jour · arme ou pet',
@@ -897,7 +897,7 @@ const I18N = {
     hub: {
       step: 'Étape 2 · Choisir le mode', solo: 'SOLO', collection: 'COLLECTION',
       arcadeTitle: 'Arcade', arcadeSub: 'Sessions rapides · sauvegarde ici',
-      collectTitle: 'Collection', collectSub: 'Armes · pets · style · bestiaire',
+      collectTitle: 'Collection', collectSub: 'Coffre · armes · pets · style',
       gear: 'Équipement', gearSub: 'Slots · look',
       training: 'Entraînement', trainingSub: '1v1 · RabbitRobot · pratique',
       wall: 'Mur', wallSub: '60 s · combo = plus vite',
@@ -1141,7 +1141,7 @@ const I18N = {
     menu: {
       continue: 'Continuar', adventure: 'Aventura', adventureSub: 'Historia · islas · jefes',
       arcade: 'Arcade', arcadeSub: 'Entrenamiento · Muro · Monedas', versus: '2 jugadores', versusSub: 'Local',
-      collect: 'Colección', collectSub: 'Armas · estilo · bestiario',
+      collect: 'Colección', collectSub: 'Armas · cofre · bestiario',
       buildings: 'Fábricas', buildingsSub: 'Obras · recolectar · mejorar',
       music: 'Música', missions: 'Misiones',
       summons: 'Summons', summonsSub: '10× al día · arma o pet',
@@ -1157,7 +1157,7 @@ const I18N = {
     hub: {
       step: 'Paso 2 · Elige modo', solo: 'SOLO', collection: 'COLECCIÓN',
       arcadeTitle: 'Arcade', arcadeSub: 'Sesiones rápidas · partida aquí',
-      collectTitle: 'Colección', collectSub: 'Armas · pets · estilo · bestiario',
+      collectTitle: 'Colección', collectSub: 'Cofre · armas · pets · estilo',
       gear: 'Equipo', gearSub: 'Slots · look',
       training: 'Entrenamiento', trainingSub: '1v1 · RabbitRobot · practicar',
       wall: 'Muro', wallSub: '60 s · combo = más rápido',
@@ -1517,6 +1517,8 @@ function applyLangStaticScreens() {
     ['#btnGearHome .hub-tile-sub', 'hub.gearSub'],
     ['.hub-tile-summon .hub-tile-title', 'menu.summons'],
     ['.hub-tile-summon .hub-tile-sub', 'menu.summonsSub'],
+    ['#btnCollectSummons .hub-tile-title', 'menu.summons'],
+    ['#btnCollectSummons .hub-tile-sub', 'menu.summonsSub'],
   ];
   for (const [sel, key] of hubMap) {
     const el = document.querySelector(sel);
@@ -1548,10 +1550,11 @@ function applyLangStaticScreens() {
   if (profileBar) profileBar.setAttribute('aria-label', t('menu.profileAria'));
   const upgradesHome = document.getElementById('btnUpgradesHome');
   if (upgradesHome) upgradesHome.setAttribute('aria-label', t('hub.upgrades'));
-  const summonHome = document.getElementById('btnSummons');
-  if (summonHome && !summonHome.getAttribute('data-hub-stat')) {
-    summonHome.setAttribute('aria-label', t('menu.summons'));
-  }
+  document.querySelectorAll('#btnSummons, #btnCollectSummons').forEach((summonHome) => {
+    if (!summonHome.getAttribute('data-hub-stat')) {
+      summonHome.setAttribute('aria-label', t('menu.summons'));
+    }
+  });
   const buildingsList = document.getElementById('buildingsList');
   if (buildingsList) buildingsList.setAttribute('aria-label', t('buildings.title'));
   const gearFilterBar = document.getElementById('gearFilterBar');
@@ -1593,6 +1596,7 @@ function applyLangStaticScreens() {
     ['btnUpgradesHome', 'hub.upgrades', 'hub.upgradesSub'],
     ['btnBuildings', 'hub.buildings', 'hub.buildingsSub'],
     ['btnDex', 'hub.dex', 'hub.dexSub'],
+    ['btnCollectSummons', 'menu.summons', 'menu.summonsSub'],
     ['btnGear', 'hub.gear', 'hub.gearSub'],
     ['btnGearHome', 'hub.gear', 'hub.gearSub'],
   ];
@@ -1748,6 +1752,8 @@ function applyLangStaticScreens() {
   }
   setText('btnSummonGotoWeapons', 'ui.summonGotoWeapons');
   setText('btnSummonGotoPets', 'ui.summonGotoPets');
+  setText('btnWeaponsGotoSummon', 'ui.summonGotoChest');
+  setText('btnPetsGotoSummon', 'ui.summonGotoChest');
 
   const gambleStartLbl = document.getElementById('gambleStartLbl');
   if (gambleStartLbl) gambleStartLbl.innerHTML = t('ui.gambleStart') + '<small>' + t('ui.gambleStartSub') + '</small>';

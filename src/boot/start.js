@@ -254,6 +254,13 @@ bindPress(document.getElementById('btnSummonGotoPets'), () => {
   UI._chestPullBusy = false;
   openCollectionScreen('petScreen', () => UI.renderPets());
 });
+function openSummonFromCollect() {
+  AudioSys.init(); AudioSys.sfx('select');
+  if (state === 'play' && game) return;
+  UI.openSummonHub();
+}
+bindPress(document.getElementById('btnWeaponsGotoSummon'), openSummonFromCollect);
+bindPress(document.getElementById('btnPetsGotoSummon'), openSummonFromCollect);
 bindPress(document.getElementById('btnBuildings'), () => {
   AudioSys.init(); AudioSys.sfx('select');
   if (typeof UI !== 'undefined' && UI.openBuildings) UI.openBuildings();

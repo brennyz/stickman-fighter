@@ -323,9 +323,9 @@ const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const VERSION_UPDATE_SAVE_KEY = 'stickfighter_version_update_save_v1';
 const VERSION_UPDATE_FLAG_KEY = 'stickfighter_version_update_flag_v1';
 const SAVE_EXPORT_SCHEMA = 3;
-const APP_VERSION = '1.18.174';
+const APP_VERSION = '1.18.175';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 384;
+const SW_CACHE_REV = 385;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', petCoins: 0, dex: {}, summons: {}, pets: {}, activePet: null,
   eggPets: {}, activeEggPet: null, eggDaily: null,
   chestDaily: null, chestWeapons: {},
@@ -2318,7 +2318,7 @@ const I18N = {
     menu: {
       continue: 'Verder spelen', adventure: 'Avontuur', adventureSub: 'Verhaal · eilanden · bazen',
       arcade: 'Arcade', arcadeSub: 'Training · Muur · Muntjes', versus: '2 spelers', versusSub: 'Lokaal',
-      collect: 'Collectie', collectSub: 'Wapens · figuur · boek', music: 'Muziek', missions: 'Missies',
+      collect: 'Collectie', collectSub: 'Wapens · kist · boek', music: 'Muziek', missions: 'Missies',
       summons: 'Oproepen', summonsSub: '10× per dag · wapen of pet',
       buildings: 'Fabrieken', buildingsSub: 'Werken · oogst · upgrade',
       options: 'Opties', tips: 'Tips', fresh: 'Verse versie', install: 'Zet in app-lade', installSub: 'Één icoon, zoals een echte app',
@@ -2334,7 +2334,7 @@ const I18N = {
     hub: {
       step: 'Stap 2 · Kies modus', solo: 'SOLO', collection: 'COLLECTIE',
       arcadeTitle: 'Arcade', arcadeSub: 'Snelle sessies · save blijft hier',
-      collectTitle: 'Collectie', collectSub: 'Uitrusting · wapens · pets · stijl',
+      collectTitle: 'Collectie', collectSub: 'Kist · wapens · pets · stijl',
       gear: 'Uitrusting', gearSub: '5 slots · look vs stats',
       training: 'Training', trainingSub: '1v1 · RabbitRobot · oefenen',
       wall: 'Muur Slopen', wallSub: '60 sec · combo = sneller',
@@ -2607,7 +2607,7 @@ const I18N = {
     menu: {
       continue: 'Continue', adventure: 'Adventure', adventureSub: 'Story · islands · bosses',
       arcade: 'Arcade', arcadeSub: 'Training · Wall · Coins', versus: '2 players', versusSub: 'Local',
-      collect: 'Collection', collectSub: 'Weapons · figure · book', music: 'Music', missions: 'Missions',
+      collect: 'Collection', collectSub: 'Weapons · chest · book', music: 'Music', missions: 'Missions',
       summons: 'Summons', summonsSub: '10× a day · weapon or pet',
       buildings: 'Buildings', buildingsSub: 'Factories · collect · upgrade',
       options: 'Settings', tips: 'Tips', fresh: 'Fresh version', install: 'Add as app', installSub: 'One icon, like a real app',
@@ -2623,7 +2623,7 @@ const I18N = {
     hub: {
       step: 'Step 2 · Pick mode', solo: 'SOLO', collection: 'COLLECTION',
       arcadeTitle: 'Arcade', arcadeSub: 'Quick sessions · save stays here',
-      collectTitle: 'Collection', collectSub: 'Gear · weapons · pets · style',
+      collectTitle: 'Collection', collectSub: 'Chest · weapons · pets · style',
       gear: 'Gear', gearSub: '5 slots · look vs stats',
       training: 'Training', trainingSub: '1v1 · RabbitRobot · practice',
       wall: 'Wall Smash', wallSub: '60 sec · combo = faster',
@@ -2896,7 +2896,7 @@ const I18N = {
     menu: {
       continue: 'Weiterspielen', adventure: 'Abenteuer', adventureSub: 'Story · Inseln · Bosse',
       arcade: 'Arcade', arcadeSub: 'Training · Mauer · Münzen', versus: '2 Spieler', versusSub: 'Lokal',
-      collect: 'Sammlung', collectSub: 'Waffen · Stil · Buch',
+      collect: 'Sammlung', collectSub: 'Waffen · Kiste · Buch',
       buildings: 'Fabriken', buildingsSub: 'Werke · ernten · upgrade',
       music: 'Musik', missions: 'Missionen',
       summons: 'Beschwörungen', summonsSub: '10× am Tag · Waffe oder Pet',
@@ -2913,7 +2913,7 @@ const I18N = {
     hub: {
       step: 'Schritt 2 · Modus wählen', solo: 'SOLO', collection: 'SAMMLUNG',
       arcadeTitle: 'Arcade', arcadeSub: 'Schnelle Runden · Save bleibt hier',
-      collectTitle: 'Sammlung', collectSub: 'Ausrüstung · Waffen · Pets · Stil',
+      collectTitle: 'Sammlung', collectSub: 'Kiste · Waffen · Pets · Stil',
       gear: 'Ausrüstung', gearSub: 'Slots · Look',
       training: 'Training', trainingSub: '1v1 · RabbitRobot · Üben',
       wall: 'Mauer', wallSub: '60 Sek · Combo = schneller',
@@ -3178,7 +3178,7 @@ const I18N = {
     menu: {
       continue: 'Continuer', adventure: 'Aventure', adventureSub: 'Histoire · îles · boss',
       arcade: 'Arcade', arcadeSub: 'Entraînement · Mur · Pièces', versus: '2 joueurs', versusSub: 'Local',
-      collect: 'Collection', collectSub: 'Armes · style · bestiaire',
+      collect: 'Collection', collectSub: 'Armes · coffre · bestiaire',
       buildings: 'Usines', buildingsSub: 'Usines · récolte · upgrade',
       music: 'Musique', missions: 'Missions',
       summons: 'Summons', summonsSub: '10× par jour · arme ou pet',
@@ -3194,7 +3194,7 @@ const I18N = {
     hub: {
       step: 'Étape 2 · Choisir le mode', solo: 'SOLO', collection: 'COLLECTION',
       arcadeTitle: 'Arcade', arcadeSub: 'Sessions rapides · sauvegarde ici',
-      collectTitle: 'Collection', collectSub: 'Armes · pets · style · bestiaire',
+      collectTitle: 'Collection', collectSub: 'Coffre · armes · pets · style',
       gear: 'Équipement', gearSub: 'Slots · look',
       training: 'Entraînement', trainingSub: '1v1 · RabbitRobot · pratique',
       wall: 'Mur', wallSub: '60 s · combo = plus vite',
@@ -3438,7 +3438,7 @@ const I18N = {
     menu: {
       continue: 'Continuar', adventure: 'Aventura', adventureSub: 'Historia · islas · jefes',
       arcade: 'Arcade', arcadeSub: 'Entrenamiento · Muro · Monedas', versus: '2 jugadores', versusSub: 'Local',
-      collect: 'Colección', collectSub: 'Armas · estilo · bestiario',
+      collect: 'Colección', collectSub: 'Armas · cofre · bestiario',
       buildings: 'Fábricas', buildingsSub: 'Obras · recolectar · mejorar',
       music: 'Música', missions: 'Misiones',
       summons: 'Summons', summonsSub: '10× al día · arma o pet',
@@ -3454,7 +3454,7 @@ const I18N = {
     hub: {
       step: 'Paso 2 · Elige modo', solo: 'SOLO', collection: 'COLECCIÓN',
       arcadeTitle: 'Arcade', arcadeSub: 'Sesiones rápidas · partida aquí',
-      collectTitle: 'Colección', collectSub: 'Armas · pets · estilo · bestiario',
+      collectTitle: 'Colección', collectSub: 'Cofre · armas · pets · estilo',
       gear: 'Equipo', gearSub: 'Slots · look',
       training: 'Entrenamiento', trainingSub: '1v1 · RabbitRobot · practicar',
       wall: 'Muro', wallSub: '60 s · combo = más rápido',
@@ -3814,6 +3814,8 @@ function applyLangStaticScreens() {
     ['#btnGearHome .hub-tile-sub', 'hub.gearSub'],
     ['.hub-tile-summon .hub-tile-title', 'menu.summons'],
     ['.hub-tile-summon .hub-tile-sub', 'menu.summonsSub'],
+    ['#btnCollectSummons .hub-tile-title', 'menu.summons'],
+    ['#btnCollectSummons .hub-tile-sub', 'menu.summonsSub'],
   ];
   for (const [sel, key] of hubMap) {
     const el = document.querySelector(sel);
@@ -3845,10 +3847,11 @@ function applyLangStaticScreens() {
   if (profileBar) profileBar.setAttribute('aria-label', t('menu.profileAria'));
   const upgradesHome = document.getElementById('btnUpgradesHome');
   if (upgradesHome) upgradesHome.setAttribute('aria-label', t('hub.upgrades'));
-  const summonHome = document.getElementById('btnSummons');
-  if (summonHome && !summonHome.getAttribute('data-hub-stat')) {
-    summonHome.setAttribute('aria-label', t('menu.summons'));
-  }
+  document.querySelectorAll('#btnSummons, #btnCollectSummons').forEach((summonHome) => {
+    if (!summonHome.getAttribute('data-hub-stat')) {
+      summonHome.setAttribute('aria-label', t('menu.summons'));
+    }
+  });
   const buildingsList = document.getElementById('buildingsList');
   if (buildingsList) buildingsList.setAttribute('aria-label', t('buildings.title'));
   const gearFilterBar = document.getElementById('gearFilterBar');
@@ -3890,6 +3893,7 @@ function applyLangStaticScreens() {
     ['btnUpgradesHome', 'hub.upgrades', 'hub.upgradesSub'],
     ['btnBuildings', 'hub.buildings', 'hub.buildingsSub'],
     ['btnDex', 'hub.dex', 'hub.dexSub'],
+    ['btnCollectSummons', 'menu.summons', 'menu.summonsSub'],
     ['btnGear', 'hub.gear', 'hub.gearSub'],
     ['btnGearHome', 'hub.gear', 'hub.gearSub'],
   ];
@@ -4045,6 +4049,8 @@ function applyLangStaticScreens() {
   }
   setText('btnSummonGotoWeapons', 'ui.summonGotoWeapons');
   setText('btnSummonGotoPets', 'ui.summonGotoPets');
+  setText('btnWeaponsGotoSummon', 'ui.summonGotoChest');
+  setText('btnPetsGotoSummon', 'ui.summonGotoChest');
 
   const gambleStartLbl = document.getElementById('gambleStartLbl');
   if (gambleStartLbl) gambleStartLbl.innerHTML = t('ui.gambleStart') + '<small>' + t('ui.gambleStartSub') + '</small>';
@@ -19844,6 +19850,8 @@ const CHEST_SKILL_MAX = 48;
 /** Reveal timeline: snappy Android clip (~2.0s); card last ~0.8s. Tap skips after card. */
 const SUMMON_REVEAL_TOTAL_MS = 2000;
 const SUMMON_CARD_LAST_MS = 800;
+/** Reduced-motion: skip video/lid/shake — card lands immediately, brief hold. */
+const SUMMON_REVEAL_REDUCED_MS = 400;
 const SUMMON_VIDEO_SRC = 'assets/summon/reveal.mp4';
 let _summonVideoOk = null;
 
@@ -20451,7 +20459,43 @@ function chestResultRarityId(res) {
   return 'common';
 }
 
+/** Display kind for card chrome / log chips — not a roll input. */
+function chestPullKindId(p) {
+  if (!p) return 'junk';
+  const type = typeof p.type === 'string' ? p.type : '';
+  if (type === 'weapon_unlock' || type === 'weapon_ascend' || p.weaponId) return 'weapon';
+  if (type === 'egg') return 'egg';
+  if (type === 'pet_unlock' || p.petId) return 'pet';
+  if (type === 'coins') return 'coins';
+  if (type === 'xp') return 'xp';
+  if (type === 'gear') return 'gear';
+  return 'junk';
+}
+
+function chestKindLabel(kind) {
+  const map = {
+    weapon: ['ui.summonKindWeapon', 'Wapen'],
+    egg: ['ui.summonEgg', 'Ei'],
+    pet: ['ui.summonKindPet', 'Pet'],
+    coins: ['ui.summonLogCoins', 'Pet coins'],
+    xp: ['ui.summonLogXp', 'XP'],
+    gear: ['ui.summonGear', 'Gear'],
+    junk: ['ui.summonLogJunk', 'Schroot'],
+  };
+  const pair = map[kind] || map.junk;
+  return (typeof tOr === 'function') ? tOr(pair[0], pair[1]) : pair[1];
+}
+
+function summonRevealShouldSkip() {
+  return typeof motionReduced === 'function' && motionReduced();
+}
+
+function summonRevealTotalMs() {
+  return summonRevealShouldSkip() ? SUMMON_REVEAL_REDUCED_MS : SUMMON_REVEAL_TOTAL_MS;
+}
+
 function summonRevealCardDelayMs(totalMs) {
+  if (summonRevealShouldSkip()) return 0;
   const total = Math.max(SUMMON_CARD_LAST_MS + 400, Number(totalMs) || SUMMON_REVEAL_TOTAL_MS);
   return Math.max(0, total - SUMMON_CARD_LAST_MS);
 }
@@ -21539,6 +21583,7 @@ function seedNlGameStrings() {
     summonNext: 'Volgende',
     summonGotoWeapons: 'Wapens',
     summonGotoPets: 'Pets',
+    summonGotoChest: 'Kist',
     summonGotoSub: 'Collectie',
     summonLogEmpty: 'Nog geen pulls vandaag.',
     summonLogCoins: 'Pet coins',
@@ -22715,6 +22760,7 @@ const CATALOG_EN = {
     summonNext: 'Next',
     summonGotoWeapons: 'Weapons',
     summonGotoPets: 'Pets',
+    summonGotoChest: 'Chest',
     summonGotoSub: 'Collection',
     summonLogEmpty: 'No pulls today yet.',
     summonLogCoins: 'Pet coins',
@@ -24344,6 +24390,7 @@ const CATALOG_DE_CHROME = {
     summonNext: 'Weiter',
     summonGotoWeapons: 'Waffen',
     summonGotoPets: 'Pets',
+    summonGotoChest: 'Kiste',
     summonGotoSub: 'Sammlung',
     summonLogEmpty: 'Heute noch keine Pulls.',
     summonLogCoins: 'Pet-Münzen',
@@ -24878,6 +24925,7 @@ overlayI18nCatalog(CATALOG_FR, {
     summonNext: 'Suivant',
     summonGotoWeapons: 'Armes',
     summonGotoPets: 'Pets',
+    summonGotoChest: 'Coffre',
     summonGotoSub: 'Collection',
     summonLogEmpty: 'Pas encore de pulls aujourd’hui.',
     summonLogCoins: 'Pet coins',
@@ -25431,6 +25479,7 @@ overlayI18nCatalog(CATALOG_ES, {
     summonNext: 'Siguiente',
     summonGotoWeapons: 'Armas',
     summonGotoPets: 'Pets',
+    summonGotoChest: 'Cofre',
     summonGotoSub: 'Colección',
     summonLogEmpty: 'Aún no hay pulls hoy.',
     summonLogCoins: 'Pet coins',
@@ -48356,6 +48405,16 @@ const UI = {
         ? t('ui.hubStatSkills', { n: skillsN, total: SKILLS.length, skill: skillLabel(activeSk), super: superLabel(activeSp) })
         : t('ui.hubStatSkillsEmpty', { n: SKILLS.length }));
       setStat('hubStatDex', t('ui.hubStatDexLine', { n: dexCount(), total: SPECIES_ORDER.length }));
+      let collectSummonLeft = 0;
+      try { collectSummonLeft = typeof chestSummonsLeft === 'function' ? chestSummonsLeft() : 0; } catch (_) {}
+      setStat('hubStatCollectSummons', collectSummonLeft > 0
+        ? t('ui.hubStatSummonLeft', { n: collectSummonLeft })
+        : t('ui.hubStatSummonEmpty'));
+      const collectSummon = document.getElementById('btnCollectSummons');
+      if (collectSummon) {
+        collectSummon.classList.toggle('has-summons', collectSummonLeft > 0);
+        collectSummon.setAttribute('data-hub-badge', tOr('ui.summonGotoChest', 'Kist'));
+      }
       const bLv = (typeof countBuildingLevels === 'function') ? countBuildingLevels() : 0;
       const readyB = (typeof BUILDING_IDS !== 'undefined' && typeof buildingCanCollect === 'function')
         ? BUILDING_IDS.filter((id) => { try { return buildingCanCollect(id); } catch (_) { return false; } }).length
@@ -48424,15 +48483,14 @@ const UI = {
       // hubTileStatLine may include SVG_COIN_ICON <img> — must be HTML, not textContent
       el.innerHTML = hubTileStatLine(el.dataset.hubStat);
     });
-    const summonTile = document.getElementById('btnSummons');
-    if (summonTile) {
-      let left = 0;
-      try { left = typeof chestSummonsLeft === 'function' ? chestSummonsLeft() : 0; } catch (_) {}
-      summonTile.classList.toggle('has-summons', left > 0);
-      summonTile.setAttribute('aria-label', left > 0
-        ? `${tOr('menu.summons', 'Summons')} · ${t('ui.summonLeftToday', { n: left })}`
+    let summonLeft = 0;
+    try { summonLeft = typeof chestSummonsLeft === 'function' ? chestSummonsLeft() : 0; } catch (_) {}
+    document.querySelectorAll('#btnSummons, #btnCollectSummons').forEach((summonTile) => {
+      summonTile.classList.toggle('has-summons', summonLeft > 0);
+      summonTile.setAttribute('aria-label', summonLeft > 0
+        ? `${tOr('menu.summons', 'Summons')} · ${t('ui.summonLeftToday', { n: summonLeft })}`
         : `${tOr('menu.summons', 'Summons')} · ${t('ui.summonDoneToday')}`);
-    }
+    });
     document.getElementById('togMusic')?.classList.toggle('off', !save.music);
     document.getElementById('togSfx')?.classList.toggle('off', !save.sfx);
     const verLine = document.getElementById('menuVerLine');
@@ -48716,7 +48774,9 @@ const UI = {
         } else {
           pulls.slice(0, 6).forEach((p) => {
             const chip = document.createElement('div');
-            chip.className = 'summon-log-chip' + (p.nice ? ' is-nice' : '');
+            const kind = (typeof chestPullKindId === 'function') ? chestPullKindId(p) : '';
+            chip.className = 'summon-log-chip' + (p.nice ? ' is-nice' : '') + (kind ? ' is-' + kind : '');
+            if (kind) chip.setAttribute('data-kind', kind);
             chip.textContent = (typeof chestPullLogLine === 'function')
               ? chestPullLogLine(p)
               : ((p.nice ? '✦ ' : '') + (p.kind || ''));
@@ -48796,8 +48856,18 @@ const UI = {
     const nameEl = document.getElementById('summonCardName');
     const rarEl = document.getElementById('summonCardRar');
     const skEl = document.getElementById('summonCardSkill');
+    const kindEl = document.getElementById('summonCardKind');
     const card = document.getElementById('summonCenterCard');
     if (!cv || !nameEl) return;
+    const kind = (typeof chestPullKindId === 'function') ? chestPullKindId(res) : '';
+    if (card) {
+      if (kind) card.setAttribute('data-kind', kind);
+      else card.removeAttribute('data-kind');
+    }
+    if (kindEl) {
+      kindEl.textContent = kind && typeof chestKindLabel === 'function' ? chestKindLabel(kind) : '';
+      kindEl.style.display = kindEl.textContent ? '' : 'none';
+    }
     const cc = cv.getContext('2d');
     const W = cv.width || 160;
     const H = cv.height || 160;
@@ -48970,13 +49040,21 @@ const UI = {
     const fallback = document.getElementById('summonStageFallback');
     const vid = document.getElementById('summonVideo');
     const rarId = typeof chestResultRarityId === 'function' ? chestResultRarityId(res) : 'common';
+    const skipLong = typeof summonRevealShouldSkip === 'function'
+      ? summonRevealShouldSkip()
+      : (typeof motionReduced === 'function' && motionReduced());
     if (screen) screen.classList.add('is-pulling');
     if (reveal) {
       reveal.dataset.rarity = rarId;
+      const pullKind = (typeof chestPullKindId === 'function') ? chestPullKindId(res) : '';
+      if (pullKind) reveal.dataset.kind = pullKind;
+      else delete reveal.dataset.kind;
       reveal.classList.toggle('is-nice', !!(res && res.nice));
       reveal.classList.remove('is-card-show', 'is-shake');
-      void reveal.offsetWidth;
-      reveal.classList.add('is-shake');
+      if (!skipLong) {
+        void reveal.offsetWidth;
+        reveal.classList.add('is-shake');
+      }
     }
     this.paintSummonCenterCard(res);
     try { if (typeof playSummonBgm === 'function') playSummonBgm(rarId); } catch (_) {}
@@ -48984,7 +49062,7 @@ const UI = {
     const startTimers = (totalMs) => {
       const cardAt = typeof summonRevealCardDelayMs === 'function'
         ? summonRevealCardDelayMs(totalMs)
-        : Math.max(0, (totalMs || SUMMON_REVEAL_TOTAL_MS) - SUMMON_CARD_LAST_MS);
+        : (skipLong ? 0 : Math.max(0, (totalMs || SUMMON_REVEAL_TOTAL_MS) - SUMMON_CARD_LAST_MS));
       this._summonCardTimer = setTimeout(() => {
         try { this.showSummonCenterCard(); } catch (_) {}
       }, cardAt);
@@ -49003,6 +49081,13 @@ const UI = {
       }
       if (fallback) fallback.style.display = '';
     };
+
+    if (skipLong) {
+      useFallback();
+      const reducedMs = (typeof SUMMON_REVEAL_REDUCED_MS === 'number') ? SUMMON_REVEAL_REDUCED_MS : 400;
+      startTimers(reducedMs);
+      return;
+    }
 
     startTimers(SUMMON_REVEAL_TOTAL_MS);
 
@@ -52465,6 +52550,13 @@ bindPress(document.getElementById('btnSummonGotoPets'), () => {
   UI._chestPullBusy = false;
   openCollectionScreen('petScreen', () => UI.renderPets());
 });
+function openSummonFromCollect() {
+  AudioSys.init(); AudioSys.sfx('select');
+  if (state === 'play' && game) return;
+  UI.openSummonHub();
+}
+bindPress(document.getElementById('btnWeaponsGotoSummon'), openSummonFromCollect);
+bindPress(document.getElementById('btnPetsGotoSummon'), openSummonFromCollect);
 bindPress(document.getElementById('btnBuildings'), () => {
   AudioSys.init(); AudioSys.sfx('select');
   if (typeof UI !== 'undefined' && UI.openBuildings) UI.openBuildings();

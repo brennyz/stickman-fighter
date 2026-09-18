@@ -31,10 +31,19 @@ must(/menu-meta-dock/.test(menu), 'missing meta dock');
 must(/menu-lang-compact/.test(menu), 'missing lang compact');
 must((menu.match(/data-hub="/g) || []).length >= 4, 'expected ≥4 hub tiles');
 must(/data-hub="summon"/.test(menu), 'missing summons hub tile');
+must(/id="btnCollectSummons"/.test(html) && /data-hub-panel="collect"[\s\S]*id="btnCollectSummons"/.test(html),
+  'Collectie hub missing one clear Summons entry');
+must(/id="btnWeaponsGotoSummon"/.test(html) && /id="btnPetsGotoSummon"/.test(html),
+  'weapon/pet screens missing Kist jump back to summons');
 must(/id="summonScreen"/.test(html), 'missing summonScreen');
 must(/id="summonCenterCard"/.test(html), 'missing summon center card');
+must(/id="summonCardKind"/.test(html), 'missing summon kind badge');
 must(/id="summonWhereStrip"/.test(html), 'missing summon where-strip');
 must(/summon-center-card/.test(css), 'missing summon-center-card CSS');
+must(/data-kind="weapon"/.test(css) && /data-kind="egg"/.test(css), 'missing egg vs weapon card chrome');
+must(/min-height:\s*44px/.test(css) && /summon-goto-link/.test(css), 'goto links must be ≥44px tap targets');
+must(/summonRevealShouldSkip|SUMMON_REVEAL_REDUCED_MS/.test(fs.readFileSync(path.join(root, 'src/data/chest-summons.js'), 'utf8')),
+  'missing reduced-motion summon skip helper');
 must(/chestDaily/.test(storage), 'missing chestDaily in DEFAULT_SAVE');
 must(/sanitizeChestDaily|chestWeapons/.test(storage), 'missing chest save sanitize hooks');
 must(/src\/data\/chest-summons\.js/.test(fs.readFileSync(path.join(root, 'src/manifest.json'), 'utf8')), 'manifest missing chest-summons.js');

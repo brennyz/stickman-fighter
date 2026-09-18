@@ -48,6 +48,14 @@
   },
   "userWishlist": [
     {
+      "id": "w-20260918T124800",
+      "from": "user",
+      "text": "Keep #313 draft. Next: (1) Collection ↔ summons navigation — one clear entry from HOME/Collectie. (2) Egg vs weapon pull distinction visually obvious. (3) A11y: large tap targets, reduced-motion skips long chest anim. Re-smoke summon + menu + FOMO. No Versus, no main.",
+      "status": "in-progress",
+      "updated": "2026-09-18",
+      "notes": "Same PR #313. Versus + speel.html untouched."
+    },
+    {
       "id": "w-20260918T122400",
       "from": "user",
       "text": "WORKER lane SUMMON systems: summons confusing + ugly. Clarify flow, clean visuals, readable UI, snappy feedback, less clutter on mobile. Keep share URL speel.html. No Versus. Draft PR only.",

@@ -2016,6 +2016,16 @@ const UI = {
         ? t('ui.hubStatSkills', { n: skillsN, total: SKILLS.length, skill: skillLabel(activeSk), super: superLabel(activeSp) })
         : t('ui.hubStatSkillsEmpty', { n: SKILLS.length }));
       setStat('hubStatDex', t('ui.hubStatDexLine', { n: dexCount(), total: SPECIES_ORDER.length }));
+      let collectSummonLeft = 0;
+      try { collectSummonLeft = typeof chestSummonsLeft === 'function' ? chestSummonsLeft() : 0; } catch (_) {}
+      setStat('hubStatCollectSummons', collectSummonLeft > 0
+        ? t('ui.hubStatSummonLeft', { n: collectSummonLeft })
+        : t('ui.hubStatSummonEmpty'));
+      const collectSummon = document.getElementById('btnCollectSummons');
+      if (collectSummon) {
+        collectSummon.classList.toggle('has-summons', collectSummonLeft > 0);
+        collectSummon.setAttribute('data-hub-badge', tOr('ui.summonGotoChest', 'Kist'));
+      }
       const bLv = (typeof countBuildingLevels === 'function') ? countBuildingLevels() : 0;
       const readyB = (typeof BUILDING_IDS !== 'undefined' && typeof buildingCanCollect === 'function')
         ? BUILDING_IDS.filter((id) => { try { return buildingCanCollect(id); } catch (_) { return false; } }).length
@@ -2084,15 +2094,14 @@ const UI = {
       // hubTileStatLine may include SVG_COIN_ICON <img> — must be HTML, not textContent
       el.innerHTML = hubTileStatLine(el.dataset.hubStat);
     });
-    const summonTile = document.getElementById('btnSummons');
-    if (summonTile) {
-      let left = 0;
-      try { left = typeof chestSummonsLeft === 'function' ? chestSummonsLeft() : 0; } catch (_) {}
-      summonTile.classList.toggle('has-summons', left > 0);
-      summonTile.setAttribute('aria-label', left > 0
-        ? `${tOr('menu.summons', 'Summons')} · ${t('ui.summonLeftToday', { n: left })}`
+    let summonLeft = 0;
+    try { summonLeft = typeof chestSummonsLeft === 'function' ? chestSummonsLeft() : 0; } catch (_) {}
+    document.querySelectorAll('#btnSummons, #btnCollectSummons').forEach((summonTile) => {
+      summonTile.classList.toggle('has-summons', summonLeft > 0);
+      summonTile.setAttribute('aria-label', summonLeft > 0
+        ? `${tOr('menu.summons', 'Summons')} · ${t('ui.summonLeftToday', { n: summonLeft })}`
         : `${tOr('menu.summons', 'Summons')} · ${t('ui.summonDoneToday')}`);
-    }
+    });
     document.getElementById('togMusic')?.classList.toggle('off', !save.music);
     document.getElementById('togSfx')?.classList.toggle('off', !save.sfx);
     const verLine = document.getElementById('menuVerLine');
@@ -2376,7 +2385,9 @@ const UI = {
         } else {
           pulls.slice(0, 6).forEach((p) => {
             const chip = document.createElement('div');
-            chip.className = 'summon-log-chip' + (p.nice ? ' is-nice' : '');
+            const kind = (typeof chestPullKindId === 'function') ? chestPullKindId(p) : '';
+            chip.className = 'summon-log-chip' + (p.nice ? ' is-nice' : '') + (kind ? ' is-' + kind : '');
+            if (kind) chip.setAttribute('data-kind', kind);
             chip.textContent = (typeof chestPullLogLine === 'function')
               ? chestPullLogLine(p)
               : ((p.nice ? '✦ ' : '') + (p.kind || ''));
@@ -2456,8 +2467,18 @@ const UI = {
     const nameEl = document.getElementById('summonCardName');
     const rarEl = document.getElementById('summonCardRar');
     const skEl = document.getElementById('summonCardSkill');
+    const kindEl = document.getElementById('summonCardKind');
     const card = document.getElementById('summonCenterCard');
     if (!cv || !nameEl) return;
+    const kind = (typeof chestPullKindId === 'function') ? chestPullKindId(res) : '';
+    if (card) {
+      if (kind) card.setAttribute('data-kind', kind);
+      else card.removeAttribute('data-kind');
+    }
+    if (kindEl) {
+      kindEl.textContent = kind && typeof chestKindLabel === 'function' ? chestKindLabel(kind) : '';
+      kindEl.style.display = kindEl.textContent ? '' : 'none';
+    }
     const cc = cv.getContext('2d');
     const W = cv.width || 160;
     const H = cv.height || 160;
@@ -2630,13 +2651,21 @@ const UI = {
     const fallback = document.getElementById('summonStageFallback');
     const vid = document.getElementById('summonVideo');
     const rarId = typeof chestResultRarityId === 'function' ? chestResultRarityId(res) : 'common';
+    const skipLong = typeof summonRevealShouldSkip === 'function'
+      ? summonRevealShouldSkip()
+      : (typeof motionReduced === 'function' && motionReduced());
     if (screen) screen.classList.add('is-pulling');
     if (reveal) {
       reveal.dataset.rarity = rarId;
+      const pullKind = (typeof chestPullKindId === 'function') ? chestPullKindId(res) : '';
+      if (pullKind) reveal.dataset.kind = pullKind;
+      else delete reveal.dataset.kind;
       reveal.classList.toggle('is-nice', !!(res && res.nice));
       reveal.classList.remove('is-card-show', 'is-shake');
-      void reveal.offsetWidth;
-      reveal.classList.add('is-shake');
+      if (!skipLong) {
+        void reveal.offsetWidth;
+        reveal.classList.add('is-shake');
+      }
     }
     this.paintSummonCenterCard(res);
     try { if (typeof playSummonBgm === 'function') playSummonBgm(rarId); } catch (_) {}
@@ -2644,7 +2673,7 @@ const UI = {
     const startTimers = (totalMs) => {
       const cardAt = typeof summonRevealCardDelayMs === 'function'
         ? summonRevealCardDelayMs(totalMs)
-        : Math.max(0, (totalMs || SUMMON_REVEAL_TOTAL_MS) - SUMMON_CARD_LAST_MS);
+        : (skipLong ? 0 : Math.max(0, (totalMs || SUMMON_REVEAL_TOTAL_MS) - SUMMON_CARD_LAST_MS));
       this._summonCardTimer = setTimeout(() => {
         try { this.showSummonCenterCard(); } catch (_) {}
       }, cardAt);
@@ -2663,6 +2692,13 @@ const UI = {
       }
       if (fallback) fallback.style.display = '';
     };
+
+    if (skipLong) {
+      useFallback();
+      const reducedMs = (typeof SUMMON_REVEAL_REDUCED_MS === 'number') ? SUMMON_REVEAL_REDUCED_MS : 400;
+      startTimers(reducedMs);
+      return;
+    }
 
     startTimers(SUMMON_REVEAL_TOTAL_MS);
 

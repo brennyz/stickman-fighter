@@ -87,6 +87,16 @@ async function run() {
         logEgg: (typeof chestPullLogLine === 'function')
           ? chestPullLogLine({ kind: 'pet', type: 'egg', id: 'egg_cloud', rarity: 'uncommon' })
           : '',
+        kindFn: typeof chestPullKindId === 'function',
+        kindWeapon: (typeof chestPullKindId === 'function') ? chestPullKindId({ type: 'weapon_unlock' }) : '',
+        kindEgg: (typeof chestPullKindId === 'function') ? chestPullKindId({ type: 'egg' }) : '',
+        kindBadge: !!document.getElementById('summonCardKind'),
+        homeTile: !!document.getElementById('btnSummons'),
+        collectTile: !!document.getElementById('btnCollectSummons'),
+        collectHub: !!document.querySelector('[data-hub-panel="collect"] [data-hub="summon"]'),
+        weaponsJump: !!document.getElementById('btnWeaponsGotoSummon'),
+        petsJump: !!document.getElementById('btnPetsGotoSummon'),
+        skipFn: typeof summonRevealShouldSkip === 'function',
       };
     });
     must(openSnap.summonActive, 'summonScreen not active: ' + JSON.stringify(openSnap.active));
@@ -109,6 +119,13 @@ async function run() {
       'log line still raw: ' + openSnap.logJunk);
     must(openSnap.logEgg && /wolkje/i.test(openSnap.logEgg) && !/egg_cloud/.test(openSnap.logEgg),
       'egg log should use display name: ' + openSnap.logEgg);
+    must(openSnap.kindFn && openSnap.kindWeapon === 'weapon' && openSnap.kindEgg === 'egg',
+      'egg vs weapon kind helper missing: ' + JSON.stringify(openSnap));
+    must(openSnap.kindBadge, 'missing #summonCardKind');
+    must(openSnap.homeTile && openSnap.collectTile && openSnap.collectHub,
+      'HOME/Collectie summons entry missing: ' + JSON.stringify(openSnap));
+    must(openSnap.weaponsJump && openSnap.petsJump, 'weapon/pet Kist jumps missing');
+    must(openSnap.skipFn, 'missing summonRevealShouldSkip');
     const btnTxt = await page.evaluate(() => (document.getElementById('btnChestPull') || {}).textContent || '');
     must(/open kist/i.test(btnTxt), 'expected Open kist CTA, got: ' + btnTxt);
     const chrome = await page.evaluate(() => {
@@ -128,6 +145,11 @@ async function run() {
         home: cs(home),
         fatGoto,
         gotoText: goto ? (goto.textContent || '').replace(/\s+/g, ' ').trim() : '',
+        gotoMinH: goto ? Math.min(...[...goto.querySelectorAll('.summon-goto-link')].map((b) => Math.round(b.getBoundingClientRect().height))) : 0,
+        pullH: (() => {
+          const b = document.getElementById('btnChestPull');
+          return b ? Math.round(b.getBoundingClientRect().height) : 0;
+        })(),
         vw: window.innerWidth,
       };
     });
@@ -139,6 +161,8 @@ async function run() {
     must(!chrome.fatGoto, 'collection jumps must be text links, not fat mode buttons');
     must(/wapens/i.test(chrome.gotoText) && /pets/i.test(chrome.gotoText),
       'expected Wapens · Pets links, got: ' + chrome.gotoText);
+    must(chrome.gotoMinH >= 44, 'goto tap targets < 44px: ' + JSON.stringify(chrome));
+    must(chrome.pullH >= 44, 'pull CTA tap target < 44px: ' + chrome.pullH);
     await page.evaluate(() => {
       const splash = document.getElementById('sfSplash');
       if (splash) { splash.hidden = true; splash.style.display = 'none'; }
@@ -275,6 +299,8 @@ async function run() {
         endText: (document.getElementById('summonRevealText') || {}).textContent || '',
         skipReady: !!(screen && screen.classList.contains('is-skip-ready')),
         logRaw: ((document.getElementById('summonLog') || {}).textContent || ''),
+        cardKind: card ? (card.getAttribute('data-kind') || '') : '',
+        kindBadge: (document.getElementById('summonCardKind') || {}).textContent || '',
       };
     }, pullStart.before);
     must(pullSnap.after === pullStart.afterPull,
@@ -284,6 +310,8 @@ async function run() {
     must(pullSnap.cardShow, 'center card not shown after reveal window');
     must(pullSnap.cardName.length > 0, 'empty center card name');
     must(pullSnap.skipReady, 'expected is-skip-ready after card lands');
+    must(pullSnap.cardKind.length > 0, 'card missing data-kind: ' + JSON.stringify(pullSnap));
+    must(pullSnap.kindBadge.length > 0, 'kind badge empty after pull');
     must(!/weapon_unlock|pet_unlock|weapon_ascend/.test(pullSnap.logRaw),
       'pull log still raw type ids: ' + pullSnap.logRaw);
     must(!/egg_/.test(pullSnap.logRaw), 'egg log still uses raw id: ' + pullSnap.logRaw);
@@ -309,6 +337,52 @@ async function run() {
       must(pullSnap.playEarly.t > 0.05, 'mp4 did not advance currentTime: ' + JSON.stringify(pullSnap.playEarly));
       must(!pullSnap.playEarly.paused, 'mp4 still paused after pull: ' + JSON.stringify(pullSnap.playEarly));
     }
+
+    const reducedSnap = await page.evaluate(async () => {
+      if (typeof save !== 'undefined') save.reducedMotion = true;
+      try { if (typeof syncA11yClasses === 'function') syncA11yClasses(); } catch (_) {}
+      UI.finishSummonReveal();
+      UI.doChestPull('random');
+      await new Promise((r) => setTimeout(r, 50));
+      const reveal = document.getElementById('summonReveal');
+      const screen = document.getElementById('summonScreen');
+      const vid = document.getElementById('summonVideo');
+      return {
+        cardShow: !!(reveal && reveal.classList.contains('is-card-show')),
+        skipReady: !!(screen && screen.classList.contains('is-skip-ready')),
+        shake: !!(reveal && reveal.classList.contains('is-shake')),
+        hasVideo: !!(screen && screen.classList.contains('has-video')),
+        vidDisplay: vid ? getComputedStyle(vid).display : null,
+        kind: (document.getElementById('summonCenterCard') || {}).getAttribute
+          ? document.getElementById('summonCenterCard').getAttribute('data-kind')
+          : '',
+        bodyRm: document.body.classList.contains('reduced-motion'),
+      };
+    });
+    must(reducedSnap.cardShow && reducedSnap.skipReady,
+      'reduced-motion should land card immediately: ' + JSON.stringify(reducedSnap));
+    must(!reducedSnap.shake, 'reduced-motion should skip chest shake: ' + JSON.stringify(reducedSnap));
+    must(!reducedSnap.hasVideo && reducedSnap.vidDisplay !== 'block',
+      'reduced-motion should skip reveal video: ' + JSON.stringify(reducedSnap));
+
+    const navSnap = await page.evaluate(() => {
+      UI.finishSummonReveal();
+      UI.goMenu();
+      UI.openModeHub('collect');
+      const tile = document.getElementById('btnCollectSummons');
+      const panel = document.querySelector('[data-hub-panel="collect"]');
+      const home = document.getElementById('btnSummons');
+      return {
+        collectActive: !!(document.getElementById('modeHubScreen') && document.getElementById('modeHubScreen').classList.contains('active')),
+        panelVisible: !!(panel && !panel.hidden),
+        tile: !!(tile && tile.dataset.hub === 'summon'),
+        featured: !!(tile && tile.classList.contains('hub-tile-featured')),
+        home: !!(home && home.dataset.hub === 'summon'),
+      };
+    });
+    must(navSnap.collectActive && navSnap.panelVisible && navSnap.tile && navSnap.featured,
+      'Collectie missing one clear Summons entry: ' + JSON.stringify(navSnap));
+    must(navSnap.home, 'HOME Summons tile missing after collect hub');
 
     const playSnap = await page.evaluate(() => {
       UI.goMenu();

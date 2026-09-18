@@ -18,6 +18,8 @@ const CHEST_SKILL_MAX = 48;
 /** Reveal timeline: snappy Android clip (~2.0s); card last ~0.8s. Tap skips after card. */
 const SUMMON_REVEAL_TOTAL_MS = 2000;
 const SUMMON_CARD_LAST_MS = 800;
+/** Reduced-motion: skip video/lid/shake — card lands immediately, brief hold. */
+const SUMMON_REVEAL_REDUCED_MS = 400;
 const SUMMON_VIDEO_SRC = 'assets/summon/reveal.mp4';
 let _summonVideoOk = null;
 
@@ -625,7 +627,43 @@ function chestResultRarityId(res) {
   return 'common';
 }
 
+/** Display kind for card chrome / log chips — not a roll input. */
+function chestPullKindId(p) {
+  if (!p) return 'junk';
+  const type = typeof p.type === 'string' ? p.type : '';
+  if (type === 'weapon_unlock' || type === 'weapon_ascend' || p.weaponId) return 'weapon';
+  if (type === 'egg') return 'egg';
+  if (type === 'pet_unlock' || p.petId) return 'pet';
+  if (type === 'coins') return 'coins';
+  if (type === 'xp') return 'xp';
+  if (type === 'gear') return 'gear';
+  return 'junk';
+}
+
+function chestKindLabel(kind) {
+  const map = {
+    weapon: ['ui.summonKindWeapon', 'Wapen'],
+    egg: ['ui.summonEgg', 'Ei'],
+    pet: ['ui.summonKindPet', 'Pet'],
+    coins: ['ui.summonLogCoins', 'Pet coins'],
+    xp: ['ui.summonLogXp', 'XP'],
+    gear: ['ui.summonGear', 'Gear'],
+    junk: ['ui.summonLogJunk', 'Schroot'],
+  };
+  const pair = map[kind] || map.junk;
+  return (typeof tOr === 'function') ? tOr(pair[0], pair[1]) : pair[1];
+}
+
+function summonRevealShouldSkip() {
+  return typeof motionReduced === 'function' && motionReduced();
+}
+
+function summonRevealTotalMs() {
+  return summonRevealShouldSkip() ? SUMMON_REVEAL_REDUCED_MS : SUMMON_REVEAL_TOTAL_MS;
+}
+
 function summonRevealCardDelayMs(totalMs) {
+  if (summonRevealShouldSkip()) return 0;
   const total = Math.max(SUMMON_CARD_LAST_MS + 400, Number(totalMs) || SUMMON_REVEAL_TOTAL_MS);
   return Math.max(0, total - SUMMON_CARD_LAST_MS);
 }
