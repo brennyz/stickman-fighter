@@ -2603,7 +2603,7 @@ const CATALOG_DE = {
     kets: 'KABLAM…', ketsBam: 'KABLAM!',
   },
   help: { tips: [
-    'Power-ups: besiegte Monster lassen manchmal Kugeln fallen — HP, Rage, Energy, Schild.',
+    'Funde: besiegte Monster lassen manchmal Kugeln fallen — HP, Wut, Energie, Schild.',
     'Bosse: unter halb HP werden sie wütender (Phase 2).',
     'Combos: schnell hintereinander schlagen für ×2 / ×3 Schaden.',
     'Dash: doppelt tippen links/rechts (oder Shift) zum Ausweichen.',
@@ -2714,7 +2714,7 @@ const CATALOG_FR = {
     kets: 'KABLAM…', ketsBam: 'KABLAM !',
   },
   help: { tips: [
-    'Power-ups : les monstres vaincus laissent parfois des orbes — PV, rage, énergie, bouclier.',
+    'Orbes : les monstres vaincus laissent parfois des orbes — PV, rage, énergie, bouclier.',
     'Boss : sous la moitié des PV ils deviennent plus furieux (phase 2).',
     'Combos : enchaîne vite pour ×2 / ×3 dégâts.',
     'Dash : double-tap gauche/droite (ou Shift) pour esquiver.',
@@ -2842,7 +2842,7 @@ const CATALOG_ES = {
     kets: '¡KABLAM…!', ketsBam: '¡KABLAM!',
   },
   help: { tips: [
-    'Power-ups: monstruos derrotados sueltan orbes — PV, furia, energía, escudo.',
+    'Orbes: monstruos derrotados sueltan orbes — PV, furia, energía, escudo.',
     'Jefes: bajo mitad PV se vuelven más feroces (fase 2).',
     'Combos: golpea rápido para ×2 / ×3 daño.',
     'Dash: doble toque izquierda/derecha (o Shift) para esquivar.',

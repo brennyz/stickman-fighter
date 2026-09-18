@@ -375,6 +375,11 @@ if (/remainderRun: 'Falta 1 run'/.test(locales)) fail('ES remainderRun still Eng
 if (/text: 'Sammle 3 Power-ups'/.test(locales + catalog)) fail('DE daily.pick3 still Power-ups');
 if (/text: 'Prends 3 power-ups'/.test(locales + catalog)) fail('FR daily.pick3 still power-ups');
 if (/text: 'Recoge 3 power-ups'/.test(locales + catalog)) fail('ES daily.pick3 still power-ups');
+if (/'Power-ups/.test(locales)) fail('DE/FR/ES overlay help still starts with Power-ups');
+if (/const CATALOG_DE[\s\S]*'Power-ups:/.test(catalog)) fail('CATALOG_DE/FR/ES help still Power-ups');
+if (!/'Funde: besiegte Monster/.test(locales + catalog)) fail('DE help tip must start with Funde:');
+if (!/'Orbes : les monstres/.test(locales + catalog)) fail('FR help tip must start with Orbes :');
+if (!/'Orbes: los monstruos|'Orbes: monstruos/.test(locales + catalog)) fail('ES help tip must start with Orbes:');
 if (!/line\('missionsUi\.flowPlaySub'\)/.test(missions)) fail('flow bar must skip empty/raw-key subs');
 if (/Bestand lezen mislukt/.test(missions)) fail('import FileReader error still Dutch');
 if (!/function errT\(/.test(i18n)) fail('errT helper missing — Dutch last-resort leaks');

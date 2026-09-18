@@ -139,3 +139,15 @@ Versie: **v1.18.180 / SW 390**. Draft PR, geen main-merge. Deel-URL `speel.html`
 Combo blijft (HUD-term). Tips-scherm “Power-ups:” niet in deze sweep.
 
 Versie: **v1.18.181 / SW 391**. Draft PR, geen main-merge. Deel-URL `speel.html`.
+
+## Examiner P3 — Tips Power-ups prefix + sprint DONE
+
+| locale | was | fix |
+|--------|-----|-----|
+| DE `help.tips[0]` | Power-ups: … Energy … | Funde: … Energie … |
+| FR `help.tips[0]` | Power-ups : … | Orbes : … |
+| ES `help.tips[0]` | Power-ups: … | Orbes: … |
+
+EN/NL blijven *Power-ups*. Examiner-sprint #317 **DONE** (P3). Draft, geen main.
+
+Versie: **v1.18.182 / SW 392**. Deel-URL `speel.html`.

@@ -103,6 +103,7 @@ async function run() {
       const tKillRem = typeof t === 'function' ? t('missionsUi.remainderKillsN', { n: 3 }) : '';
       const tRunRem = typeof t === 'function' ? t('missionsUi.remainderRun') : '';
       const tPick3 = typeof t === 'function' ? t('daily.pick3.text') : '';
+      const tHelp0 = (typeof i18nList === 'function' && i18nList('help.tips')[0]) || '';
       let collectTitle = '';
       let collectGear = '';
       try {
@@ -126,7 +127,7 @@ async function run() {
         tPower, tProduce, tGearToast, tNameShort, collectTitle, collectGear, playState, playMode,
         tStyleLeaf, tStyleEnergy, tStyleVoid, tAdvLose, tTrainLose, tKeep, tSeasonBeat,
         tErrRetry, tOpenMode, tDaily, tFightHiccup, tAchLv70, tAchZone,
-        tPickRem, tKillRem, tRunRem, tPick3,
+        tPickRem, tKillRem, tRunRem, tPick3, tHelp0,
       };
     }
     const en = snap('en');
@@ -182,6 +183,7 @@ async function run() {
       && /Funde/.test(de.tPickRem) && !/Pickup/i.test(de.tPickRem + de.tPick3)
       && /Monster/.test(de.tKillRem) && !/\bKills?\b/.test(de.tKillRem)
       && /Lauf/.test(de.tRunRem)
+      && /^Funde:/.test(de.tHelp0) && !/Power-ups/i.test(de.tHelp0)
       && de.playState === 'play' && /train/.test(de.playMode);
     const nlOk = /Avontuur/.test(nl.adv) && /Collectie/.test(nl.collect)
       && /Wapens/.test(nl.weapons) && /Instellingen/.test(nl.settings)
@@ -216,6 +218,7 @@ async function run() {
       && /orbes/.test(fr.tPickRem + fr.tPick3) && !/power-up|Pickup/i.test(fr.tPickRem + fr.tPick3)
       && /monstres/.test(fr.tKillRem) && !/\bkills?\b/.test(fr.tKillRem)
       && /partie/.test(fr.tRunRem) && !/\brun\b/.test(fr.tRunRem)
+      && /^Orbes/.test(fr.tHelp0) && !/Power-ups/i.test(fr.tHelp0)
       && fr.playState === 'play' && /train/.test(fr.playMode);
     const esOk = /Aún no hallado/.test(es.tGearLock) && !EN_LOCK.test(es.tGearLock)
       && /Ayuda salto/.test(es.tPerk) && /Guijarro/.test(es.tEgg) && !DUTCH_COPY.test(es.tPerk + es.tEgg + es.tGearLock + es.tPetSum)
@@ -237,6 +240,7 @@ async function run() {
       && /orbes/.test(es.tPickRem + es.tPick3) && !/power-up|Pickup/i.test(es.tPickRem + es.tPick3)
       && /monstruos/.test(es.tKillRem) && !/\bkills?\b/.test(es.tKillRem)
       && /partida/.test(es.tRunRem) && !/\brun\b/.test(es.tRunRem)
+      && /^Orbes/.test(es.tHelp0) && !/Power-ups/i.test(es.tHelp0)
       && es.playState === 'play' && /train/.test(es.playMode);
     return { ok: !!(enOk && deOk && nlOk && frOk && esOk), en, de, nl, fr, es, enOk, deOk, nlOk, frOk, esOk };
   });

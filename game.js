@@ -323,9 +323,9 @@ const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const VERSION_UPDATE_SAVE_KEY = 'stickfighter_version_update_save_v1';
 const VERSION_UPDATE_FLAG_KEY = 'stickfighter_version_update_flag_v1';
 const SAVE_EXPORT_SCHEMA = 3;
-const APP_VERSION = '1.18.181';
+const APP_VERSION = '1.18.182';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 391;
+const SW_CACHE_REV = 392;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', petCoins: 0, dex: {}, summons: {}, pets: {}, activePet: null,
   eggPets: {}, activeEggPet: null, eggDaily: null,
   chestDaily: null, chestWeapons: {},
@@ -23447,7 +23447,7 @@ const CATALOG_DE = {
     kets: 'KABLAM…', ketsBam: 'KABLAM!',
   },
   help: { tips: [
-    'Power-ups: besiegte Monster lassen manchmal Kugeln fallen — HP, Rage, Energy, Schild.',
+    'Funde: besiegte Monster lassen manchmal Kugeln fallen — HP, Wut, Energie, Schild.',
     'Bosse: unter halb HP werden sie wütender (Phase 2).',
     'Combos: schnell hintereinander schlagen für ×2 / ×3 Schaden.',
     'Dash: doppelt tippen links/rechts (oder Shift) zum Ausweichen.',
@@ -23558,7 +23558,7 @@ const CATALOG_FR = {
     kets: 'KABLAM…', ketsBam: 'KABLAM !',
   },
   help: { tips: [
-    'Power-ups : les monstres vaincus laissent parfois des orbes — PV, rage, énergie, bouclier.',
+    'Orbes : les monstres vaincus laissent parfois des orbes — PV, rage, énergie, bouclier.',
     'Boss : sous la moitié des PV ils deviennent plus furieux (phase 2).',
     'Combos : enchaîne vite pour ×2 / ×3 dégâts.',
     'Dash : double-tap gauche/droite (ou Shift) pour esquiver.',
@@ -23686,7 +23686,7 @@ const CATALOG_ES = {
     kets: '¡KABLAM…!', ketsBam: '¡KABLAM!',
   },
   help: { tips: [
-    'Power-ups: monstruos derrotados sueltan orbes — PV, furia, energía, escudo.',
+    'Orbes: monstruos derrotados sueltan orbes — PV, furia, energía, escudo.',
     'Jefes: bajo mitad PV se vuelven más feroces (fase 2).',
     'Combos: golpea rápido para ×2 / ×3 daño.',
     'Dash: doble toque izquierda/derecha (o Shift) para esquivar.',
@@ -25031,7 +25031,7 @@ overlayI18nCatalog(CATALOG_FR, {
     satan: 'SATAN — {name} !', satanIncoming: 'SATAN APPROCHE…', satanWin: 'SATAN VAINCU !',
   },
   help: { tips: [
-    'Power-ups : les monstres vaincus laissent parfois des orbes — PV, rage, énergie, bouclier.',
+    'Orbes : les monstres vaincus laissent parfois des orbes — PV, rage, énergie, bouclier.',
     'Boss : sous la moitié des PV ils deviennent plus furieux (phase 2).',
     'Combos : enchaîne vite pour ×2 / ×3 dégâts.',
     'Dash : double-tap gauche/droite (ou Shift) pour esquiver.',
@@ -25668,7 +25668,7 @@ overlayI18nCatalog(CATALOG_ES, {
     satan: 'SATAN — ¡{name}!', satanIncoming: 'SATAN SE ACERCA…', satanWin: '¡SATAN DERROTADO!',
   },
   help: { tips: [
-    'Power-ups: los monstruos derrotados a veces sueltan orbes — PV, furia, energía, escudo.',
+    'Orbes: los monstruos derrotados a veces sueltan orbes — PV, furia, energía, escudo.',
     'Jefes: bajo la mitad de HP se vuelven más feroces (fase 2).',
     'Combos: golpea rápido para ×2 / ×3 daño.',
     'Dash: doble toque izquierda/derecha (o Shift) para esquivar.',
@@ -26325,7 +26325,7 @@ overlayI18nCatalog(CATALOG_DE, {
     satan: 'SATAN — {name}!', satanIncoming: 'SATAN KOMMT…', satanWin: 'SATAN BESIEGT!',
   },
   help: { tips: [
-    'Power-ups: besiegte Monster lassen manchmal Kugeln fallen — HP, Rage, Energy, Schild.',
+    'Funde: besiegte Monster lassen manchmal Kugeln fallen — HP, Wut, Energie, Schild.',
     'Bosse: unter halb HP werden sie wütender (Phase 2).',
     'Combos: schnell hintereinander schlagen für ×2 / ×3 Schaden.',
     'Dash: doppelt tippen links/rechts (oder Shift) zum Ausweichen.',
