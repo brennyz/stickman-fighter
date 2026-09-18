@@ -2955,6 +2955,16 @@ function gambleOnboardHintLine() {
   return (line && line !== key) ? line : '';
 }
 
+function fomoRitualIsOpen() {
+  try {
+    if (document.body && document.body.classList.contains('is-fomo')) return true;
+    const el = document.getElementById('fomoRitual');
+    return !!(el && !el.hidden);
+  } catch (_) {
+    return false;
+  }
+}
+
 /** Welcome only on HOME hub — never chase Adventure/Settings/title. */
 function welcomeToastOnHub() {
   try {
@@ -2965,6 +2975,7 @@ function welcomeToastOnHub() {
     if (!menu || !menu.classList.contains('active')) return false;
     const other = document.querySelector('.screen.active:not(#menuScreen)');
     if (other) return false;
+    if (fomoRitualIsOpen()) return false;
     return true;
   } catch (_) {
     return false;

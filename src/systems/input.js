@@ -896,6 +896,28 @@ function hudSafeLayout(W, H, mode) {
   };
 }
 
+/** Keep canvas HUD (stars / combo / loot) clear of the HTML #pauseBtn.
+ *  Mega-merge: #321 owns hudSafeLayout / hudPhoneCompact / hudPauseGutter / --hud-pause-gutter.
+ *  Prefer those when present; this is the #318 fallback (same 48–56px + pad). */
+function hudRightReserve() {
+  try {
+    if (typeof hudSafeLayout === 'function') {
+      const lay = hudSafeLayout(typeof W === 'number' ? W : 390, typeof H === 'number' ? H : 844);
+      if (lay && Number(lay.pauseGutter) > 0) return Number(lay.pauseGutter);
+    }
+    if (typeof hudPauseGutter === 'function') {
+      const g = Number(hudPauseGutter(typeof W === 'number' ? W : 390, typeof H === 'number' ? H : 844));
+      if (g > 0) return g;
+    }
+  } catch (_) {}
+  const insets = readSafeInsets();
+  let pauseW = 48;
+  try {
+    if (document.body && document.body.classList.contains('big-touch')) pauseW = 56;
+  } catch (_) {}
+  return Math.max(insets.right + 8, 12) + pauseW + 6;
+}
+
 function playfieldGroundY(H, W) {
   const portrait = H > W * 1.02;
   const dualVs = typeof Input !== 'undefined' && Input.dualMode;

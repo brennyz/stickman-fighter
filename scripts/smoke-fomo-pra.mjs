@@ -78,6 +78,9 @@ if (!/body:has\(#summonScreen\.active\) #fomoRitual/.test(css)) {
 if (!/body\.fomo-open #summonTut/.test(css)) {
   fail('CSS must hide summon tip while FOMO is open');
 }
+if (!/_syncFomoHubLock/.test(ui) || !/is-fomo/.test(ui)) {
+  fail('EX-021: FOMO hub lock (_syncFomoHubLock / is-fomo) missing');
+}
 
 function makeEl(id) {
   return {

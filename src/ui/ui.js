@@ -1333,6 +1333,7 @@ const UI = {
           return;
         }
         try { this.clearToasts(); } catch (_) {}
+        try { document.body.classList.remove('toast-under-title'); } catch (_) {}
         try { clearScreensForPlay(); } catch (_) {}
       } else {
         const target = document.getElementById(id);
@@ -1345,7 +1346,10 @@ const UI = {
         target.classList.add('active');
         if (id !== 'menuScreen') {
           try { this.hideFomoRitual(); } catch (_) {}
+          try { this._dismissWelcomeToast(); } catch (_) {}
         }
+        document.body.classList.toggle('toast-under-title',
+          !!(id && id !== 'menuScreen' && id !== 'resultScreen'));
       }
       for (const s of this.screens) {
         if (id && s === id) continue;
@@ -1601,6 +1605,16 @@ const UI = {
     }
     if (tone !== 'ok' && tone !== 'warn' && tone !== 'danger') tone = 'info';
     return { ms: duration, tone };
+  },
+
+  _dismissWelcomeToast() {
+    let welcome = '';
+    try { welcome = (typeof t === 'function') ? t('toast.welcome') : ''; } catch (_) {}
+    const els = (this._toastEls || []).slice();
+    for (const el of els) {
+      if (!el) continue;
+      if (welcome && el.textContent === welcome) this._dismissToast(el);
+    }
   },
 
   toast(msg, ms, opts) {
@@ -2360,31 +2374,59 @@ const UI = {
     }
   },
 
+  _syncFomoHubLock(open) {
+    const on = !!open;
+    const menu = document.getElementById('menuScreen');
+    const el = document.getElementById('fomoRitual');
+    document.body.classList.toggle('is-fomo', on);
+    document.body.classList.toggle('fomo-open', on);
+    if (menu) {
+      menu.classList.toggle('is-fomo', on);
+      const chrome = menu.querySelector('.menu-chrome');
+      const stage = menu.querySelector('.menu-stage');
+      [chrome, stage].forEach((node) => {
+        if (!node) return;
+        if (on) node.setAttribute('inert', '');
+        else node.removeAttribute('inert');
+      });
+    }
+    if (el) el.setAttribute('aria-hidden', on ? 'false' : 'true');
+    const hint = document.getElementById('menuHubHint');
+    if (hint) {
+      if (on) hint.setAttribute('hidden', '');
+      else hint.removeAttribute('hidden');
+    }
+    if (on) {
+      try { this._dismissWelcomeToast(); } catch (_) {}
+    }
+  },
+
   hideFomoRitual() {
     const el = document.getElementById('fomoRitual');
     if (el) el.hidden = true;
     try { el && el.classList.remove('is-open'); } catch (_) {}
     try { document.body.classList.remove('fomo-open'); } catch (_) {}
+    this._syncFomoHubLock(false);
   },
 
   showFomoRitual(force) {
     try { this.clearToasts(); } catch (_) {}
     const el = document.getElementById('fomoRitual');
     if (!el) return;
+    const hideQuiet = () => {
+      el.hidden = true;
+      try { el.classList.remove('is-open'); } catch (_) {}
+      try { document.body.classList.remove('fomo-open'); } catch (_) {}
+      this._syncFomoHubLock(false);
+    };
     const menu = document.getElementById('menuScreen');
     if (!menu || !menu.classList.contains('active')) {
-      el.hidden = true;
-      try { document.body.classList.remove('fomo-open'); } catch (_) {}
+      hideQuiet();
       return;
     }
-    if (!force && this._fomoRitualHide) {
-      el.hidden = true;
-      try { document.body.classList.remove('fomo-open'); } catch (_) {}
-      return;
-    }
+    if (!force && this._fomoRitualHide) { hideQuiet(); return; }
     if (!force && typeof fomoRitualPending === 'function' && !fomoRitualPending()) {
-      el.hidden = true;
-      try { document.body.classList.remove('fomo-open'); } catch (_) {}
+      hideQuiet();
       return;
     }
     try { this.clearToasts(); } catch (_) {}
@@ -2462,6 +2504,7 @@ const UI = {
       void el.offsetWidth;
       el.classList.add('is-open');
     } catch (_) {}
+    this._syncFomoHubLock(true);
   },
 
   runFomoRitualCta() {

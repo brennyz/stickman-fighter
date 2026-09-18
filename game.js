@@ -8237,6 +8237,16 @@ function gambleOnboardHintLine() {
   return (line && line !== key) ? line : '';
 }
 
+function fomoRitualIsOpen() {
+  try {
+    if (document.body && document.body.classList.contains('is-fomo')) return true;
+    const el = document.getElementById('fomoRitual');
+    return !!(el && !el.hidden);
+  } catch (_) {
+    return false;
+  }
+}
+
 /** Welcome only on HOME hub — never chase Adventure/Settings/title. */
 function welcomeToastOnHub() {
   try {
@@ -8247,6 +8257,7 @@ function welcomeToastOnHub() {
     if (!menu || !menu.classList.contains('active')) return false;
     const other = document.querySelector('.screen.active:not(#menuScreen)');
     if (other) return false;
+    if (fomoRitualIsOpen()) return false;
     return true;
   } catch (_) {
     return false;
@@ -15972,6 +15983,50 @@ function fillHudText(c, text, x, y, opts) {
   }
   c.fillStyle = fill;
   c.fillText(text, x, y);
+}
+
+/** Word-wrap HUD copy so long locale strings stay inside the canvas (layout, not i18n). */
+function wrapHudText(c, text, maxW, maxLines) {
+  const raw = String(text || '');
+  const limit = Math.max(1, maxLines || 2);
+  const width = Math.max(40, maxW || 200);
+  if (!raw) return [];
+  if (c.measureText(raw).width <= width) return [raw];
+  const words = raw.split(/\s+/);
+  const lines = [];
+  let line = '';
+  for (const word of words) {
+    const test = line ? line + ' ' + word : word;
+    if (c.measureText(test).width > width && line) {
+      lines.push(line);
+      line = word;
+      if (lines.length >= limit) break;
+    } else {
+      line = test;
+    }
+  }
+  if (lines.length < limit && line) lines.push(line);
+  if (lines.length >= limit) {
+    let last = lines[limit - 1];
+    const leftover = (line && lines[limit - 1] !== line) ? line : '';
+    if (leftover || c.measureText(last).width > width) {
+      while (last.length > 1 && c.measureText(last.replace(/\s+$/, '') + '…').width > width) {
+        last = last.slice(0, -1);
+      }
+      lines[limit - 1] = last.replace(/\s+$/, '') + '…';
+    }
+  }
+  return lines.slice(0, limit);
+}
+
+function fillHudWrapped(c, text, x, y, opts) {
+  opts = opts || {};
+  const lines = wrapHudText(c, text, opts.maxW, opts.maxLines || 2);
+  const lh = opts.lineH || 16;
+  for (let i = 0; i < lines.length; i++) {
+    fillHudText(c, lines[i], x, y + i * lh, opts);
+  }
+  return lines.length * lh;
 }
 /* --- src/systems/seasons.js --- */
 /* ============================== SEASONS ================================ */
@@ -32360,6 +32415,28 @@ function hudSafeLayout(W, H, mode) {
   };
 }
 
+/** Keep canvas HUD (stars / combo / loot) clear of the HTML #pauseBtn.
+ *  Mega-merge: #321 owns hudSafeLayout / hudPhoneCompact / hudPauseGutter / --hud-pause-gutter.
+ *  Prefer those when present; this is the #318 fallback (same 48–56px + pad). */
+function hudRightReserve() {
+  try {
+    if (typeof hudSafeLayout === 'function') {
+      const lay = hudSafeLayout(typeof W === 'number' ? W : 390, typeof H === 'number' ? H : 844);
+      if (lay && Number(lay.pauseGutter) > 0) return Number(lay.pauseGutter);
+    }
+    if (typeof hudPauseGutter === 'function') {
+      const g = Number(hudPauseGutter(typeof W === 'number' ? W : 390, typeof H === 'number' ? H : 844));
+      if (g > 0) return g;
+    }
+  } catch (_) {}
+  const insets = readSafeInsets();
+  let pauseW = 48;
+  try {
+    if (document.body && document.body.classList.contains('big-touch')) pauseW = 56;
+  } catch (_) {}
+  return Math.max(insets.right + 8, 12) + pauseW + 6;
+}
+
 function playfieldGroundY(H, W) {
   const portrait = H > W * 1.02;
   const dualVs = typeof Input !== 'undefined' && Input.dualMode;
@@ -48057,7 +48134,8 @@ class Game {
     c.font = '800 10px -apple-system, sans-serif';
     const tw = c.measureText(label).width;
     const padX = 8;
-    const w = tw + padX * 2;
+    const maxChip = Math.max(80, (typeof W === 'number' ? W : 390) - 48);
+    const w = Math.min(tw + padX * 2, maxChip);
     const h = 16;
     const x = cx - w / 2;
     const y = cy - h / 2;
@@ -48071,7 +48149,14 @@ class Game {
     c.fillStyle = col;
     c.textAlign = 'center';
     c.textBaseline = 'middle';
-    c.fillText(label, cx, cy + 0.5);
+    let chipTxt = label;
+    if (c.measureText(chipTxt).width > w - padX * 2) {
+      while (chipTxt.length > 1 && c.measureText(chipTxt + '…').width > w - padX * 2) {
+        chipTxt = chipTxt.slice(0, -1);
+      }
+      chipTxt = chipTxt.replace(/\s+$/, '') + '…';
+    }
+    c.fillText(chipTxt, cx, cy + 0.5);
     c.restore();
     c.textBaseline = 'alphabetic';
     c.textAlign = 'left';
@@ -48992,6 +49077,7 @@ class Game {
         const hpPct = p.hp / Math.max(1, p.maxhp);
         const proj = starsFromHpPct(hpPct);
         const prevBest = this.advPrevStars || 0;
+        const star0 = W - rightPad - 46;
         for (let i = 0; i < 3; i++) {
           const ghost = prevBest > 0 && i < prevBest && i >= proj;
           drawStarShape(c, starX0 + 6 + i * 19, starY, 8, ghost ? 'rgba(255,215,94,.22)' : '#ffd75e', !ghost && i < proj);
@@ -49066,8 +49152,17 @@ class Game {
         else if (hpPct <= STAR_HP.three) starHint = t('hud.star3', { pct: Math.round(STAR_HP.three * 100) });
         c.font = '700 11px sans-serif';
         c.fillStyle = 'rgba(255,255,255,.7)';
-        c.fillText(t('hud.hpPct', { pct, hint: starHint }), W / 2, hy);
-        hy += 14;
+        const hpLine = t('hud.hpPct', { pct, hint: starHint });
+        const hpMax = Math.max(140, W - rightPad - 24);
+        if (typeof fillHudWrapped === 'function') {
+          const used = fillHudWrapped(c, hpLine, W / 2, hy, {
+            fill: 'rgba(255,255,255,.7)', maxW: hpMax, maxLines: 2, lineH: 13,
+          });
+          hy += Math.max(14, used);
+        } else {
+          c.fillText(hpLine, W / 2, hy);
+          hy += 14;
+        }
       }
       if (!compact && this.waveIdx >= 0 && (this.spawnQueue.length > 0 || this.monsters.some((m) => m.alive))) {
         const rem = this.spawnQueue.length + this.monsters.filter((m) => m.alive).length;
@@ -51464,6 +51559,7 @@ const UI = {
           return;
         }
         try { this.clearToasts(); } catch (_) {}
+        try { document.body.classList.remove('toast-under-title'); } catch (_) {}
         try { clearScreensForPlay(); } catch (_) {}
       } else {
         const target = document.getElementById(id);
@@ -51476,7 +51572,10 @@ const UI = {
         target.classList.add('active');
         if (id !== 'menuScreen') {
           try { this.hideFomoRitual(); } catch (_) {}
+          try { this._dismissWelcomeToast(); } catch (_) {}
         }
+        document.body.classList.toggle('toast-under-title',
+          !!(id && id !== 'menuScreen' && id !== 'resultScreen'));
       }
       for (const s of this.screens) {
         if (id && s === id) continue;
@@ -51732,6 +51831,16 @@ const UI = {
     }
     if (tone !== 'ok' && tone !== 'warn' && tone !== 'danger') tone = 'info';
     return { ms: duration, tone };
+  },
+
+  _dismissWelcomeToast() {
+    let welcome = '';
+    try { welcome = (typeof t === 'function') ? t('toast.welcome') : ''; } catch (_) {}
+    const els = (this._toastEls || []).slice();
+    for (const el of els) {
+      if (!el) continue;
+      if (welcome && el.textContent === welcome) this._dismissToast(el);
+    }
   },
 
   toast(msg, ms, opts) {
@@ -52491,31 +52600,59 @@ const UI = {
     }
   },
 
+  _syncFomoHubLock(open) {
+    const on = !!open;
+    const menu = document.getElementById('menuScreen');
+    const el = document.getElementById('fomoRitual');
+    document.body.classList.toggle('is-fomo', on);
+    document.body.classList.toggle('fomo-open', on);
+    if (menu) {
+      menu.classList.toggle('is-fomo', on);
+      const chrome = menu.querySelector('.menu-chrome');
+      const stage = menu.querySelector('.menu-stage');
+      [chrome, stage].forEach((node) => {
+        if (!node) return;
+        if (on) node.setAttribute('inert', '');
+        else node.removeAttribute('inert');
+      });
+    }
+    if (el) el.setAttribute('aria-hidden', on ? 'false' : 'true');
+    const hint = document.getElementById('menuHubHint');
+    if (hint) {
+      if (on) hint.setAttribute('hidden', '');
+      else hint.removeAttribute('hidden');
+    }
+    if (on) {
+      try { this._dismissWelcomeToast(); } catch (_) {}
+    }
+  },
+
   hideFomoRitual() {
     const el = document.getElementById('fomoRitual');
     if (el) el.hidden = true;
     try { el && el.classList.remove('is-open'); } catch (_) {}
     try { document.body.classList.remove('fomo-open'); } catch (_) {}
+    this._syncFomoHubLock(false);
   },
 
   showFomoRitual(force) {
     try { this.clearToasts(); } catch (_) {}
     const el = document.getElementById('fomoRitual');
     if (!el) return;
+    const hideQuiet = () => {
+      el.hidden = true;
+      try { el.classList.remove('is-open'); } catch (_) {}
+      try { document.body.classList.remove('fomo-open'); } catch (_) {}
+      this._syncFomoHubLock(false);
+    };
     const menu = document.getElementById('menuScreen');
     if (!menu || !menu.classList.contains('active')) {
-      el.hidden = true;
-      try { document.body.classList.remove('fomo-open'); } catch (_) {}
+      hideQuiet();
       return;
     }
-    if (!force && this._fomoRitualHide) {
-      el.hidden = true;
-      try { document.body.classList.remove('fomo-open'); } catch (_) {}
-      return;
-    }
+    if (!force && this._fomoRitualHide) { hideQuiet(); return; }
     if (!force && typeof fomoRitualPending === 'function' && !fomoRitualPending()) {
-      el.hidden = true;
-      try { document.body.classList.remove('fomo-open'); } catch (_) {}
+      hideQuiet();
       return;
     }
     try { this.clearToasts(); } catch (_) {}
@@ -52593,6 +52730,7 @@ const UI = {
       void el.offsetWidth;
       el.classList.add('is-open');
     } catch (_) {}
+    this._syncFomoHubLock(true);
   },
 
   runFomoRitualCta() {

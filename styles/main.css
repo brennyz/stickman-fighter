@@ -24,6 +24,13 @@
     --menu-ink-muted: #c8d0dc;
     --menu-edge: rgba(255, 255, 255, 0.16);
     --menu-accent: #7cf5aa;
+    --z-back: 12;
+    --z-sticky: 8;
+    --z-sheet: 32;
+    --z-toast: 40;
+    --z-fomo: 48; /* EX-021: Vandaag sheet above HOME tiles + toast */
+    --sticky-under-back: max(56px, calc(env(safe-area-inset-top) + 48px));
+    --screen-ink-bg: #151b33;
   }
   /* Canvas achter UI; geen hits in menu (anders vangt iPad alle tikken) */
   #game { position:fixed; left:0; top:0; width:100%; height:100%; height:100dvh; display:block; touch-action:none;
@@ -623,7 +630,7 @@
     }
     #menuScreen.menu-video-overhaul .hub-tile {
       min-height: 72px;
-      padding: 10px 28px 9px 11px;
+      padding: 10px 36px 9px 11px;
     }
     #menuScreen.menu-video-overhaul .hub-tile-sub { display: none; }
   }
@@ -643,27 +650,35 @@
   .hub-tile-grid .hub-tile-adventure { grid-column: 1 / -1; min-height: 96px; }
   .hub-tile {
     position: relative; display: flex; flex-direction: column; align-items: flex-start; gap: 5px;
-    padding: 13px 32px 11px 13px; min-height: 88px; border-radius: 14px; cursor: pointer;
+    padding: 13px 36px 11px 13px; min-height: 88px; border-radius: 14px; cursor: pointer;
     border: 1px solid rgba(255,255,255,.1); background: rgba(255,255,255,.04);
     box-shadow: 0 3px 0 rgba(0,0,0,.26), inset 0 1px 0 rgba(255,255,255,.06);
     color: #fff; font-family: inherit; text-align: left; touch-action: pan-y;
     transition: transform .06s, border-color .15s, background .15s;
+    min-width: 0; overflow: hidden;
   }
   .hub-tile::after {
-    content: '›'; position: absolute; right: 12px; top: 50%; transform: translateY(-50%);
+    content: '›'; position: absolute; right: 8px; top: 50%; transform: translateY(-50%);
+    width: 22px; text-align: center;
     font-size: 20px; font-weight: 700; opacity: .35; line-height: 1;
+    pointer-events: none;
   }
   .hub-tile:active { transform: translateY(2px); box-shadow: 0 1px 0 rgba(0,0,0,.26); }
   .hub-tile-featured {
     border-color: rgba(255,215,94,.45) !important;
     box-shadow: 0 3px 0 rgba(0,0,0,.26), 0 0 0 1px rgba(255,215,94,.2), inset 0 1px 0 rgba(255,255,255,.1);
+    padding-top: 22px;
   }
   .hub-tile-featured::before {
-    content: attr(data-hub-badge); position: absolute; top: 8px; right: 28px;
+    content: attr(data-hub-badge); position: absolute; top: 6px; right: 36px; left: auto;
     font-size: 8px; font-weight: 900; letter-spacing: .08em; color: #ffd75e; opacity: .9;
+    max-width: calc(100% - 56px); overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    pointer-events: none;
   }
   .hub-tile-featured:not([data-hub-badge])::before,
   .hub-tile-featured[data-hub-badge=""]::before { content: none; }
+  .hub-tile-featured:not([data-hub-badge]),
+  .hub-tile-featured[data-hub-badge=""] { padding-top: 13px; }
   .hub-tile-ico { width: 1.85em; height: 1.85em; display: flex; align-items: center; justify-content: center;
     border-radius: 9px; background: rgba(0,0,0,.2); box-shadow: inset 0 0 0 1px rgba(255,255,255,.08); }
   .hub-tile-ico svg { width: 1.15em; height: 1.15em; }
@@ -748,6 +763,7 @@
   .hub-tile-stat {
     margin-top: auto; font-size: clamp(9px, 2.4vw, 11px); font-weight: 800; letter-spacing: .04em;
     padding: 2px 7px; border-radius: 999px; background: rgba(0,0,0,.22); color: #cfe0ff;
+    max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
   }
   .hub-tile-adventure { border-color: rgba(78,207,106,.22); }
   .hub-tile-arcade { border-color: rgba(90,140,255,.22); }
@@ -1081,9 +1097,8 @@
     gap: clamp(8px, 1.5vw, 12px);
     width: 100%;
     margin: 0;
-    position: sticky;
-    bottom: max(8px, env(safe-area-inset-bottom));
-    z-index: 6;
+    position: relative;
+    z-index: 1;
   }
   .summon-pull-btn,
   #summonScreen .summon-pull-btn {
@@ -1458,6 +1473,9 @@
     position: absolute;
     left: 50%; top: 50%;
     width: min(58%, 220px);
+    max-width: calc(100% - 16px);
+    max-height: calc(100% - 16px);
+    overflow: hidden;
     transform: translate(-50%, -50%) scale(.86);
     opacity: 0;
     pointer-events: none;
@@ -1565,6 +1583,10 @@
     color: #ffffff;
     line-height: 1.2;
     text-shadow: 0 1px 0 #000;
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
   }
   .summon-card-rar {
     display: inline-block;
@@ -1780,6 +1802,7 @@
   }
   @media (max-width: 420px) {
     .summon-actions { grid-template-columns: 1fr; }
+    .summon-goto-row { grid-template-columns: 1fr 1fr; }
   }
   .menu-profile-bar {
     width: 100%; margin: 0; padding: 10px 14px; border-radius: 13px; cursor: pointer;
@@ -1797,7 +1820,14 @@
   .menu-profile-bar .prof-xp { display: block; margin-top: 6px; height: 3px; border-radius: 999px; background: rgba(255,255,255,.07); overflow: hidden; }
   .menu-profile-bar .prof-xp > span { display: block; height: 100%; background: linear-gradient(90deg, #4ecf6a, #ffd75e); border-radius: inherit; transition: width .35s ease; }
   .menu-profile-bar .prof-foot { display: block; margin-top: 5px; font-size: 10px; opacity: .6; }
-  .menu-hub-hint { width: 100%; margin: 0; font-size: 10px; color: #8fa3d9; opacity: .85; text-align: center; line-height: 1.35; min-height: 1.35em; }
+  .menu-hub-hint {
+    width: 100%; margin: 0; padding: 0 8px; font-size: 10px; color: #8fa3d9; opacity: .85;
+    text-align: center; line-height: 1.35; min-height: 0; max-width: 100%;
+    overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
+  }
+  #menuScreen.is-fomo .menu-hub-hint,
+  body.is-fomo .menu-hub-hint,
+  body:has(#toastHost .toast) #menuScreen.active .menu-hub-hint { display: none; }
   .menu-dock {
     display: flex; justify-content: center; gap: clamp(4px, 1.2vw, 8px); width: 100%; margin: 0;
   }
@@ -1866,12 +1896,10 @@
   #modeHubScreen.mode-hub-home .hub-tile-gear {
     background: linear-gradient(135deg, rgba(255, 215, 94, 0.18), transparent 42%), var(--menu-tile-solid);
     border-color: rgba(255, 215, 94, 0.34);
-    grid-column: 1 / -1;
   }
   #modeHubScreen.mode-hub-home .hub-tile-weapons {
     background: linear-gradient(135deg, rgba(176, 106, 224, 0.18), transparent 42%), var(--menu-tile-solid);
     border-color: rgba(200, 140, 255, 0.32);
-    grid-column: 1 / -1;
   }
   #modeHubScreen.mode-hub-home .hub-tile-pets {
     background: linear-gradient(135deg, rgba(78, 207, 106, 0.14), transparent 45%), var(--menu-tile-solid);
@@ -1904,7 +1932,7 @@
     background: linear-gradient(135deg, rgba(255, 154, 77, 0.16), transparent 45%), var(--menu-tile-solid);
     border-color: rgba(255, 154, 77, 0.28);
   }
-  #modeHubScreen.mode-hub-home .hub-tile-dex { grid-column: 1 / -1; }
+  #modeHubScreen.mode-hub-home .hub-tile-dex { grid-column: auto; }
   .mode-hub-body { width: var(--ui-rail); margin: 0 auto; display: flex; flex-direction: column; align-items: stretch; }
   .mode-hub-step {
     font-size: 10px; font-weight: 800; letter-spacing: .12em; color: #9db1e3;
@@ -2255,7 +2283,11 @@
   .card { width:min(92vw, 640px); background:var(--menu-tile-solid); border:1px solid var(--menu-edge);
       border-radius:16px; padding:14px 16px; margin:6px 0; display:flex; align-items:center; gap:14px;
       color:var(--menu-ink); box-shadow:0 4px 0 rgba(0,0,0,.28), inset 0 1px 0 rgba(255,255,255,.06);
-      transition: border-color .15s, background .15s; }
+      transition: border-color .15s, background .15s; min-width: 0; overflow: hidden; }
+  .card > canvas { flex: 0 0 auto; }
+  .card > div:not(.right) { flex: 1 1 auto; min-width: 0; }
+  .card .cname, .card .cinfo { overflow-wrap: anywhere; }
+  .card .right { flex: 0 1 auto; max-width: 38%; min-width: 0; overflow: hidden; }
   .card.sel { border-color:#ffd75e; background:linear-gradient(135deg, rgba(255,215,94,.16), transparent 50%), var(--menu-tile-solid-hi); box-shadow:0 0 0 1px rgba(255,215,94,.2); }
   .card.locked { opacity:.7; }
   .card.island-gated:not(.locked) { opacity:.9; border-style:dashed; }
@@ -2427,7 +2459,8 @@
   .island-bar { display:flex; flex-wrap:wrap; gap:8px; justify-content:center; width:min(92vw,640px); margin:8px 0 10px; }
   .diff-bar { display:flex; flex-wrap:nowrap; gap:8px; justify-content:center; width:min(92vw,480px); margin:4px auto 6px; }
   .diff-blurb { width:min(92vw,480px); margin:0 auto 10px; text-align:center; font-size:11px; line-height:1.35;
-      color:color-mix(in srgb, var(--diff-accent, #8fa3d9) 70%, #cdd8f5); opacity:.95; letter-spacing:.02em; min-height:1.35em; }
+      color:color-mix(in srgb, var(--diff-accent, #8fa3d9) 70%, #cdd8f5); opacity:.95; letter-spacing:.02em; min-height:0;
+      max-width:100%; overflow:hidden; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; }
   .diff-blurb-nightmare { color:#ffb08a; text-shadow:0 0 10px rgba(255,100,40,.25); }
   .diff-blurb-hell { color:#ff8a7a; text-shadow:0 0 12px rgba(255,40,30,.3); }
   .diff-tab { flex:1 1 0; min-width:0; padding:10px 8px; border-radius:14px; border:2px solid rgba(255,255,255,.12);
@@ -2455,18 +2488,25 @@
       box-shadow:0 0 0 1px color-mix(in srgb, var(--isl-accent, #ffd75e) 40%, transparent); }
   .island-tab.locked { opacity:.45; cursor:not-allowed; }
   .island-tab-n { font-size:18px; color:var(--isl-accent, #ffd75e); }
-  .island-tab-name { font-size:10px; line-height:1.2; text-align:center; opacity:.92; }
+  .island-tab-name { font-size:10px; line-height:1.2; text-align:center; opacity:.92;
+      max-width:100%; overflow:hidden; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; }
   .island-tab-lock { position:absolute; top:6px; right:6px; font-size:12px; opacity:.85; }
-  .island-info { width:min(92vw,640px); text-align:left; font-size:13px; color:#9db1e3; margin:0 0 12px; line-height:1.45;
+  .island-info { width:min(92vw,640px); max-width:100%; text-align:left; font-size:13px; color:#9db1e3; margin:0 0 12px; line-height:1.45;
       background:rgba(255,255,255,.05); border:1px solid rgba(255,255,255,.1); border-radius:16px; padding:12px 14px; }
-  .island-info-head { display:flex; align-items:center; gap:12px; }
+  .island-info-head { display:flex; align-items:center; gap:12px; min-width:0; }
+  .island-info-text { min-width:0; overflow-wrap:anywhere; }
+  .island-info-ico { flex:0 0 auto; }
   .island-info-ico svg,
   .island-info-ico img { width:36px; height:36px; display:block; }
-  .island-info-sub { font-size:12px; margin-top:4px; opacity:.92; word-spacing:.05em; line-height:1.45; }
+  .island-info-sub { font-size:12px; margin-top:4px; opacity:.92; word-spacing:.05em; line-height:1.45;
+      overflow:hidden; display:-webkit-box; -webkit-line-clamp:3; -webkit-box-orient:vertical; }
   .island-info-prog { margin-top:10px; height:7px; }
-  .island-info-chips { margin-top:8px; display:flex; flex-wrap:wrap; gap:6px; }
-  .island-info-chip { font-size:11px; font-weight:800; padding:4px 10px; border-radius:999px; background:rgba(196,122,255,.18); color:#c47aff; border:1px solid rgba(196,122,255,.35); }
-  .island-info-chip.onboard { background:rgba(124,245,255,.12); color:#9db8ff; border-color:rgba(124,245,255,.35); }
+  .island-info-chips { margin-top:8px; display:flex; flex-wrap:wrap; gap:6px; min-width:0; width:100%; }
+  .island-info-chip { font-size:11px; font-weight:800; padding:4px 10px; border-radius:999px; background:rgba(196,122,255,.18); color:#c47aff; border:1px solid rgba(196,122,255,.35);
+      min-width:0; max-width:100%; overflow-wrap:anywhere; line-height:1.3; }
+  .island-info-chip.onboard { background:rgba(124,245,255,.12); color:#9db8ff; border-color:rgba(124,245,255,.35);
+      flex:1 1 100%; border-radius:12px;
+      display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }
   .island-prog-track { display:block; width:100%; height:5px; border-radius:4px; background:#1a2040; overflow:hidden; }
   .island-prog-track i { display:block; height:100%; border-radius:4px; transition:width .25s ease; }
   .island-info-stars { margin-top:5px; height:4px; }
@@ -2531,6 +2571,7 @@
       background:linear-gradient(180deg,#5a6784,#39445e); }
   .tog.off { opacity:.4; }
 
+  /* Mega-merge: #321 also keeps #pauseBtn position:fixed + --hud-pause-gutter. */
   #pauseBtn { position:fixed; top:max(10px, calc(var(--vv-top, 0px) + env(safe-area-inset-top)));
       right:max(12px, env(safe-area-inset-right)); z-index:50;
       width:48px; height:48px; border-radius:14px; font-size:18px; display:none;
@@ -2622,6 +2663,54 @@
   #resultScreen .stars-big { font-size:min(10vw,42px); color:#ffd75e; letter-spacing:6px; margin:8px 0 14px;
       text-shadow:0 3px 0 #a86818; }
   #resultScreen .btn { margin-top:8px; }
+  #resultScreen.screen.active {
+    flex-direction: column; align-items: center;
+    padding-bottom: max(16px, env(safe-area-inset-bottom, 0px));
+  }
+  /* Mega-merge hooks:
+     #323 flappy-retry: #resCtaDock, .result-cta-primary/quiet, is-lose.is-adventure,
+       result.onceMore, RESULT_SHOW_LOSE_MS. Owns restartAdventureInstant + #resRetrySafe.
+     #318: same dock IDs + is-win.is-adventure #resNext primary (Volgend level).
+     #321 mobile HUD: hudSafeLayout / --hud-pause-gutter — do not fight; prefer #321
+       if both land. Do not add restartAdventureInstant here. */
+  #resultScreen .result-cta-dock {
+    width: min(var(--ui-rail), 420px); max-width: 100%; margin-top: auto; padding-top: 12px;
+    display: flex; flex-direction: column; align-items: center; gap: 8px;
+    position: sticky; bottom: max(10px, env(safe-area-inset-bottom, 0px));
+    z-index: 6;
+  }
+  #resultScreen .result-cta-primary {
+    width: 100%; min-height: 84px; justify-content: center;
+    font-size: clamp(20px, 6.2vw, 26px); font-weight: 900;
+    letter-spacing: .02em; margin-top: 0;
+  }
+  #resultScreen .result-cta-primary div { font-size: inherit; font-weight: 900; }
+  #resultScreen.is-lose.is-adventure #resAgain.result-cta-primary {
+    background: linear-gradient(180deg, #ffd75e 0%, #e8a820 55%, #c97a20 100%);
+    border: 2px solid rgba(255,255,255,.22); color: #1a1208;
+    box-shadow: 0 6px 0 #7a4a10, 0 10px 22px rgba(0,0,0,.35);
+  }
+  #resultScreen.is-lose.is-adventure #resAgain.result-cta-primary div { color: #1a1208; }
+  #resultScreen.is-win #resNext.result-cta-primary { order: -1; }
+  #resultScreen.is-win.is-adventure #resNext.result-cta-primary {
+    background: linear-gradient(180deg, #7cfc8a 0%, #3ecf6a 55%, #1f7a35 100%);
+    border: 2px solid rgba(255,255,255,.22); color: #07140a;
+    box-shadow: 0 6px 0 #145226, 0 10px 22px rgba(0,0,0,.35);
+  }
+  #resultScreen.is-win.is-adventure #resNext.result-cta-primary div { color: #07140a; }
+  #resultScreen.is-win.is-adventure #resAgain:not(.result-cta-primary) {
+    min-height: 48px; width: 100%; opacity: .92; font-size: 16px;
+  }
+  #resultScreen .result-cta-quiet,
+  #resultScreen.is-lose.is-adventure #resMenu.result-cta-quiet,
+  #resultScreen.is-win.is-adventure #resMenu.result-cta-quiet {
+    min-height: 44px; width: auto; margin-top: 2px;
+    background: transparent; box-shadow: none; border-color: transparent;
+    font-size: 14px; opacity: .72;
+  }
+  #resultScreen.is-lose .run-loot-panel { max-height: min(22vh, 160px); }
+  #resultScreen.is-lose .detail { font-size: 14px; }
+  body:has(#resultScreen.active) #fomoRitual { display: none; }
 
   /* Adventure lose: one fat Flappy-style retry. No extra chrome. */
   #resultScreen.lose-retry #resAgain {
@@ -2639,11 +2728,22 @@
 
   /* Android Chrome/TWA: HTML-toast onder statusbalk. Queue + toon (ok/warn/danger) van #260. */
   #toastHost { position:fixed; left:50%; top:max(12px, calc(env(safe-area-inset-top, 0px) + 10px));
-      transform:translateX(-50%); z-index:40; pointer-events:none;
+      transform:translateX(-50%); z-index:var(--z-toast); pointer-events:none;
       display:flex; flex-direction:column; gap:8px; align-items:center;
       width:min(92vw, 420px); max-width:calc(100vw - 24px); }
   body:not(.is-playing) #toastHost { top:max(70px, calc(env(safe-area-inset-top, 0px) + 56px)); }
   body.is-playing #toastHost { top:max(86px, calc(env(safe-area-inset-top, 0px) + 70px)); }
+  /* Welcome / collect toasts must sit under back + title (factories, settings, style). */
+  body.toast-under-title #toastHost,
+  body:not(.is-playing):has(#buildingsScreen.active) #toastHost,
+  body:not(.is-playing):has(#settingsScreen.active) #toastHost,
+  body:not(.is-playing):has(#styleScreen.active) #toastHost,
+  body:not(.is-playing):has(.screen.active:not(#menuScreen):not(#resultScreen)) #toastHost {
+    top: max(152px, calc(var(--sticky-under-back) + 96px));
+  }
+  body:has(#resultScreen.active) #toastHost {
+    top: max(168px, calc(env(safe-area-inset-top, 0px) + 148px));
+  }
   .toast { background:rgba(8,12,24,.96); border:2px solid rgba(255,215,94,.7); color:#fff;
       padding:12px 16px; border-radius:14px; font-weight:800; font-size:15px; line-height:1.35;
       box-shadow:0 10px 28px rgba(0,0,0,.55), 0 0 0 1px rgba(0,0,0,.35); animation: toastIn .28s ease; width:100%; box-sizing:border-box;
@@ -2684,10 +2784,27 @@
     visibility: hidden;
     pointer-events: none;
   }
+  /* EX-021: Vandaag is a hub overlay, not a .screen. Lock HOME chrome so tiles
+     / sticky footer cannot steal dismiss taps on ~390. */
+  #menuScreen.screen.is-fomo,
+  #menuScreen.is-fomo {
+    z-index: var(--z-fomo);
+  }
+  #menuScreen.is-fomo .menu-chrome,
+  #menuScreen.is-fomo .menu-stage {
+    pointer-events: none;
+  }
+  #menuScreen.menu-video-overhaul > #fomoRitual,
   #menuScreen #fomoRitual {
-    position: fixed; inset: 0; z-index: 40; display: flex; align-items: flex-end; justify-content: center;
-    padding: 16px 14px calc(24px + env(safe-area-inset-bottom, 0px));
+    position: fixed; inset: 0; z-index: var(--z-fomo);
+    display: flex; align-items: flex-end; justify-content: center;
+    padding: max(12px, env(safe-area-inset-top, 0px))
+      max(12px, env(safe-area-inset-right, 0px))
+      max(32px, calc(env(safe-area-inset-bottom, 0px) + 24px))
+      max(12px, env(safe-area-inset-left, 0px));
+    padding-bottom: max(32px, calc(env(safe-area-inset-bottom, 0px) + 24px));
     pointer-events: auto;
+    isolation: isolate;
   }
   #menuScreen #fomoRitual[hidden] { display: none; }
   #menuScreen #fomoRitual.is-open .fomo-ritual-sheet { animation: fomoSheetIn .28s ease; }
@@ -2695,30 +2812,35 @@
   .fomo-ritual-backdrop {
     position: absolute; inset: 0; border: 0; padding: 0; margin: 0;
     background: rgba(6, 10, 22, .68); cursor: pointer;
+    z-index: 0;
   }
   .fomo-ritual-sheet {
-    position: relative; z-index: 1; width: min(92vw, 440px); max-height: min(78vh, 640px);
+    position: relative; z-index: 1; width: min(92vw, 440px); max-width: 100%;
+    max-height: min(72vh, 560px);
     overflow-y: auto; -webkit-overflow-scrolling: touch; overscroll-behavior: contain;
     background: #121a28; border: 2px solid rgba(124, 245, 255, .42); border-radius: 18px;
     padding: 16px 16px 14px; box-shadow: 0 16px 40px rgba(0,0,0,.55); color: #e8f0ff;
+    margin-bottom: max(8px, env(safe-area-inset-bottom, 0px));
   }
   @keyframes fomoSheetIn { from { opacity:0; transform:translateY(22px); } to { opacity:1; transform:none; } }
   @keyframes fomoFadeIn { from { opacity:0; } to { opacity:1; } }
   body.reduced-motion #menuScreen #fomoRitual.is-open .fomo-ritual-sheet,
   body.reduced-motion #menuScreen #fomoRitual.is-open .fomo-ritual-backdrop { animation: none; }
   .fomo-ritual-x {
-    position: absolute; top: 8px; right: 8px; width: 44px; height: 44px; border: 0;
+    position: absolute; top: 4px; right: 4px; z-index: 2;
+    width: var(--touch-min); height: var(--touch-min); border: 0;
     background: transparent; color: #9db1e3; font-size: 28px; line-height: 1; font-weight: 700;
-    cursor: pointer; touch-action: manipulation;
+    cursor: pointer; touch-action: manipulation; pointer-events: auto;
   }
   .fomo-ritual-title {
-    margin: 0 40px 10px 0; font-family: 'Black Ops One', sans-serif;
+    margin: 0 48px 10px 0; font-family: 'Black Ops One', sans-serif;
     font-size: 22px; color: #ffd75e; letter-spacing: .04em;
   }
   .fomo-ritual-rows { display: flex; flex-direction: column; gap: 8px; margin-bottom: 10px; }
   .fomo-ritual-row {
     background: rgba(255,255,255,.05); border: 1px solid rgba(255,255,255,.1);
     border-radius: 12px; padding: 10px 12px; font-size: 14px; line-height: 1.4; font-weight: 700;
+    overflow-wrap: anywhere; min-width: 0;
   }
   button.fomo-ritual-row {
     width: 100%; text-align: left; font: inherit; color: inherit;
@@ -2749,17 +2871,45 @@
   #tutBox li { margin:6px 0 6px 18px; }
   #tutBox b { color:#ffd75e; }
 
-  .style-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(110px,1fr));
-      gap:12px; width:min(92vw,640px); }
+  #styleScreen { overflow-x: hidden; align-items: stretch; }
+  #styleScreen > .head,
+  #styleScreen > .subtitle,
+  #styleScreen > .card,
+  #styleScreen > .statbar,
+  #styleScreen > .style-grid,
+  #styleScreen > .sub-home-bar {
+    width: min(var(--ui-rail-wide), 100%);
+    max-width: 100%;
+    min-width: 0;
+    margin-left: auto;
+    margin-right: auto;
+  }
+  .style-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(min(148px,100%),1fr));
+      gap:12px; width:min(var(--ui-rail-wide),100%); max-width:100%; min-width:0; }
   .style-card { border-radius:16px; padding:14px 10px; text-align:center; cursor:pointer;
-      touch-action:manipulation; min-width:0; overflow:hidden;
+      touch-action:manipulation; min-width:0; max-width:100%; overflow:hidden;
       background:rgba(255,255,255,.06); border:2px solid transparent; font-weight:800; }
   .style-card-name, .style-card-bonus, .style-card-tip, .style-card-sub {
       display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical;
       overflow:hidden; word-break:break-word; max-width:100%; }
   .style-card.sel { border-color:#ffd75e; background:rgba(255,215,94,.14); }
   .style-card.locked { opacity:.4; }
-  .style-card canvas { display:block; margin:0 auto 8px; }
+  .style-card canvas { display:block; margin:0 auto 8px; max-width:100%; }
+  .style-card-name, .style-card-bonus, .style-card-tip, .style-card-sub {
+    max-width:100%; min-width:0; overflow-wrap:anywhere;
+  }
+  .style-card-name {
+    display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden;
+  }
+  .style-card-bonus {
+    display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden;
+  }
+  .style-card-tip {
+    display:-webkit-box; -webkit-line-clamp:3; -webkit-box-orient:vertical; overflow:hidden;
+  }
+  .style-card-sub {
+    display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden;
+  }
   .gear-slot-row {
     display: flex; flex-wrap: wrap; gap: 8px; width: min(92vw, 640px); margin: 8px auto 12px;
   }
@@ -2862,9 +3012,10 @@
   .char-saga-bar .saga-count { font-size:10px; opacity:.72; font-weight:700; }
   .rar-pill { display:inline-block; font-size:11px; font-weight:900; border:1px solid; border-radius:999px;
       padding:1px 8px; margin-left:6px; vertical-align:middle; letter-spacing:.3px; }
-  .dex-filter-bar { display:flex; flex-wrap:wrap; gap:6px; justify-content:center; width:min(92vw,520px); margin:0 0 12px; }
+  .dex-filter-bar { display:flex; flex-wrap:wrap; gap:6px; justify-content:center; width:min(92vw,520px); max-width:100%; margin:0 0 12px; }
   .dex-filter-btn { font-size:11px; font-weight:800; padding:7px 11px; border-radius:999px; border:1px solid rgba(255,255,255,.18);
-      background:rgba(20,26,48,.85); color:#cfe0ff; touch-action:manipulation; min-height:36px; }
+      background:rgba(20,26,48,.85); color:#cfe0ff; touch-action:manipulation; min-height:36px;
+      min-width:0; max-width:100%; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
   .dex-filter-btn.active { border-color: var(--dex-filter-color, #ffd75e); color:#fff; box-shadow:0 0 0 1px var(--dex-filter-color, #ffd75e); }
   .dex-cosmetic-row { display:flex; flex-wrap:wrap; gap:8px; margin-top:10px; }
   .dex-cosmetic-chip { flex:1 1 140px; font-size:11px; padding:8px 10px; border-radius:12px;
@@ -2876,27 +3027,44 @@
   .card.rar-hell { background:rgba(255,106,61,.12); box-shadow:inset 0 0 18px rgba(255,106,61,.18); }
   .card.rar-epic { background:rgba(176,106,224,.08); }
   .weapon-zone-pill { letter-spacing:.02em; }
-  .settings-card { width:min(92vw,480px); max-width:100%; min-width:0; box-sizing:border-box;
+  .settings-card { width:min(var(--ui-rail),100%); max-width:100%; min-width:0; box-sizing:border-box;
       background:var(--menu-tile-solid); border:1px solid var(--menu-edge);
       border-radius:16px; padding:16px 18px; margin:10px 0; color:var(--menu-ink); font-size:15px; }
   .settings-card label { display:flex; justify-content:space-between; align-items:center; gap:12px; margin:8px 0; flex-wrap:wrap; min-width:0; }
   .settings-card input[type=range] { flex:1; min-width:0; width:100%; accent-color:#ffd75e; }
-  #settingsScreen { overflow-x:hidden; }
+  #settingsScreen { overflow-x:hidden; align-items:stretch; }
+  #settingsScreen > .head,
+  #settingsScreen > .subtitle,
+  #settingsScreen > .settings-card,
+  #settingsScreen > .settings-fold,
+  #settingsScreen > .step-card,
+  #settingsScreen > .dex-filter-bar,
+  #settingsScreen > .sub-home-bar {
+    width: min(var(--ui-rail), 100%);
+    max-width: 100%;
+    min-width: 0;
+    box-sizing: border-box;
+    margin-left: auto;
+    margin-right: auto;
+  }
   #settingsScreen .dex-filter-bar,
   #settingsScreen .settings-fold,
-  #settingsScreen .settings-card { max-width:min(92vw,480px); box-sizing:border-box; }
+  #settingsScreen .settings-card { max-width:100%; box-sizing:border-box; }
   .settings-home-tile {
-    display:grid; grid-template-columns:36px 1fr auto; grid-template-rows:auto auto auto;
-    gap:4px 12px; align-items:center;
+    display:grid; grid-template-columns:36px minmax(0,1fr) auto; grid-template-rows:auto auto auto;
+    gap:4px 12px; align-items:center; min-width:0; overflow:hidden;
   }
   .settings-home-tile .hub-tile-ico { grid-row:1 / span 2; }
-  .settings-home-tile .hub-tile-title { font-size:16px; font-weight:900; color:var(--menu-ink); }
-  .settings-home-tile .hub-tile-sub { grid-column:2; font-size:13px; color:var(--menu-ink-muted); font-weight:700; }
+  .settings-home-tile .hub-tile-title { font-size:16px; font-weight:900; color:var(--menu-ink);
+    min-width:0; overflow:hidden; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; }
+  .settings-home-tile .hub-tile-sub { grid-column:2; font-size:13px; color:var(--menu-ink-muted); font-weight:700;
+    min-width:0; overflow:hidden; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; }
   .settings-home-tile .hub-tile-stat {
     grid-column:3; grid-row:1 / span 2; align-self:center;
     font-size:11px; font-weight:900; letter-spacing:.04em; text-transform:uppercase;
     color:#f2efe6; border:1px solid rgba(124,245,255,.45); border-radius:999px;
     padding:4px 10px; background:rgba(124,245,255,.12); white-space:nowrap;
+    max-width:38vw; overflow:hidden; text-overflow:ellipsis;
   }
   .settings-home-tile .settings-tile-hint {
     grid-column:1 / -1; margin:8px 0 0; font-size:12px; line-height:1.45; opacity:.78; color:var(--menu-ink-muted);
@@ -2975,20 +3143,22 @@
     box-shadow: inset 0 0 160px rgba(180,160,40,.14);
   }
   .settings-fold {
-    width:min(92vw,480px); margin:8px 0;
+    width:min(var(--ui-rail),100%); max-width:100%; min-width:0; margin:8px auto;
     background:rgba(255,255,255,.05); border:1px solid rgba(255,255,255,.12);
-    border-radius:16px; padding:4px 14px 8px;
+    border-radius:16px; padding:4px 14px 8px; overflow:hidden; box-sizing:border-box;
   }
   .settings-fold > summary {
     cursor:pointer; list-style:none; padding:12px 4px;
     font-weight:800; color:#ffd75e; font-size:15px;
+    display:flex; align-items:center; justify-content:space-between; gap:8px;
+    min-width:0;
   }
   .settings-fold > summary::-webkit-details-marker { display:none; }
-  .settings-fold > summary::after { content:' ▾'; opacity:.7; font-weight:700; }
-  .settings-fold[open] > summary::after { content:' ▴'; }
+  .settings-fold > summary::after { content:'▾'; opacity:.7; font-weight:700; flex-shrink:0; }
+  .settings-fold[open] > summary::after { content:'▴'; }
   .settings-fold .settings-fold-body {
-    width:100%; margin:0; padding:8px 2px 6px;
-    background:transparent; border:none;
+    width:100%; max-width:100%; min-width:0; margin:0; padding:8px 2px 6px;
+    background:transparent; border:none; overflow-wrap:anywhere;
   }
 
   .char-grid-scroll { width:min(94vw, 720px); max-height:min(50vh, 400px); overflow-y:auto;
@@ -3512,7 +3682,7 @@
     .hub-tile-sub, .hub-tile-stat { display: none; }
     .settings-home-tile .hub-tile-sub,
     .settings-home-tile .hub-tile-stat { display: block; }
-    .hub-tile { min-height: 56px; padding: 7px 24px 7px 10px; }
+    .hub-tile { min-height: 56px; padding: 7px 32px 7px 10px; }
     .hub-tile-ico { width: 1.5em; height: 1.5em; }
     .hub-tile-ico img { width: 22px; height: 22px; }
     .menu-profile-bar { padding: 8px 10px; }
@@ -3719,10 +3889,10 @@
   #buildingsScreen.buildings-screen { align-items: stretch; position: relative; }
   #buildingsScreen .head { margin-bottom: 4px; }
   #buildingsWallet.buildings-wallet {
-    position: sticky; top: 0; z-index: 4;
+    position: sticky; top: var(--sticky-under-back); z-index: var(--z-sticky);
     width: min(92vw, 520px); margin: 0 auto 10px; padding: 8px 10px 10px;
-    background: #151b33; border: 1px solid rgba(255,255,255,.12);
-    box-shadow: 0 4px 0 rgba(0,0,0,.28);
+    background: var(--screen-ink-bg); border: 1px solid rgba(255,255,255,.12);
+    box-shadow: 0 10px 16px rgba(10, 13, 24, 0.45);
   }
   #buildingsWallet .buildings-wallet-pc-line { display: flex; justify-content: center; margin-bottom: 6px; }
   #buildingsWallet .buildings-wallet-pc {
@@ -4512,8 +4682,18 @@
   #buildingsWallet.buildings-wallet,
   #buildingsScreen .buildings-wallet {
     position: sticky;
-    top: 0;
-    z-index: 4;
+    top: var(--sticky-under-back);
+    z-index: var(--z-sticky);
+    width: min(94vw, 480px);
+    margin: 0 auto 10px;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 6px 8px;
+    padding: 8px 6px;
+    background: var(--screen-ink-bg);
+    border: 0;
+    box-shadow: 0 10px 16px rgba(10, 13, 24, 0.45);
   }
   #buildingsScreen .buildings-wallet-chip {
     display: flex;
@@ -4533,6 +4713,10 @@
     letter-spacing: .02em;
     color: var(--menu-ink-muted);
     text-transform: uppercase;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
   #buildingsScreen .buildings-wallet-amt {
     font-size: 16px;
@@ -5268,5 +5452,336 @@
     #petScreen .pets-overview { order: 1; }
     #petScreen[data-pets-pane="list"] .pets-detail { display: flex; }
     #petScreen[data-pets-pane="detail"] .pets-overview { display: block; }
+  }
+
+  /* —— Layout polish (HOME / Collectie / factories / gear / summons / pets) —— */
+  .screen > .head,
+  .screen > .subtitle,
+  .gear-screen-head,
+  .mode-hub-head {
+    max-width: min(94vw, 720px);
+    min-width: 0;
+    overflow-wrap: anywhere;
+  }
+  .screen > .subtitle,
+  .gear-screen-head .subtitle,
+  #petScreen .subtitle,
+  #summonScreen .subtitle,
+  #buildingsScreen .subtitle {
+    padding: 0 8px;
+  }
+  .back-btn { z-index: var(--z-back); }
+  #gearScreen > .back-btn { z-index: var(--z-back); }
+
+  #menuScreen.menu-video-overhaul {
+    scroll-padding-bottom: max(88px, calc(env(safe-area-inset-bottom) + 72px));
+  }
+  #menuScreen.menu-video-overhaul .menu-landing-footer {
+    position: sticky;
+    bottom: 0;
+    z-index: var(--z-sticky);
+    width: 100%;
+    background: linear-gradient(180deg, transparent, #0a1218 22%);
+    padding-bottom: max(10px, env(safe-area-inset-bottom));
+  }
+  #menuScreen.menu-video-overhaul .menu-utility-row {
+    width: min(var(--ui-rail), 100%);
+    max-width: 100%;
+  }
+  .menu-dock .btn.tog {
+    overflow: hidden;
+  }
+  .menu-dock .btn.tog {
+    text-overflow: ellipsis;
+  }
+  .hub-tile-grid > .hub-tile { width: 100%; }
+  #modeHubScreen.mode-hub-home .hub-tile-weapons,
+  #modeHubScreen.mode-hub-home .hub-tile-gear,
+  #modeHubScreen.mode-hub-home .hub-tile-skills,
+  #modeHubScreen.mode-hub-home .hub-tile-dex {
+    grid-column: auto;
+  }
+  #modeHubScreen.mode-hub-home .hub-tile-upgrades {
+    grid-column: 1 / -1;
+  }
+
+  #buildingsScreen .buildings-wallet-chip {
+    min-width: 0;
+    max-width: 100%;
+    overflow: hidden;
+  }
+  #buildingsScreen .buildings-wallet-lbl {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    min-width: 0;
+  }
+  #buildingsScreen .buildings-wallet-amt {
+    flex-shrink: 0;
+  }
+  #buildingsScreen .buildings-row {
+    overflow: hidden;
+    min-width: 0;
+  }
+  #buildingsUpgradeSheet.buildings-sheet,
+  #buildingsUpgradeSheet.buildings-upgrade-sheet {
+    z-index: var(--z-sheet);
+    padding: 0 max(10px, env(safe-area-inset-right)) max(10px, env(safe-area-inset-bottom)) max(10px, env(safe-area-inset-left));
+  }
+  #buildingsUpgradeSheet .buildings-sheet-panel,
+  #buildingsScreen .buildings-sheet-panel {
+    width: min(94vw, 420px);
+    max-height: min(78vh, 640px);
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior: contain;
+    padding: 16px 14px max(16px, env(safe-area-inset-bottom));
+  }
+  #buildingsUpgradeSheet .buildings-sheet-panel .buildings-cta,
+  #buildingsUpgradeSheet .buildings-sheet-actions {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  #buildingsScreen .buildings-cta-row,
+  #buildingsScreen .buildings-cta-stack,
+  #buildingsScreen .buildings-upgrade-step {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .gear-filter-dock {
+    position: sticky;
+    top: var(--sticky-under-back);
+    z-index: var(--z-sticky);
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    width: 100%;
+    padding: 6px 0 8px;
+    background: var(--screen-ink-bg);
+    box-shadow: 0 10px 16px rgba(10, 13, 24, 0.45);
+  }
+  .gear-filter-btn {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .gear-card-name,
+  .gear-card-meta,
+  .gear-detail-title,
+  .gear-detail-sub,
+  .gear-slot-title,
+  .gear-slot-sub {
+    overflow-wrap: anywhere;
+  }
+  .gear-card-name {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  #summonScreen.summon-screen.screen:has(.sub-home-bar) {
+    padding-bottom: max(16px, env(safe-area-inset-bottom));
+    scroll-padding-bottom: 16px;
+  }
+  #summonScreen .summon-rail {
+    width: min(var(--ui-rail), 100%);
+    max-width: 100%;
+    overflow: auto;
+    padding-bottom: 8px;
+  }
+  #summonScreen .summon-goto-row .btn,
+  #summonScreen .summon-actions .btn {
+    max-width: 100%;
+    min-width: 0;
+    overflow: hidden;
+  }
+  #summonScreen .summon-goto-row .btn > div,
+  #summonScreen .summon-actions .btn > div {
+    min-width: 0;
+    overflow: hidden;
+  }
+  .summon-card-skill,
+  .summon-reveal-text,
+  .summon-where {
+    overflow-wrap: anywhere;
+  }
+  .summon-card-skill {
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  #summonScreen .sub-home-bar {
+    position: relative;
+    z-index: 1;
+    background: transparent;
+  }
+
+  #petScreen { align-items: stretch; }
+  #petScreen > .head,
+  #petScreen > .subtitle,
+  #petTabBar,
+  #petDexPanel,
+  #petEggPanel,
+  #petSummary,
+  #eggSummary,
+  #petList,
+  #eggList {
+    width: min(var(--ui-rail-wide), 100%);
+    max-width: 100%;
+    margin-left: auto;
+    margin-right: auto;
+  }
+  #petTabBar {
+    position: sticky;
+    top: var(--sticky-under-back);
+    z-index: var(--z-sticky);
+    background: var(--screen-ink-bg);
+    padding: 6px 4px 8px;
+    box-shadow: 0 8px 14px rgba(10, 13, 24, 0.4);
+  }
+  #petScreen .card,
+  #weaponScreen .card {
+    width: min(var(--ui-rail-wide), 100%);
+  }
+
+  #menuScreen.menu-video-overhaul > #fomoRitual,
+  #menuScreen #fomoRitual {
+    z-index: var(--z-fomo);
+    padding: max(12px, env(safe-area-inset-top)) max(12px, env(safe-area-inset-right))
+      max(32px, calc(env(safe-area-inset-bottom, 0px) + 24px)) max(12px, env(safe-area-inset-left));
+    padding-bottom: max(32px, calc(env(safe-area-inset-bottom, 0px) + 24px));
+  }
+  .fomo-ritual-title { margin-right: 48px; }
+  .fomo-ritual-x {
+    top: 4px;
+    right: 4px;
+    z-index: 2;
+  }
+
+  @media (max-width: 420px) {
+    .card {
+      display: grid;
+      grid-template-columns: 56px minmax(0, 1fr);
+      grid-template-areas: "art body" "art action";
+      align-items: start;
+      gap: 8px 10px;
+    }
+    .card > canvas { grid-area: art; width: 56px; height: 56px; }
+    .card > div:not(.right) { grid-area: body; }
+    .card .right {
+      grid-area: action;
+      margin-left: 0;
+      max-width: none;
+      text-align: left;
+    }
+    #buildingsScreen .buildings-wallet,
+    #buildingsWallet.buildings-wallet {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      justify-content: stretch;
+    }
+    #buildingsScreen .buildings-wallet-chip {
+      width: 100%;
+      min-width: 0;
+      justify-content: space-between;
+      padding: 6px 8px;
+    }
+    .island-info { padding: 10px 10px; }
+    .island-info-chip { padding: 4px 8px; }
+    .dex-filter-btn { padding: 7px 8px; }
+    .gear-filter-btn { padding: 8px 8px; font-size: 11px; }
+    .hub-tile { padding-right: 32px; }
+    .hub-tile-featured::before { right: 32px; max-width: calc(100% - 48px); }
+    .settings-home-tile {
+      grid-template-columns: 32px minmax(0, 1fr);
+    }
+    .settings-home-tile .hub-tile-stat {
+      grid-column: 2;
+      grid-row: auto;
+      justify-self: start;
+      max-width: 100%;
+    }
+    .style-grid { grid-template-columns: 1fr 1fr; }
+    #summonScreen .summon-goto-row { grid-template-columns: 1fr 1fr; }
+    .summon-stage { max-height: min(32vh, 220px); }
+    #summonScreen .sub-home-bar { margin-top: 8px; }
+    #summonScreen .summon-rail { gap: 6px; }
+    .gear-hero, .gear-slot-list, .gear-inv, .gear-weapon-aside,
+    #gearScreen .gear-screen-head { width: min(94vw, 100%); }
+  }
+
+  @media (min-width: 860px) {
+    #gearScreen.gear-screen.active {
+      display: grid;
+      grid-template-columns: minmax(280px, 360px) minmax(320px, 1fr);
+      grid-template-areas:
+        "back back"
+        "head head"
+        "hero slots"
+        "hero aside"
+        "inv inv"
+        "home home";
+      justify-content: center;
+      column-gap: 16px;
+      row-gap: 8px;
+      padding-left: max(20px, env(safe-area-inset-left));
+      padding-right: max(20px, env(safe-area-inset-right));
+    }
+    #gearScreen > .back-btn { grid-area: back; width: auto; }
+    #gearScreen .gear-screen-head { grid-area: head; width: 100%; }
+    #gearScreen .gear-hero { grid-area: hero; width: 100%; }
+    #gearScreen #gearWeaponAside { grid-area: aside; width: 100%; }
+    #gearScreen #gearSlotList { grid-area: slots; width: 100%; }
+    #gearScreen .gear-inv { grid-area: inv; width: 100%; max-width: none; }
+    #gearScreen .sub-home-bar { grid-area: home; width: 100%; }
+    #buildingsScreen .buildings-wallet,
+    #buildingsWallet.buildings-wallet { width: min(94vw, 860px); }
+    #summonScreen .summon-rail { width: min(var(--ui-rail-wide), 720px); }
+  }
+
+  /* Landscape phone (844×390): drop vista, shrink hub so tiles+dock stay on-screen. */
+  @media (orientation: landscape) and (max-height: 420px) {
+    #menuScreen.menu-video-overhaul .menu-stage {
+      height: 0;
+      display: none;
+    }
+    #menuScreen.menu-video-overhaul .menu-title-glass {
+      margin: 0 auto 4px;
+      padding: 2px 10px 4px;
+    }
+    #menuScreen.menu-video-overhaul h1.title.arcade-logo {
+      font-size: clamp(18px, 4vw, 24px);
+    }
+    #menuScreen.menu-video-overhaul .menu-landing-footer {
+      padding-top: 2px;
+      padding-bottom: max(4px, env(safe-area-inset-bottom));
+    }
+    .hub-tile-grid { gap: 6px; }
+    .hub-tile,
+    .hub-tile-adventure,
+    #menuScreen.menu-video-overhaul .hub-tile {
+      min-height: 48px;
+      padding: 6px 32px 6px 10px;
+    }
+    .menu-dock .btn.tog { min-height: 36px; font-size: 8px; padding: 4px 2px 3px; }
+    #resultScreen .bigres { margin: 8px 0 4px; font-size: min(8vw, 40px); }
+    #resultScreen .result-cta-primary { min-height: 56px; font-size: 18px; }
+    #resultScreen .stars-big { margin: 4px 0 6px; font-size: min(6vw, 28px); }
+    #resultScreen .result-cta-dock { padding-top: 6px; }
+    body:not(.is-playing) #toastHost,
+    body.toast-under-title #toastHost {
+      top: auto;
+      bottom: max(52px, calc(env(safe-area-inset-bottom, 0px) + 44px));
+    }
+    body:has(#resultScreen.active) #toastHost {
+      top: max(72px, calc(env(safe-area-inset-top, 0px) + 64px));
+      bottom: auto;
+    }
   }
 

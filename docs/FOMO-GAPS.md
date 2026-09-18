@@ -140,6 +140,7 @@ Do **not** rename `SAVE_KEY`.
 - [ ] Counts match `chestSummonsLeft` / live tasks (never hardcoded 10).
 - [ ] Second open same day: no sheet; `#btnMissions` still `tog-alert` if claimable.
 - [ ] Versus string absent. `npm test` green.
+- [ ] **EX-021** (390): `#fomoRitual` above HOME tiles / sticky footer / toast (`--z-fomo`). Open lock: `#menuScreen.is-fomo` + chrome/stage `inert` + `pointer-events:none`. X / backdrop dismiss clears the lock. Sheet ≥24px above gesture strip. No nuclear `.screen { display:none !important }`.
 
 ---
 

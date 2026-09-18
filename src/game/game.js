@@ -4282,7 +4282,8 @@ class Game {
     c.font = '800 10px -apple-system, sans-serif';
     const tw = c.measureText(label).width;
     const padX = 8;
-    const w = tw + padX * 2;
+    const maxChip = Math.max(80, (typeof W === 'number' ? W : 390) - 48);
+    const w = Math.min(tw + padX * 2, maxChip);
     const h = 16;
     const x = cx - w / 2;
     const y = cy - h / 2;
@@ -4296,7 +4297,14 @@ class Game {
     c.fillStyle = col;
     c.textAlign = 'center';
     c.textBaseline = 'middle';
-    c.fillText(label, cx, cy + 0.5);
+    let chipTxt = label;
+    if (c.measureText(chipTxt).width > w - padX * 2) {
+      while (chipTxt.length > 1 && c.measureText(chipTxt + '…').width > w - padX * 2) {
+        chipTxt = chipTxt.slice(0, -1);
+      }
+      chipTxt = chipTxt.replace(/\s+$/, '') + '…';
+    }
+    c.fillText(chipTxt, cx, cy + 0.5);
     c.restore();
     c.textBaseline = 'alphabetic';
     c.textAlign = 'left';
@@ -5217,6 +5225,7 @@ class Game {
         const hpPct = p.hp / Math.max(1, p.maxhp);
         const proj = starsFromHpPct(hpPct);
         const prevBest = this.advPrevStars || 0;
+        const star0 = W - rightPad - 46;
         for (let i = 0; i < 3; i++) {
           const ghost = prevBest > 0 && i < prevBest && i >= proj;
           drawStarShape(c, starX0 + 6 + i * 19, starY, 8, ghost ? 'rgba(255,215,94,.22)' : '#ffd75e', !ghost && i < proj);
@@ -5291,8 +5300,17 @@ class Game {
         else if (hpPct <= STAR_HP.three) starHint = t('hud.star3', { pct: Math.round(STAR_HP.three * 100) });
         c.font = '700 11px sans-serif';
         c.fillStyle = 'rgba(255,255,255,.7)';
-        c.fillText(t('hud.hpPct', { pct, hint: starHint }), W / 2, hy);
-        hy += 14;
+        const hpLine = t('hud.hpPct', { pct, hint: starHint });
+        const hpMax = Math.max(140, W - rightPad - 24);
+        if (typeof fillHudWrapped === 'function') {
+          const used = fillHudWrapped(c, hpLine, W / 2, hy, {
+            fill: 'rgba(255,255,255,.7)', maxW: hpMax, maxLines: 2, lineH: 13,
+          });
+          hy += Math.max(14, used);
+        } else {
+          c.fillText(hpLine, W / 2, hy);
+          hy += 14;
+        }
       }
       if (!compact && this.waveIdx >= 0 && (this.spawnQueue.length > 0 || this.monsters.some((m) => m.alive))) {
         const rem = this.spawnQueue.length + this.monsters.filter((m) => m.alive).length;
