@@ -78,6 +78,10 @@ must(/emptyFirst/.test(i18n) && /emptyFilterAct/.test(i18n) && /pauseNoneHint/.t
 must(/emptyFirst/.test(ui) && /pets-empty-btn/.test(ui), 'empty-state CTA missing');
 must(/overflow-y:\s*auto/.test(css) && /#petScreen \.pets-list/.test(css),
   '390 list must scroll independently');
+must(/data-pets-egg/.test(css) && /MM-002/.test(css) && /MM-011/.test(css),
+  'fold-first pets CSS (MM-002/011) missing');
+must(/grid-template-columns:\s*repeat\(3/.test(css),
+  '844×390 pets list must show 3 cards on the fold');
 must(manifest.includes('src/ui/pets-ui.js'), 'manifest missing pets-ui');
 must(/No Versus/.test(docs), 'docs must keep Versus retired');
 must(/speel\.html/.test(docs), 'docs must keep speel.html share URL');
@@ -132,9 +136,13 @@ async function runBrowser() {
       if (screen.getAttribute('data-pets-pane') !== 'list') return { ok: false, why: 'must start on list' };
       const wallet = document.getElementById('petsWallet');
       if (!wallet || !wallet.querySelector('.pets-wallet-chip')) return { ok: false, why: 'wallet chips missing' };
-      const hero = document.getElementById('petsHeroCanvas');
-      const heroBox = hero && hero.getBoundingClientRect();
-      if (!heroBox || heroBox.height < 60) return { ok: false, why: 'hero too small', h: heroBox && heroBox.height };
+      const heroWrap = document.getElementById('petsHero');
+      const heroDisp = heroWrap ? getComputedStyle(heroWrap).display : '';
+      if (heroDisp !== 'none') {
+        const hero = document.getElementById('petsHeroCanvas');
+        const heroBox = hero && hero.getBoundingClientRect();
+        if (!heroBox || heroBox.height < 32) return { ok: false, why: 'hero too small', h: heroBox && heroBox.height };
+      }
       const next = document.getElementById('petsNext');
       if (!next || !(next.textContent || '').trim()) return { ok: false, why: 'next-goal empty' };
       const heroPerk = (document.getElementById('petsHeroPerk') || {}).textContent || '';
@@ -170,6 +178,22 @@ async function runBrowser() {
       if (eggReady && crack.getBoundingClientRect().height < 40) {
         return { ok: false, why: 'egg CTA not visible', h: crack.getBoundingClientRect().height };
       }
+      const vh = window.innerHeight;
+      const inFold = (el) => {
+        if (!el) return false;
+        const r = el.getBoundingClientRect();
+        const st = getComputedStyle(el);
+        if (st.display === 'none' || el.hidden) return false;
+        return r.bottom > 8 && r.top < vh - 4 && r.height > 16;
+      };
+      const foldCards = cards.filter(inFold);
+      if (foldCards.length < 3) {
+        return { ok: false, why: 'list below fold', n: foldCards.length, vh, firstTop: cards[0] && cards[0].getBoundingClientRect().top };
+      }
+      const primary = (eggReady && !crack.hidden) ? crack : (next.hidden ? foldCards[0] : next);
+      if (!inFold(primary)) {
+        return { ok: false, why: 'primary CTA off-fold', vh, top: primary && primary.getBoundingClientRect().top };
+      }
       const first = cards[0];
       first.click();
       if (screen.getAttribute('data-pets-pane') !== 'detail') return { ok: false, why: 'tap did not open detail' };
@@ -178,9 +202,47 @@ async function runBrowser() {
       if (!/Wat doet|What does|Was macht|Ça fait|Qué hace/i.test(detail.textContent || '')) {
         return { ok: false, why: 'what-does-this-do missing', text: detail.textContent };
       }
+      const detailCta = detail.querySelector('.pets-cta');
+      if (!inFold(detailCta)) {
+        return { ok: false, why: 'detail CTA off-fold', top: detailCta.getBoundingClientRect().top, vh };
+      }
       const versus = document.querySelector('[data-hub="versus"]');
       if (versus) return { ok: false, why: 'versus tile must stay gone' };
-      return { ok: true, n: cards.length, next: next.textContent };
+      return { ok: true, n: cards.length, fold: foldCards.length, next: next.textContent };
+    } catch (err) {
+      return { ok: false, why: String(err && err.message || err) };
+    }
+  });
+
+  await page.setViewport({ width: 844, height: 390, isMobile: true, hasTouch: true });
+  const land = await page.evaluate(() => {
+    try {
+      if (typeof UI.petsShowList === 'function') UI.petsShowList();
+      else UI.openPets();
+      const vh = window.innerHeight;
+      const inFold = (el) => {
+        if (!el) return false;
+        const r = el.getBoundingClientRect();
+        const st = getComputedStyle(el);
+        if (st.display === 'none' || el.hidden) return false;
+        return r.bottom > 8 && r.top < vh - 4 && r.height > 16;
+      };
+      const cards = [...document.querySelectorAll('#petList [data-pet-id]')];
+      const foldCards = cards.filter(inFold);
+      if (foldCards.length < 3) {
+        return { ok: false, why: 'land list below fold', n: foldCards.length, vh, firstTop: cards[0] && cards[0].getBoundingClientRect().top };
+      }
+      const crack = document.getElementById('eggCrackBtn');
+      const next = document.getElementById('petsNext');
+      const eggReady = typeof canCrackDailyEgg === 'function' && canCrackDailyEgg();
+      const primary = (eggReady && crack && !crack.hidden) ? crack : foldCards[0];
+      if (!inFold(primary)) return { ok: false, why: 'land primary CTA off-fold' };
+      foldCards[0].click();
+      const detailCta = document.querySelector('#petDetail .pets-cta');
+      if (!inFold(detailCta)) {
+        return { ok: false, why: 'land detail CTA off-fold', top: detailCta && detailCta.getBoundingClientRect().top, vh };
+      }
+      return { ok: true, fold: foldCards.length };
     } catch (err) {
       return { ok: false, why: String(err && err.message || err) };
     }
@@ -192,7 +254,11 @@ async function runBrowser() {
     console.error('SMOKE_FAIL pets-ui browser', result);
     process.exit(1);
   }
-  console.log('SMOKE_OK pets-ui browser', result);
+  if (!land.ok) {
+    console.error('SMOKE_FAIL pets-ui landscape 844×390', land);
+    process.exit(1);
+  }
+  console.log('SMOKE_OK pets-ui browser', result, land);
 }
 
 runBrowser().catch((e) => { console.error('SMOKE_FAIL', e); process.exit(1); });

@@ -165,7 +165,8 @@ if (typeof UI === 'object' && UI) {
       ? petsNextGoalLine()
       : petsTxt('pets.nextHint', 'Hunt in the monster book or play coin bonus');
     el.textContent = line;
-    el.hidden = !line;
+    const eggReady = (typeof canCrackDailyEgg === 'function') ? canCrackDailyEgg() : false;
+    el.hidden = !line || eggReady;
     const act = !!(goal && (goal.kind === 'egg' || goal.kind === 'claim' || goal.kind === 'buy'));
     el.classList.toggle('is-act', act);
     el.disabled = !act;
@@ -197,6 +198,11 @@ if (typeof UI === 'object' && UI) {
       try { ensureEggDaily(); } catch (_) {}
     }
     const ready = (typeof canCrackDailyEgg === 'function') ? canCrackDailyEgg() : false;
+    const scr = document.getElementById('petScreen');
+    if (scr) {
+      if (ready) scr.setAttribute('data-pets-egg', 'ready');
+      else scr.removeAttribute('data-pets-egg');
+    }
     crackBtn.hidden = !ready;
     crackBtn.disabled = !ready;
     crackBtn.classList.toggle('is-ready', ready);
@@ -364,6 +370,9 @@ if (typeof UI === 'object' && UI) {
       scr.classList.add('pets-screen');
       scr.setAttribute('data-pets-tab', tab);
       scr.setAttribute('data-pets-pane', this.petsPane === 'detail' ? 'detail' : 'list');
+      const eggReady = (typeof canCrackDailyEgg === 'function') ? canCrackDailyEgg() : false;
+      if (eggReady) scr.setAttribute('data-pets-egg', 'ready');
+      else scr.removeAttribute('data-pets-egg');
     }
     const bar = document.getElementById('petTabBar');
     if (bar) {
@@ -738,6 +747,7 @@ if (typeof UI === 'object' && UI) {
       + '<div class="pets-detail-art"><canvas id="petsDetailCanvas" width="96" height="96" aria-hidden="true"></canvas></div>'
       + '<div class="pets-detail-name">' + petsEscape(sp ? sp.name : rosterDef.id)
       + ' ' + petsRarityPill(sp ? sp.rarity : 'common') + '</div>'
+      + '<div class="pets-cta-stack">' + cta + '</div>'
       + '<div class="pets-effect">'
       + '<div class="pets-effect-kicker">' + petsEscape(petsTxt('pets.doesTitle', 'What does this do?')) + '</div>'
       + '<p class="pets-effect-blurb">' + petsEscape(perk) + '</p>'
@@ -749,8 +759,7 @@ if (typeof UI === 'object' && UI) {
         ? petsTxt('ui.petTamedAssist', 'Tamed · assist in adventure')
         : petsTxt('pets.killBar', '{cur}/{need} kills', { cur: Math.min(st.kills || 0, st.need || 1), need: st.need || 1 }))
       + '</div>'
-      + '<div class="pets-bar pets-bar-lg" aria-hidden="true"><span style="width:' + (st.tamed ? 100 : (st.pct || 0)) + '%;background:' + petsEscape(rar.color || '#ffd75e') + '"></span></div>'
-      + '<div class="pets-cta-stack">' + cta + '</div>';
+      + '<div class="pets-bar pets-bar-lg" aria-hidden="true"><span style="width:' + (st.tamed ? 100 : (st.pct || 0)) + '%;background:' + petsEscape(rar.color || '#ffd75e') + '"></span></div>';
     const cv = document.getElementById('petsDetailCanvas');
     if (cv && sp && typeof drawMonsterArt === 'function') {
       const cc = cv.getContext('2d');
@@ -792,12 +801,12 @@ if (typeof UI === 'object' && UI) {
       '<button type="button" class="pets-overview-btn" data-pets-act="list">' + petsEscape(petsTxt('pets.backList', '← Overview')) + '</button>'
       + '<div class="pets-detail-art"><canvas id="petsDetailCanvas" width="96" height="96" aria-hidden="true"></canvas></div>'
       + '<div class="pets-detail-name">' + petsEscape(owned ? name : '???') + ' ' + petsRarityPill(rosterDef.rarity) + '</div>'
+      + '<div class="pets-cta-stack">' + cta + '</div>'
       + '<div class="pets-effect">'
       + '<div class="pets-effect-kicker">' + petsEscape(petsTxt('pets.doesTitle', 'What does this do?')) + '</div>'
       + '<p class="pets-effect-blurb">' + petsEscape(owned ? perk : petsTxt('ui.eggUnhatched', 'Not hatched yet')) + '</p>'
       + '<p class="pets-effect-now">' + petsEscape(petsTxt('pets.eggCosmeticHero', 'Look only — no combat boost')) + '</p>'
-      + '</div>'
-      + '<div class="pets-cta-stack">' + cta + '</div>';
+      + '</div>';
     const cv = document.getElementById('petsDetailCanvas');
     if (cv && typeof drawEggPetArt === 'function') {
       const cc = cv.getContext('2d');

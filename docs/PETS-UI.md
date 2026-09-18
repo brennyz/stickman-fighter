@@ -34,6 +34,7 @@ Feel-only — assist damage and cooldown numbers unchanged.
 - **List → detail** (Android portrait: list first; tap a row for “What does this do?”)
 - List cards stay short on 390px: name + rarity + `{cur}/{need} · {cost} PC` (perk lives in detail)
 - **390 empty/equip:** hero perk = next-goal (not “tap a row”); tamed-filter empty has **Show all**; pause chip “hunt or buy”. List scrolls inside the pane (no whole-screen drag). Combat follow P0 left as-is.
+- **Fold-first (MM-002 / MM-011):** portrait 390 + landscape 844×390 put the dex list (≥3 cards) and the primary CTA (daily egg, else next-goal / first card) on first paint. Hero / jump / sub-home drop off the fold; triple-egg next-goal hides when the crack CTA is up. Detail Equip/Tame/Buy sits under the name (sticky on short viewports).
 - Detail CTAs: Equip / Unequip / Tame now (if kills already met) / Buy
 - **Pause pet chip**: no tamed = copy only; unequipped = one-tap first tamed; equipped = cycle. Stays in pause (no mid-fight screen hop)
 - EN / DE / NL / FR / ES chrome for the new UI
