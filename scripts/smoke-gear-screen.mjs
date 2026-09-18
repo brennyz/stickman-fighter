@@ -91,6 +91,9 @@ must(/\.gear-filter-btn/.test(css), 'filter chips CSS missing');
 must(/\.gear-card-action/.test(css) && /\.gear-detail-actions/.test(css) && /\.gear-unequip-all/.test(css) && /\.gear-hunt-cta/.test(css), 'equip/unequip/lock affordances CSS missing');
 must(!/\.gear-detail-actions\s*\{\s*display:\s*none/.test(css), 'detail actions must be visible');
 must(/min-width:\s*900px/.test(css) && /grid-template-columns/.test(css), 'desktop two-column gear layout missing');
+must(/orientation:\s*landscape\)\s*and\s*\(max-height:\s*500px\)/.test(css)
+  && /grid-template-areas:[\s\S]{0,80}"hero slots"/.test(css),
+  'MM-010 landscape compact loadout (doll|slots) missing');
 must(!/\.screen\s*\{\s*display:\s*none\s*!important/.test(css), 'nuclear display:none forbidden');
 
 const chrome = ['/usr/local/bin/google-chrome', '/usr/bin/google-chrome'].find((p) => fs.existsSync(p));
@@ -198,6 +201,21 @@ async function run() {
       const subBox = subEl.getBoundingClientRect();
       if (Math.abs(titleBox.top - subBox.top) < 8) {
         return { ok: false, why: 'slot title/sub stacked inline', title: titleEl.textContent, sub: subEl.textContent };
+      }
+
+      screen.scrollTop = 0;
+      const foldH = window.innerHeight;
+      const lastSlot = cards[cards.length - 1].getBoundingClientRect();
+      if (lastSlot.bottom > foldH + 8) {
+        return { ok: false, why: 'MM-010 390 slots off first paint', bottom: lastSlot.bottom, vh: foldH };
+      }
+      const huntBox = hunt.getBoundingClientRect();
+      if (huntBox.bottom > foldH + 8) {
+        return { ok: false, why: 'MM-010 390 hunt CTA off first paint', bottom: huntBox.bottom, vh: foldH };
+      }
+      const allOffBox = allOff.getBoundingClientRect();
+      if (allOffBox.bottom > foldH + 12) {
+        return { ok: false, why: 'MM-010 390 unequip off first paint', bottom: allOffBox.bottom, vh: foldH };
       }
 
       const chips = [...document.querySelectorAll('#gearFilterBar [data-gear-filter]')];
@@ -526,6 +544,38 @@ async function run() {
     return { ok: true };
   });
 
+  await page.setViewport({ width: 844, height: 390, isMobile: true, hasTouch: true, isLandscape: true });
+  await page.evaluate(() => {
+    const screen = document.getElementById('gearScreen');
+    if (screen) screen.scrollTop = 0;
+    UI.safeOpen('gearScreen', () => UI.renderGear());
+    if (screen) screen.scrollTop = 0;
+  });
+  await page.evaluate(() => new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r))));
+  const land = await page.evaluate(() => {
+    const vh = window.innerHeight;
+    const screen = document.getElementById('gearScreen');
+    if (screen) screen.scrollTop = 0;
+    const slots = [...document.querySelectorAll('#gearSlotList [data-slot]')];
+    if (slots.length !== 5) return { ok: false, why: 'land slots', n: slots.length };
+    const first = slots[0].getBoundingClientRect();
+    const last = slots[slots.length - 1].getBoundingClientRect();
+    if (first.top < -4 || last.bottom > vh + 12) {
+      return { ok: false, why: 'MM-010 844x390 slots off first paint', top: first.top, bottom: last.bottom, vh };
+    }
+    const doll = document.getElementById('gearDollCanvas');
+    const db = doll && doll.getBoundingClientRect();
+    const weapon = document.getElementById('gearWeaponAside');
+    const wb = weapon && weapon.getBoundingClientRect();
+    if (!wb || wb.bottom > vh + 12) {
+      return { ok: false, why: 'MM-010 844x390 weapon off first paint', bottom: wb && wb.bottom, vh };
+    }
+    if (db && db.bottom > vh && last.top > vh) {
+      return { ok: false, why: 'MM-010 doll-only first paint', dollBottom: db.bottom, slotTop: last.top, vh };
+    }
+    return { ok: true, slotBottom: last.bottom, weaponBottom: wb.bottom, vh, dollH: db && db.height };
+  });
+
   await browser.close();
   try { if (server && server.close) server.close(); } catch (_) {}
   if (!result || !result.ok) {
@@ -536,7 +586,11 @@ async function run() {
     console.error('SMOKE_FAIL gear-screen desktop', desk);
     process.exit(1);
   }
-  console.log('SMOKE_OK gear-screen', result.cards.join(','), result.catalog, result.aside);
+  if (!land || !land.ok) {
+    console.error('SMOKE_FAIL gear-screen landscape', land);
+    process.exit(1);
+  }
+  console.log('SMOKE_OK gear-screen', result.cards.join(','), result.catalog, result.aside, 'land', land.slotBottom + '/' + land.vh);
 }
 
 run().catch((err) => {

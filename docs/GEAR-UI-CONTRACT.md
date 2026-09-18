@@ -52,7 +52,7 @@ From `gearTooltipModel`: **LOOK** if vanity / `!appliesStats`. **STAT** if `appl
 
 ## Catalog UX
 
-131 items. Filter chips (all / Look / Stats / Lock / owned) + rarity + search + **Wis filters**. **One page-scroll** (no nested picker `max-height`). Desktop ≥900px: loadout sticky left, sheet right. Tap item = equip/unequip; sheet `#gearDetail` has Aandoen / Uitdoen / lock reason. Slot rows are select-only (no per-row Uitdoen). `#gearUnequipAll` is a two-tap confirm. First-time starter-only loadout shows `#gearHuntCta` → Avontuur. HOME tile `#btnGearHome` (`data-hub="gear"`) is 1 tap from HOME.
+131 items. Filter chips (all / Look / Stats / Lock / owned) + rarity + search + **Wis filters**. **One page-scroll** (no nested picker `max-height`). Phone 390 + short landscape (844×390 / MM-010): compact loadout so **slots + hunt/unequip land on first paint** (doll shrinks; landscape = doll | 2-col slots). Catalog stays page-scroll under a sheet-styled `#gearInv`. Desktop ≥900px: loadout sticky left, sheet right. Tap item = equip/unequip; sheet `#gearDetail` has Aandoen / Uitdoen / lock reason. Slot rows are select-only (no per-row Uitdoen). `#gearUnequipAll` is a two-tap confirm. First-time starter-only loadout shows `#gearHuntCta` → Avontuur. HOME tile `#btnGearHome` (`data-hub="gear"`) is 1 tap from HOME.
 
 ## UI IDs
 

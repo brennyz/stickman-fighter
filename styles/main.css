@@ -4788,11 +4788,140 @@
     .gear-card-name .gear-pill-on { display: none; }
     .gear-summary { gap: 4px; }
     .gear-pill { padding: 3px 7px; }
+    /* MM-010/001: 390 first paint — slots + hunt/unequip, not doll-only */
+    #gearScreen .head { font-size: clamp(22px, 6.4vw, 30px); margin: 0 0 2px; }
+    #gearScreen .subtitle {
+      display: -webkit-box;
+      -webkit-line-clamp: 1;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+      margin: 0 0 4px;
+      font-size: 12px;
+    }
+    #gearScreen .gear-screen-head { margin: 0 auto 4px; }
+    #gearScreen > .back-btn { margin-bottom: 4px; }
+    #gearScreen .gear-hero { padding: 8px 8px 6px; gap: 4px; }
+    #gearScreen .gear-doll-canvas {
+      width: min(48vw, 168px);
+      height: min(44vw, 172px);
+      max-height: 172px;
+    }
+    #gearScreen .gear-hunt-cta {
+      flex-direction: row;
+      align-items: center;
+      padding: 8px 10px;
+      margin-bottom: 8px;
+      gap: 8px;
+    }
+    #gearScreen .gear-hunt-copy {
+      flex: 1;
+      min-width: 0;
+      font-size: 12px;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+    #gearScreen .gear-hunt-btn {
+      flex: 0 0 auto;
+      min-width: 120px;
+      min-height: max(44px, var(--touch-min));
+      padding: 8px 10px;
+      font-size: 13px;
+    }
+    #gearScreen .gear-weapon-aside.hub-tile,
+    #gearScreen .gear-weapon-aside {
+      min-height: max(48px, var(--touch-min));
+      padding: 8px 14px 8px 10px;
+    }
+    #gearScreen .gear-loadout { gap: 8px; }
+    #gearScreen .gear-slot-list { gap: 6px; }
+    #gearScreen .gear-slot-card.hub-tile,
+    #gearScreen .gear-slot-card {
+      min-height: max(48px, var(--touch-min));
+      padding: 8px 12px;
+    }
+    #gearScreen .gear-unequip-all { margin-top: 4px; }
   }
   @media (max-width: 380px) {
-    .gear-doll-canvas { width: min(78vw, 200px); height: min(50vw, 240px); }
+    .gear-doll-canvas { width: min(48vw, 160px); height: min(44vw, 172px); max-height: 172px; }
     .gear-slot-title { font-size: 14px; }
     .gear-card-action { min-width: 64px; font-size: 10px; }
+  }
+  /* MM-010: 844×390 — compact loadout + sheet peek, slots on first paint */
+  @media (orientation: landscape) and (max-height: 500px) {
+    #gearScreen.gear-screen {
+      padding-top: max(6px, calc(env(safe-area-inset-top) + 2px));
+      padding-bottom: max(12px, calc(env(safe-area-inset-bottom) + 8px));
+    }
+    #gearScreen .gear-screen-head { margin: 0 auto 4px; width: min(96vw, 100%); }
+    #gearScreen .head { font-size: clamp(18px, 4vw, 24px); margin: 0; }
+    #gearScreen .subtitle { display: none; }
+    #gearScreen > .back-btn { margin-bottom: 4px; }
+    #gearScreen .gear-hunt-cta {
+      width: min(96vw, 100%);
+      flex-direction: row;
+      align-items: center;
+      padding: 6px 10px;
+      margin: 0 auto 6px;
+      gap: 8px;
+    }
+    #gearScreen .gear-hunt-copy { display: none; }
+    #gearScreen .gear-hunt-btn {
+      flex: 1 1 auto;
+      min-height: max(44px, var(--touch-min));
+      padding: 6px 12px;
+    }
+    #gearScreen .gear-layout { width: min(96vw, 100%); }
+    #gearScreen .gear-loadout {
+      display: grid;
+      grid-template-columns: minmax(112px, 26vw) minmax(0, 1fr);
+      grid-template-areas:
+        "hero slots"
+        "hero aside"
+        "hero unequip";
+      column-gap: 10px;
+      row-gap: 6px;
+      align-items: start;
+    }
+    #gearScreen .gear-hero { grid-area: hero; padding: 6px; gap: 4px; }
+    #gearScreen #gearSlotList { grid-area: slots; }
+    #gearScreen #gearWeaponAside { grid-area: aside; }
+    #gearScreen #gearUnequipAll { grid-area: unequip; margin: 0; }
+    #gearScreen .gear-doll-canvas {
+      width: min(24vw, 132px);
+      height: min(52vh, 168px);
+      max-height: 168px;
+    }
+    #gearScreen .gear-slot-list {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 6px;
+    }
+    #gearScreen .gear-slot-card.hub-tile,
+    #gearScreen .gear-slot-card {
+      min-height: max(44px, var(--touch-min));
+      padding: 6px 8px;
+      gap: 6px;
+    }
+    body.big-touch #gearScreen .gear-slot-card { min-height: max(44px, var(--touch-min)); }
+    #gearScreen .gear-slot-title { font-size: 13px; -webkit-line-clamp: 1; }
+    #gearScreen .gear-slot-sub { -webkit-line-clamp: 1; font-size: 11px; }
+    #gearScreen .gear-weapon-aside.hub-tile,
+    #gearScreen .gear-weapon-aside {
+      min-height: max(44px, var(--touch-min));
+      padding: 6px 12px 6px 10px;
+    }
+    #gearScreen .gear-summary { gap: 4px; }
+    #gearScreen .gear-summary .gear-pill { padding: 2px 6px; font-size: 9px; }
+    #gearScreen .gear-inv {
+      margin-top: 8px;
+      padding: 10px 10px 4px;
+      border-radius: 16px 16px 0 0;
+      border: 1px solid var(--menu-edge);
+      background: var(--menu-tile-solid);
+      box-shadow: 0 -4px 18px rgba(0, 0, 0, 0.28);
+    }
   }
   @media (min-width: 900px) {
     #gearScreen .gear-screen-head,
