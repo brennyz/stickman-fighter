@@ -20,8 +20,8 @@
     "featureBranch": "cursor/summons-cleanup-18b8",
     "pushBlocked": null,
     "shareUrl": "https://brennyz.github.io/stickman-fighter/speel.html",
-    "note": "Draft #313 keep-going: gold primary, flatten glance, idle juice off. 390+desktop. Versus + speel.html untouched. No main.",
-    "updated": "2026-09-18T13:42:00Z",
+    "note": "DONE #313 sprint (P0–P2). Remaining leftover is P3-only. Versus + speel.html untouched. No main.",
+    "updated": "2026-09-18T13:46:00Z",
     "localMainHead": "a18fc9e67633773cb18b638c64c9a86916d02d27",
     "remoteMainHead": "a18fc9e67633773cb18b638c64c9a86916d02d27"
   },
@@ -41,19 +41,27 @@
         "pr": 313,
         "url": "https://github.com/brennyz/stickman-fighter/pull/313",
         "branch": "cursor/summons-cleanup-18b8",
-        "title": "Summon systems: clearer chest flow + cleaner mobile UI",
-        "note": "Keep-going: gold primary + idle juice off. Draft only. Do not merge until Brendon says merge."
+        "title": "DONE: Summon systems — clearer chest flow + cleaner mobile UI",
+        "note": "DONE for sprint (P0–P2). P3 leftover. Draft — do not merge until Brendon says merge."
       }
     ]
   },
   "userWishlist": [
+    {
+      "id": "w-20260918T134500",
+      "from": "user",
+      "text": "Good. Mark #313 DONE for sprint unless a clear P0 remains. No main.",
+      "status": "done-in-code",
+      "updated": "2026-09-18",
+      "notes": "Docs-only: no clear P0 left. Mark #313 DONE for sprint. Draft, no main."
+    },
     {
       "id": "w-20260918T133900",
       "from": "user",
       "text": "Keep going on PR #313 (same branch). Summons are still a top P0 (messy/ugly). Clean visual hierarchy, readable states, less clutter; juice on summon/hit only when it helps feel, not UI spam. One clear primary action on the summons flow. Mobile ~390px + desktop PWA; no Android native; do not merge to main. Push more commits to this PR.",
       "status": "done-in-code",
       "updated": "2026-09-18",
-      "notes": "Same #313: gold primary wins, flatten glance, idle juice off, 390+desktop smoke."
+      "notes": "Draft #313: gold Open kist beats menu-tile unify; glance flattened; idle rays/FX off until shake/card. smoke:summon 390+1280 + menu green. Versus + speel.html untouched."
     },
     {
       "id": "w-20260918T130500",
@@ -1114,6 +1122,10 @@
   ],
   "sessionLog": [
     {
+      "at": "2026-09-18T13:46:01Z",
+      "summary": "#313 DONE for sprint (P0–P2). Geen heldere P0 over. P3 leftover. v1.18.179 / SW 389. Draft, niet main."
+    },
+    {
       "at": "2026-09-18T13:43:42Z",
       "summary": "#313 keep-going: gold Open kist primary, flatten glance, idle juice off. smoke:summon 390+1280 groen. v1.18.179 / SW 389. Draft, niet main."
     },
@@ -1208,10 +1220,6 @@
     {
       "at": "2026-09-14T13:49:29Z",
       "summary": "Arcade pick-mode HOME-tegels + chrome i18n volgt taal. PR #264. #263 geparkeerd. Niet stil main."
-    },
-    {
-      "at": "2026-09-14T13:44:04Z",
-      "summary": "Arcade pick-mode restyle + i18n chrome volgt game-taal"
     }
   ],
   "implementedFeaturesSummary": "d18 char select deel 1+2 (v1.11.1-2); Mats coinrun + shuriken mik/vliegers + anti-spam (v1.12.0); speel.html (v1.12.2+). Zie HANDOFF-ZOEKINDEX.md en improvement-d20-bag.json userFeatureLog.",
