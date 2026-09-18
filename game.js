@@ -2335,14 +2335,14 @@ const I18N = {
       step: 'Stap 2 · Kies modus', solo: 'SOLO', collection: 'COLLECTIE',
       arcadeTitle: 'Arcade', arcadeSub: 'Snelle sessies · save blijft hier',
       collectTitle: 'Collectie', collectSub: 'Uitrusting · wapens · pets · stijl',
-      gear: 'Uitrusting', gearSub: '5 slots · look vs stats', gearSubEmpty: 'Leeg · vind in avontuur',
+      gear: 'Uitrusting', gearSub: '5 slots · look vs stats', gearSubEmpty: 'Starter · vind drops in avontuur',
       training: 'Training', trainingSub: '1v1 · RabbitRobot · oefenen',
       wall: 'Muur Slopen', wallSub: '60 sec · combo = sneller',
       mats: 'Muntjes', matsSub: '45 sec · munten → pet coins',
       weapons: 'Wapens', weaponsSub: '26 wapens · summon ascends',
       pets: 'Pets', petsSub: 'Muntjes · dex temmen · ei arcade',
       style: 'Stijl', styleSub: 'Bandana & outfit unlocks',
-      gear: 'Uitrusting', gearSub: '5 slots · pantser & cosmetics', gearSubEmpty: 'Leeg · vind in avontuur',
+      gear: 'Uitrusting', gearSub: '5 slots · pantser & cosmetics', gearSubEmpty: 'Starter · vind drops in avontuur',
       skills: 'Skills', skillsSub: 'Energy specials · Spiral Orb · Wave Cannon',
       upgrades: 'Upgrades', upgradesSub: 'Shards · techniek uitrusten',
       dex: 'Monsterboek', dexSub: '{n} soorten · rariteit = HP · boerderij · zoo · zee · woud · crypte · schroot · vorst',
@@ -2624,14 +2624,14 @@ const I18N = {
       step: 'Step 2 · Pick mode', solo: 'SOLO', collection: 'COLLECTION',
       arcadeTitle: 'Arcade', arcadeSub: 'Quick sessions · save stays here',
       collectTitle: 'Collection', collectSub: 'Gear · weapons · pets · style',
-      gear: 'Gear', gearSub: '5 slots · look vs stats', gearSubEmpty: 'Empty · find in Adventure',
+      gear: 'Gear', gearSub: '5 slots · look vs stats', gearSubEmpty: 'Starter · find drops in Adventure',
       training: 'Training', trainingSub: '1v1 · RabbitRobot · practice',
       wall: 'Wall Smash', wallSub: '60 sec · combo = faster',
       mats: 'Coins', matsSub: '45 sec · coins → pet coins',
       weapons: 'Weapons', weaponsSub: '26 weapons · summon ascends',
       pets: 'Pets', petsSub: 'Coins · dex tame · egg arcade',
       style: 'Style', styleSub: 'Bandana & outfit unlocks',
-      gear: 'Loadout', gearSub: '5 slots · armour & cosmetics', gearSubEmpty: 'Empty · find in Adventure',
+      gear: 'Loadout', gearSub: '5 slots · armour & cosmetics', gearSubEmpty: 'Starter · find drops in Adventure',
       skills: 'Skills', skillsSub: 'Energy specials · Spiral Orb · Wave Cannon',
       upgrades: 'Upgrades', upgradesSub: 'Shards · equip a technique',
       dex: 'Monster book', dexSub: '{n} species · rarity = HP · farm · zoo · sea · woods · crypt · scrap · frost',
@@ -2914,14 +2914,14 @@ const I18N = {
       step: 'Schritt 2 · Modus wählen', solo: 'SOLO', collection: 'SAMMLUNG',
       arcadeTitle: 'Arcade', arcadeSub: 'Schnelle Runden · Save bleibt hier',
       collectTitle: 'Sammlung', collectSub: 'Ausrüstung · Waffen · Pets · Stil',
-      gear: 'Ausrüstung', gearSub: 'Slots · Look', gearSubEmpty: 'Leer · im Abenteuer finden',
+      gear: 'Ausrüstung', gearSub: 'Slots · Look', gearSubEmpty: 'Starter · Drops im Abenteuer',
       training: 'Training', trainingSub: '1v1 · RabbitRobot · Üben',
       wall: 'Mauer', wallSub: '60 Sek · Combo = schneller',
       mats: 'Münzen', matsSub: '45 Sek · Münzen → Pet-Coins',
       weapons: 'Waffen', weaponsSub: '26 Waffen · Summons',
       pets: 'Pets', petsSub: 'Münzen · Dex zähmen',
       style: 'Stil', styleSub: 'Outfit-Freischaltungen',
-      gear: 'Ausrüstung', gearSub: '5 Slots · Rüstung & Kosmetik', gearSubEmpty: 'Leer · im Abenteuer finden',
+      gear: 'Ausrüstung', gearSub: '5 Slots · Rüstung & Kosmetik', gearSubEmpty: 'Starter · Drops im Abenteuer',
       skills: 'Skills', skillsSub: 'Energie-Spezials · Spiral Orb · Wave Cannon',
       upgrades: 'Upgrades', upgradesSub: 'Splitter · Technik ausrüsten',
       dex: 'Monsterbuch', dexSub: '{n} Arten · Seltenheit = HP · Farm · Zoo · Meer · Wald · Krypta · Schrott · Frost',
@@ -3195,14 +3195,14 @@ const I18N = {
       step: 'Étape 2 · Choisir le mode', solo: 'SOLO', collection: 'COLLECTION',
       arcadeTitle: 'Arcade', arcadeSub: 'Sessions rapides · sauvegarde ici',
       collectTitle: 'Collection', collectSub: 'Armes · pets · style · bestiaire',
-      gear: 'Équipement', gearSub: 'Slots · look', gearSubEmpty: 'Vide · à trouver en aventure',
+      gear: 'Équipement', gearSub: 'Slots · look', gearSubEmpty: 'Départ · drops en aventure',
       training: 'Entraînement', trainingSub: '1v1 · RabbitRobot · pratique',
       wall: 'Mur', wallSub: '60 s · combo = plus vite',
       mats: 'Pièces', matsSub: '45 s · pièces → pet coins',
       weapons: 'Armes', weaponsSub: '26 armes · invocations',
       pets: 'Pets', petsSub: 'Pièces · dex · œufs',
       style: 'Style', styleSub: 'Déblocages tenues',
-      gear: 'Équipement', gearSub: '5 emplacements · armure & cosmétique', gearSubEmpty: 'Vide · à trouver en aventure',
+      gear: 'Équipement', gearSub: '5 emplacements · armure & cosmétique', gearSubEmpty: 'Départ · drops en aventure',
       skills: 'Skills', skillsSub: 'Spéciaux énergie · Spiral Orb · Wave Cannon',
       upgrades: 'Améliorations', upgradesSub: 'Éclats · équiper une technique',
       dex: 'Bestiaire', dexSub: '{n} espèces · rareté = PV · ferme · zoo · mer · bois · crypte · ferraille · gel',
@@ -3455,14 +3455,14 @@ const I18N = {
       step: 'Paso 2 · Elige modo', solo: 'SOLO', collection: 'COLECCIÓN',
       arcadeTitle: 'Arcade', arcadeSub: 'Sesiones rápidas · partida aquí',
       collectTitle: 'Colección', collectSub: 'Armas · pets · estilo · bestiario',
-      gear: 'Equipo', gearSub: 'Slots · look', gearSubEmpty: 'Vacío · encuéntralo en Aventura',
+      gear: 'Equipo', gearSub: 'Slots · look', gearSubEmpty: 'Inicial · drops en Aventura',
       training: 'Entrenamiento', trainingSub: '1v1 · RabbitRobot · practicar',
       wall: 'Muro', wallSub: '60 s · combo = más rápido',
       mats: 'Monedas', matsSub: '45 s · monedas → pet coins',
       weapons: 'Armas', weaponsSub: '26 armas · invocaciones',
       pets: 'Pets', petsSub: 'Monedas · dex · huevos',
       style: 'Estilo', styleSub: 'Desbloqueos de outfit',
-      gear: 'Equipo', gearSub: '5 huecos · armadura y cosméticos', gearSubEmpty: 'Vacío · encuéntralo en Aventura',
+      gear: 'Equipo', gearSub: '5 huecos · armadura y cosméticos', gearSubEmpty: 'Inicial · drops en Aventura',
       skills: 'Skills', skillsSub: 'Especiales energía · Spiral Orb · Wave Cannon',
       upgrades: 'Mejoras', upgradesSub: 'Fragmentos · equipar técnica',
       dex: 'Bestiario', dexSub: '{n} especies · rareza = HP · granja · zoo · mar · bosque · cripta · chatarra · escarcha',
@@ -4165,6 +4165,7 @@ function applyLangStaticScreens() {
     installScreen: t('back.menu'),
   });
   UI.syncBackLabels();
+  try { if (UI.syncHubJuiceTiles) UI.syncHubJuiceTiles(); } catch (_) {}
 }
 
 function renderLangSwitchBar(bar) {
@@ -21729,9 +21730,9 @@ function seedNlFromRuntime() {
     filterSearch: 'Zoek in {n}…',
     filterEmpty: 'Niets in deze filter',
     filterClear: 'Wis filter',
-    emptyOwned: 'Nog geen uitrusting. Vind drops in Avontuur.',
+    emptyOwned: 'Nog geen drops. Vind sterkere uitrusting in Avontuur.',
     emptyOwnedCta: 'Naar avontuur',
-    emptySlotHint: 'Leeg slot — speel Avontuur om iets te vinden.',
+    emptySlotHint: 'Starter look — speel Avontuur om drops te vinden.',
     filterRarityAll: 'Alle',
     filterCount: '{shown}/{total} in {slot}',
     filterAria: 'Filter',
@@ -21800,9 +21801,9 @@ const CATALOG_EN = {
     filterSearch: 'Search {n}…',
     filterEmpty: 'Nothing in this filter',
     filterClear: 'Clear filter',
-    emptyOwned: 'No gear yet. Find drops in Adventure.',
+    emptyOwned: 'No drops yet. Find stronger gear in Adventure.',
     emptyOwnedCta: 'Go to Adventure',
-    emptySlotHint: 'Empty slot — play Adventure to find something.',
+    emptySlotHint: 'Starter look — play Adventure to find drops.',
     filterRarityAll: 'All',
     filterCount: '{shown}/{total} in {slot}',
     filterAria: 'Filter',
@@ -21997,9 +21998,9 @@ const CATALOG_EN = {
     lockSlot: 'Wrong slot',
     filterEmpty: 'Nothing in this filter',
     filterClear: 'Clear filter',
-    emptyOwned: 'No gear yet. Find drops in Adventure.',
+    emptyOwned: 'No drops yet. Find stronger gear in Adventure.',
     emptyOwnedCta: 'Go to Adventure',
-    emptySlotHint: 'Empty slot — play Adventure to find something.',
+    emptySlotHint: 'Starter look — play Adventure to find drops.',
   },
 
   banner: {
@@ -23048,9 +23049,9 @@ const CATALOG_FR = {
   gear: {
     filterEmpty: 'Rien dans ce filtre',
     filterClear: 'Effacer le filtre',
-    emptyOwned: 'Pas encore d’équipement. Trouve des drops en aventure.',
+    emptyOwned: 'Pas encore de drops. Trouve de l’équipement en aventure.',
     emptyOwnedCta: 'Vers l’aventure',
-    emptySlotHint: 'Emplacement vide — joue l’aventure pour en trouver.',
+    emptySlotHint: 'Look de départ — joue l’aventure pour des drops.',
   },
   ach: {
     first_win: { name: 'Première victoire', desc: 'Gagne ton premier niveau' },
@@ -23164,9 +23165,9 @@ const CATALOG_ES = {
   gear: {
     filterEmpty: 'Nada en este filtro',
     filterClear: 'Borrar filtro',
-    emptyOwned: 'Aún no hay equipo. Encuentra drops en Aventura.',
+    emptyOwned: 'Aún no hay drops. Encuentra equipo en Aventura.',
     emptyOwnedCta: 'Ir a Aventura',
-    emptySlotHint: 'Hueco vacío — juega Aventura para encontrar algo.',
+    emptySlotHint: 'Look inicial — juega Aventura para encontrar drops.',
   },
   ach: {
     first_win: { name: 'Primer triunfo', desc: 'Gana tu primer nivel' },
@@ -24350,9 +24351,9 @@ const CATALOG_DE_CHROME = {
     pickHint: 'Tippe einen Slot, dann ein Item.',
     filterEmpty: 'Nichts in diesem Filter',
     filterClear: 'Filter löschen',
-    emptyOwned: 'Noch keine Ausrüstung. Finde Drops im Abenteuer.',
+    emptyOwned: 'Noch keine Drops. Finde stärkere Ausrüstung im Abenteuer.',
     emptyOwnedCta: 'Zum Abenteuer',
-    emptySlotHint: 'Leerer Slot — spiele Abenteuer, um etwas zu finden.',
+    emptySlotHint: 'Starter-Look — spiele Abenteuer, um Drops zu finden.',
     lockedLine: 'Gesperrt · {why}',
     equip: 'Anlegen',
     unequip: 'Ablegen',
@@ -24722,7 +24723,7 @@ overlayI18nCatalog(CATALOG_FR, {
     continueLastMode: 'Dernier mode',
     gearHead: 'Équipement',
     gearSub: '5 emplacements · look vs stats · niveau et temps',
-    gearSubEmpty: 'Vide · à trouver en aventure',
+    gearSubEmpty: 'Départ · drops en aventure',
     dexAllBiomes: 'Tous les biomes',
     dexBiome: { farm: 'Ferme', zoo: 'Zoo', sea: 'Mer', wild: 'Bois', crypt: 'Crypte', scrap: 'Ferraille', frost: 'Givre', classic: 'Classique', secret: 'Secret' },
   },
@@ -25240,7 +25241,7 @@ overlayI18nCatalog(CATALOG_ES, {
     continueLastMode: 'Último modo',
     gearHead: 'Equipo',
     gearSub: '5 huecos · look vs stats · nivel y tiempo',
-    gearSubEmpty: 'Vacío · encuéntralo en Aventura',
+    gearSubEmpty: 'Inicial · drops en Aventura',
     dexAllBiomes: 'Todos los biomas',
     dexBiome: { farm: 'Granja', zoo: 'Zoo', sea: 'Mar', wild: 'Bosque', crypt: 'Cripta', scrap: 'Chatarra', frost: 'Escarcha', classic: 'Clásico', secret: 'Secreto' },
   },
@@ -25772,7 +25773,7 @@ overlayI18nCatalog(CATALOG_DE, {
     continueLastMode: 'Letzter Modus',
     gearHead: 'Ausrüstung',
     gearSub: '5 Slots · Look vs Stats · Level und Zeit',
-    gearSubEmpty: 'Leer · im Abenteuer finden',
+    gearSubEmpty: 'Starter · Drops im Abenteuer',
     dexAllBiomes: 'Alle Biome',
     dexBiome: { farm: 'Farm', zoo: 'Zoo', sea: 'Meer', wild: 'Wald', crypt: 'Krypta', scrap: 'Schrott', frost: 'Frost', classic: 'Klassisch', secret: 'Geheim' },
   },
@@ -46159,6 +46160,17 @@ function juiceGearOwnedCount(items) {
   return n;
 }
 
+function juiceGearNeedsAdventure() {
+  const list = (typeof GEAR_ITEMS !== 'undefined' && Array.isArray(GEAR_ITEMS)) ? GEAR_ITEMS : [];
+  for (const it of list) {
+    if (!it || it.starter) continue;
+    try {
+      if (typeof gearOwned === 'function' && gearOwned(it)) return false;
+    } catch (_) {}
+  }
+  return true;
+}
+
 function juiceOpenAdventure() {
   try { UI.goMenu(); } catch (_) {}
   const adv = document.getElementById('btnAdventure');
@@ -48340,16 +48352,15 @@ const UI = {
   },
 
   syncHubJuiceTiles() {
-    const gearHome = document.getElementById('btnGearHome');
-    const filled = typeof gearEquippedCount === 'function' ? gearEquippedCount() : 0;
-    if (gearHome) {
-      gearHome.classList.toggle('hub-tile-empty', filled <= 0);
-      const sub = gearHome.querySelector('.hub-tile-sub');
-      if (sub) {
-        sub.textContent = filled <= 0
-          ? tOr('hub.gearSubEmpty', 'Leeg · vind in avontuur')
-          : tOr('hub.gearSub', '5 slots · look vs stats');
-      }
+    const needsAdv = juiceGearNeedsAdventure();
+    const emptyLine = tOr('hub.gearSubEmpty', 'Starter · vind drops in avontuur');
+    const filledLine = tOr('hub.gearSub', '5 slots · look vs stats');
+    for (const id of ['btnGearHome', 'btnGear']) {
+      const tile = document.getElementById(id);
+      if (!tile) continue;
+      tile.classList.toggle('hub-tile-empty', needsAdv);
+      const sub = tile.querySelector('.hub-tile-sub');
+      if (sub) sub.textContent = needsAdv ? emptyLine : filledLine;
     }
     const bld = document.getElementById('btnBuildings');
     if (bld) {
@@ -50823,27 +50834,33 @@ const UI = {
       const keepScroll = this._gearPickerScroll || picker.scrollTop || 0;
       picker.innerHTML = '';
       const frag = document.createDocumentFragment();
-      if (!shown.length) {
+      const ownedN = juiceGearOwnedCount(items);
+      if (juiceGearNeedsAdventure()) {
+        const intro = document.createElement('div');
+        intro.className = 'gear-filter-empty juice-empty juice-empty-owned';
+        const copy = document.createElement('p');
+        copy.className = 'juice-empty-copy';
+        copy.textContent = tOr('gear.emptyOwned', 'Nog geen uitrusting. Vind drops in Avontuur.');
+        intro.appendChild(copy);
+        const cta = document.createElement('button');
+        cta.type = 'button';
+        cta.className = 'btn mode-btn b-adventure big-touch gear-empty-cta';
+        cta.textContent = tOr('gear.emptyOwnedCta', 'Naar avontuur');
+        bindPress(cta, () => {
+          safeUiAction(() => juiceOpenAdventure(), 'gearEmptyAdv', tOr('gear.errSlot', 'Slot pick failed'));
+        });
+        intro.appendChild(cta);
+        frag.appendChild(intro);
+      }
+      if (!shown.length && ownedN > 0) {
         const empty = document.createElement('div');
         empty.className = 'gear-filter-empty juice-empty';
-        const ownedN = juiceGearOwnedCount(items);
         const filtered = this.gearFilter !== 'all' || this.gearRarity !== 'all' || !!(this.gearFilterQ || '').trim();
         const copy = document.createElement('p');
         copy.className = 'juice-empty-copy';
-        if (!filtered && ownedN <= 0) {
-          copy.textContent = tOr('gear.emptyOwned', 'Nog geen uitrusting. Vind drops in Avontuur.');
-          empty.appendChild(copy);
-          const cta = document.createElement('button');
-          cta.type = 'button';
-          cta.className = 'btn mode-btn b-adventure big-touch gear-empty-cta';
-          cta.textContent = tOr('gear.emptyOwnedCta', 'Naar avontuur');
-          bindPress(cta, () => {
-            safeUiAction(() => juiceOpenAdventure(), 'gearEmptyAdv', tOr('gear.errSlot', 'Slot pick failed'));
-          });
-          empty.appendChild(cta);
-        } else if (filtered) {
-          copy.textContent = tOr('gear.filterEmpty', 'Niets in deze filter');
-          empty.appendChild(copy);
+        copy.textContent = tOr('gear.filterEmpty', 'Niets in deze filter');
+        empty.appendChild(copy);
+        if (filtered) {
           const cta = document.createElement('button');
           cta.type = 'button';
           cta.className = 'btn mode-btn b-gray big-touch gear-empty-cta';
@@ -50861,9 +50878,6 @@ const UI = {
             }, 'gearFilterClear', 'Filter mislukt');
           });
           empty.appendChild(cta);
-        } else {
-          copy.textContent = tOr('gear.filterEmpty', 'Niets in deze filter');
-          empty.appendChild(copy);
         }
         frag.appendChild(empty);
       }

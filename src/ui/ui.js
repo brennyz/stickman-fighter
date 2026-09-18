@@ -19,6 +19,17 @@ function juiceGearOwnedCount(items) {
   return n;
 }
 
+function juiceGearNeedsAdventure() {
+  const list = (typeof GEAR_ITEMS !== 'undefined' && Array.isArray(GEAR_ITEMS)) ? GEAR_ITEMS : [];
+  for (const it of list) {
+    if (!it || it.starter) continue;
+    try {
+      if (typeof gearOwned === 'function' && gearOwned(it)) return false;
+    } catch (_) {}
+  }
+  return true;
+}
+
 function juiceOpenAdventure() {
   try { UI.goMenu(); } catch (_) {}
   const adv = document.getElementById('btnAdventure');
@@ -2200,16 +2211,15 @@ const UI = {
   },
 
   syncHubJuiceTiles() {
-    const gearHome = document.getElementById('btnGearHome');
-    const filled = typeof gearEquippedCount === 'function' ? gearEquippedCount() : 0;
-    if (gearHome) {
-      gearHome.classList.toggle('hub-tile-empty', filled <= 0);
-      const sub = gearHome.querySelector('.hub-tile-sub');
-      if (sub) {
-        sub.textContent = filled <= 0
-          ? tOr('hub.gearSubEmpty', 'Leeg · vind in avontuur')
-          : tOr('hub.gearSub', '5 slots · look vs stats');
-      }
+    const needsAdv = juiceGearNeedsAdventure();
+    const emptyLine = tOr('hub.gearSubEmpty', 'Starter · vind drops in avontuur');
+    const filledLine = tOr('hub.gearSub', '5 slots · look vs stats');
+    for (const id of ['btnGearHome', 'btnGear']) {
+      const tile = document.getElementById(id);
+      if (!tile) continue;
+      tile.classList.toggle('hub-tile-empty', needsAdv);
+      const sub = tile.querySelector('.hub-tile-sub');
+      if (sub) sub.textContent = needsAdv ? emptyLine : filledLine;
     }
     const bld = document.getElementById('btnBuildings');
     if (bld) {
@@ -4683,27 +4693,33 @@ const UI = {
       const keepScroll = this._gearPickerScroll || picker.scrollTop || 0;
       picker.innerHTML = '';
       const frag = document.createDocumentFragment();
-      if (!shown.length) {
+      const ownedN = juiceGearOwnedCount(items);
+      if (juiceGearNeedsAdventure()) {
+        const intro = document.createElement('div');
+        intro.className = 'gear-filter-empty juice-empty juice-empty-owned';
+        const copy = document.createElement('p');
+        copy.className = 'juice-empty-copy';
+        copy.textContent = tOr('gear.emptyOwned', 'Nog geen uitrusting. Vind drops in Avontuur.');
+        intro.appendChild(copy);
+        const cta = document.createElement('button');
+        cta.type = 'button';
+        cta.className = 'btn mode-btn b-adventure big-touch gear-empty-cta';
+        cta.textContent = tOr('gear.emptyOwnedCta', 'Naar avontuur');
+        bindPress(cta, () => {
+          safeUiAction(() => juiceOpenAdventure(), 'gearEmptyAdv', tOr('gear.errSlot', 'Slot pick failed'));
+        });
+        intro.appendChild(cta);
+        frag.appendChild(intro);
+      }
+      if (!shown.length && ownedN > 0) {
         const empty = document.createElement('div');
         empty.className = 'gear-filter-empty juice-empty';
-        const ownedN = juiceGearOwnedCount(items);
         const filtered = this.gearFilter !== 'all' || this.gearRarity !== 'all' || !!(this.gearFilterQ || '').trim();
         const copy = document.createElement('p');
         copy.className = 'juice-empty-copy';
-        if (!filtered && ownedN <= 0) {
-          copy.textContent = tOr('gear.emptyOwned', 'Nog geen uitrusting. Vind drops in Avontuur.');
-          empty.appendChild(copy);
-          const cta = document.createElement('button');
-          cta.type = 'button';
-          cta.className = 'btn mode-btn b-adventure big-touch gear-empty-cta';
-          cta.textContent = tOr('gear.emptyOwnedCta', 'Naar avontuur');
-          bindPress(cta, () => {
-            safeUiAction(() => juiceOpenAdventure(), 'gearEmptyAdv', tOr('gear.errSlot', 'Slot pick failed'));
-          });
-          empty.appendChild(cta);
-        } else if (filtered) {
-          copy.textContent = tOr('gear.filterEmpty', 'Niets in deze filter');
-          empty.appendChild(copy);
+        copy.textContent = tOr('gear.filterEmpty', 'Niets in deze filter');
+        empty.appendChild(copy);
+        if (filtered) {
           const cta = document.createElement('button');
           cta.type = 'button';
           cta.className = 'btn mode-btn b-gray big-touch gear-empty-cta';
@@ -4721,9 +4737,6 @@ const UI = {
             }, 'gearFilterClear', 'Filter mislukt');
           });
           empty.appendChild(cta);
-        } else {
-          copy.textContent = tOr('gear.filterEmpty', 'Niets in deze filter');
-          empty.appendChild(copy);
         }
         frag.appendChild(empty);
       }
