@@ -1280,12 +1280,15 @@ function triggerSpecialEnemyIntro(game, monster, kind) {
   }
 
   const x = monster.x, y = monster.y - (monster.size || 40) * 0.4;
-  const burstN = motionReduced() || fxLite()
-    ? 8
+  const spawnLite = (typeof fxSpawnLite === 'function' && fxSpawnLite())
+    || (typeof fxLite === 'function' && fxLite())
+    || motionReduced();
+  const burstN = spawnLite
+    ? (firstOfWave && (tier === 'superBoss' || colossal) ? 6 : 4)
     : (firstOfWave ? (tier === 'superBoss' || colossal ? 34 : (bigBoss ? 26 : 18)) : 8);
   try {
     game.burst(x, y, col, burstN);
-    if (firstOfWave) {
+    if (firstOfWave && !spawnLite) {
       game.burst(x, y, '#fff', Math.ceil(burstN * 0.35));
       spawnFxRing(game, x, y, col, tier === 'superBoss' || colossal ? 26 : (bigBoss ? 20 : 14));
       if (tier !== 'elite') spawnFxRing(game, x, y - 20, '#fff', bigBoss ? 14 : 10);
@@ -1295,6 +1298,13 @@ function triggerSpecialEnemyIntro(game, monster, kind) {
       game.shake(shakeAmt, shakeDur);
       game.freezeT = Math.max(game.freezeT || 0, colossal ? 0.22 : (tier === 'superBoss' ? 0.18 : (bigBoss ? 0.14 : 0.1)));
       haptic(colossal ? 36 : (tier === 'superBoss' ? 28 : (bigBoss ? 22 : 16)));
+    } else if (firstOfWave && spawnLite) {
+      // One ring + small shake — no freeze (that hitch is the mid-phone stutter).
+      if (typeof spawnFxRing === 'function') spawnFxRing(game, x, y, col, colossal ? 14 : 8);
+      if (colossal || tier === 'superBoss') {
+        try { game.shake(colossal ? 8 : 6, 0.22); } catch (_) {}
+        haptic(colossal ? 22 : 16);
+      }
     }
   } catch (_) {}
 }

@@ -1,7 +1,7 @@
 {
   "name": "stickman-fighter",
   "private": true,
-  "version": "1.18.189",
+  "version": "1.18.190",
   "description": "Stickman Fighter PWA",
   "scripts": {
     "build": "node scripts/build.mjs",
@@ -35,6 +35,7 @@
     "smoke:fighter-move": "node scripts/smoke-fighter-move.mjs",
     "smoke:touch-btns": "node scripts/smoke-touch-buttons.mjs",
     "smoke:combat-density": "node scripts/smoke-combat-density.mjs",
+    "smoke:fx-lite": "node scripts/smoke-fx-lite.mjs",
     "smoke:lose-retry": "node scripts/smoke-lose-retry.mjs",
     "smoke:dex": "node scripts/smoke-dex-book.mjs",
     "smoke:vista": "node scripts/smoke-vista-flash.mjs",
@@ -61,7 +62,7 @@
     "smoke:p0p3-uiux": "node scripts/smoke-p0p3-uiux.mjs",
     "smoke:examinator": "node scripts/smoke-examinator.mjs",
     "smoke:fomo-pra": "node scripts/smoke-fomo-pra.mjs",
-    "test": "npm run build && npm run check && npm run check:critical && npm run smoke && npm run smoke:upgrades && npm run smoke:menu && npm run smoke:html && npm run smoke:responsive && npm run smoke:hud-phone && npm run smoke:arcade-ui && npm run smoke:pwa && npm run smoke:playtest-p1 && npm run smoke:island-polish && npm run smoke:toast-queue && npm run smoke:juice-feel && npm run smoke:toast && npm run smoke:arcade-pick && npm run smoke:start-copy && npm run smoke:unify-ui && npm run smoke:layout && npm run smoke:i18n-locale && npm run smoke:i18n-switch && npm run smoke:p0p3-uiux && npm run smoke:examinator && npm run smoke:fomo-pra && npm run smoke:gamble && npm run smoke:levelup && npm run smoke:petwave && npm run smoke:wave12 && npm run smoke:spiral-orb && npm run smoke:boomerang && npm run smoke:weapons && npm run smoke:zone && npm run smoke:cave && npm run smoke:pc && npm run smoke:fighter-move && npm run smoke:touch-btns && npm run smoke:combat-density && npm run smoke:lose-retry && npm run smoke:dex && npm run smoke:vista && npm run smoke:advbg && npm run smoke:adventure && npm run smoke:flappy-retry && npm run smoke:satan && npm run smoke:save && npm run smoke:summon && npm run smoke:wall && npm run smoke:training && npm run smoke:nav && npm run smoke:audio-themes && npm run smoke:aim-tutorial && npm run smoke:aim-indicator && npm run smoke:seasons && npm run smoke:season-art && npm run smoke:gear && npm run smoke:gear-screen && npm run smoke:equip-look && npm run smoke:gear-drops && npm run smoke:monster-catalog && npm run smoke:monster-pixels && npm run smoke:top20 && npm run smoke:buildings && npm run smoke:building-pixels && npm run smoke:buildings-powers && npm run smoke:buildings-ui && npm run smoke:pets-ui && npm run smoke:pets-feel && npm run smoke:copy-toast && npm run smoke:season && npm run smoke:ghost-hp && npm run store:doctor && npm run android:go",
+    "test": "npm run build && npm run check && npm run check:critical && npm run smoke && npm run smoke:upgrades && npm run smoke:menu && npm run smoke:html && npm run smoke:responsive && npm run smoke:hud-phone && npm run smoke:arcade-ui && npm run smoke:pwa && npm run smoke:playtest-p1 && npm run smoke:island-polish && npm run smoke:toast-queue && npm run smoke:juice-feel && npm run smoke:toast && npm run smoke:arcade-pick && npm run smoke:start-copy && npm run smoke:unify-ui && npm run smoke:layout && npm run smoke:i18n-locale && npm run smoke:i18n-switch && npm run smoke:p0p3-uiux && npm run smoke:examinator && npm run smoke:fomo-pra && npm run smoke:gamble && npm run smoke:levelup && npm run smoke:petwave && npm run smoke:wave12 && npm run smoke:spiral-orb && npm run smoke:boomerang && npm run smoke:weapons && npm run smoke:zone && npm run smoke:cave && npm run smoke:pc && npm run smoke:fighter-move && npm run smoke:touch-btns && npm run smoke:combat-density && npm run smoke:fx-lite && npm run smoke:lose-retry && npm run smoke:dex && npm run smoke:vista && npm run smoke:advbg && npm run smoke:adventure && npm run smoke:flappy-retry && npm run smoke:satan && npm run smoke:save && npm run smoke:summon && npm run smoke:wall && npm run smoke:training && npm run smoke:nav && npm run smoke:audio-themes && npm run smoke:aim-tutorial && npm run smoke:aim-indicator && npm run smoke:seasons && npm run smoke:season-art && npm run smoke:gear && npm run smoke:gear-screen && npm run smoke:equip-look && npm run smoke:gear-drops && npm run smoke:monster-catalog && npm run smoke:monster-pixels && npm run smoke:top20 && npm run smoke:buildings && npm run smoke:building-pixels && npm run smoke:buildings-powers && npm run smoke:buildings-ui && npm run smoke:pets-ui && npm run smoke:pets-feel && npm run smoke:copy-toast && npm run smoke:season && npm run smoke:ghost-hp && npm run store:doctor && npm run android:go",
     "roll": "bash scripts/roll-improvement-d20.sh",
     "roll:status": "bash scripts/roll-improvement-d20.sh status",
     "roll:verify": "bash scripts/roll-improvement-d20.sh verify",

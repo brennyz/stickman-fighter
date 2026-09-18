@@ -347,13 +347,15 @@ function triggerSatanIntro(game, monster) {
   const x = monster.x;
   const y = monster.y - (monster.size || 40) * 0.4;
   try {
-    game.burst(x, y, '#ff3040', motionReduced() || fxLite() ? 12 : 30);
-    game.burst(x, y, '#ffd75e', 14);
-    spawnFxRing(game, x, y, '#ff3040', 26);
-    spawnFxRing(game, x, y - 18, '#1a0a10', 14);
-    game.shake(16, 0.5);
-    game.freezeT = Math.max(game.freezeT || 0, 0.2);
-    haptic(34);
+    const spawnLite = (typeof fxSpawnLite === 'function' && fxSpawnLite())
+      || motionReduced() || (typeof fxLite === 'function' && fxLite());
+    game.burst(x, y, '#ff3040', spawnLite ? 6 : 30);
+    if (!spawnLite) game.burst(x, y, '#ffd75e', 14);
+    spawnFxRing(game, x, y, '#ff3040', spawnLite ? 12 : 26);
+    if (!spawnLite) spawnFxRing(game, x, y - 18, '#1a0a10', 14);
+    game.shake(spawnLite ? 8 : 16, spawnLite ? 0.24 : 0.5);
+    if (!spawnLite) game.freezeT = Math.max(game.freezeT || 0, 0.2);
+    haptic(spawnLite ? 20 : 34);
   } catch (_) {}
 }
 
