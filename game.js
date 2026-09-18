@@ -323,9 +323,9 @@ const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const VERSION_UPDATE_SAVE_KEY = 'stickfighter_version_update_save_v1';
 const VERSION_UPDATE_FLAG_KEY = 'stickfighter_version_update_flag_v1';
 const SAVE_EXPORT_SCHEMA = 3;
-const APP_VERSION = '1.18.176';
+const APP_VERSION = '1.18.177';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 386;
+const SW_CACHE_REV = 387;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', petCoins: 0, dex: {}, summons: {}, pets: {}, activePet: null,
   eggPets: {}, activeEggPet: null, eggDaily: null,
   chestDaily: null, chestWeapons: {},
@@ -41333,9 +41333,12 @@ class Game {
         const base = named || (this.player.hp <= 0
           ? t('result.lossBlockTip', { prog })
           : t('result.lossOrbTip', { prog }));
-        const once = onceResultTip('adventure', 'loss',
-          t('result.lossGambleTip'));
-        const core = once ? `${once} · ${base}` : base;
+        // EX-027: killer first. Skip gamble lecture until first punch (don't burn the once-flag).
+        let once = '';
+        if (!(typeof firstPunchPending === 'function' && firstPunchPending())) {
+          once = onceResultTip('adventure', 'loss', t('result.lossGambleTip'));
+        }
+        const core = once ? `${base} · ${once}` : base;
         return heatTip ? `${heatTip} · ${core}` : core;
       })(),
     }));

@@ -1091,9 +1091,12 @@ class Game {
         const base = named || (this.player.hp <= 0
           ? t('result.lossBlockTip', { prog })
           : t('result.lossOrbTip', { prog }));
-        const once = onceResultTip('adventure', 'loss',
-          t('result.lossGambleTip'));
-        const core = once ? `${once} · ${base}` : base;
+        // EX-027: killer first. Skip gamble lecture until first punch (don't burn the once-flag).
+        let once = '';
+        if (!(typeof firstPunchPending === 'function' && firstPunchPending())) {
+          once = onceResultTip('adventure', 'loss', t('result.lossGambleTip'));
+        }
+        const core = once ? `${base} · ${once}` : base;
         return heatTip ? `${heatTip} · ${core}` : core;
       })(),
     }));

@@ -101,6 +101,10 @@ if (!/advLoseBy: 'VERLOREN · \{name\}'/.test(catalog)) fail('NL result.advLoseB
 if (!/advLoseBy: 'YOU LOSE · \{name\}'/.test(catalog)) fail('EN result.advLoseBy missing');
 if (!/killedByFlyer/.test(catalog)) fail('result.killedByFlyer missing');
 if (!/titleParams/.test(ui)) fail('showResult must pass titleParams for killer name');
+if (!/EX-027/.test(exam)) fail('EXAMINATOR.md must rank EX-027 first-loss tip');
+if (!/Skip gamble lecture until first punch/.test(game)) {
+  fail('lose tip must skip gamble lecture until first punch');
+}
 
 console.log('SMOKE_OK examinator: static P0 guards');
 
@@ -204,6 +208,23 @@ const feel = await feelPage.evaluate(() => {
     hasHurt: typeof notePlayerHurtSource === 'function',
   };
 });
+await feelPage.evaluate(() => {
+  try { if (typeof save !== 'undefined' && save) { save.feltFirstPunch = false; persist(); } } catch (_) {}
+  startFirstPunchAdventure();
+});
+await feelPage.waitForFunction(() => game && game.monsters && game.monsters.some((m) => m && m.alive), { timeout: 8000 });
+await feelPage.evaluate(() => {
+  const m = game.monsters.find((x) => x && x.alive);
+  game.player.takeDamage(9999, 20, game, { attacker: m });
+  if (!game.over) game.finishAdventure(false);
+});
+await feelPage.waitForFunction(() => typeof state !== 'undefined' && state === 'result', { timeout: 4000 });
+const feelLose = await feelPage.evaluate(() => ({
+  title: document.getElementById('resTitle') && document.getElementById('resTitle').textContent,
+  tip: document.getElementById('resTip') && document.getElementById('resTip').textContent,
+  pending: typeof firstPunchPending === 'function' && firstPunchPending(),
+  name: game && game.lastHurtBy && game.lastHurtBy.name,
+}));
 await feelPage.close();
 await browser.close();
 if (server && server.close) try { server.close(); } catch (_) {}
@@ -239,5 +260,14 @@ if (!phoneNl.loseBy || !/VERLOREN/.test(phoneNl.loseBy)) fail('NL advLoseBy: ' +
 if (!phoneDe.loseBy || !/VERLOREN/.test(phoneDe.loseBy)) fail('DE advLoseBy: ' + phoneDe.loseBy);
 if (!phoneFr.loseBy || !/DÉFAITE/.test(phoneFr.loseBy)) fail('FR advLoseBy: ' + phoneFr.loseBy);
 if (!phoneEs.loseBy || !/DERROTA/.test(phoneEs.loseBy)) fail('ES advLoseBy: ' + phoneEs.loseBy);
+if (!feelLose.title || !feelLose.name || feelLose.title.indexOf(feelLose.name) < 0) {
+  fail('live lose title must name killer: ' + feelLose.title);
+}
+if (/dobbelen|gamble|parier|würfeln|apostar/i.test(feelLose.tip || '')) {
+  fail('first-punch lose tip must not lecture gamble: ' + feelLose.tip);
+}
+if (feelLose.name && !(feelLose.tip || '').includes(feelLose.name)) {
+  fail('first-punch lose tip must lead with killer: ' + feelLose.tip);
+}
 
 console.log('SMOKE_OK examinator: phone', phone.lv10total, '/', phone.lv20total, 'desk', desk.lv10total, '/', desk.lv20total);
