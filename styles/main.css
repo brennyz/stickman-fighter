@@ -1328,8 +1328,8 @@
     color: #9db1e3;
   }
   @media (max-width: 420px) {
-    .summon-actions,
-    .summon-goto-row { grid-template-columns: 1fr; }
+    .summon-actions { grid-template-columns: 1fr; }
+    .summon-goto-row { grid-template-columns: 1fr 1fr; }
   }
   .menu-profile-bar {
     width: 100%; margin: 0; padding: 10px 14px; border-radius: 13px; cursor: pointer;
@@ -3995,7 +3995,7 @@
       padding: 6px 8px;
     }
     .hub-tile { padding-right: 26px; }
-    #summonScreen .summon-goto-row { grid-template-columns: 1fr; }
+    #summonScreen .summon-goto-row { grid-template-columns: 1fr 1fr; }
     .summon-stage { max-height: min(32vh, 220px); }
     #summonScreen .sub-home-bar { margin-top: 8px; }
     #summonScreen .summon-rail { gap: 6px; }
