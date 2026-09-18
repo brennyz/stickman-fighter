@@ -960,7 +960,7 @@ class Game {
       this.banner(t('banner.lost'), 2, '#ff6b6b', 50);
     }
     // Resultaat-scherm altijd tonen (Volgende level / Opnieuw) — niet stil naar menu
-    scheduleGameResult(this, win ? 1600 : 1400, () => UI.showResult(win, {
+    scheduleGameResult(this, juiceResultDelayMs(win), () => UI.showResult(win, {
       titleKey: win ? 'result.advWin' : 'result.advLose',
       title: win ? t('result.advWin') : t('result.advLose'),
       detailKey: win ? 'result.advDetailWin' : 'result.advDetailLose',
@@ -1004,22 +1004,9 @@ class Game {
         ? t('result.starImproved', { stars, prev: prevStars })
         : t('result.pickupsHelp', { hint: starHintLine() })))) : (() => {
         const prog = this.waveIdx >= 0 ? t('result.wavesProg', { cur: this.waveIdx + 1, total: this.level.waves.length }) : tOr('result.wavesStart', 'begin');
-        const failsNow = advFailCount(lv, diff);
-        let heatTip = '';
-        if (failsNow >= SATAN_FAIL_THRESHOLD && typeof shouldTriggerSatan === 'function' && shouldTriggerSatan(lv, diff)) {
-          heatTip = t('result.heatSatanNext');
-        } else if (failsNow >= SATAN_DANGER_FAILS) {
-          heatTip = t('result.heatDanger');
-        } else if (failsNow >= 7) {
-          heatTip = t('result.heatRising', { n: failsNow, max: SATAN_FAIL_THRESHOLD });
-        }
-        const base = this.player.hp <= 0
-          ? t('result.lossBlockTip', { prog })
-          : t('result.lossOrbTip', { prog });
-        const once = onceResultTip('adventure', 'loss',
-          t('result.lossGambleTip'));
-        const core = once ? `${once} · ${base}` : base;
-        return heatTip ? `${heatTip} · ${core}` : core;
+        return this.player.hp <= 0
+          ? tOr('result.lossSelfHp', 'Jij viel — {prog}', { prog })
+          : tOr('result.lossSelfOrb', 'Jij miste de orbs — {prog}', { prog });
       })(),
     }));
   }
@@ -1712,7 +1699,7 @@ class Game {
           : tOr('result.trainStyleMore', 'Unlock stijlen door meer train-wins!')))
       : onceResultTip('training', 'loss', tOr('combat.trainLostTip', tOr('combat.trainLossTip', 'Spring tijdens LIGHTNING PIERCE — robot mist · spring oor-lasers')))
         || tOr('combat.trainTipDefault', 'Tip: spring lasers · energy vol → Spiral Orb');
-    scheduleGameResult(this, 1400, () => UI.showResult(win, {
+    scheduleGameResult(this, juiceResultDelayMs(win), () => UI.showResult(win, {
       titleKey: win ? 'result.trainWin' : 'result.trainLose',
       title: win ? tOr('result.trainWin', 'KAMPIOEN!') : tOr('result.trainLose', 'ROBOT WINT...'),
       detailKey: win ? 'result.trainDetailWin' : 'result.trainDetailLose',
@@ -1963,7 +1950,7 @@ class Game {
     let tip = t('result.vsRematchTip');
     if (this.matchFatality) tip = t('result.vsFatalityRematchTip');
     else if (close) tip = t('result.vsCloseRematchTip');
-    scheduleGameResult(this, 1200, () => UI.showResult(p1Win, {
+    scheduleGameResult(this, juiceResultDelayMs(p1Win), () => UI.showResult(p1Win, {
       titleKey: p1Win ? 'result.vsP1Win' : 'result.vsP2Win',
       title: p1Win ? t('result.vsP1Win') : t('result.vsP2Win'),
       detail: `${vsRosterName(this.p1Pick) || 'P1'} vs ${vsRosterName(this.p2Pick) || 'P2'} · ${this.roundsP1}-${this.roundsP2}` +
@@ -2141,7 +2128,7 @@ class Game {
       else if (paceDelta != null && paceDelta < -3) tip = t('result.wallBehindPace');
       else if (paceDelta != null && paceDelta >= 3) tip = t('result.wallGoodPace');
     }
-    scheduleGameResult(this, 1200, () => UI.showResult(true, {
+    scheduleGameResult(this, juiceResultDelayMs(true), () => UI.showResult(true, {
       titleKey: isRecord ? 'result.wallRecord' : 'result.wallTime',
       title: isRecord ? t('result.wallRecord') : t('result.wallTime'),
       detail: t('result.wallDetail', {
@@ -2251,7 +2238,7 @@ class Game {
     AudioSys.sfx(isRecord ? 'win' : 'bonus');
     this.banner(t('banner.bonusDone'), 1.4, '#7cfc8a', 40);
     const wallet = petCoinsBalance();
-    scheduleGameResult(this, 1200, () => UI.showResult(true, {
+    scheduleGameResult(this, juiceResultDelayMs(true), () => UI.showResult(true, {
       titleKey: isRecord ? 'result.matsRecord' : 'result.matsDone',
       title: isRecord ? t('result.matsRecord') : t('result.matsDone'),
       detail: t('result.matsDetail', {
@@ -2933,6 +2920,19 @@ class Game {
     if (this.mode === 'adventure') this.updateKetsbam(dt);
     if (!ketsJustFinished) this.t += dt;
     if (this.hint > 0) this.hint -= dt;
+    if (this._juiceTeach && !this._juiceTaught && !this.over) {
+      const landed = (this.combo || 0) > 0 || (this.maxCombo || 0) > 0 || (this.kills || 0) > 0;
+      if (landed) {
+        this._juiceTaught = true;
+      } else if (this.t >= 3 && this.t < 30 && this.hint <= 0) {
+        this._juiceTaught = true;
+        const touch = typeof useTouchFightPads === 'function' ? useTouchFightPads() : (typeof IS_TOUCH !== 'undefined' && IS_TOUCH);
+        this.modeHintLine = typeof tOr === 'function'
+          ? tOr(touch ? 'juice.strikeNudge' : 'juice.strikeNudgeKb', touch ? 'Tik slaan' : 'Druk J')
+          : (touch ? 'Tik slaan' : 'Druk J');
+        this.hint = 2.6;
+      }
+    }
     this.shakeT = Math.max(0, this.shakeT - dt);
     if (this.bossPhase2Flash > 0) this.bossPhase2Flash -= dt;
 

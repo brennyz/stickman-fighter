@@ -22,6 +22,12 @@ const CATALOG_DE_CHROME = {
     streakReward7: '+Ei oder Summons',
     streakReward14: '+120 XP',
   },
+  juice: {
+    strikeNudge: 'Tippe Schlag',
+    strikeNudgeKb: 'Drücke J',
+    againSub: 'sofort zurück',
+    nextSub: 'weiter',
+  },
   runLoot: {
     head: 'Dieser Lauf · Beute neben XP',
     headAdv: 'Dieser Lauf · Beute neben XP',
@@ -48,6 +54,8 @@ const CATALOG_DE_CHROME = {
     pickupsHelp: '{hint} — Pickups helfen',
     lossBlockTip: 'Tipp: blocken · nach oben zielen auf Flieger · {prog}',
     lossOrbTip: 'Tipp: grüne Orbs · SUPER vor dem Boss füllen · {prog}',
+    lossSelfHp: 'Du bist gefallen — {prog}',
+    lossSelfOrb: 'Du hast die Orbs verpasst — {prog}',
     lossGambleTip: 'Erste Niederlage: vor jedem Level würfeln — Verbündeter hilft zwischen Wellen.',
     heatRising: 'Hitze {n}/{max} — Gefahr bei 9, Satan bei 10',
     heatDanger: 'GEFAHR! Hitze rot — noch 1 Verlust und Satan kommt',

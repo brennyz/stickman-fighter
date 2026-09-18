@@ -877,6 +877,34 @@
     animation: none;
   }
 
+  /* Flappy-class result: one gold primary, quiet secondary, home last. */
+  #resultScreen .juice-cta-primary {
+    min-height: 76px;
+    width: min(92vw, 420px);
+    font-size: min(6.4vw, 26px);
+    font-weight: 900;
+    background: linear-gradient(180deg, #ffe27a 0%, #f0b429 70%, #e09a18 100%);
+    color: #1a1408;
+    border: 3px solid #fff3c4;
+    box-shadow: 0 7px 0 #a86818, 0 12px 28px rgba(255, 200, 60, .35);
+    order: -1;
+  }
+  #resultScreen .juice-cta-primary div { color: #1a1408; font-weight: 900; }
+  #resultScreen .juice-cta-primary small { color: #5a3d0a; font-weight: 800; display: block; }
+  #resultScreen .juice-cta-quiet {
+    min-height: 48px;
+    opacity: .9;
+  }
+  #resultScreen .juice-cta-home {
+    min-height: 44px;
+    opacity: .74;
+  }
+  body.big-touch #resultScreen .juice-cta-primary { min-height: 84px; }
+  body.reduced-motion #resultScreen .juice-cta-primary {
+    animation: none;
+    box-shadow: 0 5px 0 #a86818, 0 0 0 2px rgba(255, 215, 94, .35);
+  }
+
   /* —— Summons hub (arcade, wide rail, stage-first) —— */
   .summon-screen .head { margin-bottom: 2px; }
   .summon-screen .subtitle {

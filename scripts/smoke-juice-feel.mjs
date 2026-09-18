@@ -58,6 +58,26 @@ must(/menu\.collectSub/.test(i18n) && /Uitrusting · wapens · boek/.test(i18n),
 must(!/data-hub="versus"/.test(html), 'versus hub tile must stay retired');
 must(!/\.screen\s*\{\s*display:\s*none\s*!important/.test(css), 'nuclear .screen hide forbidden');
 
+const missions = fs.readFileSync(path.join(root, 'src/systems/missions.js'), 'utf8');
+const start = fs.readFileSync(path.join(root, 'src/boot/start.js'), 'utf8');
+must(/function juiceResultDelayMs/.test(missions), 'juice result delay helper missing');
+must(/return win \? 900 : 700/.test(missions), 'result delay must be 900/700 not 1600/1400');
+must(/function juiceRetryAdventure/.test(missions), 'juice retry must skip dice via startGame');
+must(/gamble: null/.test(missions) && /juiceRetryAdventure/.test(start), 'result Again/Next must call juice retry');
+must(!/function restartAdventureInstant/.test(missions) && !/id="resRetrySafe"/.test(html), 'must not clone rematch-lane ids');
+must(/function juiceFirstPlayPending/.test(missions), 'first-play FOMO gate missing');
+must(/juiceFirstPlayPending\(\)/.test(missions) && /fomoRitualHubReady/.test(missions), 'FOMO sheet must wait for first play');
+must(/g\._juiceTeach = true/.test(missions), 'onboarding must teach by doing, not 8s wall');
+must(!/g\.hint = 8/.test(missions), 'first-minute 8s paragraph must stay off');
+must(/save\.tipsSeen\.welcome = 1/.test(missions) && !/userToast\(t\('toast\.welcome'\)/.test(missions), 'welcome wall must stay off');
+must(/juicePaintResultCtas/.test(ui) && /juice-cta-primary/.test(ui), 'result one-primary CTA painter missing');
+must(/#resultScreen \.juice-cta-primary/.test(css) && /juice-cta-home/.test(css), 'result CTA CSS missing');
+must(/body\.reduced-motion #resultScreen \.juice-cta-primary/.test(css), 'primary CTA must skip motion under RM');
+must(/juiceResultDelayMs\(win\)/.test(game), 'adventure must use juice result delay');
+must(/result\.lossSelfHp/.test(game) && !/heatTip \? `\$\{heatTip\}/.test(game), 'lose tip must be one self-blame line');
+must(/_juiceTeach/.test(game) && /juice\.strikeNudge/.test(game), 'first-30s strike nudge missing');
+must(/strikeNudge:/.test(i18n) && /againSub:/.test(i18n), 'juice CTA/nudge copy missing');
+
 const built = fs.existsSync(path.join(root, 'game.js'))
   ? fs.readFileSync(path.join(root, 'game.js'), 'utf8')
   : '';
@@ -65,6 +85,8 @@ if (built) {
   must(/syncHubJuiceTiles/.test(built), 'built game.js missing HOME juice sync');
   must(/toast-out/.test(built), 'built game.js missing toast-out');
   must(/juicePetsNeedTame/.test(built) && /combat\.ko/.test(built), 'built game.js missing pets empty / KO');
+  must(/juiceResultDelayMs/.test(built) && /juiceRetryAdventure/.test(built), 'built game.js missing feel-bar retry');
+  must(/juicePaintResultCtas/.test(built) && /juice\.strikeNudge/.test(built), 'built game.js missing feel-bar CTA/nudge');
 }
 
 console.log('SMOKE_OK juice-feel');

@@ -323,9 +323,9 @@ const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const VERSION_UPDATE_SAVE_KEY = 'stickfighter_version_update_save_v1';
 const VERSION_UPDATE_FLAG_KEY = 'stickfighter_version_update_flag_v1';
 const SAVE_EXPORT_SCHEMA = 3;
-const APP_VERSION = '1.18.175';
+const APP_VERSION = '1.18.176';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 385;
+const SW_CACHE_REV = 386;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', petCoins: 0, dex: {}, summons: {}, pets: {}, activePet: null,
   eggPets: {}, activeEggPet: null, eggDaily: null,
   chestDaily: null, chestWeapons: {},
@@ -2376,7 +2376,15 @@ const I18N = {
       advWin: 'GEWONNEN!', advLose: 'VERLOREN', trainWin: 'KAMPIOEN!', trainLose: 'ROBOT WINT...',
       advLoseKeep: 'XP en loot van deze run blijven',
       wavesStart: 'begin',
+      lossSelfHp: 'Jij viel — {prog}',
+      lossSelfOrb: 'Jij miste de orbs — {prog}',
       xp: '+{xp} XP verdiend · nu Lv {lvl} ({cur}/{need} XP)' },
+    juice: {
+      strikeNudge: 'Tik slaan',
+      strikeNudgeKb: 'Druk J',
+      againSub: 'direct terug',
+      nextSub: 'volgende',
+    },
     settings: {
       title: 'Instellingen', sub: 'Geluid & HUD — save gaat automatisch mee',
       lang: 'Taal', music: 'Muziek', sfx: 'Effecten', shake: 'Schermschok', haptics: 'Trillen',
@@ -2671,7 +2679,15 @@ const I18N = {
       advWin: 'VICTORY!', advLose: 'YOU LOSE', trainWin: 'CHAMPION!', trainLose: 'ROBOT WINS...',
       advLoseKeep: 'XP and loot from this run stay',
       wavesStart: 'start',
+      lossSelfHp: 'You went down — {prog}',
+      lossSelfOrb: 'You missed the orbs — {prog}',
       xp: '+{xp} XP earned · now Lv {lvl} ({cur}/{need} XP)' },
+    juice: {
+      strikeNudge: 'Tap strike',
+      strikeNudgeKb: 'Press J',
+      againSub: 'jump back in',
+      nextSub: 'next',
+    },
     settings: {
       title: 'Settings', sub: 'Sound & HUD — save stays with you automatically',
       lang: 'Language', music: 'Music', sfx: 'Effects', shake: 'Screen shake', haptics: 'Haptics',
@@ -3024,7 +3040,15 @@ const I18N = {
       advWin: 'GEWONNEN!', advLose: 'VERLOREN', trainWin: 'MEISTER!', trainLose: 'ROBOT GEWINNT...',
       advLoseKeep: 'XP und Beute von diesem Lauf bleiben',
       wavesStart: 'Start',
+      lossSelfHp: 'Du bist gefallen — {prog}',
+      lossSelfOrb: 'Du hast die Orbs verpasst — {prog}',
       xp: '+{xp} XP · jetzt Lv {lvl} ({cur}/{need} XP)' },
+    juice: {
+      strikeNudge: 'Tippe Schlag',
+      strikeNudgeKb: 'Drücke J',
+      againSub: 'sofort zurück',
+      nextSub: 'weiter',
+    },
     settings: {
       title: 'Einstellungen', sub: 'Sound & HUD — Save läuft automatisch mit',
       lang: 'Sprache', music: 'Musik', sfx: 'Effekte', shake: 'Bildschirmshake', haptics: 'Vibration',
@@ -3309,7 +3333,15 @@ const I18N = {
       advWin: 'VICTOIRE !', advLose: 'DÉFAITE', trainWin: 'CHAMPION !', trainLose: 'ROBOT GAGNE...',
       advLoseKeep: 'XP et butin de cette run restent',
       wavesStart: 'début',
+      lossSelfHp: 'Tu es tombé — {prog}',
+      lossSelfOrb: 'Tu as manqué les orbes — {prog}',
       xp: '+{xp} XP · Lv {lvl} ({cur}/{need} XP)' },
+    juice: {
+      strikeNudge: 'Tape frappe',
+      strikeNudgeKb: 'Appuie sur J',
+      againSub: 'tout de suite',
+      nextSub: 'suivant',
+    },
     settings: {
       title: 'Options', sub: 'Son & HUD — la save suit automatiquement',
       lang: 'Langue', music: 'Musique', sfx: 'Effets', shake: 'Secousse écran', haptics: 'Vibration',
@@ -3575,7 +3607,15 @@ const I18N = {
       advWin: '¡VICTORIA!', advLose: 'DERROTA', trainWin: '¡CAMPEÓN!', trainLose: 'ROBOT GANA...',
       advLoseKeep: 'XP y botín de esta run se quedan',
       wavesStart: 'inicio',
+      lossSelfHp: 'Caíste — {prog}',
+      lossSelfOrb: 'Perdiste las orbes — {prog}',
       xp: '+{xp} XP · Lv {lvl} ({cur}/{need} XP)' },
+    juice: {
+      strikeNudge: 'Toca golpear',
+      strikeNudgeKb: 'Pulsa J',
+      againSub: 'ahora mismo',
+      nextSub: 'siguiente',
+    },
     settings: {
       title: 'Opciones', sub: 'Sonido y HUD — el save va automático',
       lang: 'Idioma', music: 'Música', sfx: 'Efectos', shake: 'Sacudida pantalla', haptics: 'Vibración',
@@ -4600,10 +4640,24 @@ function fomoRitualEggVisible() {
   return !!(save && save.stats && (save.stats.advWins || 0) >= 1);
 }
 
+function juiceFirstPlayPending() {
+  try {
+    if (typeof save === 'undefined' || !save) return true;
+    if (save.lastPlay) return false;
+    if ((save.lvl || 1) > 1) return false;
+    if (typeof onboardingProgress === 'function' && onboardingProgress().seen > 0) return false;
+    if (save.stats && (save.stats.advWins || 0) > 0) return false;
+  } catch (_) {}
+  return true;
+}
+
 function fomoRitualHubReady() {
   try {
     const splash = document.getElementById('sfSplash');
     if (splash && !splash.classList.contains('is-done')) return false;
+  } catch (_) {}
+  try {
+    if (juiceFirstPlayPending()) return false;
   } catch (_) {}
   return true;
 }
@@ -6434,6 +6488,30 @@ function ensureVisibleScreen() {
   ensureMenuScreenActive();
 }
 
+/** Die → result in under 3s. Complementary to the rematch lane (juice-named hooks only). */
+function juiceResultDelayMs(win) {
+  try {
+    if (typeof motionReduced === 'function' && motionReduced()) return win ? 280 : 200;
+  } catch (_) {}
+  return win ? 900 : 700;
+}
+
+/** Result retry/next skips dice flash — startGame already accepts { level, gamble: null }. */
+function juiceRetryAdventure(level, difficulty) {
+  const cap = (typeof MAX_LEVEL === 'number' && MAX_LEVEL > 0) ? MAX_LEVEL : 99;
+  const lv = Math.max(1, Math.min(cap, Number(level) || 1));
+  let diff = difficulty;
+  try {
+    if (!diff && typeof currentAdvDiff === 'function') diff = currentAdvDiff();
+    if (diff && typeof setAdvDiff === 'function' && typeof advDiffAvailable === 'function' && advDiffAvailable(diff)) {
+      setAdvDiff(diff);
+    }
+  } catch (_) {}
+  pendingAdvLevel = lv;
+  lastGambleRoll = null;
+  startGame('adventure', { level: lv, gamble: null, difficulty: diff });
+}
+
 /** Veilig resultaat na gevecht — voorkomt ReferenceError + zwart scherm. */
 function scheduleGameResult(gameRef, delayMs, showFn) {
   if (!gameRef || typeof showFn !== 'function') return;
@@ -7261,8 +7339,8 @@ function applyModeOnboarding(mode, g) {
   if (mode === 'adventure' || mode === 'training') save.tipsSeen.energy = 1;
   if (mode === 'coinrun') save.tipsSeen.hint_coinrun = 1;
   persist();
-  g.modeHintLine = modeFirstMinuteLine(mode);
-  g.hint = 8;
+  // Teach by doing — short strike nudge in combat, not an 8s first-minute wall.
+  g._juiceTeach = true;
 }
 
 /** Eén regel op gok-scherm — geen toast. */
@@ -7298,41 +7376,9 @@ function welcomeToastOnHub() {
 function maybeWelcomeToast() {
   ensureTipsSeen();
   if (save.tipsSeen.welcome) return;
-  const prog = onboardingProgress();
-  if (prog.seen > 0 || save.lvl > 1 || save.missionsIntroSeen) {
-    save.tipsSeen.welcome = 1;
-    persist();
-    return;
-  }
-  let tries = 0;
-  const tick = () => {
-    if (save.tipsSeen.welcome) return;
-    if (onboardingProgress().seen > 0 || save.lvl > 1) {
-      save.tipsSeen.welcome = 1;
-      persist();
-      return;
-    }
-    if (welcomeToastOnHub()) {
-      save.tipsSeen.welcome = 1;
-      persist();
-      try { userToast(t('toast.welcome'), 2200); } catch (_) {}
-      return;
-    }
-    tries++;
-    let onSplash = false;
-    try {
-      const splash = document.getElementById('sfSplash');
-      onSplash = !!(splash && !splash.classList.contains('is-done'));
-    } catch (_) {}
-    // Still on title/splash — wait for HOME. Left hub already — don't follow.
-    if (onSplash && tries < 24) {
-      setTimeout(tick, 350);
-      return;
-    }
-    save.tipsSeen.welcome = 1;
-    persist();
-  };
-  setTimeout(tick, 400);
+  // Flappy-class: SPELEN is the CTA. No welcome wall on first HOME.
+  save.tipsSeen.welcome = 1;
+  persist();
 }
 
 /** Level-pacing v1.14.3: iets rustiger — +15% vroeg, oplopend tot +50% vanaf ~Lv 18. */
@@ -20688,6 +20734,8 @@ function seedNlGameStrings() {
     pickupsHelp: '{hint} — pickups helpen',
     lossBlockTip: 'Tip: blokkeer · mik omhoog op vliegers · {prog}',
     lossOrbTip: 'Tip: pak groene orbs · vul SUPER vóór baas · {prog}',
+    lossSelfHp: 'Jij viel — {prog}',
+    lossSelfOrb: 'Jij miste de orbs — {prog}',
     lossGambleTip: 'Eerste nederlaag: vóór elk level kun je dobbelen — bondgenoot helpt tussen golven.',
     heatRising: 'Hitte {n}/{max} — bij 9 gevaar, bij 10 Satan',
     heatDanger: 'GEVAAR! Hitte rood — nog 1 verlies en Satan komt',
@@ -21002,6 +21050,13 @@ function seedNlGameStrings() {
     streakReward3: '+1 summon',
     streakReward7: '+ei of summons',
     streakReward14: '+120 XP',
+  });
+  if (!I18N.nl.juice) I18N.nl.juice = {};
+  Object.assign(I18N.nl.juice, {
+    strikeNudge: 'Tik slaan',
+    strikeNudgeKb: 'Druk J',
+    againSub: 'direct terug',
+    nextSub: 'volgende',
   });
   if (!I18N.nl.missionsUi) I18N.nl.missionsUi = {};
   Object.assign(I18N.nl.missionsUi, {
@@ -21965,6 +22020,8 @@ const CATALOG_EN = {
     pickupsHelp: '{hint} — pickups help',
     lossBlockTip: 'Tip: block · aim up at flyers · {prog}',
     lossOrbTip: 'Tip: grab green orbs · fill SUPER before boss · {prog}',
+    lossSelfHp: 'You went down — {prog}',
+    lossSelfOrb: 'You missed the orbs — {prog}',
     lossGambleTip: 'First loss: before each level you can gamble — ally helps between waves.',
     heatRising: 'Heat {n}/{max} — danger at 9, Satan at 10',
     heatDanger: 'DANGER! Heat red — one more loss and Satan appears',
@@ -22257,6 +22314,12 @@ const CATALOG_EN = {
     streakReward3: '+1 summon',
     streakReward7: '+egg or summons',
     streakReward14: '+120 XP',
+  },
+  juice: {
+    strikeNudge: 'Tap strike',
+    strikeNudgeKb: 'Press J',
+    againSub: 'jump back in',
+    nextSub: 'next',
   },
   missionsUi: {
     flowDone: '✓ Day done',
@@ -23515,6 +23578,12 @@ const CATALOG_DE_CHROME = {
     streakReward7: '+Ei oder Summons',
     streakReward14: '+120 XP',
   },
+  juice: {
+    strikeNudge: 'Tippe Schlag',
+    strikeNudgeKb: 'Drücke J',
+    againSub: 'sofort zurück',
+    nextSub: 'weiter',
+  },
   runLoot: {
     head: 'Dieser Lauf · Beute neben XP',
     headAdv: 'Dieser Lauf · Beute neben XP',
@@ -23541,6 +23610,8 @@ const CATALOG_DE_CHROME = {
     pickupsHelp: '{hint} — Pickups helfen',
     lossBlockTip: 'Tipp: blocken · nach oben zielen auf Flieger · {prog}',
     lossOrbTip: 'Tipp: grüne Orbs · SUPER vor dem Boss füllen · {prog}',
+    lossSelfHp: 'Du bist gefallen — {prog}',
+    lossSelfOrb: 'Du hast die Orbs verpasst — {prog}',
     lossGambleTip: 'Erste Niederlage: vor jedem Level würfeln — Verbündeter hilft zwischen Wellen.',
     heatRising: 'Hitze {n}/{max} — Gefahr bei 9, Satan bei 10',
     heatDanger: 'GEFAHR! Hitze rot — noch 1 Verlust und Satan kommt',
@@ -24451,6 +24522,8 @@ overlayI18nCatalog(CATALOG_FR, {
     pickupsHelp: '{hint} — les orbes aident',
     lossBlockTip: 'Astuce : bloque · vise en haut les voiliers · {prog}',
     lossOrbTip: 'Astuce : prends les orbes verts · remplis SUPER avant le boss · {prog}',
+    lossSelfHp: 'Tu es tombé — {prog}',
+    lossSelfOrb: 'Tu as manqué les orbes — {prog}',
     lossGambleTip: '1re défaite : avant chaque niveau tu peux parier — un allié aide entre les vagues.',
     heatRising: 'Chaleur {n}/{max} — danger à 9, Satan à 10',
     heatDanger: 'DANGER ! Chaleur rouge — encore 1 défaite et Satan arrive',
@@ -24782,6 +24855,12 @@ overlayI18nCatalog(CATALOG_FR, {
     streakReward7: '+œuf ou summons',
     streakReward14: '+120 XP',
   },
+  juice: {
+    strikeNudge: 'Tape frappe',
+    strikeNudgeKb: 'Appuie sur J',
+    againSub: 'tout de suite',
+    nextSub: 'suivant',
+  },
   fighter: { energyEmpty: 'Énergie pas pleine !', subst: 'Substitution !', dash: 'Dash !', shield: 'Bouclier !', parry: 'PARRY !', block: 'BLOC !', miss: 'RATÉ !' },
   egg: { dailyReady: 'Œuf du jour prêt', advBonus: 'Œuf bonus : gagne 1× aventure', tomorrow: 'Œuf demain' },
   pet: { active: 'Pet · actif', tamed: 'Pet · apprivoisé', buy: 'Pet · acheter {cost} PC', killsNeed: 'Pet · {need} kills', killsProgress: 'Pet · {cur}/{need} kills' },
@@ -24969,6 +25048,8 @@ overlayI18nCatalog(CATALOG_ES, {
     pickupsHelp: '{hint} — los orbes ayudan',
     lossBlockTip: 'Consejo: bloquea · apunta arriba a los voladores · {prog}',
     lossOrbTip: 'Consejo: coge orbes verdes · llena SUPER antes del jefe · {prog}',
+    lossSelfHp: 'Caíste — {prog}',
+    lossSelfOrb: 'Perdiste las orbes — {prog}',
     lossGambleTip: 'Primera derrota: antes de cada nivel puedes apostar — un aliado ayuda entre oleadas.',
     heatRising: 'Calor {n}/{max} — peligro en 9, Satan en 10',
     heatDanger: '¡PELIGRO! Calor rojo — 1 derrota más y llega Satan',
@@ -25300,6 +25381,12 @@ overlayI18nCatalog(CATALOG_ES, {
     streakReward7: '+huevo o summons',
     streakReward14: '+120 XP',
   },
+  juice: {
+    strikeNudge: 'Toca golpear',
+    strikeNudgeKb: 'Pulsa J',
+    againSub: 'ahora mismo',
+    nextSub: 'siguiente',
+  },
   fighter: { energyEmpty: '¡Energía incompleta!', subst: '¡Sustitución!', dash: '¡Dash!', shield: '¡Escudo!', parry: '¡PARRY!', block: '¡BLOQUEO!', miss: '¡FALLO!' },
   egg: { dailyReady: 'Huevo diario listo', advBonus: 'Huevo extra: gana 1× aventura', tomorrow: 'Huevo otra vez mañana' },
   pet: { active: 'Pet · activo', tamed: 'Pet · domado', buy: 'Pet · comprar {cost} PC', killsNeed: 'Pet · {need} kills', killsProgress: 'Pet · {cur}/{need} kills' },
@@ -25500,6 +25587,8 @@ overlayI18nCatalog(CATALOG_DE, {
     pickupsHelp: '{hint} — Kugeln helfen',
     lossBlockTip: 'Tipp: blocken · nach oben auf Flieger zielen · {prog}',
     lossOrbTip: 'Tipp: grüne Kugeln · SUPER vor dem Boss füllen · {prog}',
+    lossSelfHp: 'Du bist gefallen — {prog}',
+    lossSelfOrb: 'Du hast die Orbs verpasst — {prog}',
     lossGambleTip: 'Erste Niederlage: vor jedem Level kannst du würfeln — Verbündeter hilft zwischen Wellen.',
     heatRising: 'Hitze {n}/{max} — Gefahr bei 9, Satan bei 10',
     heatDanger: 'GEFAHR! Hitze rot — noch 1 Verlust und Satan kommt',
@@ -25831,6 +25920,12 @@ overlayI18nCatalog(CATALOG_DE, {
     streakReward3: '+1 Summon',
     streakReward7: '+Ei oder Summons',
     streakReward14: '+120 XP',
+  },
+  juice: {
+    strikeNudge: 'Tippe Schlag',
+    strikeNudgeKb: 'Drücke J',
+    againSub: 'sofort zurück',
+    nextSub: 'weiter',
   },
   fighter: { energyEmpty: 'Energy nicht voll!', subst: 'Substitution!', dash: 'Dash!', shield: 'Schild!', parry: 'PARRY!', block: 'BLOCK!', miss: 'DANEBEN!' },
   egg: { dailyReady: 'Tages-Ei bereit', advBonus: 'Bonus-Ei: 1× Abenteuer gewinnen', tomorrow: 'Ei morgen wieder' },
@@ -40996,7 +41091,7 @@ class Game {
       this.banner(t('banner.lost'), 2, '#ff6b6b', 50);
     }
     // Resultaat-scherm altijd tonen (Volgende level / Opnieuw) — niet stil naar menu
-    scheduleGameResult(this, win ? 1600 : 1400, () => UI.showResult(win, {
+    scheduleGameResult(this, juiceResultDelayMs(win), () => UI.showResult(win, {
       titleKey: win ? 'result.advWin' : 'result.advLose',
       title: win ? t('result.advWin') : t('result.advLose'),
       detailKey: win ? 'result.advDetailWin' : 'result.advDetailLose',
@@ -41040,22 +41135,9 @@ class Game {
         ? t('result.starImproved', { stars, prev: prevStars })
         : t('result.pickupsHelp', { hint: starHintLine() })))) : (() => {
         const prog = this.waveIdx >= 0 ? t('result.wavesProg', { cur: this.waveIdx + 1, total: this.level.waves.length }) : tOr('result.wavesStart', 'begin');
-        const failsNow = advFailCount(lv, diff);
-        let heatTip = '';
-        if (failsNow >= SATAN_FAIL_THRESHOLD && typeof shouldTriggerSatan === 'function' && shouldTriggerSatan(lv, diff)) {
-          heatTip = t('result.heatSatanNext');
-        } else if (failsNow >= SATAN_DANGER_FAILS) {
-          heatTip = t('result.heatDanger');
-        } else if (failsNow >= 7) {
-          heatTip = t('result.heatRising', { n: failsNow, max: SATAN_FAIL_THRESHOLD });
-        }
-        const base = this.player.hp <= 0
-          ? t('result.lossBlockTip', { prog })
-          : t('result.lossOrbTip', { prog });
-        const once = onceResultTip('adventure', 'loss',
-          t('result.lossGambleTip'));
-        const core = once ? `${once} · ${base}` : base;
-        return heatTip ? `${heatTip} · ${core}` : core;
+        return this.player.hp <= 0
+          ? tOr('result.lossSelfHp', 'Jij viel — {prog}', { prog })
+          : tOr('result.lossSelfOrb', 'Jij miste de orbs — {prog}', { prog });
       })(),
     }));
   }
@@ -41748,7 +41830,7 @@ class Game {
           : tOr('result.trainStyleMore', 'Unlock stijlen door meer train-wins!')))
       : onceResultTip('training', 'loss', tOr('combat.trainLostTip', tOr('combat.trainLossTip', 'Spring tijdens LIGHTNING PIERCE — robot mist · spring oor-lasers')))
         || tOr('combat.trainTipDefault', 'Tip: spring lasers · energy vol → Spiral Orb');
-    scheduleGameResult(this, 1400, () => UI.showResult(win, {
+    scheduleGameResult(this, juiceResultDelayMs(win), () => UI.showResult(win, {
       titleKey: win ? 'result.trainWin' : 'result.trainLose',
       title: win ? tOr('result.trainWin', 'KAMPIOEN!') : tOr('result.trainLose', 'ROBOT WINT...'),
       detailKey: win ? 'result.trainDetailWin' : 'result.trainDetailLose',
@@ -41999,7 +42081,7 @@ class Game {
     let tip = t('result.vsRematchTip');
     if (this.matchFatality) tip = t('result.vsFatalityRematchTip');
     else if (close) tip = t('result.vsCloseRematchTip');
-    scheduleGameResult(this, 1200, () => UI.showResult(p1Win, {
+    scheduleGameResult(this, juiceResultDelayMs(p1Win), () => UI.showResult(p1Win, {
       titleKey: p1Win ? 'result.vsP1Win' : 'result.vsP2Win',
       title: p1Win ? t('result.vsP1Win') : t('result.vsP2Win'),
       detail: `${vsRosterName(this.p1Pick) || 'P1'} vs ${vsRosterName(this.p2Pick) || 'P2'} · ${this.roundsP1}-${this.roundsP2}` +
@@ -42177,7 +42259,7 @@ class Game {
       else if (paceDelta != null && paceDelta < -3) tip = t('result.wallBehindPace');
       else if (paceDelta != null && paceDelta >= 3) tip = t('result.wallGoodPace');
     }
-    scheduleGameResult(this, 1200, () => UI.showResult(true, {
+    scheduleGameResult(this, juiceResultDelayMs(true), () => UI.showResult(true, {
       titleKey: isRecord ? 'result.wallRecord' : 'result.wallTime',
       title: isRecord ? t('result.wallRecord') : t('result.wallTime'),
       detail: t('result.wallDetail', {
@@ -42287,7 +42369,7 @@ class Game {
     AudioSys.sfx(isRecord ? 'win' : 'bonus');
     this.banner(t('banner.bonusDone'), 1.4, '#7cfc8a', 40);
     const wallet = petCoinsBalance();
-    scheduleGameResult(this, 1200, () => UI.showResult(true, {
+    scheduleGameResult(this, juiceResultDelayMs(true), () => UI.showResult(true, {
       titleKey: isRecord ? 'result.matsRecord' : 'result.matsDone',
       title: isRecord ? t('result.matsRecord') : t('result.matsDone'),
       detail: t('result.matsDetail', {
@@ -42969,6 +43051,19 @@ class Game {
     if (this.mode === 'adventure') this.updateKetsbam(dt);
     if (!ketsJustFinished) this.t += dt;
     if (this.hint > 0) this.hint -= dt;
+    if (this._juiceTeach && !this._juiceTaught && !this.over) {
+      const landed = (this.combo || 0) > 0 || (this.maxCombo || 0) > 0 || (this.kills || 0) > 0;
+      if (landed) {
+        this._juiceTaught = true;
+      } else if (this.t >= 3 && this.t < 30 && this.hint <= 0) {
+        this._juiceTaught = true;
+        const touch = typeof useTouchFightPads === 'function' ? useTouchFightPads() : (typeof IS_TOUCH !== 'undefined' && IS_TOUCH);
+        this.modeHintLine = typeof tOr === 'function'
+          ? tOr(touch ? 'juice.strikeNudge' : 'juice.strikeNudgeKb', touch ? 'Tik slaan' : 'Druk J')
+          : (touch ? 'Tik slaan' : 'Druk J');
+        this.hint = 2.6;
+      }
+    }
     this.shakeT = Math.max(0, this.shakeT - dt);
     if (this.bossPhase2Flash > 0) this.bossPhase2Flash -= dt;
 
@@ -46227,6 +46322,45 @@ function juiceDexNeedDiscover() {
 
 function juiceEggsNeedHatch() {
   try { return typeof eggOwnedCount === 'function' && eggOwnedCount() <= 0; } catch (_) { return true; }
+}
+
+function juicePaintResultCtas(win, data) {
+  data = data || {};
+  const again = document.getElementById('resAgain');
+  const nextBtn = document.getElementById('resNext');
+  const menuBtn = document.getElementById('resMenu');
+  const showNext = !!(win && data.mode === 'adventure' && data.level < MAX_LEVEL);
+  if (nextBtn) {
+    nextBtn.style.display = showNext ? 'flex' : 'none';
+    nextBtn.classList.toggle('juice-cta-primary', showNext);
+    nextBtn.classList.toggle('juice-cta-quiet', !showNext);
+    const label = nextBtn.querySelector('div');
+    if (label) {
+      label.innerHTML = t('result.next') + '<small>' + tOr('juice.nextSub', 'volgende') + '</small>';
+    }
+  }
+  if (again) {
+    again.classList.toggle('juice-cta-primary', !showNext);
+    again.classList.toggle('juice-cta-quiet', showNext);
+    const label = again.querySelector('div');
+    if (label) {
+      if (data.mode === 'training') {
+        label.innerHTML = t('result.again') + '<small>' + tOr('result.trainAgainSub', 'vs RabbitRobot') + '</small>';
+      } else {
+        label.innerHTML = t('result.again') + '<small>' + tOr('juice.againSub', 'direct terug') + '</small>';
+      }
+    }
+  }
+  if (menuBtn) {
+    menuBtn.classList.add('juice-cta-home');
+    menuBtn.classList.remove('juice-cta-primary');
+    const label = menuBtn.querySelector('div');
+    if (label) {
+      label.textContent = (typeof hubForPlayMode === 'function' && hubForPlayMode(data.mode) === 'arcade')
+        ? t('result.menuArcade')
+        : t('result.menu');
+    }
+  }
 }
 
 function juiceOpenAdventure() {
@@ -51504,26 +51638,7 @@ const UI = {
           (delta ? `<small class="stars-delta">${t('result.starGain', { n: delta })}</small>` : '');
       }
     }
-    const nextBtn = document.getElementById('resNext');
-    if (nextBtn) {
-      nextBtn.style.display = (win && data.mode === 'adventure' && data.level < MAX_LEVEL) ? 'flex' : 'none';
-    }
-    const again = document.getElementById('resAgain');
-    if (again) {
-      const label = again.querySelector('div');
-      if (label) {
-        if (data.mode === 'versus') label.innerHTML = t('result.rematch') + '<small>' + t('result.rematchSub') + '</small>';
-        else if (data.mode === 'training') label.innerHTML = t('result.again') + '<small>' + tOr('result.trainAgainSub', 'vs RabbitRobot') + '</small>';
-        else label.textContent = t('result.again');
-      }
-    }
-    const menuBtn = document.getElementById('resMenu');
-    if (menuBtn) {
-      const label = menuBtn.querySelector('div');
-      if (label) {
-        label.textContent = hubForPlayMode(data.mode) === 'arcade' ? t('result.menuArcade') : t('result.menu');
-      }
-    }
+    juicePaintResultCtas(win, data);
     state = 'result';
     scheduleResize();
     document.getElementById('pauseBtn')?.classList.remove('show');
@@ -52947,14 +53062,9 @@ bindPress(document.getElementById('resAgain'), () => {
   if (!d || !d.mode) return;
   AudioSys.sfx('select');
   try { if (game) game._resultToken = (game._resultToken || 0) + 1; } catch (_) {}
-  if (d.mode === 'adventure') gokGooiStartLevel(d.level);
-  else if (d.mode === 'versus') {
-    const p1 = d.p1 || vsSelect.p1;
-    const p2 = d.p2 || vsSelect.p2;
-    vsSelect.p1 = p1;
-    vsSelect.p2 = p2;
-    UI.toast(`Rematch · ${vsRosterName(p1) || 'P1'} vs ${vsRosterName(p2) || 'P2'}`, 2600);
-    startGame('versus', { p1, p2 });
+  if (d.mode === 'adventure') {
+    if (typeof juiceRetryAdventure === 'function') juiceRetryAdventure(d.level, d.difficulty);
+    else startGame('adventure', { level: d.level, gamble: null, difficulty: d.difficulty });
   }
   else startGame(d.mode);
 });
@@ -52963,7 +53073,9 @@ bindPress(document.getElementById('resNext'), () => {
   if (!d || d.mode !== 'adventure' || !d.win) return;
   AudioSys.sfx('select');
   try { if (game) game._resultToken = (game._resultToken || 0) + 1; } catch (_) {}
-  gokGooiStartLevel(Math.min(MAX_LEVEL, d.level + 1));
+  const nextLv = Math.min(MAX_LEVEL, (d.level || 1) + 1);
+  if (typeof juiceRetryAdventure === 'function') juiceRetryAdventure(nextLv, d.difficulty);
+  else startGame('adventure', { level: nextLv, gamble: null, difficulty: d.difficulty });
 });
 bindPress(document.getElementById('resMenu'), () => {
   try { if (game) game._resultToken = (game._resultToken || 0) + 1; } catch (_) {}

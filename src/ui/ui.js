@@ -42,6 +42,45 @@ function juiceEggsNeedHatch() {
   try { return typeof eggOwnedCount === 'function' && eggOwnedCount() <= 0; } catch (_) { return true; }
 }
 
+function juicePaintResultCtas(win, data) {
+  data = data || {};
+  const again = document.getElementById('resAgain');
+  const nextBtn = document.getElementById('resNext');
+  const menuBtn = document.getElementById('resMenu');
+  const showNext = !!(win && data.mode === 'adventure' && data.level < MAX_LEVEL);
+  if (nextBtn) {
+    nextBtn.style.display = showNext ? 'flex' : 'none';
+    nextBtn.classList.toggle('juice-cta-primary', showNext);
+    nextBtn.classList.toggle('juice-cta-quiet', !showNext);
+    const label = nextBtn.querySelector('div');
+    if (label) {
+      label.innerHTML = t('result.next') + '<small>' + tOr('juice.nextSub', 'volgende') + '</small>';
+    }
+  }
+  if (again) {
+    again.classList.toggle('juice-cta-primary', !showNext);
+    again.classList.toggle('juice-cta-quiet', showNext);
+    const label = again.querySelector('div');
+    if (label) {
+      if (data.mode === 'training') {
+        label.innerHTML = t('result.again') + '<small>' + tOr('result.trainAgainSub', 'vs RabbitRobot') + '</small>';
+      } else {
+        label.innerHTML = t('result.again') + '<small>' + tOr('juice.againSub', 'direct terug') + '</small>';
+      }
+    }
+  }
+  if (menuBtn) {
+    menuBtn.classList.add('juice-cta-home');
+    menuBtn.classList.remove('juice-cta-primary');
+    const label = menuBtn.querySelector('div');
+    if (label) {
+      label.textContent = (typeof hubForPlayMode === 'function' && hubForPlayMode(data.mode) === 'arcade')
+        ? t('result.menuArcade')
+        : t('result.menu');
+    }
+  }
+}
+
 function juiceOpenAdventure() {
   try { UI.goMenu(); } catch (_) {}
   const adv = document.getElementById('btnAdventure');
@@ -5317,26 +5356,7 @@ const UI = {
           (delta ? `<small class="stars-delta">${t('result.starGain', { n: delta })}</small>` : '');
       }
     }
-    const nextBtn = document.getElementById('resNext');
-    if (nextBtn) {
-      nextBtn.style.display = (win && data.mode === 'adventure' && data.level < MAX_LEVEL) ? 'flex' : 'none';
-    }
-    const again = document.getElementById('resAgain');
-    if (again) {
-      const label = again.querySelector('div');
-      if (label) {
-        if (data.mode === 'versus') label.innerHTML = t('result.rematch') + '<small>' + t('result.rematchSub') + '</small>';
-        else if (data.mode === 'training') label.innerHTML = t('result.again') + '<small>' + tOr('result.trainAgainSub', 'vs RabbitRobot') + '</small>';
-        else label.textContent = t('result.again');
-      }
-    }
-    const menuBtn = document.getElementById('resMenu');
-    if (menuBtn) {
-      const label = menuBtn.querySelector('div');
-      if (label) {
-        label.textContent = hubForPlayMode(data.mode) === 'arcade' ? t('result.menuArcade') : t('result.menu');
-      }
-    }
+    juicePaintResultCtas(win, data);
     state = 'result';
     scheduleResize();
     document.getElementById('pauseBtn')?.classList.remove('show');

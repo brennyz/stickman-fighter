@@ -96,6 +96,8 @@ function seedNlGameStrings() {
     pickupsHelp: '{hint} — pickups helpen',
     lossBlockTip: 'Tip: blokkeer · mik omhoog op vliegers · {prog}',
     lossOrbTip: 'Tip: pak groene orbs · vul SUPER vóór baas · {prog}',
+    lossSelfHp: 'Jij viel — {prog}',
+    lossSelfOrb: 'Jij miste de orbs — {prog}',
     lossGambleTip: 'Eerste nederlaag: vóór elk level kun je dobbelen — bondgenoot helpt tussen golven.',
     heatRising: 'Hitte {n}/{max} — bij 9 gevaar, bij 10 Satan',
     heatDanger: 'GEVAAR! Hitte rood — nog 1 verlies en Satan komt',
@@ -410,6 +412,13 @@ function seedNlGameStrings() {
     streakReward3: '+1 summon',
     streakReward7: '+ei of summons',
     streakReward14: '+120 XP',
+  });
+  if (!I18N.nl.juice) I18N.nl.juice = {};
+  Object.assign(I18N.nl.juice, {
+    strikeNudge: 'Tik slaan',
+    strikeNudgeKb: 'Druk J',
+    againSub: 'direct terug',
+    nextSub: 'volgende',
   });
   if (!I18N.nl.missionsUi) I18N.nl.missionsUi = {};
   Object.assign(I18N.nl.missionsUi, {
@@ -1373,6 +1382,8 @@ const CATALOG_EN = {
     pickupsHelp: '{hint} — pickups help',
     lossBlockTip: 'Tip: block · aim up at flyers · {prog}',
     lossOrbTip: 'Tip: grab green orbs · fill SUPER before boss · {prog}',
+    lossSelfHp: 'You went down — {prog}',
+    lossSelfOrb: 'You missed the orbs — {prog}',
     lossGambleTip: 'First loss: before each level you can gamble — ally helps between waves.',
     heatRising: 'Heat {n}/{max} — danger at 9, Satan at 10',
     heatDanger: 'DANGER! Heat red — one more loss and Satan appears',
@@ -1665,6 +1676,12 @@ const CATALOG_EN = {
     streakReward3: '+1 summon',
     streakReward7: '+egg or summons',
     streakReward14: '+120 XP',
+  },
+  juice: {
+    strikeNudge: 'Tap strike',
+    strikeNudgeKb: 'Press J',
+    againSub: 'jump back in',
+    nextSub: 'next',
   },
   missionsUi: {
     flowDone: '✓ Day done',
