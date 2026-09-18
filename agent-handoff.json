@@ -50,7 +50,7 @@
       "id": "w-20260918T123600",
       "from": "user",
       "text": "Keep going on #314 (still draft, no main). Highest remaining EX: colossal bosses filling the strip on phone — readable telegraph / fair window. Re-smoke combat-density + adventure 390. speel.html, no Versus.",
-      "status": "in-progress",
+      "status": "done-in-code",
       "updated": "2026-09-18"
     },
     {
@@ -1087,6 +1087,10 @@
   ],
   "sessionLog": [
     {
+      "at": "2026-09-18T12:40:56Z",
+      "summary": "EX-1 on #314: phone colossal ×1.38 + 94px cap (lane 210, wind 0.46); desktop ×2.0. Smokes OK on 390×844. Draft, no main."
+    },
+    {
       "at": "2026-09-18T12:35:49Z",
       "summary": "Examinator on #314: 390px telegraph floor 0.38 + on-screen charge cue + intro hold; compact jump slop + left-bottom swipe pad. Remaining EX in docs. Draft only."
     },
@@ -1181,10 +1185,6 @@
     {
       "at": "2026-09-14T12:46:48Z",
       "summary": "P1 entry: Android-first landing — één install-blok, geen iPad op Android · v1.18.157 / SW 367"
-    },
-    {
-      "at": "2026-09-14T12:45:42Z",
-      "summary": "P1 entry: Android-first landing — geen iPad-blok op Android"
     }
   ],
   "implementedFeaturesSummary": "d18 char select deel 1+2 (v1.11.1-2); Mats coinrun + shuriken mik/vliegers + anti-spam (v1.12.0); speel.html (v1.12.2+). Zie HANDOFF-ZOEKINDEX.md en improvement-d20-bag.json userFeatureLog.",
