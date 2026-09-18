@@ -19,6 +19,7 @@ rg -l "handoff|coinrun|projAimVelocity|charSelectScreen|ASSET-STYLE" .
 
 | Gebruiker vroeg | Versie | Commit | Waar in code |
 |-----------------|--------|--------|----------------|
+| **Playtest 3/9 landscape combat** | 1.18.190 | this draft | `docs/playtest-landscape-combat-2026-09-18.md` · `playtest:landscape-combat`. No P0 on LIVE `c9a29fc`. Versus out. |
 | **Invisible fighters recover** | 1.18.190 | main | `drawCombatants` · `pinPlayfieldBodies` · `fighterCombatStroke` · recover re-paint · `smoke:fighters-visible`. Versus out. |
 | **Landscape Begin/HOME SPELEN** | 1.18.190 | main | two-col title-gate + FOMO left dock · `smoke:landscape-begin`. Versus out. |
 | **Telegraph readability** | 1.18.190 | main | fair-fail ring + `combatFailRetryTip` · keep #314 density 0.50 · `docs/COMBAT-TELEGRAPH.md`. Versus out. |

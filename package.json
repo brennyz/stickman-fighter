@@ -101,6 +101,7 @@
     "smoke:landscape-begin": "node scripts/smoke-landscape-begin.mjs",
     "smoke:telegraph-read": "node scripts/smoke-telegraph-read.mjs",
     "smoke:landscape-touch": "node scripts/smoke-landscape-touch.mjs",
+    "playtest:landscape-combat": "node scripts/playtest-landscape-combat-bot.mjs",
     "smoke:first30-teach": "node scripts/smoke-first30-teach.mjs",
     "smoke:fx-lite": "node scripts/smoke-fx-lite.mjs"
   }
