@@ -44970,14 +44970,27 @@ class Game {
       const isl = islandMeta(islandFromLevel(this.level.n));
       const wCap = adventureWeaponCapForLevel(this.level.n);
       const wv = Math.max(1, this.waveIdx + 1);
+      const rightPad = typeof hudRightReserve === 'function'
+        ? hudRightReserve()
+        : Math.max(14, readSafeInsets().right + 8);
+      const centerMax = Math.max(120, W - rightPad - 58);
       let hy = Math.max(28, hudInsetTop() + 4);
       this.advHudBottom = hy;
 
       c.font = '800 16px -apple-system, sans-serif';
-      fillHudText(c, t('hud.levelWave', { n: this.level.n, wv: Math.min(wv, this.level.waves.length), total: this.level.waves.length }), W / 2, hy, {
-        fill: a11yHighContrast() ? '#fff' : 'rgba(255,255,255,.9)',
-      });
-      hy += 17;
+      const lvLine = t('hud.levelWave', { n: this.level.n, wv: Math.min(wv, this.level.waves.length), total: this.level.waves.length });
+      if (typeof fillHudWrapped === 'function') {
+        const used = fillHudWrapped(c, lvLine, W / 2, hy, {
+          fill: a11yHighContrast() ? '#fff' : 'rgba(255,255,255,.9)',
+          maxW: centerMax, maxLines: 2, lineH: 16,
+        });
+        hy += Math.max(17, used);
+      } else {
+        fillHudText(c, lvLine, W / 2, hy, {
+          fill: a11yHighContrast() ? '#fff' : 'rgba(255,255,255,.9)',
+        });
+        hy += 17;
+      }
 
       if (this.advDiff && this.advDiff !== 'normal') {
         const dm = advDiffMeta(this.advDiff);
@@ -45082,9 +45095,6 @@ class Game {
       }
 
       const starY = Math.max(24, hudInsetTop() + 2);
-      const rightPad = typeof hudRightReserve === 'function'
-        ? hudRightReserve()
-        : Math.max(14, readSafeInsets().right + 8);
       if (p.alive) {
         const hpPct = p.hp / Math.max(1, p.maxhp);
         const proj = starsFromHpPct(hpPct);
