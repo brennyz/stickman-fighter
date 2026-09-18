@@ -145,6 +145,7 @@ Schrijf **1–3 regels** per sessie: datum, d#, wat, versie.
 
 | Datum (UTC) | d# | Update |
 |-------------|-----|--------|
+| 2026-09-18 | — | **#323 DONE (P0–P2).** Shared result-dock hooks with #318 (`#resCtaDock`, 84px gold, 700ms). Behavior (`restartAdventureInstant`, `#resRetrySafe`) stays on this lane. P3 leftover. **v1.18.174 / SW 384**. Draft, niet main. |
 | 2026-09-18 | — | **#323 keep-improving:** Training/Wall/Coinrun zelfde &lt;3s retry; tap-safe `#resRetrySafe` (mistap ≠ Menu); onceMore EN/DE/FR/ES. smoke:flappy-retry groen (731ms / 725ms). **v1.18.174 / SW 384**. Draft, niet main. |
 | 2026-09-18 | — | **Flappy-retry #323:** Avontuur-dood → “Nog één keer” in ~700ms, 84px tap 390px, geen dobbel-doolhof, FOMO uit result. #316 juice ongemoeid. **v1.18.173 / SW 383**. Draft, niet main. |
 | 2026-09-16 | — | **MEGA-MERGE → main** Grok wave #295–#309 (i18n → systems → UI → pixels → polish). Feature-base PRs (#297/#300/#307/#309) cherry-picked. **v1.18.172 / SW 382**. speel.html na Pages. |
