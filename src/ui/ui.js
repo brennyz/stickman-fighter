@@ -4265,6 +4265,30 @@ const UI = {
     }
   },
 
+  _gearFilterCount(items, key) {
+    if (typeof gearFilterInventory === 'function') {
+      return gearFilterInventory(items, key, this.gearFilterQ, this.gearRarity).length;
+    }
+    if (typeof gearFilterItems === 'function') {
+      return gearFilterItems(items, key, this.gearFilterQ, this.gearRarity).length;
+    }
+    return (items || []).length;
+  },
+
+  _gearActionFor(unlock, equippedHere) {
+    const state = (unlock && unlock.state) || '';
+    if (equippedHere || state === 'already-equipped') {
+      return { key: 'unequip', label: tOr('gear.unequip', 'Uitdoen') };
+    }
+    if (unlock && unlock.unlocked) {
+      return { key: 'equip', label: tOr('gear.equip', 'Aandoen') };
+    }
+    if (state === 'not-owned') {
+      return { key: 'locked', label: tOr('gear.lockOwned', 'Nog niet gevonden') };
+    }
+    return { key: 'locked', label: (unlock && unlock.label) || tOr('gear.pillLock', 'LOCK') };
+  },
+
   renderGear(opts) {
     const pickerOnly = !!(opts && opts.pickerOnly);
     const esc = (s) => String(s == null ? '' : s)
@@ -4382,25 +4406,31 @@ const UI = {
         const rawItem = typeof gearItemById === 'function' ? gearItemById(eq[sid]) : null;
         const item = (typeof contractGearItem === 'function' && rawItem) ? contractGearItem(rawItem) : rawItem;
         const unlock = item && typeof gearUnlockState === 'function' ? gearUnlockState(item, sid) : { unlocked: true };
+        const row = document.createElement('div');
+        row.className = 'gear-slot-row';
+        row.setAttribute('role', 'listitem');
         const btn = document.createElement('button');
         btn.type = 'button';
         btn.className = 'hub-tile gear-slot-card'
           + (sid === pickSlot ? ' sel' : '')
           + (item && unlock.unlocked && gearHasStats(item) ? ' kind-stat' : '')
           + (item && !unlock.unlocked ? ' locked' : '')
-          + (!item ? ' empty' : '');
+          + (item ? ' filled' : ' empty');
         btn.setAttribute('data-gear-slot', sid);
         btn.setAttribute('data-slot', sid);
-        btn.setAttribute('role', 'listitem');
         btn.setAttribute('aria-pressed', sid === pickSlot ? 'true' : 'false');
+        btn.setAttribute('aria-current', sid === pickSlot ? 'true' : 'false');
         const tint = (item && item.look && item.look.tint) || (item && item.color) || slot.color || '#1c2940';
         const rar = item && item.rarity ? String(item.rarity) : '';
         const sub = !item
-          ? tOr('gear.empty', 'Leeg')
+          ? tOr('gear.slotEmptyHint', 'Leeg — tik om te vullen')
           : (!unlock.unlocked
             ? (unlock.label || tOr('gear.pillLock', 'LOCK'))
             : (gearItemName(item) + (rar ? ' · ' + tOr('rarity.' + rar, tOr('gear.rar.' + rar, rar)) : '')));
         const ico = slotIco[sid] || 'assets/buttons/modes/gear.svg';
+        const openMark = sid === pickSlot
+          ? `<span class="gear-slot-open">${esc(tOr('gear.slotOpen', 'open'))}</span>`
+          : '';
         btn.innerHTML =
           `<span class="hub-tile-ico gear-slot-swatch" style="background:${esc(tint)}">` +
           `<img src="${esc(ico)}" alt="" width="22" height="22" decoding="async" draggable="false"></span>` +
@@ -4408,7 +4438,7 @@ const UI = {
           `<span class="hub-tile-title gear-slot-title">${esc(gearSlotName(sid))}</span>` +
           `<span class="hub-tile-sub gear-slot-sub">${esc(sub)}</span>` +
           `</span>` +
-          `<span class="gear-slot-pills hub-tile-stat">${pillFor(item, unlock, { on: !!item })}</span>`;
+          `<span class="gear-slot-pills hub-tile-stat">${pillFor(item, unlock, { on: !!item })}${openMark}</span>`;
         bindPress(btn, () => {
           safeUiAction(() => {
             this.gearSlotPick = sid;
@@ -4418,14 +4448,33 @@ const UI = {
             this.renderGear();
             const screen = document.getElementById('gearScreen');
             const inv = document.getElementById('gearInvSection');
-            if (screen && inv) {
+            if (screen && inv && window.matchMedia && !window.matchMedia('(min-width: 900px)').matches) {
               const sr = screen.getBoundingClientRect();
               const ir = inv.getBoundingClientRect();
               screen.scrollTop += (ir.top - sr.top) - 10;
             }
           }, 'gearSlot/' + sid, tOr('gear.errSlot', 'Slot pick failed'));
         });
-        slotList.appendChild(btn);
+        row.appendChild(btn);
+        const clear = document.createElement('button');
+        clear.type = 'button';
+        clear.className = 'gear-slot-clear';
+        clear.setAttribute('data-gear-unequip', sid);
+        clear.textContent = tOr('gear.unequip', 'Uitdoen');
+        clear.setAttribute('aria-label', tOr('gear.clearSlot', '{slot} leegmaken', { slot: gearSlotName(sid) }));
+        if (!item) clear.hidden = true;
+        bindPress(clear, () => {
+          safeUiAction(() => {
+            if (!item) return;
+            this.gearSlotPick = sid;
+            this.gearItemPick = item.id;
+            takeOff(Object.assign({}, item, { slot: sid, slotId: sid }));
+            this.renderGear();
+            this.renderMenu();
+          }, 'gearUnequip/' + sid, tOr('gear.errSlot', 'Slot pick failed'));
+        });
+        row.appendChild(clear);
+        slotList.appendChild(row);
       }
     }
 
@@ -4458,30 +4507,61 @@ const UI = {
 
     const kicker = document.getElementById('gearInvKicker');
     if (kicker) {
-      kicker.textContent = tOr('gear.invKicker', '{slot}', { slot: gearSlotName(pickSlot) });
+      kicker.textContent = tOr('gear.invKickerOpen', '{slot}', { slot: gearSlotName(pickSlot) });
+    }
+    const hintEl = document.getElementById('gearSheetHint');
+    if (hintEl) {
+      hintEl.textContent = tOr('gear.sheetHint', 'Tik een stuk om het aan of uit te doen. Op slot blijft zichtbaar.');
     }
 
     const detail = document.getElementById('gearDetail');
     const rawPicked = typeof gearItemById === 'function' ? gearItemById(this.gearItemPick) : null;
     const picked = (typeof contractGearItem === 'function' && rawPicked) ? contractGearItem(rawPicked) : rawPicked;
     if (detail) {
+      detail.classList.remove('is-equipped', 'is-locked');
       if (!picked) {
         detail.innerHTML = `<div class="gear-detail-sub">${esc(tOr('gear.pickHint', 'Tik een item om aan of uit te doen.'))}</div>`;
       } else {
         const unlock = gearUnlockState(picked, pickSlot);
         const tip = unlock.model || (typeof gearTooltipModel === 'function' ? gearTooltipModel(picked) : null);
-        const equippedHere = eq[picked.slot] === picked.id || eq[picked.slotId] === picked.id;
+        const equippedHere = eq[picked.slot] === picked.id || eq[picked.slotId] === picked.id
+          || unlock.state === 'already-equipped';
         const kindPill = pillFor(picked, unlock, { on: equippedHere });
         const lockLine = unlock.unlocked
           ? ''
-          : `<div class="gear-detail-sub" style="color:#ffd75e;margin-top:4px">${esc(unlock.label || tOr('gear.pillLock', 'LOCK'))}</div>`;
+          : `<div class="gear-detail-lock">${esc(unlock.label || tOr('gear.pillLock', 'LOCK'))}</div>`;
         const bonus = unlock.unlocked
           ? (tip && tip.desc ? esc(tip.desc) + (tip.combatLine ? ' · ' + esc(tip.combatLine) : '') : esc(gearStatLine(picked)))
           : esc(tOr('gear.lockNoStats', 'Geen stats tot het slot open is'));
+        const action = this._gearActionFor(unlock, equippedHere);
+        let actionBtn = '';
+        if (action.key === 'unequip') {
+          actionBtn = `<button type="button" class="gear-detail-btn unequip" data-gear-act="unequip">${esc(tOr('gear.detailRemove', 'Dit stuk uitdoen'))}</button>`;
+          detail.classList.add('is-equipped');
+        } else if (action.key === 'equip') {
+          actionBtn = `<button type="button" class="gear-detail-btn equip" data-gear-act="equip">${esc(tOr('gear.detailWear', 'Dit stuk aandoen'))}</button>`;
+        } else {
+          actionBtn = `<button type="button" class="gear-detail-btn locked" data-gear-act="locked" disabled>${esc(tOr('gear.detailLocked', 'Nog op slot'))} · ${esc(action.label)}</button>`;
+          detail.classList.add('is-locked');
+        }
         detail.innerHTML =
           `<div class="gear-detail-title">${esc(gearItemName(picked))} ${kindPill}</div>` +
           `<div class="gear-detail-sub">${bonus}</div>` +
-          lockLine;
+          lockLine +
+          `<div class="gear-detail-actions">${actionBtn}</div>`;
+        const actBtn = detail.querySelector('[data-gear-act]');
+        if (actBtn && action.key !== 'locked') {
+          bindPress(actBtn, () => {
+            safeUiAction(() => {
+              this.gearItemPick = picked.id;
+              keepPickerScroll();
+              if (action.key === 'unequip') takeOff(picked);
+              else wearItem(picked);
+              this.renderGear();
+              this.renderMenu();
+            }, 'gearDetail/' + picked.id, 'Item kiezen mislukt');
+          });
+        }
       }
     }
 
@@ -4489,9 +4569,9 @@ const UI = {
     if (filterBar) {
       const labels = {
         all: tOr('gear.filterAll', 'Alles'),
-        look: tOr('gear.pillVanity', 'LOOK'),
-        stat: tOr('gear.pillStat', 'STAT'),
-        lock: tOr('gear.pillLock', 'LOCK'),
+        look: tOr('gear.filterLook', tOr('gear.pillVanity', 'LOOK')),
+        stat: tOr('gear.filterStat', tOr('gear.pillStat', 'STAT')),
+        lock: tOr('gear.filterLock', tOr('gear.pillLock', 'LOCK')),
         owned: tOr('gear.filterOwned', 'Van jou'),
       };
       if (!this._gearFilterBound) {
@@ -4503,7 +4583,7 @@ const UI = {
           chip.className = 'gear-filter-btn';
           chip.setAttribute('data-gear-filter', key);
           chip.setAttribute('role', 'tab');
-          chip.textContent = labels[key] || key;
+          chip.innerHTML = `<span class="gear-filter-label">${esc(labels[key] || key)}</span><span class="gear-filter-n" data-gear-filter-n="${esc(key)}"></span>`;
           bindPress(chip, () => {
             safeUiAction(() => {
               this.gearFilter = key;
@@ -4520,7 +4600,11 @@ const UI = {
         const key = chip.getAttribute('data-gear-filter');
         chip.classList.toggle('sel', key === this.gearFilter);
         chip.setAttribute('aria-selected', key === this.gearFilter ? 'true' : 'false');
-        chip.textContent = labels[key] || key;
+        const lab = chip.querySelector('.gear-filter-label');
+        if (lab) lab.textContent = labels[key] || key;
+        else chip.textContent = labels[key] || key;
+        const nEl = chip.querySelector('[data-gear-filter-n]');
+        if (nEl) nEl.textContent = String(this._gearFilterCount(items, key));
       }
     }
 
@@ -4589,6 +4673,27 @@ const UI = {
         slot: gearSlotName(pickSlot),
       });
     }
+    const clearEl = document.getElementById('gearFilterClear');
+    if (clearEl) {
+      const filtered = this.gearFilter !== 'all' || this.gearRarity !== 'all' || !!(this.gearFilterQ && String(this.gearFilterQ).trim());
+      clearEl.hidden = !filtered;
+      clearEl.textContent = tOr('gear.filterClear', 'Wis filters');
+      if (!clearEl.dataset.sfGearClear) {
+        clearEl.dataset.sfGearClear = '1';
+        bindPress(clearEl, () => {
+          safeUiAction(() => {
+            this.gearFilter = 'all';
+            this.gearRarity = 'all';
+            this.gearFilterQ = '';
+            this._gearPickerScroll = 0;
+            const q = document.getElementById('gearFilterQ');
+            if (q) q.value = '';
+            AudioSys.sfx('select');
+            this.renderGear({ pickerOnly: true });
+          }, 'gearFilterClear', 'Filter mislukt');
+        });
+      }
+    }
 
     const picker = document.getElementById('gearPicker');
     if (picker) {
@@ -4605,14 +4710,17 @@ const UI = {
         const unlock = gearUnlockState(it, pickSlot);
         const equippedHere = eq[it.slot] === it.id || eq[it.slotId] === it.id
           || unlock.state === 'already-equipped';
+        const action = this._gearActionFor(unlock, equippedHere);
         const el = document.createElement('button');
         el.type = 'button';
         el.className = 'gear-card'
           + (this.gearItemPick === it.id ? ' sel' : '')
           + (unlock.unlocked ? '' : ' locked')
+          + (unlock.state === 'not-owned' ? ' not-owned' : '')
           + (equippedHere ? ' equipped' : '');
         el.setAttribute('data-gear-id', it.id);
         el.setAttribute('data-equip-state', unlock.state || '');
+        el.setAttribute('data-gear-action', action.key);
         el.setAttribute('data-rarity', it.rarity || '');
         el.setAttribute('aria-disabled', unlock.unlocked ? 'false' : 'true');
         const tint = (it.look && it.look.tint) || it.color || '#333c55';
@@ -4621,12 +4729,15 @@ const UI = {
           ? `<span class="gear-pill gear-pill-rar rar-${esc(rar)}">${esc(tOr('gear.rar.' + rar, rar))}</span>`
           : '';
         const meta = unlock.unlocked
-          ? (gearHasStats(it) ? gearStatLine(it) : tOr('gear.vanityHint', 'Geen stats — alleen look'))
+          ? (equippedHere
+            ? tOr('gear.wearingNow', 'Nu aan — tik om uit te doen')
+            : (gearHasStats(it) ? gearStatLine(it) : tOr('gear.vanityHint', 'Geen stats — alleen look')))
           : (unlock.label || tOr('gear.pillLock', 'LOCK'));
         el.innerHTML =
           `<span class="gear-card-swatch" style="background:${esc(tint)}"></span>` +
           `<span class="gear-card-body"><span class="gear-card-name">${esc(gearItemName(it))} ${pillFor(it, unlock, { on: equippedHere })} ${rarPill}</span>` +
-          `<span class="gear-card-meta">${esc(meta)}</span></span>`;
+          `<span class="gear-card-meta">${esc(meta)}</span></span>` +
+          `<span class="gear-card-action ${esc(action.key)}">${esc(action.label)}</span>`;
         bindPress(el, () => {
           safeUiAction(() => {
             this.gearItemPick = it.id;

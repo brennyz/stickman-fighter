@@ -52,8 +52,8 @@ From `gearTooltipModel`: **LOOK** if vanity / `!appliesStats`. **STAT** if `appl
 
 ## Catalog UX
 
-131 items. Filter chips (all / LOOK / STAT / LOCK / owned) + rarity + search. **One page-scroll** (no nested picker `max-height`). Tap item = equip/unequip. HOME tile `#btnGearHome` (`data-hub="gear"`) is 1 tap from HOME.
+131 items. Filter chips (all / Look / Stats / Lock / owned) + rarity + search + **Wis filters**. **One page-scroll** (no nested picker `max-height`). Desktop ≥900px: loadout sticky left, sheet right. Tap item = equip/unequip; sheet `#gearDetail` also has Aandoen / Uitdoen / lock reason. Slot row has sibling `[data-gear-unequip]`. HOME tile `#btnGearHome` (`data-hub="gear"`) is 1 tap from HOME.
 
 ## UI IDs
 
-`#gearScreen` · `#btnGear` · `#btnGearHome` · `#gearDollCanvas` · `#gearSlotList` (`data-slot`) · `#gearWeaponAside` · `#gearDetail` · `#gearFilterBar` · `#gearFilterQ` · `#gearPicker` (`data-gear-id`)
+`#gearScreen` · `#btnGear` · `#btnGearHome` · `#gearDollCanvas` · `#gearSlotList` (`data-slot`) · `#gearWeaponAside` · `#gearDetail` · `#gearFilterBar` · `#gearFilterQ` · `#gearFilterClear` · `#gearPicker` (`data-gear-id`) · `#gearSheetHint` · `[data-gear-action]` · `[data-gear-unequip]`

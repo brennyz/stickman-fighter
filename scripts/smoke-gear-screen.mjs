@@ -33,6 +33,7 @@ must(/id="gearWeaponAside"/.test(html), 'missing weapon aside');
 must(/id="gearDollCanvas"/.test(html), 'missing stickman preview');
 must(/id="gearFilterBar"/.test(html) && /id="gearFilterQ"/.test(html), 'filter bar + search required for large catalog');
 must(/id="gearRarityBar"/.test(html) && /id="gearFilterCount"/.test(html), 'rarity bar + result count required');
+must(/id="gearFilterClear"/.test(html) && /id="gearSheetHint"/.test(html) && /id="gearLayout"/.test(html), 'sheet tools + layout wrappers required');
 must(!/data-gear-slot="arms"/.test(html) && !/data-gear-slot="aura"/.test(html), 'legacy arms/aura slots must not be in HTML');
 must(/hub-tile-gear/.test(html), 'Character tile must use HOME hub-tile chrome');
 
@@ -68,6 +69,9 @@ must(/function gearSortItems/.test(uiAdapt) && /function gearRaritiesInList/.tes
 must(/gearFilterItems\(items, filter, q, rarity\)/.test(uiAdapt) || /function gearFilterItems\(items, filter, q, rarity\)/.test(uiAdapt), 'gearFilterItems must take rarity');
 must(/isCosmetic/.test(uiAdapt) && /hasStats/.test(uiAdapt), 'contract item flags missing');
 must(/\.gear-filter-btn/.test(css), 'filter chips CSS missing');
+must(/\.gear-card-action/.test(css) && /\.gear-detail-actions/.test(css) && /\.gear-slot-clear/.test(css), 'equip/unequip/lock affordances CSS missing');
+must(!/\.gear-detail-actions\s*\{\s*display:\s*none/.test(css), 'detail actions must be visible');
+must(/min-width:\s*900px/.test(css) && /grid-template-columns/.test(css), 'desktop two-column gear layout missing');
 must(!/\.screen\s*\{\s*display:\s*none\s*!important/.test(css), 'nuclear display:none forbidden');
 
 const chrome = ['/usr/local/bin/google-chrome', '/usr/bin/google-chrome'].find((p) => fs.existsSync(p));
@@ -353,6 +357,43 @@ async function run() {
       const stat = [...document.querySelectorAll('.gear-pill-stat')];
       if (!look.length || !stat.length) return { ok: false, why: 'LOOK/STAT pills missing' };
 
+      const worn = document.querySelector('#gearPicker [data-gear-id="head_wrap_cloth"]');
+      if (!worn || worn.getAttribute('data-gear-action') !== 'unequip') {
+        return { ok: false, why: 'equipped card must expose unequip action', act: worn && worn.getAttribute('data-gear-action') };
+      }
+      if (!worn.querySelector('.gear-card-action')) return { ok: false, why: 'card action chip missing' };
+      const detailAct = document.querySelector('#gearDetail [data-gear-act="unequip"]');
+      if (!detailAct) return { ok: false, why: 'detail unequip button missing' };
+      const detailBox = document.querySelector('#gearDetail .gear-detail-actions');
+      if (!detailBox || detailBox.getBoundingClientRect().height < 36) {
+        return { ok: false, why: 'detail actions not visible', h: detailBox && detailBox.getBoundingClientRect().height };
+      }
+      const slotClear = document.querySelector('#gearSlotList [data-gear-unequip="head"]');
+      if (!slotClear || slotClear.hidden) return { ok: false, why: 'slot unequip control missing on filled head' };
+      slotClear.click();
+      if (save.gear.equipped.head) return { ok: false, why: 'slot unequip must clear head', head: save.gear.equipped.head };
+
+      UI.gearFilter = 'lock';
+      UI.gearFilterQ = '';
+      UI.gearRarity = 'all';
+      UI.renderGear({ pickerOnly: true });
+      const lockCard = document.querySelector('#gearPicker .gear-card.locked');
+      if (!lockCard) return { ok: false, why: 'LOCK filter must show a locked card' };
+      if (lockCard.getAttribute('data-gear-action') !== 'locked') {
+        return { ok: false, why: 'locked card action', act: lockCard.getAttribute('data-gear-action') };
+      }
+      const lockAct = lockCard.querySelector('.gear-card-action');
+      if (!lockAct || !lockAct.textContent.trim()) return { ok: false, why: 'locked card must show lock reason action' };
+
+      const clearBtn = document.getElementById('gearFilterClear');
+      if (!clearBtn || clearBtn.hidden) return { ok: false, why: 'clear filters must show when filtered' };
+      clearBtn.click();
+      if (UI.gearFilter !== 'all') return { ok: false, why: 'clear filters must reset type', filter: UI.gearFilter };
+      const nChip = document.querySelector('#gearFilterBar [data-gear-filter="all"] [data-gear-filter-n]');
+      if (!nChip || !/^\d+$/.test((nChip.textContent || '').trim())) {
+        return { ok: false, why: 'filter chips must show counts', text: nChip && nChip.textContent };
+      }
+
       return {
         ok: true,
         ids,
@@ -366,10 +407,33 @@ async function run() {
     }
   });
 
+  await page.setViewport({ width: 1100, height: 800, isMobile: false, hasTouch: false });
+  await page.evaluate(() => {
+    UI.safeOpen('gearScreen', () => UI.renderGear());
+  });
+  const desk = await page.evaluate(() => {
+    const layout = document.getElementById('gearLayout');
+    const loadout = document.getElementById('gearLoadout');
+    const inv = document.getElementById('gearInvSection');
+    if (!layout || !loadout || !inv) return { ok: false, why: 'desktop layout nodes missing' };
+    const cs = getComputedStyle(layout);
+    if (cs.display !== 'grid') return { ok: false, why: 'desktop layout not grid', display: cs.display };
+    const lb = loadout.getBoundingClientRect();
+    const ib = inv.getBoundingClientRect();
+    if (ib.left < lb.right - 8) {
+      return { ok: false, why: 'desktop columns should sit side by side', left: lb.right, right: ib.left };
+    }
+    return { ok: true };
+  });
+
   await browser.close();
   try { if (server && server.close) server.close(); } catch (_) {}
   if (!result || !result.ok) {
     console.error('SMOKE_FAIL gear-screen', result);
+    process.exit(1);
+  }
+  if (!desk || !desk.ok) {
+    console.error('SMOKE_FAIL gear-screen desktop', desk);
     process.exit(1);
   }
   console.log('SMOKE_OK gear-screen', result.cards.join(','), result.catalog, result.aside);

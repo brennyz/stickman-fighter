@@ -40,6 +40,13 @@
   },
   "userWishlist": [
     {
+      "id": "w-20260918T122300",
+      "from": "user",
+      "text": "WORKER lane: GEAR screens UX. Uitrusting / slot sheets / tap-to-equip feel clunky. Make equip/unequip/filters/locks clear on mobile+desktop. Keep gear schema/equip API. No Versus. Draft PR only. speel.html.",
+      "status": "in-progress",
+      "updated": "2026-09-18"
+    },
+    {
       "id": "w-20260916T121500",
       "from": "user",
       "text": "Stickman Fighter MEGA-MERGE to main — Brendon said everything is klaar, merge NOW. Merge ALL open Stickman feature PRs into origin/main (resolve conflicts). Known batch #295–#309 plus any other open stickman-fighter PRs in this Grok wave. Skip it-academy. Order: languages/i18n → systems → UI → pixels/motion → polish. Feature-base PRs (e.g. #300) still land on main. No new features.",
@@ -1042,9 +1049,10 @@
     {
       "id": "w-20260916T111200",
       "from": "user",
-      "text": "Systems equip-API klaar (#295): align sheets/equip-flow. Bind gearEquipState/gearCanEquip (ok|vanity-ok|already-equipped|locked|not-owned|wrong-slot|unknown), gearEquipItem(id,{expectSlot?}), gearSlotInventory(slot,save). DOM #gearScreen/[data-slot]/[data-gear-id] ongewijzigd. Schema 1 ongemoeid. Geen layout-conflict met systems. Update PR #307 met screenshots + NL API-note.",
-      "status": "in-progress",
-      "updated": "2026-09-16"
+      "text": "Systems equip-API klaar (#295): align sheets/equip-flow. Bind gearEquipState/gearCanEquip (ok|vanity-ok|already-equipped|locked|not-owned|wrong-slot|unknown), gearEquipItem(id,{expectSlot?}), gearSlotInventory(slot,save). DOM #gearScreen/[data-slot]/[data-gear-id] ongewijzigd. Schema 1 ongemoeid. Geen layout-conflict met systems. Update PR #307 with screenshots + NL API-note.",
+      "status": "done-in-code",
+      "updated": "2026-09-18",
+      "notes": "Sheets/filters/locks aligned on worker UX lane. DOM IDs + schema 1 kept. Draft PR, not main."
     }
   ],
   "agentRules": [
