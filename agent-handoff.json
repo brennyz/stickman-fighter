@@ -20,7 +20,7 @@
     "featureBranch": "cursor/combat-juice-hit-4682",
     "pushBlocked": null,
     "shareUrl": "https://brennyz.github.io/stickman-fighter/speel.html",
-    "note": "DRAFT combat juice hit/kill/equip on cursor/combat-juice-hit-4682. LIVE main stays v1.18.189 / SW 399. No Versus. speel.html. Invisible-render / landscape menu not this lane.",
+    "note": "DRAFT #330 combat juice on cursor/combat-juice-hit-4682 (v1.18.190 / SW 400). LIVE main v1.18.189. speel.html. No Versus. Invisible-render / landscape not this lane.",
     "updated": "2026-09-18T15:40:46Z",
     "localMainHead": "c9cba4b925db7b76a1e55ba0a6f20f89a6b1c378",
     "remoteMainHead": "c9cba4b925db7b76a1e55ba0a6f20f89a6b1c378"
@@ -45,6 +45,12 @@
         "pr": 324,
         "title": "Tablet midband (SKIP — already in #314)",
         "skip": true
+      },
+      {
+        "pr": 330,
+        "title": "Combat juice hit/kill/equip snap",
+        "branch": "cursor/combat-juice-hit-4682",
+        "draft": true
       }
     ]
   },
@@ -53,7 +59,7 @@
       "id": "w-20260918T153500",
       "from": "user",
       "text": "MASTERGAME — Stickman Fighter combat juice & hit feedback. Off main. Draft PR. No Versus. speel.html. Until ~17:54 Amsterdam. Improve hit/kill/equip juice so fights feel punchy (Flappy-like: juice on core action, not UI spam). Reduced-motion safe. Don't own invisible-render or landscape menu P0s. Draft only.",
-      "status": "in-progress",
+      "status": "done-in-code",
       "updated": "2026-09-18",
       "notes": "Lane: src/systems/combat-juice.js. Do not restage #316 HOME/result UI juice. Do not own invisible-render or landscape menu."
     },
@@ -1184,6 +1190,10 @@
   ],
   "sessionLog": [
     {
+      "at": "2026-09-18T15:53:02Z",
+      "summary": "Draft #330 combat juice: hit haptic+squash, rate-limited KO, equip punch. Browser-verified Training hits + gear. Reduced-motion safe. No Versus."
+    },
+    {
       "at": "2026-09-18T15:40:46Z",
       "summary": "MASTERGAME combat juice: punchy hit/kill/equip snap (haptic+squash+rate-limited KO). Reduced-motion safe. Draft only, no Versus."
     },
@@ -1278,10 +1288,6 @@
     {
       "at": "2026-09-18T12:31:56Z",
       "summary": "LANGUAGE: factory desc + nameShort, FOMO/HUD locale, export gear/fabriek i18n. Draft #317, geen main."
-    },
-    {
-      "at": "2026-09-18T12:30:17Z",
-      "summary": "LANGUAGE worker: layout-safe NL/EN/DE/FR/ES copy (factory desc, FOMO, HUD telegraphs). Draft, geen main."
     }
   ],
   "implementedFeaturesSummary": "d18 char select deel 1+2 (v1.11.1-2); Mats coinrun + shuriken mik/vliegers + anti-spam (v1.12.0); speel.html (v1.12.2+). Zie HANDOFF-ZOEKINDEX.md en improvement-d20-bag.json userFeatureLog.",
