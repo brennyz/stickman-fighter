@@ -40,6 +40,7 @@ How to pick work: take the **lowest open EX-id** in your lane. Mark `in-progress
 | EX-018 | P2 | open | A–Z | “Verder spelen” continue banner stays on HOME after a run | `#btnContinue` / `menu.continue` |
 | EX-019 | P3 | open | i18n | Gear chips LOOK/STAT still English tokens in FR/ES (short on purpose) | catalog-locales overlays |
 | EX-020 | P3 | open | Android native | TWA / Play / APK signing, back-gesture, display-cutout, install prompt — **next sprint** | `native/android/` · `docs/store/` |
+| EX-021 | P2 | open | FOMO / HOME | First-open «Vandaag» ritual sheet covers HOME tiles on 390px (by design, still blocks the grid until dismiss) | `src/systems/missions.js` FOMO ritual · `#fomoRitual` |
 
 ---
 
@@ -64,7 +65,7 @@ Desktop ~1280×800 and phone 390×844 (Puppeteer + computer-use). Versus tile ab
 | Surface | 390px | Desktop | Notes |
 |---------|-------|---------|-------|
 | Title gate / SPELEN | ok | ok | Android-first landing on `speel.html` |
-| HOME hub | tiles stack; no clip | 2-col | NL/EN/DE switch clean on chrome |
+| HOME hub | tiles stack; FOMO «Vandaag» sheet covers grid on first open (EX-021) | 2-col | NL/EN/DE switch clean on chrome |
 | Factories | list→detail | **was** dual-pane clutter | ids confirmed |
 | Gear | pills wrap risk | long scroll | LOOK/STAT English tokens (fixed NL) |
 | Summons | chest-heavy | sparse CTA | EX-010 still open |
