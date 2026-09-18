@@ -13,10 +13,10 @@
     "tunnelBookmark": "https://stickfighter-ipad-b75e.loca.lt/ipad.html"
   },
   "codeTruth": {
-    "appVersion": "1.18.173",
-    "swCache": "stickfighter-app-v383",
-    "gameJsQuery": "game.js?v=383",
-    "cssQuery": "styles/main.css?v=383",
+    "appVersion": "1.18.174",
+    "swCache": "stickfighter-app-v384",
+    "gameJsQuery": "game.js?v=384",
+    "cssQuery": "styles/main.css?v=384",
     "featureBranch": "cursor/summons-cleanup-18b8",
     "pushBlocked": null,
     "shareUrl": "https://brennyz.github.io/stickman-fighter/speel.html",
@@ -1074,6 +1074,10 @@
   ],
   "sessionLog": [
     {
+      "at": "2026-09-18T12:47:40Z",
+      "summary": "Summon P0 on #313: glance leftover/odds/no-pity, empty+spam guard, card contrast. F2 rolls still off. v1.18.174 / SW 384. Draft."
+    },
+    {
       "at": "2026-09-18T12:43:14Z",
       "summary": "Summon systems cleanup: clearer 10/day chest flow, 2s skip-ready reveal, readable pull log, less mobile chrome. Draft #313. Versus + speel.html ongemoeid. v1.18.173 / SW 383."
     },
@@ -1168,10 +1172,6 @@
     {
       "at": "2026-09-14T12:45:42Z",
       "summary": "P1 entry: Android-first landing — geen iPad-blok op Android"
-    },
-    {
-      "at": "2026-09-14T12:44:05Z",
-      "summary": "Toast-wachtrij: één tegelijk, Android Chrome/TWA zelfde HTML onder statusbalk · v1.18.156 / SW 366"
     }
   ],
   "implementedFeaturesSummary": "d18 char select deel 1+2 (v1.11.1-2); Mats coinrun + shuriken mik/vliegers + anti-spam (v1.12.0); speel.html (v1.12.2+). Zie HANDOFF-ZOEKINDEX.md en improvement-d20-bag.json userFeatureLog.",
