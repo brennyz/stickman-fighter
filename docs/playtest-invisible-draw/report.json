@@ -1,0 +1,578 @@
+{
+  "ok": true,
+  "app": "1.18.190",
+  "sw": 400,
+  "cases": [
+    {
+      "id": "A-portrait-spawn",
+      "ok": true,
+      "fails": [],
+      "shot": "docs/playtest-invisible-draw/01-portrait-spawn.png",
+      "data": {
+        "app": "1.18.190",
+        "sw": 400,
+        "state": "play",
+        "bodyPlay": true,
+        "activeScreens": [],
+        "canvasVis": "visible",
+        "W": 390,
+        "H": 844,
+        "ground": 616.12,
+        "player": {
+          "x": 98,
+          "y": 616,
+          "hp": 100,
+          "alive": true,
+          "deadT": 0,
+          "hitFlashT": 0,
+          "invulnT": 0.5,
+          "onField": true,
+          "scale": 1
+        },
+        "mob": {
+          "x": 359,
+          "y": 572,
+          "hp": 34,
+          "alive": true,
+          "deadT": -1,
+          "flashT": 0,
+          "onField": true,
+          "size": 16,
+          "id": "kikkervis"
+        },
+        "liveMobs": 1,
+        "playerScore": {
+          "ok": true,
+          "lit": 5152,
+          "n": 5152,
+          "frac": 1,
+          "dark": 0,
+          "left": 70,
+          "top": 524,
+          "w": 56,
+          "h": 92
+        },
+        "mobScore": {
+          "ok": true,
+          "lit": 5040,
+          "n": 5040,
+          "frac": 1,
+          "dark": 0,
+          "left": 327,
+          "top": 492,
+          "w": 63,
+          "h": 80
+        },
+        "extra": null
+      }
+    },
+    {
+      "id": "B-portrait-after-hit",
+      "ok": true,
+      "fails": [],
+      "shot": "docs/playtest-invisible-draw/02-portrait-after-hit.png",
+      "data": {
+        "app": "1.18.190",
+        "sw": 400,
+        "state": "play",
+        "bodyPlay": true,
+        "activeScreens": [],
+        "canvasVis": "visible",
+        "W": 390,
+        "H": 844,
+        "ground": 616.12,
+        "player": {
+          "x": 98,
+          "y": 616,
+          "hp": 100,
+          "alive": true,
+          "deadT": 0,
+          "hitFlashT": 0,
+          "invulnT": 0.37,
+          "onField": true,
+          "scale": 1
+        },
+        "mob": {
+          "x": 341,
+          "y": 554,
+          "hp": 16,
+          "alive": true,
+          "deadT": -1,
+          "flashT": 0.14,
+          "onField": true,
+          "size": 16,
+          "id": "kikkervis"
+        },
+        "liveMobs": 1,
+        "playerScore": {
+          "ok": true,
+          "lit": 5152,
+          "n": 5152,
+          "frac": 1,
+          "dark": 0,
+          "left": 70,
+          "top": 524,
+          "w": 56,
+          "h": 92
+        },
+        "mobScore": {
+          "ok": true,
+          "lit": 5120,
+          "n": 5120,
+          "frac": 1,
+          "dark": 0,
+          "left": 309,
+          "top": 474,
+          "w": 64,
+          "h": 80
+        },
+        "extra": null
+      }
+    },
+    {
+      "id": "C-landscape-after-rotate",
+      "ok": true,
+      "fails": [],
+      "shot": "docs/playtest-invisible-draw/03-landscape-after-rotate.png",
+      "data": {
+        "app": "1.18.190",
+        "sw": 400,
+        "state": "play",
+        "bodyPlay": true,
+        "activeScreens": [],
+        "canvasVis": "visible",
+        "W": 844,
+        "H": 390,
+        "ground": 312,
+        "player": {
+          "x": 98,
+          "y": 312,
+          "hp": 100,
+          "alive": true,
+          "deadT": 0,
+          "hitFlashT": 0,
+          "invulnT": 0.15,
+          "onField": true,
+          "scale": 1
+        },
+        "mob": {
+          "x": 325,
+          "y": 296,
+          "hp": 16,
+          "alive": true,
+          "deadT": -1,
+          "flashT": -0.01,
+          "onField": true,
+          "size": 16,
+          "id": "kikkervis"
+        },
+        "liveMobs": 1,
+        "playerScore": {
+          "ok": true,
+          "lit": 5152,
+          "n": 5152,
+          "frac": 1,
+          "dark": 0,
+          "left": 70,
+          "top": 220,
+          "w": 56,
+          "h": 92
+        },
+        "mobScore": {
+          "ok": true,
+          "lit": 5120,
+          "n": 5120,
+          "frac": 1,
+          "dark": 0,
+          "left": 293,
+          "top": 216,
+          "w": 64,
+          "h": 80
+        },
+        "extra": null
+      }
+    },
+    {
+      "id": "D-landscape-after-hit",
+      "ok": true,
+      "fails": [],
+      "shot": "docs/playtest-invisible-draw/04-landscape-after-hit.png",
+      "data": {
+        "app": "1.18.190",
+        "sw": 400,
+        "state": "play",
+        "bodyPlay": true,
+        "activeScreens": [],
+        "canvasVis": "visible",
+        "W": 844,
+        "H": 390,
+        "ground": 312,
+        "player": {
+          "x": 98,
+          "y": 312,
+          "hp": 103,
+          "alive": true,
+          "deadT": 0,
+          "hitFlashT": 0,
+          "invulnT": 0,
+          "onField": true,
+          "scale": 1
+        },
+        "mob": {
+          "x": 330,
+          "y": 296,
+          "hp": 0,
+          "alive": false,
+          "deadT": 0.02,
+          "flashT": 0.12,
+          "onField": true,
+          "size": 16,
+          "id": "kikkervis"
+        },
+        "liveMobs": 0,
+        "playerScore": {
+          "ok": true,
+          "lit": 5152,
+          "n": 5152,
+          "frac": 1,
+          "dark": 0,
+          "left": 70,
+          "top": 220,
+          "w": 56,
+          "h": 92
+        },
+        "mobScore": {
+          "ok": true,
+          "lit": 5120,
+          "n": 5120,
+          "frac": 1,
+          "dark": 0,
+          "left": 298,
+          "top": 216,
+          "w": 64,
+          "h": 80
+        },
+        "extra": null
+      }
+    },
+    {
+      "id": "E-portrait-rotate-back",
+      "ok": true,
+      "fails": [],
+      "shot": "docs/playtest-invisible-draw/05-portrait-rotate-back.png",
+      "data": {
+        "app": "1.18.190",
+        "sw": 400,
+        "state": "play",
+        "bodyPlay": true,
+        "activeScreens": [],
+        "canvasVis": "visible",
+        "W": 390,
+        "H": 844,
+        "ground": 616.12,
+        "player": {
+          "x": 98,
+          "y": 616,
+          "hp": 103,
+          "alive": true,
+          "deadT": 0,
+          "hitFlashT": 0,
+          "invulnT": -0.02,
+          "onField": true,
+          "scale": 1
+        },
+        "mob": {
+          "x": 330,
+          "y": 600,
+          "hp": 0,
+          "alive": false,
+          "deadT": 0.28,
+          "flashT": -0.01,
+          "onField": true,
+          "size": 16,
+          "id": "kikkervis"
+        },
+        "liveMobs": 0,
+        "playerScore": {
+          "ok": true,
+          "lit": 5152,
+          "n": 5152,
+          "frac": 1,
+          "dark": 0,
+          "left": 70,
+          "top": 524,
+          "w": 56,
+          "h": 92
+        },
+        "mobScore": {
+          "ok": true,
+          "lit": 5120,
+          "n": 5120,
+          "frac": 1,
+          "dark": 0,
+          "left": 298,
+          "top": 520,
+          "w": 64,
+          "h": 80
+        },
+        "extra": null
+      }
+    },
+    {
+      "id": "F-enemy-death-midfade",
+      "ok": true,
+      "fails": [],
+      "shot": "docs/playtest-invisible-draw/06-enemy-death-midfade.png",
+      "data": {
+        "app": "1.18.190",
+        "sw": 400,
+        "state": "play",
+        "bodyPlay": true,
+        "activeScreens": [],
+        "canvasVis": "visible",
+        "W": 390,
+        "H": 844,
+        "ground": 616.12,
+        "player": {
+          "x": 98,
+          "y": 616,
+          "hp": 103,
+          "alive": true,
+          "deadT": 0,
+          "hitFlashT": 0,
+          "invulnT": -0.02,
+          "onField": true,
+          "scale": 1
+        },
+        "mob": {
+          "x": 330,
+          "y": 600,
+          "hp": 0,
+          "alive": false,
+          "deadT": 0.45,
+          "flashT": -0.01,
+          "onField": true,
+          "size": 16,
+          "id": "kikkervis"
+        },
+        "liveMobs": 0,
+        "playerScore": {
+          "ok": true,
+          "lit": 5152,
+          "n": 5152,
+          "frac": 1,
+          "dark": 0,
+          "left": 70,
+          "top": 524,
+          "w": 56,
+          "h": 92
+        },
+        "mobScore": {
+          "ok": true,
+          "lit": 5120,
+          "n": 5120,
+          "frac": 1,
+          "dark": 0,
+          "left": 298,
+          "top": 520,
+          "w": 64,
+          "h": 80
+        },
+        "extra": null
+      }
+    },
+    {
+      "id": "G-player-death-pose",
+      "ok": true,
+      "fails": [],
+      "shot": "docs/playtest-invisible-draw/07-player-death-pose.png",
+      "data": {
+        "app": "1.18.190",
+        "sw": 400,
+        "state": "play",
+        "bodyPlay": true,
+        "activeScreens": [],
+        "canvasVis": "visible",
+        "W": 390,
+        "H": 844,
+        "ground": 616.12,
+        "player": {
+          "x": 98,
+          "y": 616,
+          "hp": 0,
+          "alive": false,
+          "deadT": 0.35,
+          "hitFlashT": 0.18,
+          "invulnT": 0.54,
+          "onField": true,
+          "scale": 1
+        },
+        "mob": {
+          "x": 364,
+          "y": 579,
+          "hp": 34,
+          "alive": true,
+          "deadT": -1,
+          "flashT": 0,
+          "onField": true,
+          "size": 16,
+          "id": "kikkervis"
+        },
+        "liveMobs": 1,
+        "playerScore": {
+          "ok": true,
+          "lit": 5152,
+          "n": 5152,
+          "frac": 1,
+          "dark": 0,
+          "left": 70,
+          "top": 524,
+          "w": 56,
+          "h": 92
+        },
+        "mobScore": {
+          "ok": true,
+          "lit": 4640,
+          "n": 4640,
+          "frac": 1,
+          "dark": 0,
+          "left": 332,
+          "top": 499,
+          "w": 58,
+          "h": 80
+        },
+        "extra": null
+      }
+    },
+    {
+      "id": "H-player-death-after-rotate",
+      "ok": true,
+      "fails": [],
+      "shot": "docs/playtest-invisible-draw/08-player-death-after-rotate.png",
+      "data": {
+        "app": "1.18.190",
+        "sw": 400,
+        "state": "play",
+        "bodyPlay": true,
+        "activeScreens": [],
+        "canvasVis": "visible",
+        "W": 844,
+        "H": 390,
+        "ground": 312,
+        "player": {
+          "x": 98,
+          "y": 312,
+          "hp": 0,
+          "alive": false,
+          "deadT": 0.57,
+          "hitFlashT": 0.18,
+          "invulnT": 0.54,
+          "onField": true,
+          "scale": 1
+        },
+        "mob": {
+          "x": 342,
+          "y": 296,
+          "hp": 34,
+          "alive": true,
+          "deadT": -1,
+          "flashT": 0,
+          "onField": true,
+          "size": 16,
+          "id": "kikkervis"
+        },
+        "liveMobs": 1,
+        "playerScore": {
+          "ok": true,
+          "lit": 5152,
+          "n": 5152,
+          "frac": 1,
+          "dark": 0,
+          "left": 70,
+          "top": 220,
+          "w": 56,
+          "h": 92
+        },
+        "mobScore": {
+          "ok": true,
+          "lit": 5120,
+          "n": 5120,
+          "frac": 1,
+          "dark": 0,
+          "left": 310,
+          "top": 216,
+          "w": 64,
+          "h": 80
+        },
+        "extra": null
+      }
+    },
+    {
+      "id": "I-landscape-fresh-spawn",
+      "ok": true,
+      "fails": [],
+      "shot": "docs/playtest-invisible-draw/09-landscape-fresh-spawn.png",
+      "data": {
+        "app": "1.18.190",
+        "sw": 400,
+        "state": "play",
+        "bodyPlay": true,
+        "activeScreens": [],
+        "canvasVis": "visible",
+        "W": 844,
+        "H": 390,
+        "ground": 312,
+        "player": {
+          "x": 211,
+          "y": 312,
+          "hp": 103,
+          "alive": true,
+          "deadT": 0,
+          "hitFlashT": 0,
+          "invulnT": 0.53,
+          "onField": true,
+          "scale": 1
+        },
+        "mob": {
+          "x": 824,
+          "y": 297,
+          "hp": 28,
+          "alive": true,
+          "deadT": -1,
+          "flashT": 0,
+          "onField": true,
+          "size": 15,
+          "id": "bubbel"
+        },
+        "liveMobs": 1,
+        "playerScore": {
+          "ok": true,
+          "lit": 5152,
+          "n": 5152,
+          "frac": 1,
+          "dark": 0,
+          "left": 183,
+          "top": 220,
+          "w": 56,
+          "h": 92
+        },
+        "mobScore": {
+          "ok": true,
+          "lit": 4160,
+          "n": 4160,
+          "frac": 1,
+          "dark": 0,
+          "left": 792,
+          "top": 217,
+          "w": 52,
+          "h": 80
+        },
+        "extra": null
+      }
+    }
+  ],
+  "failures": [],
+  "notes": [
+    "boot-shot docs/playtest-invisible-draw/00-speel-boot-portrait.png app=1.18.190 sw=400"
+  ]
+}

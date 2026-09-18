@@ -38,6 +38,10 @@
     "pendingUpload": [],
     "pendingMerge": [
       {
+        "pr": 336,
+        "title": "PLAYTEST BOT 1/9 — INVISIBLE / DRAW (Adventure findings)"
+      },
+      {
         "pr": 311,
         "title": "playtest-harden-cycles"
       },
@@ -49,6 +53,13 @@
     ]
   },
   "userWishlist": [
+    {
+      "id": "w-20260918T160911",
+      "from": "user",
+      "text": "PLAYTEST BOT 1/9 — Stickman Fighter. LIVE main c9a29fc v1.18.190 SW400. speel.html. Until ~18:36 Amsterdam. Focus: INVISIBLE / DRAW — play Adventure portrait+landscape; confirm stickman+enemies always visible after hit/rotate/death. Screenshot failures. Draft PR with PLAYTEST findings only (no large feature fixes). No Versus. No main merge.",
+      "status": "done-in-code",
+      "updated": "2026-09-18"
+    },
     {
       "id": "w-20260918T155700",
       "from": "user",
@@ -1231,6 +1242,14 @@
   ],
   "sessionLog": [
     {
+      "at": "2026-09-18T16:38:56Z",
+      "summary": "PLAYTEST 1/9 INVISIBLE/DRAW: Adventure portrait+landscape on LIVE c9a29fc v1.18.190/SW400. Alive hit/rotate PASS. P1 fallen stickman vanishes after death+rotate. Draft #336, no main."
+    },
+    {
+      "at": "2026-09-18T16:09:11Z",
+      "summary": "start: PLAYTEST BOT 1/9 INVISIBLE/DRAW on LIVE c9a29fc v1.18.190"
+    },
+    {
       "at": "2026-09-18T16:06:11Z",
       "summary": "MEGA-MERGE 20m drafts #333–#327 onto main. v1.18.190 / SW 400. Playtest swarm. SKIP #324. Leave #311."
     },
@@ -1321,14 +1340,6 @@
     {
       "at": "2026-09-18T12:36:17Z",
       "summary": "examiner P0: pets/gear locale + 390px overflow (start)"
-    },
-    {
-      "at": "2026-09-18T12:31:56Z",
-      "summary": "LANGUAGE: factory desc + nameShort, FOMO/HUD locale, export gear/fabriek i18n. Draft #317, geen main."
-    },
-    {
-      "at": "2026-09-18T12:30:17Z",
-      "summary": "LANGUAGE worker: layout-safe NL/EN/DE/FR/ES copy (factory desc, FOMO, HUD telegraphs). Draft, geen main."
     }
   ],
   "implementedFeaturesSummary": "d18 char select deel 1+2 (v1.11.1-2); Mats coinrun + shuriken mik/vliegers + anti-spam (v1.12.0); speel.html (v1.12.2+). Zie HANDOFF-ZOEKINDEX.md en improvement-d20-bag.json userFeatureLog.",
