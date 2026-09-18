@@ -145,6 +145,7 @@ Schrijf **1–3 regels** per sessie: datum, d#, wat, versie.
 
 | Datum (UTC) | d# | Update |
 |-------------|-----|--------|
+| 2026-09-18 | — | **#313 keep-going P0:** één gouden Open kist (72/80px, beat menu-tile unify); glance plat; idle rarity-juice uit tot shake/card; 390+1280 smoke groen. **v1.18.179 / SW 389**. Draft, niet main. |
 | 2026-09-18 | — | **Summon #313 DONE (P3-only leftover):** EX-010 skip video/chest op liteFx + low-end; tip nooit over FOMO; smoke:summon/menu/fomo-pra groen. F2 pity-rolls blijven UIT. **v1.18.178 / SW 388**. Draft, niet main. |
 | 2026-09-18 | — | **Summon P0 #313:** first-time tip (dismissible), DE/FR/ES via t() (Neueste/Abbrechen/Weiter), smoke EN+DE 390px. F2 pity-rolls blijven UIT. **v1.18.177 / SW 387**. Draft, niet main. |
 | 2026-09-18 | — | **Summon P0 #313:** pull-log 4 nieuwste (save 5), geen x10-batch, Volgende left/total + Stop, FOMO niet over summon. smoke:summon + menu + fomo-pra groen. F2 pity-rolls blijven UIT. **v1.18.176 / SW 386**. Draft, niet main. |
