@@ -785,7 +785,11 @@ bindPress(document.getElementById('resAgain'), () => {
   if (!d || !d.mode) return;
   AudioSys.sfx('select');
   try { if (game) game._resultToken = (game._resultToken || 0) + 1; } catch (_) {}
-  if (d.mode === 'adventure') gokGooiStartLevel(d.level);
+  if (d.mode === 'adventure') {
+    if (typeof restartAdventureInstant === 'function') restartAdventureInstant(d);
+    else startGame('adventure', { level: d.level, difficulty: d.difficulty });
+    return;
+  }
   else if (d.mode === 'versus') {
     const p1 = d.p1 || vsSelect.p1;
     const p2 = d.p2 || vsSelect.p2;

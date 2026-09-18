@@ -2014,6 +2014,29 @@ function ensureVisibleScreen() {
   ensureMenuScreenActive();
 }
 
+/** Adventure lose: land the retry CTA well under 3s (Flappy-feel). Win can stay a beat longer. */
+const RESULT_SHOW_WIN_MS = 1400;
+const RESULT_SHOW_LOSE_MS = 700;
+function adventureResultDelayMs(win) {
+  const rm = typeof motionReduced === 'function' && motionReduced();
+  if (win) return rm ? 400 : RESULT_SHOW_WIN_MS;
+  return rm ? 160 : RESULT_SHOW_LOSE_MS;
+}
+
+/** Instant same-level rematch — no island / dice / HOME maze after death. */
+function restartAdventureInstant(data) {
+  try { if (typeof UI !== 'undefined' && UI.hideFomoRitual) UI.hideFomoRitual(); } catch (_) {}
+  try { if (typeof UI !== 'undefined' && UI.hideGambleRollFlash) UI.hideGambleRollFlash(); } catch (_) {}
+  try { if (typeof cancelGambleStart === 'function') cancelGambleStart(); } catch (_) {}
+  const level = Math.max(1, Math.min(MAX_LEVEL, Number(data && data.level) || 1));
+  let difficulty = 'normal';
+  try {
+    difficulty = (data && data.difficulty)
+      || (typeof currentAdvDiff === 'function' ? currentAdvDiff() : 'normal');
+  } catch (_) {}
+  startGame('adventure', { level, difficulty });
+}
+
 /** Veilig resultaat na gevecht — voorkomt ReferenceError + zwart scherm. */
 function scheduleGameResult(gameRef, delayMs, showFn) {
   if (!gameRef || typeof showFn !== 'function') return;

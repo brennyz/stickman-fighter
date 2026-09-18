@@ -959,8 +959,11 @@ class Game {
       AudioSys.sfx('lose');
       this.banner(t('banner.lost'), 2, '#ff6b6b', 50);
     }
-    // Resultaat-scherm altijd tonen (Volgende level / Opnieuw) — niet stil naar menu
-    scheduleGameResult(this, win ? 1600 : 1400, () => UI.showResult(win, {
+    // Resultaat-scherm altijd tonen (Volgende / Nog één keer) — niet stil naar menu
+    const resultDelay = (typeof adventureResultDelayMs === 'function')
+      ? adventureResultDelayMs(win)
+      : (win ? 1400 : 700);
+    scheduleGameResult(this, resultDelay, () => UI.showResult(win, {
       titleKey: win ? 'result.advWin' : 'result.advLose',
       title: win ? t('result.advWin') : t('result.advLose'),
       detailKey: win ? 'result.advDetailWin' : 'result.advDetailLose',

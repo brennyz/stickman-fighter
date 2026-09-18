@@ -17,10 +17,10 @@
     "swCache": "stickfighter-app-v382",
     "gameJsQuery": "game.js?v=382",
     "cssQuery": "styles/main.css?v=382",
-    "featureBranch": "main",
+    "featureBranch": "cursor/flappy-retry-18b8",
     "pushBlocked": null,
     "shareUrl": "https://brennyz.github.io/stickman-fighter/speel.html",
-    "note": "MEGA-MERGE LIVE on origin/main a18fc9e. #295–#309. v1.18.172 / SW 382. Pages ~1–3 min then Verse versie.",
+    "note": "Draft flappy-retry (Adventure death CTA). Versus + speel.html untouched. No main.",
     "updated": "2026-09-16T12:31:58Z",
     "localMainHead": "a18fc9e67633773cb18b638c64c9a86916d02d27",
     "remoteMainHead": "a18fc9e67633773cb18b638c64c9a86916d02d27"
@@ -36,9 +36,25 @@
     "lastChecked": "2026-09-16T12:31:58Z",
     "lastAsked": "2026-08-17T14:01:21Z",
     "pendingUpload": [],
-    "pendingMerge": []
+    "pendingMerge": [
+      {
+        "pr": null,
+        "url": null,
+        "branch": "cursor/flappy-retry-18b8",
+        "title": "Adventure death: Flappy-feel retry CTA (draft)",
+        "note": "Draft only. Do not merge until Brendon says merge."
+      }
+    ]
   },
   "userWishlist": [
+    {
+      "id": "w-20260918T131100",
+      "from": "user",
+      "text": "#313 DONE. NEW draft branch preferred. Flappy-feel P0 for Stickman Adventure: (1) Death → primary retry/next CTA visible in <~3s, huge tap on 390px. (2) No menu maze after die; one clear “nog één keer”. (3) Don’t fight FOMO/sheets. Coordinate with #316 juice if overlapping — don’t re-dupe. Draft only, speel.html, no Versus, no payments, no main.",
+      "status": "in-progress",
+      "updated": "2026-09-18",
+      "notes": "New draft cursor/flappy-retry-18b8. Instant same-level retry, huge lose CTA, FOMO hidden on result. #316 juice not duplicated."
+    },
     {
       "id": "w-20260916T121500",
       "from": "user",
