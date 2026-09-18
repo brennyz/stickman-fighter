@@ -81,7 +81,7 @@ must(ui.includes('doesLine') || ui.includes('buildingsDoesLine'), 'does-line mis
 must(ui.includes('buildingsGoAdventure') || ui.includes('goAdventure'), 'locked factory must have adventure next-step');
 must(ui.includes('collectCap') || ui.includes('hopper vol') || ui.includes('pillFull'), 'cap collect feedback missing');
 must(ui.includes('_buildingsCollectBusy'), 'collect race lock missing');
-must(!/doBuildingCollect[\s\S]{0,900}buildingsShowDetail\(id\)/.test(ui), 'empty collect must not open detail');
+must(!/function doBuildingCollect[\s\S]{0,1600}buildingsShowDetail/.test(ui), 'empty collect must not open detail');
 must(ui.includes('buildingDescModel'), 'UI must consume systems buildingDescModel');
 must(ui.includes('buildingWalletModel'), 'UI must consume systems buildingWalletModel');
 must(ui.includes('buildingArtSrc'), 'UI must consume systems buildingArtSrc');
