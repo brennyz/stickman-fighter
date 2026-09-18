@@ -385,9 +385,9 @@ const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const VERSION_UPDATE_SAVE_KEY = 'stickfighter_version_update_save_v1';
 const VERSION_UPDATE_FLAG_KEY = 'stickfighter_version_update_flag_v1';
 const SAVE_EXPORT_SCHEMA = 3;
-const APP_VERSION = '1.18.190';
+const APP_VERSION = '1.18.191';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 400;
+const SW_CACHE_REV = 401;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', petCoins: 0, dex: {}, summons: {}, pets: {}, activePet: null,
   eggPets: {}, activeEggPet: null, eggDaily: null,
   chestDaily: null, chestWeapons: {},
@@ -55900,10 +55900,10 @@ const UI = {
         ? tOr('gear.summaryWithStats', '{n}/5 · {stat} met stats', { n: filled, stat: statN })
         : tOr('gear.summaryLookOnly', '{n}/5 · alleen look', { n: filled });
       sumEl.innerHTML =
-        `<span class="gear-pill gear-pill-on">${esc(line)}</span>` +
+        `<span class="gear-pill gear-pill-on gear-stat-chip">${esc(line)}</span>` +
         (statN
-          ? `<span class="gear-pill gear-pill-stat">${esc(tOr('gear.kindStat', 'Met stats'))}</span>`
-          : `<span class="gear-pill gear-pill-vanity">${esc(tOr('gear.kindLook', 'Alleen look'))}</span>`);
+          ? `<span class="gear-pill gear-pill-stat gear-stat-chip">${esc(tOr('gear.pillStat', 'STAT'))} · ${statN}</span>`
+          : `<span class="gear-pill gear-pill-vanity gear-stat-chip">${esc(tOr('gear.pillVanity', 'LOOK'))}</span>`);
     }
     const legend = document.getElementById('gearLegend');
     if (!pickerOnly && legend) {

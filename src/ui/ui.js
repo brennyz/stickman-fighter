@@ -4723,10 +4723,10 @@ const UI = {
         ? tOr('gear.summaryWithStats', '{n}/5 · {stat} met stats', { n: filled, stat: statN })
         : tOr('gear.summaryLookOnly', '{n}/5 · alleen look', { n: filled });
       sumEl.innerHTML =
-        `<span class="gear-pill gear-pill-on">${esc(line)}</span>` +
+        `<span class="gear-pill gear-pill-on gear-stat-chip">${esc(line)}</span>` +
         (statN
-          ? `<span class="gear-pill gear-pill-stat">${esc(tOr('gear.kindStat', 'Met stats'))}</span>`
-          : `<span class="gear-pill gear-pill-vanity">${esc(tOr('gear.kindLook', 'Alleen look'))}</span>`);
+          ? `<span class="gear-pill gear-pill-stat gear-stat-chip">${esc(tOr('gear.pillStat', 'STAT'))} · ${statN}</span>`
+          : `<span class="gear-pill gear-pill-vanity gear-stat-chip">${esc(tOr('gear.pillVanity', 'LOOK'))}</span>`);
     }
     const legend = document.getElementById('gearLegend');
     if (!pickerOnly && legend) {

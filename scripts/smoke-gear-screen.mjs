@@ -168,6 +168,20 @@ async function run() {
       if (!dollBox || dollBox.height < 170) {
         return { ok: false, why: 'hero too small', h: dollBox && dollBox.height };
       }
+      const lastSlot = cards[cards.length - 1].getBoundingClientRect();
+      if (lastSlot.bottom > 844 + 12) {
+        return { ok: false, why: '390 first-fold missing a slot', bottom: lastSlot.bottom };
+      }
+      const heroChrome = getComputedStyle(document.getElementById('gearHero') || doll);
+      if (heroChrome && heroChrome.boxShadow && heroChrome.boxShadow !== 'none') {
+        return { ok: false, why: 'doll card must be flat (no nested chrome)', shadow: heroChrome.boxShadow };
+      }
+      const statChip = document.querySelector('#gearSummary .gear-stat-chip, #gearSlotList .gear-pill-stat');
+      if (statChip) {
+        const cs = getComputedStyle(statChip);
+        const fs = parseFloat(cs.fontSize) || 0;
+        if (fs < 11) return { ok: false, why: 'STAT chip too small', fs };
+      }
       const titleEl = cards[0] && cards[0].querySelector('.gear-slot-title');
       const subEl = cards[0] && cards[0].querySelector('.gear-slot-sub');
       if (!titleEl || !subEl) return { ok: false, why: 'slot title/sub missing' };
@@ -526,6 +540,27 @@ async function run() {
     return { ok: true };
   });
 
+  await page.setViewport({ width: 844, height: 390, isMobile: true, hasTouch: true });
+  await page.evaluate(() => {
+    const screen = document.getElementById('gearScreen');
+    if (screen) screen.scrollTop = 0;
+    UI.safeOpen('gearScreen', () => UI.renderGear());
+  });
+  const land = await page.evaluate(() => {
+    const cards = [...document.querySelectorAll('#gearSlotList [data-slot]')];
+    if (cards.length !== 5) return { ok: false, why: 'landscape slots', n: cards.length };
+    const last = cards[cards.length - 1].getBoundingClientRect();
+    if (last.bottom > 390 + 12) {
+      return { ok: false, why: '844x390 first-fold missing a slot', bottom: last.bottom };
+    }
+    const doll = document.getElementById('gearDollCanvas');
+    const dollBox = doll && doll.getBoundingClientRect();
+    if (!dollBox || dollBox.height < 170) {
+      return { ok: false, why: 'landscape hero too small', h: dollBox && dollBox.height };
+    }
+    return { ok: true, slotBottom: last.bottom };
+  });
+
   await browser.close();
   try { if (server && server.close) server.close(); } catch (_) {}
   if (!result || !result.ok) {
@@ -536,7 +571,11 @@ async function run() {
     console.error('SMOKE_FAIL gear-screen desktop', desk);
     process.exit(1);
   }
-  console.log('SMOKE_OK gear-screen', result.cards.join(','), result.catalog, result.aside);
+  if (!land || !land.ok) {
+    console.error('SMOKE_FAIL gear-screen landscape', land);
+    process.exit(1);
+  }
+  console.log('SMOKE_OK gear-screen', result.cards.join(','), result.catalog, result.aside, 'land', land.slotBottom);
 }
 
 run().catch((err) => {

@@ -52,7 +52,7 @@ From `gearTooltipModel`: **LOOK** if vanity / `!appliesStats`. **STAT** if `appl
 
 ## Catalog UX
 
-131 items. Filter chips (all / Look / Stats / Lock / owned) + rarity + search + **Wis filters**. **One page-scroll** (no nested picker `max-height`). Desktop ≥900px: loadout sticky left, sheet right. Tap item = equip/unequip; sheet `#gearDetail` has Aandoen / Uitdoen / lock reason. Slot rows are select-only (no per-row Uitdoen). `#gearUnequipAll` is a two-tap confirm. First-time starter-only loadout shows `#gearHuntCta` → Avontuur. HOME tile `#btnGearHome` (`data-hub="gear"`) is 1 tap from HOME.
+131 items. Filter chips (all / Look / Stats / Lock / owned) + rarity + search + **Wis filters**. **One page-scroll** (no nested picker `max-height`). Phone ~390: doll + 5 slots on first paint (flat hero, no nested doll card). Desktop ≥900px: loadout sticky left, sheet right. Tap item = equip/unequip; sheet `#gearDetail` has Aandoen / Uitdoen / lock reason. Slot rows are select-only (no per-row Uitdoen). `#gearUnequipAll` is a two-tap confirm. First-time starter-only loadout shows `#gearHuntCta` → Avontuur (under the 5 slots). HOME tile `#btnGearHome` (`data-hub="gear"`) is 1 tap from HOME. Equip-look sibling owns doll pixel offsets/layers — this contract is layout/IDs only.
 
 ## UI IDs
 
