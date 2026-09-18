@@ -1190,6 +1190,8 @@ function seedNlGameStrings() {
     teleCharge: 'CHARGE — uit de weg!',
     teleShoot: 'SCHIET — side-step!',
     teleFire: 'VUUR — side-step!',
+    teleInk: 'INKT — side-step!',
+    teleTech: 'TECH — ontwijk!',
     ketsTap: 'Tik!', ketsKey: 'E / tik',
   });
 }
@@ -2669,6 +2671,8 @@ const CATALOG_EN = {
     teleCharge: 'CHARGE — dodge!',
     teleShoot: 'SHOT — side-step!',
     teleFire: 'FIRE — side-step!',
+    teleInk: 'INK — side-step!',
+    teleTech: 'TECH — dodge!',
     ketsTap: 'Tap!', ketsKey: 'E / tap',
   },
   technique: { spiral_orb: 'SPIRAL ORB!', lightning_pierce: 'LIGHTNING PIERCE!', wave_cannon: 'WAVE CANNON!', void_gaze: 'VOID GAZE!' },

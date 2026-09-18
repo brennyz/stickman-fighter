@@ -205,8 +205,8 @@ must(iso.scaleAdventureHordePad(4, desk) === 4, 'desktop boss pad unchanged');
 must(iso.scaleAdventureHordePad(4, phone) === 2, 'phone boss pad 4 → 2');
 
 must(iso.applyCombatTelegraphWind(0.45, desk) === 0.45, 'desktop charge wind stays 0.45');
-must(iso.applyCombatTelegraphWind(0.28, desk) === 0.28, 'desktop enrage wind stays 0.28');
-must(iso.applyCombatTelegraphWind(0.20, desk) === 0.20, 'desktop shark-enrage wind stays 0.20');
+must(iso.applyCombatTelegraphWind(0.28, desk) === 0.32, 'desktop enrage floor 0.32s (readable)');
+must(iso.applyCombatTelegraphWind(0.20, desk) === 0.32, 'desktop shark-enrage floor 0.32s');
 const phoneCharge = iso.applyCombatTelegraphWind(0.45, phone);
 must(phoneCharge > 0.45 && phoneCharge >= 0.38, 'phone charge wind longer than desktop', phoneCharge);
 must(iso.applyCombatTelegraphWind(0.20, phone) === 0.38, 'phone enrage floor 0.38s (readable jump)');
@@ -327,7 +327,7 @@ const deskLane = iso.combatColossalFairLane(180, desk);
 const phoneLane = iso.combatColossalFairLane(phoneCol, phone);
 must(phoneLane > deskLane || phoneLane >= 80, 'phone leftover lane after colossal fit', { phoneLane, deskLane, phoneCol });
 must(iso.applyCombatTelegraphWind(0.45, phone, { colossal: true }) >= 0.46, 'phone colossal wind ≥ 0.46');
-must(iso.applyCombatTelegraphWind(0.45, desk, { colossal: true }) === 0.45, 'desktop colossal wind unchanged');
+must(iso.applyCombatTelegraphWind(0.45, desk, { colossal: true }) === 0.45, 'desktop colossal 0.45 stays (above floor)');
 must(typeof iso.refreshAdventureBossScale === 'function', 'resize refit helper missing');
 
 must(iso.combatEnrageWalkMul(1, desk) === 1.32, 'desktop Normal enrage walk 1.32');
@@ -506,7 +506,9 @@ console.log('BUILDLEVEL', {
 must(typeof ctx.applyCombatTelegraphWind === 'function', 'applyCombatTelegraphWind not in vm');
 must(typeof ctx.combatIntroHolds === 'function', 'combatIntroHolds not in vm');
 must(ctx.applyCombatTelegraphWind(0.45, { w: 1280, h: 800 }) === 0.45, 'vm desktop wind 0.45');
+must(ctx.applyCombatTelegraphWind(0.20, { w: 1280, h: 800 }) === 0.32, 'vm desktop enrage floor 0.32');
 must(ctx.applyCombatTelegraphWind(0.20, { w: 390, h: 844 }) === 0.38, 'vm phone enrage floor 0.38');
+must(ctx.applyCombatTelegraphWind(0.42, { w: 390, h: 844 }, { ranged: true }) >= 0.46, 'vm phone ranged floor');
 must(ctx.combatChargeTeleDist(240, { w: 390, h: 844 }) <= Math.round(390 * 0.42), 'vm phone charge on-screen');
 must(ctx.combatIntroHolds({ w: 390, h: 844 }) === true, 'vm phone intro holds');
 must(ctx.combatIntroHolds({ w: 1280, h: 800 }) === false, 'vm desktop intro does not hold');
@@ -527,6 +529,10 @@ const slamM = { alive: true, telegraphT: 0.40, telegraphMax: 0.45, sp: { type: '
 const chargeM = { alive: true, telegraphT: 0.22, telegraphMax: 0.45, sp: { type: 'charge' } };
 const hudList = ctx.adventureTelegraphHuds([slamM, chargeM, { alive: true, sp: { type: 'hop' } }]);
 must(hudList.length === 2, 'vm two winding elites both produce HUD cues', hudList);
+const shootM = { alive: true, telegraphT: 0.35, telegraphMax: 0.42, telegraphKind: 'shoot', sp: { type: 'shoot' } };
+const shootHud = ctx.adventureTelegraphHuds([shootM]);
+must(shootHud.length === 1 && shootHud[0].kind === 'shoot' && shootHud[0].remain === 0.35,
+  'vm shoot HUD uses telegraphT', shootHud);
 const phoneHud = ctx.combatPickTelegraphHuds(hudList, { w: 390, h: 844 });
 must(phoneHud.length === 2 && phoneHud[0].kind === 'charge', 'vm 390 stacks soonest charge then slam', phoneHud);
 const landHud = ctx.combatPickTelegraphHuds(hudList, { w: 844, h: 390 });

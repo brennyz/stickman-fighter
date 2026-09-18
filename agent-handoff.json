@@ -50,6 +50,13 @@
   },
   "userWishlist": [
     {
+      "id": "w-20260918T153745",
+      "from": "user",
+      "text": "MASTERGAME — Stickman Fighter enemy telegraph readability. Off main. Draft PR. No Versus. speel.html. Until ~17:54 Amsterdam. Make attack telegraphs fair and readable on phone+desktop so deaths feel fair (Flappy: fair fail). Don't change spawn density ownership from prior #314 unless needed for telegraph visibility. Draft only.",
+      "status": "open",
+      "updated": "2026-09-18"
+    },
+    {
       "id": "w-20260918T141700",
       "from": "user",
       "text": "MEGA-MERGE Stickman Fighter examinator sprint to main. Brendon said «merge main». Merge examinator-sprint draft PRs into main in order: #317 i18n, #323 Flappy retry, #320 Examinator, #314 density + #321 HUD, SKIP #324 if #314 has tablet midband, #312 factories, #315 gear, #313 summons, #319 pets, #316 juice, #318 UI layout, #322 FOMO Vandaag, optionally #311 harden. Share URL speel.html. Versus retired. No secrets. No force-push.",
@@ -1176,6 +1183,10 @@
   ],
   "sessionLog": [
     {
+      "at": "2026-09-18T15:37:45Z",
+      "summary": "start: enemy telegraph readability (fair fail), draft, no Versus"
+    },
+    {
       "at": "2026-09-18T15:01:24Z",
       "summary": "Leftover stack: #318 UI chrome + #322 FOMO 390px on main. Keep #321 HUD + #323 retry. SKIP #324. Leave #311."
     },
@@ -1270,10 +1281,6 @@
     {
       "at": "2026-09-18T12:30:17Z",
       "summary": "LANGUAGE worker: layout-safe NL/EN/DE/FR/ES copy (factory desc, FOMO, HUD telegraphs). Draft, geen main."
-    },
-    {
-      "at": "2026-09-16T12:33:04Z",
-      "summary": "Mega-merge leftover GitHub PRs #297 #300 #302 #307 #308 #309 closed — content already on origin/main 0044b2e (v1.18.172 / SW 382). Pages live."
     }
   ],
   "implementedFeaturesSummary": "d18 char select deel 1+2 (v1.11.1-2); Mats coinrun + shuriken mik/vliegers + anti-spam (v1.12.0); speel.html (v1.12.2+). Zie HANDOFF-ZOEKINDEX.md en improvement-d20-bag.json userFeatureLog.",

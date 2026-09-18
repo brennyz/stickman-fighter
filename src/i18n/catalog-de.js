@@ -547,6 +547,8 @@ const CATALOG_DE_CHROME = {
     teleCharge: 'CHARGE — ausweichen!',
     teleShoot: 'SCHUSS — zur Seite!',
     teleFire: 'FEUER — zur Seite!',
+    teleInk: 'TINTE — zur Seite!',
+    teleTech: 'TECHNIK — ausweichen!',
     ketsTap: 'Tippen!', ketsKey: 'E / tippen',
   },
   ui: {

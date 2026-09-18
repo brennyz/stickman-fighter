@@ -1013,6 +1013,8 @@ function bootGame() {
       preferStrike: combatPreferStrike,
       perWave: scaleAdventurePerWave,
       telegraphWind: applyCombatTelegraphWind,
+      telegraphRead: combatTelegraphReadScale,
+      telegraphKind: combatTelegraphKindOf,
       chargeDist: combatChargeTeleDist,
       introHolds: combatIntroHolds,
       jumpSlop: combatJumpSlopExtra,

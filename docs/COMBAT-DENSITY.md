@@ -89,7 +89,7 @@ Kick sits on the inner column of the right cluster (closest strike to the joy). 
 
 | Cue | Desktop (unchanged) | Phone / compact |
 |-----|---------------------|-----------------|
-| Charge wind | 0.45s (enrage 0.28) | ×1.28, floor **0.38s** |
+| Charge wind | 0.45s (enrage floor **0.32s**) | ×1.28, floor **0.38s** |
 | Charge trigger | 240px | ≤ 42% of W (~164px) — ring on-screen |
 | Elite/boss intro | AI still fights | Aggression **held** until introT; banners cap 40px |
 | Jump hit | legacy slop | **+10px** slop |
@@ -97,7 +97,7 @@ Kick sits on the inner column of the right cluster (closest strike to the joy). 
 | Colossal wind | raw | Floor **0.46s** |
 | Hell enrage walk | 1.32 × enrageMul (**1.7424**) | Extra ×0.52 → Hell **~1.386** |
 | Floor loot | x unchanged | **40px** fan |
-| Telegraph HUD | 2 bars | 2 bars portrait; short land **1 +N** |
+| Telegraph HUD | 2 bars · shoot/fire/ink use `telegraphT` | 2 bars portrait; short land **1 +N** |
 | Flyer hover / melee | 110 / 130 · lift 88 | Short 844×390 hover ~84, lift **104**; tall phone hover 110, lift 96 |
 | Part-gate hold-right | **3.35s** | **2.2s** |
 
@@ -145,6 +145,7 @@ Combat density on 390px was still a pile-on at floor 0.60 / ~17 alive. This pass
 | Item | Owner |
 |------|--------|
 | Tablet 834 mid-band cadence | **this PR** — 0.66–1.22 / 0.55–1.15 |
+| Telegraph readability (rings / ranged wind / desktop floor) | sibling `docs/COMBAT-TELEGRAPH.md` — not density counts |
 | Satan / tide duel cadence | special-duel path, not density spawn |
 | Hell 20+ many-minute juice (feel, not counts) | later |
 | Android native / TWA bump | out of scope |

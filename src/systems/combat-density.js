@@ -228,6 +228,11 @@ function adventureSpawnCadence(queueLeft, opener, bossWave, spawnMul, profile, e
 }
 
 const COMBAT_TELEGRAPH_FLOOR = 0.38;
+/** Desktop/tablet enrage+shark used to wind 0.20–0.28s — unreadable fair-fail. */
+const COMBAT_TELEGRAPH_FLOOR_DESK = 0.32;
+const COMBAT_TELEGRAPH_FLOOR_TAB = 0.34;
+const COMBAT_TELEGRAPH_RANGED_DESK = 0.40;
+const COMBAT_TELEGRAPH_RANGED_PHONE = 0.46;
 
 function asCombatProfile(profileOrSize) {
   if (!profileOrSize) return combatDensityProfile();
@@ -478,9 +483,39 @@ function combatColossalFairLane(size, profile) {
 function applyCombatTelegraphWind(baseWind, profile, flags) {
   profile = asCombatProfile(profile);
   let w = Number(baseWind) * combatTelegraphMul(profile);
-  if (profile.compact) w = Math.max(w, COMBAT_TELEGRAPH_FLOOR);
+  const floor = profile.compact
+    ? COMBAT_TELEGRAPH_FLOOR
+    : (profile.tablet ? COMBAT_TELEGRAPH_FLOOR_TAB : COMBAT_TELEGRAPH_FLOOR_DESK);
+  w = Math.max(w, floor);
   if (profile.compact && flags && flags.colossal) w = Math.max(w, 0.46);
+  if (flags && flags.ranged) {
+    const rangedFloor = profile.compact
+      ? COMBAT_TELEGRAPH_RANGED_PHONE
+      : (profile.tablet ? 0.42 : COMBAT_TELEGRAPH_RANGED_DESK);
+    w = Math.max(w, rangedFloor);
+  }
   return w;
+}
+
+/** World-space ring/lane scale. Compact needs a thicker cue on 390px. */
+function combatTelegraphReadScale(profile) {
+  profile = asCombatProfile(profile);
+  if (profile.compact) return 1.22;
+  if (profile.tablet) return 1.10;
+  return 1;
+}
+
+function combatTelegraphKindOf(m) {
+  if (!m) return '';
+  if (m.telegraphKind) return m.telegraphKind;
+  if (m.techniqueTelegraphT > 0) return 'tech';
+  const sp = m.sp || {};
+  if (sp.type === 'tank') return 'slam';
+  if (sp.type === 'charge' || (sp.type === 'swim' && sp.art === 'shark')) return 'charge';
+  if (sp.type === 'dragon') return 'fire';
+  if (sp.type === 'shoot') return 'shoot';
+  if (sp.type === 'swim') return 'ink';
+  return '';
 }
 
 const COMBAT_LOSE_MS_COMPACT = 650;
