@@ -2840,6 +2840,26 @@
   #pauseScreen .b-gray {
     background: var(--menu-tile-solid-hi);
   }
+  #resultScreen .mode-btn.juice-cta-primary,
+  #resultScreen .b-adventure.juice-cta-primary,
+  #resultScreen .b-training.juice-cta-primary {
+    min-height: 76px;
+    width: min(92vw, 420px);
+    font-size: min(6.4vw, 26px);
+    font-weight: 900;
+    background: linear-gradient(180deg, #ffe27a 0%, #f0b429 70%, #e09a18 100%);
+    color: #1a1408;
+    border: 3px solid #fff3c4;
+    box-shadow: 0 7px 0 #a86818, 0 12px 28px rgba(255, 200, 60, .35);
+    order: -1;
+  }
+  #resultScreen .mode-btn.juice-cta-primary div { color: #1a1408; font-weight: 900; }
+  #resultScreen .mode-btn.juice-cta-primary small { color: #5a3d0a; font-weight: 800; display: block; }
+  body.big-touch #resultScreen .mode-btn.juice-cta-primary { min-height: 84px; font-size: min(6.4vw, 26px); }
+  body.reduced-motion #resultScreen .mode-btn.juice-cta-primary {
+    animation: none;
+    box-shadow: 0 5px 0 #a86818, 0 0 0 2px rgba(255, 215, 94, .35);
+  }
   .summon-pull-btn {
     background: linear-gradient(135deg, rgba(255, 215, 94, 0.2), transparent 45%), var(--menu-tile-solid);
     color: var(--menu-ink);
