@@ -19,6 +19,10 @@ if (!/function\s+drawEquipLayer\s*\(/.test(bundle)) fail('drawEquipLayer missing
 if (!/function\s+looksForStyle\s*\(/.test(bundle)) fail('looksForStyle missing');
 if (!src('src/manifest.json').includes('src/data/equip-look.js')) fail('manifest missing equip-look data');
 if (!src('src/manifest.json').includes('src/render/equip-look.js')) fail('manifest missing equip-look render');
+const dollSrc = src('src/systems/gear.js');
+if (!/gearDescriptor:\s*desc/.test(dollSrc)) fail('drawGearHeroDoll must pass gearDescriptor into Fighter');
+if (/function _paintGearOverlay/.test(dollSrc)) fail('T-pose _paintGearOverlay must stay gone (cap-behind-head)');
+if (!/function drawLookHat/.test(src('src/render/equip-look.js'))) fail('drawLookHat missing');
 if (/fillRect\(\s*hx\s*-\s*11,\s*hy\s*-\s*17,\s*22,\s*7\s*\)/.test(src('src/entities/fighter.js'))) {
   fail('legacy brick bandana still in fighter.js');
 }
@@ -245,6 +249,15 @@ for (const id of Object.keys(expectKind)) {
 }
 const helmLooks = api.forGear({ head: { kind: 'helmet', color: '#9aa8bc' } });
 if (!api.hidesBaseHead(helmLooks)) fail('helmet gear must mark coversHead so a replacement skull is drawn');
+const hatLooks = api.forGear({ head: { kind: 'hat', color: '#ffd75e' } });
+if (!hatLooks.some((l) => l.kind === 'hat' && l.layer === 'head')) fail('hat kind must sit on the head layer');
+if (api.hidesBaseHead(hatLooks)) fail('hat must not hide the stick head — it sits on the circle');
+if (api.kindFromId('head_hat_paper', 'head') !== 'hat') fail('paper hat → hat (not helmet disc)');
+if (api.kindFromId('head_beanie_wool', 'head') !== 'hat') fail('beanie → hat');
+if (api.kindFromId('head_crown_cardboard', 'head') !== 'hat') fail('crown → hat');
+if (api.kindFromId('head_hat_chef', 'head') !== 'hat') fail('chef hat → hat');
+if (api.kindFromId('head_helm_crystal', 'head') !== 'helmet') fail('crystal helm stays helmet');
+if (api.kindFromId('head_helm_iron', 'head') !== 'helmet') fail('iron helm stays helmet');
 if (typeof api.luma === 'function') {
   if (api.luma('#1a1424') >= 0.38) fail('crimson/void body must count as dark (contrast rim)');
   if (api.luma('#f2f5ff') < 0.75) fail('classic body must count as light');
@@ -463,7 +476,7 @@ const catalogIds = [
   ['back', 'void_spine'], ['back', 'wings_nightmare'], ['back', 'wings_hell'],
 ];
 if (catalogIds.length !== 131) fail('catalog snapshot must stay 131');
-const drawable = new Set(['bandana', 'visor', 'fox', 'horns', 'halo', 'glow', 'helmet', 'gloves', 'charm', 'greaves', 'wrap', 'wings', 'cape', 'tome', 'crystal', 'chestplate', 'vest', 'tail']);
+const drawable = new Set(['bandana', 'visor', 'fox', 'horns', 'halo', 'glow', 'helmet', 'hat', 'gloves', 'charm', 'greaves', 'wrap', 'wings', 'cape', 'tome', 'crystal', 'chestplate', 'vest', 'tail']);
 for (const [slot, suf] of catalogIds) {
   const id = slot + '_' + suf;
   const kind = api.kindFromId(id, slot);
@@ -488,6 +501,17 @@ try {
     if (!headArcs.length) fail(id + ' preview drew no head-sized arc (head vanished)');
   }
   api.drawPreview(rec, 'leaf_band', { head: { kind: 'helmet', color: '#ccc' } });
+  const recHat = recordingContext();
+  api.drawPreview(recHat, 'classic', { head: { kind: 'hat', color: '#ffd75e' } });
+  let firstHead = -1;
+  let hatFill = -1;
+  recHat.calls.forEach((c, i) => {
+    if (firstHead < 0 && c[0] === 'arc' && Number(c[3]) >= 8 && Number(c[3]) <= 13.5) firstHead = i;
+    if (c[0] === 'fill' && String(c[1] || '').toLowerCase() === '#ffd75e') hatFill = i;
+  });
+  if (firstHead < 0) fail('hat preview drew no head-sized arc');
+  if (hatFill < 0) fail('hat preview drew no hat fill');
+  if (hatFill < firstHead) fail('hat must paint AFTER the head circle (brim in front, not behind)');
 } catch (e) {
   fail('drawPreview threw: ' + e.message);
 }

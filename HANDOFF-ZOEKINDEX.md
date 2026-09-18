@@ -19,6 +19,7 @@ rg -l "handoff|coinrun|projAimVelocity|charSelectScreen|ASSET-STYLE" .
 
 | Gebruiker vroeg | Versie | Commit | Waar in code |
 |-----------------|--------|--------|----------------|
+| **Equip look hat z-order** | 1.18.191 | this branch | `drawLookHat` + helmet-on-skull · doll uses `gearDescriptor` (no T-pose cap overlay) · `smoke:equip-look`. Versus out. |
 | **Invisible fighters recover** | 1.18.190 | main | `drawCombatants` · `pinPlayfieldBodies` · `fighterCombatStroke` · recover re-paint · `smoke:fighters-visible`. Versus out. |
 | **Landscape Begin/HOME SPELEN** | 1.18.190 | main | two-col title-gate + FOMO left dock · `smoke:landscape-begin`. Versus out. |
 | **Telegraph readability** | 1.18.190 | main | fair-fail ring + `combatFailRetryTip` · keep #314 density 0.50 · `docs/COMBAT-TELEGRAPH.md`. Versus out. |

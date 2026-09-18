@@ -50,6 +50,14 @@
   },
   "userWishlist": [
     {
+      "id": "w-20260918T164800",
+      "from": "user",
+      "text": "FIX — Stickman Fighter EQUIP LOOK / stickman doll layering. Off main. Draft PR only. No Versus. speel.html. Until ~19:10 Amsterdam if possible. User screenshot: yellow baseball CAP draws BEHIND the head circle (z-order wrong). Also review chest/boots/cape/weapon/pet draw order so equipped cosmetics sit correctly on the stickman in menu AND combat if shared. Fix layer order/offsets for headgear (and other slots if broken). Sibling agent owns gear screen layout — this run owns draw order / equip look pixels. Prove with before/after screenshots of doll with hat. Smoke:equip-look if exists. No main merge.",
+      "status": "in-progress",
+      "updated": "2026-09-18",
+      "notes": "Branch cursor/equip-look-hat-zorder-209b. Doll _paintGearOverlay used stale T-pose cap at x=0 while ready-stance lean shifts head; hats mapped to helmet. Shared EquipLook + hat kind + bone-locked doll."
+    },
+    {
       "id": "w-20260918T155700",
       "from": "user",
       "text": "MEGA-MERGE Stickman 20m-session drafts to main. Brendon wants playtest swarm on a fixed build next. Priority: #333 invisible fighters, #325 landscape combat camera/floor, #334 examinator feel (keep pauseG), #329 landscape begin/HOME SPELEN + FOMO dock, #332 telegraph readability (keep #314 density), #331 landscape touch, #328 first-30s teach, #330 combat juice, #326 death-retry polish, #327 fxLite if mergeable. No Versus. speel.html. No force-push. Conflict: keep #333 drawCombatants+recover, #325 viewport/floor, #334 pauseG HUD, #329 two-col SPELEN + FOMO left dock, #323/#326 fat gold Nog één keer + restartAdventureInstant.",

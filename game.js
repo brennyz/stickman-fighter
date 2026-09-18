@@ -385,9 +385,9 @@ const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const VERSION_UPDATE_SAVE_KEY = 'stickfighter_version_update_save_v1';
 const VERSION_UPDATE_FLAG_KEY = 'stickfighter_version_update_flag_v1';
 const SAVE_EXPORT_SCHEMA = 3;
-const APP_VERSION = '1.18.190';
+const APP_VERSION = '1.18.191';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 400;
+const SW_CACHE_REV = 401;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', petCoins: 0, dex: {}, summons: {}, pets: {}, activePet: null,
   eggPets: {}, activeEggPet: null, eggDaily: null,
   chestDaily: null, chestWeapons: {},
@@ -11878,6 +11878,7 @@ const EQUIP_LOOK_DEFAULTS = {
   duck: { slot: 'head', layer: 'head', ox: 1, oy: 1, scale: 1 },
   topknot: { slot: 'head', layer: 'head', ox: 0, oy: -1, scale: 1 },
   helmet: { slot: 'head', layer: 'head', ox: 0, oy: 0, scale: 1 },
+  hat: { slot: 'head', layer: 'head', ox: 0, oy: -1, scale: 1 },
   glow: { slot: 'head', layer: 'head', ox: 0, oy: 0, scale: 1 },
   lightning: { slot: 'head', layer: 'head', ox: 0, oy: 0, scale: 1 },
   charm: { slot: 'head', layer: 'head', ox: 0, oy: 2, scale: 1 },
@@ -11906,7 +11907,8 @@ const GEAR_ID_KIND_RULES = [
   [/halo|circlet/, 'halo'],
   [/aura_glow|hood_void/, 'glow'],
   [/mask_/, 'visor'],
-  [/helm|beanie|hat_|crown|hood|pumpkin/, 'helmet'],
+  [/beanie|hat_|crown/, 'hat'],
+  [/helm|hood|pumpkin/, 'helmet'],
   [/gaunt|bracer|mittens|cuffs|fists|claws|gloves|hands_wrap|wraps_monk|wraps_gold|wraps_dream/, 'gloves'],
   [/rings_/, 'charm'],
   [/greaves|boots_|sneakers/, 'greaves'],
@@ -34903,64 +34905,6 @@ function startGearDollLive() {
   _gearDollRaf = requestAnimationFrame(step);
 }
 
-function _paintGearOverlay(cc, slot, tint, accent) {
-  if (!tint) return;
-  /* Fighter preview pose (animT 0.35): hips ~-46, shoulders ~-78, head ~-96. */
-  const hipY = -46, shY = -78, headCy = -96;
-  cc.save();
-  cc.fillStyle = tint;
-  cc.strokeStyle = accent || tint;
-  cc.lineWidth = 2;
-  cc.lineCap = 'round';
-  cc.lineJoin = 'round';
-  if (slot === 'back') {
-    cc.globalAlpha = 0.32;
-    cc.beginPath();
-    cc.moveTo(-6, shY + 4);
-    cc.quadraticCurveTo(-22, hipY, -16, -8);
-    cc.lineTo(16, -8);
-    cc.quadraticCurveTo(22, hipY, 6, shY + 4);
-    cc.closePath();
-    cc.fill();
-    cc.globalAlpha = 0.7;
-    cc.stroke();
-  } else if (slot === 'legs') {
-    cc.globalAlpha = 0.8;
-    cc.beginPath();
-    cc.moveTo(-11, -10); cc.lineTo(-14, 2); cc.lineTo(-4, 2); cc.lineTo(-6, -10);
-    cc.moveTo(6, -10); cc.lineTo(4, 2); cc.lineTo(14, 2); cc.lineTo(11, -10);
-    cc.fill();
-    cc.stroke();
-  } else if (slot === 'chest') {
-    cc.globalAlpha = 0.38;
-    cc.beginPath();
-    cc.moveTo(-8, shY + 2);
-    cc.lineTo(8, shY + 2);
-    cc.lineTo(7, hipY + 2);
-    cc.lineTo(-7, hipY + 2);
-    cc.closePath();
-    cc.fill();
-    cc.globalAlpha = 0.85;
-    cc.stroke();
-  } else if (slot === 'head') {
-    cc.globalAlpha = 0.88;
-    cc.beginPath();
-    cc.arc(0, headCy, 8.6, Math.PI * 1.05, -0.05, false);
-    cc.stroke();
-    cc.beginPath();
-    cc.moveTo(-9, headCy - 1);
-    cc.lineTo(9, headCy - 1);
-    cc.stroke();
-  } else if (slot === 'hands') {
-    cc.globalAlpha = 0.88;
-    cc.beginPath();
-    cc.arc(-17, shY + 20, 3.2, 0, Math.PI * 2);
-    cc.arc(17, shY + 20, 3.2, 0, Math.PI * 2);
-    cc.fill();
-  }
-  cc.restore();
-}
-
 function drawGearHeroDoll(cv, saveObj, animT) {
   if (!cv || typeof Fighter !== 'function') return;
   const cc = cv.getContext('2d');
@@ -34970,12 +34914,9 @@ function drawGearHeroDoll(cv, saveObj, animT) {
   cc.save();
   if (typeof startGearDollLive === 'function') startGearDollLive();
   const desc = (typeof gearRenderDescriptor === 'function' && s) ? gearRenderDescriptor(s) : gearUiRenderDescriptor(s);
-  const layers = (desc && desc.slots) ? desc.slots : [];
-  const layerOf = (sid) => layers.find((L) => L.slot === sid) || null;
-  const tintOf = (sid) => {
-    const layer = layerOf(sid);
-    return layer && (layer.tint || layer.accent) ? layer : null;
-  };
+  /* Shared Fighter + EquipLook path (menu == combat). Do NOT stamp a second
+     T-pose baseball cap at x=0 — ready-stance lean puts the real head at x≈8
+     and that leftover overlay drew the brim behind the circle. */
   const floor = cc.createRadialGradient(cv.width / 2, cv.height * 0.86, 8, cv.width / 2, cv.height * 0.86, cv.width * 0.38);
   floor.addColorStop(0, 'rgba(255,255,255,0.08)');
   floor.addColorStop(1, 'rgba(0,0,0,0)');
@@ -34986,20 +34927,17 @@ function drawGearHeroDoll(cv, saveObj, animT) {
   const scale = Math.min(cv.width / 140, cv.height / 190) * 1.28;
   cc.translate(cv.width / 2, cv.height - 36);
   cc.scale(scale, scale);
-  const back = tintOf('back');
-  if (back) _paintGearOverlay(cc, 'back', back.tint || back.accent, back.accent);
   const st = typeof styleById === 'function' ? styleById((s && s.style) || 'classic') : { body: '#f2f5ff' };
   const wpn = (s && typeof weaponById === 'function') ? weaponById(s.weapon || 'vuist') : null;
   const preview = new Fighter({
     isPlayer: true, x: 0, y: 0, color: (st && st.body) || '#f2f5ff', style: st, scale: 1,
     weapon: wpn || undefined,
+    gearDescriptor: desc,
+    _preview: true,
   });
   preview.animT = Number.isFinite(animT) ? animT : 0.55;
   preview.draw(cc);
-  for (const sid of ['legs', 'chest', 'head', 'hands']) {
-    const layer = tintOf(sid);
-    if (layer) _paintGearOverlay(cc, sid, layer.tint || layer.accent, layer.accent);
-  }
+  /* GEAR_DRAW_ORDER: pet last, after body / weapon-hold. */
   if (s && s.activePet && typeof drawMonsterArt === 'function') {
     const def = (typeof activePetDef === 'function') ? activePetDef()
       : ((typeof petDef === 'function') ? petDef(s.activePet) : null);
@@ -36950,29 +36888,64 @@ function drawLookTopknot(c, look, x, y, sc) {
   c.fill();
 }
 
+function drawLookHat(c, look, x, y, sc) {
+  const r = (typeof EQUIP_LOOK_HEAD_R === 'number' ? EQUIP_LOOK_HEAD_R : 10.5) * sc;
+  const col = look.color || look.accent || '#ffd75e';
+  const brimY = y - r * 0.38;
+  const peakY = y - r * 1.32;
+  const crownW = r * 0.94;
+  /* Crown sits on the skull — drawn after the head circle so it cannot fall behind. */
+  c.fillStyle = col;
+  c.beginPath();
+  c.moveTo(x - crownW, brimY);
+  c.quadraticCurveTo(x - crownW * 0.55, peakY + r * 0.16, x, peakY);
+  c.quadraticCurveTo(x + crownW * 0.55, peakY + r * 0.16, x + crownW, brimY);
+  c.closePath();
+  c.fill();
+  c.strokeStyle = 'rgba(0,0,0,.28)';
+  c.lineWidth = 1;
+  c.stroke();
+  /* Brim in FRONT of the forehead (wide oval, not a T-pose stamp at x=0). */
+  c.fillStyle = col;
+  c.beginPath();
+  if (typeof c.ellipse === 'function') {
+    c.ellipse(x + r * 0.06, brimY + 0.45 * sc, r * 1.28, 2.2 * sc, 0, 0, TAU);
+  } else {
+    c.rect(lookPx(x - r * 1.2), lookPx(brimY - 0.6 * sc), r * 2.5, 3.4 * sc);
+  }
+  c.fill();
+  c.strokeStyle = look.accent || 'rgba(0,0,0,.25)';
+  c.lineWidth = 1.1;
+  c.stroke();
+}
+
 function drawLookHelmet(c, look, x, y, sc, bones, fighter) {
   const r = 11.0 * sc;
-  /* Replacement skull — if the base hollow head is skipped, this disc is the head. */
+  /* Dome + brow on the already-drawn stick head — never a disc behind the circle. */
   c.fillStyle = look.color;
   c.beginPath();
-  c.arc(x, y, r * 0.9, 0, TAU);
-  c.fill();
-  c.beginPath();
-  c.arc(x, y - 0.6 * sc, r, Math.PI, 0);
-  c.lineTo(x + r, y + 1.2 * sc);
-  c.quadraticCurveTo(x, y + 2.4 * sc, x - r, y + 1.2 * sc);
+  c.arc(x, y - 0.7 * sc, r, Math.PI * 1.08, -0.08, false);
+  c.lineTo(x + r * 1.02, y - r * 0.1);
+  c.quadraticCurveTo(x, y + 0.8 * sc, x - r * 1.02, y - r * 0.1);
   c.closePath();
   c.fill();
   c.strokeStyle = look.accent || 'rgba(0,0,0,.3)';
   c.lineWidth = 1.2;
   c.stroke();
-  /* Open face / chin so a helm never leaves a blank hole. */
+  c.fillStyle = look.accent || look.color;
+  c.globalAlpha = 0.72;
+  const bw = r * 1.88, bh = 3.3 * sc;
+  c.beginPath();
+  c.rect(lookPx(x - bw / 2), lookPx(y - r * 0.2), bw, bh);
+  c.fill();
+  c.globalAlpha = 1;
+  /* Tight chin only — a full-circle restroke would bury the brim. */
   const body = (fighter && fighter.color) || look.accent || '#f2f5ff';
   c.strokeStyle = body;
   c.lineWidth = (fighter && fighter.lineW) || 3.2;
   c.lineCap = 'round';
   c.beginPath();
-  c.arc(x, y, (typeof EQUIP_LOOK_HEAD_R === 'number' ? EQUIP_LOOK_HEAD_R : 10.5) * sc, 0.2, Math.PI - 0.2);
+  c.arc(x, y, (typeof EQUIP_LOOK_HEAD_R === 'number' ? EQUIP_LOOK_HEAD_R : 10.5) * sc, 0.62, Math.PI - 0.62);
   c.stroke();
 }
 
@@ -37308,7 +37281,17 @@ function ensureEquipHeadVisible(c, looks, bones, fighter) {
   if (!c) return;
   const head = bones && bones.head;
   if (!lookBoneOk(head)) return;
-  void looks;
+  /* Hats / helms already sit on the disc. Restroking the circle buries the brim
+     (the yellow baseball-cap-behind-head bug on the gear doll). */
+  if (looks && looks.length) {
+    for (let i = 0; i < looks.length; i++) {
+      const row = looks[i];
+      if (!row) continue;
+      if ((row.slot === 'head' || row.layer === 'head') && (row.kind === 'hat' || row.kind === 'helmet')) {
+        return;
+      }
+    }
+  }
   restrokeStickmanChin(c, head.x, head.y, fighter && fighter.color, {
     lineW: fighter && fighter.lineW,
   });
@@ -37347,6 +37330,7 @@ const EQUIP_LOOK_DRAW = {
   duck: drawLookDuck,
   topknot: drawLookTopknot,
   helmet: drawLookHelmet,
+  hat: drawLookHat,
   coat: drawLookCoat,
   cape: drawLookCape,
   vest: drawLookVest,

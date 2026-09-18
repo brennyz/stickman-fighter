@@ -198,29 +198,64 @@ function drawLookTopknot(c, look, x, y, sc) {
   c.fill();
 }
 
+function drawLookHat(c, look, x, y, sc) {
+  const r = (typeof EQUIP_LOOK_HEAD_R === 'number' ? EQUIP_LOOK_HEAD_R : 10.5) * sc;
+  const col = look.color || look.accent || '#ffd75e';
+  const brimY = y - r * 0.38;
+  const peakY = y - r * 1.32;
+  const crownW = r * 0.94;
+  /* Crown sits on the skull — drawn after the head circle so it cannot fall behind. */
+  c.fillStyle = col;
+  c.beginPath();
+  c.moveTo(x - crownW, brimY);
+  c.quadraticCurveTo(x - crownW * 0.55, peakY + r * 0.16, x, peakY);
+  c.quadraticCurveTo(x + crownW * 0.55, peakY + r * 0.16, x + crownW, brimY);
+  c.closePath();
+  c.fill();
+  c.strokeStyle = 'rgba(0,0,0,.28)';
+  c.lineWidth = 1;
+  c.stroke();
+  /* Brim in FRONT of the forehead (wide oval, not a T-pose stamp at x=0). */
+  c.fillStyle = col;
+  c.beginPath();
+  if (typeof c.ellipse === 'function') {
+    c.ellipse(x + r * 0.06, brimY + 0.45 * sc, r * 1.28, 2.2 * sc, 0, 0, TAU);
+  } else {
+    c.rect(lookPx(x - r * 1.2), lookPx(brimY - 0.6 * sc), r * 2.5, 3.4 * sc);
+  }
+  c.fill();
+  c.strokeStyle = look.accent || 'rgba(0,0,0,.25)';
+  c.lineWidth = 1.1;
+  c.stroke();
+}
+
 function drawLookHelmet(c, look, x, y, sc, bones, fighter) {
   const r = 11.0 * sc;
-  /* Replacement skull — if the base hollow head is skipped, this disc is the head. */
+  /* Dome + brow on the already-drawn stick head — never a disc behind the circle. */
   c.fillStyle = look.color;
   c.beginPath();
-  c.arc(x, y, r * 0.9, 0, TAU);
-  c.fill();
-  c.beginPath();
-  c.arc(x, y - 0.6 * sc, r, Math.PI, 0);
-  c.lineTo(x + r, y + 1.2 * sc);
-  c.quadraticCurveTo(x, y + 2.4 * sc, x - r, y + 1.2 * sc);
+  c.arc(x, y - 0.7 * sc, r, Math.PI * 1.08, -0.08, false);
+  c.lineTo(x + r * 1.02, y - r * 0.1);
+  c.quadraticCurveTo(x, y + 0.8 * sc, x - r * 1.02, y - r * 0.1);
   c.closePath();
   c.fill();
   c.strokeStyle = look.accent || 'rgba(0,0,0,.3)';
   c.lineWidth = 1.2;
   c.stroke();
-  /* Open face / chin so a helm never leaves a blank hole. */
+  c.fillStyle = look.accent || look.color;
+  c.globalAlpha = 0.72;
+  const bw = r * 1.88, bh = 3.3 * sc;
+  c.beginPath();
+  c.rect(lookPx(x - bw / 2), lookPx(y - r * 0.2), bw, bh);
+  c.fill();
+  c.globalAlpha = 1;
+  /* Tight chin only — a full-circle restroke would bury the brim. */
   const body = (fighter && fighter.color) || look.accent || '#f2f5ff';
   c.strokeStyle = body;
   c.lineWidth = (fighter && fighter.lineW) || 3.2;
   c.lineCap = 'round';
   c.beginPath();
-  c.arc(x, y, (typeof EQUIP_LOOK_HEAD_R === 'number' ? EQUIP_LOOK_HEAD_R : 10.5) * sc, 0.2, Math.PI - 0.2);
+  c.arc(x, y, (typeof EQUIP_LOOK_HEAD_R === 'number' ? EQUIP_LOOK_HEAD_R : 10.5) * sc, 0.62, Math.PI - 0.62);
   c.stroke();
 }
 
@@ -556,7 +591,17 @@ function ensureEquipHeadVisible(c, looks, bones, fighter) {
   if (!c) return;
   const head = bones && bones.head;
   if (!lookBoneOk(head)) return;
-  void looks;
+  /* Hats / helms already sit on the disc. Restroking the circle buries the brim
+     (the yellow baseball-cap-behind-head bug on the gear doll). */
+  if (looks && looks.length) {
+    for (let i = 0; i < looks.length; i++) {
+      const row = looks[i];
+      if (!row) continue;
+      if ((row.slot === 'head' || row.layer === 'head') && (row.kind === 'hat' || row.kind === 'helmet')) {
+        return;
+      }
+    }
+  }
   restrokeStickmanChin(c, head.x, head.y, fighter && fighter.color, {
     lineW: fighter && fighter.lineW,
   });
@@ -595,6 +640,7 @@ const EQUIP_LOOK_DRAW = {
   duck: drawLookDuck,
   topknot: drawLookTopknot,
   helmet: drawLookHelmet,
+  hat: drawLookHat,
   coat: drawLookCoat,
   cape: drawLookCape,
   vest: drawLookVest,
