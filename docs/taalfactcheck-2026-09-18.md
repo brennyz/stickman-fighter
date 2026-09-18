@@ -122,5 +122,6 @@ Technische `sfReportError(where, err)` zonder userMsg blijft console + gelokalis
 | * | `achLabel` | Fallback `ach.name` (NL seed) | Leeg als key ontbreekt |
 | * | `tOr('ui.summonFail', 'Mislukt')` | Dutch last-resort | `errT` EN last-resort |
 | * | import `Error('… mislukt')` | Console/throw NL | EN technical; user-toast blijft `ui.errImportFile` |
+| DE/FR/ES | `missionsUi.flowPlaySub` `''` | `t()` ziet leeg als miss → raw key op flow-bar | `dailyFlowBarHtml` slaat lege/raw keys over |
 
-Versie: **v1.18.179 / SW 389**. Draft PR, geen main-merge. Deel-URL `speel.html`.
+Versie: **v1.18.180 / SW 390**. Draft PR, geen main-merge. Deel-URL `speel.html`.

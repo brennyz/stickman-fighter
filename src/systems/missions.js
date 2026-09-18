@@ -465,15 +465,19 @@ function dailyFlowBarHtml(step) {
   if (step === 0) {
     return `<div class="mission-flow-bar mission-flow-done">${t('missionsUi.flowDone')}</div>`;
   }
+  const line = (key) => {
+    const s = typeof t === 'function' ? t(key) : '';
+    return (s && s !== key) ? s : '';
+  };
   const mk = (n, label, sub) => {
     const active = step === n ? ' active' : '';
     const done = step > n ? ' done' : '';
     const small = sub ? `<small>${sub}</small>` : '';
     return `<span class="mission-flow-pill${active}${done}"><b>${n}</b> ${label}${small}</span>`;
   };
-  return `<div class="mission-flow-bar">${mk(1, t('missionsUi.flowPlay'), t('missionsUi.flowPlaySub'))}` +
-    `<span class="mission-flow-arrow">→</span>${mk(2, t('missionsUi.flowClaim'), t('missionsUi.flowClaimSub'))}` +
-    `<span class="mission-flow-arrow">→</span>${mk(3, t('missionsUi.flowBonus'), t('missionsUi.flowBonusSub'))}</div>`;
+  return `<div class="mission-flow-bar">${mk(1, line('missionsUi.flowPlay'), line('missionsUi.flowPlaySub'))}` +
+    `<span class="mission-flow-arrow">→</span>${mk(2, line('missionsUi.flowClaim'), line('missionsUi.flowClaimSub'))}` +
+    `<span class="mission-flow-arrow">→</span>${mk(3, line('missionsUi.flowBonus'), line('missionsUi.flowBonusSub'))}</div>`;
 }
 
 function dailyTaskRemainderText(task, def) {

@@ -365,6 +365,8 @@ if (!/lv70: \{ name: 'Höllen-Legende'/.test(catalog + locales)) fail('DE ach.lv
 if (!/lv70: \{ name: 'Légende de l.enfer'/.test(catalog)) fail('FR ach.lv70 missing');
 if (!/lv70: \{ name: 'Leyenda del infierno'/.test(catalog)) fail('ES ach.lv70 missing');
 if (/tOr\('ui\.summonFail', 'Mislukt'\)/.test(ui)) fail('summonFail still Dutch Mislukt last-resort');
+if (/mk\(1, t\('missionsUi\.flowPlay'/.test(missions)) fail('flow bar still t() empty-sub → raw key leak');
+if (!/line\('missionsUi\.flowPlaySub'\)/.test(missions)) fail('flow bar must skip empty/raw-key subs');
 if (/Bestand lezen mislukt/.test(missions)) fail('import FileReader error still Dutch');
 if (!/function errT\(/.test(i18n)) fail('errT helper missing — Dutch last-resort leaks');
 if (!/errRetry:/.test(catalog + locales)) fail('toast.errRetry missing');
