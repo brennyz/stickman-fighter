@@ -323,9 +323,9 @@ const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const VERSION_UPDATE_SAVE_KEY = 'stickfighter_version_update_save_v1';
 const VERSION_UPDATE_FLAG_KEY = 'stickfighter_version_update_flag_v1';
 const SAVE_EXPORT_SCHEMA = 3;
-const APP_VERSION = '1.18.174';
+const APP_VERSION = '1.18.175';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 384;
+const SW_CACHE_REV = 385;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', petCoins: 0, dex: {}, summons: {}, pets: {}, activePet: null,
   eggPets: {}, activeEggPet: null, eggDaily: null,
   chestDaily: null, chestWeapons: {},
@@ -2562,6 +2562,14 @@ const I18N = {
       storedFull: '{n}/{cap} VOL',
       collectCap: '+{n} {res} · hopper vol ({cap})',
       lockedWorldNamed: '{name} (eiland {n})',
+      costPc: '{n} PC',
+      costRes: '{n} {res}',
+      islandFallback: 'eiland {n}',
+      emptyStart: '{name} is open — tik Bouw',
+      emptyStartCost: '{name} is open — tik Bouw ({cost})',
+      emptyLocked: 'Speel Avontuur — dan Stok-Aansteker',
+      upgradeOkShort: '{short} · Lv {lv}',
+      walletAria: 'Portemonnee',
       desc: {
         produceLocked: '{res} na eiland',
         produceUnbuilt: 'Bouw: {res} {n}/u',
@@ -2585,15 +2593,15 @@ const I18N = {
         bamboo_vent: 'Vent', bamboo_burst: 'Boesa', pressure_cook: 'Stoom', boesa_overheat: 'Hitte',
         taunt_toot: 'Toot', whistle_chorus: 'Koor',
       },
-      stick_lighter: { name: 'Stok-Aansteker Fabriek', blurb: 'Scheef schuurtje dat stokken tegen elkaar wrijft tot ze vonken geven.' },
+      stick_lighter: { name: 'Stok-Aansteker Fabriek', short: 'Stok-Aansteker', blurb: 'Scheef schuurtje dat stokken tegen elkaar wrijft tot ze vonken geven.' },
       stick_lighterSub: 'Vonken · Oost-eiland',
-      woodchip_glue: { name: 'Houtsnipper-Lijm Fabriek', blurb: 'Kookt zaagsel tot een pasta die harder plakt dan een combo. Niet likken.' },
+      woodchip_glue: { name: 'Houtsnipper-Lijm Fabriek', short: 'Lijm', blurb: 'Kookt zaagsel tot een pasta die harder plakt dan een combo. Niet likken.' },
       woodchip_glueSub: 'Lijm · Vuur-eiland',
-      chipping_wood: { name: 'Versnipper-Hout Fabriek', blurb: 'Vrolijke versnipperaar die TIMBER fluistert en nuttige snippers hoest.' },
+      chipping_wood: { name: 'Versnipper-Hout Fabriek', short: 'Versnipper', blurb: 'Vrolijke versnipperaar die TIMBER fluistert en nuttige snippers hoest.' },
       chipping_woodSub: 'Snippers · Neon-eiland',
-      bamboo_boesa: { name: 'Bamboe-Boesa Ketel', blurb: 'Vuur-ketel die holle boesa-bamboe stoomt tot de stengels fluiten.' },
+      bamboo_boesa: { name: 'Bamboe-Boesa Ketel', short: 'Boesa', blurb: 'Vuur-ketel die holle boesa-bamboe stoomt tot de stengels fluiten.' },
       bamboo_boesaSub: 'Stoom · Tempel-eiland',
-      echo_whistle: { name: 'Echo-Fluitmolen', blurb: 'Molenrad dat lucht tot taunts maalt. Het gebouw scheldt terug.' },
+      echo_whistle: { name: 'Echo-Fluitmolen', short: 'Echo', blurb: 'Molenrad dat lucht tot taunts maalt. Het gebouw scheldt terug.' },
       echo_whistleSub: 'Echo · Finale-eiland',
       bamboo_boesa_boiler: { name: 'Bamboe-Boesa Ketel' }, echo_whistle_mill: { name: 'Echo-Fluitmolen' },
       res: { spark: 'Vonken', glue: 'Lijm', chip: 'Snippers', steam: 'Stoom', echo: 'Echo', embers: 'sintels', chips: 'chips', echoes: 'echo' },
@@ -2877,6 +2885,14 @@ const I18N = {
       storedFull: '{n}/{cap} FULL',
       collectCap: '+{n} {res} · hopper full ({cap})',
       lockedWorldNamed: '{name} (island {n})',
+      costPc: '{n} PC',
+      costRes: '{n} {res}',
+      islandFallback: 'island {n}',
+      emptyStart: '{name} is open — tap Build',
+      emptyStartCost: '{name} is open — tap Build ({cost})',
+      emptyLocked: 'Play Adventure — then Stick-Lighter',
+      upgradeOkShort: '{short} · Lv {lv}',
+      walletAria: 'Wallet',
       desc: {
         produceLocked: '{res} after island',
         produceUnbuilt: 'Build: {res} {n}/h',
@@ -2900,15 +2916,15 @@ const I18N = {
         bamboo_vent: 'Vent', bamboo_burst: 'Boesa', pressure_cook: 'Steam', boesa_overheat: 'Heat',
         taunt_toot: 'Toot', whistle_chorus: 'Chorus',
       },
-      stick_lighter: { name: 'Stick-Lighter Factory', blurb: 'A lopsided woodshed that rubs sticks together until they sulk into sparks.' },
+      stick_lighter: { name: 'Stick-Lighter Factory', short: 'Lighter', blurb: 'A lopsided woodshed that rubs sticks together until they sulk into sparks.' },
       stick_lighterSub: 'Sparks · East island',
-      woodchip_glue: { name: 'Woodchip-Glue Factory', blurb: 'Boils yesterday’s sawdust into a paste that sticks harder than a combo. Do not lick.' },
+      woodchip_glue: { name: 'Woodchip-Glue Factory', short: 'Glue', blurb: 'Boils yesterday’s sawdust into a paste that sticks harder than a combo. Do not lick.' },
       woodchip_glueSub: 'Glue · Fire island',
-      chipping_wood: { name: 'Chipping-Wood Factory', blurb: 'A cheerful chipper that whispers TIMBER and coughs useful chips.' },
+      chipping_wood: { name: 'Chipping-Wood Factory', short: 'Chipper', blurb: 'A cheerful chipper that whispers TIMBER and coughs useful chips.' },
       chipping_woodSub: 'Chips · Neon island',
-      bamboo_boesa: { name: 'Bamboo-Boesa Boiler', blurb: 'Fire-island kettle that steams hollow “boesa” bamboo until the stalks whistle.' },
+      bamboo_boesa: { name: 'Bamboo-Boesa Boiler', short: 'Boiler', blurb: 'Fire-island kettle that steams hollow “boesa” bamboo until the stalks whistle.' },
       bamboo_boesaSub: 'Steam · Temple island',
-      echo_whistle: { name: 'Echo-Whistle Mill', blurb: 'A mill wheel that turns air into taunts. The building heckles you back.' },
+      echo_whistle: { name: 'Echo-Whistle Mill', short: 'Whistle', blurb: 'A mill wheel that turns air into taunts. The building heckles you back.' },
       echo_whistleSub: 'Echo · Final island',
       bamboo_boesa_boiler: { name: 'Bamboo-Boesa Boiler' }, echo_whistle_mill: { name: 'Echo-Whistle Mill' },
       res: { spark: 'Spark', glue: 'Glue', chip: 'Chip', steam: 'Steam', echo: 'Echo', embers: 'embers', chips: 'chips', echoes: 'echoes' },
@@ -3029,6 +3045,14 @@ const I18N = {
       storedFull: '{n}/{cap} VOLL',
       collectCap: '+{n} {res} · Hopper voll ({cap})',
       lockedWorldNamed: '{name} (Insel {n})',
+      costPc: '{n} PC',
+      costRes: '{n} {res}',
+      islandFallback: 'Insel {n}',
+      emptyStart: '{name} ist frei — tippe Bauen',
+      emptyStartCost: '{name} ist frei — tippe Bauen ({cost})',
+      emptyLocked: 'Abenteuer spielen — dann Anzünder',
+      upgradeOkShort: '{short} · Lv {lv}',
+      walletAria: 'Beutel',
       desc: {
         produceLocked: '{res} nach Insel',
         produceUnbuilt: 'Bau: {res} {n}/h',
@@ -3052,15 +3076,15 @@ const I18N = {
         bamboo_vent: 'Dampf', bamboo_burst: 'Boesa', pressure_cook: 'Druck', boesa_overheat: 'Hitze',
         taunt_toot: 'Toot', whistle_chorus: 'Chor',
       },
-      stick_lighter: { name: 'Stock-Anzünder-Fabrik', blurb: 'Schiefer Schuppen, der Stöcke reibt, bis sie Funken geben.' },
+      stick_lighter: { name: 'Stock-Anzünder-Fabrik', short: 'Anzünder', blurb: 'Schiefer Schuppen, der Stöcke reibt, bis sie Funken geben.' },
       stick_lighterSub: 'Funken · Ostinsel',
-      woodchip_glue: { name: 'Holzspan-Leim-Fabrik', blurb: 'Kocht Sägemehl zu einer Paste, die härter klebt als eine Combo. Nicht lecken.' },
+      woodchip_glue: { name: 'Holzspan-Leim-Fabrik', short: 'Leim', blurb: 'Kocht Sägemehl zu einer Paste, die härter klebt als eine Combo. Nicht lecken.' },
       woodchip_glueSub: 'Leim · Feuerinsel',
-      chipping_wood: { name: 'Holz-Häcksler-Fabrik', blurb: 'Fröhlicher Häcksler, der TIMBER flüstert und nützliche Späne hustet.' },
+      chipping_wood: { name: 'Holz-Häcksler-Fabrik', short: 'Häcksler', blurb: 'Fröhlicher Häcksler, der TIMBER flüstert und nützliche Späne hustet.' },
       chipping_woodSub: 'Späne · Neoninsel',
-      bamboo_boesa: { name: 'Bambus-Boesa-Kessel', blurb: 'Feuerinsel-Kessel, der hohles Boesa-Bambus dämpft, bis die Stängel pfeifen.' },
+      bamboo_boesa: { name: 'Bambus-Boesa-Kessel', short: 'Boesa', blurb: 'Feuerinsel-Kessel, der hohles Boesa-Bambus dämpft, bis die Stängel pfeifen.' },
       bamboo_boesaSub: 'Dampf · Tempelinsel',
-      echo_whistle: { name: 'Echo-Pfeifenmühle', blurb: 'Mühlrad, das Luft zu Spott mahlt. Das Gebäude motzt zurück.' },
+      echo_whistle: { name: 'Echo-Pfeifenmühle', short: 'Echo', blurb: 'Mühlrad, das Luft zu Spott mahlt. Das Gebäude motzt zurück.' },
       echo_whistleSub: 'Echo · Finalinsel',
       bamboo_boesa_boiler: { name: 'Bambus-Boesa-Kessel' }, echo_whistle_mill: { name: 'Echo-Pfeifenmühle' },
       res: { spark: 'Funken', glue: 'Leim', chip: 'Span', steam: 'Dampf', echo: 'Echo', embers: 'Glut', chips: 'Späne', echoes: 'Echos' },
@@ -3336,6 +3360,14 @@ const I18N = {
       storedFull: '{n}/{cap} PLEIN',
       collectCap: '+{n} {res} · trémie pleine ({cap})',
       lockedWorldNamed: '{name} (île {n})',
+      costPc: '{n} PC',
+      costRes: '{n} {res}',
+      islandFallback: 'île {n}',
+      emptyStart: '{name} est ouverte — touche Construire',
+      emptyStartCost: '{name} est ouverte — touche Construire ({cost})',
+      emptyLocked: 'Joue l’Aventure — puis Allume-Bâton',
+      upgradeOkShort: '{short} · Nv {lv}',
+      walletAria: 'Portefeuille',
       desc: {
         produceLocked: '{res} après île',
         produceUnbuilt: 'Bâtir : {res} {n}/h',
@@ -3359,15 +3391,15 @@ const I18N = {
         bamboo_vent: 'Vapeur', bamboo_burst: 'Boesa', pressure_cook: 'Pression', boesa_overheat: 'Chaleur',
         taunt_toot: 'Toot', whistle_chorus: 'Chœur',
       },
-      stick_lighter: { name: 'Usine Allume-Bâton', blurb: 'Hangar de travers qui frotte des bâtons jusqu’à ce qu’ils crachent des étincelles.' },
+      stick_lighter: { name: 'Usine Allume-Bâton', short: 'Allume-Bâton', blurb: 'Hangar de travers qui frotte des bâtons jusqu’à ce qu’ils crachent des étincelles.' },
       stick_lighterSub: 'Étincelles · île de l’Est',
-      woodchip_glue: { name: 'Usine Colle-Copeaux', blurb: 'Fait bouillir la sciure en une pâte plus collante qu’un combo. Ne pas lécher.' },
+      woodchip_glue: { name: 'Usine Colle-Copeaux', short: 'Colle', blurb: 'Fait bouillir la sciure en une pâte plus collante qu’un combo. Ne pas lécher.' },
       woodchip_glueSub: 'Colle · île de Feu',
-      chipping_wood: { name: 'Usine Copeaux-Bois', blurb: 'Déchiqueteuse joyeuse qui murmure TIMBER et tousse des copeaux utiles.' },
+      chipping_wood: { name: 'Usine Copeaux-Bois', short: 'Copeaux', blurb: 'Déchiqueteuse joyeuse qui murmure TIMBER et tousse des copeaux utiles.' },
       chipping_woodSub: 'Copeaux · île Néon',
-      bamboo_boesa: { name: 'Chaudière Bambou-Boesa', blurb: 'Bouilloire de l’île de Feu qui vapeur le bambou creux jusqu’à ce qu’il siffle.' },
+      bamboo_boesa: { name: 'Chaudière Bambou-Boesa', short: 'Boesa', blurb: 'Bouilloire de l’île de Feu qui vapeur le bambou creux jusqu’à ce qu’il siffle.' },
       bamboo_boesaSub: 'Vapeur · île Temple',
-      echo_whistle: { name: 'Moulin Echo-Sifflet', blurb: 'Roue de moulin qui transforme l’air en moqueries. Le bâtiment te répond.' },
+      echo_whistle: { name: 'Moulin Echo-Sifflet', short: 'Écho', blurb: 'Roue de moulin qui transforme l’air en moqueries. Le bâtiment te répond.' },
       echo_whistleSub: 'Écho · île Finale',
       bamboo_boesa_boiler: { name: 'Chaudière Bambou-Boesa' }, echo_whistle_mill: { name: 'Moulin Echo-Sifflet' },
       res: { spark: 'étincelles', glue: 'colle', chip: 'copeau', steam: 'vapeur', echo: 'écho', embers: 'braises', chips: 'copeaux', echoes: 'échos' },
@@ -3624,6 +3656,14 @@ const I18N = {
       storedFull: '{n}/{cap} LLENO',
       collectCap: '+{n} {res} · tolva llena ({cap})',
       lockedWorldNamed: '{name} (isla {n})',
+      costPc: '{n} PC',
+      costRes: '{n} {res}',
+      islandFallback: 'isla {n}',
+      emptyStart: '{name} está abierta — toca Construir',
+      emptyStartCost: '{name} está abierta — toca Construir ({cost})',
+      emptyLocked: 'Juega Aventura — luego Palo-Mechero',
+      upgradeOkShort: '{short} · Nv {lv}',
+      walletAria: 'Cartera',
       desc: {
         produceLocked: '{res} tras isla',
         produceUnbuilt: 'Construir: {res} {n}/h',
@@ -3647,15 +3687,15 @@ const I18N = {
         bamboo_vent: 'Vapor', bamboo_burst: 'Boesa', pressure_cook: 'Presión', boesa_overheat: 'Calor',
         taunt_toot: 'Toot', whistle_chorus: 'Coro',
       },
-      stick_lighter: { name: 'Fábrica Palo-Mechero', blurb: 'Cobertizo torcido que frota palos hasta que sueltan chispas.' },
+      stick_lighter: { name: 'Fábrica Palo-Mechero', short: 'Mechero', blurb: 'Cobertizo torcido que frota palos hasta que sueltan chispas.' },
       stick_lighterSub: 'Chispas · isla Este',
-      woodchip_glue: { name: 'Fábrica Cola-Astillas', blurb: 'Hierve el serrín hasta una pasta más pegajosa que un combo. No lamer.' },
+      woodchip_glue: { name: 'Fábrica Cola-Astillas', short: 'Cola', blurb: 'Hierve el serrín hasta una pasta más pegajosa que un combo. No lamer.' },
       woodchip_glueSub: 'Cola · isla Fuego',
-      chipping_wood: { name: 'Fábrica Astilla-Madera', blurb: 'Trituradora alegre que susurra TIMBER y tose astillas útiles.' },
+      chipping_wood: { name: 'Fábrica Astilla-Madera', short: 'Astilla', blurb: 'Trituradora alegre que susurra TIMBER y tose astillas útiles.' },
       chipping_woodSub: 'Astillas · isla Neón',
-      bamboo_boesa: { name: 'Caldera Bambú-Boesa', blurb: 'Olla de la isla Fuego que cuece bambú hueco hasta que silba.' },
+      bamboo_boesa: { name: 'Caldera Bambú-Boesa', short: 'Boesa', blurb: 'Olla de la isla Fuego que cuece bambú hueco hasta que silba.' },
       bamboo_boesaSub: 'Vapor · isla Templo',
-      echo_whistle: { name: 'Molino Eco-Silbido', blurb: 'Rueda que convierte el aire en burlas. El edificio te responde.' },
+      echo_whistle: { name: 'Molino Eco-Silbido', short: 'Eco', blurb: 'Rueda que convierte el aire en burlas. El edificio te responde.' },
       echo_whistleSub: 'Eco · isla Final',
       bamboo_boesa_boiler: { name: 'Caldera Bambú-Boesa' }, echo_whistle_mill: { name: 'Molino Eco-Silbido' },
       res: { spark: 'chispas', glue: 'cola', chip: 'astilla', steam: 'vapor', echo: 'eco', embers: 'brasas', chips: 'astillas', echoes: 'ecos' },
@@ -3985,6 +4025,10 @@ function applyLangStaticScreens() {
   }
   const buildingsList = document.getElementById('buildingsList');
   if (buildingsList) buildingsList.setAttribute('aria-label', t('buildings.title'));
+  const buildingsTile = document.getElementById('btnBuildings');
+  if (buildingsTile) buildingsTile.setAttribute('aria-label', t('hub.buildings'));
+  const buildingsWallet = document.getElementById('buildingsWallet');
+  if (buildingsWallet) buildingsWallet.setAttribute('aria-label', tOr('buildings.walletAria', t('buildings.title')));
   const gearFilterBar = document.getElementById('gearFilterBar');
   if (gearFilterBar) gearFilterBar.setAttribute('aria-label', tOr('gear.filterAria', t('gear.filterAll')));
   const gearRarityBar = document.getElementById('gearRarityBar');
@@ -51503,6 +51547,62 @@ function buildingsCostText(view) {
   return view.upgradeHint || '';
 }
 
+function buildingsShortName(id, view) {
+  const key = 'buildings.' + id + '.short';
+  const named = buildingsTxt(key, '');
+  if (named && named !== key) return named;
+  try {
+    const def = (typeof BUILDING_BY_ID === 'object' && BUILDING_BY_ID) ? BUILDING_BY_ID[id] : null;
+    if (def && def.short) return def.short;
+  } catch (_) {}
+  const name = (view && view.name) || '';
+  const stripped = String(name).replace(/\s+(Fabriek|Factory|Fabrik|Usine|Fábrica|Ketel|Boiler|Mill|molen|Mühle).*$/i, '').trim();
+  return stripped || name || id || '';
+}
+
+function buildingsCostParts(view) {
+  if (!view) return [];
+  const cost = view.nextCost || {};
+  const model = buildingsWalletSnap();
+  const parts = [];
+  const needPc = Math.max(0, Math.floor(Number(cost.petCoins) || 0));
+  if (needPc) {
+    const have = model.petCoins;
+    parts.push({
+      id: 'petCoins',
+      need: needPc,
+      have,
+      ok: have >= needPc,
+      label: buildingsTxt('buildings.costPc', '{n} PC', { n: needPc }),
+    });
+  }
+  const resBag = (cost.resources && typeof cost.resources === 'object') ? cost.resources : {};
+  for (const [rid, n] of Object.entries(resBag)) {
+    const need = Math.max(0, Math.floor(Number(n) || 0));
+    if (!need) continue;
+    const have = ((model.resources || []).find((r) => r.id === rid) || {}).amount || 0;
+    const rlabel = (typeof buildingsResourceLabel === 'function') ? buildingsResourceLabel(rid) : rid;
+    parts.push({
+      id: rid,
+      need,
+      have,
+      ok: have >= need,
+      label: buildingsTxt('buildings.costRes', '{n} {res}', { n: need, res: rlabel }),
+    });
+  }
+  return parts;
+}
+
+function buildingsCostChipsHtml(view) {
+  const parts = buildingsCostParts(view);
+  if (!parts.length) return '';
+  return '<div class="buildings-cost-chips" data-buildings-cost-chips>'
+    + parts.map((p) =>
+      '<span class="buildings-cost-chip ' + (p.ok ? 'is-ok' : 'is-short') + '" data-cost="' + buildingsEscape(p.id) + '">'
+      + buildingsEscape(p.label) + '</span>').join('')
+    + '</div>';
+}
+
 function buildingsIsUnbuilt(view) {
   return !!(view && !view.locked && !(view.built || view.level >= 1));
 }
@@ -51511,22 +51611,41 @@ function buildingsIsMax(view) {
   return !!(view && !view.locked && !buildingsIsUnbuilt(view) && view.level >= view.maxLevel);
 }
 
+function buildingsNoneBuilt(rows) {
+  return !!(rows && rows.length && rows.every((r) => !r || r.locked || buildingsIsUnbuilt(r)));
+}
+
+function buildingsEmptyStartHtml(rows) {
+  if (!buildingsNoneBuilt(rows)) return '';
+  const first = (rows || []).find((r) => r && r.id === 'stick_lighter')
+    || (rows || []).find((r) => r && !r.locked)
+    || null;
+  if (!first || first.locked) {
+    return '<p class="buildings-empty-start" data-buildings-empty="locked">'
+      + buildingsEscape(buildingsTxt('buildings.emptyLocked', 'Speel Avontuur — dan Stok-Aansteker'))
+      + '</p>';
+  }
+  const pc = first.nextCost && Math.max(0, Math.floor(Number(first.nextCost.petCoins) || 0));
+  const cost = pc
+    ? buildingsTxt('buildings.costPc', '{n} PC', { n: pc })
+    : buildingsCostText(first);
+  const name = buildingsShortName(first.id, first);
+  const line = cost
+    ? buildingsTxt('buildings.emptyStartCost', '{name} is open — tik Bouw ({cost})', { name, cost })
+    : buildingsTxt('buildings.emptyStart', '{name} is open — tik Bouw', { name });
+  return '<button type="button" class="buildings-empty-start" data-buildings-empty="'
+    + buildingsEscape(first.id) + '" data-buildings-empty-open="' + buildingsEscape(first.id) + '">'
+    + buildingsEscape(line) + '</button>';
+}
+
 function buildingsBrokeHint(view) {
   if (!view || view.locked || buildingsIsMax(view) || view.canUpgrade) return '';
-  const cost = view.nextCost || {};
-  const model = buildingsWalletSnap();
-  const missing = [];
-  const needPc = Math.max(0, Math.floor(Number(cost.petCoins) || 0) - model.petCoins);
-  if (needPc > 0) missing.push(needPc + ' PC');
-  const resBag = cost.resources && typeof cost.resources === 'object' ? cost.resources : {};
-  for (const [rid, n] of Object.entries(resBag)) {
-    const need = Math.max(0, Math.floor(Number(n) || 0));
-    const have = ((model.resources || []).find((r) => r.id === rid) || {}).amount || 0;
-    if (have < need) {
-      const label = (typeof buildingsResourceLabel === 'function') ? buildingsResourceLabel(rid) : rid;
-      missing.push((need - have) + ' ' + label);
-    }
-  }
+  const missing = buildingsCostParts(view).filter((p) => !p.ok).map((p) => {
+    const short = Math.max(0, p.need - p.have);
+    if (p.id === 'petCoins') return short + ' PC';
+    const rlabel = (typeof buildingsResourceLabel === 'function') ? buildingsResourceLabel(p.id) : p.id;
+    return short + ' ' + rlabel;
+  });
   if (!missing.length) return view.upgradeHint || buildingsCostText(view) || '';
   return buildingsTxt('buildings.brokeHint', 'Mis {cost} — speel of oogst eerst', { cost: missing.join(' + ') });
 }
@@ -51626,6 +51745,12 @@ if (typeof UI === 'object' && UI) {
     const list = document.getElementById('buildingsList');
     const detail = document.getElementById('buildingsDetail');
     const handle = (e, fromDetail) => {
+      const emptyBtn = e.target && e.target.closest && e.target.closest('[data-buildings-empty-open]');
+      if (emptyBtn) {
+        const startId = emptyBtn.getAttribute('data-buildings-empty-open');
+        if (startId) UI.buildingsShowDetail(startId);
+        return;
+      }
       const pill = e.target && e.target.closest && e.target.closest('[data-buildings-collect]');
       if (pill) {
         const id = pill.getAttribute('data-buildings-collect');
@@ -51664,6 +51789,22 @@ if (typeof UI === 'object' && UI) {
     };
     bind(list, (e) => handle(e, false));
     bind(detail, (e) => handle(e, true));
+    const emptyHost = this.ensureBuildingsEmptyHost();
+    bind(emptyHost, (e) => handle(e, false));
+  };
+
+  UI.ensureBuildingsEmptyHost = function ensureBuildingsEmptyHost() {
+    let host = document.getElementById('buildingsEmptyStart');
+    if (host) return host;
+    const overview = document.getElementById('buildingsOverview');
+    if (!overview) return null;
+    host = document.createElement('div');
+    host.id = 'buildingsEmptyStart';
+    host.className = 'buildings-empty-start-wrap';
+    const listEl = document.getElementById('buildingsList');
+    if (listEl && listEl.parentNode === overview) overview.insertBefore(host, listEl);
+    else overview.insertBefore(host, overview.firstChild);
+    return host;
   };
 
   UI.buildingsShowList = function buildingsShowList() {
@@ -51821,6 +51962,12 @@ if (typeof UI === 'object' && UI) {
       sheet.classList.add('buildings-sheet', 'buildings-upgrade-sheet');
     }
     if (list) this.paintBuildingsList(list, rows, sel, quiet);
+    const emptyHost = this.ensureBuildingsEmptyHost();
+    if (emptyHost) {
+      const showEmpty = pane === 'list' && buildingsNoneBuilt(rows);
+      emptyHost.hidden = !showEmpty;
+      emptyHost.innerHTML = showEmpty ? buildingsEmptyStartHtml(rows) : '';
+    }
     const view = rows.find((r) => r.id === sel) || rows[0];
     if (detail) {
       const key = (view && view.id || '') + ':' + (this.buildingsStep || 'harvest') + ':' + pane;
@@ -51853,7 +52000,8 @@ if (typeof UI === 'object' && UI) {
       card.className = 'buildings-card buildings-row'
         + (view.id === sel ? ' buildings-row-sel is-sel' : '')
         + (view.locked ? ' buildings-row-locked is-locked' : '')
-        + (view.canCollect ? ' buildings-row-ready is-ready' : '');
+        + (view.canCollect ? ' buildings-row-ready is-ready' : '')
+        + (buildingsNoneBuilt(rows) && view.id === 'stick_lighter' && !view.locked ? ' is-start' : '');
       card.setAttribute('data-factory-id', view.id);
       card.dataset.buildingId = view.id;
       card.dataset.factoryId = view.id;
@@ -51985,33 +52133,35 @@ if (typeof UI === 'object' && UI) {
       sheet.innerHTML = '';
       return;
     }
-    const costHint = buildingsCostText(view);
     const unbuilt = buildingsIsUnbuilt(view);
     const atMax = buildingsIsMax(view);
     const broke = buildingsBrokeHint(view);
+    const chips = atMax ? '' : buildingsCostChipsHtml(view);
     const desc = buildingsDesc(view.id, view) || {};
     const ask = unbuilt
       ? buildingsTxt('buildings.buildAsk', 'Bouw {name}?', { name: view.name })
       : buildingsTxt('buildings.upgradeAsk', 'Upgrade naar Lv {next}?', { next: (view.level || 0) + 1 });
     const canPay = !!view.canUpgrade && !atMax && !view.locked;
+    const confirmCls = 'btn mode-btn big-touch buildings-cta'
+      + (canPay ? ' b-continue is-afford' : ' b-gray is-broke');
     sheet.hidden = false;
     sheet.setAttribute('aria-hidden', 'false');
     sheet.classList.add('buildings-sheet', 'buildings-upgrade-sheet');
     sheet.innerHTML =
       '<button type="button" class="buildings-sheet-backdrop" data-buildings-sheet-close></button>'
       + '<div class="buildings-sheet-panel" role="dialog" aria-modal="true">'
-      + '<h3>' + buildingsEscape(buildingsTxt('buildings.upgradeTitle', 'Upgrade {name}', { name: view.name })) + '</h3>'
+      + '<h3>' + buildingsEscape(buildingsTxt('buildings.upgradeTitle', 'Upgrade {name}', { name: buildingsShortName(view.id, view) })) + '</h3>'
       + (desc.nextLine ? '<p class="buildings-sheet-now buildings-next">' + buildingsEscape(desc.nextLine) + '</p>'
         : (desc.doesLine ? '<p class="buildings-sheet-now">' + buildingsEscape(desc.doesLine) + '</p>' : ''))
       + '<p class="buildings-upgrade-ask buildings-sheet-why">' + buildingsEscape(atMax
         ? buildingsTxt('buildings.upgradeMax', 'Max level')
         : ask) + '</p>'
-      + (costHint ? '<p class="buildings-upgrade-cost buildings-sheet-cost">' + buildingsEscape(costHint) + '</p>' : '')
+      + chips
       + (!canPay && broke ? '<p class="buildings-sheet-why">' + buildingsEscape(broke) + '</p>' : '')
       + '<div class="buildings-sheet-actions buildings-cta-stack">'
       + (atMax
         ? ''
-        : ('<button type="button" class="btn mode-btn b-continue big-touch buildings-cta" id="btnBuildingUpgradeConfirm"'
+        : ('<button type="button" class="' + confirmCls + '" id="btnBuildingUpgradeConfirm"'
           + (canPay ? '' : ' disabled') + '>'
           + buildingsEscape(buildingsTxt('buildings.upgradeConfirm', 'Bevestig')) + '</button>'))
       + '<button type="button" class="btn mode-btn b-gray big-touch buildings-cta" data-buildings-sheet-close>'
@@ -52102,7 +52252,11 @@ if (typeof UI === 'object' && UI) {
     const res = (typeof buildingsUpgrade === 'function') ? buildingsUpgrade(id) : { ok: false };
     if (res && res.ok) {
       try { if (typeof AudioSys !== 'undefined') AudioSys.sfx('levelup'); } catch (_) {}
-      try { this.toast(res.message || '', 2600, { tone: 'ok' }); } catch (_) {}
+      const after = (typeof buildingsGet === 'function') ? buildingsGet(id) : null;
+      const lv = Math.max(1, Math.floor(Number((res && res.level) != null ? res.level : (after && after.level)) || 1));
+      const short = buildingsShortName(id, after);
+      const msg = buildingsTxt('buildings.upgradeOkShort', '{short} · Lv {lv}', { short, lv });
+      try { this.toast(msg, 2000, { tone: 'ok' }); } catch (_) {}
       this.buildingsStep = 'harvest';
       this.buildingsView = 'detail';
       this.buildingsPane = 'detail';

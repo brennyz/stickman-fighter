@@ -94,8 +94,9 @@ When `BUILDING_IDS` + `buildingCollect` are present, the HOME screen binds that 
 4. Wallet chips under the title always show **PC + Vonken / Lijm / Snippers / Stoom / Echo** (readable amounts, including 0).
 5. Tap a factory → **detail**: does-line + produce/power, hopper, **collect pill**. Upgrade… opens the sheet — not a twin collect button.
 6. One-tap pill credits spark / glue / chip / steam / echo; toast `+N` and the matching wallet pill flashes `+N`. Hopper at cap: gold **VOL** on pill + wallet (rate paused) and toast `+N · hopper vol (cap)`. Empty collect never opens detail (no double-tap race).
-7. Upgrade… → sheet with does/next + cost. Unbuilt uses **Bouwen…**. Not enough currency: sheet explains what’s missing + Sluiten. Locked factory: **Naar Avontuur** (no disabled dead CTA). Max: status line, harvest still runs.
-8. ← Overzicht or Back closes sheet → detail → list; Back on the list returns to KIES JE PAD. Versus tile must stay gone.
+7. First open (nothing built): one-line **empty start** — `Stok-Aansteker is open — tik Bouw (20 PC)` / EN `Lighter is open — tap Build (20 PC)`. Tap opens stick_lighter. No wall of text.
+8. Upgrade… → sheet with does/next + **red/green cost chips** (wallet covers = green, short = red). Confirm is `is-afford` / `is-broke`. Success toast is short (`Lighter · Lv 4`), not the full factory name. Unbuilt uses **Bouwen…**. Locked factory: **Naar Avontuur**. Max: status line, harvest still runs. EN/DE overlays use locale keys (`costPc`, `islandFallback`, `sheetClose`) — no Dutch leftovers.
+9. ← Overzicht or Back closes sheet → detail → list; Back on the list returns to KIES JE PAD. Versus tile must stay gone.
 
 Debug without adventure progress: in console
 `save.unlocked = 70; persist(); location.reload()` then all five unlock.

@@ -129,6 +129,62 @@ function buildingsCostText(view) {
   return view.upgradeHint || '';
 }
 
+function buildingsShortName(id, view) {
+  const key = 'buildings.' + id + '.short';
+  const named = buildingsTxt(key, '');
+  if (named && named !== key) return named;
+  try {
+    const def = (typeof BUILDING_BY_ID === 'object' && BUILDING_BY_ID) ? BUILDING_BY_ID[id] : null;
+    if (def && def.short) return def.short;
+  } catch (_) {}
+  const name = (view && view.name) || '';
+  const stripped = String(name).replace(/\s+(Fabriek|Factory|Fabrik|Usine|Fábrica|Ketel|Boiler|Mill|molen|Mühle).*$/i, '').trim();
+  return stripped || name || id || '';
+}
+
+function buildingsCostParts(view) {
+  if (!view) return [];
+  const cost = view.nextCost || {};
+  const model = buildingsWalletSnap();
+  const parts = [];
+  const needPc = Math.max(0, Math.floor(Number(cost.petCoins) || 0));
+  if (needPc) {
+    const have = model.petCoins;
+    parts.push({
+      id: 'petCoins',
+      need: needPc,
+      have,
+      ok: have >= needPc,
+      label: buildingsTxt('buildings.costPc', '{n} PC', { n: needPc }),
+    });
+  }
+  const resBag = (cost.resources && typeof cost.resources === 'object') ? cost.resources : {};
+  for (const [rid, n] of Object.entries(resBag)) {
+    const need = Math.max(0, Math.floor(Number(n) || 0));
+    if (!need) continue;
+    const have = ((model.resources || []).find((r) => r.id === rid) || {}).amount || 0;
+    const rlabel = (typeof buildingsResourceLabel === 'function') ? buildingsResourceLabel(rid) : rid;
+    parts.push({
+      id: rid,
+      need,
+      have,
+      ok: have >= need,
+      label: buildingsTxt('buildings.costRes', '{n} {res}', { n: need, res: rlabel }),
+    });
+  }
+  return parts;
+}
+
+function buildingsCostChipsHtml(view) {
+  const parts = buildingsCostParts(view);
+  if (!parts.length) return '';
+  return '<div class="buildings-cost-chips" data-buildings-cost-chips>'
+    + parts.map((p) =>
+      '<span class="buildings-cost-chip ' + (p.ok ? 'is-ok' : 'is-short') + '" data-cost="' + buildingsEscape(p.id) + '">'
+      + buildingsEscape(p.label) + '</span>').join('')
+    + '</div>';
+}
+
 function buildingsIsUnbuilt(view) {
   return !!(view && !view.locked && !(view.built || view.level >= 1));
 }
@@ -137,22 +193,41 @@ function buildingsIsMax(view) {
   return !!(view && !view.locked && !buildingsIsUnbuilt(view) && view.level >= view.maxLevel);
 }
 
+function buildingsNoneBuilt(rows) {
+  return !!(rows && rows.length && rows.every((r) => !r || r.locked || buildingsIsUnbuilt(r)));
+}
+
+function buildingsEmptyStartHtml(rows) {
+  if (!buildingsNoneBuilt(rows)) return '';
+  const first = (rows || []).find((r) => r && r.id === 'stick_lighter')
+    || (rows || []).find((r) => r && !r.locked)
+    || null;
+  if (!first || first.locked) {
+    return '<p class="buildings-empty-start" data-buildings-empty="locked">'
+      + buildingsEscape(buildingsTxt('buildings.emptyLocked', 'Speel Avontuur — dan Stok-Aansteker'))
+      + '</p>';
+  }
+  const pc = first.nextCost && Math.max(0, Math.floor(Number(first.nextCost.petCoins) || 0));
+  const cost = pc
+    ? buildingsTxt('buildings.costPc', '{n} PC', { n: pc })
+    : buildingsCostText(first);
+  const name = buildingsShortName(first.id, first);
+  const line = cost
+    ? buildingsTxt('buildings.emptyStartCost', '{name} is open — tik Bouw ({cost})', { name, cost })
+    : buildingsTxt('buildings.emptyStart', '{name} is open — tik Bouw', { name });
+  return '<button type="button" class="buildings-empty-start" data-buildings-empty="'
+    + buildingsEscape(first.id) + '" data-buildings-empty-open="' + buildingsEscape(first.id) + '">'
+    + buildingsEscape(line) + '</button>';
+}
+
 function buildingsBrokeHint(view) {
   if (!view || view.locked || buildingsIsMax(view) || view.canUpgrade) return '';
-  const cost = view.nextCost || {};
-  const model = buildingsWalletSnap();
-  const missing = [];
-  const needPc = Math.max(0, Math.floor(Number(cost.petCoins) || 0) - model.petCoins);
-  if (needPc > 0) missing.push(needPc + ' PC');
-  const resBag = cost.resources && typeof cost.resources === 'object' ? cost.resources : {};
-  for (const [rid, n] of Object.entries(resBag)) {
-    const need = Math.max(0, Math.floor(Number(n) || 0));
-    const have = ((model.resources || []).find((r) => r.id === rid) || {}).amount || 0;
-    if (have < need) {
-      const label = (typeof buildingsResourceLabel === 'function') ? buildingsResourceLabel(rid) : rid;
-      missing.push((need - have) + ' ' + label);
-    }
-  }
+  const missing = buildingsCostParts(view).filter((p) => !p.ok).map((p) => {
+    const short = Math.max(0, p.need - p.have);
+    if (p.id === 'petCoins') return short + ' PC';
+    const rlabel = (typeof buildingsResourceLabel === 'function') ? buildingsResourceLabel(p.id) : p.id;
+    return short + ' ' + rlabel;
+  });
   if (!missing.length) return view.upgradeHint || buildingsCostText(view) || '';
   return buildingsTxt('buildings.brokeHint', 'Mis {cost} — speel of oogst eerst', { cost: missing.join(' + ') });
 }
@@ -252,6 +327,12 @@ if (typeof UI === 'object' && UI) {
     const list = document.getElementById('buildingsList');
     const detail = document.getElementById('buildingsDetail');
     const handle = (e, fromDetail) => {
+      const emptyBtn = e.target && e.target.closest && e.target.closest('[data-buildings-empty-open]');
+      if (emptyBtn) {
+        const startId = emptyBtn.getAttribute('data-buildings-empty-open');
+        if (startId) UI.buildingsShowDetail(startId);
+        return;
+      }
       const pill = e.target && e.target.closest && e.target.closest('[data-buildings-collect]');
       if (pill) {
         const id = pill.getAttribute('data-buildings-collect');
@@ -290,6 +371,22 @@ if (typeof UI === 'object' && UI) {
     };
     bind(list, (e) => handle(e, false));
     bind(detail, (e) => handle(e, true));
+    const emptyHost = this.ensureBuildingsEmptyHost();
+    bind(emptyHost, (e) => handle(e, false));
+  };
+
+  UI.ensureBuildingsEmptyHost = function ensureBuildingsEmptyHost() {
+    let host = document.getElementById('buildingsEmptyStart');
+    if (host) return host;
+    const overview = document.getElementById('buildingsOverview');
+    if (!overview) return null;
+    host = document.createElement('div');
+    host.id = 'buildingsEmptyStart';
+    host.className = 'buildings-empty-start-wrap';
+    const listEl = document.getElementById('buildingsList');
+    if (listEl && listEl.parentNode === overview) overview.insertBefore(host, listEl);
+    else overview.insertBefore(host, overview.firstChild);
+    return host;
   };
 
   UI.buildingsShowList = function buildingsShowList() {
@@ -447,6 +544,12 @@ if (typeof UI === 'object' && UI) {
       sheet.classList.add('buildings-sheet', 'buildings-upgrade-sheet');
     }
     if (list) this.paintBuildingsList(list, rows, sel, quiet);
+    const emptyHost = this.ensureBuildingsEmptyHost();
+    if (emptyHost) {
+      const showEmpty = pane === 'list' && buildingsNoneBuilt(rows);
+      emptyHost.hidden = !showEmpty;
+      emptyHost.innerHTML = showEmpty ? buildingsEmptyStartHtml(rows) : '';
+    }
     const view = rows.find((r) => r.id === sel) || rows[0];
     if (detail) {
       const key = (view && view.id || '') + ':' + (this.buildingsStep || 'harvest') + ':' + pane;
@@ -479,7 +582,8 @@ if (typeof UI === 'object' && UI) {
       card.className = 'buildings-card buildings-row'
         + (view.id === sel ? ' buildings-row-sel is-sel' : '')
         + (view.locked ? ' buildings-row-locked is-locked' : '')
-        + (view.canCollect ? ' buildings-row-ready is-ready' : '');
+        + (view.canCollect ? ' buildings-row-ready is-ready' : '')
+        + (buildingsNoneBuilt(rows) && view.id === 'stick_lighter' && !view.locked ? ' is-start' : '');
       card.setAttribute('data-factory-id', view.id);
       card.dataset.buildingId = view.id;
       card.dataset.factoryId = view.id;
@@ -611,33 +715,35 @@ if (typeof UI === 'object' && UI) {
       sheet.innerHTML = '';
       return;
     }
-    const costHint = buildingsCostText(view);
     const unbuilt = buildingsIsUnbuilt(view);
     const atMax = buildingsIsMax(view);
     const broke = buildingsBrokeHint(view);
+    const chips = atMax ? '' : buildingsCostChipsHtml(view);
     const desc = buildingsDesc(view.id, view) || {};
     const ask = unbuilt
       ? buildingsTxt('buildings.buildAsk', 'Bouw {name}?', { name: view.name })
       : buildingsTxt('buildings.upgradeAsk', 'Upgrade naar Lv {next}?', { next: (view.level || 0) + 1 });
     const canPay = !!view.canUpgrade && !atMax && !view.locked;
+    const confirmCls = 'btn mode-btn big-touch buildings-cta'
+      + (canPay ? ' b-continue is-afford' : ' b-gray is-broke');
     sheet.hidden = false;
     sheet.setAttribute('aria-hidden', 'false');
     sheet.classList.add('buildings-sheet', 'buildings-upgrade-sheet');
     sheet.innerHTML =
       '<button type="button" class="buildings-sheet-backdrop" data-buildings-sheet-close></button>'
       + '<div class="buildings-sheet-panel" role="dialog" aria-modal="true">'
-      + '<h3>' + buildingsEscape(buildingsTxt('buildings.upgradeTitle', 'Upgrade {name}', { name: view.name })) + '</h3>'
+      + '<h3>' + buildingsEscape(buildingsTxt('buildings.upgradeTitle', 'Upgrade {name}', { name: buildingsShortName(view.id, view) })) + '</h3>'
       + (desc.nextLine ? '<p class="buildings-sheet-now buildings-next">' + buildingsEscape(desc.nextLine) + '</p>'
         : (desc.doesLine ? '<p class="buildings-sheet-now">' + buildingsEscape(desc.doesLine) + '</p>' : ''))
       + '<p class="buildings-upgrade-ask buildings-sheet-why">' + buildingsEscape(atMax
         ? buildingsTxt('buildings.upgradeMax', 'Max level')
         : ask) + '</p>'
-      + (costHint ? '<p class="buildings-upgrade-cost buildings-sheet-cost">' + buildingsEscape(costHint) + '</p>' : '')
+      + chips
       + (!canPay && broke ? '<p class="buildings-sheet-why">' + buildingsEscape(broke) + '</p>' : '')
       + '<div class="buildings-sheet-actions buildings-cta-stack">'
       + (atMax
         ? ''
-        : ('<button type="button" class="btn mode-btn b-continue big-touch buildings-cta" id="btnBuildingUpgradeConfirm"'
+        : ('<button type="button" class="' + confirmCls + '" id="btnBuildingUpgradeConfirm"'
           + (canPay ? '' : ' disabled') + '>'
           + buildingsEscape(buildingsTxt('buildings.upgradeConfirm', 'Bevestig')) + '</button>'))
       + '<button type="button" class="btn mode-btn b-gray big-touch buildings-cta" data-buildings-sheet-close>'
@@ -728,7 +834,11 @@ if (typeof UI === 'object' && UI) {
     const res = (typeof buildingsUpgrade === 'function') ? buildingsUpgrade(id) : { ok: false };
     if (res && res.ok) {
       try { if (typeof AudioSys !== 'undefined') AudioSys.sfx('levelup'); } catch (_) {}
-      try { this.toast(res.message || '', 2600, { tone: 'ok' }); } catch (_) {}
+      const after = (typeof buildingsGet === 'function') ? buildingsGet(id) : null;
+      const lv = Math.max(1, Math.floor(Number((res && res.level) != null ? res.level : (after && after.level)) || 1));
+      const short = buildingsShortName(id, after);
+      const msg = buildingsTxt('buildings.upgradeOkShort', '{short} · Lv {lv}', { short, lv });
+      try { this.toast(msg, 2000, { tone: 'ok' }); } catch (_) {}
       this.buildingsStep = 'harvest';
       this.buildingsView = 'detail';
       this.buildingsPane = 'detail';

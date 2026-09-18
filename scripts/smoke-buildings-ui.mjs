@@ -82,6 +82,12 @@ must(ui.includes('buildingsGoAdventure') || ui.includes('goAdventure'), 'locked 
 must(ui.includes('collectCap') || ui.includes('hopper vol') || ui.includes('pillFull'), 'cap collect feedback missing');
 must(ui.includes('_buildingsCollectBusy'), 'collect race lock missing');
 must(!/function doBuildingCollect[\s\S]{0,1600}buildingsShowDetail/.test(ui), 'empty collect must not open detail');
+must(ui.includes('buildings-cost-chip') && ui.includes('buildingsCostChipsHtml'), 'upgrade sheet cost chips missing');
+must(ui.includes('upgradeOkShort'), 'short upgrade toast missing');
+must(ui.includes('emptyStart') && ui.includes('buildings-empty-start'), 'first-time empty state missing');
+must(/costPc/.test(i18n) && /islandFallback/.test(i18n) && /emptyStartCost/.test(i18n), 'buildings cost/empty i18n keys missing');
+must(css.includes('buildings-cost-chip') && css.includes('is-short') && css.includes('is-ok'), 'afford chip CSS missing');
+must(css.includes('buildings-empty-start'), 'empty start CSS missing');
 must(ui.includes('buildingDescModel'), 'UI must consume systems buildingDescModel');
 must(ui.includes('buildingWalletModel'), 'UI must consume systems buildingWalletModel');
 must(ui.includes('buildingArtSrc'), 'UI must consume systems buildingArtSrc');
@@ -163,6 +169,10 @@ async function runBrowser() {
       const wallet = document.getElementById('buildingsWallet');
       const chips = wallet ? [...wallet.querySelectorAll('[data-res]')].map((c) => c.getAttribute('data-res')) : [];
       const doesLines = list ? [...list.querySelectorAll('.buildings-card-does')].map((el) => (el.textContent || '').trim()) : [];
+      const emptyStart = document.querySelector('[data-buildings-empty]');
+      const emptyStartOn = !!(emptyStart && (emptyStart.textContent || '').trim());
+      const emptyStartShort = emptyStartOn && (emptyStart.textContent || '').trim().length <= 56
+        && !/Kracht rank|Power rank|hopper max|Wat doet dit/i.test(emptyStart.textContent || '');
       if (typeof UI.buildingsShowDetail === 'function') UI.buildingsShowDetail('stick_lighter');
       const paneDetail = (scr && scr.getAttribute('data-buildings-pane')) === 'detail';
       const effect = document.querySelector('[data-buildings-effect="stick_lighter"]');
@@ -194,6 +204,7 @@ async function runBrowser() {
         if (typeof persist === 'function') persist();
       }
       if (typeof UI.renderBuildings === 'function') UI.renderBuildings();
+      const emptyGone = !document.querySelector('[data-buildings-empty]');
       const collectAfter = document.getElementById('btnBuildingCollect');
       const upgradeAfter = document.getElementById('btnBuildingUpgrade');
       const fullPill = document.querySelector('[data-factory-id="stick_lighter"] [data-buildings-collect]');
@@ -218,6 +229,35 @@ async function runBrowser() {
       const sheet = document.getElementById('buildingsUpgradeSheet');
       const sheetOpen = !!(sheet && !sheet.hidden);
       const sheetClose = !!(sheet && sheet.querySelector('[data-buildings-sheet-close]'));
+      const costChips = sheet ? [...sheet.querySelectorAll('.buildings-cost-chip')] : [];
+      const hasAffordChips = costChips.length > 0
+        && costChips.every((c) => c.classList.contains('is-ok') || c.classList.contains('is-short'));
+      const dutchRe = /Fabrieken|Op slot|Bouwen|Sluiten|eiland |oogst op|opgeslagen|Nog niet gebouwd|Overzicht|Bevestig|tik Bouw/;
+      const surf = (root) => (root && root.innerText) || '';
+      if (typeof setLang === 'function') setLang('en');
+      if (typeof UI.renderBuildings === 'function') UI.renderBuildings();
+      const enHead = (document.getElementById('buildingsScreenHead') || {}).textContent || '';
+      const enLeak = dutchRe.test(surf(document.getElementById('buildingsScreen')) + surf(document.getElementById('buildingsUpgradeSheet')));
+      if (typeof setLang === 'function') setLang('de');
+      if (typeof UI.renderBuildings === 'function') UI.renderBuildings();
+      const deHead = (document.getElementById('buildingsScreenHead') || {}).textContent || '';
+      const deLeak = dutchRe.test(surf(document.getElementById('buildingsScreen')) + surf(document.getElementById('buildingsUpgradeSheet')));
+      if (typeof setLang === 'function') setLang('nl');
+      if (typeof UI.renderBuildings === 'function') UI.renderBuildings();
+      if (typeof save !== 'undefined') {
+        save.petCoins = Math.max(save.petCoins || 0, 400);
+        save.buildings = save.buildings || { schema: 1, factories: {}, wallet: {} };
+        save.buildings.wallet = save.buildings.wallet || {};
+        save.buildings.wallet.spark = Math.max(Number(save.buildings.wallet.spark) || 0, 80);
+        if (typeof persist === 'function') persist();
+      }
+      if (typeof UI.buildingsShowDetail === 'function') UI.buildingsShowDetail('stick_lighter');
+      if (typeof UI.buildingsShowUpgradeStep === 'function') UI.buildingsShowUpgradeStep();
+      if (typeof UI.doBuildingUpgrade === 'function') UI.doBuildingUpgrade('stick_lighter');
+      const toastText = [...document.querySelectorAll('#toastHost .toast, #toastHost [class*="toast"]')]
+        .map((el) => (el.textContent || '').trim()).join(' | ');
+      const toastShort = /Lv\s*\d/.test(toastText)
+        && !/Stok-Aansteker Fabriek|Stick-Lighter Factory|Stock-Anzünder-Fabrik/.test(toastText);
       const usesDesc = typeof buildingDescModel === 'function';
       const usesWallet = typeof buildingWalletModel === 'function';
       const usesArt = typeof buildingArtSrc === 'function';
@@ -246,7 +286,10 @@ async function runBrowser() {
           && hopperFull && walletFull && capToast && noCollectRace && doesShort
           && echoPlayLocked && echoOpen
           && versusGone
-          && apiLive),
+          && apiLive
+          && emptyStartOn && emptyStartShort && emptyGone
+          && hasAffordChips && toastShort && !enLeak && !deLeak
+          && /Factor/i.test(enHead) && /Fabrik/i.test(deHead)),
         ids,
         factoryIds,
         chips,
@@ -279,6 +322,16 @@ async function runBrowser() {
         doesShort,
         echoPlayLocked,
         echoPlay: !!echoPlay,
+        emptyStartOn,
+        emptyStartShort,
+        emptyGone,
+        hasAffordChips,
+        toastShort,
+        toastText,
+        enHead,
+        deHead,
+        enLeak,
+        deLeak,
         head: (document.getElementById('buildingsScreenHead') || {}).textContent || '',
       };
     } catch (e) {

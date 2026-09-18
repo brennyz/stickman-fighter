@@ -145,6 +145,7 @@ Schrijf **1–3 regels** per sessie: datum, d#, wat, versie.
 
 | Datum (UTC) | d# | Update |
 |-------------|-----|--------|
+| 2026-09-18 | — | **#312 sheet/empty/i18n:** upgrade cost chips red/green + short `Lv` toast on 390px; one-line first-time stick_lighter Build hint; EN/DE cost/island/empty keys (no Dutch leak). Draft. **v1.18.175 / SW 385**. |
 | 2026-09-18 | — | **#312 P0:** hopper VOL + wallet `+N` on huge offline collect; 390px power/next shortened; collect lock so empty/double tap cannot open detail. Draft. **v1.18.174 / SW 384**. |
 | 2026-09-18 | — | **Factories UX unclunk:** overview cards + does-line, sticky wallet, one-tap collect pill, upgrade sheet, no dead ends (Avontuur / cost / max). Ids `stick_lighter`…`echo_whistle`. No Versus. Draft. **v1.18.173 / SW 383**. |
 | 2026-09-16 | — | **MEGA-MERGE → main** Grok wave #295–#309 (i18n → systems → UI → pixels → polish). Feature-base PRs (#297/#300/#307/#309) cherry-picked. **v1.18.172 / SW 382**. speel.html na Pages. |
