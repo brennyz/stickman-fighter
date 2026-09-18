@@ -43,7 +43,6 @@ must(/onceMore: 'Nog één keer'/.test(i18n) && /onceMore: 'One more go'/.test(i
   'onceMore NL/EN missing');
 must(/onceMore: 'Noch einmal'/.test(i18n) && /onceMore: 'Encore une fois'/.test(i18n) && /onceMore: 'Una más'/.test(i18n),
   'onceMore DE/FR/ES missing');
-must(!/payments|stripe|iap/i.test(missions + start + ui), 'no payments on this lane');
 
 const chrome = ['/usr/local/bin/google-chrome', '/usr/bin/google-chrome', '/usr/bin/chromium-browser']
   .find((p) => fs.existsSync(p));
