@@ -1930,6 +1930,10 @@ function applyLang() {
       try { UI.showResult(!!UI.lastResult.win, UI.lastResult); } catch (_) {}
     }
     UI.syncBackLabels();
+    try { if (typeof UI.refreshToastsI18n === 'function') UI.refreshToastsI18n(); } catch (_) {}
+    if (active === 'buildingsScreen' && typeof UI.renderBuildings === 'function') {
+      try { UI.renderBuildings(); } catch (_) {}
+    }
   }
   try { if (typeof syncTitleGateCopy === 'function') syncTitleGateCopy(); } catch (_) {}
   try { if (typeof updateNetStatus === 'function') updateNetStatus(); } catch (_) {}

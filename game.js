@@ -323,9 +323,9 @@ const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const VERSION_UPDATE_SAVE_KEY = 'stickfighter_version_update_save_v1';
 const VERSION_UPDATE_FLAG_KEY = 'stickfighter_version_update_flag_v1';
 const SAVE_EXPORT_SCHEMA = 3;
-const APP_VERSION = '1.18.172';
+const APP_VERSION = '1.18.173';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 382;
+const SW_CACHE_REV = 383;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', petCoins: 0, dex: {}, summons: {}, pets: {}, activePet: null,
   eggPets: {}, activeEggPet: null, eggDaily: null,
   chestDaily: null, chestWeapons: {},
@@ -4227,6 +4227,10 @@ function applyLang() {
       try { UI.showResult(!!UI.lastResult.win, UI.lastResult); } catch (_) {}
     }
     UI.syncBackLabels();
+    try { if (typeof UI.refreshToastsI18n === 'function') UI.refreshToastsI18n(); } catch (_) {}
+    if (active === 'buildingsScreen' && typeof UI.renderBuildings === 'function') {
+      try { UI.renderBuildings(); } catch (_) {}
+    }
   }
   try { if (typeof syncTitleGateCopy === 'function') syncTitleGateCopy(); } catch (_) {}
   try { if (typeof updateNetStatus === 'function') updateNetStatus(); } catch (_) {}
@@ -7257,6 +7261,15 @@ function welcomeToastOnHub() {
   }
 }
 
+function fomoRitualIsOpen() {
+  try {
+    const el = document.getElementById('fomoRitual');
+    return !!(el && !el.hidden);
+  } catch (_) {
+    return false;
+  }
+}
+
 function maybeWelcomeToast() {
   ensureTipsSeen();
   if (save.tipsSeen.welcome) return;
@@ -7275,9 +7288,17 @@ function maybeWelcomeToast() {
       return;
     }
     if (welcomeToastOnHub()) {
+      // EX-021: do not stack welcome on Vandaag / leave-hub chrome.
+      if (fomoRitualIsOpen()) {
+        if (tries < 40) {
+          tries++;
+          setTimeout(tick, 400);
+        }
+        return;
+      }
       save.tipsSeen.welcome = 1;
       persist();
-      try { userToast(t('toast.welcome'), 2200); } catch (_) {}
+      try { userToast('toast.welcome', 2200); } catch (_) {}
       return;
     }
     tries++;
@@ -7287,7 +7308,7 @@ function maybeWelcomeToast() {
       onSplash = !!(splash && !splash.classList.contains('is-done'));
     } catch (_) {}
     // Still on title/splash — wait for HOME. Left hub already — don't follow.
-    if (onSplash && tries < 24) {
+    if ((onSplash || fomoRitualIsOpen()) && tries < 40) {
       setTimeout(tick, 350);
       return;
     }
@@ -47341,6 +47362,7 @@ const UI = {
         const scr = document.getElementById(s);
         if (scr) scr.classList.remove('active');
       }
+      try { this.syncHudChrome(id); } catch (_) {}
       if (id) {
         try { if (typeof syncSeasonFlavorUi === 'function') syncSeasonFlavorUi(); } catch (_) {}
         const el = document.getElementById(id);
@@ -47588,7 +47610,14 @@ const UI = {
     return { ms: duration, tone };
   },
 
+  _toastKeyFromMsg(msg) {
+    const raw = String(msg == null ? '' : msg).trim();
+    if (/^[a-z][a-z0-9]*(\.[a-zA-Z0-9_]+)+$/.test(raw) && raw.length < 80) return raw;
+    return '';
+  },
+
   toast(msg, ms, opts) {
+    const key = this._toastKeyFromMsg(msg);
     const text = this._resolveToastText(msg);
     if (!text) return;
     const spec = this._parseToastArgs(ms, opts);
@@ -47601,18 +47630,21 @@ const UI = {
     this._toastQ = this._toastQ || [];
     this._toastEls = this._toastEls || [];
 
-    const sameEl = this._toastEls.find((el) => el && el.textContent === text);
+    const sameEl = this._toastEls.find((el) => el && (
+      el.textContent === text || (key && el.dataset && el.dataset.toastKey === key)
+    ));
     if (sameEl) {
       this._bumpToast(sameEl, spec.ms);
       return;
     }
-    const sameQ = this._toastQ.find((q) => q.text === text);
+    const sameQ = this._toastQ.find((q) => q && (q.text === text || (key && q.key === key)));
     if (sameQ) {
       sameQ.ms = Math.max(sameQ.ms, spec.ms);
       if (spec.tone !== 'info') sameQ.tone = spec.tone;
+      if (key) sameQ.key = key;
       return;
     }
-    const item = { text, ms: spec.ms, tone: spec.tone };
+    const item = { text, ms: spec.ms, tone: spec.tone, key };
     if (this._toastEls.length >= 2) {
       this._toastQ.push(item);
       if (this._toastQ.length > 4) this._toastQ.shift();
@@ -47640,6 +47672,12 @@ const UI = {
     const el = document.createElement('div');
     el.className = 'toast' + (item.tone && item.tone !== 'info' ? ' toast-' + item.tone : '');
     el.textContent = item.text;
+    if (item.key) {
+      try { el.dataset.toastKey = item.key; } catch (_) {}
+      if (item.key === 'toast.welcome') {
+        try { el.classList.add('toast-welcome'); } catch (_) {}
+      }
+    }
     try { el.setAttribute('role', 'status'); } catch (_) {}
     const dismiss = () => this._dismissToast(el);
     try {
@@ -47680,6 +47718,44 @@ const UI = {
     this._toastEls = this._toastEls || [];
     while (this._toastEls.length < 2 && this._toastQ.length) {
       this._mountToast(this._toastQ.shift());
+    }
+  },
+
+  refreshToastsI18n() {
+    const els = this._toastEls || [];
+    for (const el of els) {
+      const key = el && el.dataset && el.dataset.toastKey;
+      if (!key) continue;
+      const next = this._resolveToastText(key);
+      if (next) el.textContent = next;
+    }
+    this._toastQ = (this._toastQ || []).map((q) => {
+      if (!q || !q.key) return q;
+      const next = this._resolveToastText(q.key);
+      return next ? Object.assign({}, q, { text: next }) : q;
+    });
+  },
+
+  dismissWelcomeToasts() {
+    const els = (this._toastEls || []).slice();
+    for (const el of els) {
+      if (!el) continue;
+      const key = el.dataset && el.dataset.toastKey;
+      const welcome = key === 'toast.welcome'
+        || (el.classList && el.classList.contains('toast-welcome'));
+      if (welcome) this._dismissToast(el);
+    }
+    this._toastQ = (this._toastQ || []).filter((q) => !q || q.key !== 'toast.welcome');
+  },
+
+  syncHudChrome(id) {
+    const sub = !!(id && id !== 'menuScreen');
+    try { document.body.classList.toggle('sf-sub-screen', sub); } catch (_) {}
+    if (!id || id !== 'menuScreen') {
+      try { this.hideFomoRitual(); } catch (_) {}
+    }
+    if (sub) {
+      try { this.dismissWelcomeToasts(); } catch (_) {}
     }
   },
 
@@ -48270,14 +48346,15 @@ const UI = {
   hideFomoRitual() {
     const el = document.getElementById('fomoRitual');
     if (el) el.hidden = true;
+    try { document.body.classList.remove('fomo-ritual-open'); } catch (_) {}
   },
 
   showFomoRitual(force) {
     const el = document.getElementById('fomoRitual');
     if (!el) return;
-    if (!force && this._fomoRitualHide) { el.hidden = true; return; }
+    if (!force && this._fomoRitualHide) { this.hideFomoRitual(); return; }
     if (!force && typeof fomoRitualPending === 'function' && !fomoRitualPending()) {
-      el.hidden = true;
+      this.hideFomoRitual();
       return;
     }
     const rows = document.getElementById('fomoRitualRows');
@@ -48332,6 +48409,7 @@ const UI = {
     const dismiss = document.getElementById('fomoRitualDismiss');
     if (dismiss) dismiss.setAttribute('aria-label', tOr('fomo.ritualDismiss', 'Sluiten'));
     el.hidden = false;
+    try { document.body.classList.add('fomo-ritual-open'); } catch (_) {}
   },
 
   runFomoRitualCta() {

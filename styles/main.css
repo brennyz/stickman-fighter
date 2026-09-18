@@ -2091,6 +2091,14 @@
       display:flex; flex-direction:column; gap:8px; align-items:center;
       width:min(92vw, 420px); max-width:calc(100vw - 24px); }
   body:not(.is-playing) #toastHost { top:max(70px, calc(env(safe-area-inset-top, 0px) + 56px)); }
+  /* Sub-screens: sit below back-btn + .head (EX-021 / buildings title). */
+  body:not(.is-playing).sf-sub-screen #toastHost {
+    top: max(124px, calc(env(safe-area-inset-top, 0px) + 112px));
+  }
+  /* FOMO Vandaag open: park toast in HOME peek strip, not on logo or sheet. */
+  body.fomo-ritual-open #toastHost {
+    top: max(92px, calc(env(safe-area-inset-top, 0px) + 76px));
+  }
   body.is-playing #toastHost { top:max(86px, calc(env(safe-area-inset-top, 0px) + 70px)); }
   .toast { background:rgba(10,14,28,.94); border:1.5px solid rgba(255,215,94,.55); color:#fff;
       padding:12px 16px; border-radius:14px; font-weight:800; font-size:15px; line-height:1.35;
@@ -2105,40 +2113,57 @@
   @keyframes toastIn { from { opacity:0; transform:translateY(-10px); } to { opacity:1; transform:none; } }
   @keyframes toastBump { 0% { transform:scale(1); } 40% { transform:scale(1.03); } 100% { transform:scale(1); } }
 
+  /* EX-021: Vandaag is a compact bottom sheet — HOME title + tiles stay visible above. */
   #menuScreen #fomoRitual {
     position: fixed; inset: 0; z-index: 30; display: flex; align-items: flex-end; justify-content: center;
-    padding: 16px 14px calc(24px + env(safe-area-inset-bottom, 0px));
+    padding: 12px 12px calc(24px + env(safe-area-inset-bottom, 0px));
     pointer-events: auto;
   }
   #menuScreen #fomoRitual[hidden] { display: none; }
   .fomo-ritual-backdrop {
     position: absolute; inset: 0; border: 0; padding: 0; margin: 0;
-    background: rgba(6, 10, 22, .62); cursor: pointer;
+    background: linear-gradient(180deg,
+      rgba(6, 10, 22, .22) 0%,
+      rgba(6, 10, 22, .38) 42%,
+      rgba(6, 10, 22, .7) 100%);
+    cursor: pointer;
   }
   .fomo-ritual-sheet {
-    position: relative; z-index: 1; width: min(92vw, 440px); max-height: min(78vh, 640px);
-    overflow-y: auto; -webkit-overflow-scrolling: touch; overscroll-behavior: contain;
+    position: relative; z-index: 1; width: min(92vw, 440px);
+    max-height: min(48vh, 400px);
+    display: flex; flex-direction: column;
+    overflow: hidden;
     background: #121a28; border: 1px solid rgba(124, 245, 255, .32); border-radius: 18px;
-    padding: 16px 16px 14px; box-shadow: 0 16px 40px rgba(0,0,0,.5); color: #e8f0ff;
+    padding: 14px 14px 12px; box-shadow: 0 16px 40px rgba(0,0,0,.5); color: #e8f0ff;
   }
+  .fomo-ritual-head { flex: 0 0 auto; position: relative; min-height: 44px; }
   .fomo-ritual-x {
-    position: absolute; top: 8px; right: 8px; width: 44px; height: 44px; border: 0;
+    position: absolute; top: 0; right: 0; width: 44px; height: 44px; border: 0;
     background: transparent; color: #9db1e3; font-size: 28px; line-height: 1; font-weight: 700;
     cursor: pointer; touch-action: manipulation;
   }
   .fomo-ritual-title {
-    margin: 0 40px 10px 0; font-family: 'Black Ops One', sans-serif;
-    font-size: 22px; color: #ffd75e; letter-spacing: .04em;
+    margin: 0 44px 8px 0; font-family: 'Black Ops One', sans-serif;
+    font-size: 20px; color: #ffd75e; letter-spacing: .04em;
   }
-  .fomo-ritual-rows { display: flex; flex-direction: column; gap: 8px; margin-bottom: 10px; }
+  .fomo-ritual-rows {
+    display: flex; flex-direction: column; gap: 8px; margin-bottom: 10px;
+    flex: 1 1 auto; min-height: 0; overflow-y: auto;
+    -webkit-overflow-scrolling: touch; overscroll-behavior: contain;
+  }
   .fomo-ritual-row {
     background: rgba(255,255,255,.05); border: 1px solid rgba(255,255,255,.1);
     border-radius: 12px; padding: 10px 12px; font-size: 14px; line-height: 1.4; font-weight: 700;
   }
   .fomo-ritual-row small { display: block; margin-top: 2px; font-size: 12px; font-weight: 600; color: #9db1e3; }
-  .fomo-ritual-reset { margin: 0 0 12px; font-size: 12px; font-weight: 700; color: #7cf5ff; }
-  .fomo-ritual-cta { width: 100%; justify-content: center; margin: 0; }
+  .fomo-ritual-reset { flex: 0 0 auto; margin: 0 0 10px; font-size: 12px; font-weight: 700; color: #7cf5ff; }
+  .fomo-ritual-cta { flex: 0 0 auto; width: 100%; justify-content: center; margin: 0; }
   #fomoRitualReopen { margin: 0 auto 10px; }
+  @media (max-width: 430px), (max-height: 860px) {
+    .fomo-ritual-sheet { max-height: min(44vh, 360px); padding: 12px 12px 10px; }
+    .fomo-ritual-title { font-size: 18px; }
+    .fomo-ritual-row { padding: 8px 10px; font-size: 13px; }
+  }
 
   .version-update-overlay { position:fixed; inset:0; z-index:55; display:flex; align-items:center; justify-content:center;
       padding:max(16px, env(safe-area-inset-top)) 16px max(16px, env(safe-area-inset-bottom));

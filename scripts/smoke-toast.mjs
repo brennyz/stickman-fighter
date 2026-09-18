@@ -46,7 +46,12 @@ must(/tik een melding weg/.test(catalog), 'NL welcome should mention tap-to-dism
 
 must(/toast-ok/.test(css) && /toast-danger/.test(css), 'toast tone CSS missing');
 must(/body\.is-playing #toastHost/.test(css), 'play-mode toast placement missing');
+must(/body:not\(\.is-playing\)\.sf-sub-screen #toastHost/.test(css), 'sub-screen toast must sit below .head');
+must(/body\.fomo-ritual-open #toastHost/.test(css), 'FOMO-open toast placement missing');
 must(/pointer-events:\s*auto/.test(css.match(/\.toast \{[\s\S]*?\}/)?.[0] || ''), 'toast must be tappable');
+must(/dismissWelcomeToasts/.test(ui), 'welcome dismiss missing');
+must(/refreshToastsI18n/.test(ui), 'toast i18n refresh missing');
+must(/dataset\.toastKey|_toastKeyFromMsg/.test(ui), 'toast key tracking missing');
 
 must(/t\('toast\.unknownMode'\)/.test(start), 'unknownMode must use i18n');
 must(/t\('toast\.noBackup'\)/.test(start), 'backup toasts must use i18n');

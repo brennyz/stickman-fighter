@@ -2875,6 +2875,15 @@ function welcomeToastOnHub() {
   }
 }
 
+function fomoRitualIsOpen() {
+  try {
+    const el = document.getElementById('fomoRitual');
+    return !!(el && !el.hidden);
+  } catch (_) {
+    return false;
+  }
+}
+
 function maybeWelcomeToast() {
   ensureTipsSeen();
   if (save.tipsSeen.welcome) return;
@@ -2893,9 +2902,17 @@ function maybeWelcomeToast() {
       return;
     }
     if (welcomeToastOnHub()) {
+      // EX-021: do not stack welcome on Vandaag / leave-hub chrome.
+      if (fomoRitualIsOpen()) {
+        if (tries < 40) {
+          tries++;
+          setTimeout(tick, 400);
+        }
+        return;
+      }
       save.tipsSeen.welcome = 1;
       persist();
-      try { userToast(t('toast.welcome'), 2200); } catch (_) {}
+      try { userToast('toast.welcome', 2200); } catch (_) {}
       return;
     }
     tries++;
@@ -2905,7 +2922,7 @@ function maybeWelcomeToast() {
       onSplash = !!(splash && !splash.classList.contains('is-done'));
     } catch (_) {}
     // Still on title/splash — wait for HOME. Left hub already — don't follow.
-    if (onSplash && tries < 24) {
+    if ((onSplash || fomoRitualIsOpen()) && tries < 40) {
       setTimeout(tick, 350);
       return;
     }

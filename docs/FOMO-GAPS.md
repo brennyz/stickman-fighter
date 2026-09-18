@@ -140,6 +140,7 @@ Do **not** rename `SAVE_KEY`.
 - [ ] Counts match `chestSummonsLeft` / live tasks (never hardcoded 10).
 - [ ] Second open same day: no sheet; `#btnMissions` still `tog-alert` if claimable.
 - [ ] Versus string absent. `npm test` green.
+- [ ] EX-021 (390px): Vandaag sheet is a compact bottom sheet (`max-height` ≤48vh). HOME title + tiles stay visible/dimmed above; ≥24px above gesture strip. Welcome toast waits until the sheet is closed and does not cover sub-screen `.head`.
 
 ---
 

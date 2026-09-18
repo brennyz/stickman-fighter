@@ -66,6 +66,26 @@ if (!/showFomoRitual/.test(ui) || !/lastOpenDate/.test(ui)) {
   fail('F1 renderMenu ritual / lastOpenDate missing');
 }
 
+const css = fs.readFileSync(path.join(root, 'styles/main.css'), 'utf8');
+if (/fomo-ritual-sheet[\s\S]{0,220}max-height:\s*min\(78vh/.test(css)) {
+  fail('EX-021: Vandaag sheet still 78vh — covers HOME on 390px');
+}
+if (!/fomo-ritual-sheet[\s\S]{0,280}max-height:\s*min\(4[48]vh/.test(css)) {
+  fail('EX-021: Vandaag sheet must be a compact bottom sheet (≤48vh)');
+}
+if (!/fomo-ritual-head/.test(html) || !/fomo-ritual-head/.test(css)) {
+  fail('EX-021: sticky/pinned Vandaag head missing');
+}
+if (!/fomo-ritual-open/.test(css) || !/fomo-ritual-open/.test(ui)) {
+  fail('EX-021: toast vs FOMO HUD class fomo-ritual-open missing');
+}
+if (!/dismissWelcomeToasts/.test(ui) || !/refreshToastsI18n/.test(ui)) {
+  fail('EX-021: welcome dismiss / live i18n refresh missing');
+}
+if (!/fomoRitualIsOpen/.test(missions) || /userToast\(t\('toast\.welcome'\)/.test(missions)) {
+  fail('EX-021: welcome must wait on Vandaag and pass toast.welcome key');
+}
+
 function makeEl(id) {
   return {
     id, tagName: 'DIV', classList: { s: new Set(), add() {}, remove() {}, toggle() {}, contains: () => false },
