@@ -1447,10 +1447,6 @@ const CATALOG_EN = {
     petCoinsLine: '+{n} pet coins',
     gearLine: 'Gear: {name}',
   },
-  gear: {
-    slot: { head: 'Head', chest: 'Chest', hands: 'Hands', legs: 'Legs', back: 'Back' },
-    lockSlot: 'Wrong slot',
-  },
 
   banner: {
     levelStart: 'LEVEL {n}',

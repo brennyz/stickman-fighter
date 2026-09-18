@@ -46,6 +46,7 @@ Post-mega-merge (`v1.18.172`) audit, Z→A: **nl → fr → es → en → de**. 
 
 | locale | key / locatie | probleem | fix |
 |--------|---------------|----------|-----|
+| en | `CATALOG_EN.gear` 2× | Tweede `gear:` veegde lock-keys weg → NL *Nog niet gevonden* | Eén gear-object |
 | de/fr/es | `gear.lock*` / filter chrome | Alleen NL+EN → lock-regels in EN | Korte DE/FR/ES keys |
 | fr/es | `ui.pet*` / `ui.egg*` | Overlay `ui` miste pet/egg → EN fallback | Overlay-keys + korte tip |
 | * | `PET_ROSTER.perk` / `EGG_ROSTER.name` | Hardcoded NL in alle talen | `pets.perk.*` + `egg.name.*` / `egg.perk.*` |

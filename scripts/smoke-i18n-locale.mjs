@@ -266,6 +266,9 @@ if (!/egg_pebble: 'Pebble'/.test(catalog)) fail('EN egg.name.egg_pebble missing'
 if (!/egg_pebble: 'Kiesel'/.test(locales + deChrome)) fail('DE egg.name.egg_pebble missing');
 if (!/egg_pebble: 'Galet'/.test(locales)) fail('FR egg.name.egg_pebble missing');
 if (!/egg_pebble: 'Guijarro'/.test(locales)) fail('ES egg.name.egg_pebble missing');
+const catalogEnOnly = catalogEn.split('const CATALOG_DE')[0] || '';
+if ((catalogEnOnly.match(/\bgear:\s*\{/g) || []).length > 1) fail('CATALOG_EN has two gear: blocks — the second wipes EN lock keys to NL');
+if (!/lockOwned: 'Not found yet'/.test(catalogEnOnly)) fail('EN gear.lockOwned missing — Dutch fallback leak');
 if (!/lockOwned: 'Pas encore trouvé'/.test(catalog)) fail('FR gear.lockOwned missing');
 if (!/lockOwned: 'Aún no hallado'/.test(catalog)) fail('ES gear.lockOwned missing');
 if (!/lockOwned: 'Noch nicht gefunden'/.test(deChrome)) fail('DE gear.lockOwned missing');
