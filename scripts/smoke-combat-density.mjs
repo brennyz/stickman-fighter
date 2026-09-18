@@ -29,6 +29,7 @@ const built = fs.existsSync(path.join(root, 'game.js'))
   ? fs.readFileSync(path.join(root, 'game.js'), 'utf8')
   : '';
 
+must(fs.existsSync(path.join(root, 'scripts/smoke-lose-retry.mjs')), 'smoke-lose-retry.mjs missing');
 must(manifest.includes('src/systems/combat-density.js'), 'manifest missing combat-density.js');
 must(/function combatDensityProfile\(/.test(densSrc), 'combatDensityProfile missing');
 must(/function adventureSpawnCadence\(/.test(densSrc), 'adventureSpawnCadence missing');

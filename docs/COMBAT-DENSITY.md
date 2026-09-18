@@ -111,6 +111,7 @@ Live cap (`adventureMaxAliveNow`) follows the current viewport so rotate-to-land
 
 ```bash
 npm run smoke:combat-density
+npm run smoke:lose-retry
 npm run smoke:adventure
 ```
 
