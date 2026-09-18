@@ -466,6 +466,8 @@ async function run() {
     const reducedSnap = await page.evaluate(async () => {
       if (typeof save !== 'undefined') save.reducedMotion = true;
       try { if (typeof syncA11yClasses === 'function') syncA11yClasses(); } catch (_) {}
+      UI._summonGuardUntil = 0;
+      UI._summonPullLock = false;
       UI.finishSummonReveal();
       UI.doChestPull('random');
       await new Promise((r) => setTimeout(r, 50));
@@ -496,6 +498,8 @@ async function run() {
         save.liteFx = true;
       }
       try { if (typeof syncA11yClasses === 'function') syncA11yClasses(); } catch (_) {}
+      UI._summonGuardUntil = 0;
+      UI._summonPullLock = false;
       UI.finishSummonReveal();
       UI.doChestPull('random');
       await new Promise((r) => setTimeout(r, 50));

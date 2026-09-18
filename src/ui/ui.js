@@ -2475,6 +2475,10 @@ const UI = {
       }
     } catch (_) {}
     try {
+      const reveal = document.getElementById('summonReveal');
+      if (reveal) reveal.classList.remove('is-card-show', 'is-shake');
+    } catch (_) {}
+    try {
       const vid = document.getElementById('summonVideo');
       if (vid) {
         vid.onloadedmetadata = null;
