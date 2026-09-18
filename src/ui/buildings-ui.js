@@ -130,6 +130,9 @@ function buildingsCostText(view) {
 }
 
 function buildingsShortName(id, view) {
+  const nameShortKey = 'buildings.' + id + '.nameShort';
+  const nameShort = buildingsTxt(nameShortKey, '');
+  if (nameShort && nameShort !== nameShortKey) return nameShort;
   const key = 'buildings.' + id + '.short';
   const named = buildingsTxt(key, '');
   if (named && named !== key) return named;
