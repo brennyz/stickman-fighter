@@ -385,9 +385,9 @@ const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const VERSION_UPDATE_SAVE_KEY = 'stickfighter_version_update_save_v1';
 const VERSION_UPDATE_FLAG_KEY = 'stickfighter_version_update_flag_v1';
 const SAVE_EXPORT_SCHEMA = 3;
-const APP_VERSION = '1.18.190';
+const APP_VERSION = '1.18.191';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 400;
+const SW_CACHE_REV = 401;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', petCoins: 0, dex: {}, summons: {}, pets: {}, activePet: null,
   eggPets: {}, activeEggPet: null, eggDaily: null,
   chestDaily: null, chestWeapons: {},
@@ -2466,11 +2466,11 @@ const I18N = {
     },
     modes: { adventure: 'Avontuur', training: 'Training', wall: 'Muur', versus: '2 spelers', coinrun: 'Muntjes' },
     pause: {
-      title: 'Pauze', sub: 'Spiral Orb klaar — moto! · voortgang blijft op dit apparaat',
+      title: 'Gepauzeerd', sub: 'Spiral Orb klaar — gaan! · voortgang blijft op dit apparaat',
       wallTime: '{n}s resterend', wallStones: '{n} stenen', wallCombo: 'combo ×{n}',
       wallPaceAhead: '+{n} vs record-tempo', wallPaceBehind: '−{n} vs record-tempo',
       wallGap: 'nog {gap} tot record',
-      resume: 'Verder spelen', music: 'Muziek', sfx: 'Geluid', quit: 'Stop & hoofdmenu',
+      resume: 'Hervatten', music: 'Muziek', sfx: 'Geluid', quit: 'Stop & hoofdmenu',
       quitArcade: 'Stop & Arcade',
       vsRestart: 'Herstart match', vsRestartSub: '0-0 · zelfde vechters',
       vsSwap: 'Wissel kant', vsSwapSub: 'P1 ↔ P2 · zelfde score',
@@ -4729,6 +4729,62 @@ function setTitle(id, key, params) {
   if (el) el.title = t(key, params);
 }
 
+/** Pause chrome from current locale — call on applyLang and every pause open. */
+function applyPauseChrome(opts) {
+  if (!canApplyDomI18n()) return;
+  opts = opts || {};
+  const pauseBtn = document.getElementById('pauseBtn');
+  if (pauseBtn) pauseBtn.setAttribute('aria-label', t('pause.title'));
+  setText('pauseHead', 'pause.title');
+  if (!opts.skipSub) setText('pauseSub', 'pause.sub');
+  setText('pauseMusicVolName', 'pause.music');
+  setText('pauseSfxVolName', 'pause.sfx');
+  setText('pauseAudioThemeLbl', 'settings.audioThemeHead');
+  const pauseResume = document.getElementById('pauseResume');
+  if (pauseResume) {
+    const d = pauseResume.querySelector('div');
+    if (d) d.textContent = t('pause.resume');
+  }
+  const pauseQuit = document.getElementById('pauseQuit');
+  if (pauseQuit) {
+    const d = pauseQuit.querySelector('div');
+    if (d) {
+      const arcade = typeof hubForPlayMode === 'function'
+        && hubForPlayMode(typeof game !== 'undefined' && game && game.mode) === 'arcade';
+      d.textContent = t(arcade ? 'pause.quitArcade' : 'pause.quit');
+    }
+  }
+  const pauseVs = document.getElementById('pauseVsRestart');
+  if (pauseVs) {
+    const d = pauseVs.querySelector('div');
+    if (d) d.innerHTML = t('pause.vsRestart') + '<small>' + t('pause.vsRestartSub') + '</small>';
+  }
+  const pauseVsSwapEl = document.getElementById('pauseVsSwap');
+  if (pauseVsSwapEl) {
+    const d = pauseVsSwapEl.querySelector('div');
+    if (d) d.innerHTML = t('pause.vsSwap') + '<small>' + t('pause.vsSwapSub') + '</small>';
+  }
+  ['pauseTogMusic', 'pauseTogSfx'].forEach((id, i) => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    const ico = el.querySelector('.tog-ico');
+    const label = t(i ? 'pause.sfx' : 'pause.music');
+    el.textContent = '';
+    if (ico) el.appendChild(ico);
+    el.appendChild(document.createTextNode(label));
+  });
+  const pausePresets = [
+    ['pauseAudioMuteAll', 'pause.audioMuteAll'],
+    ['pauseAudioRestore', 'pause.audioRestore'],
+    ['pauseAudioSfxOnly', 'pause.audioSfxOnly'],
+  ];
+  for (const [id, key] of pausePresets) {
+    const el = document.getElementById(id);
+    if (el) el.textContent = t(key);
+  }
+  if (typeof UI !== 'undefined') UI.pauseSubDefault = t('pause.sub');
+}
+
 function applyLangStaticScreens() {
   if (!canApplyDomI18n()) return;
   if (document.documentElement) document.documentElement.lang = getLang();
@@ -5039,50 +5095,7 @@ function applyLangStaticScreens() {
   const charFightBtn = document.getElementById('btnCharFight');
   if (charFightBtn) charFightBtn.textContent = t('ui.charFight');
 
-  setText('pauseHead', 'pause.title');
-  setText('pauseSub', 'pause.sub');
-  const pauseResume = document.getElementById('pauseResume');
-  if (pauseResume) {
-    const d = pauseResume.querySelector('div');
-    if (d) d.textContent = t('pause.resume');
-  }
-  const pauseQuit = document.getElementById('pauseQuit');
-  if (pauseQuit) {
-    const d = pauseQuit.querySelector('div');
-    if (d) {
-      const arcade = typeof hubForPlayMode === 'function'
-        && hubForPlayMode(typeof game !== 'undefined' && game && game.mode) === 'arcade';
-      d.textContent = t(arcade ? 'pause.quitArcade' : 'pause.quit');
-    }
-  }
-  const pauseVs = document.getElementById('pauseVsRestart');
-  if (pauseVs) {
-    const d = pauseVs.querySelector('div');
-    if (d) d.innerHTML = t('pause.vsRestart') + '<small>' + t('pause.vsRestartSub') + '</small>';
-  }
-  const pauseVsSwapEl = document.getElementById('pauseVsSwap');
-  if (pauseVsSwapEl) {
-    const d = pauseVsSwapEl.querySelector('div');
-    if (d) d.innerHTML = t('pause.vsSwap') + '<small>' + t('pause.vsSwapSub') + '</small>';
-  }
-  ['pauseTogMusic', 'pauseTogSfx'].forEach((id, i) => {
-    const el = document.getElementById(id);
-    if (!el) return;
-    const ico = el.querySelector('.tog-ico');
-    const label = t(i ? 'pause.sfx' : 'pause.music');
-    el.textContent = '';
-    if (ico) el.appendChild(ico);
-    el.appendChild(document.createTextNode(label));
-  });
-  const pausePresets = [
-    ['pauseAudioMuteAll', 'pause.audioMuteAll'],
-    ['pauseAudioRestore', 'pause.audioRestore'],
-    ['pauseAudioSfxOnly', 'pause.audioSfxOnly'],
-  ];
-  for (const [id, key] of pausePresets) {
-    const el = document.getElementById(id);
-    if (el) el.textContent = t(key);
-  }
+  applyPauseChrome();
 
   const resAgain = document.getElementById('resAgain');
   if (resAgain) {
@@ -22460,6 +22473,20 @@ function seedNlGameStrings() {
     starGain: '+{n}★',
     starImproved: 'Nieuwe sterren! Was {prev}★ — nu {stars}★ · hou HP hoog voor meer',
   });
+  if (!I18N.nl.pause) I18N.nl.pause = {};
+  Object.assign(I18N.nl.pause, {
+    title: 'Gepauzeerd',
+    sub: 'Spiral Orb klaar — gaan! · voortgang blijft op dit apparaat',
+    resume: 'Hervatten',
+    music: 'Muziek',
+    sfx: 'Geluid',
+    quit: 'Stop & hoofdmenu',
+    quitArcade: 'Stop & Arcade',
+    audioHint: 'Volume in pauze — sliders sync met Instellingen',
+    audioMuteAll: 'Alles uit',
+    audioRestore: 'Standaard',
+    audioSfxOnly: 'Alleen geluid',
+  });
   if (!I18N.nl.runLoot) I18N.nl.runLoot = {};
   Object.assign(I18N.nl.runLoot, {
     head: 'Deze ronde · buit naast XP',
@@ -22467,7 +22494,7 @@ function seedNlGameStrings() {
     hudShort: 'Buit: {line}',
     summonLine: 'Kist: {name} → {rar}',
     dexLine: 'Boek: {name} ({rar})',
-    hpBonusLine: '+{n} max HP uit boek',
+    hpBonusLine: '+{n} max-HP uit het boek',
     petLine: 'Pet getemd: {name}',
     eggLine: 'Bonus-ei: {name}',
     eggDupLine: 'Ei-dubbel: {name}',
@@ -52407,6 +52434,7 @@ const UI = {
   },
 
   refreshPauseSubtitle() {
+    try { if (typeof applyPauseChrome === 'function') applyPauseChrome(); } catch (_) {}
     const sub = document.querySelector('#pauseScreen .subtitle');
     const vsRestart = document.getElementById('pauseVsRestart');
     const vsSwap = document.getElementById('pauseVsSwap');
@@ -52456,7 +52484,7 @@ const UI = {
     } else if (game?.mode === 'wall' && typeof wallPauseSubtitle === 'function') {
       sub.textContent = wallPauseSubtitle(game);
     } else {
-      sub.textContent = this.pauseSubDefault;
+      sub.textContent = (typeof t === 'function') ? t('pause.sub') : (this.pauseSubDefault || '');
     }
     this.renderPauseRunLoot();
     try { if (typeof this.paintPausePetChip === 'function') this.paintPausePetChip(); } catch (_) {}
@@ -56623,6 +56651,7 @@ const UI = {
   },
 
   renderPauseToggles() {
+    try { if (typeof applyPauseChrome === 'function') applyPauseChrome({ skipSub: true }); } catch (_) {}
     const togM = document.getElementById('pauseTogMusic');
     const togS = document.getElementById('pauseTogSfx');
     togM?.classList.toggle('off', !save.music);

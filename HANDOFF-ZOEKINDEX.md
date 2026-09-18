@@ -18,6 +18,7 @@ rg -l "handoff|coinrun|projAimVelocity|charSelectScreen|ASSET-STYLE" .
 ## Feature → versie → commit → code
 
 | Gebruiker vroeg | Versie | Commit | Waar in code |
+| **Pause i18n NL chrome** | 1.18.191 | this branch | `applyPauseChrome` · NL Gepauzeerd/Hervatten/Muziek/Geluid · `smoke:i18n-locale` + switch. Monster names untouched. Versus out. |
 |-----------------|--------|--------|----------------|
 | **Invisible fighters recover** | 1.18.190 | main | `drawCombatants` · `pinPlayfieldBodies` · `fighterCombatStroke` · recover re-paint · `smoke:fighters-visible`. Versus out. |
 | **Landscape Begin/HOME SPELEN** | 1.18.190 | main | two-col title-gate + FOMO left dock · `smoke:landscape-begin`. Versus out. |

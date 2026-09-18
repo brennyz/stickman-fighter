@@ -516,5 +516,58 @@ if (!/tOr\('gear\.huntBtn'/.test(ui) || !/tOr\('gear\.unequipAll'/.test(ui)) fai
 if (!/tOr\('toast\.gearUnequipAll'/.test(ui)) fail('unequip-all toast must use tOr');
 if (/tOr\('gear\.huntBtn', 'Naar Avontuur'/.test(ui)) fail('gear.huntBtn fallback must not be Dutch');
 if (/tOr\('gear\.unequipAll', 'Alles uitdoen'/.test(ui)) fail('gear.unequipAll fallback must not be Dutch');
-console.log('SMOKE_OK i18n-locale: Tips/VERLOREN + #273 coverage + #283 overlays + 2026-09-18 result/FOMO/settings');
+
+const i18nNlPause = i18n.split(/\n\s+en:\s+\{/)[0] || '';
+const i18nEnPause = (i18n.split(/\n\s+en:\s+\{/)[1] || '').split(/\n\s+de:\s+\{/)[0] || '';
+const i18nDePause = (i18n.split(/\n\s+de:\s+\{/)[1] || '').split(/\n\s+fr:\s+\{/)[0] || '';
+const i18nFrPause = (i18n.split(/\n\s+fr:\s+\{/)[1] || '').split(/\n\s+es:\s+\{/)[0] || '';
+const i18nEsPause = (i18n.split(/\n\s+es:\s+\{/)[1] || '').split(/\n\};/)[0] || '';
+if (!/title: 'Gepauzeerd'/.test(i18nNlPause) || !/resume: 'Hervatten'/.test(i18nNlPause)) {
+  fail('NL pause.title/resume must be Gepauzeerd / Hervatten');
+}
+if (!/music: 'Muziek'/.test(i18nNlPause) || !/sfx: 'Geluid'/.test(i18nNlPause)) {
+  fail('NL pause.music/sfx must be Muziek / Geluid');
+}
+if (/progress stays on this device/.test(i18nNlPause) || /Spiral Orb ready/.test(i18nNlPause)) {
+  fail('NL pause.sub still English');
+}
+if (/title: 'Paused'/.test(i18nNlPause) || /resume: 'Resume'/.test(i18nNlPause)) {
+  fail('NL pause chrome still English Paused/Resume');
+}
+if (!/title: 'Paused'/.test(i18nEnPause) || !/resume: 'Resume'/.test(i18nEnPause)) {
+  fail('EN pause.title/resume must stay Paused / Resume');
+}
+if (!/music: 'Music'/.test(i18nEnPause) || !/sfx: 'Sound'/.test(i18nEnPause)) {
+  fail('EN pause.music/sfx must stay Music / Sound');
+}
+if (!/progress stays on this device/.test(i18nEnPause)) fail('EN pause.sub missing progress stays line');
+if (!/title: 'Pause'/.test(i18nDePause) || !/resume: 'Weiter'/.test(i18nDePause) || !/sfx: 'Ton'/.test(i18nDePause)) {
+  fail('DE pause chrome must stay Pause / Weiter / Ton');
+}
+if (!/title: 'Pause'/.test(i18nFrPause) || !/resume: 'Reprendre'/.test(i18nFrPause) || !/music: 'Musique'/.test(i18nFrPause)) {
+  fail('FR pause chrome must stay Pause / Reprendre / Musique');
+}
+if (!/title: 'Pausa'/.test(i18nEsPause) || !/resume: 'Seguir'/.test(i18nEsPause) || !/music: 'Música'/.test(i18nEsPause)) {
+  fail('ES pause chrome must stay Pausa / Seguir / Música');
+}
+if (/hpBonusLine: '\+\{n\} max HP from dex'/.test(catalog.split('const CATALOG_EN')[0] || '')) {
+  fail('NL runLoot.hpBonusLine still English from dex');
+}
+if (!/hpBonusLine: '\+\{n\} max-HP uit het boek'/.test(catalog)) fail('NL runLoot.hpBonusLine must be Dutch');
+if (!/hpBonusLine: '\+\{n\} max HP from dex'/.test(catalogEn)) fail('EN runLoot.hpBonusLine must stay from dex');
+if (!/pauseCycle: 'Wissel · \{name\}'/.test(i18nNlPause)) fail('NL pets.pauseCycle must be Wissel');
+if (!/pauseCycle: 'Swap · \{name\}'/.test(i18nEnPause)) fail('EN pets.pauseCycle must stay Swap');
+if (!/function applyPauseChrome/.test(i18n)) fail('applyPauseChrome missing');
+if (!/applyPauseChrome\(\)/.test(i18n)) fail('applyLang must call applyPauseChrome');
+if (!/applyPauseChrome\(\)/.test(ui)) fail('pause open must re-apply chrome from locale');
+if (!/t\('pause\.sub'\)/.test(ui)) fail('refreshPauseSubtitle must use live t(pause.sub)');
+if (!/id="pauseHead"[\s\S]*Gepauzeerd/.test(html)) fail('HTML pauseHead default must be Gepauzeerd');
+if (!/id="pauseResume"[\s\S]*Hervatten/.test(html)) fail('HTML pauseResume default must be Hervatten');
+if (/id="pauseHead"[^>]*>Paused</.test(html) || /id="pauseHead"[^>]*>PAUSED</.test(html)) {
+  fail('HTML pauseHead default still English');
+}
+if (!/title: 'Gepauzeerd'/.test(catalog) || !/resume: 'Hervatten'/.test(catalog)) {
+  fail('seedNlGameStrings must lock NL pause chrome');
+}
+console.log('SMOKE_OK i18n-locale: Tips/VERLOREN + #273 coverage + #283 overlays + 2026-09-18 result/FOMO/settings + pause NL chrome');
 

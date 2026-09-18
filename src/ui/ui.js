@@ -1230,6 +1230,7 @@ const UI = {
   },
 
   refreshPauseSubtitle() {
+    try { if (typeof applyPauseChrome === 'function') applyPauseChrome(); } catch (_) {}
     const sub = document.querySelector('#pauseScreen .subtitle');
     const vsRestart = document.getElementById('pauseVsRestart');
     const vsSwap = document.getElementById('pauseVsSwap');
@@ -1279,7 +1280,7 @@ const UI = {
     } else if (game?.mode === 'wall' && typeof wallPauseSubtitle === 'function') {
       sub.textContent = wallPauseSubtitle(game);
     } else {
-      sub.textContent = this.pauseSubDefault;
+      sub.textContent = (typeof t === 'function') ? t('pause.sub') : (this.pauseSubDefault || '');
     }
     this.renderPauseRunLoot();
     try { if (typeof this.paintPausePetChip === 'function') this.paintPausePetChip(); } catch (_) {}
@@ -5446,6 +5447,7 @@ const UI = {
   },
 
   renderPauseToggles() {
+    try { if (typeof applyPauseChrome === 'function') applyPauseChrome({ skipSub: true }); } catch (_) {}
     const togM = document.getElementById('pauseTogMusic');
     const togS = document.getElementById('pauseTogSfx');
     togM?.classList.toggle('off', !save.music);

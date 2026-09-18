@@ -157,6 +157,20 @@ function seedNlGameStrings() {
     starGain: '+{n}★',
     starImproved: 'Nieuwe sterren! Was {prev}★ — nu {stars}★ · hou HP hoog voor meer',
   });
+  if (!I18N.nl.pause) I18N.nl.pause = {};
+  Object.assign(I18N.nl.pause, {
+    title: 'Gepauzeerd',
+    sub: 'Spiral Orb klaar — gaan! · voortgang blijft op dit apparaat',
+    resume: 'Hervatten',
+    music: 'Muziek',
+    sfx: 'Geluid',
+    quit: 'Stop & hoofdmenu',
+    quitArcade: 'Stop & Arcade',
+    audioHint: 'Volume in pauze — sliders sync met Instellingen',
+    audioMuteAll: 'Alles uit',
+    audioRestore: 'Standaard',
+    audioSfxOnly: 'Alleen geluid',
+  });
   if (!I18N.nl.runLoot) I18N.nl.runLoot = {};
   Object.assign(I18N.nl.runLoot, {
     head: 'Deze ronde · buit naast XP',
@@ -164,7 +178,7 @@ function seedNlGameStrings() {
     hudShort: 'Buit: {line}',
     summonLine: 'Kist: {name} → {rar}',
     dexLine: 'Boek: {name} ({rar})',
-    hpBonusLine: '+{n} max HP uit boek',
+    hpBonusLine: '+{n} max-HP uit het boek',
     petLine: 'Pet getemd: {name}',
     eggLine: 'Bonus-ei: {name}',
     eggDupLine: 'Ei-dubbel: {name}',
