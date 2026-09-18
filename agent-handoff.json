@@ -49,7 +49,7 @@
       "id": "w-20260918T134000",
       "from": "user",
       "text": "Keep going on PR #312 (same branch). Factories/gearing screens are still a top P0 (clunky). Unclunk further: fewer taps to the one clear primary action, clearer hierarchy, no text overlap, snappy feedback. Stay on factories UX lane. Mobile ~390px + desktop PWA; no Android native; do not merge to main. Push more commits to this PR.",
-      "status": "in-progress",
+      "status": "done-in-code",
       "updated": "2026-09-18"
     },
     {
@@ -1106,6 +1106,10 @@
   ],
   "sessionLog": [
     {
+      "at": "2026-09-18T13:43:54Z",
+      "summary": "Keep #312: one-tap Bouw/Upgrade from overview pill (skip detail); short cards + clamped tip; welcome cleared on open. v1.18.178."
+    },
+    {
       "at": "2026-09-18T13:09:02Z",
       "summary": "Final #312 polish: collect-all EN/DE/FR/ES + DONE checklist. P3 leftovers only — stopping. v1.18.177."
     },
@@ -1200,10 +1204,6 @@
     {
       "at": "2026-09-14T13:22:45Z",
       "summary": "MERGE MAIN: #259 + #260 → v1.18.159/SW369. Hit-reg gehouden. #261 closed. #256 overgeslagen. speel.html LIVE na Pages."
-    },
-    {
-      "at": "2026-09-14T13:07:40Z",
-      "summary": "PARKED #259 v1.18.158/SW368 tot «merge». Hit-reg van ons; #261 draft niet herschrijven. LIVE blijft 1.18.153."
     }
   ],
   "implementedFeaturesSummary": "d18 char select deel 1+2 (v1.11.1-2); Mats coinrun + shuriken mik/vliegers + anti-spam (v1.12.0); speel.html (v1.12.2+). Zie HANDOFF-ZOEKINDEX.md en improvement-d20-bag.json userFeatureLog.",
