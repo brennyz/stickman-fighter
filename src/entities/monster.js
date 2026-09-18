@@ -87,6 +87,7 @@ class Monster {
     }
     this.vx = 0; this.vy = 0;
     this.t = rand(0, 10); this.flashT = 0; this.deadT = -1;
+    this.hitSquashT = 0; this.hitSquashAmt = 0;
     this.atkCD = rand(0.5, 1.5); this.shootCD = rand(1, 2.5);
     this.dashT = 0; this.telegraphT = 0; this.telegraphMax = 0; this.hopT = rand(0, 0.8);
     /** Soft-feel: langere dodge-telegraphs op golf 1 / vroege levels. */
@@ -127,6 +128,7 @@ class Monster {
     if (this.safetyT > 0) this.safetyT -= dt;
     if (this.flashT > 0) this.flashT -= dt;
     if (this.phase2FlashT > 0) this.phase2FlashT -= dt;
+    if (typeof juiceTickSquash === 'function') juiceTickSquash(this, dt);
     if (!this.alive) { this.deadT += dt; return; }
     if (this.introT > 0 && typeof combatIntroHolds === 'function' && combatIntroHolds()) {
       if (!this.flying && !this.swimming) this.y = game.ground - this.size;
@@ -356,6 +358,9 @@ class Monster {
     if (this.safetyT > 0 && this.hp - dmg < 1) dmg = Math.max(0, this.hp - 1);
     this.hp -= dmg;
     this.flashT = motionReduced() ? 0.06 : (dmg >= 18 ? 0.14 : opts.crit ? 0.12 : 0.1);
+    if (typeof juiceApplyHitSquash === 'function') {
+      juiceApplyHitSquash(this, { heavy: dmg >= 18, crit: opts.crit, kind: opts.kind });
+    }
     const kb = scaleKnockback(kbx, dmg, { crit: opts.crit, kind: opts.kind });
     this.x += Math.sign(kb || 1) * clamp(Math.abs(kb) * 0.038, 5, 26);
     if (!opts.quiet) {
@@ -397,7 +402,9 @@ class Monster {
     if (!this.alive) {
       const k = this.deadT / 0.6;
       c.globalAlpha = 1 - k;
-      if (!motionReduced()) c.scale(1 + k * 0.6, Math.max(0.05, 1 - k));
+      if (!motionReduced()) c.scale(1 + k * 0.75, Math.max(0.05, 1 - k));
+    } else if (typeof juiceDrawSquash === 'function') {
+      juiceDrawSquash(c, this);
     }
     // schaduw
     if (!this.flying && !this.swimming) {

@@ -19,6 +19,7 @@ rg -l "handoff|coinrun|projAimVelocity|charSelectScreen|ASSET-STYLE" .
 
 | Gebruiker vroeg | Versie | Commit | Waar in code |
 |-----------------|--------|--------|----------------|
+| **Combat juice hit/kill/equip** | 1.18.190 | this branch | `src/systems/combat-juice.js` · `applyHitConfirmFx` haptic+shake · KO snap rate-limit · doll punch · `docs/COMBAT-JUICE.md` · Versus out |
 | **Mobile combat density** | 1.18.186 | main | `src/systems/combat-density.js` · `buildLevel` / spawn cadence · `docs/COMBAT-DENSITY.md` · Versus out |
 | **Phone HUD keep-out (~390×844)** | 1.18.186 | main | `hudSafeLayout` / pause gutter · compact combat+wall/train · sheet bottoms · `smoke:hud-phone`. Versus out. |
 | **MOTION lived-in + Styles head** | 1.18.170 | #301 `cursor/equip-look-head-a6cb` | `src/render/live-fx.js` ready/flame/spark/cloth; `fighter.pose` idle; gear doll rAF. Versus out. |

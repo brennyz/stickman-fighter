@@ -107,7 +107,7 @@ No unique FEEL P1 left on #320 after EX-028. Next feel work is sibling-owned (#3
 | EX-019 | P3 | **DELEGATED #315** | i18n | Gear chips LOOK/STAT still English tokens in FR/ES (short on purpose) | catalog-locales overlays |
 | EX-020 | P3 | open | Android native | TWA / Play / APK signing, back-gesture, display-cutout, install prompt — **next sprint** | `native/android/` · `docs/store/` |
 | EX-022 | P0 | **DELEGATED #323** | FEEL / retry | Death → fight under 3s + one primary CTA. Do **not** restage on #320 | `src/systems/missions.js` on #323 |
-| EX-025 | P2 | **DELEGATED #316** | FEEL / juice | Punch/kick/KO snap, empty-collection CTA, reduced-motion | `docs` / `smoke:juice-feel` on #316 |
+| EX-025 | P2 | **#316 on main** + follow-up draft | FEEL / juice | #316 = KO confirm / empty CTAs. Combat snap (hit haptic + squash + kill rate-limit + equip punch) = `src/systems/combat-juice.js` draft — do not restage UI juice | `docs/COMBAT-JUICE.md` · `smoke:juice-feel` |
 | EX-026 | P3 | open · **IAP out of scope** | payments | No coins-for-cash / Play Billing until Android Play is live. Do not add IAP. Note only. | `docs/store/` · `native/android/` |
 
 ---

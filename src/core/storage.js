@@ -5,9 +5,9 @@ const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const VERSION_UPDATE_SAVE_KEY = 'stickfighter_version_update_save_v1';
 const VERSION_UPDATE_FLAG_KEY = 'stickfighter_version_update_flag_v1';
 const SAVE_EXPORT_SCHEMA = 3;
-const APP_VERSION = '1.18.189';
+const APP_VERSION = '1.18.190';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 399;
+const SW_CACHE_REV = 400;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', petCoins: 0, dex: {}, summons: {}, pets: {}, activePet: null,
   eggPets: {}, activeEggPet: null, eggDaily: null,
   chestDaily: null, chestWeapons: {},
@@ -833,8 +833,21 @@ function applyHitConfirmFx(game, x, y, spec, opts) {
   const minGap = opts.counter ? 45 : 95;
   if (!opts.force && (now - last) < minGap) return;
   game._hitConfirmAt = now;
-  // Reduced-motion: skip particle pulse; flash + damage/KO floater stay readable.
+  // Haptic is not visual motion — punch confirm even under reduced-motion.
+  if (opts.haptic !== false && typeof save !== 'undefined' && save && save.haptics !== false) {
+    const hk = spec && spec.kind ? spec.kind : 'punch';
+    const heavy = !!(opts.heavy || (spec && spec.dmg >= 18) || opts.crit);
+    const ms = opts.counter ? 11 : (heavy ? 10 : hk === 'kick' ? 8 : 6);
+    try { haptic(ms); } catch (_) {}
+  }
+  // Reduced-motion: skip particle pulse + shake; flash + damage/KO floater stay readable.
   if (motionReduced()) return;
+  if (typeof save === 'undefined' || !save || save.shake !== false) {
+    try {
+      const mag = opts.counter ? 3.5 : (opts.heavy || (spec && spec.dmg >= 18) || opts.crit ? 3 : 2);
+      if (game.shake) game.shake(mag, opts.counter ? 0.1 : 0.07);
+    } catch (_) {}
+  }
   const kind = spec && spec.kind ? spec.kind : 'punch';
   let col = hitConfirmColor(kind);
   if (kind === 'weapon' && spec.move) col = weaponMoveFxColor(spec.move);

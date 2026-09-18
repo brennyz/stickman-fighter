@@ -25,6 +25,9 @@ const buildings = fs.readFileSync(path.join(root, 'src/ui/buildings-ui.js'), 'ut
 const i18n = fs.readFileSync(path.join(root, 'src/i18n/i18n.js'), 'utf8');
 const storage = fs.readFileSync(path.join(root, 'src/core/storage.js'), 'utf8');
 const monster = fs.readFileSync(path.join(root, 'src/entities/monster.js'), 'utf8');
+const juice = fs.readFileSync(path.join(root, 'src/systems/combat-juice.js'), 'utf8');
+const fighter = fs.readFileSync(path.join(root, 'src/entities/fighter.js'), 'utf8');
+const manifest = fs.readFileSync(path.join(root, 'src/manifest.json'), 'utf8');
 
 must(/_toastEls\.length >= 1/.test(ui), 'toast queue must show one at a time');
 must(/_toastEls\.length < 1/.test(ui), 'toast flush must wait for the visible toast');
@@ -47,13 +50,23 @@ must(!/`\+\$\{xp\} XP`/.test(game), 'kill must not stack +XP floater on KO');
 must(/_hitConfirmAt/.test(storage), 'hit confirm must rate-limit');
 must(/if \(motionReduced\(\)\) return;/.test(storage) && /_hitConfirmAt/.test(storage), 'hit confirm must skip pulse under reduced-motion');
 must(/if \(!motionReduced\(\)\) c\.scale/.test(monster), 'monster death squash must skip under reduced-motion');
+must(/function juiceKillSnap/.test(juice) && /function juiceApplyHitSquash/.test(juice), 'combat juice hit/kill helpers missing');
+must(/function juiceEquipCombat/.test(juice) && /function juiceEquipMenu/.test(juice), 'combat juice equip helpers missing');
+must(/combat-juice\.js/.test(manifest), 'combat-juice must be in the src manifest');
+must(/juiceKillSnap\(this, m\)/.test(game), 'kill snap must run from onMonsterKilled');
+must(/juiceApplyHitSquash/.test(monster) && /juiceApplyHitSquash/.test(fighter), 'hit squash must bind monster + fighter');
+must(/juiceDrawSquash/.test(monster) && /juiceDrawSquash/.test(fighter), 'hit squash draw missing');
+must(/motionReduced\(\)\) return/.test(juice) && /juiceApplyHitSquash/.test(juice), 'hit squash must skip under reduced-motion');
+must(/opts\.haptic !== false/.test(storage), 'hit confirm must offer a haptic punch');
+must(/scale\(1\.07\)/.test(css) && /body\.reduced-motion \.gear-doll-canvas\.juice-flash/.test(css), 'equip doll punch + RM highlight missing');
+must(!/mode === 'versus'/.test(juice), 'combat juice must not add Versus extras');
 must(/body\.reduced-motion \.toast-out/.test(css) && /body\.reduced-motion \.hub-tile\.hub-tile-empty/.test(css), 'reduced-motion must skip juice pulses, keep empty clarity');
 must(/petsSubEmpty:/.test(i18n) && /dexSubEmpty:/.test(i18n), 'HOME pets/book empty copy missing');
 must(/applyLangStaticScreens[\s\S]*syncHubJuiceTiles/.test(i18n), 'i18n must keep HOME empty-gear subtitle');
 must(/gear-empty-cta/.test(css), 'gear empty CTA style missing');
 must(/juice-flash/.test(ui) && /gearDollFlash/.test(css), 'equip doll flash missing');
-must(/applyHitConfirmFx\(this, p\.x/.test(game), 'gear pickup hit-confirm missing');
-must(/haptic\(14\)/.test(game) && /pickupGear/.test(game), 'gear pickup haptic missing');
+must(/juiceEquipCombat\(this, p\.x/.test(game) || /applyHitConfirmFx\(this, p\.x/.test(game), 'gear pickup hit-confirm missing');
+must((/haptic\(14\)/.test(game) || /haptic\(14\)/.test(juice)) && /pickupGear/.test(game), 'gear pickup haptic missing');
 must(/haptic\(10\)/.test(buildings), 'buildings collect haptic missing');
 must(/menu\.collectSub/.test(i18n) && (/kist · boek/.test(i18n) || /Uitrusting · wapens · boek/.test(i18n)), 'HOME Collectie subtitle missing');
 must(!/data-hub="versus"/.test(html), 'versus hub tile must stay retired');
@@ -91,6 +104,7 @@ if (built) {
   must(/juicePetsNeedTame/.test(built) && /combat\.ko/.test(built), 'built game.js missing pets empty / KO');
   must(/juiceResultDelayMs/.test(built) && /juiceRetryAdventure/.test(built), 'built game.js missing feel-bar retry');
   must(/juicePaintResultCtas/.test(built) && /juice\.strikeNudge/.test(built), 'built game.js missing feel-bar CTA/nudge');
+  must(/function juiceKillSnap/.test(built) && /function juiceEquipCombat/.test(built), 'built game.js missing combat juice snaps');
 }
 
 console.log('SMOKE_OK juice-feel');

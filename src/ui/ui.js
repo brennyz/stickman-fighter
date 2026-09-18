@@ -4688,7 +4688,8 @@ const UI = {
       AudioSys.sfx('select');
       try { if (typeof haptic === 'function') haptic(10); } catch (_) {}
       const doll = document.getElementById('gearDollCanvas');
-      if (doll) {
+      if (typeof juiceEquipMenu === 'function') juiceEquipMenu(doll);
+      else if (doll) {
         try {
           doll.classList.remove('juice-flash');
           void doll.offsetWidth;

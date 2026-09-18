@@ -1198,9 +1198,7 @@ class Game {
       }
       try { haptic(8 + Math.min(ks, 12)); } catch (_) {}
     }
-    this.freezeT = Math.max(this.freezeT || 0, 0.045 + Math.min(ks, 12) * 0.002);
-    try { this.shake(5, 0.18); } catch (_) {}
-    try { haptic(12); } catch (_) {}
+    try { if (typeof juiceKillSnap === 'function') juiceKillSnap(this, m); } catch (_) {}
     const sp = m.sp || {};
     const rar = rarityOf(sp.rarity);
     const killRingR = m.superBoss ? 18 : (m.elite ? 14 : (m.giant ? 12 : 9));
@@ -1622,9 +1620,9 @@ class Game {
         const lbl = typeof gearLabel === 'function' ? gearLabel(gdef) : gdef.name;
         this.floater(p.x, p.y - 100, t('combat.pickupGear', { name: lbl }), col, 15);
         if (fresh) {
-          try { haptic(14); } catch (_) {}
           try {
-            if (typeof applyHitConfirmFx === 'function') applyHitConfirmFx(this, p.x, p.y - 36, { kind: 'special' });
+            if (typeof juiceEquipCombat === 'function') juiceEquipCombat(this, p.x, p.y - 36);
+            else if (typeof applyHitConfirmFx === 'function') applyHitConfirmFx(this, p.x, p.y - 36, { kind: 'special' });
           } catch (_) {}
           try { UI.toast(t('toast.gearDrop', { name: lbl, slot: gearSlotLabel(gdef.slot) }), 3600, { tone: 'ok' }); } catch (_) {}
         }
@@ -2863,7 +2861,6 @@ class Game {
           if (m.techniqueTelegraphT > 0) m.techniqueTelegraphT = 0;
           if (m.telegraphT > 0) m.telegraphT = 0;
           if (m.dashT > 0) { m.dashT = 0; m.vx *= 0.35; }
-          if (save.haptics !== false) haptic(9);
         }
         m.takeDamage(hitRoll.dmg, kbHit, this, { crit: hitRoll.crit, kind: spec.kind });
         if (f.isPlayer && typeof markFeltFirstPunch === 'function') markFeltFirstPunch();
@@ -2885,7 +2882,9 @@ class Game {
           try { spawnWeaponLightHit(this, f, m, { finisher, crit: hitRoll.crit }); } catch (_) {}
         }
         if (counter) this.freezeT = Math.max(this.freezeT, 0.026);
-        applyHitConfirmFx(this, hx, hy, spec, counter ? { counter: true } : null);
+        applyHitConfirmFx(this, hx, hy, spec, {
+          counter: !!counter, heavy: hitRoll.dmg >= 18, crit: hitRoll.crit,
+        });
         if (f.isPlayer && this.styleLightning && !fxLite()) {
           this.burst(m.x, m.y - m.size * 0.5, f.style?.accent || '#7cf5ff', 5, { kind: 'spark', size: 2 });
           if (f.style?.id === 'cyber') spawnFxRing(this, m.x, m.y - m.size * 0.3, '#4ecf6a', 6);
@@ -2982,7 +2981,9 @@ class Game {
           this.hitReadT = 0.45;
           this.hitReadDmg = dmg;
         }
-        applyHitConfirmFx(this, hx, hy, spec, counter ? { counter: true } : null);
+        applyHitConfirmFx(this, hx, hy, spec, {
+          counter: !!counter, heavy: hitRoll.dmg >= 18, crit: hitRoll.crit,
+        });
         if (spec.kind === 'weapon') bumpWeaponComboWindow(f, 0.1);
         if (spec.kind === 'weapon' && !isThrowWeapon(f.weapon.id) && spec.moveIdx < 2) {
           f._weaponComboHits = (f._weaponComboHits || 0) + 1;
@@ -3003,8 +3004,6 @@ class Game {
         f.energy = clamp(f.energy + 9, 0, 100);
         applyHitStop(this, spec, { crit: hitRoll.crit, combo: this.combo, heavy: hitRoll.dmg >= 18 });
         if (counter) this.freezeT = Math.max(this.freezeT, 0.014);
-        this.shake(spec.dmg > 20 ? 4 : 3, 0.12);
-        if ((f.isPlayer || f.playerSlot) && save.haptics !== false) haptic(5);
         try { AudioSys.sfxAt(weaponHitSfx(f.weapon, hitRoll.dmg), tgt.x); } catch (_) {}
         hit = true;
       }

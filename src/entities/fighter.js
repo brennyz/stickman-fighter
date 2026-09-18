@@ -10,7 +10,7 @@ class Fighter {
       weapon: weaponById('vuist'), speed: 260, jumpV: 620,
       ai: null, aiTimer: 0, aiMove: 0, aiCd: 2,
       name: 'Stickman',
-      substCd: 0, specialCd: 0, invulnT: 0, hitFlashT: 0, hpGhost: 0, hpGhostT: 0, afterimages: [], dashCd: 0,
+      substCd: 0, specialCd: 0, invulnT: 0, hitFlashT: 0, hitSquashT: 0, hitSquashAmt: 0, hpGhost: 0, hpGhostT: 0, afterimages: [], dashCd: 0,
       weaponComboIdx: 0, weaponComboT: 0, _lastWeaponKind: null, _weaponComboPrimed: false, _weaponComboHits: 0,
       style: null, playerSlot: 0, vsSpecial: 'spiral_orb',
     }, opts);
@@ -414,6 +414,7 @@ class Fighter {
     }
     if (this.invulnT > 0) this.invulnT -= dt;
     if (this.hitFlashT > 0) this.hitFlashT -= dt;
+    if (typeof juiceTickSquash === 'function') juiceTickSquash(this, dt);
     if (this.hpGhostT > 0) {
       this.hpGhostT -= dt;
       if (this.hpGhostT <= 0) this.hpGhost = this.hp;
@@ -639,6 +640,9 @@ class Fighter {
     }
     this.hurtT = dmg >= 18 ? 0.28 : 0.24;
     this.hitFlashT = motionReduced() ? 0.06 : (dmg >= 18 ? 0.18 : 0.14);
+    if (typeof juiceApplyHitSquash === 'function') {
+      juiceApplyHitSquash(this, { heavy: dmg >= 18 });
+    }
     this.attack = null;
     let kbScaled = scaleKnockback(kbx, dmg, { heavy: dmg >= 18 });
     if (this.isPlayer && game && game.buildingKbMul && game.buildingKbMul !== 1) {
@@ -749,6 +753,7 @@ class Fighter {
     const s = this.scale;
     c.save();
     c.translate(this.x, this.y);
+    if (this.alive && typeof juiceDrawSquash === 'function') juiceDrawSquash(c, this);
     if (this.hitFlashT > 0) {
       const flashA = motionReduced() ? 0.18 : 0.4;
       c.globalAlpha = Math.min(flashA, this.hitFlashT * (flashA / 0.14));

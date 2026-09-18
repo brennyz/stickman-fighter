@@ -323,9 +323,9 @@ const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const VERSION_UPDATE_SAVE_KEY = 'stickfighter_version_update_save_v1';
 const VERSION_UPDATE_FLAG_KEY = 'stickfighter_version_update_flag_v1';
 const SAVE_EXPORT_SCHEMA = 3;
-const APP_VERSION = '1.18.189';
+const APP_VERSION = '1.18.190';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 399;
+const SW_CACHE_REV = 400;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', petCoins: 0, dex: {}, summons: {}, pets: {}, activePet: null,
   eggPets: {}, activeEggPet: null, eggDaily: null,
   chestDaily: null, chestWeapons: {},
@@ -1151,8 +1151,21 @@ function applyHitConfirmFx(game, x, y, spec, opts) {
   const minGap = opts.counter ? 45 : 95;
   if (!opts.force && (now - last) < minGap) return;
   game._hitConfirmAt = now;
-  // Reduced-motion: skip particle pulse; flash + damage/KO floater stay readable.
+  // Haptic is not visual motion — punch confirm even under reduced-motion.
+  if (opts.haptic !== false && typeof save !== 'undefined' && save && save.haptics !== false) {
+    const hk = spec && spec.kind ? spec.kind : 'punch';
+    const heavy = !!(opts.heavy || (spec && spec.dmg >= 18) || opts.crit);
+    const ms = opts.counter ? 11 : (heavy ? 10 : hk === 'kick' ? 8 : 6);
+    try { haptic(ms); } catch (_) {}
+  }
+  // Reduced-motion: skip particle pulse + shake; flash + damage/KO floater stay readable.
   if (motionReduced()) return;
+  if (typeof save === 'undefined' || !save || save.shake !== false) {
+    try {
+      const mag = opts.counter ? 3.5 : (opts.heavy || (spec && spec.dmg >= 18) || opts.crit ? 3 : 2);
+      if (game.shake) game.shake(mag, opts.counter ? 0.1 : 0.07);
+    } catch (_) {}
+  }
   const kind = spec && spec.kind ? spec.kind : 'punch';
   let col = hitConfirmColor(kind);
   if (kind === 'weapon' && spec.move) col = weaponMoveFxColor(spec.move);
@@ -17797,7 +17810,7 @@ function applyHitStop(game, spec, opts) {
     return;
   }
   const kind = spec && spec.kind ? spec.kind : 'punch';
-  let base = kind === 'special' ? 0.052 : kind === 'kick' ? 0.038 : 0.026;
+  let base = kind === 'special' ? 0.052 : kind === 'kick' ? 0.044 : 0.034;
   if (opts.heavy || (spec && spec.dmg >= 18)) base += 0.008;
   if (opts.crit) base += 0.014;
   if (opts.combo >= 6) base += 0.006;
@@ -33463,6 +33476,85 @@ function refreshAdventureBossScale(game) {
     } catch (_) {}
   }
 }
+/* --- src/systems/combat-juice.js --- */
+/**
+ * Combat juice — punch / kick / kill / equip snap.
+ * Flappy-like: juice the core action, not UI chrome (no extra toasts / HUD spam).
+ * Versus retired. Reduced-motion skips shake / squash / particles; haptic + KO text stay.
+ */
+function juiceNowMs() {
+  return (typeof performance !== 'undefined' && performance.now) ? performance.now() : Date.now();
+}
+
+function juiceGapOk(store, key, minMs) {
+  if (!store) return false;
+  const now = juiceNowMs();
+  if ((now - (store[key] || 0)) < minMs) return false;
+  store[key] = now;
+  return true;
+}
+
+/** Impact squash on the body that just got hit. Feel only — hitboxes stay. */
+function juiceApplyHitSquash(target, opts) {
+  if (!target) return;
+  if (typeof motionReduced === 'function' && motionReduced()) return;
+  opts = opts || {};
+  const heavy = !!(opts.heavy || opts.crit);
+  const dur = opts.counter ? 0.12 : (heavy ? 0.11 : 0.07);
+  const amt = opts.counter ? 0.16 : (heavy ? 0.14 : 0.09);
+  target.hitSquashT = Math.max(target.hitSquashT || 0, dur);
+  target.hitSquashAmt = Math.max(target.hitSquashAmt || 0, amt);
+}
+
+function juiceTickSquash(target, dt) {
+  if (!target) return;
+  if ((target.hitSquashT || 0) > 0) target.hitSquashT -= dt;
+}
+
+function juiceDrawSquash(c, target) {
+  if (!c || !target) return;
+  if (typeof motionReduced === 'function' && motionReduced()) return;
+  const t = target.hitSquashT || 0;
+  if (t <= 0) return;
+  const amt = target.hitSquashAmt || 0.1;
+  const k = Math.min(1, t / 0.11);
+  c.scale(1 + amt * k, Math.max(0.72, 1 - amt * 0.85 * k));
+}
+
+/**
+ * Kill snap: one freeze + rate-limited shake/haptic so a horde does not camera-spam.
+ * Caller still paints the single KO floater.
+ */
+function juiceKillSnap(game, m) {
+  if (!game) return;
+  const elite = !!(m && (m.elite || m.bossCore || m.superBoss || m.satanBoss || m.colossal));
+  game.freezeT = Math.max(game.freezeT || 0, elite ? 0.075 : 0.058);
+  if (!juiceGapOk(game, '_juiceKillSnapAt', elite ? 60 : 90)) return;
+  try { game.shake(elite ? 7 : 5, elite ? 0.22 : 0.16); } catch (_) {}
+  try { if (typeof haptic === 'function') haptic(elite ? 16 : 12); } catch (_) {}
+}
+
+/** World-drop / pickup equip: snap in the fight, not a second toast. */
+function juiceEquipCombat(game, x, y) {
+  if (!game) return;
+  try { if (typeof haptic === 'function') haptic(14); } catch (_) {}
+  if (typeof applyHitConfirmFx === 'function') {
+    try { applyHitConfirmFx(game, x, y, { kind: 'special' }, { force: true, haptic: false }); } catch (_) {}
+  }
+  if (typeof motionReduced === 'function' && motionReduced()) return;
+  game.freezeT = Math.max(game.freezeT || 0, 0.04);
+  try { game.shake(3, 0.1); } catch (_) {}
+}
+
+/** Gear-screen doll punch. Reduced-motion CSS keeps a static highlight. */
+function juiceEquipMenu(doll) {
+  if (!doll) return;
+  try {
+    doll.classList.remove('juice-flash');
+    void doll.offsetWidth;
+    doll.classList.add('juice-flash');
+  } catch (_) {}
+}
 /* --- src/systems/fighter-move.js --- */
 /* ========================== FIGHTER MOVE ========================== */
 /**
@@ -37966,7 +38058,7 @@ class Fighter {
       weapon: weaponById('vuist'), speed: 260, jumpV: 620,
       ai: null, aiTimer: 0, aiMove: 0, aiCd: 2,
       name: 'Stickman',
-      substCd: 0, specialCd: 0, invulnT: 0, hitFlashT: 0, hpGhost: 0, hpGhostT: 0, afterimages: [], dashCd: 0,
+      substCd: 0, specialCd: 0, invulnT: 0, hitFlashT: 0, hitSquashT: 0, hitSquashAmt: 0, hpGhost: 0, hpGhostT: 0, afterimages: [], dashCd: 0,
       weaponComboIdx: 0, weaponComboT: 0, _lastWeaponKind: null, _weaponComboPrimed: false, _weaponComboHits: 0,
       style: null, playerSlot: 0, vsSpecial: 'spiral_orb',
     }, opts);
@@ -38370,6 +38462,7 @@ class Fighter {
     }
     if (this.invulnT > 0) this.invulnT -= dt;
     if (this.hitFlashT > 0) this.hitFlashT -= dt;
+    if (typeof juiceTickSquash === 'function') juiceTickSquash(this, dt);
     if (this.hpGhostT > 0) {
       this.hpGhostT -= dt;
       if (this.hpGhostT <= 0) this.hpGhost = this.hp;
@@ -38595,6 +38688,9 @@ class Fighter {
     }
     this.hurtT = dmg >= 18 ? 0.28 : 0.24;
     this.hitFlashT = motionReduced() ? 0.06 : (dmg >= 18 ? 0.18 : 0.14);
+    if (typeof juiceApplyHitSquash === 'function') {
+      juiceApplyHitSquash(this, { heavy: dmg >= 18 });
+    }
     this.attack = null;
     let kbScaled = scaleKnockback(kbx, dmg, { heavy: dmg >= 18 });
     if (this.isPlayer && game && game.buildingKbMul && game.buildingKbMul !== 1) {
@@ -38705,6 +38801,7 @@ class Fighter {
     const s = this.scale;
     c.save();
     c.translate(this.x, this.y);
+    if (this.alive && typeof juiceDrawSquash === 'function') juiceDrawSquash(c, this);
     if (this.hitFlashT > 0) {
       const flashA = motionReduced() ? 0.18 : 0.4;
       c.globalAlpha = Math.min(flashA, this.hitFlashT * (flashA / 0.14));
@@ -39041,6 +39138,7 @@ class Monster {
     }
     this.vx = 0; this.vy = 0;
     this.t = rand(0, 10); this.flashT = 0; this.deadT = -1;
+    this.hitSquashT = 0; this.hitSquashAmt = 0;
     this.atkCD = rand(0.5, 1.5); this.shootCD = rand(1, 2.5);
     this.dashT = 0; this.telegraphT = 0; this.telegraphMax = 0; this.hopT = rand(0, 0.8);
     /** Soft-feel: langere dodge-telegraphs op golf 1 / vroege levels. */
@@ -39081,6 +39179,7 @@ class Monster {
     if (this.safetyT > 0) this.safetyT -= dt;
     if (this.flashT > 0) this.flashT -= dt;
     if (this.phase2FlashT > 0) this.phase2FlashT -= dt;
+    if (typeof juiceTickSquash === 'function') juiceTickSquash(this, dt);
     if (!this.alive) { this.deadT += dt; return; }
     if (this.introT > 0 && typeof combatIntroHolds === 'function' && combatIntroHolds()) {
       if (!this.flying && !this.swimming) this.y = game.ground - this.size;
@@ -39310,6 +39409,9 @@ class Monster {
     if (this.safetyT > 0 && this.hp - dmg < 1) dmg = Math.max(0, this.hp - 1);
     this.hp -= dmg;
     this.flashT = motionReduced() ? 0.06 : (dmg >= 18 ? 0.14 : opts.crit ? 0.12 : 0.1);
+    if (typeof juiceApplyHitSquash === 'function') {
+      juiceApplyHitSquash(this, { heavy: dmg >= 18, crit: opts.crit, kind: opts.kind });
+    }
     const kb = scaleKnockback(kbx, dmg, { crit: opts.crit, kind: opts.kind });
     this.x += Math.sign(kb || 1) * clamp(Math.abs(kb) * 0.038, 5, 26);
     if (!opts.quiet) {
@@ -39351,7 +39453,9 @@ class Monster {
     if (!this.alive) {
       const k = this.deadT / 0.6;
       c.globalAlpha = 1 - k;
-      if (!motionReduced()) c.scale(1 + k * 0.6, Math.max(0.05, 1 - k));
+      if (!motionReduced()) c.scale(1 + k * 0.75, Math.max(0.05, 1 - k));
+    } else if (typeof juiceDrawSquash === 'function') {
+      juiceDrawSquash(c, this);
     }
     // schaduw
     if (!this.flying && !this.swimming) {
@@ -45059,9 +45163,7 @@ class Game {
       }
       try { haptic(8 + Math.min(ks, 12)); } catch (_) {}
     }
-    this.freezeT = Math.max(this.freezeT || 0, 0.045 + Math.min(ks, 12) * 0.002);
-    try { this.shake(5, 0.18); } catch (_) {}
-    try { haptic(12); } catch (_) {}
+    try { if (typeof juiceKillSnap === 'function') juiceKillSnap(this, m); } catch (_) {}
     const sp = m.sp || {};
     const rar = rarityOf(sp.rarity);
     const killRingR = m.superBoss ? 18 : (m.elite ? 14 : (m.giant ? 12 : 9));
@@ -45483,9 +45585,9 @@ class Game {
         const lbl = typeof gearLabel === 'function' ? gearLabel(gdef) : gdef.name;
         this.floater(p.x, p.y - 100, t('combat.pickupGear', { name: lbl }), col, 15);
         if (fresh) {
-          try { haptic(14); } catch (_) {}
           try {
-            if (typeof applyHitConfirmFx === 'function') applyHitConfirmFx(this, p.x, p.y - 36, { kind: 'special' });
+            if (typeof juiceEquipCombat === 'function') juiceEquipCombat(this, p.x, p.y - 36);
+            else if (typeof applyHitConfirmFx === 'function') applyHitConfirmFx(this, p.x, p.y - 36, { kind: 'special' });
           } catch (_) {}
           try { UI.toast(t('toast.gearDrop', { name: lbl, slot: gearSlotLabel(gdef.slot) }), 3600, { tone: 'ok' }); } catch (_) {}
         }
@@ -46724,7 +46826,6 @@ class Game {
           if (m.techniqueTelegraphT > 0) m.techniqueTelegraphT = 0;
           if (m.telegraphT > 0) m.telegraphT = 0;
           if (m.dashT > 0) { m.dashT = 0; m.vx *= 0.35; }
-          if (save.haptics !== false) haptic(9);
         }
         m.takeDamage(hitRoll.dmg, kbHit, this, { crit: hitRoll.crit, kind: spec.kind });
         if (f.isPlayer && typeof markFeltFirstPunch === 'function') markFeltFirstPunch();
@@ -46746,7 +46847,9 @@ class Game {
           try { spawnWeaponLightHit(this, f, m, { finisher, crit: hitRoll.crit }); } catch (_) {}
         }
         if (counter) this.freezeT = Math.max(this.freezeT, 0.026);
-        applyHitConfirmFx(this, hx, hy, spec, counter ? { counter: true } : null);
+        applyHitConfirmFx(this, hx, hy, spec, {
+          counter: !!counter, heavy: hitRoll.dmg >= 18, crit: hitRoll.crit,
+        });
         if (f.isPlayer && this.styleLightning && !fxLite()) {
           this.burst(m.x, m.y - m.size * 0.5, f.style?.accent || '#7cf5ff', 5, { kind: 'spark', size: 2 });
           if (f.style?.id === 'cyber') spawnFxRing(this, m.x, m.y - m.size * 0.3, '#4ecf6a', 6);
@@ -46843,7 +46946,9 @@ class Game {
           this.hitReadT = 0.45;
           this.hitReadDmg = dmg;
         }
-        applyHitConfirmFx(this, hx, hy, spec, counter ? { counter: true } : null);
+        applyHitConfirmFx(this, hx, hy, spec, {
+          counter: !!counter, heavy: hitRoll.dmg >= 18, crit: hitRoll.crit,
+        });
         if (spec.kind === 'weapon') bumpWeaponComboWindow(f, 0.1);
         if (spec.kind === 'weapon' && !isThrowWeapon(f.weapon.id) && spec.moveIdx < 2) {
           f._weaponComboHits = (f._weaponComboHits || 0) + 1;
@@ -46864,8 +46969,6 @@ class Game {
         f.energy = clamp(f.energy + 9, 0, 100);
         applyHitStop(this, spec, { crit: hitRoll.crit, combo: this.combo, heavy: hitRoll.dmg >= 18 });
         if (counter) this.freezeT = Math.max(this.freezeT, 0.014);
-        this.shake(spec.dmg > 20 ? 4 : 3, 0.12);
-        if ((f.isPlayer || f.playerSlot) && save.haptics !== false) haptic(5);
         try { AudioSys.sfxAt(weaponHitSfx(f.weapon, hitRoll.dmg), tgt.x); } catch (_) {}
         hit = true;
       }
@@ -54923,7 +55026,8 @@ const UI = {
       AudioSys.sfx('select');
       try { if (typeof haptic === 'function') haptic(10); } catch (_) {}
       const doll = document.getElementById('gearDollCanvas');
-      if (doll) {
+      if (typeof juiceEquipMenu === 'function') juiceEquipMenu(doll);
+      else if (doll) {
         try {
           doll.classList.remove('juice-flash');
           void doll.offsetWidth;
