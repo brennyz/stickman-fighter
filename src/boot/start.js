@@ -88,7 +88,7 @@ function bindPress(el, handler) {
     if (now - last < 320) return;
     last = now;
     try { handler(e); } catch (err) {
-      sfReportError('ui/' + (el.id || 'press'), err, 'Actie mislukt — probeer opnieuw');
+      sfReportError('ui/' + (el.id || 'press'), err, errT('toast.errRetry', 'Action failed — try again'));
     }
   };
   const hitOk = (e) => {
@@ -170,7 +170,7 @@ bindPress(btnContinue, () => {
   try {
     if (!resumeLastPlay()) userToast(t('toast.noSession'), 2400, { tone: 'warn' });
   } catch (err) {
-    sfReportError('resume', err, 'Verder spelen mislukt — kies een modus');
+    sfReportError('resume', err, errT('ui.errResume', 'Resume failed — pick a mode'));
   }
 });
 bindPress(document.getElementById('btnTraining'), () => {
@@ -282,7 +282,7 @@ if (dailyClaimAllBtn) bindPress(dailyClaimAllBtn, () => {
   try {
     AudioSys.init(); AudioSys.sfx('select'); claimAllDailyReady();
   } catch (err) {
-    sfReportError('claimAll', err, 'Claim mislukt — probeer opnieuw');
+    sfReportError('claimAll', err, errT('ui.errClaimRetry', 'Claim failed — try again'));
   }
 });
 const dailyBonusBtn = document.getElementById('dailyBonusBtn');
@@ -290,17 +290,17 @@ if (dailyBonusBtn) bindPress(dailyBonusBtn, () => {
   try {
     AudioSys.sfx('select'); claimDailyDayBonus();
   } catch (err) {
-    sfReportError('dayBonus', err, 'Dagbonus mislukt — probeer opnieuw');
+    sfReportError('dayBonus', err, errT('ui.errDayBonus', 'Daily bonus failed — try again'));
   }
 });
 bindPress(document.getElementById('fomoRitualDismiss'), () => {
   try { AudioSys.sfx('select'); dismissFomoRitual(); } catch (err) {
-    sfReportError('fomoDismiss', err, 'Kon overzicht sluiten');
+    sfReportError('fomoDismiss', err, errT('ui.errFomo', 'Could not close day overview'));
   }
 });
 bindPress(document.getElementById('fomoRitualBackdrop'), () => {
   try { dismissFomoRitual(); } catch (err) {
-    sfReportError('fomoDismiss', err, 'Kon overzicht sluiten');
+    sfReportError('fomoDismiss', err, errT('ui.errFomo', 'Could not close day overview'));
   }
 });
 bindPress(document.getElementById('fomoRitualCta'), () => {
@@ -308,7 +308,7 @@ bindPress(document.getElementById('fomoRitualCta'), () => {
     AudioSys.init(); AudioSys.sfx('select');
     UI.runFomoRitualCta();
   } catch (err) {
-    sfReportError('fomoCta', err, 'Kon actie niet openen');
+    sfReportError('fomoCta', err, errT('ui.errFomo', 'Could not close day overview'));
   }
 });
 bindPress(document.getElementById('fomoRitualReopen'), () => {
@@ -316,7 +316,7 @@ bindPress(document.getElementById('fomoRitualReopen'), () => {
     AudioSys.init(); AudioSys.sfx('select');
     reopenFomoRitual();
   } catch (err) {
-    sfReportError('fomoReopen', err, 'Kon dagoverzicht niet openen');
+    sfReportError('fomoReopen', err, errT('ui.errFomo', 'Could not close day overview'));
   }
 });
 const btnCopyLink = document.getElementById('btnCopyLink');
@@ -328,7 +328,7 @@ if (btnOpenPlayLink) btnOpenPlayLink.addEventListener('click', () => {
     const url = await resolveSharePlayUrl();
     if (url) window.open(url, '_blank', 'noopener');
     else userToast(t('toast.noPlayLink'), 2800, { tone: 'warn' });
-  })(), 'openPlayLink', 'Link openen mislukt');
+  })(), 'openPlayLink', errT('ui.errCopyLink', 'Could not copy link — see Settings'));
 });
 const btnExportSave = document.getElementById('btnExportSave');
 if (btnExportSave) btnExportSave.addEventListener('click', () => {
@@ -358,7 +358,7 @@ if (btnExportSave) btnExportSave.addEventListener('click', () => {
       size: formatSaveBytes(json.length),
     }), 3600, { tone: 'ok' });
     UI.renderSettings();
-  })(), 'exportSave', 'Export mislukt — kopieer JSON handmatig uit het vak');
+  })(), 'exportSave', errT('ui.errExport', 'Export failed — copy JSON from the box'));
 });
 const btnImportSave = document.getElementById('btnImportSave');
 bindSaveImportFile();
@@ -528,7 +528,7 @@ if (btnRestoreBackup) btnRestoreBackup.addEventListener('click', () => {
       UI.toast(t('toast.backupRestored'), 3000, { tone: 'ok' });
       UI.renderSettings();
     } else UI.toast(t('toast.backupFailed'), 3200, { tone: 'danger' });
-  }, 'restoreBackup', 'Backup herstellen mislukt');
+  }, 'restoreBackup', errT('toast.backupFailed', 'Backup restore failed'));
 });
 const btnSyncBackup = document.getElementById('btnSyncBackup');
 if (btnSyncBackup) btnSyncBackup.addEventListener('click', () => {
@@ -545,7 +545,7 @@ if (btnSyncBackup) btnSyncBackup.addEventListener('click', () => {
       UI.toast(t('toast.syncOk'), 2800, { tone: 'ok' });
       UI.renderSettings();
     } else UI.toast(t('toast.syncFailed'), 3200, { tone: 'danger' });
-  }, 'syncBackup', 'Backup sync mislukt');
+  }, 'syncBackup', errT('ui.errBackupSync', 'Backup sync failed'));
 });
 const btnClearSave = document.getElementById('btnClearSave');
 if (btnClearSave) btnClearSave.addEventListener('click', () => {
@@ -567,7 +567,7 @@ if (btnClearSave) btnClearSave.addEventListener('click', () => {
     AudioSys.sfx('lose');
     UI.renderMenu();
     UI.toast(t('toast.newStart'), 4000, { tone: 'ok' });
-  }, 'clearSave', 'Reset mislukt — probeer opnieuw');
+  }, 'clearSave', errT('toast.errRetry', 'Action failed — try again'));
 });
 bindSettingsControls();
 function bindPlayerDiagUnlock() {

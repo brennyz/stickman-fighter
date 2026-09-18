@@ -95,6 +95,12 @@
   }
 
   function labelOf(key, fallback) {
+    if (typeof t === 'function') {
+      const nested = t('buildings.power.' + key + '.label');
+      if (nested && nested !== 'buildings.power.' + key + '.label') return nested;
+      const flat = t('buildings.power.' + key);
+      if (flat && flat !== 'buildings.power.' + key) return flat;
+    }
     if (typeof tOr === 'function') return tOr('buildings.power.' + key, fallback);
     return fallback;
   }
@@ -313,7 +319,7 @@
         }
       }
     } catch (err) {
-      try { if (typeof sfReportError === 'function') sfReportError('building/combat', err, 'Fabriek-proc hiccup'); } catch (e6) { /* ignore */ }
+      try { if (typeof sfReportError === 'function') sfReportError('building/combat', err, errT('toast.fightHiccup', 'Hiccup — fight continues')); } catch (e6) { /* ignore */ }
     }
   }
 

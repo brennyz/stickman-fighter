@@ -287,7 +287,7 @@ function loop(now) {
         game.update(dt);
       } catch (updateErr) {
         // NOOIT recoverToMenu tijdens live fight (Kets/charge crashte → startscherm)
-        try { sfReportError('update', updateErr, 'Hiccup in gevecht — speel door'); } catch (_) {}
+        try { sfReportError('update', updateErr, errT('toast.fightHiccup', 'Hiccup — fight continues')); } catch (_) {}
         try {
           if (typeof recoverFightHiccup === 'function') recoverFightHiccup(game);
           else if (game) {
@@ -328,7 +328,7 @@ function loop(now) {
         try {
           game.draw(ctx);
         } catch (drawErr) {
-          try { sfReportError('draw', drawErr, 'Tekenen hiccup — speel door'); } catch (_) {}
+          try { sfReportError('draw', drawErr, errT('toast.fightHiccup', 'Hiccup — fight continues')); } catch (_) {}
           // On error: still paint sky+ground so adventure doesn't go black
           try {
             if (game && typeof drawBackground === 'function') {
@@ -928,7 +928,7 @@ function bootGame() {
       if (window.__sfLoopErr) return;
       const r = ev.reason;
       const err = r instanceof Error ? r : new Error(String(r != null ? r : 'async reject'));
-      sfReportError('async', err, 'Actie mislukt — probeer opnieuw');
+      sfReportError('async', err, errT('toast.errRetry', 'Action failed — try again'));
       if (state === 'play' || state === 'pause') return;
       if (state === 'result' && !game) {
         try { recoverToMenu(); } catch (_) {}

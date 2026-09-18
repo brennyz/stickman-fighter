@@ -1,3 +1,12 @@
+| 2026-09-18 | **i18n tips Power-ups** | Examiner #317 sprint DONE (P3): DE/FR/ES Tips `Power-ups:` → Funde/Orbes. Versus ongemoeid. **v1.18.182 / SW v392**. Draft. |
+| 2026-09-18 | **i18n mission loanwords** | Examiner #317: DE remainder Pickups→Funde; DE/FR/ES kills/run/power-ups in mission UI. Versus ongemoeid. **v1.18.181 / SW v391**. Draft. |
+| 2026-09-18 | **i18n ach/err leftovers** | Examiner #317: `achLabel` geen NL fallback; `lv70`/`zoneWeapons10` in EN/DE/FR/ES; laatste `Mislukt` → `errT`; import Error EN-technisch; flow-bar empty-sub geen raw key. Versus ongemoeid. **v1.18.180 / SW v390**. Draft. |
+| 2026-09-18 | **i18n errT/missions** | Examiner #317: mission-labels via `modes.*`; `errT` + locale keys i.p.v. Dutch `tOr`/`mislukt`; user-visible hiccups `toast.fightHiccup`. Versus ongemoeid. **v1.18.178 / SW v388**. Draft. |
+| 2026-09-18 | **i18n style/result** | Examiner #317: DE/FR/ES style tips (geen Leaf/energy/knockback mix); win/lose titels gelijk (DÉFAITE / LE ROBOT); advLoseKeep zonder EN run/loot; toast.resultHiccup. Versus ongemoeid. **v1.18.177 / SW v387**. Draft. |
+| 2026-09-18 | **i18n factories/gear** | Examiner #317: factory power `.label`/`.blurb` (geen EN catalog-leak); gearLocked FR/ES; DE nameShort+hub clamp. Versus ongemoeid. **v1.18.176 / SW v386**. Draft. |
+| 2026-09-18 | **i18n HUD/settings** | Examiner #317: HUD/FOMO DE/FR/ES (geen Summons/Unlock/BLOCK leak); settings import+persistCtx; style/season clamp 390px. Versus ongemoeid. **v1.18.175 / SW v385**. Draft. |
+| 2026-09-18 | **i18n pets/gear** | Examiner #317: DE/FR/ES pets+gear chrome (geen EN lock/perk leak); egg names; petKillsLeft; 390px clamp/toast wrap. Versus ongemoeid. **v1.18.174 / SW v384**. Draft. |
+| 2026-09-18 | **i18n layout-safe** | Worker LANGUAGE: factory desc keys (geen NL-leak op EN/DE/FR/ES-kaarten); nameShort + 2-line clamp; FOMO summons→kist/coffre/cofre; HUD KICK/PUNCH gelokaliseerd; DE Ton; Versus ongemoeid. **v1.18.173 / SW v383**. Draft. |
 | 2026-09-16 | **i18n spotcheck** | Main-spotcheck: EN YOU LOSE (niet VERLOREN); DE Hallo/Ton/Münze; FR/ES install-titel; fomo+buildings al in #299. **v1.18.169 / SW v379**. |
 | 2026-09-16 | **i18n alle talen** | Post-#283 factcheck Z→A (nl→fr→es→en→de): FOMO/fabrieken/wapens FR/ES/DE; speel.html i18n + #stepsIos; Versus ongemoeid. **v1.18.168 / SW v378**. |
 | 2026-09-14 | **i18n Z→A rebase** | #283 rebased on #273: coverage keys + FR/ES/DE overlays; polish wording wins. **v1.18.165 / SW v375**. |
@@ -145,6 +154,16 @@ Schrijf **1–3 regels** per sessie: datum, d#, wat, versie.
 
 | Datum (UTC) | d# | Update |
 |-------------|-----|--------|
+| 2026-09-18 | — | LANGUAGE examiner **#317 DONE**: pets/summons/gear empty states (DE overlay wipe → EN pulls/Done; FR/ES summonNoPulls; NL trekkingen). Copy only, geen layout. Draft, geen main. **v1.18.186 / SW 396**. |
+| 2026-09-18 | — | LANGUAGE examiner #317: lose/win/FOMO/settings FR/ES/DE leaks (run→partie, SUMMON→Coffre/Kiste, Unlock/Skip/Sound, settings chrome). Draft, geen main. **v1.18.185 / SW 395**. |
+| 2026-09-18 | — | LANGUAGE examiner #317 P0 overlap: HUD wrap + korte firstMinute + FR/ES summon CTA (geen Open chest). Draft, geen main. **v1.18.184 / SW 394**. |
+| 2026-09-18 | — | LANGUAGE examiner #317 sprint DONE (P3): Tips Funde/Orbes. Draft, geen main. **v1.18.182 / SW 392**. |
+| 2026-09-18 | — | LANGUAGE examiner #317: mission-labels + errT mislukt keys + fight hiccups. Draft, geen main. **v1.18.178 / SW 388**. |
+| 2026-09-18 | — | LANGUAGE examiner #317: style tips DE/FR/ES + result win/lose consistency + Dutch audit. Draft, geen main. **v1.18.177 / SW 387**. |
+| 2026-09-18 | — | LANGUAGE examiner #317: factory powers/detail + gear lock toasts + DE nameShort. Draft, geen main. **v1.18.176 / SW 386**. |
+| 2026-09-18 | — | LANGUAGE examiner #317: HUD/FOMO/settings locale + style/season 390px clamp. Draft, geen main. **v1.18.175 / SW 385**. |
+| 2026-09-18 | — | LANGUAGE examiner #317: pets/gear DE/FR/ES keys (lock/perk/egg), petKillsLeft, 390px clamp. Draft, geen main. **v1.18.174 / SW 384**. |
+| 2026-09-18 | — | LANGUAGE worker: layout-safe NL/EN/DE/FR/ES copy — factory desc keys, nameShort cards, FOMO kist/coffre, HUD telegraphs, DE Ton. Versus ongemoeid. Draft, geen main. **v1.18.173 / SW 383**. |
 | 2026-09-16 | — | **MEGA-MERGE → main** Grok wave #295–#309 (i18n → systems → UI → pixels → polish). Feature-base PRs (#297/#300/#307/#309) cherry-picked. **v1.18.172 / SW 382**. speel.html na Pages. |
 | 2026-09-16 | — | Gear UI ↔ #295 equip-API: sheets via gearSlotInventory, tap via gearEquipItem(id,{expectSlot}), states ok/vanity-ok/already-equipped/locked/not-owned/wrong-slot/unknown. DOM/schema 1 ongewijzigd. v1.18.171 / SW 381. Draft, niet main. |
 | 2026-09-16 | — | Gear UX pass: HOME-sibling (1-tap Uitrusting, grotere hero + overlays, slot/wapen HOME-cards, tap=aan/uit, safe Back, één page-scroll). Schema ongewijzigd. v1.18.170 / SW 380. Draft, niet main. |

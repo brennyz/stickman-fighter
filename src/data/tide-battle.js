@@ -71,8 +71,8 @@ function reportTideBattleRecover(reason, err) {
   if (window.__sfTideRecoverT && now - window.__sfTideRecoverT < 6000) return;
   window.__sfTideRecoverT = now;
   const msg = reason === 'spawn'
-    ? 'Tide Battle start mislukt — ga verder met avontuur'
-    : 'Tide Battle hersteld — muziek/HUD gesynchroniseerd';
+    ? errT('ui.errTideStart', 'Tide Battle start failed — keep going')
+    : errT('ui.errProgressSafe', 'Progress is safe — keep playing');
   if (typeof sfReportError === 'function') sfReportError('tideBattle/' + (reason || 'recover'), err, msg);
   else if (typeof userToast === 'function') userToast(msg, 3400);
 }

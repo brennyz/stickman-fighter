@@ -20,14 +20,14 @@ const DAILY_PLAY_HINTS = {
   boss1: 'Avontuur: baas aan einde van een level',
 };
 const DAILY_PLAY_TARGETS = {
-  kills12: { mode: 'adventure', label: 'Avontuur' },
-  advwin: { mode: 'adventure', label: 'Avontuur' },
-  wall35: { mode: 'wall', label: 'Muur' },
-  trainwin: { mode: 'training', label: 'Training' },
-  combo5: { mode: 'adventure', label: 'Avontuur' },
-  finisher3: { mode: 'adventure', label: 'Avontuur' },
-  pick3: { mode: 'adventure', label: 'Avontuur' },
-  boss1: { mode: 'adventure', label: 'Avontuur' },
+  kills12: { mode: 'adventure' },
+  advwin: { mode: 'adventure' },
+  wall35: { mode: 'wall' },
+  trainwin: { mode: 'training' },
+  combo5: { mode: 'adventure' },
+  finisher3: { mode: 'adventure' },
+  pick3: { mode: 'adventure' },
+  boss1: { mode: 'adventure' },
 };
 function goDailyPlayTarget(taskId) {
   try {
@@ -43,7 +43,7 @@ function goDailyPlayTarget(taskId) {
       startGame('wall');
     }
   } catch (err) {
-    sfReportError('dailyPlay', err, 'Kon modus niet openen — kies handmatig in menu');
+    sfReportError('dailyPlay', err, errT('ui.errOpenMode', 'Could not open mode — pick from the menu'));
   }
 }
 const ACHIEVEMENTS = [
@@ -294,7 +294,7 @@ function claimDailyTask(taskId, opts) {
     AudioSys.sfx('bonus');
     UI.toast(t('toast.claimXp', { xp: def.xp, text: dailyText(taskId) }), 2800);
   }
-  if (!persistOrToast('missie-claim')) {
+  if (!persistOrToast('mission')) {
     task.claimed = snap.claimed;
     save.xp = snap.xp;
     save.lvl = snap.lvl;
@@ -399,7 +399,7 @@ function claimDailyDayBonus() {
     grantMetaXP(120, { deferPersist: true });
   }
   AudioSys.sfx('win');
-  if (!persistOrToast('dagbonus')) {
+  if (!persistOrToast('daily')) {
     save.daily.dayBonusClaimed = snap.dayBonusClaimed;
     save.stats.dailyBonusCount = snap.dailyBonusCount;
     save.stats.dailyStreak = snap.dailyStreak;
@@ -465,15 +465,19 @@ function dailyFlowBarHtml(step) {
   if (step === 0) {
     return `<div class="mission-flow-bar mission-flow-done">${t('missionsUi.flowDone')}</div>`;
   }
+  const line = (key) => {
+    const s = typeof t === 'function' ? t(key) : '';
+    return (s && s !== key) ? s : '';
+  };
   const mk = (n, label, sub) => {
     const active = step === n ? ' active' : '';
     const done = step > n ? ' done' : '';
     const small = sub ? `<small>${sub}</small>` : '';
     return `<span class="mission-flow-pill${active}${done}"><b>${n}</b> ${label}${small}</span>`;
   };
-  return `<div class="mission-flow-bar">${mk(1, t('missionsUi.flowPlay'), t('missionsUi.flowPlaySub'))}` +
-    `<span class="mission-flow-arrow">→</span>${mk(2, t('missionsUi.flowClaim'), t('missionsUi.flowClaimSub'))}` +
-    `<span class="mission-flow-arrow">→</span>${mk(3, t('missionsUi.flowBonus'), t('missionsUi.flowBonusSub'))}</div>`;
+  return `<div class="mission-flow-bar">${mk(1, line('missionsUi.flowPlay'), line('missionsUi.flowPlaySub'))}` +
+    `<span class="mission-flow-arrow">→</span>${mk(2, line('missionsUi.flowClaim'), line('missionsUi.flowClaimSub'))}` +
+    `<span class="mission-flow-arrow">→</span>${mk(3, line('missionsUi.flowBonus'), line('missionsUi.flowBonusSub'))}</div>`;
 }
 
 function dailyTaskRemainderText(task, def) {
@@ -553,7 +557,7 @@ function goAchievementPlayTarget(ach) {
       startGame('wall');
     }
   } catch (err) {
-    sfReportError('achPlay/' + (ach && ach.id), err, 'Kon modus niet openen — kies handmatig in menu');
+    sfReportError('achPlay/' + (ach && ach.id), err, errT('ui.errOpenMode', 'Could not open mode — pick from the menu'));
   }
 }
 
@@ -896,20 +900,20 @@ function saveExportSummaryLine(s) {
   if (eggs) line += t('ui.saveHealthEgg', { n: eggs });
   if (typeof countSkillUpgradeLevels === 'function') {
     const sk = countSkillUpgradeLevels(st);
-    if (sk) line += ` · skill +${sk} Lv`;
+    if (sk) line += t('ui.saveHealthSkill', { n: sk });
   }
   if (typeof countItemUpgradeLevels === 'function') {
     const it = countItemUpgradeLevels(st);
-    if (it) line += ` · item +${it} Lv`;
+    if (it) line += t('ui.saveHealthItem', { n: it });
   }
   const pc = Math.max(0, Math.floor(Number(st.petCoins) || 0));
-  if (pc) line += ` · ${pc} pet coins`;
+  if (pc) line += t('ui.saveHealthPetCoins', { n: pc });
   const gearN = st.gear && st.gear.owned && typeof st.gear.owned === 'object'
     ? Object.keys(st.gear.owned).length : 0;
-  if (gearN) line += ` · gear ${gearN}`;
+  if (gearN) line += t('ui.saveHealthGear', { n: gearN });
   if (typeof countBuildingLevels === 'function') {
     const bl = countBuildingLevels(st);
-    if (bl) line += ` · fabriek +${bl} Lv`;
+    if (bl) line += t('ui.saveHealthFactory', { n: bl });
   }
   return line;
 }
@@ -1075,14 +1079,14 @@ function updateSaveImportPreview(text) {
     const { save: next, meta, warnings } = previewImportSave(text);
     previewEl.style.display = 'block';
     previewEl.style.color = '#ffd75e';
-    const metaLine = meta && meta.app ? ` · export v${meta.app}` : '';
+    const metaLine = meta && meta.app ? t('ui.importPreviewMeta', { app: meta.app }) : '';
     const warnLine = warnings && warnings.length ? '\n' + warnings.join(' · ') : '';
     previewEl.textContent =
-      `Preview: ${saveExportSummaryLine(next)}${metaLine}.${warnLine} Import 2× om te laden.`;
+      t('ui.importPreview', { summary: saveExportSummaryLine(next), meta: metaLine }) + warnLine;
   } catch (e) {
     previewEl.style.display = 'block';
     previewEl.style.color = '#ffb0b8';
-    previewEl.textContent = (e && e.message) ? e.message : 'Ongeldige save-JSON';
+    previewEl.textContent = (e && e.message) ? e.message : t('ui.importInvalid');
   }
 }
 
@@ -1119,11 +1123,11 @@ function applySaveImportText(text, sourceLabel) {
 
 function readSaveImportFile(file) {
   return new Promise((resolve, reject) => {
-    if (!file) { reject(new Error('Geen bestand gekozen')); return; }
-    if (file.size > 120000) { reject(new Error('Save-bestand te groot (>120 KB)')); return; }
+    if (!file) { reject(new Error('No file chosen')); return; }
+    if (file.size > 120000) { reject(new Error('Save file too large (>120 KB)')); return; }
     const reader = new FileReader();
     reader.onload = () => resolve(String(reader.result || ''));
-    reader.onerror = () => reject(new Error('Bestand lezen mislukt'));
+    reader.onerror = () => reject(new Error('Could not read file'));
     reader.readAsText(file);
   });
 }
@@ -1137,10 +1141,10 @@ function bindSaveImportFile() {
     if (!file) return;
     safeAsync((async () => {
       const text = await readSaveImportFile(file);
-      if (!text.trim()) throw new Error('Bestand is leeg');
+      if (!text.trim()) throw new Error('File is empty');
       applySaveImportText(text, file.name || 'bestand');
       AudioSys.sfx('select');
-    })(), 'importSaveFile', 'Importbestand lezen mislukt');
+    })(), 'importSaveFile', errT('ui.errImportFile', 'Could not read import file'));
     try { input.value = ''; } catch (_) {}
   });
 }
@@ -1435,67 +1439,67 @@ function importPreviewWarnings(next, meta) {
       }
     } catch (_) {}
   }
-  if (meta && meta.app) lines.push('App-versie export: v' + meta.app);
+  if (meta && meta.app) lines.push(t('ui.importAppVer', { v: meta.app }));
   if (meta && meta.summary && typeof meta.summary === 'object') {
     const s = meta.summary;
     let sum = t('ui.saveHealthStats', { lvl: s.lvl, unlocked: s.unlocked, dex: s.dex, kills: s.kills || 0 }) + t('ui.saveExportAch', { n: s.achievements });
     if (s.summons) sum += t('ui.saveHealthSummon', { n: s.summons });
     if (s.pets) sum += t('ui.saveHealthPet', { n: s.pets });
     if (s.eggs) sum += t('ui.saveHealthEgg', { n: s.eggs });
-    if (s.skillUpLv) sum += ` · skill +${s.skillUpLv} Lv`;
-    if (s.itemUpLv) sum += ` · item +${s.itemUpLv} Lv`;
-    if (s.petCoins) sum += ` · ${s.petCoins} pet coins`;
-    if (s.style && s.style !== 'classic') sum += ` · stijl ${s.style}`;
+    if (s.skillUpLv) sum += t('ui.saveHealthSkill', { n: s.skillUpLv });
+    if (s.itemUpLv) sum += t('ui.saveHealthItem', { n: s.itemUpLv });
+    if (s.petCoins) sum += t('ui.saveHealthPetCoins', { n: s.petCoins });
+    if (s.style && s.style !== 'classic') sum += t('ui.saveHealthStyle', { name: s.style });
     lines.push(sum);
   }
   const summonN = summonCountFromSave(next);
   const curSummonN = summonCountFromSave(save);
-  if (summonN > curSummonN) lines.push(`+${summonN - curSummonN} summon-wapen(s) in import`);
-  else if (summonN < curSummonN) lines.push(`Minder summons dan nu (${summonN} vs ${curSummonN})`);
+  if (summonN > curSummonN) lines.push(t('ui.importMore', { n: summonN - curSummonN, kind: t('ui.importKindSummon') }));
+  else if (summonN < curSummonN) lines.push(t('ui.importFewer', { kind: t('ui.importKindSummon'), a: summonN, b: curSummonN }));
   const petN = petCountFromSave(next);
   const curPetN = petCountFromSave(save);
-  if (petN > curPetN) lines.push(`+${petN - curPetN} dex-pet(s) in import`);
-  else if (petN < curPetN) lines.push(`Minder pets dan nu (${petN} vs ${curPetN})`);
+  if (petN > curPetN) lines.push(t('ui.importMore', { n: petN - curPetN, kind: t('ui.importKindPet') }));
+  else if (petN < curPetN) lines.push(t('ui.importFewer', { kind: t('ui.importKindPet'), a: petN, b: curPetN }));
   const eggN = eggCountFromSave(next);
   const curEggN = eggCountFromSave(save);
-  if (eggN > curEggN) lines.push(`+${eggN - curEggN} ei-pet(s) in import`);
-  else if (eggN < curEggN) lines.push(`Minder ei-pets dan nu (${eggN} vs ${curEggN})`);
+  if (eggN > curEggN) lines.push(t('ui.importMore', { n: eggN - curEggN, kind: t('ui.importKindEgg') }));
+  else if (eggN < curEggN) lines.push(t('ui.importFewer', { kind: t('ui.importKindEgg'), a: eggN, b: curEggN }));
   if (typeof countSkillUpgradeLevels === 'function') {
     const skN = countSkillUpgradeLevels(next);
     const curSkN = countSkillUpgradeLevels(save);
-    if (skN > curSkN) lines.push(`+${skN - curSkN} skill-upgrade Lv in import`);
-    else if (skN < curSkN) lines.push(`Minder skill-upgrades (${skN} vs ${curSkN} Lv)`);
+    if (skN > curSkN) lines.push(t('ui.importMore', { n: skN - curSkN, kind: t('ui.importKindSkill') }));
+    else if (skN < curSkN) lines.push(t('ui.importFewer', { kind: t('ui.importKindSkill'), a: skN, b: curSkN }));
   }
   if (typeof countItemUpgradeLevels === 'function') {
     const itN = countItemUpgradeLevels(next);
     const curItN = countItemUpgradeLevels(save);
-    if (itN > curItN) lines.push(`+${itN - curItN} item-upgrade Lv in import`);
-    else if (itN < curItN) lines.push(`Minder item-upgrades (${itN} vs ${curItN} Lv)`);
+    if (itN > curItN) lines.push(t('ui.importMore', { n: itN - curItN, kind: t('ui.importKindItem') }));
+    else if (itN < curItN) lines.push(t('ui.importFewer', { kind: t('ui.importKindItem'), a: itN, b: curItN }));
   }
   const impCoins = Math.max(0, Math.floor(Number(next.petCoins) || 0));
   const curCoins = Math.max(0, Math.floor(Number(save.petCoins) || 0));
-  if (impCoins > curCoins) lines.push(`+${impCoins - curCoins} pet coins in import`);
-  else if (impCoins < curCoins) lines.push(`Minder pet coins (${impCoins} vs ${curCoins})`);
+  if (impCoins > curCoins) lines.push(t('ui.importMore', { n: impCoins - curCoins, kind: t('ui.importKindCoins') }));
+  else if (impCoins < curCoins) lines.push(t('ui.importFewer', { kind: t('ui.importKindCoins'), a: impCoins, b: curCoins }));
   if (next.style !== save.style) {
-    lines.push(`Stijl ${save.style || 'classic'} → ${next.style || 'classic'}`);
+    lines.push(t('ui.importStyleChange', { from: save.style || 'classic', to: next.style || 'classic' }));
   }
   if (next.lvl < save.lvl || next.unlocked < save.unlocked) {
-    lines.push('Lager niveau/unlock dan huidige save op dit apparaat');
+    lines.push(t('ui.importLower'));
   } else if (next.lvl > save.lvl || next.unlocked > save.unlocked) {
-    lines.push('Hogere voortgang dan huidige save — goed voor overzet');
+    lines.push(t('ui.importHigher'));
   }
   return lines;
 }
 
 function previewImportSave(text) {
-  if (typeof text !== 'string' || !text.trim()) throw new Error('Plak eerst save-JSON in het vak');
-  if (text.length > 120000) throw new Error('Save te groot of ongeldig');
+  if (typeof text !== 'string' || !text.trim()) throw new Error(t('ui.importErrEmpty'));
+  if (text.length > 120000) throw new Error(t('ui.importErrTooBig'));
   let parsed;
   try { parsed = JSON.parse(text); } catch (_) {
-    throw new Error('Geen geldige JSON — controleer plaksel');
+    throw new Error(t('ui.importErrJson'));
   }
   if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) {
-    throw new Error('Ongeldige save-structuur');
+    throw new Error(t('ui.importErrStruct'));
   }
   parsed = unwrapSavePayload(parsed);
   const meta = parsed._exportMeta;
@@ -1560,7 +1564,7 @@ function sfReportError(where, err, userMsg) {
   if (!window.__sfErrToastT || now - window.__sfErrToastT > 4500) {
     window.__sfErrToastT = now;
     // Default mag NOOIT "terug naar menu" beloven — fight blijft vaak staan
-    userToast(userMsg || 'Hiccup — spel gaat door');
+    userToast(userMsg || errT('toast.hiccupContinue', 'Hiccup — game continues'));
   }
 }
 
@@ -2029,7 +2033,7 @@ function scheduleGameResult(gameRef, delayMs, showFn) {
       if (state === 'menu') return;
       gameRef._pendingResult = false;
       showFn();
-    }, 'scheduleGameResult', 'Resultaat laden mislukt — tik Menu of Opnieuw');
+    }, 'scheduleGameResult', errT('ui.errResultLoad', 'Could not load result — tap Menu or Again'));
   }, Math.max(0, delayMs || 0));
 }
 
@@ -2103,7 +2107,7 @@ function recoverToMenu(opts) {
     ensureVisibleScreen();
   } catch (err) {
     console.error('[Stickman] recoverToMenu', err);
-    sfReportError('recoverToMenu', err, 'Herstel mislukt — herlaad de pagina als menu vastzit');
+    sfReportError('recoverToMenu', err, errT('ui.errRecoverMenu', 'Recover failed — reload if the menu is stuck'));
     state = 'menu';
     game = null;
     syncPlayLayer();
@@ -2124,7 +2128,7 @@ function importSaveJson(text) {
   const { save: next, warnings } = previewImportSave(text);
   const keptBackup = typeof snapshotSaveToBackup === 'function' && snapshotSaveToBackup(save);
   save = next;
-  if (!persistPrimaryOnly()) throw new Error('Import gelukt maar opslaan mislukt — probeer opnieuw');
+  if (!persistPrimaryOnly()) throw new Error('Import ok but persist failed — try again');
   try { if (typeof syncAudioThemeAfterSaveChange === 'function') syncAudioThemeAfterSaveChange(); } catch (_) {}
   try { checkAchievements(); } catch (_) {}
   try { UI.renderMenu(); } catch (_) {}
@@ -2170,7 +2174,7 @@ function resumeLastPlay() {
     }
     return true;
   } catch (err) {
-    sfReportError('resumeLastPlay', err, 'Verder spelen mislukt — kies een modus');
+    sfReportError('resumeLastPlay', err, errT('ui.errResume', 'Resume failed — pick a mode'));
     return false;
   }
 }
@@ -2186,7 +2190,7 @@ function startAdventureFromGamble(skipGamble) {
     startGame('adventure', { level, gamble, difficulty: diff });
   } catch (err) {
     cancelGambleStart();
-    sfReportError('gambleStart', err, 'Avontuur starten mislukt — kies level opnieuw');
+    sfReportError('gambleStart', err, errT('ui.errLevelStart', 'Could not start level'));
   }
 }
 
@@ -2544,7 +2548,7 @@ function copyPlayLink() {
     } catch (_) {
       UI.toast(url, 4500);
     }
-  })(), 'copyLink', 'Link kopiëren mislukt — zie Instellingen → Deel link');
+  })(), 'copyLink', errT('ui.errCopyLink', 'Could not copy link — see Settings'));
 }
 
 function sharePlayLink() {
@@ -2568,7 +2572,7 @@ function sharePlayLink() {
     } catch (_) {
       UI.toast(url, 4500);
     }
-  })(), 'shareLink', 'Delen mislukt — kopieer link via Instellingen');
+  })(), 'shareLink', errT('ui.errShare', 'Share failed — copy the link in Settings'));
 }
 
 function isTunnelHostUrl(u) {
@@ -2757,25 +2761,11 @@ function modeFirstMinuteLine(mode) {
   const key = touch ? base : base + 'Kb';
   const localized = typeof t === 'function' ? t(key) : '';
   if (localized && localized !== key) return localized;
-  // Fallback if Kb key missing: try base touch key only on touch
   if (!touch) {
-    const lines = {
-      adventure: 'Eerste minuut: A/D lopen · W springen · J/K/L · U technique · Shift subst',
-      training: 'Eerste minuut: spring lasers · Shift = substitutie · energy vol → U',
-      wall: '60s · combo-milestones · A/D · J/K/L · record-tempo in HUD',
-      versus: 'Eerste minuut: P1 WASD+JKL · P2 pijltjes+1-5 · best-of-3',
-      coinrun: 'Munten pakken · W/↑ hoger mikken · J/K shuriken · max 3 snel',
-    };
-    return lines[mode] || lines.adventure;
+    const baseLine = typeof t === 'function' ? t(base) : '';
+    if (baseLine && baseLine !== base) return baseLine;
   }
-  const lines = {
-    adventure: 'Eerste minuut: links lopen · rechts slaan · joy ↑ mik op vliegers · vol energy = SUPER',
-    training: 'Eerste minuut: spring rode laser · blokkeer dichtbij · energy vol → SUPER',
-    wall: '60s · combo ×3/×5/×8 hints · record-tempo + projectie in HUD',
-    versus: 'Eerste minuut: P1 links · P2 rechts',
-    coinrun: '45s munten · joy ↑ mik · roze vlieger = +3 · max 3 shuriken snel',
-  };
-  return lines[mode] || lines.adventure;
+  return '';
 }
 
 /** Eén keer Ketsbam-uitleg — geen toast (avontuur ontsnapping). */
@@ -2785,9 +2775,7 @@ function ketsbamOnboardHintLine() {
   const key = IS_TOUCH ? 'ui.ketsbamOnboardTouch' : 'ui.ketsbamOnboardKb';
   const line = typeof t === 'function' ? t(key) : '';
   if (line && line !== key) return line;
-  return IS_TOUCH
-    ? 'Omringd? Tik het midden-symbool — Ketsbam-ontsnapping · 9s cooldown'
-    : 'Omringd? E of midden-symbool = Ketsbam · 9s cooldown';
+  return '';
 }
 
 function markKetsbamOnboardSeen() {
@@ -2804,11 +2792,9 @@ function tideBattleOnboardPending() {
 
 function tideBattleOnboardHintLine(bossName) {
   const key = IS_TOUCH ? 'ui.tideBattleOnboardTouch' : 'ui.tideBattleOnboardKb';
-  const line = typeof t === 'function' ? t(key, { name: bossName || 'baas' }) : '';
+  const line = typeof t === 'function' ? t(key, { name: bossName || '' }) : '';
   if (line && line !== key) return line;
-  return IS_TOUCH
-    ? `Eerste Tide Battle: versla ${bossName || 'de baas'} — geen andere golven tot klaar`
-    : `First Tide Battle: defeat ${bossName || 'the boss'} — waves pause until done`;
+  return '';
 }
 
 function markTideBattleOnboardSeen() {
@@ -2853,10 +2839,7 @@ function gambleOnboardHintLine() {
   persist();
   const key = IS_TOUCH ? 'ui.gambleOnboardTouch' : 'ui.gambleOnboardKb';
   const line = typeof t === 'function' ? t(key) : '';
-  return (line && line !== key) ? line
-    : (IS_TOUCH
-      ? 'Eerste keer gok: lage som = super-baas · hoge som = bondgenoot · Overslaan = normaal level'
-      : 'Eerste keer: sum ≤5 super-baas · sum ≥9 ally buff · Skip = geen gok');
+  return (line && line !== key) ? line : '';
 }
 
 /** Welcome only on HOME hub — never chase Adventure/Settings/title. */

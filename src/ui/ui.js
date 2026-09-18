@@ -24,7 +24,7 @@ function appendItemUpgradeButton(el, cat, id, rerender) {
       const lv = itemUpgradeLevel(cat, id);
       UI.toast(t('toast.itemUpgraded', { name, lv, detail: itemUpgradeSummary(cat, id) }), 3200);
       rerender();
-    }, 'itemUp/' + cat + '/' + id, 'Upgrade mislukt');
+    }, 'itemUp/' + cat + '/' + id, errT('toast.errRetry', 'Action failed — try again'));
   });
   el.appendChild(btn);
 }
@@ -170,7 +170,7 @@ function pickVsRosterId(id) {
     UI.renderCharSelect();
     if (UI.charPickStep === 2) scrollCharFightIntoView();
   } catch (err) {
-    sfReportError('charPick', err, 'Vechter kiezen mislukt — tik opnieuw');
+    sfReportError('charPick', err, errT('ui.errCharPick', 'Could not pick fighter — tap again'));
   }
 }
 
@@ -347,7 +347,7 @@ function equipSkill(id) {
       UI.renderModeHub();
       UI.toast(t('toast.skillEquipped', { name: skillLabel(sk) }), 2200);
       UI._skillArmId = null;
-    }, 'pickSkill/' + id, 'Skill kiezen mislukt');
+    }, 'pickSkill/' + id, errT('toast.errRetry', 'Action failed — try again'));
   } finally {
     UI._skillEquipBusy = false;
   }
@@ -379,7 +379,7 @@ function equipSuper(id) {
       UI.renderModeHub();
       UI.toast(t('toast.superEquipped', { name: superLabel(sp) }), 2200);
       UI._superArmId = null;
-    }, 'pickSuper/' + id, 'Super kiezen mislukt');
+    }, 'pickSuper/' + id, errT('toast.errRetry', 'Action failed — try again'));
   } finally {
     UI._superEquipBusy = false;
   }
@@ -1202,14 +1202,14 @@ const UI = {
     }
     const el = document.getElementById(screenId);
     if (!el) {
-      sfReportError('safeOpen/' + screenId, new Error('missing screen DOM'), 'Scherm niet gevonden — terug naar menu');
+      sfReportError('safeOpen/' + screenId, new Error('missing screen DOM'), errT('ui.errScreenMissing', 'Screen missing — back to menu'));
       try { this.goMenu(); } catch (_) { ensureVisibleScreen(); }
       return;
     }
     this.show(screenId);
     if (renderFn) {
       try { renderFn(); } catch (err) {
-        sfReportError(renderFn.name || screenId, err, opts.msg || 'Scherm laden mislukt — herlaad via Verse versie');
+        sfReportError(renderFn.name || screenId, err, opts.msg || errT('ui.errLoadScreen', 'Could not load screen — tap Fresh version'));
       }
     }
   },
@@ -1218,7 +1218,7 @@ const UI = {
     try {
       if (!id) {
         if (state === 'play' && !game) {
-          sfReportError('UI.show/play', new Error('no game ref'), 'Gevecht niet geladen — terug naar menu');
+          sfReportError('UI.show/play', new Error('no game ref'), errT('ui.errScreenMissing', 'Screen missing — back to menu'));
           try { this.goMenu(); } catch (_) { ensureVisibleScreen(); }
           syncPlayLayer();
           return;
@@ -1228,7 +1228,7 @@ const UI = {
       } else {
         const target = document.getElementById(id);
         if (!target) {
-          sfReportError('UI.show/' + id, new Error('missing screen DOM'), 'Scherm niet gevonden — terug naar menu');
+          sfReportError('UI.show/' + id, new Error('missing screen DOM'), errT('ui.errScreenMissing', 'Screen missing — back to menu'));
           try { this.goMenu(); } catch (_) { ensureVisibleScreen(); }
           syncPlayLayer();
           return;
@@ -1275,7 +1275,7 @@ const UI = {
       const pauseBtn = document.getElementById('pauseBtn');
       if (pauseBtn) pauseBtn.classList.toggle('show', !id && !!game && !game.over && state !== 'result');
     } catch (err) {
-      sfReportError('UI.show/' + (id || 'play'), err, 'Schermwissel mislukt — terug naar menu');
+      sfReportError('UI.show/' + (id || 'play'), err, errT('ui.errScreenSwitch', 'Screen switch failed — back to menu'));
       try { this.goMenu(); } catch (_) { ensureVisibleScreen(); }
     }
     syncPlayLayer();
@@ -1430,7 +1430,7 @@ const UI = {
       }
       this.goMenu();
     } catch (err) {
-      sfReportError('goBack', err, 'Menu-navigatie mislukt — terug naar hoofdmenu');
+      sfReportError('goBack', err, errT('ui.errGoBack', 'Navigation failed — back to menu'));
       this.goMenu();
     }
   },
@@ -1645,7 +1645,7 @@ const UI = {
       scheduleResize();
       if (window.StickInstall) window.StickInstall.refreshMenuButton();
     } catch (err) {
-      sfReportError('goMenu', err, 'Kon menu niet openen — herlaad de pagina');
+      sfReportError('goMenu', err, errT('ui.errGoMenu', 'Could not open menu — reload the page'));
       try { Input.releaseAll(); } catch (_) {}
       if (game) {
         try {
@@ -1942,7 +1942,7 @@ const UI = {
     if (!MODE_HUB_META[id]) return;
     this.modeHubId = id;
     this.safeOpen('modeHubScreen', () => this.renderModeHub(), {
-      msg: (typeof tOr === 'function') ? tOr('hub.loadFail', 'Hub laden mislukt') : 'Hub laden mislukt',
+      msg: errT('hub.loadFail', 'Could not load hub'),
     });
   },
 
@@ -2162,7 +2162,7 @@ const UI = {
       }
     } catch (_) {}
     } catch (err) {
-      sfReportError('renderMenu', err, 'Menu kon niet ververst worden');
+      sfReportError('renderMenu', err, errT('ui.errMenuRefresh', 'Could not refresh menu'));
     }
   },
 
@@ -2279,7 +2279,7 @@ const UI = {
         if (titleEl) {
           const small = titleEl.querySelector('small');
           titleEl.textContent = '';
-          titleEl.appendChild(document.createTextNode(tOr('ui.summonOpen', 'Open kist')));
+          titleEl.appendChild(document.createTextNode(t('ui.summonPull')));
           if (small) titleEl.appendChild(small);
         }
         pullBtn.setAttribute('aria-label', left > 0
@@ -2298,7 +2298,7 @@ const UI = {
       }
       const hint = document.getElementById('summonStageHint');
       if (hint) {
-        hint.textContent = tOr('ui.summonHint', 'Tik kist om te openen');
+        hint.textContent = t('ui.summonHint');
         hint.style.display = (left > 0 && !this._chestPullBusy) ? '' : 'none';
       }
 
@@ -2319,7 +2319,7 @@ const UI = {
       try { syncPlayLayer(); } catch (_) {}
       try { hardenButtonIcons(document.getElementById('summonScreen')); } catch (_) {}
     } catch (err) {
-      sfReportError('renderSummon', err, 'Summons laden mislukt');
+      sfReportError('renderSummon', err, t('ui.errSummonLoad'));
       try { this.goMenu(); } catch (_) { ensureVisibleScreen(); }
     }
   },
@@ -2372,9 +2372,9 @@ const UI = {
       this.safeOpen('summonScreen', () => {
         this.renderSummon();
         try { ensureSummonVideoPreloaded(); } catch (_) {}
-      }, { msg: 'Summons laden mislukt' });
+      }, { msg: t('ui.errSummonLoad') });
     } catch (err) {
-      sfReportError('openSummonHub', err, 'Summons openen mislukt');
+      sfReportError('openSummonHub', err, t('ui.errSummonOpen'));
       try { this.goMenu(); } catch (_) {}
     }
   },
@@ -2669,10 +2669,10 @@ const UI = {
         this._chestPullLeftSnap = null;
       }
       const text = document.getElementById('summonRevealText');
-      const msg = typeof chestResultToast === 'function' ? chestResultToast(res) : (res && res.ok ? 'Summon!' : tOr('ui.summonFail', 'Mislukt'));
+      const msg = typeof chestResultToast === 'function' ? chestResultToast(res) : (res && res.ok ? 'Summon!' : errT('ui.summonFail', 'Summon failed — try again'));
       // Never spoil via toast/text during the open — only after card
       this._summonPendingMsg = (res && res.ok) ? msg : null;
-      if (text) text.textContent = (res && res.ok) ? tOr('ui.summonOpening', 'Kist opent…') : msg;
+      if (text) text.textContent = (res && res.ok) ? t('ui.summonOpening') : msg;
 
       if (!res || !res.ok) {
         this._chestPullBusy = false;
@@ -2695,7 +2695,7 @@ const UI = {
       this._chestPullBusy = false;
       this._summonPendingMsg = null;
       this.clearSummonRevealTimers();
-      sfReportError('doChestPull', err, 'Summon mislukt');
+      sfReportError('doChestPull', err, errT('ui.summonFail', 'Summon failed — try again'));
       try { ensureVisibleScreen(); } catch (_) {}
     }
   },
@@ -2811,14 +2811,14 @@ const UI = {
         bindPress(btn, () => safeUiAction(() => {
           AudioSys.sfx('select');
           claimDailyTask(task.id);
-        }, 'claimDaily/' + task.id, 'Claim mislukt — probeer opnieuw'));
+        }, 'claimDaily/' + task.id, errT('ui.errClaimRetry', 'Claim failed — try again')));
         el.appendChild(btn);
       } else if (!task.done && playTarget) {
         const btn = document.createElement('button');
         btn.type = 'button';
         btn.className = 'btn mission-play-btn';
         btn.textContent = t('missionsUi.dailyPlayBtn', { mode: dailyModeLabel(playTarget.mode) });
-        bindPress(btn, () => safeUiAction(() => goDailyPlayTarget(task.id), 'dailyPlay/' + task.id, 'Kon modus niet openen'));
+        bindPress(btn, () => safeUiAction(() => goDailyPlayTarget(task.id), 'dailyPlay/' + task.id, errT('ui.errOpenMode', 'Could not open mode — pick from the menu')));
         el.appendChild(btn);
       }
       dailyHost.appendChild(el);
@@ -2891,7 +2891,7 @@ const UI = {
           btn.type = 'button';
           btn.className = 'btn mission-spot-btn';
           btn.textContent = t('missionsUi.spotlightPlayBtn', { mode: dailyModeLabel(playTarget.mode) });
-          bindPress(btn, () => safeUiAction(() => goAchievementPlayTarget(near.ach), 'achSpotPlay/' + near.ach.id, 'Kon modus niet openen'));
+          bindPress(btn, () => safeUiAction(() => goAchievementPlayTarget(near.ach), 'achSpotPlay/' + near.ach.id, errT('ui.errOpenMode', 'Could not open mode — pick from the menu')));
           achSpot.appendChild(btn);
         }
       } else {
@@ -3246,13 +3246,13 @@ const UI = {
         el.addEventListener('click', (e) => {
           if (holdSkip) { holdSkip = false; return; }
           if (!uiTapAllowed(e)) return;
-          safeUiAction(() => gokGooiStartLevel(n), 'gokStart/' + n, 'Level starten mislukt');
+          safeUiAction(() => gokGooiStartLevel(n), 'gokStart/' + n, errT('ui.errLevelStart', 'Could not start level'));
         });
       }
       grid.appendChild(el);
     }
     } catch (err) {
-      sfReportError('renderLevels', err, 'Level-overzicht laden mislukt — herlaad via Verse versie');
+      sfReportError('renderLevels', err, errT('ui.errLoadScreen', 'Could not load screen — tap Fresh version'));
     }
   },
 
@@ -3495,7 +3495,7 @@ const UI = {
         safeUiAction(() => {
           save.weapon = w.id;
           this.weaponPreviewId = w.id;
-          if (!persistOrToast('wapen')) return;
+          if (!persistOrToast('weapon')) return;
           playWeaponPickFeedback(w.id);
           if (islandLocked) UI.toast(t('toast.weaponIslandCap', { cap: adventureWeaponCap() }), 2800);
           this.renderWeapons();
@@ -3592,14 +3592,14 @@ const UI = {
   openUpgrades(tab) {
     this.upgradeTab = tab || 'skills';
     this.safeOpen('upgradeScreen', () => this.renderUpgrades(), {
-      msg: 'Upgrades laden mislukt — herlaad via Verse versie',
+      msg: errT('ui.errLoadScreen', 'Could not load screen — tap Fresh version'),
     });
   },
 
   /** Fallback stub. Live list→detail lives in src/ui/buildings-ui.js (loaded after this file). */
   openBuildings() {
     this.safeOpen('buildingsScreen', () => this.renderBuildings(), {
-      msg: (typeof tOr === 'function') ? tOr('buildings.loadFail', 'Fabrieken laden mislukt') : 'Fabrieken laden mislukt',
+      msg: errT('buildings.loadFail', 'Could not load factories'),
     });
   },
   renderBuildings() {},
@@ -3732,7 +3732,7 @@ const UI = {
               if (!setActiveTechnique(id)) return;
               AudioSys.sfx('select');
               this.renderUpgrades();
-            }, 'equipTechnique/' + id, 'Technique kiezen mislukt');
+            }, 'equipTechnique/' + id, errT('toast.errRetry', 'Action failed — try again'));
           });
           el.appendChild(eqBtn);
         }
@@ -3749,7 +3749,7 @@ const UI = {
               const nlv = skillLevel(id);
               UI.toast(t('toast.skillUpgraded', { name, lv: nlv, detail: skillUpgradeSummary(id) }), 3200);
               this.renderUpgrades();
-            }, 'skillUp/' + id, 'Upgrade mislukt');
+            }, 'skillUp/' + id, errT('toast.errRetry', 'Action failed — try again'));
           });
           el.appendChild(btn);
         }
@@ -4010,7 +4010,7 @@ const UI = {
           wallet,
         }) +
         (petChips ? `<div style="margin-top:6px;line-height:1.7">${petChips}</div>` : '') +
-        `<div style="margin-top:6px;font-size:12px;opacity:.85">${t('ui.petCoinTip')}</div>`;
+        `<div class="pet-coin-tip">${t('ui.petCoinTip')}</div>`;
     }
     const list = document.getElementById('petList');
     if (!list) return;
@@ -4040,6 +4040,7 @@ const UI = {
       }
       el.appendChild(cv);
       const info = document.createElement('div');
+      info.className = 'card-info';
       const badge = active ? ` <span class="rar-pill" style="color:#7cf5ff;border-color:#7cf5ff">${t('ui.petActive').toUpperCase()}</span>` : '';
       const upLv = tamed ? itemUpgradeLevel('pet', def.id) : 0;
       const upMax = tamed ? itemUpgradeMax('pet', def.id) : 0;
@@ -4050,7 +4051,7 @@ const UI = {
         ? ` <span class="rar-pill" style="color:#ffd75e;border-color:#ffd75e">${t('ui.weaponChestBadge')}</span>`
         : '';
       info.innerHTML = `<div class="cname">${sp.name} <span class="rar-pill" style="color:${rar.color};border-color:${rar.color}">${rarityLabel(sp.rarity)}</span>${badge}${chestPetBadge}${upBadge}</div>` +
-        `<div class="cinfo">${def.perk}</div>` +
+        `<div class="cinfo">${petPerkLabel(def)}</div>` +
         (chestPetSk ? `<div class="cinfo" style="opacity:.9;font-size:12px;margin-top:3px;color:#ffd75e">✦ ${chestPetSk}</div>` : '') +
         `<div class="cinfo" style="opacity:.78;font-size:12px;margin-top:3px">${tamed
           ? t('ui.petTamedAssist')
@@ -4068,7 +4069,7 @@ const UI = {
         right.innerHTML = `${t('ui.petBuy')}<br>${cost} ${SVG_COIN_ICON}`;
         right.style.color = '#ff9ad5';
       } else {
-        right.innerHTML = kills > 0 ? `${need - kills} kills` : `${cost} ${SVG_COIN_ICON}`;
+        right.innerHTML = kills > 0 ? t('ui.petKillsLeft', { n: need - kills }) : `${cost} ${SVG_COIN_ICON}`;
         right.style.opacity = '0.7';
       }
       el.appendChild(right);
@@ -4136,8 +4137,8 @@ const UI = {
             try { AudioSys.sfx('diceRoll'); } catch (_) {}
             const rar = rarityOf(res.def.rarity);
             UI.toast(res.duplicate
-              ? t('toast.eggDuplicateUi', { name: res.def.name })
-              : t('toast.eggHatch', { name: res.def.name, rarity: rarityLabel(res.def.rarity) }), 3600);
+              ? t('toast.eggDuplicateUi', { name: eggPetName(res.def) })
+              : t('toast.eggHatch', { name: eggPetName(res.def), rarity: rarityLabel(res.def.rarity) }), 3600);
             this.renderPets();
             this.renderMenu();
           }, 'crackDailyEgg', t('ui.errEggCrack'));
@@ -4161,9 +4162,10 @@ const UI = {
       drawEggPetArt(cc, def, 18, 1.1, 0, 0, !owned);
       el.appendChild(cv);
       const info = document.createElement('div');
+      info.className = 'card-info';
       const badge = active ? ` <span class="rar-pill" style="color:#ffd75e;border-color:#ffd75e">${t('ui.petActive').toUpperCase()}</span>` : '';
-      info.innerHTML = `<div class="cname">${def.name} <span class="rar-pill" style="color:${rar.color};border-color:${rar.color}">${rarityLabel(def.rarity)}</span>${badge}</div>` +
-        `<div class="cinfo">${def.perk}</div>` +
+      info.innerHTML = `<div class="cname">${eggPetName(def)} <span class="rar-pill" style="color:${rar.color};border-color:${rar.color}">${rarityLabel(def.rarity)}</span>${badge}</div>` +
+        `<div class="cinfo">${eggPerkLabel(def)}</div>` +
         `<div class="cinfo" style="opacity:.78;font-size:12px;margin-top:3px">${owned ? t('ui.eggCosmetic') : t('ui.eggUnhatched')}</div>`;
       el.appendChild(info);
       const right = document.createElement('div');
@@ -4184,7 +4186,7 @@ const UI = {
             } else {
               equipEggPet(def.id);
               AudioSys.sfx('select');
-              UI.toast(t('toast.eggFloat', { name: def.name }), 2200);
+              UI.toast(t('toast.eggFloat', { name: eggPetName(def) }), 2200);
             }
             this.renderPets();
           }, 'equipEggPet/' + def.id, t('ui.errEggPick'));
@@ -4222,11 +4224,13 @@ const UI = {
       drawStyleLookPreview(cc, st, 80, 86);
       el.appendChild(cv);
       const cap = document.createElement('div');
+      cap.className = 'style-card-name';
       cap.style.fontSize = '13px';
       cap.style.color = st.accent;
       cap.textContent = styleLabel(st);
       el.appendChild(cap);
       const bonus = document.createElement('div');
+      bonus.className = 'style-card-bonus';
       bonus.style.fontSize = '11px';
       bonus.style.fontWeight = '800';
       bonus.style.color = ok ? '#7cf5ff' : '#8fa3d9';
@@ -4235,6 +4239,7 @@ const UI = {
       bonus.style.opacity = ok ? '1' : '0.55';
       el.appendChild(bonus);
       const tip = document.createElement('div');
+      tip.className = 'style-card-tip';
       tip.style.fontSize = '10px';
       tip.style.opacity = '0.72';
       tip.style.marginTop = '4px';
@@ -4242,6 +4247,7 @@ const UI = {
       tip.textContent = styleLabel(st, 'tooltip') || styleLabel(st, 'hint');
       el.appendChild(tip);
       const sub = document.createElement('div');
+      sub.className = 'style-card-sub';
       sub.style.fontSize = '11px';
       sub.style.fontWeight = '600';
       sub.style.opacity = '0.75';
@@ -4253,12 +4259,12 @@ const UI = {
         bindPress(el, () => {
           safeUiAction(() => {
             save.style = st.id;
-            if (!persistOrToast('stijl')) return;
+            if (!persistOrToast('style')) return;
             AudioSys.sfx('select');
             this.renderStyle();
             this.renderMenu();
             UI.toast(t('toast.styleEquipped', { name: styleLabel(st) }), 2200);
-          }, 'pickStyle/' + st.id, 'Stijl kiezen mislukt');
+          }, 'pickStyle/' + st.id, t('ui.errStylePick'));
         });
       }
       grid.appendChild(el);
@@ -4326,7 +4332,7 @@ const UI = {
         : equipGear(item.id, { expectSlot });
       if (!res || !res.ok) {
         const fail = gearUnlockState(item, expectSlot);
-        UI.toast((res && res.label) || fail.label || tOr('toast.gearLocked', 'Nog op slot'), 1800, { tone: 'warn' });
+        UI.toast((res && res.label) || fail.label || errT('toast.gearLocked', 'Still locked'), 1800, { tone: 'warn' });
         return false;
       }
       AudioSys.sfx('select');
@@ -4510,7 +4516,7 @@ const UI = {
               this._gearPickerScroll = 0;
               AudioSys.sfx('select');
               this.renderGear({ pickerOnly: true });
-            }, 'gearFilter/' + key, 'Filter mislukt');
+            }, 'gearFilter/' + key, errT('toast.errRetry', 'Action failed — try again'));
           });
           filterBar.appendChild(chip);
         }
@@ -4548,7 +4554,7 @@ const UI = {
               this._gearPickerScroll = 0;
               AudioSys.sfx('select');
               this.renderGear({ pickerOnly: true });
-            }, 'gearRarity/' + key, 'Rarity filter mislukt');
+            }, 'gearRarity/' + key, errT('toast.errRetry', 'Action failed — try again'));
           });
           rarBar.appendChild(chip);
         }
@@ -4633,7 +4639,7 @@ const UI = {
             keepPickerScroll();
             if (!unlock.unlocked) {
               AudioSys.sfx('select');
-              UI.toast(tOr('toast.gearLocked', 'Nog op slot · {why}', { why: unlock.label || '' }), 1800, { tone: 'warn' });
+              UI.toast(tOr('toast.gearLocked', 'Still locked · {why}', { why: unlock.label || '' }), 1800, { tone: 'warn' });
               this.renderGear({ pickerOnly: true });
               return;
             }
@@ -4641,7 +4647,7 @@ const UI = {
             else wearItem(it);
             this.renderGear();
             this.renderMenu();
-          }, 'gearPick/' + it.id, 'Item kiezen mislukt');
+          }, 'gearPick/' + it.id, errT('toast.errRetry', 'Action failed — try again'));
         });
         frag.appendChild(el);
       }
@@ -5023,9 +5029,7 @@ const UI = {
     const titleKey = data.titleKey || (data.mode === 'training'
       ? (win ? 'result.trainWin' : 'result.trainLose')
       : (win ? 'result.advWin' : 'result.advLose'));
-    const titleFallback = data.mode === 'training'
-      ? (win ? tOr('result.trainWin', 'KAMPIOEN!') : tOr('result.trainLose', 'ROBOT WINT...'))
-      : (win ? tOr('result.advWin', 'GEWONNEN!') : tOr('result.advLose', 'VERLOREN'));
+    const titleFallback = (typeof t === 'function') ? t(titleKey) : titleKey;
     // Never reuse a stale English title (ROBOT WINS / YOU LOST) when the UI is NL.
     const painted = (typeof tOr === 'function') ? tOr(titleKey, titleFallback) : titleFallback;
     title.textContent = painted;
@@ -5042,7 +5046,7 @@ const UI = {
         detail = tOr(data.detailKey, detail, params);
         if (data.diffLineKey) detail = tOr(data.diffLineKey, '', data.diffLineParams || {}) + detail;
         if (data.keepLoot) {
-          const keep = tOr('result.advLoseKeep', 'XP en loot van deze run blijven');
+          const keep = t('result.advLoseKeep');
           if (keep) detail = keep + ' · ' + detail;
         }
         if (data.masterBuff) detail += tOr('result.masterBuffActive', '');
@@ -5116,7 +5120,7 @@ const UI = {
     playMenuBgm(true);
     AudioSys.applyVolumes();
     } catch (err) {
-      sfReportError('showResult', err, 'Resultaat hiccup — probeer Opnieuw / Menu');
+      sfReportError('showResult', err, errT('toast.resultHiccup', 'Result hiccup — try Again / Menu'));
       // NOOIT stil naar startscherm: forceer result-screen best-effort
       try {
         state = 'result';

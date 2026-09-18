@@ -154,7 +154,7 @@ function _lockCopy(gate, need, when) {
     return typeof tOr === 'function' ? tOr('gear.lockTime', 'Vanaf {when}', { when: when || 'datum' }) : ('Vanaf ' + (when || 'datum'));
   }
   if (gate === 'adventure' || gate === 'adv') {
-    return typeof tOr === 'function' ? tOr('gear.lockAdv', 'Avontuur Lv {n}', { n: need }) : ('Avontuur Lv ' + need);
+    return typeof tOr === 'function' ? tOr('gear.lockAdv', 'Adventure Lv {n}', { n: need }) : ('Adventure Lv ' + need);
   }
   if (gate === 'diff') {
     return typeof tOr === 'function' ? tOr('gear.lockDiff', 'Nog niet vrij') : 'Nog niet vrij';

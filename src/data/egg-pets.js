@@ -34,6 +34,18 @@ const EGG_BY_ID = Object.fromEntries(EGG_ROSTER.map(e => [e.id, e]));
 
 function eggDef(id) { return EGG_BY_ID[id] || null; }
 
+function eggPetName(def) {
+  if (!def) return '';
+  if (typeof tOr === 'function') return tOr('egg.name.' + def.id, def.name || def.id);
+  return def.name || def.id || '';
+}
+
+function eggPerkLabel(def) {
+  if (!def) return '';
+  if (typeof tOr === 'function') return tOr('egg.perk.' + def.id, def.perk || '');
+  return def.perk || '';
+}
+
 function isEggOwned(id) {
   return !!(save.eggPets && save.eggPets[id]);
 }
@@ -134,7 +146,7 @@ function eggProgressSummary() {
   return {
     owned,
     total: EGG_ROSTER.length,
-    activeName: active ? active.name : t('ui.petNone'),
+    activeName: active ? eggPetName(active) : t('ui.petNone'),
     daily: eggDailyStatusLine(),
   };
 }

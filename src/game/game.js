@@ -57,11 +57,14 @@ function drawTelegraphBar(c, game, tele, y) {
   }
   c.font = '900 15px sans-serif';
   c.textAlign = 'center';
+  const teleLabel = typeof wrapHudLines === 'function'
+    ? wrapHudLines(c, tele.label, barW - (tele.icon ? 40 : 16), 1)[0]
+    : tele.label;
   if (typeof fillHudText === 'function') {
-    fillHudText(c, tele.label, W / 2, y, { fill: tele.color, strokeW: 3 });
+    fillHudText(c, teleLabel, W / 2, y, { fill: tele.color, strokeW: 3 });
   } else {
     c.fillStyle = tele.color;
-    c.fillText(tele.label, W / 2, y);
+    c.fillText(teleLabel, W / 2, y);
   }
   c.fillStyle = 'rgba(255,255,255,.2)';
   game.rr(c, bx, y + 8, barW, 8, 4);
@@ -358,7 +361,7 @@ class Game {
       try { AudioSys.sting('masterSword'); AudioSys.sfx('masterSword'); } catch (_) {}
       haptic(26);
     } catch (err) {
-      try { sfReportError('masterSword/on', err, 'Master Sword hiccup — speel door'); } catch (_) {}
+      try { sfReportError('masterSword/on', err, errT('toast.fightHiccup', 'Hiccup — fight continues')); } catch (_) {}
     }
   }
 
@@ -712,7 +715,7 @@ class Game {
       const grabR = (pk.kind === 'gear' && typeof IS_TOUCH !== 'undefined' && IS_TOUCH) ? 58 : 44;
       if ((p.x - pk.x) ** 2 + dy ** 2 < grabR * grabR) {
         try { this.collectPickup(pk); } catch (pickErr) {
-          try { sfReportError('pickup', pickErr, 'Pickup hiccup — gevecht gaat door'); } catch (_) {}
+          try { sfReportError('pickup', pickErr, errT('toast.fightHiccup', 'Hiccup — fight continues')); } catch (_) {}
           pk.life = 0;
         }
       }
@@ -985,7 +988,7 @@ class Game {
           base = t('result.advDiffLine', { diff: advDiffLabel(diff) }) + base;
         }
         if (!win) {
-          const keep = tOr('result.advLoseKeep', 'XP en loot van deze run blijven');
+          const keep = t('result.advLoseKeep');
           if (keep) base = keep + ' · ' + base;
         }
         if (masterBuffActive(lv, diff) && !win) base += t('result.masterBuffActive');
@@ -1029,7 +1032,7 @@ class Game {
     try {
       this._onMonsterKilledInner(m);
     } catch (err) {
-      try { sfReportError('onMonsterKilled', err, 'Kill-reward hiccup — gevecht gaat door'); } catch (_) {}
+      try { sfReportError('onMonsterKilled', err, errT('toast.fightHiccup', 'Hiccup — fight continues')); } catch (_) {}
     }
   }
 
@@ -1257,7 +1260,7 @@ class Game {
       console.error('[Satan] finish', err);
       clearSatanState(this);
       this.betweenT = 1.2;
-      sfReportError('satan/finish', err, 'Satan-gevecht afronden mislukt — avontuur veilig');
+      sfReportError('satan/finish', err, errT('ui.errProgressSafe', 'Progress is safe — keep playing'));
     }
   }
 
@@ -1356,7 +1359,7 @@ class Game {
       this.tideFromSatan = false;
       clearTideBattleState(this, { restoreMusic: true });
       if (this.waveIdx < 0) this.betweenT = 1.2;
-      sfReportError('tideBattle/finish', err, 'Tide Battle beloning mislukt — voortgang veilig');
+      sfReportError('tideBattle/finish', err, errT('ui.errProgressSafe', 'Progress is safe — keep playing'));
     }
   }
 
@@ -1709,7 +1712,7 @@ class Game {
         || tOr('combat.trainTipDefault', 'Tip: spring lasers · energy vol → Spiral Orb');
     scheduleGameResult(this, 1400, () => UI.showResult(win, {
       titleKey: win ? 'result.trainWin' : 'result.trainLose',
-      title: win ? tOr('result.trainWin', 'KAMPIOEN!') : tOr('result.trainLose', 'ROBOT WINT...'),
+      title: win ? t('result.trainWin') : t('result.trainLose'),
       detailKey: win ? 'result.trainDetailWin' : 'result.trainDetailLose',
       detailParams: { p: this.roundsP, r: this.roundsR, combo: trainBest, wins: save.trainWins },
       detail: win
@@ -2324,7 +2327,7 @@ class Game {
         const newSuper = SUPERS.find(s => s.needLvl === save.lvl && superUnlocked(s));
         if (newSuper) { try { UI.toast(t('toast.superUnlock', { name: superLabel(newSuper) }), 3500, { tone: 'ok' }); } catch (_) {} }
       } catch (lvlErr) {
-        try { sfReportError('grantXP/level', lvlErr, 'Level-up hiccup — gevecht gaat door'); } catch (_) {}
+        try { sfReportError('grantXP/level', lvlErr, errT('toast.fightHiccup', 'Hiccup — fight continues')); } catch (_) {}
         break;
       }
     }
@@ -2933,44 +2936,44 @@ class Game {
 
     if (!this.player) return;
     try { this.player.update(dt, this); } catch (plErr) {
-      try { sfReportError('player/update', plErr, 'Speler hiccup — speel door'); } catch (_) {}
+      try { sfReportError('player/update', plErr, errT('toast.fightHiccup', 'Hiccup — fight continues')); } catch (_) {}
     }
     if (this.pet) {
       try { this.pet.update(dt); } catch (petErr) {
-        try { sfReportError('pet/update', petErr, 'Pet hiccup — speel door'); } catch (_) {}
+        try { sfReportError('pet/update', petErr, errT('toast.fightHiccup', 'Hiccup — fight continues')); } catch (_) {}
       }
     }
     if (this.eggPet) {
       try { this.eggPet.update(dt); } catch (eggErr) {
-        try { sfReportError('eggPet/update', eggErr, 'Ei-pet hiccup — speel door'); } catch (_) {}
+        try { sfReportError('eggPet/update', eggErr, errT('toast.fightHiccup', 'Hiccup — fight continues')); } catch (_) {}
       }
     }
 
     if (this.mode === 'adventure') {
       try { this.updateAdventure(dt); } catch (advErr) {
-        try { sfReportError('adventure/update', advErr, 'Avontuur hiccup — speel door'); } catch (_) {}
+        try { sfReportError('adventure/update', advErr, errT('toast.fightHiccup', 'Hiccup — fight continues')); } catch (_) {}
       }
     } else if (this.mode === 'training') {
       try { this.updateTraining(dt); } catch (trErr) {
-        try { sfReportError('training/update', trErr, 'Training hiccup — speel door'); } catch (_) {}
+        try { sfReportError('training/update', trErr, errT('toast.fightHiccup', 'Hiccup — fight continues')); } catch (_) {}
       }
     } else if (this.mode === 'versus') {
       try { this.updateVersus(dt); } catch (vsErr) {
-        try { sfReportError('versus/update', vsErr, 'Versus hiccup — speel door'); } catch (_) {}
+        try { sfReportError('versus/update', vsErr, errT('toast.fightHiccup', 'Hiccup — fight continues')); } catch (_) {}
       }
     } else if (this.mode === 'wall') {
       try { this.updateWall(dt); } catch (wErr) {
-        try { sfReportError('wall/update', wErr, 'Muur hiccup — speel door'); } catch (_) {}
+        try { sfReportError('wall/update', wErr, errT('toast.fightHiccup', 'Hiccup — fight continues')); } catch (_) {}
       }
     } else if (this.mode === 'coinrun') {
       try { this.updateCoinRun(dt); } catch (crErr) {
-        try { sfReportError('coinrun/update', crErr, 'Mats hiccup — speel door'); } catch (_) {}
+        try { sfReportError('coinrun/update', crErr, errT('toast.fightHiccup', 'Hiccup — fight continues')); } catch (_) {}
       }
     }
 
     for (const m of this.monsters) {
       try { m.update(dt, this); } catch (monErr) {
-        try { sfReportError('monster/update', monErr, 'Vijand hiccup — speel door'); } catch (_) {}
+        try { sfReportError('monster/update', monErr, errT('toast.fightHiccup', 'Hiccup — fight continues')); } catch (_) {}
       }
     }
     try { if (typeof tickWeaponStatusEffects === 'function') tickWeaponStatusEffects(this, dt); } catch (_) {}
@@ -3215,7 +3218,7 @@ class Game {
       }
     }
     } catch (projErr) {
-      try { sfReportError('projectile/update', projErr, 'Projectiel hiccup — speel door'); } catch (_) {}
+      try { sfReportError('projectile/update', projErr, errT('toast.fightHiccup', 'Hiccup — fight continues')); } catch (_) {}
     }
     for (const p of this.projectiles) {
       if (p.life <= 0 && p.kind === 'boemerang') {
@@ -3812,24 +3815,31 @@ class Game {
       }
       c.font = '600 15px -apple-system, sans-serif';
       c.textAlign = 'center';
-      const tw = c.measureText(hintTxt).width;
+      const maxW = Math.min(W * 0.72, 500);
+      const lines = typeof wrapHudLines === 'function' ? wrapHudLines(c, hintTxt, maxW, 2) : [hintTxt];
+      const lineH = 18;
+      let tw = 0;
+      for (let i = 0; i < lines.length; i++) tw = Math.max(tw, c.measureText(lines[i]).width);
       const padX = 16;
+      const pillH = 12 + lines.length * lineH;
       const hintY = (this.mode === 'adventure' && this.advHudBottom > 0)
         ? Math.max(H * 0.2, this.advHudBottom + 20)
         : H * 0.2;
-      const pillY = hintY - 24;
+      const pillY = hintY - 20;
       c.fillStyle = 'rgba(6,10,24,.78)';
-      this.rr(c, W / 2 - tw / 2 - padX, pillY, tw + padX * 2, 30, 10);
+      this.rr(c, W / 2 - tw / 2 - padX, pillY, tw + padX * 2, pillH, 10);
       c.fill();
       c.strokeStyle = 'rgba(255,215,94,.35)';
       c.lineWidth = a11yHighContrast() ? 2.5 : 1.5;
-      this.rr(c, W / 2 - tw / 2 - padX, pillY, tw + padX * 2, 30, 10);
+      this.rr(c, W / 2 - tw / 2 - padX, pillY, tw + padX * 2, pillH, 10);
       c.stroke();
-      fillHudText(c, hintTxt, W / 2, hintY, {
-        fill: '#fff',
-        stroke: 'rgba(0,0,0,.85)',
-        strokeW: a11yHighContrast() ? 3.5 : 0,
-      });
+      for (let i = 0; i < lines.length; i++) {
+        fillHudText(c, lines[i], W / 2, pillY + 16 + i * lineH, {
+          fill: '#fff',
+          stroke: 'rgba(0,0,0,.85)',
+          strokeW: a11yHighContrast() ? 3.5 : 0,
+        });
+      }
       c.globalAlpha = 1;
     }
     try { if (typeof drawAimTutorial === 'function') drawAimTutorial(c, this); } catch (_) {}
@@ -5218,7 +5228,10 @@ class Game {
         }
         c.font = '800 11px sans-serif';
         c.textAlign = 'center';
-        fillHudText(c, tele.label, W / 2, 102, { fill: tele.color, strokeW: a11yHighContrast() ? 3 : 0 });
+        const trainTeleLabel = typeof wrapHudLines === 'function'
+          ? wrapHudLines(c, tele.label, barW - (tele.icon ? 36 : 12), 1)[0]
+          : tele.label;
+        fillHudText(c, trainTeleLabel, W / 2, 102, { fill: tele.color, strokeW: a11yHighContrast() ? 3 : 0 });
         c.fillStyle = 'rgba(255,255,255,.15)';
         this.rr(c, bx, 108, barW, 5, 3);
         c.fill();

@@ -26,6 +26,7 @@ const ui = fs.readFileSync(path.join(root, 'src/ui/ui.js'), 'utf8');
 const locales = fs.readFileSync(path.join(root, 'src/i18n/catalog-locales.js'), 'utf8');
 const start = fs.readFileSync(path.join(root, 'src/boot/start.js'), 'utf8');
 const deChrome = fs.readFileSync(path.join(root, 'src/i18n/catalog-de.js'), 'utf8');
+const a11y = fs.readFileSync(path.join(root, 'src/systems/a11y.js'), 'utf8');
 const manifest = fs.readFileSync(path.join(root, 'src/manifest.json'), 'utf8');
 const catalogEn = catalog.split('const CATALOG_EN')[1] || '';
 const i18nEs = (i18n.split(/\n\s+es:\s+\{/)[1] || '').split(/\n\s+zh:\s+\{/)[0];
@@ -95,8 +96,8 @@ if (/Lande 3 finishers/.test(catalog + locales)) fail('FR still has machine-Dutc
 if (/Aterriza 3 finishers/.test(catalog + locales)) fail('ES still has machine-English Aterriza 3 finishers');
 if (/Schlacker/.test(catalog + locales)) fail('DE wall100 still has garbled Schlacker');
 if (/DANNeben/.test(locales)) fail('DE miss typo DANNeben');
-if (!/Place 3 finishers/.test(locales)) fail('FR finisher3 not polished');
-if (!/Asesta 3 finishers/.test(locales)) fail('ES finisher3 not polished');
+if (!/Place 3 coups finaux/.test(locales)) fail('FR finisher3 not polished');
+if (!/Asesta 3 remates/.test(locales)) fail('ES finisher3 not polished');
 if (!/Abrissprofi/.test(locales)) fail('DE wall100 not polished to Abrissprofi');
 
 if (/charBig5Hint: 'Eigen vechters/.test(catalogEn)) fail('EN catalog still has Dutch charBig5Hint');
@@ -134,6 +135,8 @@ if (!/ui\.saveExportContains/.test(ui) && !/exportHint\.textContent = saveExport
 }
 const missions = fs.readFileSync(path.join(root, 'src/systems/missions.js'), 'utf8');
 if (/boek \$\{dexCountFromSave/.test(missions) || /\$\{[^}]+\} prestaties/.test(missions)) fail('save export summary still hardcodes Dutch');
+if (/ · gear \$\{/.test(missions) || / · fabriek \+/.test(missions)) fail('save export still hardcodes gear/fabriek');
+if (!/ui\.saveHealthGear/.test(missions) || !/ui\.saveHealthFactory/.test(missions)) fail('save export gear/factory must use t()');
 if (/Volgende prestatie/.test(missions)) fail('dex next achievement still hardcodes Dutch');
 if (!/pets\.crackEgg/.test(ui)) fail('egg crack must use pets.crackEgg');
 if (!/egg\.dailyReady/.test(fs.readFileSync(path.join(root, 'src/data/egg-pets.js'), 'utf8'))) {
@@ -143,8 +146,8 @@ if (/Gratis Pull/.test(i18n)) fail('DE pets.crackEggSub still has leftover Dutch
 
 if (!/updateReady: 'Nouvelle version prête/.test(i18n)) fail('FR net chrome missing');
 if (!/updateReady: 'Nueva versión lista/.test(i18n)) fail('ES net chrome missing');
-if (!/summons: 'Summons', summonsSub: 'Coffre du jour/.test(i18n)) fail('FR summons chrome missing');
-if (!/summons: 'Summons', summonsSub: 'Cofre diario/.test(i18n)) fail('ES summons chrome missing');
+if (!/summons: 'Coffres', summonsSub: 'Coffre du jour/.test(i18n)) fail('FR summons chrome missing');
+if (!/summons: 'Cofres', summonsSub: 'Cofre diario/.test(i18n)) fail('ES summons chrome missing');
 if (/teens\+/.test(i18nEs)) fail('ES ageHint still has English teens+');
 if (/Version fraîche/.test(i18n)) fail('FR still has calque Version fraîche');
 
@@ -212,4 +215,250 @@ if (!/wild: 'Bosque'/.test(locales)) fail('ES dexBiome.wild must be Bosque');
 if (!/scrap: 'Scrap'/.test(catalog)) fail('EN dexBiome.scrap missing');
 if (!/scrap: 'Schrott'/.test(deChrome + locales)) fail('DE dexBiome.scrap must not stay Dutch Schroot');
 
-console.log('SMOKE_OK i18n-locale: Tips/VERLOREN + #273 coverage + #283 overlays + 2026-09-16 FR/ES/DE polish');
+if (/Naar summons/.test(catalog + i18n)) fail('NL FOMO still says Naar summons');
+if (/Zu Summons/.test(i18n + locales + deChrome)) fail('DE FOMO still says Zu Summons');
+if (/A summons/.test(i18n + locales)) fail('ES FOMO still says A summons');
+if (/Vers les summons/.test(i18n + locales)) fail('FR FOMO still says Vers les summons');
+if (!/produceLocked:/.test(i18n)) fail('buildings.desc.produceLocked missing — Dutch fallback would leak');
+if (!/nameShort: 'Aansteker'/.test(i18n)) fail('NL factory nameShort missing (Android card overflow)');
+if (!/nameShort: 'Anzünder'/.test(i18n)) fail('DE factory nameShort missing (keep short — Stock-Anzünder overflows)');
+if (/nameShort: 'Stock-Anzünder'/.test(i18n)) fail('DE nameShort still long Stock-Anzünder');
+if (/nameShort: 'Holzhäcksler'/.test(i18n)) fail('DE nameShort still long Holzhäcksler');
+if (/nameShort: 'Bambus-Boesa'/.test(i18n)) fail('DE nameShort still long Bambus-Boesa');
+if (!/nameShort: 'Allume-Bâton'/.test(i18n)) fail('FR factory nameShort missing');
+if (!/nameShort: 'Palo-Mechero'/.test(i18n)) fail('ES factory nameShort missing');
+if (!/nameShort: 'Stick-Lighter'/.test(i18n)) fail('EN factory nameShort missing');
+if (/sfxOff: 'Sound aus'/.test(i18n)) fail('DE audio.sfxOff still English Sound');
+if (/audioSfxOnly: 'Nur Sound'/.test(i18n)) fail('DE pause.audioSfxOnly still English Sound');
+if (!/sfxOff: 'Ton aus'/.test(i18n)) fail('DE audio.sfxOff must be Ton aus');
+if (/kickTele: 'KICK — spring/.test(locales)) fail('DE HUD kickTele overlay still English KICK');
+if (/kickTele: 'KICK — saute/.test(locales)) fail('FR HUD kickTele overlay still English KICK');
+if (/kickTele: 'KICK — ¡salta/.test(locales)) fail('ES HUD kickTele overlay still English KICK');
+if (!/kickTele: 'TRITT — spring/.test(locales + deChrome)) fail('DE HUD kickTele must be TRITT');
+if (!/kickTele: 'PIED — saute/.test(locales)) fail('FR HUD kickTele must be PIED');
+if (!/kickTele: 'PATADA — ¡salta/.test(locales)) fail('ES HUD kickTele must be PATADA');
+if (!/summonHead: 'Coffres'/.test(locales)) fail('FR ui.summonHead missing');
+if (!/summonHead: 'Cofres'/.test(locales)) fail('ES ui.summonHead missing');
+if (!/islandFallback: 'island \{n\}'/.test(i18n)) fail('EN buildings.islandFallback missing (Dutch eiland leak)');
+if (!/islandFallback: 'Insel \{n\}'/.test(i18n)) fail('DE buildings.islandFallback missing');
+if (/upgrade: 'Upgrade'/.test((i18n.split(/\n\s+de:\s+\{/)[1] || '').split(/\n\s+fr:\s+\{/)[0] || '')) {
+  fail('DE buildings.upgrade still leftover English Upgrade');
+}
+
+if (!/petKillsLeft:/.test(catalog + locales + deChrome)) fail('ui.petKillsLeft missing — hardcoded kills leak');
+if (!/function petPerkLabel/.test(fs.readFileSync(path.join(root, 'src/data/pets.js'), 'utf8'))) {
+  fail('pet perks must go through petPerkLabel');
+}
+if (!/function eggPetName/.test(fs.readFileSync(path.join(root, 'src/data/egg-pets.js'), 'utf8'))) {
+  fail('egg names must go through eggPetName');
+}
+if (/\`\$\{need - kills\} kills\`/.test(ui) || /\$\{need - kills\} kills/.test(ui)) {
+  fail('pets sheet still hardcodes "kills" in the right column');
+}
+if (/Pet · \$\{need\} kills/.test(fs.readFileSync(path.join(root, 'src/data/pets.js'), 'utf8'))) {
+  fail('petProgressLine still hardcodes Pet · N kills');
+}
+if (!/ui\.petKillsLeft/.test(ui)) fail('pets right column must use ui.petKillsLeft');
+if (!/petPerkLabel\(def\)/.test(ui)) fail('pets sheet must use petPerkLabel');
+if (!/eggPetName\(def\)/.test(ui) && !/eggPetName\(res\.def\)/.test(ui)) fail('egg sheet must use eggPetName');
+if (!/eggPerkLabel\(def\)/.test(ui)) fail('egg sheet must use eggPerkLabel');
+if (!/pet_slymo: 'Hop assist/.test(i18n)) fail('EN pets.perk.pet_slymo missing');
+if (!/pet_slymo: 'Sprung-Assist/.test(i18n)) fail('DE pets.perk.pet_slymo missing');
+if (!/pet_slymo: 'Aide saut/.test(i18n)) fail('FR pets.perk.pet_slymo missing');
+if (!/pet_slymo: 'Ayuda salto/.test(i18n)) fail('ES pets.perk.pet_slymo missing');
+if (!/egg_pebble: 'Pebble'/.test(catalog)) fail('EN egg.name.egg_pebble missing');
+if (!/egg_pebble: 'Kiesel'/.test(locales + deChrome)) fail('DE egg.name.egg_pebble missing');
+if (!/egg_pebble: 'Galet'/.test(locales)) fail('FR egg.name.egg_pebble missing');
+if (!/egg_pebble: 'Guijarro'/.test(locales)) fail('ES egg.name.egg_pebble missing');
+const catalogEnOnly = catalogEn.split('const CATALOG_DE')[0] || '';
+if ((catalogEnOnly.match(/\bgear:\s*\{/g) || []).length > 1) fail('CATALOG_EN has two gear: blocks — the second wipes EN lock keys to NL');
+if (!/lockOwned: 'Not found yet'/.test(catalogEnOnly)) fail('EN gear.lockOwned missing — Dutch fallback leak');
+if (!/lockOwned: 'Pas encore trouvé'/.test(catalog)) fail('FR gear.lockOwned missing');
+if (!/lockOwned: 'Aún no hallado'/.test(catalog)) fail('ES gear.lockOwned missing');
+if (!/lockOwned: 'Noch nicht gefunden'/.test(deChrome)) fail('DE gear.lockOwned missing');
+if (!/lockAdv: 'Aventure Nv/.test(catalog)) fail('FR gear.lockAdv missing');
+if (!/lockAdv: 'Aventura Nv/.test(catalog)) fail('ES gear.lockAdv missing');
+if (!/lockAdv: 'Abenteuer Lv/.test(deChrome)) fail('DE gear.lockAdv missing');
+if (!/petSummaryTamed: 'Apprivoisés/.test(locales)) fail('FR ui.petSummaryTamed missing — EN leak');
+if (!/petSummaryTamed: 'Domados/.test(locales)) fail('ES ui.petSummaryTamed missing — EN leak');
+if (!/petSummaryTamed: 'Gezähmt/.test(locales + deChrome)) fail('DE ui.petSummaryTamed missing — EN leak');
+if (/Bleibt in Sammlung → Waffen/.test(deChrome + locales)) fail('DE weaponAsideHint still overflows on 390px');
+if (!/weaponAsideHint: 'Sammlung · kein 6. Slot'/.test(deChrome)) fail('DE weaponAsideHint must be short');
+if (/killsNeed: 'Pet · \{need\} kills'/.test(locales)) fail('FR/ES pet.killsNeed still leftover English kills');
+if (!/card-info/.test(css)) fail('card-info min-width missing (390px overlap)');
+if (!/-webkit-line-clamp: 2/.test(css) || !/\.card \.cname/.test(css)) fail('card name clamp missing');
+if (!/overflow-wrap:anywhere/.test(css.replace(/\s/g, '')) && !/overflow-wrap:\s*anywhere/.test(css)) {
+  fail('toast/card overflow-wrap missing for 390px');
+}
+if (/persistOrToast\('stijl'\)/.test(ui)) fail('persistOrToast still interpolates Dutch stijl');
+if (/persistOrToast\('wapen'\)/.test(ui + missions)) fail('persistOrToast still interpolates Dutch wapen');
+if (/Preview: \$\{/.test(missions) || /Import 2× om te laden/.test(missions)) {
+  fail('settings import preview still hardcodes EN Preview / NL Import 2×');
+}
+if (!/ui\.importPreview/.test(missions)) fail('settings import preview must use ui.importPreview');
+if (!/style-card-tip/.test(css) || !/style-card-name/.test(css)) fail('style-card clamp classes missing');
+if (!/#seasonHubBeat/.test(css) && !/#seasonBlurb/.test(css)) fail('season blurb clamp missing');
+if (/Random-Summons/.test(deChrome + locales)) fail('DE summonQuota still says Random-Summons');
+if (/Keine Summons mehr/.test(deChrome + locales)) fail('DE summonNoMore still says Summons');
+if (!/summonQuota: 'Heute: \{left\}\/\{total\} Kisten'/.test(deChrome + locales)) fail('DE summonQuota must be Kisten');
+if (!/summonQuota: 'Aujourd/.test(locales)) fail('FR ui.summonQuota missing — EN Today leak');
+if (!/summonQuota: 'Hoy:/.test(locales)) fail('ES ui.summonQuota missing — EN Today leak');
+if (!/saveHealthStats: 'Nv \{lvl\} · libre/.test(locales)) fail('FR/ES saveHealthStats missing');
+if (/kickTele: 'TRITT — spring\/block!'/.test(deChrome)) fail('DE kickTele still English block');
+if (!/kickTele: 'TRITT — spring\/blocken!'/.test(deChrome + locales)) fail('DE kickTele must say blocken');
+if (/block: 'BLOCK!'/.test(locales.split('overlayI18nCatalog(CATALOG_DE')[1] || '')) {
+  fail('DE fighter.block overlay still English BLOCK');
+}
+if (!/persistCtxWeapon:/.test(catalog + locales + deChrome)) fail('toast.persistCtxWeapon missing');
+if (!/errSummonLoad:/.test(catalog + locales)) fail('ui.errSummonLoad missing');
+if (!/function persistContextLabel/.test(fs.readFileSync(path.join(root, 'src/core/storage.js'), 'utf8'))) {
+  fail('persistOrToast must localize context via persistContextLabel');
+}
+if (/syncFailed: 'Sync fallida/.test(locales)) fail('ES toast.syncFailed still English Sync');
+if (/syncFailed: 'Sync fehlgeschlagen/.test(locales + deChrome)) fail('DE toast.syncFailed still English Sync');
+if (/syncConfirm: 'Sync overschrijft/.test(catalog.split('const CATALOG_EN')[0] || '')) {
+  fail('NL toast.syncConfirm still English Sync');
+}
+if (/nach Unlock \+ Bau/.test(i18n)) fail('DE produceLocked still English Unlock');
+if (/après débloc \+ build/.test(i18n)) fail('FR produceLocked still English build');
+if (/na unlock \+ bouw/.test(i18n)) fail('NL produceLocked still English unlock');
+if (!/spark_kindle: \{ label: 'Funke'/.test(i18n)) fail('DE buildings.power.spark_kindle.label missing — EN Spark Kindle leak');
+if (!/spark_kindle: \{ label: 'Étincelle'/.test(i18n)) fail('FR buildings.power.spark_kindle.label missing');
+if (!/spark_kindle: \{ label: 'Chispa'/.test(i18n)) fail('ES buildings.power.spark_kindle.label missing');
+if (!/spark_kindle: \{ label: 'Vonk'/.test(i18n)) fail('NL buildings.power.spark_kindle.label missing');
+if (!/kindle_trail: \{ label:/.test(i18n)) fail('buildings.power.kindle_trail missing — EN catalog blurb leak');
+if (!/function buildingPowerField/.test(fs.readFileSync(path.join(root, 'src/data/buildings.js'), 'utf8'))) {
+  fail('buildingPowerLabel must prefer locale .label over EN catalog');
+}
+if (!/gearLocked: 'Encore verrouillé/.test(locales)) fail('FR toast.gearLocked missing — EN Still locked leak');
+if (!/gearLocked: 'Aún bloqueado/.test(locales)) fail('ES toast.gearLocked missing');
+if (/weaponsSub: '26 Waffen · Summons'/.test(i18n)) fail('DE hub.weaponsSub still English Summons');
+if (!/-webkit-line-clamp: 2/.test(css) || !/\.hub-tile-title/.test(css)) fail('hub-tile-title clamp missing (DE compound overflow)');
+
+if (/name: 'Leaf-Bandana'/.test(catalog)) fail('DE style still Leaf-Bandana');
+if (/name: 'Bandana Leaf'/.test(catalog)) fail('FR/ES style still Bandana Leaf');
+if (/Lueur energy/.test(catalog)) fail('FR energy_glow still Lueur energy');
+if (/Brillo de energy/.test(catalog)) fail('ES energy_glow still Brillo de energy');
+if (/Void-Wanderer/.test(catalog)) fail('DE void still Void-Wanderer');
+const catalogFrEs = catalog.split('const CATALOG_FR')[1] || '';
+if (/knockback/.test(catalogFrEs)) fail('FR/ES style leftover English knockback');
+if (/cette run restent/.test(catalog + i18n + locales)) fail('FR advLoseKeep still English run');
+if (/esta run se quedan/.test(catalog + i18n + locales)) fail('ES advLoseKeep still English run');
+if (/loot van deze run/.test(catalog + i18n)) fail('NL advLoseKeep still English loot/run');
+if (/advLose: 'DÉFAITE\.\.\.'/.test(catalog + locales)) fail('FR advLose still dotted DÉFAITE...');
+if (/advLose: 'DERROTA\.\.\.'/.test(catalog + locales)) fail('ES advLose still dotted DERROTA...');
+if (!/trainLose: 'LE ROBOT GAGNE/.test(locales + i18n)) fail('FR trainLose must be LE ROBOT GAGNE');
+if (!/trainLose: 'EL ROBOT GANA/.test(locales + i18n)) fail('ES trainLose must be EL ROBOT GANA');
+if (/tOr\('result\.advLoseKeep', 'XP en loot/.test(ui + game)) fail('advLoseKeep still Dutch tOr fallback');
+if (!/t\('result\.advLoseKeep'\)/.test(ui + game)) fail('advLoseKeep must use t()');
+if (!/resultHiccup:/.test(catalog + locales)) fail('toast.resultHiccup missing');
+if (!/name: 'Blatt-Bandana'/.test(catalog)) fail('DE leaf_band must be Blatt-Bandana');
+if (!/name: 'Bandana feuille'/.test(catalog)) fail('FR leaf_band must be Bandana feuille');
+if (!/name: 'Pañuelo hoja'/.test(catalog)) fail('ES leaf_band must be Pañuelo hoja');
+
+if (/label: 'Avontuur'/.test(missions)) fail('DAILY_PLAY_TARGETS still hardcodes Dutch Avontuur labels');
+if (/function dailyText[\s\S]{0,220}return def \? def\.text/.test(catalog)) fail('dailyText still falls back to Dutch DAILY_DEFS.text');
+if (/function dailyHint[\s\S]{0,180}DAILY_PLAY_HINTS\[id\]/.test(catalog)) fail('dailyHint still falls back to Dutch DAILY_PLAY_HINTS');
+if (/function achLabel[\s\S]{0,180}return ach\[field\]/.test(i18n)) fail('achLabel still falls back to Dutch ACHIEVEMENTS names');
+if (!/lv70: \{ name: 'Hell legend'/.test(catalog)) fail('EN ach.lv70 missing — Hel-legende leak');
+if (!/zoneWeapons10: \{ name: 'Zone collector'/.test(catalog)) fail('EN ach.zoneWeapons10 missing — Zone-verzamelaar leak');
+if (!/lv70: \{ name: 'Höllen-Legende'/.test(catalog + locales)) fail('DE ach.lv70 missing');
+if (!/lv70: \{ name: 'Légende de l.enfer'/.test(catalog)) fail('FR ach.lv70 missing');
+if (!/lv70: \{ name: 'Leyenda del infierno'/.test(catalog)) fail('ES ach.lv70 missing');
+if (/tOr\('ui\.summonFail', 'Mislukt'\)/.test(ui)) fail('summonFail still Dutch Mislukt last-resort');
+if (/mk\(1, t\('missionsUi\.flowPlay'/.test(missions)) fail('flow bar still t() empty-sub → raw key leak');
+if (/remainderPickupsN: 'Noch \{n\} Pickups'/.test(locales + deChrome)) fail('DE remainder still Pickups');
+if (/remainderPickupsN: 'Noch \{n\} Funde'/.test(locales) === false) fail('DE remainderPickupsN must be Funde');
+if (/remainderKillsN: 'Encore \{n\} kills'/.test(locales)) fail('FR remainder still English kills');
+if (/remainderRun: 'Encore 1 run'/.test(locales)) fail('FR remainderRun still English run');
+if (/remainderKillsN: 'Faltan \{n\} kills'/.test(locales)) fail('ES remainder still English kills');
+if (/remainderRun: 'Falta 1 run'/.test(locales)) fail('ES remainderRun still English run');
+if (/text: 'Sammle 3 Power-ups'/.test(locales + catalog)) fail('DE daily.pick3 still Power-ups');
+if (/text: 'Prends 3 power-ups'/.test(locales + catalog)) fail('FR daily.pick3 still power-ups');
+if (/text: 'Recoge 3 power-ups'/.test(locales + catalog)) fail('ES daily.pick3 still power-ups');
+if (/'Power-ups/.test(locales)) fail('DE/FR/ES overlay help still starts with Power-ups');
+if (/const CATALOG_DE[\s\S]*'Power-ups:/.test(catalog)) fail('CATALOG_DE/FR/ES help still Power-ups');
+if (!/'Funde: besiegte Monster/.test(locales + catalog)) fail('DE help tip must start with Funde:');
+if (!/'Orbes : les monstres/.test(locales + catalog)) fail('FR help tip must start with Orbes :');
+if (!/'Orbes: los monstruos|'Orbes: monstruos/.test(locales + catalog)) fail('ES help tip must start with Orbes:');
+if (!/line\('missionsUi\.flowPlaySub'\)/.test(missions)) fail('flow bar must skip empty/raw-key subs');
+if (/Bestand lezen mislukt/.test(missions)) fail('import FileReader error still Dutch');
+if (!/function errT\(/.test(i18n)) fail('errT helper missing — Dutch last-resort leaks');
+if (!/errRetry:/.test(catalog + locales)) fail('toast.errRetry missing');
+if (!/fightHiccup:/.test(catalog + locales)) fail('toast.fightHiccup missing');
+if (!/errOpenMode:/.test(catalog + locales)) fail('ui.errOpenMode missing');
+if (/lab\('menu\.adventure', 'Avontuur'\)/.test(fs.readFileSync(path.join(root, 'src/render/scenery.js'), 'utf8'))) {
+  fail('scenery hub markers still hardcode Dutch Avontuur');
+}
+if (/userMsg \|\| 'Actie mislukt/.test(fs.readFileSync(path.join(root, 'src/core/storage.js'), 'utf8'))) {
+  fail('safeUiAction still defaults to Dutch Actie mislukt');
+}
+if (/Hiccup — spel gaat door'\)/.test(missions)) fail('sfReportError default still Dutch');
+if (/'Speler hiccup/.test(game)) fail('player update hiccup still Dutch');
+
+if (/firstMinuteAdventure: 'Eerste minuut:/.test(catalog)) fail('NL firstMinute still a text wall');
+if (/firstMinuteAdventure: 'First minute:/.test(catalog)) fail('EN firstMinute still a text wall');
+if (/firstMinuteAdventure: 'Erste Minute:/.test(deChrome + locales)) fail('DE firstMinute still a text wall');
+if (!/firstMinuteAdventure: 'Loop · sla/.test(catalog)) fail('NL firstMinuteAdventure must be a short verb phrase');
+if (!/firstMinuteAdventure: 'Move · punch/.test(catalog)) fail('EN firstMinuteAdventure must be a short verb phrase');
+if (!/firstMinuteAdventure: 'Laufen · schlagen/.test(deChrome + locales)) fail('DE firstMinuteAdventure must be a short verb phrase');
+if (!/firstMinuteAdventure: 'Cours · frappe/.test(locales)) fail('FR firstMinute missing — EN/NL leak');
+if (!/firstMinuteAdventure: 'Corre · pega/.test(locales)) fail('ES firstMinute missing — EN/NL leak');
+if (!/function wrapHudLines/.test(a11y)) fail('wrapHudLines missing');
+if (!/wrapHudLines\(c, hintTxt/.test(game)) fail('HUD hint must wrap via wrapHudLines');
+if (/Koop of tem via het monsterboek/.test(catalog)) fail('NL petCoinTip still a wall');
+if (/Buy here or tame via the monster book/.test(catalog)) fail('EN petCoinTip still a wall');
+if (/Kaufen oder im Monsterbuch zähmen/.test(deChrome + locales)) fail('DE petCoinTip still a wall');
+if (/Dex-pets via monsterboek · Ei-pets via dagelijkse/.test(html)) fail('petScreenSub HTML still a wall');
+if (!/summonOpen: 'Ouvrir'/.test(locales)) fail('FR ui.summonOpen missing — EN Open chest leak');
+if (!/summonOpen: 'Abrir'/.test(locales)) fail('ES ui.summonOpen missing — EN Open chest leak');
+const deOverlayUi = locales.split('overlayI18nCatalog(CATALOG_DE')[1] || '';
+if (!/summonLogEmpty: 'Heute noch keine Züge/.test(deOverlayUi)) {
+  fail('DE overlay ui.summonLogEmpty missing — EN No pulls leak after overlay wipe');
+}
+if (!/summonPullEmpty: 'Leer'/.test(deOverlayUi)) {
+  fail('DE overlay ui.summonPullEmpty missing — EN Done leak after overlay wipe');
+}
+if (!/summonNoPulls: 'Heute noch keine Züge/.test(deOverlayUi)) {
+  fail('DE overlay ui.summonNoPulls missing');
+}
+if (!/summonLogEmpty: 'Pas encore de tirage/.test(locales)) fail('FR ui.summonLogEmpty missing');
+if (!/summonLogEmpty: 'Aún no hay tiradas/.test(locales)) fail('ES ui.summonLogEmpty missing');
+if (!/summonNoPulls: 'Pas encore de tirage/.test(locales)) fail('FR ui.summonNoPulls missing — EN pulls leak');
+if (!/summonNoPulls: 'Aún no hay tiradas/.test(locales)) fail('ES ui.summonNoPulls missing — EN pulls leak');
+if (/summonNoPulls: 'Nog geen pulls/.test(catalog)) fail('NL ui.summonNoPulls still English pulls');
+if (!/filterEmpty: 'Rien dans ce filtre'/.test(catalog)) fail('FR gear.filterEmpty missing');
+if (!/filterEmpty: 'Nada en este filtro'/.test(catalog)) fail('ES gear.filterEmpty missing');
+if (!/filterEmpty: 'Nichts in diesem Filter'/.test(deChrome)) fail('DE gear.filterEmpty missing');
+if (!/eggUnhatched: 'Pas encore éclos'/.test(locales)) fail('FR ui.eggUnhatched missing');
+if (!/eggUnhatched: 'Aún no eclosionado'/.test(locales)) fail('ES ui.eggUnhatched missing');
+if (!/eggUnhatched: 'Noch nicht geschlüpft'/.test(deOverlayUi + deChrome)) fail('DE ui.eggUnhatched missing');
+if (!/petNone: 'Pas de pet actif'/.test(locales)) fail('FR toast.petNone missing');
+if (!/petNone: 'Sin pet activo'/.test(locales)) fail('ES toast.petNone missing');
+if (!/petNone: 'Kein aktives Pet'/.test(locales)) fail('DE toast.petNone missing');
+if (/tOr\('ui\.summonOpen'/.test(ui)) fail('summon CTA still Dutch/EN tOr fallback');
+if (!/t\('ui\.summonPull'\)/.test(ui)) fail('summon CTA must use ui.summonPull');
+if (!/max-width: 430px/.test(css)) fail('430px overlap media missing');
+if (!/\.buildings-card-does/.test(css) || !/-webkit-line-clamp: 2/.test(css)) {
+  fail('buildings-card-does clamp missing');
+}
+if (!/\.pet-coin-tip/.test(css)) fail('pet-coin-tip clamp missing');
+
+if (/Cette run/.test(locales)) fail('FR runLoot still English run');
+if (/Esta run/.test(locales)) fail('ES runLoot still English run');
+if (/Deze run/.test(catalog)) fail('NL runLoot still English run');
+if (/✦ SUMMON/.test(locales + deChrome)) fail('DE/FR/ES banner still English SUMMON');
+if (/summon: '✦ SUMMON! ✦'/.test((catalog.split('const CATALOG_EN')[0] || ''))) fail('NL banner.summon still English SUMMON');
+if (/Summon: \{name\}/.test(locales + deChrome)) fail('DE/FR/ES runLoot.summonLine still Summon');
+if (/Unlock Lv/.test(locales + deChrome)) fail('DE still Unlock Lv');
+if (/Skip =/.test(deChrome + locales)) fail('DE gamble still English Skip');
+if (/title: 'Einstellungen', sub: 'Sound/.test(i18n)) fail('DE settings.sub still Sound');
+if (/Soundeffekte:/.test(i18n)) fail('DE settings still Soundeffekte');
+if (!/saveOnlineLine: 'Save en ligne/.test(i18n)) fail('FR settings.saveOnlineLine missing — EN leak');
+if (!/saveOnlineLine: 'Save online · última sincro/.test(i18n)) fail('ES settings.saveOnlineLine missing — EN leak');
+if (/finishersLine: ' · \{n\} finishers'/.test(locales)) fail('FR/ES result.finishersLine still English finishers');
+if (/text: 'Place 3 finishers/.test(locales + catalog)) fail('FR daily.finisher3 still finishers');
+if (/text: 'Asesta 3 finishers/.test(locales + catalog)) fail('ES daily.finisher3 still finishers');
+if (/errExport: 'Export raté/.test(locales)) fail('FR toast.errExport still English Export');
+
+console.log('SMOKE_OK i18n-locale: Tips/VERLOREN + #273 coverage + #283 overlays + 2026-09-18 result/FOMO/settings');

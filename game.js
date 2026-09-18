@@ -323,9 +323,9 @@ const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const VERSION_UPDATE_SAVE_KEY = 'stickfighter_version_update_save_v1';
 const VERSION_UPDATE_FLAG_KEY = 'stickfighter_version_update_flag_v1';
 const SAVE_EXPORT_SCHEMA = 3;
-const APP_VERSION = '1.18.172';
+const APP_VERSION = '1.18.186';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 382;
+const SW_CACHE_REV = 396;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', petCoins: 0, dex: {}, summons: {}, pets: {}, activePet: null,
   eggPets: {}, activeEggPet: null, eggDaily: null,
   chestDaily: null, chestWeapons: {},
@@ -1539,7 +1539,7 @@ function persist() {
     } catch (_) {}
     if (!backupOk && !window.__sfBackupWriteWarn) {
       window.__sfBackupWriteWarn = true;
-      userToast(toastT('toast.backupWriteFail', null, 'Backup opslaan mislukt — export save in Instellingen (hoofd-save wel OK)'), 5200, { tone: 'warn' });
+      userToast(toastT('toast.backupWriteFail', null, 'Backup save failed — export in Settings (main save is OK)'), 5200, { tone: 'warn' });
     }
     writeSaveStamp(json);
     return true;
@@ -1552,8 +1552,8 @@ function persist() {
     if (!window.__sfPersistWarn) {
       window.__sfPersistWarn = true;
       userToast(backupSaved
-        ? toastT('toast.persistPrimaryFail', null, 'Hoofd-save mislukt — backup wel bijgewerkt (export in Instellingen)')
-        : toastT('toast.persistFail', null, 'Opslaan mislukt — export save in Instellingen'), 5200, { tone: 'danger' });
+        ? toastT('toast.persistPrimaryFail', null, 'Main save failed — backup updated (export in Settings)')
+        : toastT('toast.persistFail', null, 'Save failed — export in Settings'), 5200, { tone: 'danger' });
     }
     return false;
   }
@@ -1569,25 +1569,51 @@ function safeCall(fn, label, toastOnFail) {
 
 function safeAsync(promise, label, userMsg) {
   return Promise.resolve(promise).catch((err) => {
-    sfReportError(label || 'async', err, userMsg || 'Actie mislukt — probeer opnieuw');
+    sfReportError(label || 'async', err, userMsg || errT('toast.errRetry', 'Action failed — try again'));
   });
 }
 
 function safeUiAction(fn, label, userMsg) {
   try { return fn(); } catch (err) {
-    sfReportError(label || 'ui', err, userMsg || 'Actie mislukt — probeer opnieuw');
+    sfReportError(label || 'ui', err, userMsg || errT('toast.errRetry', 'Action failed — try again'));
   }
+}
+
+function persistContextLabel(context) {
+  const raw = String(context || '').trim();
+  if (!raw) return '';
+  const map = {
+    skill: 'toast.persistCtxSkill', super: 'toast.persistCtxSuper',
+    wapen: 'toast.persistCtxWeapon', weapon: 'toast.persistCtxWeapon',
+    style: 'toast.persistCtxStyle', stijl: 'toast.persistCtxStyle',
+    'missie-claim': 'toast.persistCtxMission', mission: 'toast.persistCtxMission',
+    'claim-all': 'toast.persistCtxClaim', dagbonus: 'toast.persistCtxDaily',
+    daily: 'toast.persistCtxDaily', XP: 'toast.persistCtxXp', xp: 'toast.persistCtxXp',
+    gear: 'toast.persistCtxGear', 'tide-battle': 'toast.persistCtxTide',
+  };
+  let key = map[raw];
+  if (!key) {
+    if (raw.indexOf('building/') === 0) key = 'toast.persistCtxBuilding';
+    else if (raw.indexOf('itemUp/') === 0) key = 'toast.persistCtxItem';
+    else if (raw.indexOf('skillUp/') === 0) key = 'toast.persistCtxSkill';
+  }
+  if (key && typeof t === 'function') {
+    const label = t(key);
+    if (label && label !== key) return label;
+  }
+  return raw;
 }
 
 function persistOrToast(context) {
   if (persist()) return true;
   const key = context || 'save';
+  const ctxLabel = persistContextLabel(context);
   window.__sfPersistCtxWarn = window.__sfPersistCtxWarn || {};
   if (!window.__sfPersistCtxWarn[key]) {
     window.__sfPersistCtxWarn[key] = true;
     userToast(context
-      ? toastT('toast.persistFailCtx', { context }, `Opslaan mislukt (${context}) — export save in Instellingen`)
-      : toastT('toast.persistFail', null, 'Opslaan mislukt — export save in Instellingen'), 4200, { tone: 'warn' });
+      ? toastT('toast.persistFailCtx', { context: ctxLabel }, `Save failed (${ctxLabel}) — export in Settings`)
+      : toastT('toast.persistFail', null, 'Save failed — export in Settings'), 4200, { tone: 'warn' });
   }
   return false;
 }
@@ -1606,7 +1632,7 @@ function applySaveFromBackupRaw() {
 function restoreSaveFromBackup() {
   try {
     if (!applySaveFromBackupRaw()) {
-      userToast(toastT('toast.backupFailed', null, 'Backup herstellen mislukt — export save als je die hebt'), 4200, { tone: 'danger' });
+      userToast(toastT('toast.backupFailed', null, 'Backup restore failed — export save if you have one'), 4200, { tone: 'danger' });
       return false;
     }
     try { checkAchievements(); } catch (_) {}
@@ -1614,7 +1640,7 @@ function restoreSaveFromBackup() {
     try { if (UI.renderMissions) UI.renderMissions(); } catch (_) {}
     return true;
   } catch (err) {
-    sfReportError('restoreBackup', err, 'Backup herstellen mislukt');
+    sfReportError('restoreBackup', err, errT('toast.backupFailed', 'Backup restore failed'));
     return false;
   }
 }
@@ -1658,7 +1684,7 @@ function stashSaveForVersionUpdate() {
     localStorage.setItem(VERSION_UPDATE_FLAG_KEY, '1');
     return true;
   } catch (err) {
-    sfReportError('versionStash', err, 'Save veiligstellen mislukt');
+    sfReportError('versionStash', err, errT('ui.errBackupStash', 'Could not stash save'));
     return false;
   }
 }
@@ -1688,7 +1714,7 @@ function applyVersionUpdateSave() {
   try {
     save = sanitizeSave(stash.save);
     if (!persist()) {
-      userToast(toastT('toast.persistFail', null, 'Save geladen maar opslaan mislukt — export in Instellingen'), 4200, { tone: 'danger' });
+      userToast(toastT('toast.persistFail', null, 'Save loaded but write failed — export in Settings'), 4200, { tone: 'danger' });
       return false;
     }
     clearVersionUpdateSave();
@@ -1700,7 +1726,7 @@ function applyVersionUpdateSave() {
     }
     return true;
   } catch (err) {
-    sfReportError('versionApply', err, 'Save laden mislukt');
+    sfReportError('versionApply', err, errT('ui.errSaveApply', 'Could not load save'));
     return false;
   }
 }
@@ -1726,7 +1752,7 @@ function syncBackupFromPrimary() {
     writeSaveStamp(json);
     return true;
   } catch (err) {
-    sfReportError('syncBackup', err, 'Backup sync mislukt');
+    sfReportError('syncBackup', err, errT('ui.errBackupSync', 'Backup sync failed'));
     return false;
   }
 }
@@ -2367,7 +2393,7 @@ const I18N = {
     result: { again: 'Opnieuw', next: 'Volgend level', menu: 'Hoofdmenu', menuArcade: 'Arcade', rematch: 'Rematch', rematchSub: 'Zelfde vechters',
       trainAgainSub: 'vs RabbitRobot',
       advWin: 'GEWONNEN!', advLose: 'VERLOREN', trainWin: 'KAMPIOEN!', trainLose: 'ROBOT WINT...',
-      advLoseKeep: 'XP en loot van deze run blijven',
+      advLoseKeep: 'XP en buit van deze ronde blijven',
       wavesStart: 'begin',
       xp: '+{xp} XP verdiend · nu Lv {lvl} ({cur}/{need} XP)' },
     settings: {
@@ -2438,7 +2464,7 @@ const I18N = {
     },
     season: {
       title: 'Seizoen',
-      hint: 'Sfeerlaag boven het originele scherm. Auto volgt de kalender. Tikken blijven vrij.',
+      hint: 'Sfeerlaag. Auto volgt de kalender. Tikken blijven vrij.',
       auto: 'Auto',
       classic: 'Klassiek',
       jungle: 'Jungle',
@@ -2495,8 +2521,16 @@ const I18N = {
       streakReward7: '+ei of oproepen',
       streakReward14: '+120 XP',
     },
-    pets: { title: 'Pets · Metgezels', sub: 'Dex-pets via monsterboek · Ei-pets via dagelijkse arcade-pull',
-      crackEgg: 'Dag-ei openen', crackEggSub: 'Gratis arcade-pull' },
+    pets: { title: 'Pets · Metgezels', sub: 'Dex via monsterboek · ei via arcade-pull',
+      crackEgg: 'Dag-ei openen', crackEggSub: 'Gratis arcade-pull',
+      perk: {
+        pet_slymo: 'Spring-assist — extra schade', pet_bubbel: '+6 max HP · zachte assist',
+        pet_flapper: 'Snellere energy-regen', pet_stekelra: 'Charge-assist — stevige tik',
+        pet_spooki: '+4% crit-kans', pet_blikkert: 'Korte shield elke golf',
+        pet_vlamvos: '+4% loopsnelheid', pet_piepvleugel: 'Vlugge energy + dart-assist',
+        pet_rotsbonk: '+12 max HP · tank-assist', pet_nachtwolk: 'Spook-crit + energy drain',
+        pet_gloeidrake: 'Draken-assist — zwaarste tik', pet_stormvos: 'Storm-snelheid + combo-assist',
+      } },
     dex: { title: 'Monsterboek', sub: '{n} soorten · rariteit = HP · boerderij / zoo / zee / woud / crypte / schroot / vorst · 4 rariteiten = Kristallijn' },
     help: { title: 'Tips & besturing' },
     gear: {
@@ -2517,7 +2551,7 @@ const I18N = {
     },
     buildings: {
       title: 'Fabrieken',
-      sub: 'Tik een fabriek · oogst op tijd · upgrade',
+      sub: 'Tik een fabriek · oogst op tijd · opwaarderen',
       hubStatReady: '{n} klaar om te oogsten', hubStatIdle: '5 werken',
       hubStatLocked: '{n}/{total} open',
       level: 'Lv {n}', locked: 'Op slot',
@@ -2536,38 +2570,74 @@ const I18N = {
       whatItDoes: 'Wat doet dit?',
       powerNow: '{label} — {blurb}',
       powerNext: 'Volgende @ rank {n}: {label}',
-      powerNone: 'Bouw dit werk om de power te ontgrendelen',
+      powerNone: 'Bouw dit werk om de kracht te ontgrendelen',
       unbuilt: 'Nog niet gebouwd',
-      upgradeAsk: 'Upgrade naar Lv {next}?',
+      upgradeAsk: 'Opwaarderen naar Lv {next}?',
       buildAsk: 'Bouw {name}?',
       upgradeConfirm: 'Bevestig',
       upgradeBack: 'Terug naar oogst',
-      upgradeOpen: 'Upgrade…',
+      upgradeOpen: 'Opwaarderen…',
       buildOpen: 'Bouwen…',
       walletPc: 'PC',
-      upgradeTitle: 'Upgrade {name}',
+      upgradeTitle: '{name} opwaarderen',
       sheetClose: 'Sluiten',
       build: 'Bouwen', buildHint: 'Bouwen als eiland open is',
-      lockedWorld: 'Unlock: eiland {n}',
+      lockedWorld: 'Vrij: eiland {n}',
       rateLine: '{n}/uur · {pending} wacht · cap {cap}',
       collected: '+{n} {res} · {name}',
       collectedAll: 'Oogst +{n} uit {k} gebouwen',
       waveHeal: '+{n} HP',
-      power: {
-        spark_kindle: 'Kindle', ember_pocket: 'Vonken', matchstick_storm: 'Match',
-        glue_trap: 'Lijm', splinter_edge: 'Snipper', chip_spray: 'Spray',
-        bamboo_vent: 'Vent', bamboo_burst: 'Boesa', pressure_cook: 'Stoom', boesa_overheat: 'Hitte',
-        taunt_toot: 'Toot', whistle_chorus: 'Koor',
+      costPc: '{n} PC',
+      costRes: '{n} {res}',
+      islandFallback: 'eiland {n}',
+      lockedWorldNamed: 'Dicht — speel {name} (eiland {n}) vrij',
+      desc: {
+        produceLocked: 'Maakt {res} na vrij + bouw',
+        produceUnbuilt: 'Bouwen: daarna {res} ({n}/uur)',
+        produce: '{res}: {n}/uur · max {cap}',
+        powerOn: 'Kracht {rank}: {label} — {blurb}',
+        powerNone: 'Geen kracht tot gebouwd',
+        doesUnbuilt: '{res} · bouw om te starten',
+        does: '{res} {n}/uur · {power}',
+        nextPower: ' · kracht: {label}',
+        nextLv: 'Lv {n}: {res} {rate}/uur · {cap}{power}',
       },
-      stick_lighter: { name: 'Stok-Aansteker Fabriek', blurb: 'Scheef schuurtje dat stokken tegen elkaar wrijft tot ze vonken geven.' },
+      power: {
+        spark_kindle: { label: 'Vonk', blurb: 'Eerste melee per golf laat een sintel achter.' },
+        kindle_trail: { label: 'Vonkspoor', blurb: 'Lopen strooit korte sintels.' },
+        ember_pocket: { label: 'Sintelzak', blurb: 'Wapentreffer kan een vonk loslaten.' },
+        flare_step: { label: 'Vlamstap', blurb: 'Korte dash met brandlijn.' },
+        matchstick_storm: { label: 'Lucifer', blurb: 'Regen lucifers — korte vuurkegel.' },
+        sticky_soles: { label: 'Plakzool', blurb: 'Minder knockback — voeten plakken.' },
+        tacky_block: { label: 'Kleefblok', blurb: 'Blok houdt een tik langer.' },
+        glue_trap: { label: 'Lijmval', blurb: 'Plas die het eerste monster remt.' },
+        paste_armor: { label: 'Lijmhuid', blurb: 'Dun lijmschild bij golfstart.' },
+        chip_golem: { label: 'Golem', blurb: 'Start elke golf met snipper-pantser.' },
+        splinter_edge: { label: 'Splinter', blurb: 'Wapentreffer slingert extra splinter.' },
+        chip_spray: { label: 'Spuit', blurb: 'Combo hoest extra snippers.' },
+        sawdust_cloud: { label: 'Zaagsel', blurb: 'Korte miss-nevel voor je.' },
+        hopper_guard: { label: 'Hopper', blurb: 'Eerste hit per golf is zachter.' },
+        chipper_fury: { label: 'Hak', blurb: 'Hoge combo’s spuiten splinters.' },
+        boiler_hiss: { label: 'Ketel', blurb: 'Dichte hitte tikt drukkers.' },
+        bamboo_vent: { label: 'Vent', blurb: 'Dash pufft een stoomstoot.' },
+        bamboo_burst: { label: 'Boesa', blurb: 'Stoomstoot — korte kegel.' },
+        pressure_cook: { label: 'Stoom', blurb: 'Combo’s bouwen een hitte-pip.' },
+        boesa_overheat: { label: 'Hitte', blurb: 'Lage HP: extra vuurtik.' },
+        taunt_toot: { label: 'Toet', blurb: 'Korte fluit — dichtstbijzijnde kijkt.' },
+        mill_heckle: { label: 'Molen', blurb: 'Raken toet een mini-taunt.' },
+        echo_ridge: { label: 'Echo', blurb: 'Kill laat een stun-rimpeling.' },
+        ridge_reply: { label: 'Kaats', blurb: 'Perfect blok echoot stun.' },
+        whistle_chorus: { label: 'Koor', blurb: 'Gebied-taunt + korte stun.' },
+      },
+      stick_lighter: { name: 'Stok-Aansteker Fabriek', nameShort: 'Aansteker', blurb: 'Scheef schuurtje dat stokken tegen elkaar wrijft tot ze vonken geven.' },
       stick_lighterSub: 'Vonken · Oost-eiland',
-      woodchip_glue: { name: 'Houtsnipper-Lijm Fabriek', blurb: 'Kookt zaagsel tot een pasta die harder plakt dan een combo. Niet likken.' },
+      woodchip_glue: { name: 'Houtsnipper-Lijm Fabriek', nameShort: 'Hout-Lijm', blurb: 'Kookt zaagsel tot een pasta die harder plakt dan een combo. Niet likken.' },
       woodchip_glueSub: 'Lijm · Vuur-eiland',
-      chipping_wood: { name: 'Versnipper-Hout Fabriek', blurb: 'Vrolijke versnipperaar die TIMBER fluistert en nuttige snippers hoest.' },
+      chipping_wood: { name: 'Versnipper-Hout Fabriek', nameShort: 'Versnipper', blurb: 'Vrolijke versnipperaar die TIMBER fluistert en nuttige snippers hoest.' },
       chipping_woodSub: 'Snippers · Neon-eiland',
-      bamboo_boesa: { name: 'Bamboe-Boesa Ketel', blurb: 'Vuur-ketel die holle boesa-bamboe stoomt tot de stengels fluiten.' },
+      bamboo_boesa: { name: 'Bamboe-Boesa Ketel', nameShort: 'Bamboe-Boesa', blurb: 'Vuur-ketel die holle boesa-bamboe stoomt tot de stengels fluiten.' },
       bamboo_boesaSub: 'Stoom · Tempel-eiland',
-      echo_whistle: { name: 'Echo-Fluitmolen', blurb: 'Molenrad dat lucht tot taunts maalt. Het gebouw scheldt terug.' },
+      echo_whistle: { name: 'Echo-Fluitmolen', nameShort: 'Echo-Fluit', blurb: 'Molenrad dat lucht tot taunts maalt. Het gebouw scheldt terug.' },
       echo_whistleSub: 'Echo · Finale-eiland',
       bamboo_boesa_boiler: { name: 'Bamboe-Boesa Ketel' }, echo_whistle_mill: { name: 'Echo-Fluitmolen' },
       res: { spark: 'Vonken', glue: 'Lijm', chip: 'Snippers', steam: 'Stoom', echo: 'Echo', embers: 'sintels', chips: 'chips', echoes: 'echo' },
@@ -2727,7 +2797,7 @@ const I18N = {
     },
     season: {
       title: 'Season',
-      hint: 'A mood layer on the original screen. Auto follows the calendar. Taps stay free.',
+      hint: 'Mood layer. Auto follows the calendar. Taps stay free.',
       auto: 'Auto',
       classic: 'Classic',
       jungle: 'Jungle',
@@ -2784,8 +2854,16 @@ const I18N = {
       streakReward7: '+egg or summons',
       streakReward14: '+120 XP',
     },
-    pets: { title: 'Pets · Companions', sub: 'Dex pets via monster book · Egg pets via daily arcade pull',
-      crackEgg: 'Open daily egg', crackEggSub: 'Free arcade pull' },
+    pets: { title: 'Pets · Companions', sub: 'Dex via monster book · eggs via arcade pull',
+      crackEgg: 'Open daily egg', crackEggSub: 'Free arcade pull',
+      perk: {
+        pet_slymo: 'Hop assist — extra damage', pet_bubbel: '+6 max HP · soft assist',
+        pet_flapper: 'Faster energy regen', pet_stekelra: 'Charge assist — hard tap',
+        pet_spooki: '+4% crit chance', pet_blikkert: 'Short shield each wave',
+        pet_vlamvos: '+4% run speed', pet_piepvleugel: 'Quick energy + dart assist',
+        pet_rotsbonk: '+12 max HP · tank assist', pet_nachtwolk: 'Ghost crit + energy drain',
+        pet_gloeidrake: 'Dragon assist — heaviest tap', pet_stormvos: 'Storm speed + combo assist',
+      } },
     dex: { title: 'Monster book', sub: '{n} species · rarity = HP · farm / zoo / sea / woods / crypt / scrap / frost · 4 rarities = Crystalline' },
     help: { title: 'Tips & controls' },
     gear: {
@@ -2842,21 +2920,57 @@ const I18N = {
       collected: '+{n} {res} · {name}',
       collectedAll: 'Harvest +{n} from {k} buildings',
       waveHeal: '+{n} HP',
-      power: {
-        spark_kindle: 'Kindle', ember_pocket: 'Spark', matchstick_storm: 'Match',
-        glue_trap: 'Glue', splinter_edge: 'Chip', chip_spray: 'Spray',
-        bamboo_vent: 'Vent', bamboo_burst: 'Boesa', pressure_cook: 'Steam', boesa_overheat: 'Heat',
-        taunt_toot: 'Toot', whistle_chorus: 'Chorus',
+      costPc: '{n} PC',
+      costRes: '{n} {res}',
+      islandFallback: 'island {n}',
+      lockedWorldNamed: 'Locked — clear {name} (island {n})',
+      desc: {
+        produceLocked: 'Makes {res} after unlock + build',
+        produceUnbuilt: 'Build: then {res} ({n}/hr)',
+        produce: '{res}: {n}/hr · max {cap}',
+        powerOn: 'Power {rank}: {label} — {blurb}',
+        powerNone: 'No power until built',
+        doesUnbuilt: '{res} · build to start',
+        does: '{res} {n}/hr · {power}',
+        nextPower: ' · power: {label}',
+        nextLv: 'Lv {n}: {res} {rate}/hr · {cap}{power}',
       },
-      stick_lighter: { name: 'Stick-Lighter Factory', blurb: 'A lopsided woodshed that rubs sticks together until they sulk into sparks.' },
+      power: {
+        spark_kindle: { label: 'Spark', blurb: 'First melee each wave leaves an ember.' },
+        kindle_trail: { label: 'Trail', blurb: 'Walking drops brief ember crumbs.' },
+        ember_pocket: { label: 'Ember', blurb: 'Weapon hits can pop a spark.' },
+        flare_step: { label: 'Flare', blurb: 'Short dash that leaves a burn line.' },
+        matchstick_storm: { label: 'Match', blurb: 'Shower of lit sticks — short fire cone.' },
+        sticky_soles: { label: 'Soles', blurb: 'Less knockback — boots grip the floor.' },
+        tacky_block: { label: 'Tacky', blurb: 'Block holds a beat longer.' },
+        glue_trap: { label: 'Glue', blurb: 'Puddle that slows the first monster.' },
+        paste_armor: { label: 'Paste', blurb: 'Thin glue shield at wave start.' },
+        chip_golem: { label: 'Golem', blurb: 'Start each wave with chip-armor.' },
+        splinter_edge: { label: 'Splint', blurb: 'Weapon hits fling a bonus splinter.' },
+        chip_spray: { label: 'Spray', blurb: 'Combos cough extra chips.' },
+        sawdust_cloud: { label: 'Dust', blurb: 'Brief miss-haze in front of you.' },
+        hopper_guard: { label: 'Guard', blurb: 'First hit each wave is a bit softer.' },
+        chipper_fury: { label: 'Fury', blurb: 'High combos spray splinters.' },
+        boiler_hiss: { label: 'Hiss', blurb: 'Close heat aura chips crowders.' },
+        bamboo_vent: { label: 'Vent', blurb: 'Dash puffs a steam shove.' },
+        bamboo_burst: { label: 'Boesa', blurb: 'Steam knock — short cone.' },
+        pressure_cook: { label: 'Cook', blurb: 'Combos build a heat pip.' },
+        boesa_overheat: { label: 'Heat', blurb: 'Low HP: extra fire chip.' },
+        taunt_toot: { label: 'Toot', blurb: 'Short whistle — nearest foe faces you.' },
+        mill_heckle: { label: 'Heckle', blurb: 'Taking a hit toots a tiny taunt.' },
+        echo_ridge: { label: 'Ridge', blurb: 'Kills leave a sound-stun ripple.' },
+        ridge_reply: { label: 'Reply', blurb: 'Perfect block echoes a stun pip.' },
+        whistle_chorus: { label: 'Chorus', blurb: 'Area taunt + brief stun.' },
+      },
+      stick_lighter: { name: 'Stick-Lighter Factory', nameShort: 'Stick-Lighter', blurb: 'A lopsided woodshed that rubs sticks together until they sulk into sparks.' },
       stick_lighterSub: 'Sparks · East island',
-      woodchip_glue: { name: 'Woodchip-Glue Factory', blurb: 'Boils yesterday’s sawdust into a paste that sticks harder than a combo. Do not lick.' },
+      woodchip_glue: { name: 'Woodchip-Glue Factory', nameShort: 'Wood-Glue', blurb: 'Boils yesterday’s sawdust into a paste that sticks harder than a combo. Do not lick.' },
       woodchip_glueSub: 'Glue · Fire island',
-      chipping_wood: { name: 'Chipping-Wood Factory', blurb: 'A cheerful chipper that whispers TIMBER and coughs useful chips.' },
+      chipping_wood: { name: 'Chipping-Wood Factory', nameShort: 'Chipper', blurb: 'A cheerful chipper that whispers TIMBER and coughs useful chips.' },
       chipping_woodSub: 'Chips · Neon island',
-      bamboo_boesa: { name: 'Bamboo-Boesa Boiler', blurb: 'Fire-island kettle that steams hollow “boesa” bamboo until the stalks whistle.' },
+      bamboo_boesa: { name: 'Bamboo-Boesa Boiler', nameShort: 'Bamboo-Boesa', blurb: 'Fire-island kettle that steams hollow “boesa” bamboo until the stalks whistle.' },
       bamboo_boesaSub: 'Steam · Temple island',
-      echo_whistle: { name: 'Echo-Whistle Mill', blurb: 'A mill wheel that turns air into taunts. The building heckles you back.' },
+      echo_whistle: { name: 'Echo-Whistle Mill', nameShort: 'Echo-Whistle', blurb: 'A mill wheel that turns air into taunts. The building heckles you back.' },
       echo_whistleSub: 'Echo · Final island',
       bamboo_boesa_boiler: { name: 'Bamboo-Boesa Boiler' }, echo_whistle_mill: { name: 'Echo-Whistle Mill' },
       res: { spark: 'Spark', glue: 'Glue', chip: 'Chip', steam: 'Steam', echo: 'Echo', embers: 'embers', chips: 'chips', echoes: 'echoes' },
@@ -2897,13 +3011,13 @@ const I18N = {
       continue: 'Weiterspielen', adventure: 'Abenteuer', adventureSub: 'Story · Inseln · Bosse',
       arcade: 'Arcade', arcadeSub: 'Training · Mauer · Münzen', versus: '2 Spieler', versusSub: 'Lokal',
       collect: 'Sammlung', collectSub: 'Waffen · Stil · Buch',
-      buildings: 'Fabriken', buildingsSub: 'Werke · ernten · upgrade',
+      buildings: 'Fabriken', buildingsSub: 'Werke · ernten · aufwerten',
       music: 'Musik', missions: 'Missionen',
       summons: 'Beschwörungen', summonsSub: 'Tägliche Kiste · Waffe & Pet',
       options: 'Einstellungen', tips: 'Tipps', fresh: 'Neue Version', install: 'Als App speichern', installSub: 'Ein Icon, wie eine echte App',
       profileAria: 'Profil und Missionen',
       pressStart: 'Münze einwerfen', missionReady: 'Mission bereit', dayBonus: 'Tagesbonus',
-      choosePath: 'WÄHLE DEINEN WEG', lastPlayed: 'ZULETZT', playHere: 'SPIEL', saveSync: 'save OK',
+      choosePath: 'WÄHLE DEINEN WEG', lastPlayed: 'ZULETZT', playHere: 'SPIEL', saveSync: 'Save ok',
       startGame: 'SPIELEN', startSub: 'Starte den Kampf',
       titleName: 'Name — optional', titleNamePh: 'Spitzname (optional)',
       titleNote: 'Kein Konto — dein Save bleibt auf diesem Handy',
@@ -2918,28 +3032,28 @@ const I18N = {
       training: 'Training', trainingSub: '1v1 · RabbitRobot · Üben',
       wall: 'Mauer', wallSub: '60 Sek · Combo = schneller',
       mats: 'Münzen', matsSub: '45 Sek · Münzen → Pet-Coins',
-      weapons: 'Waffen', weaponsSub: '26 Waffen · Summons',
+      weapons: 'Waffen', weaponsSub: '26 Waffen · Kisten',
       pets: 'Pets', petsSub: 'Münzen · Dex zähmen',
       style: 'Stil', styleSub: 'Outfit-Freischaltungen',
       gear: 'Ausrüstung', gearSub: '5 Slots · Rüstung & Kosmetik',
       skills: 'Skills', skillsSub: 'Energie-Spezials · Spiral Orb · Wave Cannon',
       upgrades: 'Upgrades', upgradesSub: 'Splitter · Technik ausrüsten',
       dex: 'Monsterbuch', dexSub: '{n} Arten · Seltenheit = HP · Farm · Zoo · Meer · Wald · Krypta · Schrott · Frost',
-      buildings: 'Fabriken', buildingsSub: 'Werke · ernten · upgrade',
+      buildings: 'Fabriken', buildingsSub: 'Werke · ernten · aufwerten',
       modes3: '3 schnelle Modi', fightersLocal: '20 Kämpfer · lokal', vsRecord: '{w}/{m} Siege',
       statTrain: '{n}× Training', statWall: 'Mauer {n}', statMats: '{n} Münzen',
       loadFail: 'Hub laden fehlgeschlagen',
     },
     buildings: {
       title: 'Fabriken',
-      sub: 'Werk antippen · ernten · upgrade',
+      sub: 'Werk antippen · ernten · aufwerten',
       hubStatReady: '{n} bereit zum Ernten', hubStatIdle: '5 Werke',
       hubStatLocked: '{n}/{total} offen',
       level: 'Lv {n}', locked: 'Gesperrt',
       lockWorld: '{name} freischalten (Welt {n})',
       collect: 'Ernten', collectSub: '{n} {res} bereit', collectEmpty: 'Noch nichts bereit',
       collectDone: '+{n} {res}',
-      upgrade: 'Upgrade', upgradeSub: '{cost} Pet-Coins · Lv {next}',
+      upgrade: 'Aufwerten', upgradeSub: '{cost} Pet-Coins · Lv {next}',
       upgradeMax: 'Max-Level', upgradeNeed: 'Noch {need} Pet-Coins',
       upgradeOk: '{name} → Lv {lv}',
       nextIn: 'Nächste in {t}', stored: '{n}/{cap} gelagert',
@@ -2947,20 +3061,20 @@ const I18N = {
       liveNote: 'Live Systems-API',
       loadFail: 'Fabriken laden fehlgeschlagen',
       overview: 'Übersicht',
-      detailSub: 'Ernten tippen · Upgrade ist ein extra Schritt',
+      detailSub: 'Ernten tippen · Aufwerten ist extra',
       whatItDoes: 'Was macht das?',
       powerNow: '{label} — {blurb}',
       powerNext: 'Als Nächstes @ Rang {n}: {label}',
-      powerNone: 'Baue das Werk, um die Power freizuschalten',
+      powerNone: 'Baue das Werk, um die Kraft freizuschalten',
       unbuilt: 'Noch nicht gebaut',
-      upgradeAsk: 'Upgrade auf Lv {next}?',
+      upgradeAsk: 'Auf Lv {next} aufwerten?',
       buildAsk: '{name} bauen?',
       upgradeConfirm: 'Bestätigen',
       upgradeBack: 'Zurück zur Ernte',
-      upgradeOpen: 'Upgrade…',
+      upgradeOpen: 'Aufwerten…',
       buildOpen: 'Bauen…',
       walletPc: 'PC',
-      upgradeTitle: 'Upgrade {name}',
+      upgradeTitle: '{name} aufwerten',
       sheetClose: 'Schließen',
       build: 'Bauen', buildHint: 'Bauen, wenn die Insel offen ist',
       lockedWorld: 'Frei: Insel {n}',
@@ -2968,21 +3082,57 @@ const I18N = {
       collected: '+{n} {res} · {name}',
       collectedAll: 'Ernte +{n} aus {k} Gebäuden',
       waveHeal: '+{n} HP',
-      power: {
-        spark_kindle: 'Kindle', ember_pocket: 'Funke', matchstick_storm: 'Streichholz',
-        glue_trap: 'Leim', splinter_edge: 'Span', chip_spray: 'Spray',
-        bamboo_vent: 'Dampf', bamboo_burst: 'Boesa', pressure_cook: 'Druck', boesa_overheat: 'Hitze',
-        taunt_toot: 'Toot', whistle_chorus: 'Chor',
+      costPc: '{n} PC',
+      costRes: '{n} {res}',
+      islandFallback: 'Insel {n}',
+      lockedWorldNamed: 'Zu — spiel {name} (Insel {n}) frei',
+      desc: {
+        produceLocked: 'Macht {res} nach frei + Bau',
+        produceUnbuilt: 'Bauen: dann {res} ({n}/Std)',
+        produce: '{res}: {n}/Std · max {cap}',
+        powerOn: 'Kraft {rank}: {label} — {blurb}',
+        powerNone: 'Keine Kraft bis gebaut',
+        doesUnbuilt: '{res} · bauen zum Start',
+        does: '{res} {n}/Std · {power}',
+        nextPower: ' · Kraft: {label}',
+        nextLv: 'Lv {n}: {res} {rate}/Std · {cap}{power}',
       },
-      stick_lighter: { name: 'Stock-Anzünder-Fabrik', blurb: 'Schiefer Schuppen, der Stöcke reibt, bis sie Funken geben.' },
+      power: {
+        spark_kindle: { label: 'Funke', blurb: 'Erster Nahkampf pro Welle hinterlässt Glut.' },
+        kindle_trail: { label: 'Pfad', blurb: 'Laufen streut kurze Glutkrümel.' },
+        ember_pocket: { label: 'Glut', blurb: 'Waffentreffer kann einen Funken lösen.' },
+        flare_step: { label: 'Flare', blurb: 'Kurzer Dash mit Brandlinie.' },
+        matchstick_storm: { label: 'Streich', blurb: 'Streichholzregen — kurzer Feuerkegel.' },
+        sticky_soles: { label: 'Sohlen', blurb: 'Weniger Knockback — Schuhe kleben.' },
+        tacky_block: { label: 'Kleber', blurb: 'Block hält einen Tick länger.' },
+        glue_trap: { label: 'Leim', blurb: 'Pfütze bremst das erste Monster.' },
+        paste_armor: { label: 'Paste', blurb: 'Dünner Leimschild bei Wellenstart.' },
+        chip_golem: { label: 'Golem', blurb: 'Jede Welle startet mit Span-Panzer.' },
+        splinter_edge: { label: 'Span', blurb: 'Waffentreffer schleudert extra Splitter.' },
+        chip_spray: { label: 'Sprüh', blurb: 'Combos husten extra Späne.' },
+        sawdust_cloud: { label: 'Mehl', blurb: 'Kurzer Nebel vor dir.' },
+        hopper_guard: { label: 'Wächter', blurb: 'Erster Treffer pro Welle weicher.' },
+        chipper_fury: { label: 'Wut', blurb: 'Hohe Combos sprühen Splitter.' },
+        boiler_hiss: { label: 'Kessel', blurb: 'Nah-Hitze tickt Dränger.' },
+        bamboo_vent: { label: 'Dampf', blurb: 'Dash pustet einen Dampfstoss.' },
+        bamboo_burst: { label: 'Boesa', blurb: 'Dampfschlag — kurzer Kegel.' },
+        pressure_cook: { label: 'Druck', blurb: 'Combos bauen Hitze-Pip.' },
+        boesa_overheat: { label: 'Glut+', blurb: 'Wenig HP: extra Feuertick.' },
+        taunt_toot: { label: 'Tröte', blurb: 'Kurzer Pfiff — nächster Gegner schaut.' },
+        mill_heckle: { label: 'Mühle', blurb: 'Treffer trötet eine Mini-Hänsel.' },
+        echo_ridge: { label: 'Echo', blurb: 'Kill lässt Stun-Welle.' },
+        ridge_reply: { label: 'Echo+', blurb: 'Perfekter Block echoet Stun.' },
+        whistle_chorus: { label: 'Chor', blurb: 'Flächen-Hänsel + kurzer Stun.' },
+      },
+      stick_lighter: { name: 'Stock-Anzünder-Fabrik', nameShort: 'Anzünder', blurb: 'Schiefer Schuppen, der Stöcke reibt, bis sie Funken geben.' },
       stick_lighterSub: 'Funken · Ostinsel',
-      woodchip_glue: { name: 'Holzspan-Leim-Fabrik', blurb: 'Kocht Sägemehl zu einer Paste, die härter klebt als eine Combo. Nicht lecken.' },
+      woodchip_glue: { name: 'Holzspan-Leim-Fabrik', nameShort: 'Holz-Leim', blurb: 'Kocht Sägemehl zu einer Paste, die härter klebt als eine Combo. Nicht lecken.' },
       woodchip_glueSub: 'Leim · Feuerinsel',
-      chipping_wood: { name: 'Holz-Häcksler-Fabrik', blurb: 'Fröhlicher Häcksler, der TIMBER flüstert und nützliche Späne hustet.' },
+      chipping_wood: { name: 'Holz-Häcksler-Fabrik', nameShort: 'Häcksler', blurb: 'Fröhlicher Häcksler, der TIMBER flüstert und nützliche Späne hustet.' },
       chipping_woodSub: 'Späne · Neoninsel',
-      bamboo_boesa: { name: 'Bambus-Boesa-Kessel', blurb: 'Feuerinsel-Kessel, der hohles Boesa-Bambus dämpft, bis die Stängel pfeifen.' },
+      bamboo_boesa: { name: 'Bambus-Boesa-Kessel', nameShort: 'Boesa', blurb: 'Feuerinsel-Kessel, der hohles Boesa-Bambus dämpft, bis die Stängel pfeifen.' },
       bamboo_boesaSub: 'Dampf · Tempelinsel',
-      echo_whistle: { name: 'Echo-Pfeifenmühle', blurb: 'Mühlrad, das Luft zu Spott mahlt. Das Gebäude motzt zurück.' },
+      echo_whistle: { name: 'Echo-Pfeifenmühle', nameShort: 'Pfeife', blurb: 'Mühlrad, das Luft zu Spott mahlt. Das Gebäude motzt zurück.' },
       echo_whistleSub: 'Echo · Finalinsel',
       bamboo_boesa_boiler: { name: 'Bambus-Boesa-Kessel' }, echo_whistle_mill: { name: 'Echo-Pfeifenmühle' },
       res: { spark: 'Funken', glue: 'Leim', chip: 'Span', steam: 'Dampf', echo: 'Echo', embers: 'Glut', chips: 'Späne', echoes: 'Echos' },
@@ -2998,16 +3148,16 @@ const I18N = {
       vsRestart: 'Match neu starten', vsRestartSub: '0-0 · gleiche Kämpfer',
       vsSwap: 'Seite tauschen', vsSwapSub: 'P1 ↔ P2 · gleicher Stand',
       audioHint: 'Lautstärke in Pause — Regler wie in Einstellungen',
-      audioMuteAll: 'Alles aus', audioRestore: 'Standard', audioSfxOnly: 'Nur Sound',
+      audioMuteAll: 'Alles aus', audioRestore: 'Standard', audioSfxOnly: 'Nur Ton',
     },
     result: { again: 'Nochmal', next: 'Nächstes Level', menu: 'Hauptmenü', menuArcade: 'Arcade', rematch: 'Revanche', rematchSub: 'Gleiche Kämpfer',
       trainAgainSub: 'vs RabbitRobot',
-      advWin: 'GEWONNEN!', advLose: 'VERLOREN', trainWin: 'MEISTER!', trainLose: 'ROBOT GEWINNT...',
+      advWin: 'GEWONNEN!', advLose: 'VERLOREN', trainWin: 'MEISTER!', trainLose: 'ROBOT GEWINNT…',
       advLoseKeep: 'XP und Beute von diesem Lauf bleiben',
       wavesStart: 'Start',
       xp: '+{xp} XP · jetzt Lv {lvl} ({cur}/{need} XP)' },
     settings: {
-      title: 'Einstellungen', sub: 'Sound & HUD — Save läuft automatisch mit',
+      title: 'Einstellungen', sub: 'Ton & HUD — Save läuft automatisch mit',
       lang: 'Sprache', music: 'Musik', sfx: 'Effekte', shake: 'Bildschirmshake', haptics: 'Vibration',
       aimHead: 'Zielanzeige', aimHint: 'Farbe und Größe des Strahls beim Zielen nach oben oder unten.',
       aimColor: 'Farbe', aimRadius: 'Größe', aimPick: 'Eigene Farbe',
@@ -3019,9 +3169,9 @@ const I18N = {
       a11yContrastOn: 'Hoher Kontrast: an', a11yContrastOs: 'Hoher Kontrast: über System',
       a11yDefault: 'Barrierefreiheit: Standard — oben oder in den Handy-Einstellungen',
       a11yTip: 'Weniger Bewegung = ruhigere Banner. Hoher Kontrast = dickere Ränder. Lite FX = flüssiger am Handy.',
-      sfxSamplesOn: 'Soundeffekte: geladen',
-      sfxSamplesLoad: 'Soundeffekte: laden…',
-      sfxSamplesOff: 'Soundeffekte: offline',
+      sfxSamplesOn: 'Toneffekte: geladen',
+      sfxSamplesLoad: 'Toneffekte: laden…',
+      sfxSamplesOff: 'Toneffekte: offline',
       syncBackup: 'Backup aktualisieren', freshCache: 'Neue Version', clearSave: 'Neustart (2× tippen)',
       syncHint: 'Backup auf deinen aktuellen Stand setzen.',
       freshHint: 'Menü hängt? Tippe hier für die neueste Version.',
@@ -3074,7 +3224,7 @@ const I18N = {
     },
     season: {
       title: 'Saison',
-      hint: 'Stimmungsschicht über dem Originalbildschirm. Auto folgt dem Kalender. Tippen bleiben frei.',
+      hint: 'Stimmungsschicht. Auto folgt dem Kalender. Tippen frei.',
       auto: 'Auto',
       classic: 'Klassisch',
       jungle: 'Dschungel',
@@ -3117,13 +3267,21 @@ const I18N = {
       claimAll: 'Alle abholen', claimAllSub: '+XP auf einmal', dayBonus: 'Tagesbonus', dayBonusSub: '+80 XP',
       achievements: 'Erfolge' },
     fomo: {
-      ritualTitle: 'Heute', ritualCtaSummon: 'Zu Beschwörungen', ritualCtaMission: 'Mission spielen',
+      ritualTitle: 'Heute', ritualCtaSummon: 'Zu Kisten', ritualCtaMission: 'Mission spielen',
       ritualCtaAdv: 'Ins Abenteuer', ritualDismiss: 'Schließen', ritualReopen: 'Tagesübersicht',
-      resetIn: 'Neu in {reset}', rowSummons: 'Beschwörungen {left}/{total}',
+      resetIn: 'Neu in {reset}', rowSummons: 'Kisten {left}/{total}',
       rowEggReady: 'Tages-Ei bereit', rowEggDone: 'Tages-Ei schon offen',
-      streakReward3: '+1 Beschwörung', streakReward7: '+Ei oder Beschwörungen', streakReward14: '+120 XP',
+      streakReward3: '+1 Kiste', streakReward7: '+Ei oder Kisten', streakReward14: '+120 XP',
     },
-    pets: { title: 'Pets · Begleiter', sub: 'Dex-Pets & Ei-Pets', crackEgg: 'Tages-Ei öffnen', crackEggSub: 'Kostenloser Arcade-Zug' },
+    pets: { title: 'Pets · Begleiter', sub: 'Dex-Pets & Ei-Pets', crackEgg: 'Tages-Ei öffnen', crackEggSub: 'Kostenloser Arcade-Zug',
+      perk: {
+        pet_slymo: 'Sprung-Assist — Extra-Schaden', pet_bubbel: '+6 max HP · sanfter Assist',
+        pet_flapper: 'Schnellere Energy-Regen', pet_stekelra: 'Charge-Assist — harter Tick',
+        pet_spooki: '+4% Crit-Chance', pet_blikkert: 'Kurzer Schild jede Welle',
+        pet_vlamvos: '+4% Lauftempo', pet_piepvleugel: 'Schnelle Energy + Dart-Assist',
+        pet_rotsbonk: '+12 max HP · Tank-Assist', pet_nachtwolk: 'Geist-Crit + Energy-Drain',
+        pet_gloeidrake: 'Drachen-Assist — härtester Tick', pet_stormvos: 'Sturmtempo + Combo-Assist',
+      } },
     dex: { title: 'Monsterbuch', sub: '{n} Arten · Seltenheit = HP · Farm / Zoo / Meer / Wald / Krypta / Schrott / Frost' },
     help: { title: 'Tipps & Steuerung' },
     gear: {
@@ -3144,9 +3302,9 @@ const I18N = {
     },
     rarity: { common: 'Gewöhnlich', uncommon: 'Ungewöhnlich', rare: 'Selten', epic: 'Episch', legendary: 'Legendär', mythic: 'Mythisch', nightmare: 'Albtraum', hell: 'Hölle' },
     audio: {
-      musicOff: 'Musik aus', sfxOff: 'Sound aus', musicPct: 'Musik {pct}%', sfxPct: 'SFX {pct}%',
+      musicOff: 'Musik aus', sfxOff: 'Ton aus', musicPct: 'Musik {pct}%', sfxPct: 'SFX {pct}%',
       allMuted: 'Alles still', pauseDuck: 'BGM leise', pauseTrack: 'Track: {track}',
-      ctxSuspended: 'Regler tippen für Sound',
+      ctxSuspended: 'Regler tippen für Ton',
       bgmDuckPause: ' · BGM gedämpft',
       track: { menu: 'Menü', menu2: 'Menü 2', menu3: 'Menü 3', menuArcade: 'Arcade', menuHero: 'Hero', menuDream: 'Dream',
         battle: 'Kampf', elite: 'Elite', boss: 'Boss', wall: 'Mauer', training: 'Training', coinrun: 'Mats' },
@@ -3179,12 +3337,13 @@ const I18N = {
       continue: 'Continuer', adventure: 'Aventure', adventureSub: 'Histoire · îles · boss',
       arcade: 'Arcade', arcadeSub: 'Entraînement · Mur · Pièces', versus: '2 joueurs', versusSub: 'Local',
       collect: 'Collection', collectSub: 'Armes · style · bestiaire',
-      buildings: 'Usines', buildingsSub: 'Usines · récolte · upgrade',
+      buildings: 'Usines', buildingsSub: 'Usines · récolte · améliorer',
       music: 'Musique', missions: 'Missions',
-      summons: 'Summons', summonsSub: 'Coffre du jour · arme et pet',
+      summons: 'Coffres', summonsSub: 'Coffre du jour · arme et pet',
+      profileAria: 'Profil et missions',
       options: 'Options', tips: 'Astuces', fresh: 'Nouvelle version', install: 'Ajouter comme app', installSub: 'Une icône, comme une vraie app',
       pressStart: 'insert coin', missionReady: 'mission prête', dayBonus: 'Bonus du jour',
-      choosePath: 'CHOISIS TON CHEMIN', lastPlayed: 'DERNIER', playHere: 'JOUER', saveSync: 'save OK',
+      choosePath: 'CHOISIS TON CHEMIN', lastPlayed: 'DERNIER', playHere: 'JOUER', saveSync: 'sauv. OK',
       startGame: 'JOUER', startSub: 'Lance le combat',
       titleName: 'Nom — pas obligatoire', titleNamePh: 'Surnom (optionnel)',
       titleNote: 'Pas de compte — ta sauvegarde reste sur ce téléphone',
@@ -3206,21 +3365,21 @@ const I18N = {
       skills: 'Skills', skillsSub: 'Spéciaux énergie · Spiral Orb · Wave Cannon',
       upgrades: 'Améliorations', upgradesSub: 'Éclats · équiper une technique',
       dex: 'Bestiaire', dexSub: '{n} espèces · rareté = PV · ferme · zoo · mer · bois · crypte · ferraille · gel',
-      buildings: 'Usines', buildingsSub: 'Ateliers · récolte · upgrade',
+      buildings: 'Usines', buildingsSub: 'Ateliers · récolte · améliorer',
       modes3: '3 modes rapides', fightersLocal: '20 combattants · local', vsRecord: '{w}/{m} victoires',
       statTrain: '{n}× entraînement', statWall: 'mur {n}', statMats: '{n} pièces',
       loadFail: 'Hub introuvable',
     },
     buildings: {
       title: 'Usines',
-      sub: 'Touche une usine · récolte · upgrade',
+      sub: 'Touche une usine · récolte · améliorer',
       hubStatReady: '{n} prêtes à récolter', hubStatIdle: '5 usines',
       hubStatLocked: '{n}/{total} ouvertes',
       level: 'Nv {n}', locked: 'Verrouillé',
       lockWorld: 'Ouvre {name} (monde {n})',
       collect: 'Récolter', collectSub: '{n} {res} prêts', collectEmpty: 'Rien de prêt',
       collectDone: '+{n} {res}',
-      upgrade: 'Upgrade', upgradeSub: '{cost} pet coins · Nv {next}',
+      upgrade: 'Améliorer', upgradeSub: '{cost} pet coins · Nv {next}',
       upgradeMax: 'Niveau max', upgradeNeed: 'Encore {need} pet coins',
       upgradeOk: '{name} → Nv {lv}',
       nextIn: 'Prochain dans {t}', stored: '{n}/{cap} stockés',
@@ -3228,7 +3387,7 @@ const I18N = {
       liveNote: 'API systems live',
       loadFail: 'Usines introuvables',
       overview: 'Aperçu',
-      detailSub: 'Récolter · l’upgrade est une étape à part',
+      detailSub: 'Récolter · améliorer à part',
       whatItDoes: 'Ça fait quoi ?',
       powerNow: '{label} — {blurb}',
       powerNext: 'Ensuite @ rang {n} : {label}',
@@ -3238,7 +3397,7 @@ const I18N = {
       buildAsk: 'Construire {name} ?',
       upgradeConfirm: 'Confirmer',
       upgradeBack: 'Retour à la récolte',
-      upgradeOpen: 'Upgrade…',
+      upgradeOpen: 'Améliorer…',
       buildOpen: 'Construire…',
       walletPc: 'PC',
       build: 'Construire', buildHint: 'Construire une fois l’île ouverte',
@@ -3247,21 +3406,57 @@ const I18N = {
       collected: '+{n} {res} · {name}',
       collectedAll: 'Récolte +{n} de {k} bâtiments',
       waveHeal: '+{n} PV',
-      power: {
-        spark_kindle: 'Kindle', ember_pocket: 'Étincelle', matchstick_storm: 'Allumette',
-        glue_trap: 'Colle', splinter_edge: 'Copeau', chip_spray: 'Spray',
-        bamboo_vent: 'Vapeur', bamboo_burst: 'Boesa', pressure_cook: 'Pression', boesa_overheat: 'Chaleur',
-        taunt_toot: 'Toot', whistle_chorus: 'Chœur',
+      costPc: '{n} PC',
+      costRes: '{n} {res}',
+      islandFallback: 'île {n}',
+      lockedWorldNamed: 'Fermé — gagne {name} (île {n})',
+      desc: {
+        produceLocked: 'Fait {res} après débloc + construire',
+        produceUnbuilt: 'Construire : puis {res} ({n}/h)',
+        produce: '{res} : {n}/h · max {cap}',
+        powerOn: 'Pouvoir {rank} : {label} — {blurb}',
+        powerNone: 'Pas de pouvoir avant construction',
+        doesUnbuilt: '{res} · construire pour partir',
+        does: '{res} {n}/h · {power}',
+        nextPower: ' · pouvoir : {label}',
+        nextLv: 'Nv {n} : {res} {rate}/h · {cap}{power}',
       },
-      stick_lighter: { name: 'Usine Allume-Bâton', blurb: 'Hangar de travers qui frotte des bâtons jusqu’à ce qu’ils crachent des étincelles.' },
+      power: {
+        spark_kindle: { label: 'Étincelle', blurb: 'Premier corps-à-corps de vague laisse une braise.' },
+        kindle_trail: { label: 'Sillage', blurb: 'Marcher sème de brèves braises.' },
+        ember_pocket: { label: 'Braise', blurb: 'Un coup d’arme peut lâcher une étincelle.' },
+        flare_step: { label: 'Flare', blurb: 'Dash court avec ligne de feu.' },
+        matchstick_storm: { label: 'Allumette', blurb: 'Pluie d’allumettes — court cône de feu.' },
+        sticky_soles: { label: 'Semelles', blurb: 'Moins de recul — les pieds collent.' },
+        tacky_block: { label: 'Colle+', blurb: 'Le bloc tient un temps de plus.' },
+        glue_trap: { label: 'Colle', blurb: 'Flaque qui ralentit le 1er monstre.' },
+        paste_armor: { label: 'Pâte', blurb: 'Fin bouclier de colle en début de vague.' },
+        chip_golem: { label: 'Golem', blurb: 'Chaque vague commence avec une armure copeaux.' },
+        splinter_edge: { label: 'Éclat', blurb: 'Le coup d’arme envoie un éclat bonus.' },
+        chip_spray: { label: 'Spray', blurb: 'Les combos crachent plus de copeaux.' },
+        sawdust_cloud: { label: 'Sciure', blurb: 'Court brouillard devant toi.' },
+        hopper_guard: { label: 'Garde', blurb: '1er coup de vague un peu plus doux.' },
+        chipper_fury: { label: 'Furie', blurb: 'Gros combos projettent des éclats.' },
+        boiler_hiss: { label: 'Chaudr.', blurb: 'Chaleur proche tick les presseurs.' },
+        bamboo_vent: { label: 'Vapeur', blurb: 'Le dash souffle un coup de vapeur.' },
+        bamboo_burst: { label: 'Boesa', blurb: 'Choc vapeur — court cône.' },
+        pressure_cook: { label: 'Pression', blurb: 'Les combos chargent de la chaleur.' },
+        boesa_overheat: { label: 'Chaleur', blurb: 'PV bas : tick feu extra.' },
+        taunt_toot: { label: 'Toot', blurb: 'Court sifflet — le plus proche te regarde.' },
+        mill_heckle: { label: 'Moulin', blurb: 'Prendre un coup toote une mini-moquerie.' },
+        echo_ridge: { label: 'Écho', blurb: 'Un KO laisse une onde stun.' },
+        ridge_reply: { label: 'Écho+', blurb: 'Bloc parfait echo un stun.' },
+        whistle_chorus: { label: 'Chœur', blurb: 'Moquerie de zone + court stun.' },
+      },
+      stick_lighter: { name: 'Usine Allume-Bâton', nameShort: 'Allume-Bâton', blurb: 'Hangar de travers qui frotte des bâtons jusqu’à ce qu’ils crachent des étincelles.' },
       stick_lighterSub: 'Étincelles · île de l’Est',
-      woodchip_glue: { name: 'Usine Colle-Copeaux', blurb: 'Fait bouillir la sciure en une pâte plus collante qu’un combo. Ne pas lécher.' },
+      woodchip_glue: { name: 'Usine Colle-Copeaux', nameShort: 'Colle-Copeaux', blurb: 'Fait bouillir la sciure en une pâte plus collante qu’un combo. Ne pas lécher.' },
       woodchip_glueSub: 'Colle · île de Feu',
-      chipping_wood: { name: 'Usine Copeaux-Bois', blurb: 'Déchiqueteuse joyeuse qui murmure TIMBER et tousse des copeaux utiles.' },
+      chipping_wood: { name: 'Usine Copeaux-Bois', nameShort: 'Copeaux-Bois', blurb: 'Déchiqueteuse joyeuse qui murmure TIMBER et tousse des copeaux utiles.' },
       chipping_woodSub: 'Copeaux · île Néon',
-      bamboo_boesa: { name: 'Chaudière Bambou-Boesa', blurb: 'Bouilloire de l’île de Feu qui vapeur le bambou creux jusqu’à ce qu’il siffle.' },
+      bamboo_boesa: { name: 'Chaudière Bambou-Boesa', nameShort: 'Bambou-Boesa', blurb: 'Bouilloire de l’île de Feu qui étuve le bambou creux jusqu’à ce qu’il siffle.' },
       bamboo_boesaSub: 'Vapeur · île Temple',
-      echo_whistle: { name: 'Moulin Echo-Sifflet', blurb: 'Roue de moulin qui transforme l’air en moqueries. Le bâtiment te répond.' },
+      echo_whistle: { name: 'Moulin Echo-Sifflet', nameShort: 'Echo-Sifflet', blurb: 'Roue de moulin qui transforme l’air en moqueries. Le bâtiment te répond.' },
       echo_whistleSub: 'Écho · île Finale',
       bamboo_boesa_boiler: { name: 'Chaudière Bambou-Boesa' }, echo_whistle_mill: { name: 'Moulin Echo-Sifflet' },
       res: { spark: 'étincelles', glue: 'colle', chip: 'copeau', steam: 'vapeur', echo: 'écho', embers: 'braises', chips: 'copeaux', echoes: 'échos' },
@@ -3281,8 +3476,8 @@ const I18N = {
     },
     result: { again: 'Rejouer', next: 'Niveau suivant', menu: 'Menu principal', menuArcade: 'Arcade', rematch: 'Revanche', rematchSub: 'Mêmes combattants',
       trainAgainSub: 'vs RabbitRobot',
-      advWin: 'VICTOIRE !', advLose: 'DÉFAITE', trainWin: 'CHAMPION !', trainLose: 'ROBOT GAGNE...',
-      advLoseKeep: 'XP et butin de cette run restent',
+      advWin: 'VICTOIRE !', advLose: 'DÉFAITE', trainWin: 'CHAMPION !', trainLose: 'LE ROBOT GAGNE…',
+      advLoseKeep: 'XP et butin de cette partie restent',
       wavesStart: 'début',
       xp: '+{xp} XP · Lv {lvl} ({cur}/{need} XP)' },
     settings: {
@@ -3318,6 +3513,25 @@ const I18N = {
       saveAutoLine: 'Nv {lvl} · OK sur cet appareil',
       saveAutoBad: 'Nv {lvl} · vérifie — ouvre Fichier / hors ligne',
       saveAutoHint: 'La save en ligne reste avec ce lien, sans bouton extra.',
+      saveOnlineLine: 'Save en ligne · dernière synchro {when}',
+      saveOnlineOffline: 'Hors ligne · save sur cet appareil',
+      saveOnlineSyncing: 'Save en ligne · synchronisation…',
+      saveSyncOk: 'Synchronisé',
+      saveSyncing: 'En cours',
+      saveSyncOffline: 'Hors ligne',
+      saveWhenJustNow: 'à l’instant',
+      saveWhenMin: 'il y a {n} min',
+      saveWhenHour: 'il y a {n} h',
+      saveWhenDay: 'il y a {n} j',
+      saveWhenNever: 'en attente du premier écrit',
+      audioThemeHead: 'Ambiance / bande-son',
+      audioThemeLine: 'Ambiance : {name}',
+      touchAuto: 'auto', touchOn: 'oui', touchOff: 'non',
+      diagOn: 'Diag d’aide activée',
+      aimSwatchCyan: 'Cyan', aimSwatchGold: 'Or', aimSwatchGreen: 'Vert',
+      aimSwatchOrange: 'Orange', aimSwatchPink: 'Rose', aimSwatchPurple: 'Violet',
+      aimSwatchWhite: 'Blanc',
+      aimPickAria: 'Choisir la couleur de visée',
       saveOfflineFold: 'Fichier / hors ligne',
       saveOfflineTitle: 'Chemin à part — seulement si tu veux un fichier',
       saveOfflineOk: 'Copie fichier prête',
@@ -3334,7 +3548,7 @@ const I18N = {
     },
     season: {
       title: 'Saison',
-      hint: 'Une couche d’ambiance sur l’écran d’origine. Auto suit le calendrier. Les appuis restent libres.',
+      hint: 'Couche d’ambiance. Auto suit le calendrier. Appuis libres.',
       auto: 'Auto',
       classic: 'Classique',
       jungle: 'Jungle',
@@ -3378,20 +3592,28 @@ const I18N = {
       achievements: 'Succès' },
     fomo: {
       ritualTitle: 'Aujourd’hui',
-      ritualCtaSummon: 'Vers les summons',
+      ritualCtaSummon: 'Vers le coffre',
       ritualCtaMission: 'Jouer une mission',
       ritualCtaAdv: 'Vers l’aventure',
       ritualDismiss: 'Fermer',
       ritualReopen: 'Aperçu du jour',
       resetIn: 'Nouveau dans {reset}',
-      rowSummons: 'Summons {left}/{total}',
+      rowSummons: 'Coffres {left}/{total}',
       rowEggReady: 'Œuf du jour prêt',
       rowEggDone: 'Œuf du jour déjà ouvert',
-      streakReward3: '+1 summon',
-      streakReward7: '+œuf ou summons',
+      streakReward3: '+1 coffre',
+      streakReward7: '+œuf ou coffres',
       streakReward14: '+120 XP',
     },
-    pets: { title: 'Pets · Compagnons', sub: 'Pets dex & œufs arcade', crackEgg: 'Ouvrir l\'œuf du jour', crackEggSub: 'Tir gratuit' },
+    pets: { title: 'Pets · Compagnons', sub: 'Pets dex & œufs arcade', crackEgg: 'Ouvrir l\'œuf du jour', crackEggSub: 'Tir gratuit',
+      perk: {
+        pet_slymo: 'Aide saut — dégâts extra', pet_bubbel: '+6 PV max · aide douce',
+        pet_flapper: 'Regen énergie plus vite', pet_stekelra: 'Aide charge — tap dur',
+        pet_spooki: '+4 % crit', pet_blikkert: 'Bouclier court / vague',
+        pet_vlamvos: '+4 % vitesse', pet_piepvleugel: 'Énergie rapide + dard',
+        pet_rotsbonk: '+12 PV max · tank', pet_nachtwolk: 'Crit spectre + drain',
+        pet_gloeidrake: 'Aide dragon — tap lourd', pet_stormvos: 'Vitesse tempête + combo',
+      } },
     dex: { title: 'Bestiaire', sub: '{n} espèces · rareté = PV · ferme / zoo / mer / bois / crypte / ferraille / gel' },
     help: { title: 'Astuces & contrôles' },
     gear: {
@@ -3399,6 +3621,9 @@ const I18N = {
       flagVanity: 'Look seulement — pas de stats', flagStats: '+ stats', flagArmour: 'Armure',
       needLvl: 'Libre dès Lv {n}', needDays: 'Libre dès le jour {n}',
       equip: 'Équiper', equipped: 'Sur toi', empty: 'Vide',
+      unequip: 'Retirer', pickHint: 'Tape un objet pour équiper.',
+      lockOwned: 'Pas encore trouvé', filterAll: 'Tout', filterOwned: 'À toi',
+      vanityHint: 'Pas de stats — look seul',
       slot: { head: 'Tête', chest: 'Torse', hands: 'Mains', legs: 'Jambes', back: 'Dos' },
     },
     install: { title: 'Ajouter comme app', sub: 'Une icône, comme une vraie app' },
@@ -3441,10 +3666,11 @@ const I18N = {
       collect: 'Colección', collectSub: 'Armas · estilo · bestiario',
       buildings: 'Fábricas', buildingsSub: 'Obras · recolectar · mejorar',
       music: 'Música', missions: 'Misiones',
-      summons: 'Summons', summonsSub: 'Cofre diario · arma y pet',
+      summons: 'Cofres', summonsSub: 'Cofre diario · arma y pet',
+      profileAria: 'Perfil y misiones',
       options: 'Opciones', tips: 'Consejos', fresh: 'Versión nueva', install: 'Añadir como app', installSub: 'Un icono, como una app real',
       pressStart: 'insert coin', missionReady: 'misión lista', dayBonus: 'Bonus diario',
-      choosePath: 'ELIGE TU CAMINO', lastPlayed: 'ÚLTIMO', playHere: 'JUEGA', saveSync: 'save OK',
+      choosePath: 'ELIGE TU CAMINO', lastPlayed: 'ÚLTIMO', playHere: 'JUEGA', saveSync: 'guardado OK',
       startGame: 'JUGAR', startSub: 'Empieza el combate',
       titleName: 'Nombre — no hace falta', titleNamePh: 'Apodo (opcional)',
       titleNote: 'Sin cuenta — tu partida se queda en este teléfono',
@@ -3507,21 +3733,57 @@ const I18N = {
       collected: '+{n} {res} · {name}',
       collectedAll: 'Cosecha +{n} de {k} edificios',
       waveHeal: '+{n} HP',
-      power: {
-        spark_kindle: 'Kindle', ember_pocket: 'Chispa', matchstick_storm: 'Cerilla',
-        glue_trap: 'Cola', splinter_edge: 'Astilla', chip_spray: 'Spray',
-        bamboo_vent: 'Vapor', bamboo_burst: 'Boesa', pressure_cook: 'Presión', boesa_overheat: 'Calor',
-        taunt_toot: 'Toot', whistle_chorus: 'Coro',
+      costPc: '{n} PC',
+      costRes: '{n} {res}',
+      islandFallback: 'isla {n}',
+      lockedWorldNamed: 'Cerrado — gana {name} (isla {n})',
+      desc: {
+        produceLocked: 'Hace {res} tras desbloqueo + construir',
+        produceUnbuilt: 'Construir: luego {res} ({n}/h)',
+        produce: '{res}: {n}/h · máx {cap}',
+        powerOn: 'Poder {rank}: {label} — {blurb}',
+        powerNone: 'Sin poder hasta construir',
+        doesUnbuilt: '{res} · construye para empezar',
+        does: '{res} {n}/h · {power}',
+        nextPower: ' · poder: {label}',
+        nextLv: 'Nv {n}: {res} {rate}/h · {cap}{power}',
       },
-      stick_lighter: { name: 'Fábrica Palo-Mechero', blurb: 'Cobertizo torcido que frota palos hasta que sueltan chispas.' },
+      power: {
+        spark_kindle: { label: 'Chispa', blurb: 'El primer melee de oleada deja brasa.' },
+        kindle_trail: { label: 'Rastro', blurb: 'Andar suelta brasas breves.' },
+        ember_pocket: { label: 'Brasa', blurb: 'Un golpe de arma puede soltar chispa.' },
+        flare_step: { label: 'Flare', blurb: 'Dash corto con línea de fuego.' },
+        matchstick_storm: { label: 'Cerilla', blurb: 'Lluvia de cerillas — cono corto.' },
+        sticky_soles: { label: 'Suelas', blurb: 'Menos empuje — los pies pegan.' },
+        tacky_block: { label: 'Pegajoso', blurb: 'El bloque dura un toque más.' },
+        glue_trap: { label: 'Cola', blurb: 'Charco que frena al 1.er monstruo.' },
+        paste_armor: { label: 'Pasta', blurb: 'Escudo fino de cola al empezar oleada.' },
+        chip_golem: { label: 'Golem', blurb: 'Cada oleada empieza con armadura astilla.' },
+        splinter_edge: { label: 'Astilla', blurb: 'El golpe lanza una astilla extra.' },
+        chip_spray: { label: 'Spray', blurb: 'Los combos tosen más astillas.' },
+        sawdust_cloud: { label: 'Serrín', blurb: 'Niebla breve delante.' },
+        hopper_guard: { label: 'Guarda', blurb: 'El 1.er golpe de oleada es más suave.' },
+        chipper_fury: { label: 'Furia', blurb: 'Combos altos rocían astillas.' },
+        boiler_hiss: { label: 'Caldera', blurb: 'Calor cercano pica a los que aprietan.' },
+        bamboo_vent: { label: 'Vapor', blurb: 'El dash sopla un empujón de vapor.' },
+        bamboo_burst: { label: 'Boesa', blurb: 'Golpe de vapor — cono corto.' },
+        pressure_cook: { label: 'Presión', blurb: 'Los combos cargan calor.' },
+        boesa_overheat: { label: 'Calor', blurb: 'PV bajos: tick de fuego extra.' },
+        taunt_toot: { label: 'Toot', blurb: 'Silbido corto — el más cercano te mira.' },
+        mill_heckle: { label: 'Molino', blurb: 'Recibir golpe pita una burla.' },
+        echo_ridge: { label: 'Eco', blurb: 'Un KO deja onda de aturdimiento.' },
+        ridge_reply: { label: 'Eco+', blurb: 'Bloqueo perfecto ecoa stun.' },
+        whistle_chorus: { label: 'Coro', blurb: 'Burla de zona + stun breve.' },
+      },
+      stick_lighter: { name: 'Fábrica Palo-Mechero', nameShort: 'Palo-Mechero', blurb: 'Cobertizo torcido que frota palos hasta que sueltan chispas.' },
       stick_lighterSub: 'Chispas · isla Este',
-      woodchip_glue: { name: 'Fábrica Cola-Astillas', blurb: 'Hierve el serrín hasta una pasta más pegajosa que un combo. No lamer.' },
+      woodchip_glue: { name: 'Fábrica Cola-Astillas', nameShort: 'Cola-Astillas', blurb: 'Hierve el serrín hasta una pasta más pegajosa que un combo. No lamer.' },
       woodchip_glueSub: 'Cola · isla Fuego',
-      chipping_wood: { name: 'Fábrica Astilla-Madera', blurb: 'Trituradora alegre que susurra TIMBER y tose astillas útiles.' },
+      chipping_wood: { name: 'Fábrica Astilla-Madera', nameShort: 'Astilladora', blurb: 'Trituradora alegre que susurra TIMBER y tose astillas útiles.' },
       chipping_woodSub: 'Astillas · isla Neón',
-      bamboo_boesa: { name: 'Caldera Bambú-Boesa', blurb: 'Olla de la isla Fuego que cuece bambú hueco hasta que silba.' },
+      bamboo_boesa: { name: 'Caldera Bambú-Boesa', nameShort: 'Bambú-Boesa', blurb: 'Olla de la isla Fuego que cuece bambú hueco hasta que silba.' },
       bamboo_boesaSub: 'Vapor · isla Templo',
-      echo_whistle: { name: 'Molino Eco-Silbido', blurb: 'Rueda que convierte el aire en burlas. El edificio te responde.' },
+      echo_whistle: { name: 'Molino Eco-Silbido', nameShort: 'Eco-Silbido', blurb: 'Rueda que convierte el aire en burlas. El edificio te responde.' },
       echo_whistleSub: 'Eco · isla Final',
       bamboo_boesa_boiler: { name: 'Caldera Bambú-Boesa' }, echo_whistle_mill: { name: 'Molino Eco-Silbido' },
       res: { spark: 'chispas', glue: 'cola', chip: 'astilla', steam: 'vapor', echo: 'eco', embers: 'brasas', chips: 'astillas', echoes: 'ecos' },
@@ -3541,8 +3803,8 @@ const I18N = {
     },
     result: { again: 'Otra vez', next: 'Siguiente nivel', menu: 'Menú principal', menuArcade: 'Arcade', rematch: 'Revancha', rematchSub: 'Mismos luchadores',
       trainAgainSub: 'vs RabbitRobot',
-      advWin: '¡VICTORIA!', advLose: 'DERROTA', trainWin: '¡CAMPEÓN!', trainLose: 'ROBOT GANA...',
-      advLoseKeep: 'XP y botín de esta run se quedan',
+      advWin: '¡VICTORIA!', advLose: 'DERROTA', trainWin: '¡CAMPEÓN!', trainLose: 'EL ROBOT GANA…',
+      advLoseKeep: 'XP y botín de esta partida se quedan',
       wavesStart: 'inicio',
       xp: '+{xp} XP · Lv {lvl} ({cur}/{need} XP)' },
     settings: {
@@ -3578,6 +3840,25 @@ const I18N = {
       saveAutoLine: 'Nv {lvl} · OK en este aparato',
       saveAutoBad: 'Nv {lvl} · revisa — abre Archivo / sin red',
       saveAutoHint: 'El save online se queda con este enlace, sin botón extra.',
+      saveOnlineLine: 'Save online · última sincro {when}',
+      saveOnlineOffline: 'Sin red · save en este aparato',
+      saveOnlineSyncing: 'Save online · sincronizando…',
+      saveSyncOk: 'Sincronizado',
+      saveSyncing: 'En curso',
+      saveSyncOffline: 'Sin red',
+      saveWhenJustNow: 'ahora mismo',
+      saveWhenMin: 'hace {n} min',
+      saveWhenHour: 'hace {n} h',
+      saveWhenDay: 'hace {n} d',
+      saveWhenNever: 'espera el primer guardado',
+      audioThemeHead: 'Ambiente / banda sonora',
+      audioThemeLine: 'Ambiente: {name}',
+      touchAuto: 'auto', touchOn: 'sí', touchOff: 'no',
+      diagOn: 'Diag de ayuda activa',
+      aimSwatchCyan: 'Cian', aimSwatchGold: 'Oro', aimSwatchGreen: 'Verde',
+      aimSwatchOrange: 'Naranja', aimSwatchPink: 'Rosa', aimSwatchPurple: 'Morado',
+      aimSwatchWhite: 'Blanco',
+      aimPickAria: 'Elegir color de mira',
       saveOfflineFold: 'Archivo / sin red',
       saveOfflineTitle: 'Camino aparte — solo si quieres un archivo',
       saveOfflineOk: 'Copia de archivo lista',
@@ -3594,7 +3875,7 @@ const I18N = {
     },
     season: {
       title: 'Temporada',
-      hint: 'Capa de ambiente sobre la pantalla original. Auto sigue el calendario. Los toques siguen libres.',
+      hint: 'Capa de ambiente. Auto sigue el calendario. Toques libres.',
       auto: 'Auto',
       classic: 'Clásico',
       jungle: 'Jungla',
@@ -3638,26 +3919,37 @@ const I18N = {
       achievements: 'Logros' },
     fomo: {
       ritualTitle: 'Hoy',
-      ritualCtaSummon: 'A summons',
+      ritualCtaSummon: 'Al cofre',
       ritualCtaMission: 'Jugar misión',
       ritualCtaAdv: 'A la aventura',
       ritualDismiss: 'Cerrar',
       ritualReopen: 'Resumen del día',
       resetIn: 'Nuevo en {reset}',
-      rowSummons: 'Summons {left}/{total}',
+      rowSummons: 'Cofres {left}/{total}',
       rowEggReady: 'Huevo diario listo',
       rowEggDone: 'Huevo diario ya abierto',
-      streakReward3: '+1 summon',
-      streakReward7: '+huevo o summons',
+      streakReward3: '+1 cofre',
+      streakReward7: '+huevo o cofres',
       streakReward14: '+120 XP',
     },
-    pets: { title: 'Pets · Compañeros', sub: 'Pets dex y huevos arcade', crackEgg: 'Abrir huevo diario', crackEggSub: 'Tirada gratis' },
+    pets: { title: 'Pets · Compañeros', sub: 'Pets dex y huevos arcade', crackEgg: 'Abrir huevo diario', crackEggSub: 'Tirada gratis',
+      perk: {
+        pet_slymo: 'Ayuda salto — daño extra', pet_bubbel: '+6 HP máx · ayuda suave',
+        pet_flapper: 'Regen energía más rápida', pet_stekelra: 'Ayuda carga — golpe duro',
+        pet_spooki: '+4% crítico', pet_blikkert: 'Escudo corto / ola',
+        pet_vlamvos: '+4% velocidad', pet_piepvleugel: 'Energía rápida + dardo',
+        pet_rotsbonk: '+12 HP máx · tanque', pet_nachtwolk: 'Crit fantasma + drenaje',
+        pet_gloeidrake: 'Ayuda dragón — golpe fuerte', pet_stormvos: 'Velocidad tormenta + combo',
+      } },
     dex: { title: 'Bestiario', sub: '{n} especies · rareza = HP · granja / zoo / mar / bosque / cripta / chatarra / escarcha' },
     help: { title: 'Consejos y controles' },
     gear: {
       title: 'Equipo', sub: '5 huecos · armadura y cosméticos · nivel + tiempo',
       flagVanity: 'Solo look — sin stats', flagStats: '+ stats', flagArmour: 'Armadura',
       needLvl: 'Libre desde Lv {n}', needDays: 'Libre desde el día {n}',
+      unequip: 'Quitar', pickHint: 'Toca un objeto para equipar.',
+      lockOwned: 'Aún no encontrado', filterAll: 'Todo', filterOwned: 'Tuyo',
+      vanityHint: 'Sin stats — solo look',
       equip: 'Equipar', equipped: 'Puesto', empty: 'Vacío',
       slot: { head: 'Cabeza', chest: 'Pecho', hands: 'Manos', legs: 'Piernas', back: 'Espalda' },
     },
@@ -3743,6 +4035,17 @@ function tOr(key, fallback, params) {
   return fallback || '';
 }
 
+/** Locale toast/error copy — last resort is EN, never Dutch. */
+function errT(key, enFallback) {
+  try {
+    if (typeof t === 'function') {
+      const s = t(key);
+      if (s && s !== key) return s;
+    }
+  } catch (_) {}
+  return enFallback || '';
+}
+
 function rarityLabel(id) {
   return t('rarity.' + id) || rarityOf(id).name;
 }
@@ -3755,7 +4058,7 @@ function achLabel(ach, field) {
   const k = 'ach.' + ach.id + '.' + field;
   const v = t(k);
   if (v && v !== k) return v;
-  return ach[field];
+  return '';
 }
 
 function setText(id, key, params) {
@@ -4402,14 +4705,14 @@ const DAILY_PLAY_HINTS = {
   boss1: 'Avontuur: baas aan einde van een level',
 };
 const DAILY_PLAY_TARGETS = {
-  kills12: { mode: 'adventure', label: 'Avontuur' },
-  advwin: { mode: 'adventure', label: 'Avontuur' },
-  wall35: { mode: 'wall', label: 'Muur' },
-  trainwin: { mode: 'training', label: 'Training' },
-  combo5: { mode: 'adventure', label: 'Avontuur' },
-  finisher3: { mode: 'adventure', label: 'Avontuur' },
-  pick3: { mode: 'adventure', label: 'Avontuur' },
-  boss1: { mode: 'adventure', label: 'Avontuur' },
+  kills12: { mode: 'adventure' },
+  advwin: { mode: 'adventure' },
+  wall35: { mode: 'wall' },
+  trainwin: { mode: 'training' },
+  combo5: { mode: 'adventure' },
+  finisher3: { mode: 'adventure' },
+  pick3: { mode: 'adventure' },
+  boss1: { mode: 'adventure' },
 };
 function goDailyPlayTarget(taskId) {
   try {
@@ -4425,7 +4728,7 @@ function goDailyPlayTarget(taskId) {
       startGame('wall');
     }
   } catch (err) {
-    sfReportError('dailyPlay', err, 'Kon modus niet openen — kies handmatig in menu');
+    sfReportError('dailyPlay', err, errT('ui.errOpenMode', 'Could not open mode — pick from the menu'));
   }
 }
 const ACHIEVEMENTS = [
@@ -4676,7 +4979,7 @@ function claimDailyTask(taskId, opts) {
     AudioSys.sfx('bonus');
     UI.toast(t('toast.claimXp', { xp: def.xp, text: dailyText(taskId) }), 2800);
   }
-  if (!persistOrToast('missie-claim')) {
+  if (!persistOrToast('mission')) {
     task.claimed = snap.claimed;
     save.xp = snap.xp;
     save.lvl = snap.lvl;
@@ -4781,7 +5084,7 @@ function claimDailyDayBonus() {
     grantMetaXP(120, { deferPersist: true });
   }
   AudioSys.sfx('win');
-  if (!persistOrToast('dagbonus')) {
+  if (!persistOrToast('daily')) {
     save.daily.dayBonusClaimed = snap.dayBonusClaimed;
     save.stats.dailyBonusCount = snap.dailyBonusCount;
     save.stats.dailyStreak = snap.dailyStreak;
@@ -4847,15 +5150,19 @@ function dailyFlowBarHtml(step) {
   if (step === 0) {
     return `<div class="mission-flow-bar mission-flow-done">${t('missionsUi.flowDone')}</div>`;
   }
+  const line = (key) => {
+    const s = typeof t === 'function' ? t(key) : '';
+    return (s && s !== key) ? s : '';
+  };
   const mk = (n, label, sub) => {
     const active = step === n ? ' active' : '';
     const done = step > n ? ' done' : '';
     const small = sub ? `<small>${sub}</small>` : '';
     return `<span class="mission-flow-pill${active}${done}"><b>${n}</b> ${label}${small}</span>`;
   };
-  return `<div class="mission-flow-bar">${mk(1, t('missionsUi.flowPlay'), t('missionsUi.flowPlaySub'))}` +
-    `<span class="mission-flow-arrow">→</span>${mk(2, t('missionsUi.flowClaim'), t('missionsUi.flowClaimSub'))}` +
-    `<span class="mission-flow-arrow">→</span>${mk(3, t('missionsUi.flowBonus'), t('missionsUi.flowBonusSub'))}</div>`;
+  return `<div class="mission-flow-bar">${mk(1, line('missionsUi.flowPlay'), line('missionsUi.flowPlaySub'))}` +
+    `<span class="mission-flow-arrow">→</span>${mk(2, line('missionsUi.flowClaim'), line('missionsUi.flowClaimSub'))}` +
+    `<span class="mission-flow-arrow">→</span>${mk(3, line('missionsUi.flowBonus'), line('missionsUi.flowBonusSub'))}</div>`;
 }
 
 function dailyTaskRemainderText(task, def) {
@@ -4935,7 +5242,7 @@ function goAchievementPlayTarget(ach) {
       startGame('wall');
     }
   } catch (err) {
-    sfReportError('achPlay/' + (ach && ach.id), err, 'Kon modus niet openen — kies handmatig in menu');
+    sfReportError('achPlay/' + (ach && ach.id), err, errT('ui.errOpenMode', 'Could not open mode — pick from the menu'));
   }
 }
 
@@ -5278,20 +5585,20 @@ function saveExportSummaryLine(s) {
   if (eggs) line += t('ui.saveHealthEgg', { n: eggs });
   if (typeof countSkillUpgradeLevels === 'function') {
     const sk = countSkillUpgradeLevels(st);
-    if (sk) line += ` · skill +${sk} Lv`;
+    if (sk) line += t('ui.saveHealthSkill', { n: sk });
   }
   if (typeof countItemUpgradeLevels === 'function') {
     const it = countItemUpgradeLevels(st);
-    if (it) line += ` · item +${it} Lv`;
+    if (it) line += t('ui.saveHealthItem', { n: it });
   }
   const pc = Math.max(0, Math.floor(Number(st.petCoins) || 0));
-  if (pc) line += ` · ${pc} pet coins`;
+  if (pc) line += t('ui.saveHealthPetCoins', { n: pc });
   const gearN = st.gear && st.gear.owned && typeof st.gear.owned === 'object'
     ? Object.keys(st.gear.owned).length : 0;
-  if (gearN) line += ` · gear ${gearN}`;
+  if (gearN) line += t('ui.saveHealthGear', { n: gearN });
   if (typeof countBuildingLevels === 'function') {
     const bl = countBuildingLevels(st);
-    if (bl) line += ` · fabriek +${bl} Lv`;
+    if (bl) line += t('ui.saveHealthFactory', { n: bl });
   }
   return line;
 }
@@ -5457,14 +5764,14 @@ function updateSaveImportPreview(text) {
     const { save: next, meta, warnings } = previewImportSave(text);
     previewEl.style.display = 'block';
     previewEl.style.color = '#ffd75e';
-    const metaLine = meta && meta.app ? ` · export v${meta.app}` : '';
+    const metaLine = meta && meta.app ? t('ui.importPreviewMeta', { app: meta.app }) : '';
     const warnLine = warnings && warnings.length ? '\n' + warnings.join(' · ') : '';
     previewEl.textContent =
-      `Preview: ${saveExportSummaryLine(next)}${metaLine}.${warnLine} Import 2× om te laden.`;
+      t('ui.importPreview', { summary: saveExportSummaryLine(next), meta: metaLine }) + warnLine;
   } catch (e) {
     previewEl.style.display = 'block';
     previewEl.style.color = '#ffb0b8';
-    previewEl.textContent = (e && e.message) ? e.message : 'Ongeldige save-JSON';
+    previewEl.textContent = (e && e.message) ? e.message : t('ui.importInvalid');
   }
 }
 
@@ -5501,11 +5808,11 @@ function applySaveImportText(text, sourceLabel) {
 
 function readSaveImportFile(file) {
   return new Promise((resolve, reject) => {
-    if (!file) { reject(new Error('Geen bestand gekozen')); return; }
-    if (file.size > 120000) { reject(new Error('Save-bestand te groot (>120 KB)')); return; }
+    if (!file) { reject(new Error('No file chosen')); return; }
+    if (file.size > 120000) { reject(new Error('Save file too large (>120 KB)')); return; }
     const reader = new FileReader();
     reader.onload = () => resolve(String(reader.result || ''));
-    reader.onerror = () => reject(new Error('Bestand lezen mislukt'));
+    reader.onerror = () => reject(new Error('Could not read file'));
     reader.readAsText(file);
   });
 }
@@ -5519,10 +5826,10 @@ function bindSaveImportFile() {
     if (!file) return;
     safeAsync((async () => {
       const text = await readSaveImportFile(file);
-      if (!text.trim()) throw new Error('Bestand is leeg');
+      if (!text.trim()) throw new Error('File is empty');
       applySaveImportText(text, file.name || 'bestand');
       AudioSys.sfx('select');
-    })(), 'importSaveFile', 'Importbestand lezen mislukt');
+    })(), 'importSaveFile', errT('ui.errImportFile', 'Could not read import file'));
     try { input.value = ''; } catch (_) {}
   });
 }
@@ -5817,67 +6124,67 @@ function importPreviewWarnings(next, meta) {
       }
     } catch (_) {}
   }
-  if (meta && meta.app) lines.push('App-versie export: v' + meta.app);
+  if (meta && meta.app) lines.push(t('ui.importAppVer', { v: meta.app }));
   if (meta && meta.summary && typeof meta.summary === 'object') {
     const s = meta.summary;
     let sum = t('ui.saveHealthStats', { lvl: s.lvl, unlocked: s.unlocked, dex: s.dex, kills: s.kills || 0 }) + t('ui.saveExportAch', { n: s.achievements });
     if (s.summons) sum += t('ui.saveHealthSummon', { n: s.summons });
     if (s.pets) sum += t('ui.saveHealthPet', { n: s.pets });
     if (s.eggs) sum += t('ui.saveHealthEgg', { n: s.eggs });
-    if (s.skillUpLv) sum += ` · skill +${s.skillUpLv} Lv`;
-    if (s.itemUpLv) sum += ` · item +${s.itemUpLv} Lv`;
-    if (s.petCoins) sum += ` · ${s.petCoins} pet coins`;
-    if (s.style && s.style !== 'classic') sum += ` · stijl ${s.style}`;
+    if (s.skillUpLv) sum += t('ui.saveHealthSkill', { n: s.skillUpLv });
+    if (s.itemUpLv) sum += t('ui.saveHealthItem', { n: s.itemUpLv });
+    if (s.petCoins) sum += t('ui.saveHealthPetCoins', { n: s.petCoins });
+    if (s.style && s.style !== 'classic') sum += t('ui.saveHealthStyle', { name: s.style });
     lines.push(sum);
   }
   const summonN = summonCountFromSave(next);
   const curSummonN = summonCountFromSave(save);
-  if (summonN > curSummonN) lines.push(`+${summonN - curSummonN} summon-wapen(s) in import`);
-  else if (summonN < curSummonN) lines.push(`Minder summons dan nu (${summonN} vs ${curSummonN})`);
+  if (summonN > curSummonN) lines.push(t('ui.importMore', { n: summonN - curSummonN, kind: t('ui.importKindSummon') }));
+  else if (summonN < curSummonN) lines.push(t('ui.importFewer', { kind: t('ui.importKindSummon'), a: summonN, b: curSummonN }));
   const petN = petCountFromSave(next);
   const curPetN = petCountFromSave(save);
-  if (petN > curPetN) lines.push(`+${petN - curPetN} dex-pet(s) in import`);
-  else if (petN < curPetN) lines.push(`Minder pets dan nu (${petN} vs ${curPetN})`);
+  if (petN > curPetN) lines.push(t('ui.importMore', { n: petN - curPetN, kind: t('ui.importKindPet') }));
+  else if (petN < curPetN) lines.push(t('ui.importFewer', { kind: t('ui.importKindPet'), a: petN, b: curPetN }));
   const eggN = eggCountFromSave(next);
   const curEggN = eggCountFromSave(save);
-  if (eggN > curEggN) lines.push(`+${eggN - curEggN} ei-pet(s) in import`);
-  else if (eggN < curEggN) lines.push(`Minder ei-pets dan nu (${eggN} vs ${curEggN})`);
+  if (eggN > curEggN) lines.push(t('ui.importMore', { n: eggN - curEggN, kind: t('ui.importKindEgg') }));
+  else if (eggN < curEggN) lines.push(t('ui.importFewer', { kind: t('ui.importKindEgg'), a: eggN, b: curEggN }));
   if (typeof countSkillUpgradeLevels === 'function') {
     const skN = countSkillUpgradeLevels(next);
     const curSkN = countSkillUpgradeLevels(save);
-    if (skN > curSkN) lines.push(`+${skN - curSkN} skill-upgrade Lv in import`);
-    else if (skN < curSkN) lines.push(`Minder skill-upgrades (${skN} vs ${curSkN} Lv)`);
+    if (skN > curSkN) lines.push(t('ui.importMore', { n: skN - curSkN, kind: t('ui.importKindSkill') }));
+    else if (skN < curSkN) lines.push(t('ui.importFewer', { kind: t('ui.importKindSkill'), a: skN, b: curSkN }));
   }
   if (typeof countItemUpgradeLevels === 'function') {
     const itN = countItemUpgradeLevels(next);
     const curItN = countItemUpgradeLevels(save);
-    if (itN > curItN) lines.push(`+${itN - curItN} item-upgrade Lv in import`);
-    else if (itN < curItN) lines.push(`Minder item-upgrades (${itN} vs ${curItN} Lv)`);
+    if (itN > curItN) lines.push(t('ui.importMore', { n: itN - curItN, kind: t('ui.importKindItem') }));
+    else if (itN < curItN) lines.push(t('ui.importFewer', { kind: t('ui.importKindItem'), a: itN, b: curItN }));
   }
   const impCoins = Math.max(0, Math.floor(Number(next.petCoins) || 0));
   const curCoins = Math.max(0, Math.floor(Number(save.petCoins) || 0));
-  if (impCoins > curCoins) lines.push(`+${impCoins - curCoins} pet coins in import`);
-  else if (impCoins < curCoins) lines.push(`Minder pet coins (${impCoins} vs ${curCoins})`);
+  if (impCoins > curCoins) lines.push(t('ui.importMore', { n: impCoins - curCoins, kind: t('ui.importKindCoins') }));
+  else if (impCoins < curCoins) lines.push(t('ui.importFewer', { kind: t('ui.importKindCoins'), a: impCoins, b: curCoins }));
   if (next.style !== save.style) {
-    lines.push(`Stijl ${save.style || 'classic'} → ${next.style || 'classic'}`);
+    lines.push(t('ui.importStyleChange', { from: save.style || 'classic', to: next.style || 'classic' }));
   }
   if (next.lvl < save.lvl || next.unlocked < save.unlocked) {
-    lines.push('Lager niveau/unlock dan huidige save op dit apparaat');
+    lines.push(t('ui.importLower'));
   } else if (next.lvl > save.lvl || next.unlocked > save.unlocked) {
-    lines.push('Hogere voortgang dan huidige save — goed voor overzet');
+    lines.push(t('ui.importHigher'));
   }
   return lines;
 }
 
 function previewImportSave(text) {
-  if (typeof text !== 'string' || !text.trim()) throw new Error('Plak eerst save-JSON in het vak');
-  if (text.length > 120000) throw new Error('Save te groot of ongeldig');
+  if (typeof text !== 'string' || !text.trim()) throw new Error(t('ui.importErrEmpty'));
+  if (text.length > 120000) throw new Error(t('ui.importErrTooBig'));
   let parsed;
   try { parsed = JSON.parse(text); } catch (_) {
-    throw new Error('Geen geldige JSON — controleer plaksel');
+    throw new Error(t('ui.importErrJson'));
   }
   if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) {
-    throw new Error('Ongeldige save-structuur');
+    throw new Error(t('ui.importErrStruct'));
   }
   parsed = unwrapSavePayload(parsed);
   const meta = parsed._exportMeta;
@@ -5942,7 +6249,7 @@ function sfReportError(where, err, userMsg) {
   if (!window.__sfErrToastT || now - window.__sfErrToastT > 4500) {
     window.__sfErrToastT = now;
     // Default mag NOOIT "terug naar menu" beloven — fight blijft vaak staan
-    userToast(userMsg || 'Hiccup — spel gaat door');
+    userToast(userMsg || errT('toast.hiccupContinue', 'Hiccup — game continues'));
   }
 }
 
@@ -6411,7 +6718,7 @@ function scheduleGameResult(gameRef, delayMs, showFn) {
       if (state === 'menu') return;
       gameRef._pendingResult = false;
       showFn();
-    }, 'scheduleGameResult', 'Resultaat laden mislukt — tik Menu of Opnieuw');
+    }, 'scheduleGameResult', errT('ui.errResultLoad', 'Could not load result — tap Menu or Again'));
   }, Math.max(0, delayMs || 0));
 }
 
@@ -6485,7 +6792,7 @@ function recoverToMenu(opts) {
     ensureVisibleScreen();
   } catch (err) {
     console.error('[Stickman] recoverToMenu', err);
-    sfReportError('recoverToMenu', err, 'Herstel mislukt — herlaad de pagina als menu vastzit');
+    sfReportError('recoverToMenu', err, errT('ui.errRecoverMenu', 'Recover failed — reload if the menu is stuck'));
     state = 'menu';
     game = null;
     syncPlayLayer();
@@ -6506,7 +6813,7 @@ function importSaveJson(text) {
   const { save: next, warnings } = previewImportSave(text);
   const keptBackup = typeof snapshotSaveToBackup === 'function' && snapshotSaveToBackup(save);
   save = next;
-  if (!persistPrimaryOnly()) throw new Error('Import gelukt maar opslaan mislukt — probeer opnieuw');
+  if (!persistPrimaryOnly()) throw new Error('Import ok but persist failed — try again');
   try { if (typeof syncAudioThemeAfterSaveChange === 'function') syncAudioThemeAfterSaveChange(); } catch (_) {}
   try { checkAchievements(); } catch (_) {}
   try { UI.renderMenu(); } catch (_) {}
@@ -6552,7 +6859,7 @@ function resumeLastPlay() {
     }
     return true;
   } catch (err) {
-    sfReportError('resumeLastPlay', err, 'Verder spelen mislukt — kies een modus');
+    sfReportError('resumeLastPlay', err, errT('ui.errResume', 'Resume failed — pick a mode'));
     return false;
   }
 }
@@ -6568,7 +6875,7 @@ function startAdventureFromGamble(skipGamble) {
     startGame('adventure', { level, gamble, difficulty: diff });
   } catch (err) {
     cancelGambleStart();
-    sfReportError('gambleStart', err, 'Avontuur starten mislukt — kies level opnieuw');
+    sfReportError('gambleStart', err, errT('ui.errLevelStart', 'Could not start level'));
   }
 }
 
@@ -6926,7 +7233,7 @@ function copyPlayLink() {
     } catch (_) {
       UI.toast(url, 4500);
     }
-  })(), 'copyLink', 'Link kopiëren mislukt — zie Instellingen → Deel link');
+  })(), 'copyLink', errT('ui.errCopyLink', 'Could not copy link — see Settings'));
 }
 
 function sharePlayLink() {
@@ -6950,7 +7257,7 @@ function sharePlayLink() {
     } catch (_) {
       UI.toast(url, 4500);
     }
-  })(), 'shareLink', 'Delen mislukt — kopieer link via Instellingen');
+  })(), 'shareLink', errT('ui.errShare', 'Share failed — copy the link in Settings'));
 }
 
 function isTunnelHostUrl(u) {
@@ -7139,25 +7446,11 @@ function modeFirstMinuteLine(mode) {
   const key = touch ? base : base + 'Kb';
   const localized = typeof t === 'function' ? t(key) : '';
   if (localized && localized !== key) return localized;
-  // Fallback if Kb key missing: try base touch key only on touch
   if (!touch) {
-    const lines = {
-      adventure: 'Eerste minuut: A/D lopen · W springen · J/K/L · U technique · Shift subst',
-      training: 'Eerste minuut: spring lasers · Shift = substitutie · energy vol → U',
-      wall: '60s · combo-milestones · A/D · J/K/L · record-tempo in HUD',
-      versus: 'Eerste minuut: P1 WASD+JKL · P2 pijltjes+1-5 · best-of-3',
-      coinrun: 'Munten pakken · W/↑ hoger mikken · J/K shuriken · max 3 snel',
-    };
-    return lines[mode] || lines.adventure;
+    const baseLine = typeof t === 'function' ? t(base) : '';
+    if (baseLine && baseLine !== base) return baseLine;
   }
-  const lines = {
-    adventure: 'Eerste minuut: links lopen · rechts slaan · joy ↑ mik op vliegers · vol energy = SUPER',
-    training: 'Eerste minuut: spring rode laser · blokkeer dichtbij · energy vol → SUPER',
-    wall: '60s · combo ×3/×5/×8 hints · record-tempo + projectie in HUD',
-    versus: 'Eerste minuut: P1 links · P2 rechts',
-    coinrun: '45s munten · joy ↑ mik · roze vlieger = +3 · max 3 shuriken snel',
-  };
-  return lines[mode] || lines.adventure;
+  return '';
 }
 
 /** Eén keer Ketsbam-uitleg — geen toast (avontuur ontsnapping). */
@@ -7167,9 +7460,7 @@ function ketsbamOnboardHintLine() {
   const key = IS_TOUCH ? 'ui.ketsbamOnboardTouch' : 'ui.ketsbamOnboardKb';
   const line = typeof t === 'function' ? t(key) : '';
   if (line && line !== key) return line;
-  return IS_TOUCH
-    ? 'Omringd? Tik het midden-symbool — Ketsbam-ontsnapping · 9s cooldown'
-    : 'Omringd? E of midden-symbool = Ketsbam · 9s cooldown';
+  return '';
 }
 
 function markKetsbamOnboardSeen() {
@@ -7186,11 +7477,9 @@ function tideBattleOnboardPending() {
 
 function tideBattleOnboardHintLine(bossName) {
   const key = IS_TOUCH ? 'ui.tideBattleOnboardTouch' : 'ui.tideBattleOnboardKb';
-  const line = typeof t === 'function' ? t(key, { name: bossName || 'baas' }) : '';
+  const line = typeof t === 'function' ? t(key, { name: bossName || '' }) : '';
   if (line && line !== key) return line;
-  return IS_TOUCH
-    ? `Eerste Tide Battle: versla ${bossName || 'de baas'} — geen andere golven tot klaar`
-    : `First Tide Battle: defeat ${bossName || 'the boss'} — waves pause until done`;
+  return '';
 }
 
 function markTideBattleOnboardSeen() {
@@ -7235,10 +7524,7 @@ function gambleOnboardHintLine() {
   persist();
   const key = IS_TOUCH ? 'ui.gambleOnboardTouch' : 'ui.gambleOnboardKb';
   const line = typeof t === 'function' ? t(key) : '';
-  return (line && line !== key) ? line
-    : (IS_TOUCH
-      ? 'Eerste keer gok: lage som = super-baas · hoge som = bondgenoot · Overslaan = normaal level'
-      : 'Eerste keer: sum ≤5 super-baas · sum ≥9 ally buff · Skip = geen gok');
+  return (line && line !== key) ? line : '';
 }
 
 /** Welcome only on HOME hub — never chase Adventure/Settings/title. */
@@ -8021,22 +8307,22 @@ function tickWeaponStatusEffects(game, dt) {
 const STYLES = [
   { id: 'classic', name: 'Klassiek', body: '#f2f5ff', accent: '#3db8ff', bandana: null,
     needLvl: 1, hint: 'Standaard ninja',
-    tooltip: 'Basis ninja — geen bonus, wel de snelste unlock.',
-    bonus: 'Geen combat-bonus' },
-  { id: 'leaf_band', name: 'Leaf bandana', body: '#f2f5ff', accent: '#43b25b', bandana: '#2d6b36', plate: '#dfe8ff',
-    needLvl: 5, hint: 'Unlock op Lv 5',
-    tooltip: 'Leaf-dorp headband. Iets meer max HP — standvastig in lange levels.',
+    tooltip: 'Basis ninja — geen bonus, wel de snelste vrijgave.',
+    bonus: 'Geen gevechtsbonus' },
+  { id: 'leaf_band', name: 'Blad-bandana', body: '#f2f5ff', accent: '#43b25b', bandana: '#2d6b36', plate: '#dfe8ff',
+    needLvl: 5, hint: 'Vrij vanaf Lv 5',
+    tooltip: 'Blad-dorp hoofdband. Iets meer max HP — standvastig in lange levels.',
     bonus: '+5 max HP', mods: { maxHp: 5 } },
   { id: 'energy_glow', name: 'Energie gloed', body: '#e8f4ff', accent: '#7cf5ff', bandana: '#3db8ff', glow: true,
     needTrain: 3, hint: 'Win 3× training',
-    tooltip: 'Blauwe energy-aura. Energy laadt sneller — vaker Spiral Orb/Lightning Pierce.',
-    bonus: '+8% energy-regen', mods: { energyMul: 1.08 } },
+    tooltip: 'Blauwe energie-aura. Energie laadt sneller — vaker Spiral Orb/Lightning Pierce.',
+    bonus: '+8% energie-regen', mods: { energyMul: 1.08 } },
   { id: 'crimson_pact', name: 'Rode mantel', body: '#1a1424', accent: '#e04f4f', bandana: '#e04f4f', coat: true,
-    needLvl: 12, hint: 'Unlock op Lv 12',
+    needLvl: 12, hint: 'Vrij vanaf Lv 12',
     tooltip: 'Rode mantel — agressieve slagen. Meer schade op melee en wapens.',
     bonus: '+4% schade', mods: { dmgMul: 1.04 } },
   { id: 'shadow', name: 'Schaduw-ninja', body: '#8fa3d9', accent: '#b06ae0', bandana: '#2a1840',
-    needLvl: 15, hint: 'Unlock op Lv 15',
+    needLvl: 15, hint: 'Vrij vanaf Lv 15',
     tooltip: 'Schaduw-stappen. Extra crit-kans op alle hits.',
     bonus: '+3% crit', mods: { critBonus: 0.03 } },
   { id: 'guvve', name: 'Guvvedukkie', body: '#43b25b', accent: '#ffe259', bandana: '#2a8a38', duck: true,
@@ -8044,41 +8330,41 @@ const STYLES = [
     tooltip: 'Quack-cosplay. Bonus XP bij avontuur-kills — licht, geen grind.',
     bonus: '+6% avontuur-XP', mods: { xpMul: 1.06 } },
   { id: 'gold', name: 'Legendarisch', body: '#ffd75e', accent: '#c97a20', bandana: '#ffb830', glow: true,
-    needLvl: 25, hint: 'Unlock op Lv 25',
-    tooltip: 'Gouden outline + gloed. Sterkere knockback op kicks en specials.',
-    bonus: '+10% knockback', mods: { kbMul: 1.1 } },
+    needLvl: 25, hint: 'Vrij vanaf Lv 25',
+    tooltip: 'Gouden outline + gloed. Sterkere terugslag op kicks en specials.',
+    bonus: '+10% terugslag', mods: { kbMul: 1.1 } },
   { id: 'sand', name: 'Woestijn', body: '#e8c98a', accent: '#c97a20', bandana: '#8a6030',
-    needLvl: 8, hint: 'Unlock op Lv 8',
+    needLvl: 8, hint: 'Vrij vanaf Lv 8',
     tooltip: 'Zandmantel — minder schade bij hits én sterker blok. Tank-stijl voor omringing.',
     bonus: '−14% schade · blok −25% chip', mods: { defMul: 0.86, blockMul: 0.75 } },
   { id: 'samurai', name: 'Samurai', body: '#2a2a35', accent: '#e04f4f', bandana: '#1a1a22', topknot: true,
-    needLvl: 20, hint: 'Unlock op Lv 20',
+    needLvl: 20, hint: 'Vrij vanaf Lv 20',
     tooltip: 'Topknot + katana-houding. Wapen-combo’s raken iets verder.',
-    bonus: '+8% wapen-reach', mods: { weaponRange: 1.08 } },
+    bonus: '+8% wapenbereik', mods: { weaponRange: 1.08 } },
   { id: 'cyber', name: 'Cyber-ninja', body: '#1a2040', accent: '#7cf5ff', bandana: '#4ecf6a', visor: true, lightning: true,
-    needLvl: 18, hint: 'Unlock op Lv 18',
-    tooltip: 'Neon-visier + bliksem-flits bij melee. Snellere energy en visuele chain-sparks.',
-    bonus: 'Lightning FX · +6% energy', mods: { energyMul: 1.06, lightning: true, dmgMul: 1.02 } },
+    needLvl: 18, hint: 'Vrij vanaf Lv 18',
+    tooltip: 'Neon-visier + bliksem-flits bij melee. Snellere energie en visuele chain-sparks.',
+    bonus: 'Bliksem-FX · +6% energie', mods: { energyMul: 1.06, lightning: true, dmgMul: 1.02 } },
   { id: 'fox', name: 'Vossen-ninja', body: '#ff8c42', accent: '#ffe259', bandana: '#d05a1e', fox: true,
     needDex: 12, hint: '12 monsters in boek',
     tooltip: 'Vossenoren — sneller op de grond. Ideaal voor kiting en shuriken.',
     bonus: '+5% loopsnelheid', mods: { speedMul: 1.05 } },
   { id: 'storm', name: 'Stormgeest', body: '#dfe8ff', accent: '#6fd7ff', bandana: '#2a7fc0', glow: true, lightning: true,
     needTrain: 5, hint: 'Win 5× training',
-    tooltip: 'Storm-aura + zachte bliksem. Extra shield bij start van elke golf.',
-    bonus: 'Lightning gloed · +0.8s shield/golf', mods: { shieldWave: 0.8, lightning: true } },
-  { id: 'void', name: 'Void-waker', body: '#2a1840', accent: '#ff6b9d', bandana: '#5a1040', coat: true,
-    needLvl: 40, hint: 'Unlock op Lv 40',
-    tooltip: 'Void-mantel — zwaardere technique. Specials (Spiral Orb/Lightning Pierce/Void Gaze) raken harder.',
-    bonus: '+8% technique-schade', mods: { techniqueMul: 1.08 } },
+    tooltip: 'Storm-aura + zachte bliksem. Extra schild bij start van elke golf.',
+    bonus: 'Bliksem-gloed · +0.8s schild/golf', mods: { shieldWave: 0.8, lightning: true } },
+  { id: 'void', name: 'Leegte-loper', body: '#2a1840', accent: '#ff6b9d', bandana: '#5a1040', coat: true,
+    needLvl: 40, hint: 'Vrij vanaf Lv 40',
+    tooltip: 'Leegte-mantel — zwaardere techniek. Specials (Spiral Orb/Lightning Pierce/Void Gaze) raken harder.',
+    bonus: '+8% techniek-schade', mods: { techniqueMul: 1.08 } },
   { id: 'hunter', name: 'Jagerlook', body: '#6b5344', accent: '#5ad06a', bandana: '#3d5c32', hunter: true,
     needDexKills: 75, hint: '75 kills in monsterboek',
     tooltip: 'Jager-cape + groene accenten. Bonus schade vs monsters in avontuur.',
     bonus: '+6% vs monsters', mods: { advDmgMul: 1.06 } },
   { id: 'crystal', name: 'Kristallijn', body: '#e8f7ff', accent: '#6fd7ff', bandana: '#2f7fc0', glow: true, crystal: true,
     needDexTiers: 4, hint: '4 rariteiten in monsterboek',
-    tooltip: 'Kristallen shard — reflecterende gloed. Korte shield elke golf.',
-    bonus: '+1.0s shield/golf', mods: { shieldWave: 1.0 } },
+    tooltip: 'Kristallen shard — reflecterende gloed. Kort schild elke golf.',
+    bonus: '+1.0s schild/golf', mods: { shieldWave: 1.0 } },
   { id: 'tome', name: 'Boekmeester', body: '#f5efe6', accent: '#c98850', bandana: '#6b5344', tome: true,
     needDexHalf: true, hint: 'Helft van het monsterboek',
     tooltip: 'Monsterboek op je rug. Meer HP-bonus bij nieuwe dex-ontdekkingen (visueel + klein HP-top-up).',
@@ -8613,17 +8899,17 @@ function gearGateCopy(item, s, now) {
     return fallback;
   };
   if (!item) return '';
-  if (!gearItemOwned(item.id, s)) return tr('gear.lockOwned', 'Nog niet gevonden');
+  if (!gearItemOwned(item.id, s)) return tr('gear.lockOwned', 'Not found yet');
   const gate = gearGateState(item, s, now);
   if (!gate || gate.ok) return '';
   const why = (gate.reasons && gate.reasons[0]) || 'locked';
   if (why === 'level') return tr('gear.lockLevel', 'Lv {n}', { n: gate.needLvl });
-  if (why === 'time') return tr('gear.lockDays', '{n} dagen', { n: gate.needDays });
+  if (why === 'time') return tr('gear.lockDays', '{n} days', { n: gate.needDays });
   if (why === 'adventure') {
     const n = item.needAdvUnlocked != null ? item.needAdvUnlocked : gate.needLvl;
-    return tr('gear.lockAdv', 'Avontuur Lv {n}', { n });
+    return tr('gear.lockAdv', 'Adventure Lv {n}', { n });
   }
-  if (why === 'diff') return tr('gear.lockDiff', 'Nog niet vrij');
+  if (why === 'diff') return tr('gear.lockDiff', 'Not free yet');
   return tr('gear.pillLock', 'LOCK');
 }
 
@@ -8856,7 +9142,7 @@ function gearEquipState(id, s, now, expectSlot) {
         state: GEAR_EQUIP_STATES.WRONG_SLOT,
         item,
         owned: gearItemOwned(item.id, parsed.s),
-        label: (typeof tOr === 'function') ? tOr('gear.lockSlot', 'Verkeerd slot') : 'Verkeerd slot',
+        label: (typeof tOr === 'function') ? tOr('gear.lockSlot', 'Wrong slot') : 'Wrong slot',
       });
     }
   }
@@ -12458,8 +12744,9 @@ function buildingLabel(id, field) {
   if (!def) return id || '?';
   const f = field || 'name';
   const key = 'buildings.' + def.id + '.' + f;
-  if (typeof tOr === 'function') return tOr(key, def[f] || def.name);
-  return def[f] || def.name;
+  const fallback = def[f] || (f === 'nameShort' ? def.short : def.name) || def.name;
+  if (typeof tOr === 'function') return tOr(key, fallback);
+  return fallback;
 }
 
 function buildingResourceLabel(resId) {
@@ -12479,14 +12766,29 @@ function buildingTxt(key, fallback, params) {
   return out;
 }
 
+function buildingPowerField(power, field, fallback) {
+  if (!power) return '';
+  const id = power.id;
+  if (typeof t === 'function') {
+    const nestedKey = 'buildings.power.' + id + '.' + field;
+    const nested = t(nestedKey);
+    if (nested && nested !== nestedKey) return nested;
+    if (field === 'label') {
+      const flat = t('buildings.power.' + id);
+      if (flat && flat !== 'buildings.power.' + id) return flat;
+    }
+  }
+  return fallback || '';
+}
+
 function buildingPowerLabel(power) {
   if (!power) return '';
-  return buildingTxt('buildings.power.' + power.id + '.label', power.label || power.id);
+  return buildingPowerField(power, 'label', power.label || power.id);
 }
 
 function buildingPowerBlurb(power) {
   if (!power) return '';
-  return buildingTxt('buildings.power.' + power.id + '.blurb', power.blurb || '');
+  return buildingPowerField(power, 'blurb', '');
 }
 
 function buildingCostLabel(cost) {
@@ -12559,6 +12861,7 @@ function buildingTooltipModel(id, st) {
   return {
     id: def.id,
     name: buildingLabel(def.id, 'name'),
+    nameShort: buildingLabel(def.id, 'nameShort'),
     blurb: buildingLabel(def.id, 'blurb'),
     short: def.short,
     worldUnlock: def.worldUnlock,
@@ -14928,6 +15231,51 @@ function refreshA11yUi() {
   } catch (_) {}
 }
 
+/** Wrap / ellipsis canvas HUD copy so a 390px-scaled fight stays one readable pill. */
+function wrapHudLines(c, text, maxW, maxLines) {
+  maxLines = Math.max(1, maxLines || 2);
+  maxW = Math.max(24, maxW || 200);
+  text = String(text == null ? '' : text).replace(/\s+/g, ' ').trim();
+  if (!text) return [''];
+  function fit(str) {
+    if (c.measureText(str).width <= maxW) return str;
+    let s = str;
+    while (s.length > 1 && c.measureText(s + '…').width > maxW) s = s.slice(0, -1);
+    return s.replace(/\s+$/, '') + '…';
+  }
+  if (c.measureText(text).width <= maxW) return [text];
+  const words = text.split(' ');
+  const lines = [];
+  let cur = '';
+  for (let i = 0; i < words.length; i++) {
+    const word = words[i];
+    const next = cur ? cur + ' ' + word : word;
+    if (cur && c.measureText(next).width > maxW) {
+      lines.push(cur);
+      cur = word;
+      if (lines.length >= maxLines - 1) {
+        lines.push(fit([cur].concat(words.slice(i + 1)).join(' ')));
+        return lines;
+      }
+      if (c.measureText(cur).width > maxW) {
+        lines.push(fit(cur));
+        cur = '';
+        if (lines.length >= maxLines) return lines;
+      }
+    } else {
+      cur = next;
+    }
+  }
+  if (cur) {
+    if (lines.length >= maxLines) {
+      lines[maxLines - 1] = fit(lines[maxLines - 1] + ' ' + cur);
+      return lines.slice(0, maxLines);
+    }
+    lines.push(c.measureText(cur).width > maxW ? fit(cur) : cur);
+  }
+  return lines.length ? lines : [fit(text)];
+}
+
 /** Canvas HUD-tekst met optionele stroke bij hoog contrast (geen flits). */
 function fillHudText(c, text, x, y, opts) {
   opts = opts || {};
@@ -17193,8 +17541,8 @@ function reportTideBattleRecover(reason, err) {
   if (window.__sfTideRecoverT && now - window.__sfTideRecoverT < 6000) return;
   window.__sfTideRecoverT = now;
   const msg = reason === 'spawn'
-    ? 'Tide Battle start mislukt — ga verder met avontuur'
-    : 'Tide Battle hersteld — muziek/HUD gesynchroniseerd';
+    ? errT('ui.errTideStart', 'Tide Battle start failed — keep going')
+    : errT('ui.errProgressSafe', 'Progress is safe — keep playing');
   if (typeof sfReportError === 'function') sfReportError('tideBattle/' + (reason || 'recover'), err, msg);
   else if (typeof userToast === 'function') userToast(msg, 3400);
 }
@@ -17658,8 +18006,8 @@ function reportSatanRecover(reason, err) {
   if (window.__sfSatanRecoverT && now - window.__sfSatanRecoverT < 6000) return;
   window.__sfSatanRecoverT = now;
   const msg = reason === 'spawn'
-    ? 'Satan-gevecht start mislukt — avontuur gaat verder'
-    : 'Satan-gevecht hersteld';
+    ? errT('ui.errSatanStart', 'Satan start failed — adventure continues')
+    : errT('ui.errProgressSafe', 'Progress is safe — keep playing');
   if (typeof sfReportError === 'function') sfReportError('satan/' + (reason || 'recover'), err, msg);
   else if (typeof userToast === 'function') userToast(msg, 3400);
 }
@@ -17759,6 +18107,13 @@ const PET_BY_SPECIES = Object.fromEntries(PET_ROSTER.map(p => [p.speciesId, p]))
 
 function petDef(id) { return PET_BY_ID[id] || null; }
 
+function petPerkLabel(def) {
+  if (!def) return '';
+  const key = 'pets.perk.' + def.id;
+  if (typeof tOr === 'function') return tOr(key, def.perk || '');
+  return def.perk || '';
+}
+
 function petKillNeed(speciesOrPetId) {
   const def = PET_BY_ID[speciesOrPetId] || PET_BY_SPECIES[speciesOrPetId];
   const sp = def ? SPECIES[def.speciesId] : SPECIES[speciesOrPetId];
@@ -17857,8 +18212,8 @@ function petProgressLine(speciesId) {
   const need = petKillNeed(speciesId);
   const cur = save.dex[speciesId] || 0;
   const coinHint = petCoinsBalance() > 0 ? ` · ${petCoinsBalance()}/${cost} PC` : '';
-  if (cur <= 0) return `Pet · ${need} kills${coinHint}`;
-  return `Pet · ${Math.min(cur, need)}/${need} kills${coinHint}`;
+  if (cur <= 0) return t('pet.killsNeed', { need }) + coinHint;
+  return t('pet.killsProgress', { cur: Math.min(cur, need), need }) + coinHint;
 }
 /* --- src/data/buildings-powers.js --- */
 /* Stickman Fighter — buildings powers + timed resources (4 of 4)
@@ -18782,6 +19137,12 @@ function petProgressLine(speciesId) {
   }
 
   function labelOf(key, fallback) {
+    if (typeof t === 'function') {
+      const nested = t('buildings.power.' + key + '.label');
+      if (nested && nested !== 'buildings.power.' + key + '.label') return nested;
+      const flat = t('buildings.power.' + key);
+      if (flat && flat !== 'buildings.power.' + key) return flat;
+    }
     if (typeof tOr === 'function') return tOr('buildings.power.' + key, fallback);
     return fallback;
   }
@@ -19000,7 +19361,7 @@ function petProgressLine(speciesId) {
         }
       }
     } catch (err) {
-      try { if (typeof sfReportError === 'function') sfReportError('building/combat', err, 'Fabriek-proc hiccup'); } catch (e6) { /* ignore */ }
+      try { if (typeof sfReportError === 'function') sfReportError('building/combat', err, errT('toast.fightHiccup', 'Hiccup — fight continues')); } catch (e6) { /* ignore */ }
     }
   }
 
@@ -19725,6 +20086,18 @@ const EGG_BY_ID = Object.fromEntries(EGG_ROSTER.map(e => [e.id, e]));
 
 function eggDef(id) { return EGG_BY_ID[id] || null; }
 
+function eggPetName(def) {
+  if (!def) return '';
+  if (typeof tOr === 'function') return tOr('egg.name.' + def.id, def.name || def.id);
+  return def.name || def.id || '';
+}
+
+function eggPerkLabel(def) {
+  if (!def) return '';
+  if (typeof tOr === 'function') return tOr('egg.perk.' + def.id, def.perk || '');
+  return def.perk || '';
+}
+
 function isEggOwned(id) {
   return !!(save.eggPets && save.eggPets[id]);
 }
@@ -19825,7 +20198,7 @@ function eggProgressSummary() {
   return {
     owned,
     total: EGG_ROSTER.length,
-    activeName: active ? active.name : t('ui.petNone'),
+    activeName: active ? eggPetName(active) : t('ui.petNone'),
     daily: eggDailyStatusLine(),
   };
 }
@@ -20303,8 +20676,8 @@ function chestResultToast(res) {
         : 'Geen summons meer vandaag';
     }
     return (typeof tOr === 'function')
-      ? tOr('ui.summonFail', 'Summon mislukt — probeer opnieuw')
-      : 'Summon mislukt — probeer opnieuw';
+      ? errT('ui.summonFail', 'Summon failed — try again')
+      : errT('ui.summonFail', 'Summon failed — try again');
   }
   if (res.type === 'weapon_unlock') {
     return `✦ ${res.name} ontgrendeld! · ${rarityLabel(res.rarity)}${res.skill ? ' · ' + res.skill : ''}`;
@@ -20612,7 +20985,7 @@ function seedNlGameStrings() {
     p1RoundWin: 'P1 WINT RONDE!',
     p2RoundWin: 'P2 WINT RONDE!',
     timeHpVs: 'TIME! {hp1}% vs {hp2}% · {msg}',
-    summon: '✦ SUMMON! ✦',
+    summon: '✦ KIST! ✦',
     summonAscend: '{name} → {rar}!',
     newDex: 'Nieuw {rar}: {name}! +{hp} max HP',
     pet: 'PET! {name}',
@@ -20641,12 +21014,12 @@ function seedNlGameStrings() {
   if (!I18N.nl.result) I18N.nl.result = {};
   Object.assign(I18N.nl.result, {
     advWin: 'GEWONNEN!', advLose: 'VERLOREN', trainWin: 'KAMPIOEN!', trainLose: 'ROBOT WINT...',
-    advLoseKeep: 'XP en loot van deze run blijven',
+    advLoseKeep: 'XP en buit van deze ronde blijven',
     trainAgainSub: 'vs RabbitRobot',
     wavesStart: 'begin',
     vsP1Win: 'SPELER 1 WINT!', vsP2Win: 'SPELER 2 WINT!', wallRecord: 'NIEUW RECORD!', wallTime: 'TIJD IS OM!',
     matsRecord: 'RECORD!', matsDone: 'Goed gedaan!',
-    perfectRun: 'Perfecte run — hou je HP hoog!',
+    perfectRun: 'Perfecte ronde — hou je HP hoog!',
     pickupsHelp: '{hint} — pickups helpen',
     lossBlockTip: 'Tip: blokkeer · mik omhoog op vliegers · {prog}',
     lossOrbTip: 'Tip: pak groene orbs · vul SUPER vóór baas · {prog}',
@@ -20674,7 +21047,7 @@ function seedNlGameStrings() {
     wallComboBarTip: 'Tip: snelle opeenvolgende slagen vullen de combo-balk',
     wallStrongCombo: 'Sterke combo (×{n}) — volgende keer record?',
     wallBehindPace: 'Achter record-tempo — probeer combo ×5+ voor meer sloop',
-    wallGoodPace: 'Goed tempo — volgende run kan record breken!',
+    wallGoodPace: 'Goed tempo — volgende ronde kan record breken!',
     matsPetTip: 'Pet coins uitgeven in Collectie → Pets · elke 2 munten = 1 pet coin',
     matsControlTip: 'Joystick omhoog = hoger mikken (slag + gooi) · shuriken max 3× snel',
     masterBuffActive: ' · Meester-buff actief',
@@ -20699,10 +21072,10 @@ function seedNlGameStrings() {
   });
   if (!I18N.nl.runLoot) I18N.nl.runLoot = {};
   Object.assign(I18N.nl.runLoot, {
-    head: 'Deze run · buit naast XP',
-    headAdv: 'Deze run · buit naast XP',
+    head: 'Deze ronde · buit naast XP',
+    headAdv: 'Deze ronde · buit naast XP',
     hudShort: 'Buit: {line}',
-    summonLine: 'Summon: {name} → {rar}',
+    summonLine: 'Kist: {name} → {rar}',
     dexLine: 'Boek: {name} ({rar})',
     hpBonusLine: '+{n} max HP uit boek',
     petLine: 'Pet getemd: {name}',
@@ -20889,9 +21262,9 @@ function seedNlGameStrings() {
     backupDrift: ' (hoofd en backup verschillen)',
     backupRestored: 'Backup teruggezet — save + backup synchroon',
     backupFailed: 'Backup herstellen mislukt — export save als je die hebt',
-    syncConfirm: 'Sync overschrijft backup met hoofd-save — tik nogmaals',
-    syncOk: 'Backup gesynchroniseerd met hoofd-save',
-    syncFailed: 'Sync mislukt — export save als vangnet',
+    syncConfirm: 'Online-save overschrijft backup — tik nogmaals',
+    syncOk: 'Backup gelijk met hoofd-save',
+    syncFailed: 'Afstemming mislukt — export save als vangnet',
     clearConfirm: 'Nogmaals tikken = voortgang wissen (backup blijft)',
     newStart: 'Nieuwe start — backup staat nog in Instellingen',
     exportCopied: 'Save gekopieerd + download · {summary} (~{size})',
@@ -20906,6 +21279,14 @@ function seedNlGameStrings() {
     persistPrimaryFail: 'Hoofd-save mislukt — backup wel bijgewerkt (export in Instellingen)',
     persistFail: 'Opslaan mislukt — export save in Instellingen',
     persistFailCtx: 'Opslaan mislukt ({context}) — export save in Instellingen',
+    resultHiccup: 'Resultaat hiccup — probeer Opnieuw / Menu',
+    errRetry: 'Actie mislukt — probeer opnieuw',
+    hiccupContinue: 'Hiccup — spel gaat door',
+    fightHiccup: 'Hiccup — speel door',
+    persistCtxSkill: 'skill', persistCtxSuper: 'super', persistCtxWeapon: 'wapen',
+    persistCtxStyle: 'stijl', persistCtxMission: 'missie', persistCtxClaim: 'claim',
+    persistCtxDaily: 'dagbonus', persistCtxXp: 'XP', persistCtxGear: 'uitrusting',
+    persistCtxBuilding: 'fabriek', persistCtxItem: 'item', persistCtxTide: 'tide',
     pickFileOrPaste: 'Kies een exportbestand of plak save-JSON in het vak',
     saveLoadedPreview: 'Save uit {src} — tik Import om te kijken',
     filePickerUnavailable: 'Bestand kiezen niet beschikbaar',
@@ -20952,17 +21333,17 @@ function seedNlGameStrings() {
   if (!I18N.nl.fomo) I18N.nl.fomo = {};
   Object.assign(I18N.nl.fomo, {
     ritualTitle: 'Vandaag',
-    ritualCtaSummon: 'Naar summons',
+    ritualCtaSummon: 'Naar oproepen',
     ritualCtaMission: 'Speel missie',
     ritualCtaAdv: 'Naar avontuur',
     ritualDismiss: 'Sluiten',
     ritualReopen: 'Dagoverzicht',
     resetIn: 'Nieuw over {reset}',
-    rowSummons: 'Summons {left}/{total}',
+    rowSummons: 'Oproepen {left}/{total}',
     rowEggReady: 'Dag-ei klaar',
     rowEggDone: 'Dag-ei al open',
-    streakReward3: '+1 summon',
-    streakReward7: '+ei of summons',
+    streakReward3: '+1 oproep',
+    streakReward7: '+ei of oproepen',
     streakReward14: '+120 XP',
   });
   if (!I18N.nl.missionsUi) I18N.nl.missionsUi = {};
@@ -21237,7 +21618,7 @@ function seedNlGameStrings() {
     superStat_charge: 'Laden',
     superHudCd: 'Nood-super {n}s',
     weaponHead: 'Wapens',
-    weaponSub: 'Summons zijn echt · eiland-skill gate: alleen wapens tot je huidige eiland-cap in avontuur',
+    weaponSub: 'Oproepen zijn echt · eiland-skill: wapens tot cap',
     skillHead: 'Upgrades',
     skillSub: 'Shards in avontuur · skills, wapens, pets & stijl · meestal max Lv 3 · zeldzaam Lv 5',
     skillTabSkills: 'Skills',
@@ -21351,18 +21732,18 @@ function seedNlGameStrings() {
     hubStatSkills: '{n}/{total} · {skill} · {super}',
     hubStatSkillsEmpty: '{total} skills',
     hubStatDex: '{n}/{total} · +max HP',
-    petCoinTip: 'Speel <b>munten bonus</b> voor pet coins (2 gouden munten = 1 PC). Koop pets hier, of tem via kills in het monsterboek. Pets volgen je in avontuur & training.',
+    petCoinTip: '<b>Munten-bonus</b>: 2 goud = 1 PC',
     petSummaryTamed: 'Getemd <b>{tamed}/{total}</b> · actief <b>{active}</b> · <b>{wallet} pet coins</b>',
     petNone: 'geen',
     installSub: 'Lade · beginscherm',
-    summonQuota: 'Vandaag: {left}/{total} random summons',
+    summonQuota: 'Vandaag: {left}/{total} kisten',
     summonLeft: '{n} over',
     summonDone: 'Op',
     summonOpen: 'Open kist',
     summonOpenAria: 'Open kist, {n} over',
-    summonNoMore: 'Geen summons meer vandaag',
+    summonNoMore: 'Geen oproepen meer vandaag',
     summonOpening: 'Kist opent…',
-    summonNoPulls: 'Nog geen pulls vandaag.',
+    summonNoPulls: 'Nog geen trekkingen vandaag.',
     summonFail: 'Summon mislukt — probeer opnieuw',
     boss: 'BAAS',
     topHunter: 'Top jager',
@@ -21371,21 +21752,21 @@ function seedNlGameStrings() {
     modeWall: '60s · combo ×3/×5/×8 hints · record-tempo + projectie in HUD · 5s waarschuwing',
     modeVersus: 'P1 links P2 rechts · best-of-3 · rematch in pauze',
     modeCoinrun: '45s munten · 2 munten = 1 pet coin · mik ↑ · vliegers +3',
-    firstMinuteAdventure: 'Eerste minuut: links lopen · rechts slaan · joy ↑ mik op vliegers · vol energy = SUPER',
-    firstMinuteTraining: 'Eerste minuut: spring rode laser · blokkeer dichtbij · energy vol → SUPER',
-    firstMinuteWall: '60s · combo ×3/×5/×8 hints · record-tempo + projectie in HUD',
-    firstMinuteVersus: 'Eerste minuut: P1 links · P2 rechts',
-    firstMinuteCoinrun: '45s munten · joy ↑ mik · roze vlieger = +3 · max 3 shuriken snel',
-    firstMinuteAdventureKb: 'Eerste minuut: A/D lopen · W springen · J/K/L · U speciaal · Shift wissel',
-    firstMinuteTrainingKb: 'Eerste minuut: spring lasers · Shift = substitutie · energy vol → U',
-    firstMinuteWallKb: '60s · combo-milestones · A/D · J/K/L · record-tempo in HUD',
-    firstMinuteVersusKb: 'Eerste minuut: P1 WASD+JKL · P2 pijltjes+1-5 · best-of-3',
-    firstMinuteCoinrunKb: 'Munten pakken · W/↑ hoger mikken · J/K shuriken · max 3 snel',
+    firstMinuteAdventure: 'Loop · sla · energy vol = SUPER',
+    firstMinuteTraining: 'Spring laser · blokkeer · SUPER',
+    firstMinuteWall: '60s · combo ×3/×5/×8',
+    firstMinuteVersus: 'P1 links · P2 rechts',
+    firstMinuteCoinrun: 'Pak munten · mik ↑',
+    firstMinuteAdventureKb: 'A/D loop · W spring · J sla · U SUPER',
+    firstMinuteTrainingKb: 'Spring lasers · Shift blok · U SUPER',
+    firstMinuteWallKb: '60s · A/D · J sla',
+    firstMinuteVersusKb: 'P1 WASD · P2 pijltjes',
+    firstMinuteCoinrunKb: 'Munten · W mik · J shuriken',
     weaponComboHint: 'Wapen 3× = ①②③ · ①+② raken → gouden ③',
     gambleOnboardTouch: 'Eerste keer gok: lage som = super-baas · hoge som = bondgenoot · Overslaan = normaal level',
-    gambleOnboardKb: 'Eerste keer: sum ≤5 super-baas · sum ≥9 ally buff · Skip = geen gok',
-    ketsbamOnboardTouch: 'Omringd? Tik het midden-symbool — Ketsbam-ontsnapping · 9s cooldown',
-    ketsbamOnboardKb: 'Omringd? E of midden-symbool = Ketsbam · 9s cooldown',
+    gambleOnboardKb: 'Eerste keer: som ≤5 super-baas · som ≥9 bondgenoot · Overslaan = geen gok',
+    ketsbamOnboardTouch: 'Omringd? Tik midden — Ketsbam',
+    ketsbamOnboardKb: 'Omringd? E = Ketsbam',
     tideBattleOnboardTouch: 'Eerste Tide Battle: versla {name} — geen andere golven tot klaar',
     tideBattleOnboardKb: 'Eerste Tide Battle: versla {name} — golven pauzeren tot klaar',
     langSwitchFail: 'Taal wisselen mislukt',
@@ -21403,20 +21784,20 @@ function seedNlGameStrings() {
     hubStatDexLine: '{n}/{total} · +max HP',
     summonHead: 'Oproepen',
     summonSub: 'Dagelijkse kist · 10× random · wapen of pet',
-    summonWhere: 'Menu → Oproepen · buit in Collectie → Wapens / Pets (badge Kist)',
-    summonQuota: 'Vandaag: {left}/{total} random summons',
+    summonWhere: 'Menu → Oproepen · buit in Collectie',
+    summonQuota: 'Vandaag: {left}/{total} kisten',
     summonPull: 'Open kist',
     summonPullLeft: '{n} over',
     summonPullEmpty: 'Op',
     summonAriaPull: 'Open kist, {n} over',
-    summonAriaEmpty: 'Geen summons meer vandaag',
+    summonAriaEmpty: 'Geen oproepen meer vandaag',
     summonAriaBusy: 'Kist opent…',
     summonHint: 'Tik kist om te openen',
     summonReveal: 'Tik de kist of Open — buit verschijnt in de kist',
     summonGotoWeapons: 'Naar wapens',
     summonGotoPets: 'Naar pets',
     summonGotoSub: 'Collectie',
-    summonLogEmpty: 'Nog geen pulls vandaag.',
+    summonLogEmpty: 'Nog geen trekkingen vandaag.',
     summonLeftToday: '{n} over vandaag',
     summonDoneToday: 'op voor vandaag',
     sharePlayLinkOk: '✓ Speel-link — deel met vrienden (Android)',
@@ -21457,14 +21838,38 @@ function seedNlGameStrings() {
     upgradeShardsLine: '{skill} skill · {item} item shards',
     upgradeMaxHint: 'Standaard max Lv {std} · mythische/extreme max Lv {ext}',
     eggSummary: 'Verzameld {owned}/{total} · actief {active} · {daily}',
-    eggSummaryHint: 'Cosmetisch — geen combat-boost. 1 dag-ei + bonus-ei na je eerste avontuur-win vandaag.',
+    eggSummaryHint: 'Cosmetisch. 1 dag-ei + bonus na eerste avontuur-win.',
     petTamedAssist: 'Getemd · assist in avontuur',
     petBuyLine: 'Kopen: {cost} pet coins',
-    petTameLine: 'Temmen: {cur}/{need} kills · of {cost}',
+    petTameLine: 'Temmen: {cur}/{need} · of {cost}',
+    petKillsLeft: '{n} nog',
     petActive: 'actief',
     petEquip: 'uitrusten',
     styleSummary: 'Outfits {unlocked}/{total} · actief {name}',
-    styleSummaryHint: 'Elke stijl heeft een eigen bonus — hover of lees de tooltip. Cosmetisch + lichte combat-perks.',
+    styleSummaryHint: 'Elke stijl heeft een bonus — look + lichte perk.',
+    errStylePick: 'Stijl kiezen mislukt',
+    errSummonLoad: 'Oproepen laden mislukt',
+    errSummonOpen: 'Oproepen openen mislukt',
+    saveHealthStyle: ' · stijl {name}',
+    importPreview: 'Voorbeeld: {summary}{meta}. Tik Laden 2×.',
+    importPreviewMeta: ' · v{app}',
+    importInvalid: 'Ongeldige save',
+    importErrEmpty: 'Plak eerst de save-JSON',
+    importErrTooBig: 'Save te groot',
+    importErrJson: 'Geen geldige JSON',
+    importErrStruct: 'Ongeldige save-structuur',
+    importMore: '+{n} {kind}',
+    importFewer: 'Minder {kind} ({a} vs {b})',
+    importKindSummon: 'oproepen',
+    importKindPet: 'pets',
+    importKindEgg: 'ei-pets',
+    importKindSkill: 'skill-Lv',
+    importKindItem: 'item-Lv',
+    importKindCoins: 'pet coins',
+    importStyleChange: 'Stijl {from} → {to}',
+    importLower: 'Lager dan de save hier',
+    importHigher: 'Hoger dan de save hier',
+    importAppVer: 'Export v{v}',
     petBuy: 'kopen',
     eggCosmetic: 'Cosmetisch metgezel',
     eggUnhatched: 'Nog niet uitgekomen',
@@ -21486,9 +21891,14 @@ function seedNlGameStrings() {
     dexType: { hop: 'Hups', fly: 'Vlieg', charge: 'Charge', shoot: 'Schiet', tank: 'Tank', dragon: 'Draak', swim: 'Zee' },
     dexBiome: { farm: 'Boerderij', zoo: 'Dierentuin', sea: 'Zee', wild: 'Woud', crypt: 'Crypte', scrap: 'Schroot', frost: 'Vorst', classic: 'Klassiek', secret: 'Geheim' },
     saveHealthStats: 'Lv {lvl} · vrij {unlocked} · boek {dex} · kills {kills}',
-    saveHealthSummon: ' · ✦ {n} summon',
+    saveHealthSummon: ' · ✦ {n} oproep',
     saveHealthPet: ' · pet {n}',
     saveHealthEgg: ' · ei {n}',
+    saveHealthSkill: ' · skill +{n} Lv',
+    saveHealthItem: ' · item +{n} Lv',
+    saveHealthPetCoins: ' · {n} pet coins',
+    saveHealthGear: ' · uitrusting {n}',
+    saveHealthFactory: ' · fabriek +{n} Lv',
     saveOk: 'Save OK',
     savePrimaryCorrupt: 'Hoofd-save corrupt',
     saveUnreadable: 'Save onleesbaar',
@@ -21531,12 +21941,46 @@ function seedNlGameStrings() {
     errLoadSettings: 'Instellingen laden mislukt',
     errLoadScreen: 'Scherm laden mislukt — herlaad via Verse versie',
     errLoadHelp: 'Tips laden mislukt',
+    errOpenMode: 'Kon modus niet openen — kies in het menu',
+    errClaimRetry: 'Claim mislukt — probeer opnieuw',
+    errCharPick: 'Vechter kiezen mislukt — tik opnieuw',
+    errScreenMissing: 'Scherm niet gevonden — terug naar menu',
+    errScreenSwitch: 'Schermwissel mislukt — terug naar menu',
+    errGoBack: 'Navigatie mislukt — terug naar menu',
+    errGoMenu: 'Kon menu niet openen — herlaad de pagina',
+    errMenuRefresh: 'Menu kon niet ververst worden',
+    errResume: 'Verder spelen mislukt — kies een modus',
+    errRecoverMenu: 'Herstel mislukt — herlaad als het menu vastzit',
+    errResultLoad: 'Resultaat laden mislukt — tik Menu of Opnieuw',
+    errCopyLink: 'Link kopiëren mislukt — zie Instellingen',
+    errShare: 'Delen mislukt — kopieer de link in Instellingen',
+    errExport: 'Export mislukt — kopieer JSON uit het vak',
+    errImportFile: 'Importbestand lezen mislukt',
+    errFomo: 'Kon dagoverzicht niet sluiten',
+    errDayBonus: 'Dagbonus mislukt — probeer opnieuw',
+    errProgressSafe: 'Voortgang veilig — speel door',
+    errSatanStart: 'Satan-start mislukt — avontuur gaat verder',
+    errTideStart: 'Tide Battle start mislukt — ga verder',
+    errBackupStash: 'Save veiligstellen mislukt',
+    errSaveApply: 'Save laden mislukt',
+    errBackupSync: 'Backup bijwerken mislukt',
   });
   if (!I18N.nl.egg) I18N.nl.egg = {};
   Object.assign(I18N.nl.egg, {
     dailyReady: 'Dag-ei klaar',
     advBonus: 'Bonus-ei: win 1× avontuur',
     tomorrow: 'Morgen weer ei',
+    name: {
+      egg_pebble: 'Kiezel', egg_moss: 'Mosbal', egg_candy: 'Snoep', egg_cloud: 'Wolkje',
+      egg_star: 'Sterretje', egg_flame: 'Vlammetje', egg_crystal: 'Kristal', egg_moon: 'Maanei',
+      egg_gold: 'Gouden', egg_neon: 'Neon', egg_rainbow: 'Regenboog', egg_prism: 'Prisma',
+    },
+    perk: {
+      egg_pebble: 'Zachte grijze gloed', egg_moss: 'Groene sprankels', egg_candy: 'Roze strepen',
+      egg_cloud: 'Zachte wolk-swirl', egg_star: 'Gouden sterren', egg_flame: 'Warme vlam-accent',
+      egg_crystal: 'Blauw kristal-shimmer', egg_moon: 'Maansikkel-gloed', egg_gold: 'Legendarische goudglans',
+      egg_neon: 'Neon-rand pulse', egg_rainbow: 'Mythisch regenboog-ei', egg_prism: 'Zeldzaam prisma-flits',
+    },
   });
   if (!I18N.nl.skill) I18N.nl.skill = {};
   Object.assign(I18N.nl.skill, {
@@ -21841,6 +22285,8 @@ const CATALOG_EN = {
     streak10: { name: 'Unstoppable', desc: 'Kill streak ×10 in adventure' },
     trainCombo10: { name: 'Dummy master', desc: 'Training combo ×10' },
     lv50: { name: 'Legend', desc: 'Unlock level 50' },
+    lv70: { name: 'Hell legend', desc: 'Unlock level 70 (Hell)' },
+    zoneWeapons10: { name: 'Zone collector', desc: 'Collect 10 Nightmare/Hell weapons' },
     daily7: { name: 'Determined', desc: 'Claim 7 daily bonuses in a row' },
     vs5: { name: 'Duelist', desc: 'Play 5× 2-player duels' },
     vsFatality1: { name: 'Finish him!', desc: 'Land a versus fatality on match KO' },
@@ -21984,10 +22430,6 @@ const CATALOG_EN = {
     petCoinsLine: '+{n} pet coins',
     gearLine: 'Gear: {name}',
   },
-  gear: {
-    slot: { head: 'Head', chest: 'Chest', hands: 'Hands', legs: 'Legs', back: 'Back' },
-    lockSlot: 'Wrong slot',
-  },
 
   banner: {
     levelStart: 'LEVEL {n}',
@@ -22067,6 +22509,14 @@ const CATALOG_EN = {
     persistPrimaryFail: 'Main save failed — backup updated (export in Settings)',
     persistFail: 'Save failed — export in Settings',
     persistFailCtx: 'Save failed ({context}) — export in Settings',
+    resultHiccup: 'Result hiccup — try Again / Menu',
+    errRetry: 'Action failed — try again',
+    hiccupContinue: 'Hiccup — game continues',
+    fightHiccup: 'Hiccup — fight continues',
+    persistCtxSkill: 'skill', persistCtxSuper: 'super', persistCtxWeapon: 'weapon',
+    persistCtxStyle: 'style', persistCtxMission: 'mission', persistCtxClaim: 'claim',
+    persistCtxDaily: 'daily', persistCtxXp: 'XP', persistCtxGear: 'gear',
+    persistCtxBuilding: 'factory', persistCtxItem: 'item', persistCtxTide: 'tide',
     pickFileOrPaste: 'Pick an export file or paste save JSON in the box',
     saveLoadedPreview: 'Save from {src} — tap Import to preview',
     filePickerUnavailable: 'File picker not available',
@@ -22511,11 +22961,11 @@ const CATALOG_EN = {
     hubStatSkills: '{n}/{total} · {skill} · {super}',
     hubStatSkillsEmpty: '{total} specials',
     hubStatDex: '{n}/{total} · +max HP',
-    petCoinTip: 'Play <b>coin bonus</b> for pet coins (2 gold coins = 1 PC). Buy pets here, or tame via monster book kills. Pets follow you in adventure & training.',
+    petCoinTip: '<b>Coin bonus</b>: 2 gold = 1 PC',
     petSummaryTamed: 'Tamed <b>{tamed}/{total}</b> · active <b>{active}</b> · <b>{wallet} pet coins</b>',
     petNone: 'none',
     installSub: 'Home screen',
-    summonQuota: 'Today: {left}/{total} random summons',
+    summonQuota: 'Today: {left}/{total} chests',
     summonLeft: '{n} left',
     summonDone: 'Done',
     summonOpen: 'Open chest',
@@ -22531,21 +22981,21 @@ const CATALOG_EN = {
     modeWall: '60s · combo ×3/×5/×8 hints · record pace + projection in HUD · 5s warning',
     modeVersus: 'P1 left P2 right · best-of-3 · rematch in pause',
     modeCoinrun: '45s coins · 2 coins = 1 pet coin · aim ↑ · flyers +3',
-    firstMinuteAdventure: 'First minute: move left · punch right · joy ↑ aim flyers · full energy = SUPER',
-    firstMinuteTraining: 'First minute: jump the red laser · block up close · full energy → SUPER',
-    firstMinuteWall: '60s · combo ×3/×5/×8 hints · record pace + projection in HUD',
-    firstMinuteVersus: 'First minute: P1 left · P2 right',
-    firstMinuteCoinrun: '45s coins · joy ↑ aim · pink flyer = +3 · max 3 shuriken fast',
-    firstMinuteAdventureKb: 'First minute: A/D move · W jump · J/K/L · U special · Shift swap',
-    firstMinuteTrainingKb: 'First minute: jump lasers · Shift = subst · full energy → U',
-    firstMinuteWallKb: '60s · combo milestones · A/D · J/K/L · record pace in HUD',
-    firstMinuteVersusKb: 'First minute: P1 WASD+JKL · P2 arrows+1-5 · best-of-3',
-    firstMinuteCoinrunKb: 'Grab coins · W/↑ aim higher · J/K shuriken · max 3 fast',
+    firstMinuteAdventure: 'Move · punch · full energy = SUPER',
+    firstMinuteTraining: 'Jump laser · block · SUPER',
+    firstMinuteWall: '60s · combo ×3/×5/×8',
+    firstMinuteVersus: 'P1 left · P2 right',
+    firstMinuteCoinrun: 'Grab coins · aim ↑',
+    firstMinuteAdventureKb: 'A/D move · W jump · J punch · U SUPER',
+    firstMinuteTrainingKb: 'Jump lasers · Shift block · U SUPER',
+    firstMinuteWallKb: '60s · A/D · J punch',
+    firstMinuteVersusKb: 'P1 WASD · P2 arrows',
+    firstMinuteCoinrunKb: 'Coins · W aim · J shuriken',
     weaponComboHint: 'Weapon 3× = ①②③ · hit ①+② → golden ③',
     gambleOnboardTouch: 'First gamble: low sum = super-boss · high sum = ally · Skip = normal level',
     gambleOnboardKb: 'First time: sum ≤5 super-boss · sum ≥9 ally buff · Skip = no gamble',
-    ketsbamOnboardTouch: 'Surrounded? Tap the center symbol — Ketsbam escape · 9s cooldown',
-    ketsbamOnboardKb: 'Surrounded? E or center symbol = Ketsbam · 9s cooldown',
+    ketsbamOnboardTouch: 'Surrounded? Tap center — Ketsbam',
+    ketsbamOnboardKb: 'Surrounded? E = Ketsbam',
     tideBattleOnboardTouch: 'First Tide Battle: defeat {name} — no other waves until done',
     tideBattleOnboardKb: 'First Tide Battle: defeat {name} — waves pause until done',
     langSwitchFail: 'Language switch failed',
@@ -22563,8 +23013,8 @@ const CATALOG_EN = {
     hubStatDexLine: '{n}/{total} · +max HP',
     summonHead: 'Summons',
     summonSub: 'Daily chest · 10× random · weapon or pet',
-    summonWhere: 'Menu → Summons · loot in Collection → Weapons / Pets (Chest badge)',
-    summonQuota: 'Today: {left}/{total} random summons',
+    summonWhere: 'Menu → Summons · loot in Collection',
+    summonQuota: 'Today: {left}/{total} chests',
     summonPull: 'Open chest',
     summonPullLeft: '{n} left',
     summonPullEmpty: 'Done',
@@ -22617,14 +23067,38 @@ const CATALOG_EN = {
     upgradeShardsLine: '{skill} skill · {item} item shards',
     upgradeMaxHint: 'Default max Lv {std} · mythic/extreme max Lv {ext}',
     eggSummary: 'Collected {owned}/{total} · active {active} · {daily}',
-    eggSummaryHint: 'Cosmetic — no combat boost. 1 daily egg + bonus egg after your first adventure win today.',
+    eggSummaryHint: 'Cosmetic. 1 daily egg + bonus after first adventure win.',
     petTamedAssist: 'Tamed · assist in adventure',
     petBuyLine: 'Buy: {cost} pet coins',
-    petTameLine: 'Tame: {cur}/{need} kills · or {cost}',
+    petTameLine: 'Tame: {cur}/{need} · or {cost}',
+    petKillsLeft: '{n} left',
     petActive: 'active',
     petEquip: 'equip',
     styleSummary: 'Outfits {unlocked}/{total} · active {name}',
-    styleSummaryHint: 'Each style has its own bonus — hover or read the tooltip. Cosmetic + light combat perks.',
+    styleSummaryHint: 'Each style has a bonus — look + light perk.',
+    errStylePick: 'Could not pick style',
+    errSummonLoad: 'Could not load chests',
+    errSummonOpen: 'Could not open chests',
+    saveHealthStyle: ' · style {name}',
+    importPreview: 'Preview: {summary}{meta}. Tap Load twice.',
+    importPreviewMeta: ' · v{app}',
+    importInvalid: 'Invalid save',
+    importErrEmpty: 'Paste the save JSON first',
+    importErrTooBig: 'Save too large',
+    importErrJson: 'Invalid JSON',
+    importErrStruct: 'Invalid save structure',
+    importMore: '+{n} {kind}',
+    importFewer: 'Fewer {kind} ({a} vs {b})',
+    importKindSummon: 'summons',
+    importKindPet: 'pets',
+    importKindEgg: 'egg pets',
+    importKindSkill: 'skill Lv',
+    importKindItem: 'item Lv',
+    importKindCoins: 'pet coins',
+    importStyleChange: 'Style {from} → {to}',
+    importLower: 'Lower than the save here',
+    importHigher: 'Higher than the save here',
+    importAppVer: 'Export v{v}',
     petBuy: 'buy',
     eggCosmetic: 'Cosmetic companion',
     eggUnhatched: 'Not hatched yet',
@@ -22652,6 +23126,11 @@ const CATALOG_EN = {
     saveHealthSummon: ' · ✦ {n} summon',
     saveHealthPet: ' · pet {n}',
     saveHealthEgg: ' · egg {n}',
+    saveHealthSkill: ' · skill +{n} Lv',
+    saveHealthItem: ' · item +{n} Lv',
+    saveHealthPetCoins: ' · {n} pet coins',
+    saveHealthGear: ' · gear {n}',
+    saveHealthFactory: ' · factory +{n} Lv',
     saveOk: 'Save OK',
     savePrimaryCorrupt: 'Main save corrupt',
     saveUnreadable: 'Save unreadable',
@@ -22689,12 +23168,48 @@ const CATALOG_EN = {
     errLoadSettings: 'Could not load settings',
     errLoadScreen: 'Could not load screen — tap Fresh version',
     errLoadHelp: 'Could not load tips',
+    errOpenMode: 'Could not open mode — pick from the menu',
+    errClaimRetry: 'Claim failed — try again',
+    errCharPick: 'Could not pick fighter — tap again',
+    errScreenMissing: 'Screen missing — back to menu',
+    errScreenSwitch: 'Screen switch failed — back to menu',
+    errGoBack: 'Navigation failed — back to menu',
+    errGoMenu: 'Could not open menu — reload the page',
+    errMenuRefresh: 'Could not refresh menu',
+    errResume: 'Resume failed — pick a mode',
+    errRecoverMenu: 'Recover failed — reload if the menu is stuck',
+    errResultLoad: 'Could not load result — tap Menu or Again',
+    errCopyLink: 'Could not copy link — see Settings',
+    errShare: 'Share failed — copy the link in Settings',
+    errExport: 'Export failed — copy JSON from the box',
+    errImportFile: 'Could not read import file',
+    errFomo: 'Could not close day overview',
+    errDayBonus: 'Daily bonus failed — try again',
+    errProgressSafe: 'Progress is safe — keep playing',
+    errSatanStart: 'Satan start failed — adventure continues',
+    errTideStart: 'Tide Battle start failed — keep going',
+    errBackupStash: 'Could not stash save',
+    errSaveApply: 'Could not load save',
+    errBackupSync: 'Backup sync failed',
   },
   fighter: {
     energyEmpty: 'Energy not full!', subst: 'Substitution!', dash: 'Dash!',
     shield: 'Shield!', parry: 'PARRY!', block: 'BLOCK!', miss: 'MISS!',
   },
-  egg: { dailyReady: 'Daily egg ready', advBonus: 'Bonus egg: win 1× adventure', tomorrow: 'Egg again tomorrow' },
+  egg: {
+    dailyReady: 'Daily egg ready', advBonus: 'Bonus egg: win 1× adventure', tomorrow: 'Egg again tomorrow',
+    name: {
+      egg_pebble: 'Pebble', egg_moss: 'Mossball', egg_candy: 'Candy', egg_cloud: 'Cloudlet',
+      egg_star: 'Starlet', egg_flame: 'Flamelet', egg_crystal: 'Crystal', egg_moon: 'Moon-egg',
+      egg_gold: 'Golden', egg_neon: 'Neon', egg_rainbow: 'Rainbow', egg_prism: 'Prism',
+    },
+    perk: {
+      egg_pebble: 'Soft grey glow', egg_moss: 'Green sparkles', egg_candy: 'Pink stripes',
+      egg_cloud: 'Soft cloud swirl', egg_star: 'Gold stars', egg_flame: 'Warm flame accent',
+      egg_crystal: 'Blue crystal shimmer', egg_moon: 'Crescent glow', egg_gold: 'Legendary gold sheen',
+      egg_neon: 'Neon-edge pulse', egg_rainbow: 'Mythic rainbow egg', egg_prism: 'Rare prism flash',
+    },
+  },
   skill: {
     spiral_orb: 'Spiral Orb', lightning_pierce: 'Lightning Pierce', void_gaze: 'Void Gaze',
     subst: 'Substitution', dash: 'Dash', energy_core: 'Energy',
@@ -22949,6 +23464,8 @@ const CATALOG_DE = {
     streak10: { name: 'Unaufhaltsam', desc: 'Kill-Streak ×10 im Abenteuer' },
     trainCombo10: { name: 'Dummy-Meister', desc: 'Training-Combo ×10' },
     lv50: { name: 'Legende', desc: 'Level 50 freischalten' },
+    lv70: { name: 'Höllen-Legende', desc: 'Level 70 freischalten (Hölle)' },
+    zoneWeapons10: { name: 'Zonen-Sammler', desc: '10 Albtraum/Hölle-Waffen sammeln' },
     daily7: { name: 'Entschlossen', desc: '7 Tagesboni in Folge' },
     vs5: { name: 'Duellant', desc: '5× 2-Spieler-Duell gespielt' },
     vs_roster: { name: 'Volles Roster', desc: '10+ verschiedene Kämpfer (2P)' },
@@ -22961,7 +23478,7 @@ const CATALOG_DE = {
     trainwin: { text: 'Gewinne Training vs Robot', hint: 'Menü → Training vs RabbitRobot' },
     combo5: { text: 'Erreiche Combo ×5', hint: 'Abenteuer: schnelle Combos' },
     finisher3: { text: 'Lande 3 Waffen-Finisher', hint: '①+② treffen, dann Finisher ③' },
-    pick3: { text: 'Sammle 3 Power-ups', hint: 'Abenteuer: grüne/orange/blaue Kugeln' },
+    pick3: { text: 'Sammle 3 Funde', hint: 'Abenteuer: grüne/orange/blaue Kugeln' },
     boss1: { text: 'Besiege 1 Boss-Monster', hint: 'Abenteuer: Boss am Levelende' },
   },
   weapon: {
@@ -22981,24 +23498,24 @@ const CATALOG_DE = {
   },
   style: {
     classic: { name: 'Klassisch', hint: 'Standard-Ninja', tooltip: 'Basis-Ninja — kein Bonus.', bonus: 'Kein Kampfbonus' },
-    leaf_band: { name: 'Leaf-Bandana', hint: 'Lv 5', tooltip: 'Leaf-Dorf-Kopfband. Etwas mehr max HP.', bonus: '+5 max HP' },
-    energy_glow: { name: 'Energie-Glühen', hint: '3× Training gewinnen', tooltip: 'Blaues Energy. Schnelleres Laden.', bonus: '+8% Energy-Regen' },
+    leaf_band: { name: 'Blatt-Bandana', hint: 'Lv 5', tooltip: 'Blatt-Dorf-Kopfband. Etwas mehr max HP.', bonus: '+5 max HP' },
+    energy_glow: { name: 'Energie-Glühen', hint: '3× Training gewinnen', tooltip: 'Blaue Energie-Aura. Schnelleres Laden.', bonus: '+8% Energie-Regen' },
     crimson_pact: { name: 'Roter Mantel', hint: 'Lv 12', tooltip: 'Aggressive Schläge.', bonus: '+4% Schaden' },
-    shadow: { name: 'Schatten-Ninja', hint: 'Lv 15', tooltip: 'Extra Crit-Chance.', bonus: '+3% Crit' },
+    shadow: { name: 'Schatten-Ninja', hint: 'Lv 15', tooltip: 'Extra Krit-Chance.', bonus: '+3% Krit' },
     guvve: { name: 'Guvvedukkie', hint: '8 Monster im Buch', tooltip: 'Quack-Cosplay. Bonus-XP.', bonus: '+6% Abenteuer-XP' },
-    gold: { name: 'Legendär', hint: 'Lv 25', tooltip: 'Goldene Umrandung.', bonus: '+10% Knockback' },
+    gold: { name: 'Legendär', hint: 'Lv 25', tooltip: 'Goldene Umrandung.', bonus: '+10% Rückstoß' },
     sand: { name: 'Wüste', hint: 'Lv 8', tooltip: 'Sandmantel — weniger Schaden.', bonus: '−14% Schaden · Block −25%' },
     samurai: { name: 'Samurai', hint: 'Lv 20', tooltip: 'Katana-Haltung.', bonus: '+8% Waffen-Reichweite' },
-    cyber: { name: 'Cyber-Ninja', hint: 'Lv 18', tooltip: 'Neon-Visier.', bonus: 'Blitz-FX · +6% Energy' },
+    cyber: { name: 'Cyber-Ninja', hint: 'Lv 18', tooltip: 'Neon-Visier.', bonus: 'Blitz-FX · +6% Energie' },
     fox: { name: 'Fuchs-Ninja', hint: '12 Monster im Buch', tooltip: 'Fuchsohren — schneller.', bonus: '+5% Lauftempo' },
     storm: { name: 'Sturmgeist', hint: '5× Training gewinnen', tooltip: 'Sturm-Aura.', bonus: 'Blitz · +0,8s Schild/Welle' },
-    void: { name: 'Void-Wanderer', hint: 'Lv 40', tooltip: 'Schwerere Technique.', bonus: '+8% Technique-Schaden' },
+    void: { name: 'Leerenwanderer', hint: 'Lv 40', tooltip: 'Schwerere Technik.', bonus: '+8% Technik-Schaden' },
     hunter: { name: 'Jägerlook', hint: '75 Kills im Buch', tooltip: 'Jäger-Umhang.', bonus: '+6% vs Monster' },
     crystal: { name: 'Kristallin', hint: '4 Seltenheiten', tooltip: 'Kristall-Splitter.', bonus: '+1,0s Schild/Welle' },
     tome: { name: 'Buchmeister', hint: 'Hälfte des Buches', tooltip: 'Monsterbuch auf dem Rücken.', bonus: '+4 max HP · Buchweisheit' },
   },
   result: {
-    advWin: 'GEWONNEN!', advLose: 'VERLOREN', trainWin: 'MEISTER!', trainLose: 'ROBOT GEWINNT...',
+    advWin: 'GEWONNEN!', advLose: 'VERLOREN', trainWin: 'MEISTER!', trainLose: 'ROBOT GEWINNT…',
     advLoseKeep: 'XP und Beute von diesem Lauf bleiben',
     trainAgainSub: 'vs RabbitRobot',
     wavesStart: 'Start',
@@ -23008,12 +23525,12 @@ const CATALOG_DE = {
   banner: {
     levelUp: 'LEVEL UP! Lv {lvl}', masterBuff: 'MEISTER-BUFF +20%', bossWave: 'BOSS-WELLE!',
     woodsWave: 'WALD-WELLE', frostWave: 'FROST-WELLE', cryptWave: 'KRYPTEN-WELLE', scrapWave: 'SCHROTT-WELLE', reefWave: 'RIFF-WELLE',
-    fight: 'KÄMPF!', levelClear: 'LEVEL {n} FERTIG!', won: 'GEWONNEN!', lost: 'VERLOREN...', summon: '✦ SUMMON! ✦',
+    fight: 'KÄMPF!', levelClear: 'LEVEL {n} FERTIG!', won: 'GEWONNEN!', lost: 'VERLOREN', summon: '✦ KISTE! ✦',
     matsStart: 'MÜNZEN-BONUS', wallStart: 'ZERSTÖRE DIE MAUER!', bonusDone: 'BONUS FERTIG!',
     kets: 'KABLAM…', ketsBam: 'KABLAM!',
   },
   help: { tips: [
-    'Power-ups: besiegte Monster lassen manchmal Kugeln fallen — HP, Rage, Energy, Schild.',
+    'Funde: besiegte Monster lassen manchmal Kugeln fallen — HP, Wut, Energie, Schild.',
     'Bosse: unter halb HP werden sie wütender (Phase 2).',
     'Combos: schnell hintereinander schlagen für ×2 / ×3 Schaden.',
     'Dash: doppelt tippen links/rechts (oder Shift) zum Ausweichen.',
@@ -23058,6 +23575,8 @@ const CATALOG_FR = {
     streak10: { name: 'Impossible à arrêter', desc: 'Série ×10 en aventure' },
     trainCombo10: { name: 'Maître du dummy', desc: 'Combo entraînement ×10' },
     lv50: { name: 'Légende', desc: 'Débloquer niveau 50' },
+    lv70: { name: 'Légende de l’enfer', desc: 'Débloquer niveau 70 (Enfer)' },
+    zoneWeapons10: { name: 'Collectionneur de zone', desc: 'Collecte 10 armes Cauchemar/Enfer' },
     daily7: { name: 'Déterminé', desc: '7 bonus quotidiens d\'affilée' },
     vs5: { name: 'Duelliste', desc: '5× duels 2 joueurs' },
     vs_roster: { name: 'Roster complet', desc: '10+ combattants différents (2P)' },
@@ -23069,8 +23588,8 @@ const CATALOG_FR = {
     wall35: { text: 'Casse 35 briques du mur', hint: 'Menu → Mur (combo aide)' },
     trainwin: { text: 'Gagne entraînement vs Robot', hint: 'Menu → Entraînement vs RabbitRobot' },
     combo5: { text: 'Atteins combo ×5', hint: 'Aventure : combos rapides' },
-    finisher3: { text: 'Place 3 finishers d’arme', hint: '①+② puis finisher ③' },
-    pick3: { text: 'Prends 3 power-ups', hint: 'Aventure : orbes vert/orange/bleu' },
+    finisher3: { text: 'Place 3 coups finaux d’arme', hint: '①+② puis coup final ③' },
+    pick3: { text: 'Prends 3 orbes', hint: 'Aventure : orbes vert/orange/bleu' },
     boss1: { text: 'Vaincs 1 boss', hint: 'Aventure : boss en fin de niveau' },
   },
   weapon: {
@@ -23090,25 +23609,25 @@ const CATALOG_FR = {
   },
   style: {
     classic: { name: 'Classique', hint: 'Ninja standard', tooltip: 'Ninja de base — pas de bonus.', bonus: 'Pas de bonus combat' },
-    leaf_band: { name: 'Bandana Leaf', hint: 'Lv 5', tooltip: 'Bandeau du village.', bonus: '+5 PV max' },
-    energy_glow: { name: 'Lueur energy', hint: '3× entraînement gagné', tooltip: 'Aura bleue.', bonus: '+8% regen energy' },
-    crimson_pact: { name: 'Manteau rouge', hint: 'Lv 12', tooltip: 'Coups agressifs.', bonus: '+4% dégâts' },
-    shadow: { name: 'Ninja ombre', hint: 'Lv 15', tooltip: 'Crit en plus.', bonus: '+3% crit' },
-    guvve: { name: 'Guvvedukkie', hint: '8 monstres au bestiaire', tooltip: 'Cosplay coin-coin.', bonus: '+6% XP aventure' },
-    gold: { name: 'Légendaire', hint: 'Lv 25', tooltip: 'Contour doré.', bonus: '+10% knockback' },
-    sand: { name: 'Désert', hint: 'Lv 8', tooltip: 'Manteau de sable.', bonus: '−14% dégâts · bloc −25%' },
-    samurai: { name: 'Samouraï', hint: 'Lv 20', tooltip: 'Posture katana.', bonus: '+8% portée arme' },
-    cyber: { name: 'Cyber-ninja', hint: 'Lv 18', tooltip: 'Visière néon.', bonus: 'FX éclair · +6% energy' },
-    fox: { name: 'Ninja renard', hint: '12 monstres', tooltip: 'Oreilles de renard.', bonus: '+5% vitesse' },
+    leaf_band: { name: 'Bandana feuille', hint: 'Lv 5', tooltip: 'Bandeau du village.', bonus: '+5 PV max' },
+    energy_glow: { name: 'Lueur d’énergie', hint: '3× entraînement gagné', tooltip: 'Aura bleue.', bonus: '+8 % regen énergie' },
+    crimson_pact: { name: 'Manteau rouge', hint: 'Lv 12', tooltip: 'Coups agressifs.', bonus: '+4 % dégâts' },
+    shadow: { name: 'Ninja ombre', hint: 'Lv 15', tooltip: 'Crit en plus.', bonus: '+3 % crit' },
+    guvve: { name: 'Guvvedukkie', hint: '8 monstres au bestiaire', tooltip: 'Cosplay coin-coin.', bonus: '+6 % XP aventure' },
+    gold: { name: 'Légendaire', hint: 'Lv 25', tooltip: 'Contour doré.', bonus: '+10 % recul' },
+    sand: { name: 'Désert', hint: 'Lv 8', tooltip: 'Manteau de sable.', bonus: '−14 % dégâts · bloc −25 %' },
+    samurai: { name: 'Samouraï', hint: 'Lv 20', tooltip: 'Posture katana.', bonus: '+8 % portée arme' },
+    cyber: { name: 'Cyber-ninja', hint: 'Lv 18', tooltip: 'Visière néon.', bonus: 'FX éclair · +6 % énergie' },
+    fox: { name: 'Ninja renard', hint: '12 monstres', tooltip: 'Oreilles de renard.', bonus: '+5 % vitesse' },
     storm: { name: 'Esprit tempête', hint: '5× entraînement', tooltip: 'Aura tempête.', bonus: 'Éclair · +0,8s bouclier/vague' },
-    void: { name: 'Marcheur du vide', hint: 'Lv 40', tooltip: 'Technique plus lourds.', bonus: '+8% dégâts technique' },
-    hunter: { name: 'Look chasseur', hint: '75 kills bestiaire', tooltip: 'Cape chasseur.', bonus: '+6% vs monstres' },
+    void: { name: 'Marcheur du vide', hint: 'Lv 40', tooltip: 'Techniques plus lourdes.', bonus: '+8 % dégâts technique' },
+    hunter: { name: 'Look chasseur', hint: '75 kills bestiaire', tooltip: 'Cape chasseur.', bonus: '+6 % vs monstres' },
     crystal: { name: 'Cristallin', hint: '4 raretés', tooltip: 'Éclat cristal.', bonus: '+1,0s bouclier/vague' },
     tome: { name: 'Maître du livre', hint: 'Moitié du bestiaire', tooltip: 'Bestiaire sur le dos.', bonus: '+4 PV max · sagesse' },
   },
   result: {
-    advWin: 'VICTOIRE !', advLose: 'DÉFAITE...', trainWin: 'CHAMPION !', trainLose: 'ROBOT GAGNE...',
-    advLoseKeep: 'XP et butin de cette run restent',
+    advWin: 'VICTOIRE !', advLose: 'DÉFAITE', trainWin: 'CHAMPION !', trainLose: 'LE ROBOT GAGNE…',
+    advLoseKeep: 'XP et butin de cette partie restent',
     trainAgainSub: 'vs RabbitRobot',
     wavesStart: 'début',
     vsP1Win: 'JOUEUR 1 GAGNE !', vsP2Win: 'JOUEUR 2 GAGNE !', wallRecord: 'NOUVEAU RECORD !', wallTime: 'FIN DU TEMPS !',
@@ -23117,16 +23636,16 @@ const CATALOG_FR = {
   banner: {
     levelUp: 'LEVEL UP ! Lv {lvl}', masterBuff: 'BUFF MAÎTRE +20 %', bossWave: 'VAGUE BOSS !',
     woodsWave: 'VAGUE FORÊT', frostWave: 'VAGUE GEL', cryptWave: 'VAGUE CRYPTE', scrapWave: 'VAGUE FERRAILLE', reefWave: 'VAGUE RÉCIF',
-    fight: 'COMBAT !', levelClear: 'NIVEAU {n} TERMINÉ !', won: 'VICTOIRE !', lost: 'DÉFAITE...', summon: '✦ INVOCATION ! ✦',
+    fight: 'COMBAT !', levelClear: 'NIVEAU {n} TERMINÉ !', won: 'VICTOIRE !', lost: 'DÉFAITE', summon: '✦ INVOCATION ! ✦',
     matsStart: 'BONUS PIÈCES', wallStart: 'CASSE LE MUR !', bonusDone: 'BONUS TERMINÉ !',
     kets: 'KABLAM…', ketsBam: 'KABLAM !',
   },
   help: { tips: [
-    'Power-ups : les monstres vaincus laissent parfois des orbes — PV, rage, energy, bouclier.',
+    'Orbes : les monstres vaincus laissent parfois des orbes — PV, rage, énergie, bouclier.',
     'Boss : sous la moitié des PV ils deviennent plus furieux (phase 2).',
     'Combos : enchaîne vite pour ×2 / ×3 dégâts.',
     'Dash : double-tap gauche/droite (ou Shift) pour esquiver.',
-    'Spiral Orb : remplis la barre energy — charge une boule et frappe.',
+    'Spiral Orb : remplis la barre d’énergie — charge une boule et frappe.',
     'Substitution : nuage de fumée + esquive (bouton ou Shift). Invulnérabilité brève.',
     'Combo arme : arme 3× vite — ①②③. Touche ① et ②, puis ③ finisher.',
     '2 joueurs : roster 5 icônes saga · best-of-3.',
@@ -23138,6 +23657,23 @@ const CATALOG_FR = {
     'Partager : menu → Lien — Chrome Android → Écran d\'accueil.',
     'Hors ligne : après 1× en ligne, cache HTML+JS — bannière sans réseau.',
   ] },
+  gear: {
+    hubStat: '{n}/5', summarySlots: '<b>{n}</b>/5',
+    pillVanity: 'LOOK', pillStat: 'STAT', pillLock: 'LOCK',
+    empty: 'Vide', pickHint: 'Tape un objet pour (dés)équiper.',
+    invKicker: '{slot}', weaponOpen: 'Armes',
+    lockedLine: 'Verrouillé · {why}', equip: 'Équiper', unequip: 'Retirer', wearing: 'sur toi',
+    vanityHint: 'Pas de stats — look seul', statHint: 'Bonus de combat',
+    lockLevel: 'Nv {n}', lockTrain: '{n}× entraîn.', lockDex: '{n} monstres',
+    lockTime: 'Dès {when}', lockTimeDate: 'Dès une date', lockDays: '{n} jours',
+    lockAdv: 'Aventure Nv {n}', lockDiff: 'Pas encore libre', lockOwned: 'Pas encore trouvé',
+    lockSlot: 'Mauvais slot', lockNoStats: 'Pas de stats tant que fermé',
+    filterAll: 'Tout', filterOwned: 'À toi', filterSearch: 'Cherche {n}…',
+    filterEmpty: 'Rien dans ce filtre', filterRarityAll: 'Tous',
+    filterCount: '{shown}/{total} · {slot}', filterAria: 'Filtre', rarityAria: 'Rareté',
+    catalogN: '{n} objets', weaponAside: 'Arme', weaponAsideHint: 'Collection · pas un 6e slot',
+    slot: { head: 'Tête', chest: 'Torse', hands: 'Mains', legs: 'Jambes', back: 'Dos' },
+  },
 };
 
 const CATALOG_ES = {
@@ -23167,6 +23703,8 @@ const CATALOG_ES = {
     streak10: { name: 'Imparable', desc: 'Racha ×10 en aventura' },
     trainCombo10: { name: 'Maestro del dummy', desc: 'Combo entrenamiento ×10' },
     lv50: { name: 'Leyenda', desc: 'Desbloquear nivel 50' },
+    lv70: { name: 'Leyenda del infierno', desc: 'Desbloquear nivel 70 (Infierno)' },
+    zoneWeapons10: { name: 'Coleccionista de zona', desc: 'Reúne 10 armas Pesadilla/Infierno' },
     daily7: { name: 'Determinado', desc: '7 bonos diarios seguidos' },
     vs5: { name: 'Duelista', desc: '5× duelos a 2 jugadores' },
     vs_roster: { name: 'Roster completo', desc: '10+ luchadores distintos (2P)' },
@@ -23178,8 +23716,8 @@ const CATALOG_ES = {
     wall35: { text: 'Rompe 35 ladrillos del muro', hint: 'Menú → Muro (combo ayuda)' },
     trainwin: { text: 'Gana entrenamiento vs Robot', hint: 'Menú → Entrenamiento vs RabbitRobot' },
     combo5: { text: 'Alcanza combo ×5', hint: 'Aventura: combos rápidos' },
-    finisher3: { text: 'Asesta 3 finishers de arma', hint: '①+② luego finisher ③' },
-    pick3: { text: 'Recoge 3 power-ups', hint: 'Aventura: orbes verde/naranja/azul' },
+    finisher3: { text: 'Asesta 3 remates de arma', hint: '①+② luego remate ③' },
+    pick3: { text: 'Recoge 3 orbes', hint: 'Aventura: orbes verde/naranja/azul' },
     boss1: { text: 'Derrota 1 jefe', hint: 'Aventura: jefe al final del nivel' },
   },
   weapon: {
@@ -23199,25 +23737,25 @@ const CATALOG_ES = {
   },
   style: {
     classic: { name: 'Clásico', hint: 'Ninja estándar', tooltip: 'Ninja base — sin bonus.', bonus: 'Sin bonus combate' },
-    leaf_band: { name: 'Bandana Leaf', hint: 'Lv 5', tooltip: 'Cinta del pueblo.', bonus: '+5 HP máx' },
-    energy_glow: { name: 'Brillo de energy', hint: '3× entrenamiento ganado', tooltip: 'Aura azul.', bonus: '+8% regen energy' },
+    leaf_band: { name: 'Pañuelo hoja', hint: 'Lv 5', tooltip: 'Cinta del pueblo.', bonus: '+5 PV máx' },
+    energy_glow: { name: 'Brillo de energía', hint: '3× entrenamiento ganado', tooltip: 'Aura azul.', bonus: '+8% regen energía' },
     crimson_pact: { name: 'Capa roja', hint: 'Lv 12', tooltip: 'Golpes agresivos.', bonus: '+4% daño' },
     shadow: { name: 'Ninja sombra', hint: 'Lv 15', tooltip: 'Más críticos.', bonus: '+3% crít' },
     guvve: { name: 'Guvvedukkie', hint: '8 monstruos en libro', tooltip: 'Cosplay cuac.', bonus: '+6% XP aventura' },
-    gold: { name: 'Legendario', hint: 'Lv 25', tooltip: 'Contorno dorado.', bonus: '+10% knockback' },
+    gold: { name: 'Legendario', hint: 'Lv 25', tooltip: 'Contorno dorado.', bonus: '+10% retroceso' },
     sand: { name: 'Desierto', hint: 'Lv 8', tooltip: 'Capa de arena.', bonus: '−14% daño · bloqueo −25%' },
     samurai: { name: 'Samurái', hint: 'Lv 20', tooltip: 'Postura katana.', bonus: '+8% alcance arma' },
-    cyber: { name: 'Cyber-ninja', hint: 'Lv 18', tooltip: 'Visor neón.', bonus: 'FX rayo · +6% energy' },
+    cyber: { name: 'Cyber-ninja', hint: 'Lv 18', tooltip: 'Visor neón.', bonus: 'FX rayo · +6% energía' },
     fox: { name: 'Ninja zorro', hint: '12 monstruos', tooltip: 'Orejas de zorro.', bonus: '+5% velocidad' },
     storm: { name: 'Espíritu tormenta', hint: '5× entrenamiento', tooltip: 'Aura tormenta.', bonus: 'Rayo · +0,8s escudo/ola' },
-    void: { name: 'Caminante del vacío', hint: 'Lv 40', tooltip: 'Techniques más fuertes.', bonus: '+8% daño de technique' },
+    void: { name: 'Caminante del vacío', hint: 'Lv 40', tooltip: 'Técnicas más fuertes.', bonus: '+8% daño de técnica' },
     hunter: { name: 'Look cazador', hint: '75 kills libro', tooltip: 'Capa cazador.', bonus: '+6% vs monstruos' },
     crystal: { name: 'Cristalino', hint: '4 rarezas', tooltip: 'Fragmento cristal.', bonus: '+1,0s escudo/ola' },
-    tome: { name: 'Maestro del libro', hint: 'Mitad del bestiario', tooltip: 'Libro en la espalda.', bonus: '+4 HP máx · sabiduría' },
+    tome: { name: 'Maestro del libro', hint: 'Mitad del bestiario', tooltip: 'Libro en la espalda.', bonus: '+4 PV máx · sabiduría' },
   },
   result: {
-    advWin: '¡VICTORIA!', advLose: 'DERROTA...', trainWin: '¡CAMPEÓN!', trainLose: 'ROBOT GANA...',
-    advLoseKeep: 'XP y botín de esta run se quedan',
+    advWin: '¡VICTORIA!', advLose: 'DERROTA', trainWin: '¡CAMPEÓN!', trainLose: 'EL ROBOT GANA…',
+    advLoseKeep: 'XP y botín de esta partida se quedan',
     trainAgainSub: 'vs RabbitRobot',
     wavesStart: 'inicio',
     vsP1Win: '¡JUGADOR 1 GANA!', vsP2Win: '¡JUGADOR 2 GANA!', wallRecord: '¡NUEVO RÉCORD!', wallTime: '¡SE ACABÓ EL TIEMPO!',
@@ -23226,16 +23764,16 @@ const CATALOG_ES = {
   banner: {
     levelUp: '¡SUBIDA DE NIVEL! Lv {lvl}', masterBuff: 'BUFF MAESTRO +20%', bossWave: '¡OLA JEFE!',
     woodsWave: 'OLA BOSQUE', frostWave: 'OLA ESCARCHA', cryptWave: 'OLA CRIPTA', scrapWave: 'OLA CHATARRA', reefWave: 'OLA ARRECIFE',
-    fight: '¡LUCHA!', levelClear: '¡NIVEL {n} LISTO!', won: '¡VICTORIA!', lost: 'DERROTA...', summon: '✦ ¡INVOCACIÓN! ✦',
+    fight: '¡LUCHA!', levelClear: '¡NIVEL {n} LISTO!', won: '¡VICTORIA!', lost: 'DERROTA', summon: '✦ ¡INVOCACIÓN! ✦',
     matsStart: 'BONUS MONEDAS', wallStart: '¡ROMPE EL MURO!', bonusDone: '¡BONUS LISTO!',
     kets: '¡KABLAM…!', ketsBam: '¡KABLAM!',
   },
   help: { tips: [
-    'Power-ups: monstruos derrotados sueltan orbes — HP, furia, energy, escudo.',
-    'Jefes: bajo mitad HP se vuelven más feroces (fase 2).',
+    'Orbes: monstruos derrotados sueltan orbes — PV, furia, energía, escudo.',
+    'Jefes: bajo mitad PV se vuelven más feroces (fase 2).',
     'Combos: golpea rápido para ×2 / ×3 daño.',
     'Dash: doble toque izquierda/derecha (o Shift) para esquivar.',
-    'Spiral Orb: llena la barra energy — carga una bola y golpea.',
+    'Spiral Orb: llena la barra de energía — carga una bola y golpea.',
     'Sustitución: nube de humo + esquiva (botón o Shift). Invulnerabilidad breve.',
     'Combo arma: arma 3× rápido — ①②③. Acierta ① y ②, luego ③ finisher.',
     '2 jugadores: roster 5 iconos saga · best-of-3.',
@@ -23247,6 +23785,23 @@ const CATALOG_ES = {
     'Compartir: menú → Enlace — Chrome Android → Añadir a inicio.',
     'Offline: tras 1× online cachea HTML+JS — banner sin red.',
   ] },
+  gear: {
+    hubStat: '{n}/5', summarySlots: '<b>{n}</b>/5',
+    pillVanity: 'LOOK', pillStat: 'STAT', pillLock: 'LOCK',
+    empty: 'Vacío', pickHint: 'Toca un objeto para (des)equipar.',
+    invKicker: '{slot}', weaponOpen: 'Armas',
+    lockedLine: 'Bloqueado · {why}', equip: 'Equipar', unequip: 'Quitar', wearing: 'puesto',
+    vanityHint: 'Sin stats — solo look', statHint: 'Bonus de combate',
+    lockLevel: 'Nv {n}', lockTrain: '{n}× entren.', lockDex: '{n} monstruos',
+    lockTime: 'Desde {when}', lockTimeDate: 'Desde fecha', lockDays: '{n} días',
+    lockAdv: 'Aventura Nv {n}', lockDiff: 'Aún no libre', lockOwned: 'Aún no hallado',
+    lockSlot: 'Hueco mal', lockNoStats: 'Sin stats hasta abrir',
+    filterAll: 'Todo', filterOwned: 'Tuyo', filterSearch: 'Busca {n}…',
+    filterEmpty: 'Nada en este filtro', filterRarityAll: 'Todos',
+    filterCount: '{shown}/{total} · {slot}', filterAria: 'Filtro', rarityAria: 'Rareza',
+    catalogN: '{n} objetos', weaponAside: 'Arma', weaponAsideHint: 'Colección · no es 6.º hueco',
+    slot: { head: 'Cabeza', chest: 'Pecho', hands: 'Manos', legs: 'Piernas', back: 'Espalda' },
+  },
 };
 
 function weaponLabel(w) {
@@ -23311,15 +23866,14 @@ function dailyText(id) {
   const k = 'daily.' + id + '.text';
   const v = t(k);
   if (v && v !== k) return v;
-  const def = typeof dailyDef === 'function' ? dailyDef(id) : null;
-  return def ? def.text : id;
+  return '';
 }
 
 function dailyHint(id) {
   const k = 'daily.' + id + '.hint';
   const v = t(k);
   if (v && v !== k) return v;
-  return (typeof DAILY_PLAY_HINTS !== 'undefined' && DAILY_PLAY_HINTS[id]) || '';
+  return '';
 }
 
 function pickupLabel(kind, skillId, itemCat, itemId, gearId) {
@@ -23435,24 +23989,24 @@ const CATALOG_DE_CHROME = {
   pickup: { heal: '+HP', rage: 'RAGE', energy: 'ENERGIE', shield: 'SCHILD' },
   fomo: {
     ritualTitle: 'Heute',
-    ritualCtaSummon: 'Zu Summons',
+    ritualCtaSummon: 'Zu Kisten',
     ritualCtaMission: 'Mission spielen',
     ritualCtaAdv: 'Abenteuer',
     ritualDismiss: 'Schließen',
     ritualReopen: 'Tagesüberblick',
     resetIn: 'Neu in {reset}',
-    rowSummons: 'Summons {left}/{total}',
+    rowSummons: 'Kisten {left}/{total}',
     rowEggReady: 'Tages-Ei bereit',
     rowEggDone: 'Tages-Ei schon offen',
-    streakReward3: '+1 Summon',
-    streakReward7: '+Ei oder Summons',
+    streakReward3: '+1 Kiste',
+    streakReward7: '+Ei oder Kisten',
     streakReward14: '+120 XP',
   },
   runLoot: {
     head: 'Dieser Lauf · Beute neben XP',
     headAdv: 'Dieser Lauf · Beute neben XP',
     hudShort: 'Beute: {line}',
-    summonLine: 'Summon: {name} → {rar}',
+    summonLine: 'Kiste: {name} → {rar}',
     dexLine: 'Buch: {name} ({rar})',
     hpBonusLine: '+{n} max HP aus Buch',
     petLine: 'Pet gezähmt: {name}',
@@ -23465,13 +24019,13 @@ const CATALOG_DE_CHROME = {
     petCoinsLine: '+{n} Pet-Coins',
   },
   result: {
-    advWin: 'GEWONNEN!', advLose: 'VERLOREN', trainWin: 'MEISTER!', trainLose: 'ROBOT GEWINNT...',
+    advWin: 'GEWONNEN!', advLose: 'VERLOREN', trainWin: 'MEISTER!', trainLose: 'ROBOT GEWINNT…',
     trainDetailWin: 'RabbitRobot besiegt ({p}-{r}) · max Combo ×{combo} · {wins}× gewonnen',
     trainDetailLose: 'RabbitRobot war zu stark ({p}-{r}) · max Combo ×{combo}',
     vsP1Win: 'SPIELER 1 GEWINNT!', vsP2Win: 'SPIELER 2 GEWINNT!', wallRecord: 'NEUER REKORD!', wallTime: 'ZEIT UM!',
     matsRecord: 'NEUER REKORD!', matsDone: 'Gut gemacht!',
     perfectRun: 'Perfekter Lauf — HP hoch halten!',
-    pickupsHelp: '{hint} — Pickups helfen',
+    pickupsHelp: '{hint} — Funde helfen',
     lossBlockTip: 'Tipp: blocken · nach oben zielen auf Flieger · {prog}',
     lossOrbTip: 'Tipp: grüne Orbs · SUPER vor dem Boss füllen · {prog}',
     lossGambleTip: 'Erste Niederlage: vor jedem Level würfeln — Verbündeter hilft zwischen Wellen.',
@@ -23531,7 +24085,7 @@ const CATALOG_DE_CHROME = {
     waveClear: 'Welle klar +{heal} HP', waveN: 'WELLE {n}/{total}',
     fight: 'KÄMPF!', levelClear: 'LEVEL {n} FERTIG!', won: 'GEWONNEN!', lost: 'VERLOREN',
     spiral_orbTriple: 'TRIPLE SPIRAL ORB!', spiral_orbDual: 'DUAL SPIRAL ORB!',
-    summon: '✦ SUMMON! ✦', summonAscend: '{name} → {rar}!',
+    summon: '✦ KISTE! ✦', summonAscend: '{name} → {rar}!',
     newDex: 'Neu {rar}: {name}! +{hp} max HP', pet: 'PET! {name}',
     matsStart: 'MÜNZEN-BONUS', wallStart: 'ZERSTÖRE DIE MAUER!', bonusDone: 'BONUS FERTIG!',
     kets: 'KABLAM…', ketsBam: 'KABLAM!', wallTime: 'ZEIT!', wallNewWall: 'MAUER KAPUTT! Neue Mauer...',
@@ -23547,9 +24101,22 @@ const CATALOG_DE_CHROME = {
   },
   fighter: {
     energyEmpty: 'Energy nicht voll!', subst: 'Substitution!', dash: 'Dash!',
-    shield: 'Schild!', parry: 'PARRY!', block: 'BLOCK!', miss: 'MISS!',
+    shield: 'Schild!', parry: 'PARRY!', block: 'ABWEHR!', miss: 'DANEBEN!',
   },
-  egg: { dailyReady: 'Tages-Ei bereit', advBonus: 'Bonus-Ei: 1× Abenteuer gewinnen', tomorrow: 'Ei wieder morgen' },
+  egg: {
+    dailyReady: 'Tages-Ei bereit', advBonus: 'Bonus-Ei: 1× Abenteuer gewinnen', tomorrow: 'Ei wieder morgen',
+    name: {
+      egg_pebble: 'Kiesel', egg_moss: 'Moosball', egg_candy: 'Bonbon', egg_cloud: 'Wölkchen',
+      egg_star: 'Sternchen', egg_flame: 'Flämmchen', egg_crystal: 'Kristall', egg_moon: 'Mond-Ei',
+      egg_gold: 'Golden', egg_neon: 'Neon', egg_rainbow: 'Regenbogen', egg_prism: 'Prisma',
+    },
+    perk: {
+      egg_pebble: 'Weiches Grauglühen', egg_moss: 'Grüne Funken', egg_candy: 'Rosa Streifen',
+      egg_cloud: 'Weicher Wolkenwirbel', egg_star: 'Goldsterne', egg_flame: 'Warmer Flammenakzent',
+      egg_crystal: 'Blaues Kristallschimmer', egg_moon: 'Mondsichel-Glühen', egg_gold: 'Legendärer Goldglanz',
+      egg_neon: 'Neonrand-Puls', egg_rainbow: 'Mythisches Regenbogen-Ei', egg_prism: 'Seltener Prisma-Blitz',
+    },
+  },
   pet: {
     active: 'Pet · aktiv', tamed: 'Pet · gezähmt', buy: 'Pet · kaufen {cost} PC',
     killsNeed: 'Pet · {need} Kills', killsProgress: 'Pet · {cur}/{need} Kills',
@@ -23615,6 +24182,14 @@ const CATALOG_DE_CHROME = {
     persistPrimaryFail: 'Haupt-Save fehlgeschlagen — Backup aktualisiert (Export in Einstellungen)',
     persistFail: 'Speichern fehlgeschlagen — Export in Einstellungen',
     persistFailCtx: 'Speichern fehlgeschlagen ({context}) — Export in Einstellungen',
+    resultHiccup: 'Ergebnis-Hiccup — Nochmal / Menü',
+    errRetry: 'Aktion fehlgeschlagen — nochmal',
+    hiccupContinue: 'Hiccup — Spiel läuft weiter',
+    fightHiccup: 'Hiccup — kämpf weiter',
+    persistCtxSkill: 'Skill', persistCtxSuper: 'Super', persistCtxWeapon: 'Waffe',
+    persistCtxStyle: 'Stil', persistCtxMission: 'Mission', persistCtxClaim: 'Claim',
+    persistCtxDaily: 'Tagesbonus', persistCtxXp: 'XP', persistCtxGear: 'Ausrüstung',
+    persistCtxBuilding: 'Fabrik', persistCtxItem: 'Item', persistCtxTide: 'Tide',
     pickFileOrPaste: 'Exportdatei wählen oder Save-JSON einfügen',
     saveLoadedPreview: 'Save von {src} — Import für Vorschau tippen',
     filePickerUnavailable: 'Dateiwähler nicht verfügbar',
@@ -23629,10 +24204,10 @@ const CATALOG_DE_CHROME = {
     saveRestoredAfterLoad: 'Save nach Ladefehler aus Backup wiederhergestellt',
     saveLoadFailedFresh: 'Save konnte nicht laden — neu gestartet',
     staleCacheMenu: 'Alter Cache — Menü hängt. Tippe «Neue Version» in der Leiste.',
-    backupRestored: 'Backup wiederhergestellt — Save + Backup im Sync',
+    backupRestored: 'Backup wiederhergestellt — Save + Backup gleich',
     backupFailed: 'Backup-Wiederherstellung fehlgeschlagen — Save exportieren',
-    syncConfirm: 'Sync überschreibt Backup mit Haupt-Save — nochmal tippen',
-    syncOk: 'Backup mit Haupt-Save synchron', syncFailed: 'Sync fehlgeschlagen — Save als Backup exportieren',
+    syncConfirm: 'Abgleich überschreibt Backup — nochmal tippen',
+    syncOk: 'Backup mit Haupt-Save gleich', syncFailed: 'Abgleich fehlgeschlagen — Save exportieren',
     clearConfirm: 'Nochmal tippen = Fortschritt löschen (Backup bleibt)', newStart: 'Neustart — Backup noch in Einstellungen',
     exportCopied: 'Save kopiert + Download · {summary} (~{size})',
     exportBox: 'Save im Feld + Download · {summary} (~{size})',
@@ -23652,7 +24227,7 @@ const CATALOG_DE_CHROME = {
     gearUnequipped: '{name} abgelegt',
     gearLocked: 'Noch gesperrt · {why}',
     gearDrop: '{slot}: {name}!',
-    summon: '✦ Summon! {name} ist jetzt {rar} — Schaden ×{dmg}',
+    summon: '✦ Kiste! {name} ist jetzt {rar} — Schaden ×{dmg}',
     tideBattle: 'Tide Battle! {name} erscheint — besiege den Boss!',
     tideBattleWin: 'Tide Battle gewonnen! +{xp} XP · +{coins} Pet-Coins',
     satanIncoming: 'Satan erscheint — 10× fest!',
@@ -23782,13 +24357,13 @@ const CATALOG_DE_CHROME = {
     statusReady: 'Holen +{xp} XP',
     statusAllClaimed: 'Tagesbonus +80 bereit',
     statusDefault: '{done}/3 Missionen',
-    remainderKills1: '1 Kill übrig',
-    remainderKillsN: '{n} Kills übrig',
+    remainderKills1: '1 Monster übrig',
+    remainderKillsN: '{n} Monster übrig',
     remainderBricks1: '1 Stein übrig',
     remainderBricksN: '{n} Steine übrig',
     remainderCombo: 'Combo ×{n} übrig',
-    remainderPickups1: '1 Pickup übrig',
-    remainderPickupsN: '{n} Pickups übrig',
+    remainderPickups1: '1 Fund übrig',
+    remainderPickupsN: '{n} Funde übrig',
     remainderRun: '1 Lauf übrig',
     remainderGeneric: '{n} übrig',
     planNow: 'Jetzt:',
@@ -23859,7 +24434,7 @@ const CATALOG_DE_CHROME = {
     trainTipDefault: 'Tipp: Laser springen · volle Energy → Spiral Orb',
     energyNotFull: 'Energy {have}/{need} — treffen zum Füllen',
     protected: 'Sicher!', iframe: 'Sicher!',
-    blockChip: 'BLOCK −{n}', parry: 'PARRY!', miss: 'MISS!',
+    blockChip: 'ABWEHR −{n}', parry: 'PARRY!', miss: 'DANEBEN!',
   },
   hud: {
     super: 'SUPER', masterShort: 'MEISTER +20%', masterSword: 'DAWNBLADE {n}s',
@@ -23874,14 +24449,14 @@ const CATALOG_DE_CHROME = {
     satanHintKb: 'Satan reflektiert 85% — zielen, ausweichen, Orbs',
     star2: ' · 2★ bei >{pct}% HP', star3: ' · 3★ bei >{pct}% HP', hpPct: '{pct}% HP{hint}',
     enemiesLeft1: 'Noch 1 Gegner in dieser Welle', enemiesLeftN: 'Noch {n} Gegner in dieser Welle',
-    waveFunnel: '{cleared}/{total} weg · Spawn aktiv',
+    waveFunnel: '{cleared}/{total} weg · Start',
     starBeat: '+{n}★ Rekord!', starBest: 'best {n}★',
-    stageClearSec: 'Stage klar — {sec}s',
+    stageClearSec: 'Level klar — {sec}s',
     toBoss: 'Zum Boss — {sec}s', walkNext: 'Weiterlaufen… nächste Welle {sec}s',
     streak: 'STREAK ×{n}', combo: 'COMBO ×{n}', rage: 'RAGE {n}s', shield: 'Schild {n}s',
     earLaser: 'OHR-LASER — spring!', lightning_pierceTele: 'LIGHTNING PIERCE — Dash/Spring!',
     lightning_pierceMiss: 'Lightning Pierce verfehlt — Springen wirkt!',
-    kickTele: 'TRITT — spring/block!', punchTele: 'SCHLAG — block/weg!', earLaserShort: 'OHR-LASER',
+    kickTele: 'TRITT — spring/blocken!', punchTele: 'SCHLAG — blocken/weg!', earLaserShort: 'OHR-LASER',
     rabbitRobot: 'RABBITROBOT · {pct}%',
     rabbitRobotHp: 'RABBIT {hp}/{max}',
     roundInfo: 'Runde {n} · zuerst 2 · {s}-{r}',
@@ -23996,9 +24571,9 @@ const CATALOG_DE_CHROME = {
     skillNextUnlockSoon: 'Nächstes: <b>{name}</b> (Lv {lvl}) — fast soweit',
     skillNextIsland: 'Nächstes: <b>{name}</b> — Insel-Gate bis Lv {cap} im Abenteuer',
     skillBehAll: 'Alle Typen',
-    skillSort_level: 'Sort: Level',
-    skillSort_dmg: 'Sort: Schaden',
-    skillSort_name: 'Sort: Name',
+    skillSort_level: 'Nach Level',
+    skillSort_dmg: 'Nach Schaden',
+    skillSort_name: 'Nach Name',
     superHead: 'Notfall-Super (Kets-Slot)',
     superSub: 'Eingekreist im Abenteuer — Mitte tippen oder E · ersetzt KETS-BAM',
     superSummaryHead: 'Notfall-Super',
@@ -24019,7 +24594,7 @@ const CATALOG_DE_CHROME = {
     superStat_charge: 'Laden',
     superHudCd: 'Notfall-Super {n}s',
     weaponHead: 'Waffen',
-    weaponSub: 'Summons sind echt · Insel-Skill-Gate: Waffen bis zu deinem Insel-Cap im Abenteuer',
+    weaponSub: 'Kisten zählen · Insel-Skill: Waffen bis Cap',
     skillTabSkills: 'Skills',
     skillTabWeapons: 'Waffen',
     skillTabPets: 'Pets',
@@ -24125,7 +24700,7 @@ const CATALOG_DE_CHROME = {
     hubStatStyle: '{n}/{total} Outfits',
     hubStatGear: '{n}/{total} Items',
     hubStatDex: '{n}/{total} · +max HP',
-    petCoinTip: 'Spiel <b>Münzen-Bonus</b> für Pet-Coins (2 Gold = 1 PC). Pets hier kaufen oder über Monsterbuch zähmen.',
+    petCoinTip: '<b>Münzen-Bonus</b>: 2 Gold = 1 PC',
     petSummaryTamed: 'Gezähmt <b>{tamed}/{total}</b> · aktiv <b>{active}</b> · <b>{wallet} Pet-Coins</b>',
     petNone: 'keine',
     installSub: 'Ein Icon, wie eine echte App',
@@ -24136,21 +24711,21 @@ const CATALOG_DE_CHROME = {
     modeWall: '60s · Combo ×3/×5/×8 · Rekord-Tempo + Projektion im HUD',
     modeVersus: 'P1 links P2 rechts · Best-of-3 · Rematch in Pause',
     modeCoinrun: '45s Münzen · 2 Münzen = 1 Pet-Coin · zielen ↑ · Flieger +3',
-    firstMinuteAdventure: 'Erste Minute: links laufen · rechts schlagen · Joy ↑ Flieger · volle Energy = SUPER',
-    firstMinuteTraining: 'Erste Minute: roten Laser springen · nah blocken · volle Energy → SUPER',
-    firstMinuteWall: '60s · Combo ×3/×5/×8 · Rekord-Tempo + Projektion im HUD',
-    firstMinuteVersus: 'Erste Minute: P1 links · P2 rechts',
-    firstMinuteCoinrun: '45s Münzen · Joy ↑ zielen · rosa Flieger = +3 · max 3 Shuriken schnell',
-    firstMinuteAdventureKb: 'Erste Minute: A/D laufen · W springen · J/K/L · U Spezial · Shift Wechsel',
-    firstMinuteTrainingKb: 'Erste Minute: Laser springen · Shift = Subst · volle Energy → U',
-    firstMinuteWallKb: '60s · Combo-Meilensteine · A/D · J/K/L · Rekord-Tempo im HUD',
-    firstMinuteVersusKb: 'Erste Minute: P1 WASD+JKL · P2 Pfeile+1-5 · Best-of-3',
-    firstMinuteCoinrunKb: 'Münzen holen · W/↑ höher zielen · J/K Shuriken · max 3 schnell',
+    firstMinuteAdventure: 'Laufen · schlagen · Energy voll = SUPER',
+    firstMinuteTraining: 'Laser springen · blocken · SUPER',
+    firstMinuteWall: '60s · Combo ×3/×5/×8',
+    firstMinuteVersus: 'P1 links · P2 rechts',
+    firstMinuteCoinrun: 'Münzen · zielen ↑',
+    firstMinuteAdventureKb: 'A/D laufen · W springen · J schlagen · U SUPER',
+    firstMinuteTrainingKb: 'Laser springen · Shift block · U SUPER',
+    firstMinuteWallKb: '60s · A/D · J schlagen',
+    firstMinuteVersusKb: 'P1 WASD · P2 Pfeile',
+    firstMinuteCoinrunKb: 'Münzen · W zielen · J Shuriken',
     weaponComboHint: 'Waffe 3× = ①②③ · ①+② treffen → goldenes ③',
-    gambleOnboardTouch: 'Erste Wette: niedrige Summe = Super-Boss · hohe = Verbündeter · Skip = normal',
-    gambleOnboardKb: 'Erstes Mal: Summe ≤5 Super-Boss · ≥9 Verbündeter · Skip = keine Wette',
-    ketsbamOnboardTouch: 'Umzingelt? Mitte tippen — Ketsbam-Flucht · 9s Cooldown',
-    ketsbamOnboardKb: 'Umzingelt? E oder Mitte = Ketsbam · 9s Cooldown',
+    gambleOnboardTouch: 'Erste Wette: niedrige Summe = Super-Boss · hohe = Verbündeter · Überspringen = normal',
+    gambleOnboardKb: 'Erstes Mal: Summe ≤5 Super-Boss · ≥9 Verbündeter · Überspringen = keine Wette',
+    ketsbamOnboardTouch: 'Umzingelt? Mitte tippen — Ketsbam',
+    ketsbamOnboardKb: 'Umzingelt? E = Ketsbam',
     tideBattleOnboardTouch: 'Erste Tide Battle: {name} besiegen — keine anderen Wellen bis fertig',
     tideBattleOnboardKb: 'Erste Tide Battle: {name} besiegen — Wellen pausieren',
     langSwitchFail: 'Sprache wechseln fehlgeschlagen',
@@ -24168,28 +24743,28 @@ const CATALOG_DE_CHROME = {
     hubStatDexLine: '{n}/{total} · +max HP',
     summonHead: 'Beschwörungen',
     summonSub: 'Tägliche Kiste · 10× random · Waffe oder Pet',
-    summonWhere: 'Menü → Beschwörungen · Beute in Sammlung → Waffen / Pets (Kisten-Badge)',
-    summonQuota: 'Heute: {left}/{total} Random-Summons',
+    summonWhere: 'Menü → Kisten · Beute in Sammlung',
+    summonQuota: 'Heute: {left}/{total} Kisten',
     summonLeft: '{n} übrig',
     summonDone: 'Leer',
     summonOpen: 'Kiste öffnen',
     summonOpenAria: 'Kiste öffnen, {n} übrig',
-    summonNoMore: 'Keine Summons mehr heute',
+    summonNoMore: 'Keine Kisten mehr heute',
     summonOpening: 'Kiste öffnet…',
-    summonNoPulls: 'Heute noch keine Pulls.',
-    summonFail: 'Summon fehlgeschlagen — nochmal versuchen',
+    summonNoPulls: 'Heute noch keine Züge.',
+    summonFail: 'Kiste fehlgeschlagen — nochmal versuchen',
     summonPull: 'Kiste öffnen',
     summonPullLeft: '{n} übrig',
     summonPullEmpty: 'Leer',
     summonAriaPull: 'Kiste öffnen, {n} übrig',
-    summonAriaEmpty: 'Keine Summons mehr heute',
+    summonAriaEmpty: 'Keine Kisten mehr heute',
     summonAriaBusy: 'Kiste öffnet…',
     summonHint: 'Kiste tippen zum Öffnen',
     summonReveal: 'Kiste oder Öffnen tippen — Beute erscheint in der Kiste',
     summonGotoWeapons: 'Zu Waffen',
     summonGotoPets: 'Zu Pets',
     summonGotoSub: 'Sammlung',
-    summonLogEmpty: 'Heute noch keine Pulls.',
+    summonLogEmpty: 'Heute noch keine Züge.',
     summonLeftToday: '{n} übrig heute',
     summonDoneToday: 'für heute leer',
     sharePlayLinkOk: '✓ Spiel-Link — mit Freunden teilen (Android)',
@@ -24235,14 +24810,38 @@ const CATALOG_DE_CHROME = {
     upgradeShardsLine: '{skill} Skill · {item} Item-Splitter',
     upgradeMaxHint: 'Standard max Lv {std} · mythisch/extrem max Lv {ext}',
     eggSummary: 'Gesammelt {owned}/{total} · aktiv {active} · {daily}',
-    eggSummaryHint: 'Kosmetik — kein Kampfbonus. 1 Tages-Ei + Bonus-Ei nach dem ersten Abenteuer-Sieg heute.',
+    eggSummaryHint: 'Kosmetik. 1 Tages-Ei + Bonus nach erstem Abenteuer-Sieg.',
     petTamedAssist: 'Gezähmt · Assist im Abenteuer',
     petBuyLine: 'Kaufen: {cost} Pet-Coins',
-    petTameLine: 'Zähmen: {cur}/{need} Kills · oder {cost}',
+    petTameLine: 'Zähmen: {cur}/{need} · oder {cost}',
+    petKillsLeft: '{n} noch',
     petActive: 'aktiv',
     petEquip: 'ausrüsten',
     styleSummary: 'Outfits {unlocked}/{total} · aktiv {name}',
-    styleSummaryHint: 'Jeder Stil hat einen eigenen Bonus — Hover oder Tooltip. Kosmetik + leichte Kampf-Perks.',
+    styleSummaryHint: 'Jeder Stil hat einen Bonus — Look + leichter Perk.',
+    errStylePick: 'Stil wählen fehlgeschlagen',
+    errSummonLoad: 'Kisten laden fehlgeschlagen',
+    errSummonOpen: 'Kisten öffnen fehlgeschlagen',
+    saveHealthStyle: ' · Stil {name}',
+    importPreview: 'Vorschau: {summary}{meta}. Laden 2× tippen.',
+    importPreviewMeta: ' · v{app}',
+    importInvalid: 'Ungültiger Save',
+    importErrEmpty: 'Zuerst Save-JSON einfügen',
+    importErrTooBig: 'Save zu groß',
+    importErrJson: 'Ungültiges JSON',
+    importErrStruct: 'Ungültige Save-Struktur',
+    importMore: '+{n} {kind}',
+    importFewer: 'Weniger {kind} ({a} vs {b})',
+    importKindSummon: 'Kisten',
+    importKindPet: 'Pets',
+    importKindEgg: 'Ei-Pets',
+    importKindSkill: 'Skill-Lv',
+    importKindItem: 'Item-Lv',
+    importKindCoins: 'Pet-Coins',
+    importStyleChange: 'Stil {from} → {to}',
+    importLower: 'Niedriger als der Save hier',
+    importHigher: 'Höher als der Save hier',
+    importAppVer: 'Export v{v}',
     petBuy: 'kaufen',
     eggCosmetic: 'Kosmetischer Begleiter',
     eggUnhatched: 'Noch nicht geschlüpft',
@@ -24253,20 +24852,25 @@ const CATALOG_DE_CHROME = {
     dexAllTypes: 'Alle Typen',
     dexSortBook: 'Buch',
     dexSortRarity: 'Seltenheit',
-    dexSortUnlock: 'Unlock Lv',
+    dexSortUnlock: 'frei Lv',
     dexSortKills: 'Kills',
     dexSummary: 'Buch {n}/{total} · Kills {kills} · Bonus max HP +{hp} · Seltenheiten {tiers}/6',
-    dexAppear: 'Erscheint im Abenteuer · Unlock Lv {lvl}',
-    dexUnlockLv: 'Unlock Lv {lvl}',
+    dexAppear: 'Erscheint im Abenteuer · frei Lv {lvl}',
+    dexUnlockLv: 'frei Lv {lvl}',
     dexSecret: 'Geheim',
     dexNotBeaten: 'Noch nicht besiegt',
     dexStats: '{type} · Basis-HP {hp} · dmg {dmg} · spd {spd} · {xp} XP · Lv {lvl}',
     dexType: { hop: 'Hopser', fly: 'Flug', charge: 'Charge', shoot: 'Schuss', tank: 'Tank', dragon: 'Drache', swim: 'Meer' },
     dexBiome: { farm: 'Farm', zoo: 'Zoo', sea: 'Meer', wild: 'Wald', crypt: 'Krypta', scrap: 'Schrott', frost: 'Frost', classic: 'Klassisch', secret: 'Geheim' },
-    saveHealthStats: 'Lv {lvl} · Unlock {unlocked} · Buch {dex} · Kills {kills}',
-    saveHealthSummon: ' · ✦ {n} Summon',
+    saveHealthStats: 'Lv {lvl} · frei {unlocked} · Buch {dex} · Kills {kills}',
+    saveHealthSummon: ' · ✦ {n} Kiste',
     saveHealthPet: ' · Pet {n}',
     saveHealthEgg: ' · Ei {n}',
+    saveHealthSkill: ' · Skill +{n} Lv',
+    saveHealthItem: ' · Item +{n} Lv',
+    saveHealthPetCoins: ' · {n} Pet-Coins',
+    saveHealthGear: ' · Ausrüstung {n}',
+    saveHealthFactory: ' · Fabrik +{n} Lv',
     saveOk: 'Save OK',
     savePrimaryCorrupt: 'Hauptsave defekt',
     saveUnreadable: 'Save unlesbar',
@@ -24310,6 +24914,29 @@ const CATALOG_DE_CHROME = {
     errLoadSettings: 'Einstellungen laden fehlgeschlagen',
     errLoadScreen: 'Bildschirm laden fehlgeschlagen — Neue Version tippen',
     errLoadHelp: 'Tipps laden fehlgeschlagen',
+    errOpenMode: 'Modus nicht zu öffnen — im Menü wählen',
+    errClaimRetry: 'Abholen fehlgeschlagen — nochmal',
+    errCharPick: 'Kämpfer wählen fehlgeschlagen — nochmal tippen',
+    errScreenMissing: 'Bildschirm fehlt — zurück zum Menü',
+    errScreenSwitch: 'Bildschirmwechsel fehlgeschlagen — Menü',
+    errGoBack: 'Navigation fehlgeschlagen — zurück zum Menü',
+    errGoMenu: 'Menü nicht zu öffnen — Seite neu laden',
+    errMenuRefresh: 'Menü nicht zu aktualisieren',
+    errResume: 'Weiter spielen fehlgeschlagen — Modus wählen',
+    errRecoverMenu: 'Wiederherstellung fehlgeschlagen — neu laden wenn Menü hängt',
+    errResultLoad: 'Ergebnis laden fehlgeschlagen — Menü oder Nochmal',
+    errCopyLink: 'Link kopieren fehlgeschlagen — Einstellungen',
+    errShare: 'Teilen fehlgeschlagen — Link in Einstellungen',
+    errExport: 'Export fehlgeschlagen — JSON aus dem Feld',
+    errImportFile: 'Importdatei nicht lesbar',
+    errFomo: 'Tagesübersicht nicht zu schließen',
+    errDayBonus: 'Tagesbonus fehlgeschlagen — nochmal',
+    errProgressSafe: 'Fortschritt sicher — spiel weiter',
+    errSatanStart: 'Satan-Start fehlgeschlagen — Abenteuer geht weiter',
+    errTideStart: 'Tide-Battle-Start fehlgeschlagen — weiter',
+    errBackupStash: 'Save sichern fehlgeschlagen',
+    errSaveApply: 'Save laden fehlgeschlagen',
+    errBackupSync: 'Backup-Abgleich fehlgeschlagen',
   },
   gear: {
     filterAll: 'Alles',
@@ -24325,9 +24952,26 @@ const CATALOG_DE_CHROME = {
     equip: 'Anlegen',
     unequip: 'Ablegen',
     wearing: 'an',
+    vanityHint: 'Keine Stats — nur Look',
+    statHint: 'Mit Kampfbonus',
+    lockLevel: 'Lv {n}',
+    lockTrain: '{n}× Training',
+    lockDex: '{n} Monster',
+    lockTime: 'Ab {when}',
+    lockTimeDate: 'Ab Datum',
+    lockDays: '{n} Tage',
+    lockAdv: 'Abenteuer Lv {n}',
+    lockDiff: 'Noch nicht frei',
+    lockOwned: 'Noch nicht gefunden',
+    lockSlot: 'Falscher Slot',
+    lockNoStats: 'Keine Stats bis offen',
+    filterSearch: 'Suche {n}…',
+    filterEmpty: 'Nichts in diesem Filter',
+    filterRarityAll: 'Alle',
+    filterCount: '{shown}/{total} · {slot}',
     catalogN: '{n} Items',
     weaponAside: 'Waffe',
-    weaponAsideHint: 'Bleibt in Sammlung → Waffen — kein 6. Slot.',
+    weaponAsideHint: 'Sammlung · kein 6. Slot',
     rar: {
       common: 'gewöhnlich', uncommon: 'ungewöhnlich', rare: 'selten', epic: 'episch',
       legendary: 'legendär', mythic: 'mythisch', nightmare: 'Albtraum', hell: 'Hölle',
@@ -24348,8 +24992,8 @@ overlayI18nCatalog(CATALOG_FR, {
     wall35: { text: 'Casse 35 briques du mur', hint: 'Menu → Mur (le combo aide)' },
     trainwin: { text: 'Gagne l’entraînement vs Robot', hint: 'Menu → Entraînement vs RabbitRobot' },
     combo5: { text: 'Atteins combo ×5', hint: 'Aventure : combos rapides' },
-    finisher3: { text: 'Place 3 finishers d’arme', hint: '①+② puis finisher ③' },
-    pick3: { text: 'Prends 3 power-ups', hint: 'Aventure : orbes vert / orange / bleu' },
+    finisher3: { text: 'Place 3 coups finaux d’arme', hint: '①+② puis coup final ③' },
+    pick3: { text: 'Prends 3 orbes', hint: 'Aventure : orbes vert / orange / bleu' },
     boss1: { text: 'Vaincs 1 boss', hint: 'Aventure : boss en fin de niveau' },
   },
   weapon: {
@@ -24370,11 +25014,12 @@ overlayI18nCatalog(CATALOG_FR, {
   pickup: { heal: '+PV', rage: 'RAGE', energy: 'ÉNERGIE', shield: 'BOUCLIER' },
   result: {
     advWin: 'VICTOIRE !', advLose: 'DÉFAITE', trainWin: 'CHAMPION !', trainLose: 'LE ROBOT GAGNE…',
+    advLoseKeep: 'XP et butin de cette partie restent',
     trainDetailWin: 'RabbitRobot à terre ({p}-{r}) · combo max ×{combo} · {wins}× gagné',
     trainDetailLose: 'RabbitRobot trop fort ({p}-{r}) · combo max ×{combo}',
     vsP1Win: 'JOUEUR 1 GAGNE !', vsP2Win: 'JOUEUR 2 GAGNE !', wallRecord: 'NOUVEAU RECORD !', wallTime: 'TEMPS ÉCOULÉ !',
     matsRecord: 'NOUVEAU RECORD !', matsDone: 'Bien joué !',
-    perfectRun: 'Run parfaite — garde tes PV hauts !',
+    perfectRun: 'Partie parfaite — garde tes PV hauts !',
     pickupsHelp: '{hint} — les orbes aident',
     lossBlockTip: 'Astuce : bloque · vise en haut les voiliers · {prog}',
     lossOrbTip: 'Astuce : prends les orbes verts · remplis SUPER avant le boss · {prog}',
@@ -24385,7 +25030,7 @@ overlayI18nCatalog(CATALOG_FR, {
     satanAfterClear: 'Aventure finie — la chaleur reste : 10× échecs sur un niveau → Satan → pet Tide',
     trainComboRecord: 'Combo entraînement : ×{n}{rec}',
     trainComboNewRec: ' — nouveau record !',
-    trainStyleUnlock: 'Nouveau style : Energy glow — Options → Style !',
+    trainStyleUnlock: 'Nouveau style : lueur d’énergie — Options → Style !',
     trainStyleMore: 'Débloque des styles en gagnant plus d’entraînements !',
     trainLossTip: 'Saute pendant LIGHTNING PIERCE — le robot rate · saute les lasers d’oreilles',
     trainTipDefault: 'Astuce : saute les lasers · énergie pleine → Spiral Orb',
@@ -24400,7 +25045,7 @@ overlayI18nCatalog(CATALOG_FR, {
     wallComboBarTip: 'Astuce : des coups rapides remplissent la barre combo',
     wallStrongCombo: 'Gros combo (×{n}) — record la prochaine fois ?',
     wallBehindPace: 'En retard sur le record — vise combo ×5+ ',
-    wallGoodPace: 'Bon rythme — le prochain run peut battre le record !',
+    wallGoodPace: 'Bon rythme — la prochaine partie peut battre le record !',
     matsPetTip: 'Dépense les pet coins dans Collection → Pets · 2 pièces = 1 pet coin',
     matsControlTip: 'Joystick haut = viser plus haut · shuriken max 3× vite',
     masterBuffActive: ' · Buff maître actif',
@@ -24408,7 +25053,7 @@ overlayI18nCatalog(CATALOG_FR, {
     trainDetail: 'RabbitRobot {outcome} ({s}-{r}) · combo max ×{combo}{wins}{record}{finishers}',
     trainOutcomeWin: 'vaincu', trainOutcomeLose: 'était trop fort',
     trainWinsLine: ' · {n} victoires', trainRecordLine: ' · record ×{n}',
-    finishersLine: ' · {n} finishers',
+    finishersLine: ' · {n} coups finaux',
     wallDetail: '{score} briques (~{pace}/min) · record {best} · combo max ×{combo}{walls}{paceDelta}',
     wallWallsLine: ' · {n} murs cassés',
     wallPaceDelta: ' · rythme {delta} vs record',
@@ -24429,17 +25074,17 @@ overlayI18nCatalog(CATALOG_FR, {
     starsProg: 'Étoiles sur cette île (max 3 par niveau)',
   },
   runLoot: {
-    head: 'Cette run · butin hors XP',
-    headAdv: 'Cette run · butin hors XP',
+    head: 'Cette partie · butin hors XP',
+    headAdv: 'Cette partie · butin hors XP',
     hudShort: 'Butin : {line}',
-    summonLine: 'Summon : {name} → {rar}',
+    summonLine: 'Coffre : {name} → {rar}',
     dexLine: 'Bestiaire : {name} ({rar})',
     hpBonusLine: '+{n} PV max du bestiaire',
     petLine: 'Pet apprivoisé : {name}',
     eggLine: 'Œuf bonus : {name}',
     eggDupLine: 'Œuf en double : {name}',
     pickupLine: '{kind} ×{n}',
-    finishersLine: '{n} finishers d’arme',
+    finishersLine: '{n} coups finaux d’arme',
     levelUpLine: '{n}× level-up',
     weaponLine: 'Nouvelle arme : {name}',
     petCoinsLine: '+{n} pet coins',
@@ -24461,7 +25106,7 @@ overlayI18nCatalog(CATALOG_FR, {
     roundWon: 'MANCHE GAGNÉE !', roundLost: 'MANCHE PERDUE',
     p1RoundWin: 'P1 GAGNE LA MANCHE !', p2RoundWin: 'P2 GAGNE LA MANCHE !',
     timeHpVs: 'TIME ! {hp1}% vs {hp2}% · {msg}',
-    summon: '✦ SUMMON ! ✦', summonAscend: '{name} → {rar} !',
+    summon: '✦ COFFRE ! ✦', summonAscend: '{name} → {rar} !',
     newDex: 'Nouveau {rar} : {name} ! +{hp} PV max', pet: 'PET ! {name}',
     matsStart: 'BONUS PIÈCES', wallStart: 'CASSE LE MUR !', bonusDone: 'BONUS TERMINÉ !',
     kets: 'KABLAM…', ketsBam: 'KABLAM !', wallTime: 'TEMPS !', wallNewWall: 'MUR CASSÉ ! Nouveau mur…',
@@ -24469,7 +25114,7 @@ overlayI18nCatalog(CATALOG_FR, {
     satan: 'SATAN — {name} !', satanIncoming: 'SATAN APPROCHE…', satanWin: 'SATAN VAINCU !',
   },
   help: { tips: [
-    'Power-ups : les monstres vaincus laissent parfois des orbes — PV, rage, energy, bouclier.',
+    'Orbes : les monstres vaincus laissent parfois des orbes — PV, rage, énergie, bouclier.',
     'Boss : sous la moitié des PV ils deviennent plus furieux (phase 2).',
     'Combos : enchaîne vite pour ×2 / ×3 dégâts.',
     'Dash : double-tap gauche/droite (ou Shift) pour esquiver.',
@@ -24505,6 +25150,17 @@ overlayI18nCatalog(CATALOG_FR, {
     persistPrimaryFail: 'Sauvegarde principale ratée — copie à jour (exporte dans Options)',
     persistFail: 'Sauvegarde ratée — exporte dans Options',
     persistFailCtx: 'Sauvegarde ratée ({context}) — exporte dans Options',
+    resultHiccup: 'Accroc résultat — Réessayer / Menu',
+    errRetry: 'Action ratée — réessaie',
+    hiccupContinue: 'Accroc — le jeu continue',
+    fightHiccup: 'Accroc — continue',
+    gearLocked: 'Encore verrouillé · {why}',
+    gearEquipped: '{name} équipé',
+    gearUnequipped: '{name} retiré',
+    persistCtxSkill: 'skill', persistCtxSuper: 'super', persistCtxWeapon: 'arme',
+    persistCtxStyle: 'style', persistCtxMission: 'mission', persistCtxClaim: 'réclame',
+    persistCtxDaily: 'bonus', persistCtxXp: 'XP', persistCtxGear: 'équipement',
+    persistCtxBuilding: 'usine', persistCtxItem: 'objet', persistCtxTide: 'tide',
     pickFileOrPaste: 'Choisis un fichier ou colle le JSON dans la case',
     saveLoadedPreview: 'Sauvegarde de {src} — tape Charger pour l’aperçu',
     filePickerUnavailable: 'Sélecteur de fichier indisponible',
@@ -24514,14 +25170,14 @@ overlayI18nCatalog(CATALOG_FR, {
     zoneDrop: '{zone} : {name} !', zoneFallback: 'Zone',
     masteryTier: '{name} : {tier} !',
     saveRepaired: 'Sauvegarde réparée : {notes}',
-    saveCorruptOverwritten: 'Sauvegarde corrompue écrasée — l’export reste ton filet',
+    saveCorruptOverwritten: 'Sauvegarde corrompue écrasée — la copie reste ton filet',
     saveRestoredAfterLoad: 'Sauvegarde restaurée après une erreur de chargement',
     saveLoadFailedFresh: 'Sauvegarde illisible — nouvelle partie (exporte une copie si tu en avais une)',
     staleCacheMenu: 'Vieux cache — le menu ne répond pas. Tape « Nouvelle version » dans le dock.',
     backupRestored: 'Copie restaurée — tout est aligné',
     backupFailed: 'Restauration ratée — exporte ta sauvegarde si tu en as une',
-    syncConfirm: 'La sync écrase la copie — tape encore',
-    syncOk: 'Copie alignée sur la sauvegarde', syncFailed: 'Sync ratée — exporte une copie',
+    syncConfirm: 'La synchro écrase la copie — tape encore',
+    syncOk: 'Copie alignée sur la sauvegarde', syncFailed: 'Synchro ratée — exporte une copie',
     clearConfirm: 'Encore une fois = tout effacer (la copie reste)', newStart: 'Nouveau départ — la copie est encore dans Options',
     exportCopied: 'Sauvegarde copiée + téléchargement · {summary} (~{size})',
     exportBox: 'Sauvegarde dans la case + téléchargement · {summary} (~{size})',
@@ -24537,7 +25193,7 @@ overlayI18nCatalog(CATALOG_FR, {
     styleUnlockTome: 'Nouveau style : Maître du livre !',
     styleUnlockCrystal: 'Nouveau style : Cristallin !',
     styleUnlock: 'Nouveau style : {name} !',
-    summon: '✦ Summon ! {name} est maintenant {rar} — dégâts ×{dmg}',
+    summon: '✦ Coffre ! {name} est maintenant {rar} — dégâts ×{dmg}',
     tideBattle: 'Tide Battle ! {name} apparaît — bats le boss !',
     tideBattleWin: 'Tide Battle gagnée ! +{xp} XP · +{coins} pet coins',
     satanIncoming: 'Satan apparaît — coincé 10× !',
@@ -24644,10 +25300,10 @@ overlayI18nCatalog(CATALOG_FR, {
     statusDone: '3 nouvelles missions demain', statusStep2: 'Réclamer', statusStep3: 'Bonus du jour',
     statusStep1: 'Jouer', statusReady: 'Réclame +{xp} XP', statusAllClaimed: 'Bonus du jour +80 prêt',
     statusDefault: '{done}/3 missions',
-    remainderKills1: 'Encore 1 kill', remainderKillsN: 'Encore {n} kills',
+    remainderKills1: 'Encore 1 monstre', remainderKillsN: 'Encore {n} monstres',
     remainderBricks1: 'Encore 1 brique', remainderBricksN: 'Encore {n} briques',
     remainderCombo: 'Encore combo ×{n}', remainderPickups1: 'Encore 1 orbe', remainderPickupsN: 'Encore {n} orbes',
-    remainderRun: 'Encore 1 run', remainderGeneric: 'Encore {n}',
+    remainderRun: 'Encore 1 partie', remainderGeneric: 'Encore {n}',
     planNow: 'Maintenant :', planEarned: 'Aujourd’hui +{earned} / max +{max} XP',
     planXpPct: '{pct} % du max XP aujourd’hui', planReset: 'Nouvelles missions dans {reset}',
     resetSoon: 'bientôt', resetMinutes: '{m} min', resetHoursOnly: '{h} h', resetHours: '{h} h {m} min',
@@ -24685,32 +25341,156 @@ overlayI18nCatalog(CATALOG_FR, {
     errLoadSettings: 'Options impossibles à charger',
     errLoadScreen: 'Écran impossible à charger — tape Nouvelle version',
     errLoadHelp: 'Astuces impossibles à charger',
+    errOpenMode: 'Mode impossible à ouvrir — choisis dans le menu',
+    errClaimRetry: 'Réclame ratée — réessaie',
+    errCharPick: 'Choix combattant raté — retape',
+    errScreenMissing: 'Écran introuvable — retour menu',
+    errScreenSwitch: 'Changement d’écran raté — retour menu',
+    errGoBack: 'Navigation ratée — retour menu',
+    errGoMenu: 'Menu impossible à ouvrir — recharge',
+    errMenuRefresh: 'Menu impossible à rafraîchir',
+    errResume: 'Reprise ratée — choisis un mode',
+    errRecoverMenu: 'Restauration ratée — recharge si le menu bloque',
+    errResultLoad: 'Résultat impossible — Menu ou Rejouer',
+    errCopyLink: 'Copie du lien ratée — vois Options',
+    errShare: 'Partage raté — copie le lien dans Options',
+    errExport: 'Copie ratée — copie le JSON',
+    errImportFile: 'Fichier d’import illisible',
+    errFomo: 'Aperçu du jour impossible à fermer',
+    errDayBonus: 'Bonus du jour raté — réessaie',
+    errProgressSafe: 'Progression saine — continue',
+    errSatanStart: 'Départ Satan raté — l’aventure continue',
+    errTideStart: 'Départ Tide Battle raté — continue',
+    errBackupStash: 'Sauvegarde impossible à mettre de côté',
+    errSaveApply: 'Sauvegarde impossible à charger',
+    errBackupSync: 'Copie impossible à synchroniser',
     charLocked: 'Verrouillé', charHead: 'CHOISIS UN COMBATTANT',
     charBig5Hint: 'Tes combattants · choix rapide',
+    saveHealthGear: ' · équipement {n}',
+    saveHealthFactory: ' · usine +{n} Nv',
+    saveHealthSkill: ' · skill +{n} Nv',
+    saveHealthItem: ' · objet +{n} Nv',
+    saveHealthPetCoins: ' · {n} pet coins',
     continueLastMode: 'Dernier mode',
     gearHead: 'Équipement',
     gearSub: '5 emplacements · look vs stats · niveau et temps',
+    summonHead: 'Coffres',
+    summonSub: 'Coffre du jour · 10× · arme ou pet',
+    summonWhere: 'Menu → Coffres · butin dans Collection',
+    summonQuota: 'Aujourd’hui : {left}/{total} coffres',
+    summonNoMore: 'Plus de coffres aujourd’hui',
+    summonAriaPull: 'Ouvrir le coffre, {n} restants',
+    summonAriaEmpty: 'Plus de coffres aujourd’hui',
+    summonAriaBusy: 'Coffre en cours…',
+    summonLeftToday: '{n} restants aujourd’hui',
+    summonDoneToday: 'fini pour aujourd’hui',
+    summonPull: 'Ouvrir',
+    summonOpen: 'Ouvrir',
+    summonOpenAria: 'Ouvrir le coffre, {n} restants',
+    summonOpening: 'Coffre…',
+    summonPullLeft: '{n} restants',
+    summonPullEmpty: 'Vide',
+    summonGotoWeapons: 'Armes',
+    summonGotoPets: 'Pets',
+    summonGotoSub: 'Collection',
+    summonLogEmpty: 'Pas encore de tirage.',
+    summonNoPulls: 'Pas encore de tirage.',
+    summonHint: 'Tape le coffre',
+    summonReveal: 'Tape le coffre — le butin apparaît',
+    errSummonLoad: 'Coffres impossibles à charger',
+    errSummonOpen: 'Coffres impossibles à ouvrir',
     dexAllBiomes: 'Tous les biomes',
     dexBiome: { farm: 'Ferme', zoo: 'Zoo', sea: 'Mer', wild: 'Bois', crypt: 'Crypte', scrap: 'Ferraille', frost: 'Givre', classic: 'Classique', secret: 'Secret' },
+    petCoinTip: '<b>Bonus pièces</b> : 2 or = 1 PC',
+    firstMinuteAdventure: 'Cours · frappe · énergie pleine = SUPER',
+    firstMinuteTraining: 'Saute laser · bloque · SUPER',
+    firstMinuteWall: '60s · combo ×3/×5/×8',
+    firstMinuteVersus: 'P1 gauche · P2 droite',
+    firstMinuteCoinrun: 'Pièces · vise ↑',
+    firstMinuteAdventureKb: 'A/D cours · W saute · J frappe · U SUPER',
+    firstMinuteTrainingKb: 'Saute lasers · Shift bloque · U SUPER',
+    firstMinuteWallKb: '60s · A/D · J frappe',
+    firstMinuteVersusKb: 'P1 WASD · P2 flèches',
+    firstMinuteCoinrunKb: 'Pièces · W vise · J shuriken',
+    ketsbamOnboardTouch: 'Cerné ? Tape le centre — Ketsbam',
+    ketsbamOnboardKb: 'Cerné ? E = Ketsbam',
+    petSummaryTamed: 'Apprivoisés <b>{tamed}/{total}</b> · actif <b>{active}</b> · <b>{wallet} pet coins</b>',
+    petNone: 'aucun',
+    petTamedAssist: 'Apprivoisé · aide en aventure',
+    petBuyLine: 'Acheter : {cost} pet coins',
+    petTameLine: 'Apprivoiser : {cur}/{need} · ou {cost}',
+    petActive: 'actif',
+    petEquip: 'équiper',
+    petBuy: 'acheter',
+    petKillsLeft: '{n} K.O.',
+    eggSummary: 'Collecté {owned}/{total} · actif {active} · {daily}',
+    eggSummaryHint: 'Cosmétique. 1 œuf/jour + bonus après 1 victoire aventure.',
+    eggCosmetic: 'Compagnon cosmétique',
+    eggUnhatched: 'Pas encore éclos',
+    petLineActive: 'Pet · actif',
+    petLineTamed: 'Pet · apprivoisé',
+    petLineBuy: 'Pet · acheter {cost} PC',
+    saveHealthStats: 'Nv {lvl} · libre {unlocked} · livre {dex} · K.O. {kills}',
+    saveHealthSummon: ' · ✦ {n} coffre',
+    saveHealthPet: ' · pet {n}',
+    saveHealthEgg: ' · œuf {n}',
+    saveExportAch: ' · {n} succès',
+    saveHealthStyle: ' · style {name}',
+    dexSummary: 'Livre {n}/{total} · K.O. {kills} · bonus PV +{hp} · raretés {tiers}/6',
+    dexAllTypes: 'Tous types',
+    styleSummaryHint: 'Chaque style a un bonus — look + perk léger.',
+    errStylePick: 'Style impossible à choisir',
+    importPreview: 'Aperçu : {summary}{meta}. Tape Charger 2×.',
+    importPreviewMeta: ' · v{app}',
+    importInvalid: 'Sauvegarde invalide',
+    importErrEmpty: 'Colle d’abord le JSON',
+    importErrTooBig: 'Sauvegarde trop grande',
+    importErrJson: 'JSON invalide',
+    importErrStruct: 'Structure invalide',
+    importMore: '+{n} {kind}',
+    importFewer: 'Moins de {kind} ({a} vs {b})',
+    importKindSummon: 'coffres',
+    importKindPet: 'pets',
+    importKindEgg: 'œufs',
+    importKindSkill: 'skill Nv',
+    importKindItem: 'objet Nv',
+    importKindCoins: 'pet coins',
+    importStyleChange: 'Style {from} → {to}',
+    importLower: 'Plus bas que la save ici',
+    importHigher: 'Plus haut que la save ici',
+    importAppVer: 'Copie v{v}',
   },
   fomo: {
     ritualTitle: 'Aujourd’hui',
-    ritualCtaSummon: 'Vers les summons',
+    ritualCtaSummon: 'Vers le coffre',
     ritualCtaMission: 'Jouer une mission',
     ritualCtaAdv: 'Vers l’aventure',
     ritualDismiss: 'Fermer',
     ritualReopen: 'Aperçu du jour',
     resetIn: 'Nouveau dans {reset}',
-    rowSummons: 'Summons {left}/{total}',
+    rowSummons: 'Coffres {left}/{total}',
     rowEggReady: 'Œuf du jour prêt',
     rowEggDone: 'Œuf du jour déjà ouvert',
-    streakReward3: '+1 summon',
-    streakReward7: '+œuf ou summons',
+    streakReward3: '+1 coffre',
+    streakReward7: '+œuf ou coffres',
     streakReward14: '+120 XP',
   },
   fighter: { energyEmpty: 'Énergie pas pleine !', subst: 'Substitution !', dash: 'Dash !', shield: 'Bouclier !', parry: 'PARRY !', block: 'BLOC !', miss: 'RATÉ !' },
-  egg: { dailyReady: 'Œuf du jour prêt', advBonus: 'Œuf bonus : gagne 1× aventure', tomorrow: 'Œuf demain' },
-  pet: { active: 'Pet · actif', tamed: 'Pet · apprivoisé', buy: 'Pet · acheter {cost} PC', killsNeed: 'Pet · {need} kills', killsProgress: 'Pet · {cur}/{need} kills' },
+  egg: {
+    dailyReady: 'Œuf du jour prêt', advBonus: 'Œuf bonus : gagne 1× aventure', tomorrow: 'Œuf demain',
+    name: {
+      egg_pebble: 'Galet', egg_moss: 'Mousse', egg_candy: 'Bonbon', egg_cloud: 'Nuage',
+      egg_star: 'Étoile', egg_flame: 'Flamme', egg_crystal: 'Cristal', egg_moon: 'Œuf-lune',
+      egg_gold: 'Doré', egg_neon: 'Néon', egg_rainbow: 'Arc-en-ciel', egg_prism: 'Prisme',
+    },
+    perk: {
+      egg_pebble: 'Lueur grise douce', egg_moss: 'Étincelles vertes', egg_candy: 'Rayures roses',
+      egg_cloud: 'Tourbillon nuage', egg_star: 'Étoiles d’or', egg_flame: 'Accent flamme',
+      egg_crystal: 'Shimmer cristal', egg_moon: 'Lueur de lune', egg_gold: 'Éclat d’or',
+      egg_neon: 'Pulse néon', egg_rainbow: 'Œuf arc-en-ciel', egg_prism: 'Flash prisme',
+    },
+  },
+  pet: { active: 'Pet · actif', tamed: 'Pet · apprivoisé', buy: 'Pet · acheter {cost} PC', killsNeed: 'Pet · {need} K.O.', killsProgress: 'Pet · {cur}/{need} K.O.' },
   menu: { tipList: [
     'Choisis une tuile — Aventure · Arcade · 2J · Collection',
     '5 îles — le boss Lv 10/20/30/40/50 ouvre la suivante',
@@ -24806,14 +25586,14 @@ overlayI18nCatalog(CATALOG_FR, {
     satanHintKb: 'Satan renvoie 85 % — vise, esquive, prends les orbes',
     star2: ' · 2★ à >{pct}% PV', star3: ' · 3★ à >{pct}% PV', hpPct: '{pct}% PV{hint}',
     enemiesLeft1: '1 ennemi restant', enemiesLeftN: '{n} ennemis restants',
-    waveFunnel: '{cleared}/{total} à terre · spawn',
+    waveFunnel: '{cleared}/{total} à terre · départ',
     starBeat: '+{n}★ record !', starBest: 'meilleur {n}★',
     stageClearSec: 'Niveau fini — {sec}s', toBoss: 'Vers le boss — {sec}s',
     walkNext: 'On avance… vague suivante {sec}s',
     streak: 'STREAK ×{n}', combo: 'COMBO ×{n}', rage: 'RAGE {n}s', shield: 'Bouclier {n}s',
     earLaser: 'LASER D’OREILLE — saute !', lightning_pierceTele: 'LIGHTNING PIERCE — dash/saute !',
     lightning_pierceMiss: 'Lightning Pierce raté — sauter marche !',
-    kickTele: 'KICK — saute/bloque !', punchTele: 'PUNCH — bloque/esquive !', earLaserShort: 'LASER OREILLE',
+    kickTele: 'PIED — saute/bloque !', punchTele: 'POING — bloque !', earLaserShort: 'LASER OREILLE',
     rabbitRobot: 'RABBITROBOT · {pct}%', roundInfo: 'Manche {n} · premier à 2 · {s}-{r}',
     dummyGrace: 'Mannequin {n}s — entraîne le combo', goal: 'but ×{n}', record: 'record ×{n}',
     time: 'TEMPS', wallGen: 'MUR ×{n}', stones: 'Briques : {n}',
@@ -24865,8 +25645,8 @@ overlayI18nCatalog(CATALOG_ES, {
     wall35: { text: 'Rompe 35 ladrillos del muro', hint: 'Menú → Muro (el combo ayuda)' },
     trainwin: { text: 'Gana el entrenamiento vs Robot', hint: 'Menú → Entrenamiento vs RabbitRobot' },
     combo5: { text: 'Alcanza combo ×5', hint: 'Aventura: combos rápidos' },
-    finisher3: { text: 'Asesta 3 finishers de arma', hint: '①+② luego finisher ③' },
-    pick3: { text: 'Recoge 3 power-ups', hint: 'Aventura: orbes verde / naranja / azul' },
+    finisher3: { text: 'Asesta 3 remates de arma', hint: '①+② luego remate ③' },
+    pick3: { text: 'Recoge 3 orbes', hint: 'Aventura: orbes verde / naranja / azul' },
     boss1: { text: 'Derrota 1 jefe', hint: 'Aventura: jefe al final del nivel' },
   },
   weapon: {
@@ -24887,11 +25667,12 @@ overlayI18nCatalog(CATALOG_ES, {
   pickup: { heal: '+PV', rage: 'RAGE', energy: 'ENERGÍA', shield: 'ESCUDO' },
   result: {
     advWin: '¡VICTORIA!', advLose: 'DERROTA', trainWin: '¡CAMPEÓN!', trainLose: 'EL ROBOT GANA…',
+    advLoseKeep: 'XP y botín de esta partida se quedan',
     trainDetailWin: 'RabbitRobot caído ({p}-{r}) · combo máx ×{combo} · {wins}× ganado',
     trainDetailLose: 'RabbitRobot demasiado fuerte ({p}-{r}) · combo máx ×{combo}',
     vsP1Win: '¡JUGADOR 1 GANA!', vsP2Win: '¡JUGADOR 2 GANA!', wallRecord: '¡NUEVO RÉCORD!', wallTime: '¡SE ACABÓ EL TIEMPO!',
     matsRecord: '¡NUEVO RÉCORD!', matsDone: '¡Bien hecho!',
-    perfectRun: 'Run perfecta — mantén el HP alto',
+    perfectRun: 'Partida perfecta — mantén el PV alto',
     pickupsHelp: '{hint} — los orbes ayudan',
     lossBlockTip: 'Consejo: bloquea · apunta arriba a los voladores · {prog}',
     lossOrbTip: 'Consejo: coge orbes verdes · llena SUPER antes del jefe · {prog}',
@@ -24902,7 +25683,7 @@ overlayI18nCatalog(CATALOG_ES, {
     satanAfterClear: 'Aventura terminada — el calor sigue: 10× fallos en un nivel → Satan → pet Tide',
     trainComboRecord: 'Combo entrenamiento: ×{n}{rec}',
     trainComboNewRec: ' — ¡nuevo récord!',
-    trainStyleUnlock: 'Nuevo estilo: Energy glow — Opciones → Estilo',
+    trainStyleUnlock: 'Nuevo estilo: brillo de energía — Opciones → Estilo',
     trainStyleMore: 'Desbloquea estilos ganando más entrenamientos',
     trainLossTip: 'Salta durante LIGHTNING PIERCE — el robot falla · salta los láseres de oreja',
     trainTipDefault: 'Consejo: salta láseres · energía llena → Spiral Orb',
@@ -24917,7 +25698,7 @@ overlayI18nCatalog(CATALOG_ES, {
     wallComboBarTip: 'Consejo: golpes rápidos llenan la barra combo',
     wallStrongCombo: 'Gran combo (×{n}) — ¿récord la próxima?',
     wallBehindPace: 'Por detrás del récord — prueba combo ×5+',
-    wallGoodPace: 'Buen ritmo — la próxima run puede batir el récord',
+    wallGoodPace: 'Buen ritmo — la próxima partida puede batir el récord',
     matsPetTip: 'Gasta pet coins en Colección → Pets · 2 monedas = 1 pet coin',
     matsControlTip: 'Joystick arriba = apunta más alto · shuriken máx 3× rápido',
     masterBuffActive: ' · Buff maestro activo',
@@ -24925,7 +25706,7 @@ overlayI18nCatalog(CATALOG_ES, {
     trainDetail: 'RabbitRobot {outcome} ({s}-{r}) · combo máx ×{combo}{wins}{record}{finishers}',
     trainOutcomeWin: 'derrotado', trainOutcomeLose: 'era demasiado fuerte',
     trainWinsLine: ' · {n} victorias', trainRecordLine: ' · récord ×{n}',
-    finishersLine: ' · {n} finishers',
+    finishersLine: ' · {n} remates',
     wallDetail: '{score} ladrillos (~{pace}/min) · récord {best} · combo máx ×{combo}{walls}{paceDelta}',
     wallWallsLine: ' · {n} muros rotos',
     wallPaceDelta: ' · ritmo {delta} vs récord',
@@ -24946,17 +25727,17 @@ overlayI18nCatalog(CATALOG_ES, {
     starsProg: 'Estrellas en esta isla (máx 3 por nivel)',
   },
   runLoot: {
-    head: 'Esta run · botín aparte de XP',
-    headAdv: 'Esta run · botín aparte de XP',
+    head: 'Esta partida · botín aparte de XP',
+    headAdv: 'Esta partida · botín aparte de XP',
     hudShort: 'Botín: {line}',
-    summonLine: 'Summon: {name} → {rar}',
+    summonLine: 'Cofre: {name} → {rar}',
     dexLine: 'Bestiario: {name} ({rar})',
     hpBonusLine: '+{n} HP máx del bestiario',
     petLine: 'Pet domado: {name}',
     eggLine: 'Huevo extra: {name}',
     eggDupLine: 'Huevo duplicado: {name}',
     pickupLine: '{kind} ×{n}',
-    finishersLine: '{n} finishers de arma',
+    finishersLine: '{n} remates de arma',
     levelUpLine: '{n}× subida de nivel',
     weaponLine: 'Arma nueva: {name}',
     petCoinsLine: '+{n} pet coins',
@@ -24978,7 +25759,7 @@ overlayI18nCatalog(CATALOG_ES, {
     roundWon: '¡RONDA GANADA!', roundLost: 'RONDA PERDIDA',
     p1RoundWin: '¡P1 GANA LA RONDA!', p2RoundWin: '¡P2 GANA LA RONDA!',
     timeHpVs: '¡TIME! {hp1}% vs {hp2}% · {msg}',
-    summon: '✦ ¡SUMMON! ✦', summonAscend: '{name} → {rar}!',
+    summon: '✦ ¡COFRE! ✦', summonAscend: '{name} → {rar}!',
     newDex: 'Nuevo {rar}: {name}! +{hp} HP máx', pet: '¡PET! {name}',
     matsStart: 'BONUS MONEDAS', wallStart: '¡ROMPE EL MURO!', bonusDone: '¡BONUS LISTO!',
     kets: '¡KABLAM…!', ketsBam: '¡KABLAM!', wallTime: '¡TIEMPO!', wallNewWall: '¡MURO ROTO! Nuevo muro…',
@@ -24986,7 +25767,7 @@ overlayI18nCatalog(CATALOG_ES, {
     satan: 'SATAN — ¡{name}!', satanIncoming: 'SATAN SE ACERCA…', satanWin: '¡SATAN DERROTADO!',
   },
   help: { tips: [
-    'Power-ups: los monstruos derrotados a veces sueltan orbes — HP, furia, energy, escudo.',
+    'Orbes: los monstruos derrotados a veces sueltan orbes — PV, furia, energía, escudo.',
     'Jefes: bajo la mitad de HP se vuelven más feroces (fase 2).',
     'Combos: golpea rápido para ×2 / ×3 daño.',
     'Dash: doble toque izquierda/derecha (o Shift) para esquivar.',
@@ -25022,6 +25803,17 @@ overlayI18nCatalog(CATALOG_ES, {
     persistPrimaryFail: 'Partida principal fallida — copia actualizada (exporta en Opciones)',
     persistFail: 'No se pudo guardar — exporta en Opciones',
     persistFailCtx: 'No se pudo guardar ({context}) — exporta en Opciones',
+    resultHiccup: 'Fallo de resultado — Otra vez / Menú',
+    errRetry: 'Acción fallida — inténtalo',
+    hiccupContinue: 'Fallo — el juego sigue',
+    fightHiccup: 'Fallo — sigue luchando',
+    gearLocked: 'Aún bloqueado · {why}',
+    gearEquipped: '{name} puesto',
+    gearUnequipped: '{name} quitado',
+    persistCtxSkill: 'skill', persistCtxSuper: 'super', persistCtxWeapon: 'arma',
+    persistCtxStyle: 'estilo', persistCtxMission: 'misión', persistCtxClaim: 'reclamo',
+    persistCtxDaily: 'bonus', persistCtxXp: 'XP', persistCtxGear: 'equipo',
+    persistCtxBuilding: 'fábrica', persistCtxItem: 'objeto', persistCtxTide: 'tide',
     pickFileOrPaste: 'Elige un archivo o pega el JSON en la caja',
     saveLoadedPreview: 'Partida de {src} — toca Cargar para ver',
     filePickerUnavailable: 'Selector de archivo no disponible',
@@ -25037,8 +25829,8 @@ overlayI18nCatalog(CATALOG_ES, {
     staleCacheMenu: 'Caché vieja — el menú no responde. Toca «Versión nueva» en el dock.',
     backupRestored: 'Copia restaurada — todo alineado',
     backupFailed: 'Restaurar falló — exporta la partida si tienes una',
-    syncConfirm: 'La sync sobrescribe la copia — toca otra vez',
-    syncOk: 'Copia alineada con la partida', syncFailed: 'Sync fallida — exporta una copia',
+    syncConfirm: 'La copia se sobrescribe — toca otra vez',
+    syncOk: 'Copia alineada con la partida', syncFailed: 'Copia no alineada — exporta una copia',
     clearConfirm: 'Otra vez = borrar progreso (la copia se queda)', newStart: 'Nuevo inicio — la copia sigue en Opciones',
     exportCopied: 'Partida copiada + descarga · {summary} (~{size})',
     exportBox: 'Partida en la caja + descarga · {summary} (~{size})',
@@ -25054,7 +25846,7 @@ overlayI18nCatalog(CATALOG_ES, {
     styleUnlockTome: '¡Nuevo estilo: Maestro del libro!',
     styleUnlockCrystal: '¡Nuevo estilo: Cristalino!',
     styleUnlock: '¡Nuevo estilo: {name}!',
-    summon: '✦ ¡Summon! {name} ahora es {rar} — daño ×{dmg}',
+    summon: '✦ ¡Cofre! {name} ahora es {rar} — daño ×{dmg}',
     tideBattle: '¡Tide Battle! Aparece {name} — ¡derrota al jefe!',
     tideBattleWin: '¡Tide Battle ganada! +{xp} XP · +{coins} pet coins',
     satanIncoming: '¡Aparece Satan — atascado 10×!',
@@ -25161,10 +25953,10 @@ overlayI18nCatalog(CATALOG_ES, {
     statusDone: '3 misiones nuevas mañana', statusStep2: 'Reclamar', statusStep3: 'Bonus diario',
     statusStep1: 'Jugar', statusReady: 'Reclama +{xp} XP', statusAllClaimed: 'Bonus diario +80 listo',
     statusDefault: '{done}/3 misiones',
-    remainderKills1: 'Falta 1 kill', remainderKillsN: 'Faltan {n} kills',
+    remainderKills1: 'Falta 1 monstruo', remainderKillsN: 'Faltan {n} monstruos',
     remainderBricks1: 'Falta 1 ladrillo', remainderBricksN: 'Faltan {n} ladrillos',
     remainderCombo: 'Falta combo ×{n}', remainderPickups1: 'Falta 1 orbe', remainderPickupsN: 'Faltan {n} orbes',
-    remainderRun: 'Falta 1 run', remainderGeneric: 'Faltan {n}',
+    remainderRun: 'Falta 1 partida', remainderGeneric: 'Faltan {n}',
     planNow: 'Ahora:', planEarned: 'Hoy +{earned} / máx +{max} XP',
     planXpPct: '{pct}% del máx XP de hoy', planReset: 'Nuevas misiones en {reset}',
     resetSoon: 'pronto', resetMinutes: '{m} min', resetHoursOnly: '{h} h', resetHours: '{h} h {m} min',
@@ -25202,32 +25994,156 @@ overlayI18nCatalog(CATALOG_ES, {
     errLoadSettings: 'No se pudieron cargar las opciones',
     errLoadScreen: 'No se pudo cargar la pantalla — toca Versión nueva',
     errLoadHelp: 'No se pudieron cargar los consejos',
+    errOpenMode: 'No se pudo abrir el modo — elige en el menú',
+    errClaimRetry: 'Reclamo fallido — inténtalo',
+    errCharPick: 'No se pudo elegir luchador — toca otra vez',
+    errScreenMissing: 'Pantalla no encontrada — vuelve al menú',
+    errScreenSwitch: 'Cambio de pantalla fallido — menú',
+    errGoBack: 'Navegación fallida — vuelve al menú',
+    errGoMenu: 'No se pudo abrir el menú — recarga',
+    errMenuRefresh: 'No se pudo actualizar el menú',
+    errResume: 'Reanudar falló — elige un modo',
+    errRecoverMenu: 'Recuperación fallida — recarga si el menú se atasca',
+    errResultLoad: 'Resultado fallido — Menú u Otra vez',
+    errCopyLink: 'No se pudo copiar el enlace — Opciones',
+    errShare: 'Compartir falló — copia el enlace en Opciones',
+    errExport: 'Exportación fallida — copia el JSON',
+    errImportFile: 'No se pudo leer el archivo',
+    errFomo: 'No se pudo cerrar el resumen del día',
+    errDayBonus: 'Bonus diario fallido — inténtalo',
+    errProgressSafe: 'Progreso a salvo — sigue',
+    errSatanStart: 'Inicio de Satan fallido — la aventura sigue',
+    errTideStart: 'Inicio Tide Battle fallido — sigue',
+    errBackupStash: 'No se pudo guardar la partida',
+    errSaveApply: 'No se pudo cargar la partida',
+    errBackupSync: 'No se pudo sincronizar la copia',
     charLocked: 'Bloqueado', charHead: 'ELIGE LUCHADOR',
     charBig5Hint: 'Tus luchadores · elección rápida',
+    saveHealthGear: ' · equipo {n}',
+    saveHealthFactory: ' · fábrica +{n} Nv',
+    saveHealthSkill: ' · skill +{n} Nv',
+    saveHealthItem: ' · objeto +{n} Nv',
+    saveHealthPetCoins: ' · {n} pet coins',
     continueLastMode: 'Último modo',
     gearHead: 'Equipo',
     gearSub: '5 huecos · look vs stats · nivel y tiempo',
+    summonHead: 'Cofres',
+    summonSub: 'Cofre diario · 10× · arma o pet',
+    summonWhere: 'Menú → Cofres · botín en Colección',
+    summonQuota: 'Hoy: {left}/{total} cofres',
+    summonNoMore: 'No quedan cofres hoy',
+    summonAriaPull: 'Abrir cofre, {n} restantes',
+    summonAriaEmpty: 'No quedan cofres hoy',
+    summonAriaBusy: 'Cofre abriendo…',
+    summonLeftToday: '{n} restantes hoy',
+    summonDoneToday: 'listo por hoy',
+    summonPull: 'Abrir',
+    summonOpen: 'Abrir',
+    summonOpenAria: 'Abrir cofre, {n} restantes',
+    summonOpening: 'Cofre…',
+    summonPullLeft: '{n} restantes',
+    summonPullEmpty: 'Vacío',
+    summonGotoWeapons: 'Armas',
+    summonGotoPets: 'Pets',
+    summonGotoSub: 'Colección',
+    summonLogEmpty: 'Aún no hay tiradas.',
+    summonNoPulls: 'Aún no hay tiradas.',
+    summonHint: 'Toca el cofre',
+    summonReveal: 'Toca el cofre — aparece el botín',
+    errSummonLoad: 'No se pudieron cargar los cofres',
+    errSummonOpen: 'No se pudieron abrir los cofres',
     dexAllBiomes: 'Todos los biomas',
     dexBiome: { farm: 'Granja', zoo: 'Zoo', sea: 'Mar', wild: 'Bosque', crypt: 'Cripta', scrap: 'Chatarra', frost: 'Escarcha', classic: 'Clásico', secret: 'Secreto' },
+    petCoinTip: '<b>Bonus monedas</b>: 2 oro = 1 PC',
+    firstMinuteAdventure: 'Corre · pega · energía llena = SUPER',
+    firstMinuteTraining: 'Salta láser · bloquea · SUPER',
+    firstMinuteWall: '60s · combo ×3/×5/×8',
+    firstMinuteVersus: 'P1 izq · P2 der',
+    firstMinuteCoinrun: 'Monedas · apunta ↑',
+    firstMinuteAdventureKb: 'A/D corre · W salta · J pega · U SUPER',
+    firstMinuteTrainingKb: 'Salta láseres · Shift bloquea · U SUPER',
+    firstMinuteWallKb: '60s · A/D · J pega',
+    firstMinuteVersusKb: 'P1 WASD · P2 flechas',
+    firstMinuteCoinrunKb: 'Monedas · W apunta · J shuriken',
+    ketsbamOnboardTouch: '¿Rodeado? Toca el centro — Ketsbam',
+    ketsbamOnboardKb: '¿Rodeado? E = Ketsbam',
+    petSummaryTamed: 'Domados <b>{tamed}/{total}</b> · activo <b>{active}</b> · <b>{wallet} pet coins</b>',
+    petNone: 'ninguno',
+    petTamedAssist: 'Domado · ayuda en aventura',
+    petBuyLine: 'Comprar: {cost} pet coins',
+    petTameLine: 'Domar: {cur}/{need} · o {cost}',
+    petActive: 'activo',
+    petEquip: 'equipar',
+    petBuy: 'comprar',
+    petKillsLeft: '{n} KO',
+    eggSummary: 'Coleccionado {owned}/{total} · activo {active} · {daily}',
+    eggSummaryHint: 'Cosmético. 1 huevo/día + bonus tras 1 victoria aventura.',
+    eggCosmetic: 'Compañero cosmético',
+    eggUnhatched: 'Aún no eclosionado',
+    petLineActive: 'Pet · activo',
+    petLineTamed: 'Pet · domado',
+    petLineBuy: 'Pet · comprar {cost} PC',
+    saveHealthStats: 'Nv {lvl} · libre {unlocked} · libro {dex} · KO {kills}',
+    saveHealthSummon: ' · ✦ {n} cofre',
+    saveHealthPet: ' · pet {n}',
+    saveHealthEgg: ' · huevo {n}',
+    saveExportAch: ' · {n} logros',
+    saveHealthStyle: ' · estilo {name}',
+    dexSummary: 'Libro {n}/{total} · KO {kills} · bonus HP +{hp} · rarezas {tiers}/6',
+    dexAllTypes: 'Todos tipos',
+    styleSummaryHint: 'Cada estilo tiene bonus — look + perk ligero.',
+    errStylePick: 'No se pudo elegir estilo',
+    importPreview: 'Vista: {summary}{meta}. Toca Cargar 2×.',
+    importPreviewMeta: ' · v{app}',
+    importInvalid: 'Partida inválida',
+    importErrEmpty: 'Pega primero el JSON',
+    importErrTooBig: 'Partida demasiado grande',
+    importErrJson: 'JSON inválido',
+    importErrStruct: 'Estructura inválida',
+    importMore: '+{n} {kind}',
+    importFewer: 'Menos {kind} ({a} vs {b})',
+    importKindSummon: 'cofres',
+    importKindPet: 'pets',
+    importKindEgg: 'huevos',
+    importKindSkill: 'skill Nv',
+    importKindItem: 'objeto Nv',
+    importKindCoins: 'pet coins',
+    importStyleChange: 'Estilo {from} → {to}',
+    importLower: 'Más bajo que la partida aquí',
+    importHigher: 'Más alto que la partida aquí',
+    importAppVer: 'Copia v{v}',
   },
   fomo: {
     ritualTitle: 'Hoy',
-    ritualCtaSummon: 'A summons',
+    ritualCtaSummon: 'Al cofre',
     ritualCtaMission: 'Jugar misión',
     ritualCtaAdv: 'A la aventura',
     ritualDismiss: 'Cerrar',
     ritualReopen: 'Resumen del día',
     resetIn: 'Nuevo en {reset}',
-    rowSummons: 'Summons {left}/{total}',
+    rowSummons: 'Cofres {left}/{total}',
     rowEggReady: 'Huevo diario listo',
     rowEggDone: 'Huevo diario ya abierto',
-    streakReward3: '+1 summon',
-    streakReward7: '+huevo o summons',
+    streakReward3: '+1 cofre',
+    streakReward7: '+huevo o cofres',
     streakReward14: '+120 XP',
   },
   fighter: { energyEmpty: '¡Energía incompleta!', subst: '¡Sustitución!', dash: '¡Dash!', shield: '¡Escudo!', parry: '¡PARRY!', block: '¡BLOQUEO!', miss: '¡FALLO!' },
-  egg: { dailyReady: 'Huevo diario listo', advBonus: 'Huevo extra: gana 1× aventura', tomorrow: 'Huevo otra vez mañana' },
-  pet: { active: 'Pet · activo', tamed: 'Pet · domado', buy: 'Pet · comprar {cost} PC', killsNeed: 'Pet · {need} kills', killsProgress: 'Pet · {cur}/{need} kills' },
+  egg: {
+    dailyReady: 'Huevo diario listo', advBonus: 'Huevo extra: gana 1× aventura', tomorrow: 'Huevo otra vez mañana',
+    name: {
+      egg_pebble: 'Guijarro', egg_moss: 'Musgo', egg_candy: 'Caramelo', egg_cloud: 'Nubecita',
+      egg_star: 'Estrellita', egg_flame: 'Llamita', egg_crystal: 'Cristal', egg_moon: 'Huevo-luna',
+      egg_gold: 'Dorado', egg_neon: 'Neón', egg_rainbow: 'Arcoíris', egg_prism: 'Prisma',
+    },
+    perk: {
+      egg_pebble: 'Brillo gris suave', egg_moss: 'Chispas verdes', egg_candy: 'Rayas rosas',
+      egg_cloud: 'Remolino de nube', egg_star: 'Estrellas de oro', egg_flame: 'Acento llama',
+      egg_crystal: 'Brillo cristal', egg_moon: 'Brillo de luna', egg_gold: 'Brillo de oro',
+      egg_neon: 'Pulso neón', egg_rainbow: 'Huevo arcoíris', egg_prism: 'Destello prisma',
+    },
+  },
+  pet: { active: 'Pet · activo', tamed: 'Pet · domado', buy: 'Pet · comprar {cost} PC', killsNeed: 'Pet · {need} KO', killsProgress: 'Pet · {cur}/{need} KO' },
   menu: { tipList: [
     'Elige una losa — Aventura · Arcade · 2J · Colección',
     '5 islas — el jefe Lv 10/20/30/40/50 abre la siguiente',
@@ -25323,14 +26239,14 @@ overlayI18nCatalog(CATALOG_ES, {
     satanHintKb: 'Satan devuelve 85% — apunta, esquiva, coge orbes',
     star2: ' · 2★ a >{pct}% HP', star3: ' · 3★ a >{pct}% HP', hpPct: '{pct}% HP{hint}',
     enemiesLeft1: '1 enemigo restante', enemiesLeftN: '{n} enemigos restantes',
-    waveFunnel: '{cleared}/{total} caídos · spawn',
+    waveFunnel: '{cleared}/{total} caídos · salida',
     starBeat: '¡+{n}★ récord!', starBest: 'mejor {n}★',
     stageClearSec: 'Nivel listo — {sec}s', toBoss: 'Hacia el jefe — {sec}s',
     walkNext: 'Sigue andando… siguiente oleada {sec}s',
     streak: 'STREAK ×{n}', combo: 'COMBO ×{n}', rage: 'RAGE {n}s', shield: 'Escudo {n}s',
     earLaser: 'LÁSER DE OREJA — ¡salta!', lightning_pierceTele: 'LIGHTNING PIERCE — ¡dash/salta!',
     lightning_pierceMiss: 'Lightning Pierce falló — ¡saltar funciona!',
-    kickTele: 'KICK — ¡salta/bloquea!', punchTele: 'PUNCH — ¡bloquea/esquiva!', earLaserShort: 'LÁSER OREJA',
+    kickTele: 'PATADA — ¡salta/bloquea!', punchTele: 'PUÑO — ¡bloquea!', earLaserShort: 'LÁSER OREJA',
     rabbitRobot: 'RABBITROBOT · {pct}%', roundInfo: 'Ronda {n} · primero a 2 · {s}-{r}',
     dummyGrace: 'Muñeco {n}s — practica combo', goal: 'meta ×{n}', record: 'récord ×{n}',
     time: 'TIEMPO', wallGen: 'MURO ×{n}', stones: 'Ladrillos: {n}',
@@ -25388,6 +26304,10 @@ overlayI18nCatalog(CATALOG_DE, {
     dexFarm: { name: 'Farmjäger', desc: '10 Farm-Arten im Buch' },
     dexZoo: { name: 'Safari-Guide', desc: '10 Zoo-Arten im Buch' },
     dexSea: { name: 'Gezeitenkenner', desc: '5 Meer-Arten im Buch' },
+    dexWild: { name: 'Waldjäger', desc: '10 Wald-Arten im Buch' },
+    dexCrypt: { name: 'Krypten-Guide', desc: '10 Krypten-Arten im Buch' },
+    dexScrap: { name: 'Schrottkenner', desc: '10 Schrott-Arten im Buch' },
+    dexFrost: { name: 'Frostkenner', desc: '8 Frost-Arten im Buch' },
     train5: { name: 'Robotbrecher', desc: '5× Training gewonnen' },
     wall100: { name: 'Abrissprofi', desc: 'Mauer-Rekord 100+' },
     combo8: { name: 'Combo-König', desc: 'Combo ×8 erreicht' },
@@ -25398,6 +26318,8 @@ overlayI18nCatalog(CATALOG_DE, {
     streak10: { name: 'Unaufhaltsam', desc: 'Kill-Streak ×10 im Abenteuer' },
     trainCombo10: { name: 'Dummy-Meister', desc: 'Training-Combo ×10' },
     lv50: { name: 'Legende', desc: 'Level 50 freischalten' },
+    lv70: { name: 'Höllen-Legende', desc: 'Level 70 freischalten (Hölle)' },
+    zoneWeapons10: { name: 'Zonen-Sammler', desc: '10 Albtraum/Hölle-Waffen sammeln' },
     daily7: { name: 'Entschlossen', desc: '7 Tagesboni abgeholt' },
     vs5: { name: 'Duellant', desc: '5× 2-Spieler-Duell gespielt' },
     vsFatality1: { name: 'Finish him!', desc: 'Lande eine Versus-Fatality beim Match-KO' },
@@ -25411,12 +26333,13 @@ overlayI18nCatalog(CATALOG_DE, {
     trainwin: { text: 'Gewinne Training vs Robot', hint: 'Menü → Training vs RabbitRobot' },
     combo5: { text: 'Erreiche Combo ×5', hint: 'Abenteuer: schnelle Combos' },
     finisher3: { text: 'Lande 3 Waffen-Finisher', hint: '①+② treffen, dann Finisher ③' },
-    pick3: { text: 'Sammle 3 Power-ups', hint: 'Abenteuer: grüne/orange/blaue Kugeln' },
+    pick3: { text: 'Sammle 3 Funde', hint: 'Abenteuer: grüne/orange/blaue Kugeln' },
     boss1: { text: 'Besiege 1 Boss-Monster', hint: 'Abenteuer: Boss am Levelende' },
   },
   pickup: { heal: '+HP', rage: 'RAGE', energy: 'ENERGY', shield: 'SCHILD' },
   result: {
     advWin: 'GEWONNEN!', advLose: 'VERLOREN', trainWin: 'MEISTER!', trainLose: 'ROBOT GEWINNT…',
+    advLoseKeep: 'XP und Beute von diesem Lauf bleiben',
     trainDetailWin: 'RabbitRobot besiegt ({p}-{r}) · max Combo ×{combo} · {wins}× gewonnen',
     trainDetailLose: 'RabbitRobot war zu stark ({p}-{r}) · max Combo ×{combo}',
     vsP1Win: 'SPIELER 1 GEWINNT!', vsP2Win: 'SPIELER 2 GEWINNT!', wallRecord: 'NEUER REKORD!', wallTime: 'ZEIT UM!',
@@ -25432,7 +26355,7 @@ overlayI18nCatalog(CATALOG_DE, {
     satanAfterClear: 'Abenteuer geschafft — Hitze bleibt: 10× Fail auf einem Level → Satan → Tide-Pet',
     trainComboRecord: 'Combo-Trainer: ×{n}{rec}',
     trainComboNewRec: ' — neuer Rekord!',
-    trainStyleUnlock: 'Neuer Stil: Energy glow — Einstellungen → Stil!',
+    trainStyleUnlock: 'Neuer Stil: Energie-Glühen — Einstellungen → Stil!',
     trainStyleMore: 'Schalte Stile mit mehr Training-Siegen frei!',
     trainLossTip: 'Spring während LIGHTNING PIERCE — Roboter verfehlt · spring Ohr-Laser',
     trainTipDefault: 'Tipp: Laser springen · Energy voll → Spiral Orb',
@@ -25479,7 +26402,7 @@ overlayI18nCatalog(CATALOG_DE, {
     head: 'Dieser Lauf · Beute neben XP',
     headAdv: 'Dieser Lauf · Beute neben XP',
     hudShort: 'Beute: {line}',
-    summonLine: 'Summon: {name} → {rar}',
+    summonLine: 'Kiste: {name} → {rar}',
     dexLine: 'Buch: {name} ({rar})',
     hpBonusLine: '+{n} max HP aus dem Buch',
     petLine: 'Pet gezähmt: {name}',
@@ -25509,7 +26432,7 @@ overlayI18nCatalog(CATALOG_DE, {
     roundWon: 'RUNDE GEWONNEN!', roundLost: 'RUNDE VERLOREN',
     p1RoundWin: 'P1 GEWINNT RUNDE!', p2RoundWin: 'P2 GEWINNT RUNDE!',
     timeHpVs: 'TIME! {hp1}% vs {hp2}% · {msg}',
-    summon: '✦ SUMMON! ✦', summonAscend: '{name} → {rar}!',
+    summon: '✦ KISTE! ✦', summonAscend: '{name} → {rar}!',
     newDex: 'Neu {rar}: {name}! +{hp} max HP', pet: 'PET! {name}',
     matsStart: 'MÜNZEN-BONUS', wallStart: 'ZERSTÖRE DIE MAUER!', bonusDone: 'BONUS FERTIG!',
     kets: 'KABLAM…', ketsBam: 'KABLAM!', wallTime: 'ZEIT!', wallNewWall: 'MAUER KAPUTT! Neue Mauer…',
@@ -25517,7 +26440,7 @@ overlayI18nCatalog(CATALOG_DE, {
     satan: 'SATAN — {name}!', satanIncoming: 'SATAN KOMMT…', satanWin: 'SATAN BESIEGT!',
   },
   help: { tips: [
-    'Power-ups: besiegte Monster lassen manchmal Kugeln fallen — HP, Rage, Energy, Schild.',
+    'Funde: besiegte Monster lassen manchmal Kugeln fallen — HP, Wut, Energie, Schild.',
     'Bosse: unter halb HP werden sie wütender (Phase 2).',
     'Combos: schnell hintereinander schlagen für ×2 / ×3 Schaden.',
     'Dash: doppelt tippen links/rechts (oder Shift) zum Ausweichen.',
@@ -25553,6 +26476,17 @@ overlayI18nCatalog(CATALOG_DE, {
     persistPrimaryFail: 'Hauptsave fehlgeschlagen — Backup aktualisiert (Export in Einstellungen)',
     persistFail: 'Speichern fehlgeschlagen — Export in Einstellungen',
     persistFailCtx: 'Speichern fehlgeschlagen ({context}) — Export in Einstellungen',
+    resultHiccup: 'Ergebnis-Hiccup — Nochmal / Menü',
+    errRetry: 'Aktion fehlgeschlagen — nochmal',
+    hiccupContinue: 'Hiccup — Spiel läuft weiter',
+    fightHiccup: 'Hiccup — kämpf weiter',
+    gearLocked: 'Noch gesperrt · {why}',
+    gearEquipped: '{name} ausgerüstet',
+    gearUnequipped: '{name} abgelegt',
+    persistCtxSkill: 'Skill', persistCtxSuper: 'Super', persistCtxWeapon: 'Waffe',
+    persistCtxStyle: 'Stil', persistCtxMission: 'Mission', persistCtxClaim: 'Claim',
+    persistCtxDaily: 'Tagesbonus', persistCtxXp: 'XP', persistCtxGear: 'Ausrüstung',
+    persistCtxBuilding: 'Fabrik', persistCtxItem: 'Item', persistCtxTide: 'Tide',
     pickFileOrPaste: 'Datei wählen oder JSON ins Feld einfügen',
     saveLoadedPreview: 'Save aus {src} — Laden tippen für Vorschau',
     filePickerUnavailable: 'Dateiauswahl nicht verfügbar',
@@ -25568,8 +26502,8 @@ overlayI18nCatalog(CATALOG_DE, {
     staleCacheMenu: 'Alter Cache — Menü hängt. Tippe «Neue Version» im Dock.',
     backupRestored: 'Backup wiederhergestellt — Save + Backup gleich',
     backupFailed: 'Backup fehlgeschlagen — exportiere den Save, wenn du einen hast',
-    syncConfirm: 'Sync überschreibt Backup — nochmal tippen',
-    syncOk: 'Backup mit Hauptsave synchron', syncFailed: 'Sync fehlgeschlagen — Save exportieren',
+    syncConfirm: 'Abgleich überschreibt Backup — nochmal tippen',
+    syncOk: 'Backup mit Hauptsave gleich', syncFailed: 'Abgleich fehlgeschlagen — Save exportieren',
     clearConfirm: 'Nochmal tippen = Fortschritt löschen (Backup bleibt)', newStart: 'Neustart — Backup noch in Einstellungen',
     exportCopied: 'Save kopiert + Download · {summary} (~{size})',
     exportBox: 'Save im Feld + Download · {summary} (~{size})',
@@ -25585,7 +26519,7 @@ overlayI18nCatalog(CATALOG_DE, {
     styleUnlockTome: 'Neuer Stil: Buchmeister!',
     styleUnlockCrystal: 'Neuer Stil: Kristallin!',
     styleUnlock: 'Neuer Stil: {name}!',
-    summon: '✦ Summon! {name} ist jetzt {rar} — Schaden ×{dmg}',
+    summon: '✦ Kiste! {name} ist jetzt {rar} — Schaden ×{dmg}',
     tideBattle: 'Tide Battle! {name} erscheint — besiege den Boss!',
     tideBattleWin: 'Tide Battle gewonnen! +{xp} XP · +{coins} Pet-Coins',
     satanIncoming: 'Satan erscheint — 10× festgefahren!',
@@ -25692,9 +26626,9 @@ overlayI18nCatalog(CATALOG_DE, {
     statusDone: 'Morgen 3 neue Missionen', statusStep2: 'Holen', statusStep3: 'Tagesbonus',
     statusStep1: 'Spielen', statusReady: 'Hol +{xp} XP', statusAllClaimed: 'Tagesbonus +80 bereit',
     statusDefault: '{done}/3 Missionen',
-    remainderKills1: 'Noch 1 Kill', remainderKillsN: 'Noch {n} Kills',
+    remainderKills1: 'Noch 1 Monster', remainderKillsN: 'Noch {n} Monster',
     remainderBricks1: 'Noch 1 Stein', remainderBricksN: 'Noch {n} Steine',
-    remainderCombo: 'Noch Combo ×{n}', remainderPickups1: 'Noch 1 Pickup', remainderPickupsN: 'Noch {n} Pickups',
+    remainderCombo: 'Noch Combo ×{n}', remainderPickups1: 'Noch 1 Fund', remainderPickupsN: 'Noch {n} Funde',
     remainderRun: 'Noch 1 Lauf', remainderGeneric: 'Noch {n}',
     planNow: 'Jetzt:', planEarned: 'Heute +{earned} / max +{max} XP',
     planXpPct: '{pct}% vom max XP heute', planReset: 'Neue Missionen in {reset}',
@@ -25726,13 +26660,36 @@ overlayI18nCatalog(CATALOG_DE, {
     boss: 'BOSS', topHunter: 'Top-Jäger',
     langSwitchFail: 'Sprachwechsel fehlgeschlagen',
     dexNotSeen: 'Noch nicht besiegt', dexKillsLine: '{n}× besiegt', dexPlayAdv: 'Abenteuer spielen',
-    dexAppears: 'Erscheint im Abenteuer · Unlock Lv {lv}',
+    dexAppears: 'Erscheint im Abenteuer · frei Lv {lv}',
     dexBaseStats: '{type} · Basis-HP {hp} · dmg {dmg} · spd {spd} · {xp} XP · Lv {lv}',
     errLoadAdventure: 'Abenteuer laden fehlgeschlagen',
     errLoadMissions: 'Missionen laden fehlgeschlagen — Neue Version tippen',
     errLoadSettings: 'Einstellungen laden fehlgeschlagen',
     errLoadScreen: 'Bildschirm laden fehlgeschlagen — Neue Version tippen',
     errLoadHelp: 'Tipps laden fehlgeschlagen',
+    errOpenMode: 'Modus nicht zu öffnen — im Menü wählen',
+    errClaimRetry: 'Abholen fehlgeschlagen — nochmal',
+    errCharPick: 'Kämpfer wählen fehlgeschlagen — nochmal tippen',
+    errScreenMissing: 'Bildschirm fehlt — zurück zum Menü',
+    errScreenSwitch: 'Bildschirmwechsel fehlgeschlagen — Menü',
+    errGoBack: 'Navigation fehlgeschlagen — zurück zum Menü',
+    errGoMenu: 'Menü nicht zu öffnen — Seite neu laden',
+    errMenuRefresh: 'Menü nicht zu aktualisieren',
+    errResume: 'Weiter spielen fehlgeschlagen — Modus wählen',
+    errRecoverMenu: 'Wiederherstellung fehlgeschlagen — neu laden wenn Menü hängt',
+    errResultLoad: 'Ergebnis laden fehlgeschlagen — Menü oder Nochmal',
+    errCopyLink: 'Link kopieren fehlgeschlagen — Einstellungen',
+    errShare: 'Teilen fehlgeschlagen — Link in Einstellungen',
+    errExport: 'Kopie fehlgeschlagen — JSON aus dem Feld',
+    errImportFile: 'Importdatei nicht lesbar',
+    errFomo: 'Tagesübersicht nicht zu schließen',
+    errDayBonus: 'Tagesbonus fehlgeschlagen — nochmal',
+    errProgressSafe: 'Fortschritt sicher — spiel weiter',
+    errSatanStart: 'Satan-Start fehlgeschlagen — Abenteuer geht weiter',
+    errTideStart: 'Tide-Battle-Start fehlgeschlagen — weiter',
+    errBackupStash: 'Save sichern fehlgeschlagen',
+    errSaveApply: 'Save laden fehlgeschlagen',
+    errBackupSync: 'Backup-Abgleich fehlgeschlagen',
     charLocked: 'Gesperrt', charHead: 'KÄMPFER WÄHLEN',
     charBig5Hint: 'Deine Kämpfer · schnell wählen',
     continueLastMode: 'Letzter Modus',
@@ -25740,24 +26697,107 @@ overlayI18nCatalog(CATALOG_DE, {
     gearSub: '5 Slots · Look vs Stats · Level und Zeit',
     dexAllBiomes: 'Alle Biome',
     dexBiome: { farm: 'Farm', zoo: 'Zoo', sea: 'Meer', wild: 'Wald', crypt: 'Krypta', scrap: 'Schrott', frost: 'Frost', classic: 'Klassisch', secret: 'Geheim' },
+    petCoinTip: '<b>Münzen-Bonus</b>: 2 Gold = 1 PC',
+    firstMinuteAdventure: 'Laufen · schlagen · Energy voll = SUPER',
+    firstMinuteTraining: 'Laser springen · blocken · SUPER',
+    firstMinuteWall: '60s · Combo ×3/×5/×8',
+    firstMinuteVersus: 'P1 links · P2 rechts',
+    firstMinuteCoinrun: 'Münzen · zielen ↑',
+    firstMinuteAdventureKb: 'A/D laufen · W springen · J schlagen · U SUPER',
+    firstMinuteTrainingKb: 'Laser springen · Shift block · U SUPER',
+    firstMinuteWallKb: '60s · A/D · J schlagen',
+    firstMinuteVersusKb: 'P1 WASD · P2 Pfeile',
+    firstMinuteCoinrunKb: 'Münzen · W zielen · J Shuriken',
+    ketsbamOnboardTouch: 'Umzingelt? Mitte tippen — Ketsbam',
+    ketsbamOnboardKb: 'Umzingelt? E = Ketsbam',
+    petSummaryTamed: 'Gezähmt <b>{tamed}/{total}</b> · aktiv <b>{active}</b> · <b>{wallet} Pet-Coins</b>',
+    petNone: 'keine',
+    petTamedAssist: 'Gezähmt · Assist im Abenteuer',
+    petBuyLine: 'Kaufen: {cost} Pet-Coins',
+    petTameLine: 'Zähmen: {cur}/{need} · oder {cost}',
+    petActive: 'aktiv',
+    petEquip: 'ausrüsten',
+    petBuy: 'kaufen',
+    petKillsLeft: '{n} noch',
+    eggSummary: 'Gesammelt {owned}/{total} · aktiv {active} · {daily}',
+    eggSummaryHint: 'Kosmetik. 1 Tages-Ei + Bonus nach erstem Abenteuer-Sieg.',
+    eggCosmetic: 'Kosmetischer Begleiter',
+    eggUnhatched: 'Noch nicht geschlüpft',
+    petLineActive: 'Pet · aktiv',
+    petLineTamed: 'Pet · gezähmt',
+    petLineBuy: 'Pet · kaufen {cost} PC',
+    saveHealthStats: 'Lv {lvl} · frei {unlocked} · Buch {dex} · Kills {kills}',
+    saveHealthSummon: ' · ✦ {n} Kiste',
+    saveExportAch: ' · {n} Erfolge',
+    saveHealthStyle: ' · Stil {name}',
+    dexSummary: 'Buch {n}/{total} · Kills {kills} · Bonus max HP +{hp} · Seltenheiten {tiers}/6',
+    dexAllTypes: 'Alle Typen',
+    styleSummaryHint: 'Jeder Stil hat einen Bonus — Look + leichter Perk.',
+    errStylePick: 'Stil wählen fehlgeschlagen',
+    errSummonLoad: 'Kisten laden fehlgeschlagen',
+    errSummonOpen: 'Kisten öffnen fehlgeschlagen',
+    summonQuota: 'Heute: {left}/{total} Kisten',
+    summonOpen: 'Öffnen',
+    summonOpenAria: 'Kiste öffnen, {n} übrig',
+    summonOpening: 'Kiste…',
+    summonPull: 'Öffnen',
+    summonNoMore: 'Keine Kisten mehr heute',
+    summonAriaEmpty: 'Keine Kisten mehr heute',
+    summonLeftToday: '{n} übrig heute',
+    summonDoneToday: 'leer für heute',
+    summonPullEmpty: 'Leer',
+    summonLogEmpty: 'Heute noch keine Züge.',
+    summonNoPulls: 'Heute noch keine Züge.',
+    importPreview: 'Vorschau: {summary}{meta}. Laden 2× tippen.',
+    importPreviewMeta: ' · v{app}',
+    importInvalid: 'Ungültiger Save',
+    importErrEmpty: 'Zuerst Save-JSON einfügen',
+    importErrTooBig: 'Save zu groß',
+    importErrJson: 'Ungültiges JSON',
+    importErrStruct: 'Ungültige Save-Struktur',
+    importMore: '+{n} {kind}',
+    importFewer: 'Weniger {kind} ({a} vs {b})',
+    importKindSummon: 'Kisten',
+    importKindPet: 'Pets',
+    importKindEgg: 'Ei-Pets',
+    importKindSkill: 'Skill-Lv',
+    importKindItem: 'Item-Lv',
+    importKindCoins: 'Pet-Coins',
+    importStyleChange: 'Stil {from} → {to}',
+    importLower: 'Niedriger als der Save hier',
+    importHigher: 'Höher als der Save hier',
+    importAppVer: 'Kopie v{v}',
   },
   fomo: {
     ritualTitle: 'Heute',
-    ritualCtaSummon: 'Zu Summons',
+    ritualCtaSummon: 'Zu Kisten',
     ritualCtaMission: 'Mission spielen',
     ritualCtaAdv: 'Abenteuer',
     ritualDismiss: 'Schließen',
     ritualReopen: 'Tagesüberblick',
     resetIn: 'Neu in {reset}',
-    rowSummons: 'Summons {left}/{total}',
+    rowSummons: 'Kisten {left}/{total}',
     rowEggReady: 'Tages-Ei bereit',
     rowEggDone: 'Tages-Ei schon offen',
-    streakReward3: '+1 Summon',
-    streakReward7: '+Ei oder Summons',
+    streakReward3: '+1 Kiste',
+    streakReward7: '+Ei oder Kisten',
     streakReward14: '+120 XP',
   },
-  fighter: { energyEmpty: 'Energy nicht voll!', subst: 'Substitution!', dash: 'Dash!', shield: 'Schild!', parry: 'PARRY!', block: 'BLOCK!', miss: 'DANEBEN!' },
-  egg: { dailyReady: 'Tages-Ei bereit', advBonus: 'Bonus-Ei: 1× Abenteuer gewinnen', tomorrow: 'Ei morgen wieder' },
+  fighter: { energyEmpty: 'Energy nicht voll!', subst: 'Substitution!', dash: 'Dash!', shield: 'Schild!', parry: 'PARRY!', block: 'ABWEHR!', miss: 'DANEBEN!' },
+  egg: {
+    dailyReady: 'Tages-Ei bereit', advBonus: 'Bonus-Ei: 1× Abenteuer gewinnen', tomorrow: 'Ei morgen wieder',
+    name: {
+      egg_pebble: 'Kiesel', egg_moss: 'Moosball', egg_candy: 'Bonbon', egg_cloud: 'Wölkchen',
+      egg_star: 'Sternchen', egg_flame: 'Flämmchen', egg_crystal: 'Kristall', egg_moon: 'Mond-Ei',
+      egg_gold: 'Golden', egg_neon: 'Neon', egg_rainbow: 'Regenbogen', egg_prism: 'Prisma',
+    },
+    perk: {
+      egg_pebble: 'Weiches Grauglühen', egg_moss: 'Grüne Funken', egg_candy: 'Rosa Streifen',
+      egg_cloud: 'Weicher Wolkenwirbel', egg_star: 'Goldsterne', egg_flame: 'Warmer Flammenakzent',
+      egg_crystal: 'Blaues Kristallschimmer', egg_moon: 'Mondsichel-Glühen', egg_gold: 'Legendärer Goldglanz',
+      egg_neon: 'Neonrand-Puls', egg_rainbow: 'Mythisches Regenbogen-Ei', egg_prism: 'Seltener Prisma-Blitz',
+    },
+  },
   pet: { active: 'Pet · aktiv', tamed: 'Pet · gezähmt', buy: 'Pet · kaufen {cost} PC', killsNeed: 'Pet · {need} Kills', killsProgress: 'Pet · {cur}/{need} Kills' },
   menu: { tipList: [
     'Wähle eine Kachel — Abenteuer · Arcade · 2P · Sammlung',
@@ -25839,7 +26879,7 @@ overlayI18nCatalog(CATALOG_DE, {
     trainLossTip: 'Spring während LIGHTNING PIERCE — Roboter verfehlt · spring Ohr-Laser',
     trainTipDefault: 'Tipp: Laser springen · Energy voll → Spiral Orb',
     energyNotFull: 'Energy {have}/{need} — treffen zum Füllen',
-    protected: 'Geschützt!', iframe: 'Geschützt!', blockChip: 'BLOCK −{n}', parry: 'PARRY!', miss: 'DANEBEN!',
+    protected: 'Geschützt!', iframe: 'Geschützt!', blockChip: 'ABWEHR −{n}', parry: 'PARRY!', miss: 'DANEBEN!',
   },
   hud: {
     super: 'SUPER', masterShort: 'MEISTER +20%', masterSword: 'DAWNBLADE {n}s',
@@ -25854,14 +26894,14 @@ overlayI18nCatalog(CATALOG_DE, {
     satanHintKb: 'Satan reflektiert 85% — zielen, ausweichen, Kugeln holen',
     star2: ' · 2★ bei >{pct}% HP', star3: ' · 3★ bei >{pct}% HP', hpPct: '{pct}% HP{hint}',
     enemiesLeft1: '1 Gegner übrig', enemiesLeftN: '{n} Gegner übrig',
-    waveFunnel: '{cleared}/{total} down · Spawn',
-    starBeat: '+{n}★ Rekord!', starBest: 'best {n}★',
-    stageClearSec: 'Stage klar — {sec}s', toBoss: 'Zum Boss — {sec}s',
+    waveFunnel: '{cleared}/{total} weg · Start',
+    starBeat: '+{n}★ Rekord!', starBest: 'Rekord {n}★',
+    stageClearSec: 'Level klar — {sec}s', toBoss: 'Zum Boss — {sec}s',
     walkNext: 'Weiterlaufen… nächste Welle {sec}s',
     streak: 'STREAK ×{n}', combo: 'COMBO ×{n}', rage: 'RAGE {n}s', shield: 'Schild {n}s',
     earLaser: 'OHR-LASER — spring!', lightning_pierceTele: 'LIGHTNING PIERCE — Dash/spring!',
     lightning_pierceMiss: 'Lightning Pierce verfehlt — Springen wirkt!',
-    kickTele: 'KICK — spring/block!', punchTele: 'PUNCH — block/ausweichen!', earLaserShort: 'OHR-LASER',
+    kickTele: 'TRITT — spring/blocken!', punchTele: 'SCHLAG — blocken/weg!', earLaserShort: 'OHR-LASER',
     rabbitRobot: 'RABBITROBOT · {pct}%', roundInfo: 'Runde {n} · zuerst 2 · {s}-{r}',
     dummyGrace: 'Dummy {n}s — Combo üben', goal: 'Ziel ×{n}', record: 'Rekord ×{n}',
     time: 'ZEIT', wallGen: 'MAUER ×{n}', stones: 'Steine: {n}',
@@ -30510,7 +31550,7 @@ function _lockCopy(gate, need, when) {
     return typeof tOr === 'function' ? tOr('gear.lockTime', 'Vanaf {when}', { when: when || 'datum' }) : ('Vanaf ' + (when || 'datum'));
   }
   if (gate === 'adventure' || gate === 'adv') {
-    return typeof tOr === 'function' ? tOr('gear.lockAdv', 'Avontuur Lv {n}', { n: need }) : ('Avontuur Lv ' + need);
+    return typeof tOr === 'function' ? tOr('gear.lockAdv', 'Adventure Lv {n}', { n: need }) : ('Adventure Lv ' + need);
   }
   if (gate === 'diff') {
     return typeof tOr === 'function' ? tOr('gear.lockDiff', 'Nog niet vrij') : 'Nog niet vrij';
@@ -38044,17 +39084,19 @@ function drawMenuCrossroadsVista(c, w, h, t, opts) {
   c.fill();
 
   // —— Four-path choice markers (hub colors) ——
-  const lab = (key, fallback) => {
-    try { return (typeof t === 'function' && t(key)) || fallback; } catch (_) { return fallback; }
+  const lab = (key) => {
+    try {
+      const s = (typeof t === 'function') ? t(key) : '';
+      return (s && s !== key) ? s : '';
+    } catch (_) { return ''; }
   };
   const markers = [
-    { x: w * 0.18, y: h * 0.64, label: lab('menu.adventure', 'Avontuur'), col: '#7cf5aa', dir: '←' },
-    { x: w * 0.50, y: forkY - 6, label: lab('menu.arcade', 'Arcade'), col: '#9db8ff', dir: '↑' },
-    { x: w * 0.78, y: h * 0.62, label: lab('menu.summons', 'Summons'), col: '#ffd75e', dir: '→' },
-    { x: w * 0.50, y: h * 0.88, label: lab('menu.collect', 'Collectie'), col: '#d8a8ff', dir: '●' },
+    { x: w * 0.18, y: h * 0.64, label: lab('menu.adventure'), col: '#7cf5aa', dir: '←' },
+    { x: w * 0.50, y: forkY - 6, label: lab('menu.arcade'), col: '#9db8ff', dir: '↑' },
+    { x: w * 0.78, y: h * 0.62, label: lab('menu.summons'), col: '#ffd75e', dir: '→' },
+    { x: w * 0.50, y: h * 0.88, label: lab('menu.collect'), col: '#d8a8ff', dir: '●' },
   ];
-  // Shorten long translated labels for pixel chip
-  if (markers[2].label && markers[2].label.length > 10) markers[2].label = 'Summon';
+  if (markers[2].label && markers[2].label.length > 10) markers[2].label = markers[2].label.slice(0, 8);
   c.font = '700 8px -apple-system, sans-serif';
   c.textAlign = 'center';
   for (const m of markers) {
@@ -40012,11 +41054,14 @@ function drawTelegraphBar(c, game, tele, y) {
   }
   c.font = '900 15px sans-serif';
   c.textAlign = 'center';
+  const teleLabel = typeof wrapHudLines === 'function'
+    ? wrapHudLines(c, tele.label, barW - (tele.icon ? 40 : 16), 1)[0]
+    : tele.label;
   if (typeof fillHudText === 'function') {
-    fillHudText(c, tele.label, W / 2, y, { fill: tele.color, strokeW: 3 });
+    fillHudText(c, teleLabel, W / 2, y, { fill: tele.color, strokeW: 3 });
   } else {
     c.fillStyle = tele.color;
-    c.fillText(tele.label, W / 2, y);
+    c.fillText(teleLabel, W / 2, y);
   }
   c.fillStyle = 'rgba(255,255,255,.2)';
   game.rr(c, bx, y + 8, barW, 8, 4);
@@ -40313,7 +41358,7 @@ class Game {
       try { AudioSys.sting('masterSword'); AudioSys.sfx('masterSword'); } catch (_) {}
       haptic(26);
     } catch (err) {
-      try { sfReportError('masterSword/on', err, 'Master Sword hiccup — speel door'); } catch (_) {}
+      try { sfReportError('masterSword/on', err, errT('toast.fightHiccup', 'Hiccup — fight continues')); } catch (_) {}
     }
   }
 
@@ -40667,7 +41712,7 @@ class Game {
       const grabR = (pk.kind === 'gear' && typeof IS_TOUCH !== 'undefined' && IS_TOUCH) ? 58 : 44;
       if ((p.x - pk.x) ** 2 + dy ** 2 < grabR * grabR) {
         try { this.collectPickup(pk); } catch (pickErr) {
-          try { sfReportError('pickup', pickErr, 'Pickup hiccup — gevecht gaat door'); } catch (_) {}
+          try { sfReportError('pickup', pickErr, errT('toast.fightHiccup', 'Hiccup — fight continues')); } catch (_) {}
           pk.life = 0;
         }
       }
@@ -40940,7 +41985,7 @@ class Game {
           base = t('result.advDiffLine', { diff: advDiffLabel(diff) }) + base;
         }
         if (!win) {
-          const keep = tOr('result.advLoseKeep', 'XP en loot van deze run blijven');
+          const keep = t('result.advLoseKeep');
           if (keep) base = keep + ' · ' + base;
         }
         if (masterBuffActive(lv, diff) && !win) base += t('result.masterBuffActive');
@@ -40984,7 +42029,7 @@ class Game {
     try {
       this._onMonsterKilledInner(m);
     } catch (err) {
-      try { sfReportError('onMonsterKilled', err, 'Kill-reward hiccup — gevecht gaat door'); } catch (_) {}
+      try { sfReportError('onMonsterKilled', err, errT('toast.fightHiccup', 'Hiccup — fight continues')); } catch (_) {}
     }
   }
 
@@ -41212,7 +42257,7 @@ class Game {
       console.error('[Satan] finish', err);
       clearSatanState(this);
       this.betweenT = 1.2;
-      sfReportError('satan/finish', err, 'Satan-gevecht afronden mislukt — avontuur veilig');
+      sfReportError('satan/finish', err, errT('ui.errProgressSafe', 'Progress is safe — keep playing'));
     }
   }
 
@@ -41311,7 +42356,7 @@ class Game {
       this.tideFromSatan = false;
       clearTideBattleState(this, { restoreMusic: true });
       if (this.waveIdx < 0) this.betweenT = 1.2;
-      sfReportError('tideBattle/finish', err, 'Tide Battle beloning mislukt — voortgang veilig');
+      sfReportError('tideBattle/finish', err, errT('ui.errProgressSafe', 'Progress is safe — keep playing'));
     }
   }
 
@@ -41664,7 +42709,7 @@ class Game {
         || tOr('combat.trainTipDefault', 'Tip: spring lasers · energy vol → Spiral Orb');
     scheduleGameResult(this, 1400, () => UI.showResult(win, {
       titleKey: win ? 'result.trainWin' : 'result.trainLose',
-      title: win ? tOr('result.trainWin', 'KAMPIOEN!') : tOr('result.trainLose', 'ROBOT WINT...'),
+      title: win ? t('result.trainWin') : t('result.trainLose'),
       detailKey: win ? 'result.trainDetailWin' : 'result.trainDetailLose',
       detailParams: { p: this.roundsP, r: this.roundsR, combo: trainBest, wins: save.trainWins },
       detail: win
@@ -42279,7 +43324,7 @@ class Game {
         const newSuper = SUPERS.find(s => s.needLvl === save.lvl && superUnlocked(s));
         if (newSuper) { try { UI.toast(t('toast.superUnlock', { name: superLabel(newSuper) }), 3500, { tone: 'ok' }); } catch (_) {} }
       } catch (lvlErr) {
-        try { sfReportError('grantXP/level', lvlErr, 'Level-up hiccup — gevecht gaat door'); } catch (_) {}
+        try { sfReportError('grantXP/level', lvlErr, errT('toast.fightHiccup', 'Hiccup — fight continues')); } catch (_) {}
         break;
       }
     }
@@ -42888,44 +43933,44 @@ class Game {
 
     if (!this.player) return;
     try { this.player.update(dt, this); } catch (plErr) {
-      try { sfReportError('player/update', plErr, 'Speler hiccup — speel door'); } catch (_) {}
+      try { sfReportError('player/update', plErr, errT('toast.fightHiccup', 'Hiccup — fight continues')); } catch (_) {}
     }
     if (this.pet) {
       try { this.pet.update(dt); } catch (petErr) {
-        try { sfReportError('pet/update', petErr, 'Pet hiccup — speel door'); } catch (_) {}
+        try { sfReportError('pet/update', petErr, errT('toast.fightHiccup', 'Hiccup — fight continues')); } catch (_) {}
       }
     }
     if (this.eggPet) {
       try { this.eggPet.update(dt); } catch (eggErr) {
-        try { sfReportError('eggPet/update', eggErr, 'Ei-pet hiccup — speel door'); } catch (_) {}
+        try { sfReportError('eggPet/update', eggErr, errT('toast.fightHiccup', 'Hiccup — fight continues')); } catch (_) {}
       }
     }
 
     if (this.mode === 'adventure') {
       try { this.updateAdventure(dt); } catch (advErr) {
-        try { sfReportError('adventure/update', advErr, 'Avontuur hiccup — speel door'); } catch (_) {}
+        try { sfReportError('adventure/update', advErr, errT('toast.fightHiccup', 'Hiccup — fight continues')); } catch (_) {}
       }
     } else if (this.mode === 'training') {
       try { this.updateTraining(dt); } catch (trErr) {
-        try { sfReportError('training/update', trErr, 'Training hiccup — speel door'); } catch (_) {}
+        try { sfReportError('training/update', trErr, errT('toast.fightHiccup', 'Hiccup — fight continues')); } catch (_) {}
       }
     } else if (this.mode === 'versus') {
       try { this.updateVersus(dt); } catch (vsErr) {
-        try { sfReportError('versus/update', vsErr, 'Versus hiccup — speel door'); } catch (_) {}
+        try { sfReportError('versus/update', vsErr, errT('toast.fightHiccup', 'Hiccup — fight continues')); } catch (_) {}
       }
     } else if (this.mode === 'wall') {
       try { this.updateWall(dt); } catch (wErr) {
-        try { sfReportError('wall/update', wErr, 'Muur hiccup — speel door'); } catch (_) {}
+        try { sfReportError('wall/update', wErr, errT('toast.fightHiccup', 'Hiccup — fight continues')); } catch (_) {}
       }
     } else if (this.mode === 'coinrun') {
       try { this.updateCoinRun(dt); } catch (crErr) {
-        try { sfReportError('coinrun/update', crErr, 'Mats hiccup — speel door'); } catch (_) {}
+        try { sfReportError('coinrun/update', crErr, errT('toast.fightHiccup', 'Hiccup — fight continues')); } catch (_) {}
       }
     }
 
     for (const m of this.monsters) {
       try { m.update(dt, this); } catch (monErr) {
-        try { sfReportError('monster/update', monErr, 'Vijand hiccup — speel door'); } catch (_) {}
+        try { sfReportError('monster/update', monErr, errT('toast.fightHiccup', 'Hiccup — fight continues')); } catch (_) {}
       }
     }
     try { if (typeof tickWeaponStatusEffects === 'function') tickWeaponStatusEffects(this, dt); } catch (_) {}
@@ -43170,7 +44215,7 @@ class Game {
       }
     }
     } catch (projErr) {
-      try { sfReportError('projectile/update', projErr, 'Projectiel hiccup — speel door'); } catch (_) {}
+      try { sfReportError('projectile/update', projErr, errT('toast.fightHiccup', 'Hiccup — fight continues')); } catch (_) {}
     }
     for (const p of this.projectiles) {
       if (p.life <= 0 && p.kind === 'boemerang') {
@@ -43767,24 +44812,31 @@ class Game {
       }
       c.font = '600 15px -apple-system, sans-serif';
       c.textAlign = 'center';
-      const tw = c.measureText(hintTxt).width;
+      const maxW = Math.min(W * 0.72, 500);
+      const lines = typeof wrapHudLines === 'function' ? wrapHudLines(c, hintTxt, maxW, 2) : [hintTxt];
+      const lineH = 18;
+      let tw = 0;
+      for (let i = 0; i < lines.length; i++) tw = Math.max(tw, c.measureText(lines[i]).width);
       const padX = 16;
+      const pillH = 12 + lines.length * lineH;
       const hintY = (this.mode === 'adventure' && this.advHudBottom > 0)
         ? Math.max(H * 0.2, this.advHudBottom + 20)
         : H * 0.2;
-      const pillY = hintY - 24;
+      const pillY = hintY - 20;
       c.fillStyle = 'rgba(6,10,24,.78)';
-      this.rr(c, W / 2 - tw / 2 - padX, pillY, tw + padX * 2, 30, 10);
+      this.rr(c, W / 2 - tw / 2 - padX, pillY, tw + padX * 2, pillH, 10);
       c.fill();
       c.strokeStyle = 'rgba(255,215,94,.35)';
       c.lineWidth = a11yHighContrast() ? 2.5 : 1.5;
-      this.rr(c, W / 2 - tw / 2 - padX, pillY, tw + padX * 2, 30, 10);
+      this.rr(c, W / 2 - tw / 2 - padX, pillY, tw + padX * 2, pillH, 10);
       c.stroke();
-      fillHudText(c, hintTxt, W / 2, hintY, {
-        fill: '#fff',
-        stroke: 'rgba(0,0,0,.85)',
-        strokeW: a11yHighContrast() ? 3.5 : 0,
-      });
+      for (let i = 0; i < lines.length; i++) {
+        fillHudText(c, lines[i], W / 2, pillY + 16 + i * lineH, {
+          fill: '#fff',
+          stroke: 'rgba(0,0,0,.85)',
+          strokeW: a11yHighContrast() ? 3.5 : 0,
+        });
+      }
       c.globalAlpha = 1;
     }
     try { if (typeof drawAimTutorial === 'function') drawAimTutorial(c, this); } catch (_) {}
@@ -45173,7 +46225,10 @@ class Game {
         }
         c.font = '800 11px sans-serif';
         c.textAlign = 'center';
-        fillHudText(c, tele.label, W / 2, 102, { fill: tele.color, strokeW: a11yHighContrast() ? 3 : 0 });
+        const trainTeleLabel = typeof wrapHudLines === 'function'
+          ? wrapHudLines(c, tele.label, barW - (tele.icon ? 36 : 12), 1)[0]
+          : tele.label;
+        fillHudText(c, trainTeleLabel, W / 2, 102, { fill: tele.color, strokeW: a11yHighContrast() ? 3 : 0 });
         c.fillStyle = 'rgba(255,255,255,.15)';
         this.rr(c, bx, 108, barW, 5, 3);
         c.fill();
@@ -46125,7 +47180,7 @@ function appendItemUpgradeButton(el, cat, id, rerender) {
       const lv = itemUpgradeLevel(cat, id);
       UI.toast(t('toast.itemUpgraded', { name, lv, detail: itemUpgradeSummary(cat, id) }), 3200);
       rerender();
-    }, 'itemUp/' + cat + '/' + id, 'Upgrade mislukt');
+    }, 'itemUp/' + cat + '/' + id, errT('toast.errRetry', 'Action failed — try again'));
   });
   el.appendChild(btn);
 }
@@ -46271,7 +47326,7 @@ function pickVsRosterId(id) {
     UI.renderCharSelect();
     if (UI.charPickStep === 2) scrollCharFightIntoView();
   } catch (err) {
-    sfReportError('charPick', err, 'Vechter kiezen mislukt — tik opnieuw');
+    sfReportError('charPick', err, errT('ui.errCharPick', 'Could not pick fighter — tap again'));
   }
 }
 
@@ -46448,7 +47503,7 @@ function equipSkill(id) {
       UI.renderModeHub();
       UI.toast(t('toast.skillEquipped', { name: skillLabel(sk) }), 2200);
       UI._skillArmId = null;
-    }, 'pickSkill/' + id, 'Skill kiezen mislukt');
+    }, 'pickSkill/' + id, errT('toast.errRetry', 'Action failed — try again'));
   } finally {
     UI._skillEquipBusy = false;
   }
@@ -46480,7 +47535,7 @@ function equipSuper(id) {
       UI.renderModeHub();
       UI.toast(t('toast.superEquipped', { name: superLabel(sp) }), 2200);
       UI._superArmId = null;
-    }, 'pickSuper/' + id, 'Super kiezen mislukt');
+    }, 'pickSuper/' + id, errT('toast.errRetry', 'Action failed — try again'));
   } finally {
     UI._superEquipBusy = false;
   }
@@ -47303,14 +48358,14 @@ const UI = {
     }
     const el = document.getElementById(screenId);
     if (!el) {
-      sfReportError('safeOpen/' + screenId, new Error('missing screen DOM'), 'Scherm niet gevonden — terug naar menu');
+      sfReportError('safeOpen/' + screenId, new Error('missing screen DOM'), errT('ui.errScreenMissing', 'Screen missing — back to menu'));
       try { this.goMenu(); } catch (_) { ensureVisibleScreen(); }
       return;
     }
     this.show(screenId);
     if (renderFn) {
       try { renderFn(); } catch (err) {
-        sfReportError(renderFn.name || screenId, err, opts.msg || 'Scherm laden mislukt — herlaad via Verse versie');
+        sfReportError(renderFn.name || screenId, err, opts.msg || errT('ui.errLoadScreen', 'Could not load screen — tap Fresh version'));
       }
     }
   },
@@ -47319,7 +48374,7 @@ const UI = {
     try {
       if (!id) {
         if (state === 'play' && !game) {
-          sfReportError('UI.show/play', new Error('no game ref'), 'Gevecht niet geladen — terug naar menu');
+          sfReportError('UI.show/play', new Error('no game ref'), errT('ui.errScreenMissing', 'Screen missing — back to menu'));
           try { this.goMenu(); } catch (_) { ensureVisibleScreen(); }
           syncPlayLayer();
           return;
@@ -47329,7 +48384,7 @@ const UI = {
       } else {
         const target = document.getElementById(id);
         if (!target) {
-          sfReportError('UI.show/' + id, new Error('missing screen DOM'), 'Scherm niet gevonden — terug naar menu');
+          sfReportError('UI.show/' + id, new Error('missing screen DOM'), errT('ui.errScreenMissing', 'Screen missing — back to menu'));
           try { this.goMenu(); } catch (_) { ensureVisibleScreen(); }
           syncPlayLayer();
           return;
@@ -47376,7 +48431,7 @@ const UI = {
       const pauseBtn = document.getElementById('pauseBtn');
       if (pauseBtn) pauseBtn.classList.toggle('show', !id && !!game && !game.over && state !== 'result');
     } catch (err) {
-      sfReportError('UI.show/' + (id || 'play'), err, 'Schermwissel mislukt — terug naar menu');
+      sfReportError('UI.show/' + (id || 'play'), err, errT('ui.errScreenSwitch', 'Screen switch failed — back to menu'));
       try { this.goMenu(); } catch (_) { ensureVisibleScreen(); }
     }
     syncPlayLayer();
@@ -47531,7 +48586,7 @@ const UI = {
       }
       this.goMenu();
     } catch (err) {
-      sfReportError('goBack', err, 'Menu-navigatie mislukt — terug naar hoofdmenu');
+      sfReportError('goBack', err, errT('ui.errGoBack', 'Navigation failed — back to menu'));
       this.goMenu();
     }
   },
@@ -47746,7 +48801,7 @@ const UI = {
       scheduleResize();
       if (window.StickInstall) window.StickInstall.refreshMenuButton();
     } catch (err) {
-      sfReportError('goMenu', err, 'Kon menu niet openen — herlaad de pagina');
+      sfReportError('goMenu', err, errT('ui.errGoMenu', 'Could not open menu — reload the page'));
       try { Input.releaseAll(); } catch (_) {}
       if (game) {
         try {
@@ -48043,7 +49098,7 @@ const UI = {
     if (!MODE_HUB_META[id]) return;
     this.modeHubId = id;
     this.safeOpen('modeHubScreen', () => this.renderModeHub(), {
-      msg: (typeof tOr === 'function') ? tOr('hub.loadFail', 'Hub laden mislukt') : 'Hub laden mislukt',
+      msg: errT('hub.loadFail', 'Could not load hub'),
     });
   },
 
@@ -48263,7 +49318,7 @@ const UI = {
       }
     } catch (_) {}
     } catch (err) {
-      sfReportError('renderMenu', err, 'Menu kon niet ververst worden');
+      sfReportError('renderMenu', err, errT('ui.errMenuRefresh', 'Could not refresh menu'));
     }
   },
 
@@ -48380,7 +49435,7 @@ const UI = {
         if (titleEl) {
           const small = titleEl.querySelector('small');
           titleEl.textContent = '';
-          titleEl.appendChild(document.createTextNode(tOr('ui.summonOpen', 'Open kist')));
+          titleEl.appendChild(document.createTextNode(t('ui.summonPull')));
           if (small) titleEl.appendChild(small);
         }
         pullBtn.setAttribute('aria-label', left > 0
@@ -48399,7 +49454,7 @@ const UI = {
       }
       const hint = document.getElementById('summonStageHint');
       if (hint) {
-        hint.textContent = tOr('ui.summonHint', 'Tik kist om te openen');
+        hint.textContent = t('ui.summonHint');
         hint.style.display = (left > 0 && !this._chestPullBusy) ? '' : 'none';
       }
 
@@ -48420,7 +49475,7 @@ const UI = {
       try { syncPlayLayer(); } catch (_) {}
       try { hardenButtonIcons(document.getElementById('summonScreen')); } catch (_) {}
     } catch (err) {
-      sfReportError('renderSummon', err, 'Summons laden mislukt');
+      sfReportError('renderSummon', err, t('ui.errSummonLoad'));
       try { this.goMenu(); } catch (_) { ensureVisibleScreen(); }
     }
   },
@@ -48473,9 +49528,9 @@ const UI = {
       this.safeOpen('summonScreen', () => {
         this.renderSummon();
         try { ensureSummonVideoPreloaded(); } catch (_) {}
-      }, { msg: 'Summons laden mislukt' });
+      }, { msg: t('ui.errSummonLoad') });
     } catch (err) {
-      sfReportError('openSummonHub', err, 'Summons openen mislukt');
+      sfReportError('openSummonHub', err, t('ui.errSummonOpen'));
       try { this.goMenu(); } catch (_) {}
     }
   },
@@ -48770,10 +49825,10 @@ const UI = {
         this._chestPullLeftSnap = null;
       }
       const text = document.getElementById('summonRevealText');
-      const msg = typeof chestResultToast === 'function' ? chestResultToast(res) : (res && res.ok ? 'Summon!' : tOr('ui.summonFail', 'Mislukt'));
+      const msg = typeof chestResultToast === 'function' ? chestResultToast(res) : (res && res.ok ? 'Summon!' : errT('ui.summonFail', 'Summon failed — try again'));
       // Never spoil via toast/text during the open — only after card
       this._summonPendingMsg = (res && res.ok) ? msg : null;
-      if (text) text.textContent = (res && res.ok) ? tOr('ui.summonOpening', 'Kist opent…') : msg;
+      if (text) text.textContent = (res && res.ok) ? t('ui.summonOpening') : msg;
 
       if (!res || !res.ok) {
         this._chestPullBusy = false;
@@ -48796,7 +49851,7 @@ const UI = {
       this._chestPullBusy = false;
       this._summonPendingMsg = null;
       this.clearSummonRevealTimers();
-      sfReportError('doChestPull', err, 'Summon mislukt');
+      sfReportError('doChestPull', err, errT('ui.summonFail', 'Summon failed — try again'));
       try { ensureVisibleScreen(); } catch (_) {}
     }
   },
@@ -48912,14 +49967,14 @@ const UI = {
         bindPress(btn, () => safeUiAction(() => {
           AudioSys.sfx('select');
           claimDailyTask(task.id);
-        }, 'claimDaily/' + task.id, 'Claim mislukt — probeer opnieuw'));
+        }, 'claimDaily/' + task.id, errT('ui.errClaimRetry', 'Claim failed — try again')));
         el.appendChild(btn);
       } else if (!task.done && playTarget) {
         const btn = document.createElement('button');
         btn.type = 'button';
         btn.className = 'btn mission-play-btn';
         btn.textContent = t('missionsUi.dailyPlayBtn', { mode: dailyModeLabel(playTarget.mode) });
-        bindPress(btn, () => safeUiAction(() => goDailyPlayTarget(task.id), 'dailyPlay/' + task.id, 'Kon modus niet openen'));
+        bindPress(btn, () => safeUiAction(() => goDailyPlayTarget(task.id), 'dailyPlay/' + task.id, errT('ui.errOpenMode', 'Could not open mode — pick from the menu')));
         el.appendChild(btn);
       }
       dailyHost.appendChild(el);
@@ -48992,7 +50047,7 @@ const UI = {
           btn.type = 'button';
           btn.className = 'btn mission-spot-btn';
           btn.textContent = t('missionsUi.spotlightPlayBtn', { mode: dailyModeLabel(playTarget.mode) });
-          bindPress(btn, () => safeUiAction(() => goAchievementPlayTarget(near.ach), 'achSpotPlay/' + near.ach.id, 'Kon modus niet openen'));
+          bindPress(btn, () => safeUiAction(() => goAchievementPlayTarget(near.ach), 'achSpotPlay/' + near.ach.id, errT('ui.errOpenMode', 'Could not open mode — pick from the menu')));
           achSpot.appendChild(btn);
         }
       } else {
@@ -49347,13 +50402,13 @@ const UI = {
         el.addEventListener('click', (e) => {
           if (holdSkip) { holdSkip = false; return; }
           if (!uiTapAllowed(e)) return;
-          safeUiAction(() => gokGooiStartLevel(n), 'gokStart/' + n, 'Level starten mislukt');
+          safeUiAction(() => gokGooiStartLevel(n), 'gokStart/' + n, errT('ui.errLevelStart', 'Could not start level'));
         });
       }
       grid.appendChild(el);
     }
     } catch (err) {
-      sfReportError('renderLevels', err, 'Level-overzicht laden mislukt — herlaad via Verse versie');
+      sfReportError('renderLevels', err, errT('ui.errLoadScreen', 'Could not load screen — tap Fresh version'));
     }
   },
 
@@ -49596,7 +50651,7 @@ const UI = {
         safeUiAction(() => {
           save.weapon = w.id;
           this.weaponPreviewId = w.id;
-          if (!persistOrToast('wapen')) return;
+          if (!persistOrToast('weapon')) return;
           playWeaponPickFeedback(w.id);
           if (islandLocked) UI.toast(t('toast.weaponIslandCap', { cap: adventureWeaponCap() }), 2800);
           this.renderWeapons();
@@ -49693,14 +50748,14 @@ const UI = {
   openUpgrades(tab) {
     this.upgradeTab = tab || 'skills';
     this.safeOpen('upgradeScreen', () => this.renderUpgrades(), {
-      msg: 'Upgrades laden mislukt — herlaad via Verse versie',
+      msg: errT('ui.errLoadScreen', 'Could not load screen — tap Fresh version'),
     });
   },
 
   /** Fallback stub. Live list→detail lives in src/ui/buildings-ui.js (loaded after this file). */
   openBuildings() {
     this.safeOpen('buildingsScreen', () => this.renderBuildings(), {
-      msg: (typeof tOr === 'function') ? tOr('buildings.loadFail', 'Fabrieken laden mislukt') : 'Fabrieken laden mislukt',
+      msg: errT('buildings.loadFail', 'Could not load factories'),
     });
   },
   renderBuildings() {},
@@ -49833,7 +50888,7 @@ const UI = {
               if (!setActiveTechnique(id)) return;
               AudioSys.sfx('select');
               this.renderUpgrades();
-            }, 'equipTechnique/' + id, 'Technique kiezen mislukt');
+            }, 'equipTechnique/' + id, errT('toast.errRetry', 'Action failed — try again'));
           });
           el.appendChild(eqBtn);
         }
@@ -49850,7 +50905,7 @@ const UI = {
               const nlv = skillLevel(id);
               UI.toast(t('toast.skillUpgraded', { name, lv: nlv, detail: skillUpgradeSummary(id) }), 3200);
               this.renderUpgrades();
-            }, 'skillUp/' + id, 'Upgrade mislukt');
+            }, 'skillUp/' + id, errT('toast.errRetry', 'Action failed — try again'));
           });
           el.appendChild(btn);
         }
@@ -50111,7 +51166,7 @@ const UI = {
           wallet,
         }) +
         (petChips ? `<div style="margin-top:6px;line-height:1.7">${petChips}</div>` : '') +
-        `<div style="margin-top:6px;font-size:12px;opacity:.85">${t('ui.petCoinTip')}</div>`;
+        `<div class="pet-coin-tip">${t('ui.petCoinTip')}</div>`;
     }
     const list = document.getElementById('petList');
     if (!list) return;
@@ -50141,6 +51196,7 @@ const UI = {
       }
       el.appendChild(cv);
       const info = document.createElement('div');
+      info.className = 'card-info';
       const badge = active ? ` <span class="rar-pill" style="color:#7cf5ff;border-color:#7cf5ff">${t('ui.petActive').toUpperCase()}</span>` : '';
       const upLv = tamed ? itemUpgradeLevel('pet', def.id) : 0;
       const upMax = tamed ? itemUpgradeMax('pet', def.id) : 0;
@@ -50151,7 +51207,7 @@ const UI = {
         ? ` <span class="rar-pill" style="color:#ffd75e;border-color:#ffd75e">${t('ui.weaponChestBadge')}</span>`
         : '';
       info.innerHTML = `<div class="cname">${sp.name} <span class="rar-pill" style="color:${rar.color};border-color:${rar.color}">${rarityLabel(sp.rarity)}</span>${badge}${chestPetBadge}${upBadge}</div>` +
-        `<div class="cinfo">${def.perk}</div>` +
+        `<div class="cinfo">${petPerkLabel(def)}</div>` +
         (chestPetSk ? `<div class="cinfo" style="opacity:.9;font-size:12px;margin-top:3px;color:#ffd75e">✦ ${chestPetSk}</div>` : '') +
         `<div class="cinfo" style="opacity:.78;font-size:12px;margin-top:3px">${tamed
           ? t('ui.petTamedAssist')
@@ -50169,7 +51225,7 @@ const UI = {
         right.innerHTML = `${t('ui.petBuy')}<br>${cost} ${SVG_COIN_ICON}`;
         right.style.color = '#ff9ad5';
       } else {
-        right.innerHTML = kills > 0 ? `${need - kills} kills` : `${cost} ${SVG_COIN_ICON}`;
+        right.innerHTML = kills > 0 ? t('ui.petKillsLeft', { n: need - kills }) : `${cost} ${SVG_COIN_ICON}`;
         right.style.opacity = '0.7';
       }
       el.appendChild(right);
@@ -50237,8 +51293,8 @@ const UI = {
             try { AudioSys.sfx('diceRoll'); } catch (_) {}
             const rar = rarityOf(res.def.rarity);
             UI.toast(res.duplicate
-              ? t('toast.eggDuplicateUi', { name: res.def.name })
-              : t('toast.eggHatch', { name: res.def.name, rarity: rarityLabel(res.def.rarity) }), 3600);
+              ? t('toast.eggDuplicateUi', { name: eggPetName(res.def) })
+              : t('toast.eggHatch', { name: eggPetName(res.def), rarity: rarityLabel(res.def.rarity) }), 3600);
             this.renderPets();
             this.renderMenu();
           }, 'crackDailyEgg', t('ui.errEggCrack'));
@@ -50262,9 +51318,10 @@ const UI = {
       drawEggPetArt(cc, def, 18, 1.1, 0, 0, !owned);
       el.appendChild(cv);
       const info = document.createElement('div');
+      info.className = 'card-info';
       const badge = active ? ` <span class="rar-pill" style="color:#ffd75e;border-color:#ffd75e">${t('ui.petActive').toUpperCase()}</span>` : '';
-      info.innerHTML = `<div class="cname">${def.name} <span class="rar-pill" style="color:${rar.color};border-color:${rar.color}">${rarityLabel(def.rarity)}</span>${badge}</div>` +
-        `<div class="cinfo">${def.perk}</div>` +
+      info.innerHTML = `<div class="cname">${eggPetName(def)} <span class="rar-pill" style="color:${rar.color};border-color:${rar.color}">${rarityLabel(def.rarity)}</span>${badge}</div>` +
+        `<div class="cinfo">${eggPerkLabel(def)}</div>` +
         `<div class="cinfo" style="opacity:.78;font-size:12px;margin-top:3px">${owned ? t('ui.eggCosmetic') : t('ui.eggUnhatched')}</div>`;
       el.appendChild(info);
       const right = document.createElement('div');
@@ -50285,7 +51342,7 @@ const UI = {
             } else {
               equipEggPet(def.id);
               AudioSys.sfx('select');
-              UI.toast(t('toast.eggFloat', { name: def.name }), 2200);
+              UI.toast(t('toast.eggFloat', { name: eggPetName(def) }), 2200);
             }
             this.renderPets();
           }, 'equipEggPet/' + def.id, t('ui.errEggPick'));
@@ -50323,11 +51380,13 @@ const UI = {
       drawStyleLookPreview(cc, st, 80, 86);
       el.appendChild(cv);
       const cap = document.createElement('div');
+      cap.className = 'style-card-name';
       cap.style.fontSize = '13px';
       cap.style.color = st.accent;
       cap.textContent = styleLabel(st);
       el.appendChild(cap);
       const bonus = document.createElement('div');
+      bonus.className = 'style-card-bonus';
       bonus.style.fontSize = '11px';
       bonus.style.fontWeight = '800';
       bonus.style.color = ok ? '#7cf5ff' : '#8fa3d9';
@@ -50336,6 +51395,7 @@ const UI = {
       bonus.style.opacity = ok ? '1' : '0.55';
       el.appendChild(bonus);
       const tip = document.createElement('div');
+      tip.className = 'style-card-tip';
       tip.style.fontSize = '10px';
       tip.style.opacity = '0.72';
       tip.style.marginTop = '4px';
@@ -50343,6 +51403,7 @@ const UI = {
       tip.textContent = styleLabel(st, 'tooltip') || styleLabel(st, 'hint');
       el.appendChild(tip);
       const sub = document.createElement('div');
+      sub.className = 'style-card-sub';
       sub.style.fontSize = '11px';
       sub.style.fontWeight = '600';
       sub.style.opacity = '0.75';
@@ -50354,12 +51415,12 @@ const UI = {
         bindPress(el, () => {
           safeUiAction(() => {
             save.style = st.id;
-            if (!persistOrToast('stijl')) return;
+            if (!persistOrToast('style')) return;
             AudioSys.sfx('select');
             this.renderStyle();
             this.renderMenu();
             UI.toast(t('toast.styleEquipped', { name: styleLabel(st) }), 2200);
-          }, 'pickStyle/' + st.id, 'Stijl kiezen mislukt');
+          }, 'pickStyle/' + st.id, t('ui.errStylePick'));
         });
       }
       grid.appendChild(el);
@@ -50427,7 +51488,7 @@ const UI = {
         : equipGear(item.id, { expectSlot });
       if (!res || !res.ok) {
         const fail = gearUnlockState(item, expectSlot);
-        UI.toast((res && res.label) || fail.label || tOr('toast.gearLocked', 'Nog op slot'), 1800, { tone: 'warn' });
+        UI.toast((res && res.label) || fail.label || errT('toast.gearLocked', 'Still locked'), 1800, { tone: 'warn' });
         return false;
       }
       AudioSys.sfx('select');
@@ -50611,7 +51672,7 @@ const UI = {
               this._gearPickerScroll = 0;
               AudioSys.sfx('select');
               this.renderGear({ pickerOnly: true });
-            }, 'gearFilter/' + key, 'Filter mislukt');
+            }, 'gearFilter/' + key, errT('toast.errRetry', 'Action failed — try again'));
           });
           filterBar.appendChild(chip);
         }
@@ -50649,7 +51710,7 @@ const UI = {
               this._gearPickerScroll = 0;
               AudioSys.sfx('select');
               this.renderGear({ pickerOnly: true });
-            }, 'gearRarity/' + key, 'Rarity filter mislukt');
+            }, 'gearRarity/' + key, errT('toast.errRetry', 'Action failed — try again'));
           });
           rarBar.appendChild(chip);
         }
@@ -50734,7 +51795,7 @@ const UI = {
             keepPickerScroll();
             if (!unlock.unlocked) {
               AudioSys.sfx('select');
-              UI.toast(tOr('toast.gearLocked', 'Nog op slot · {why}', { why: unlock.label || '' }), 1800, { tone: 'warn' });
+              UI.toast(tOr('toast.gearLocked', 'Still locked · {why}', { why: unlock.label || '' }), 1800, { tone: 'warn' });
               this.renderGear({ pickerOnly: true });
               return;
             }
@@ -50742,7 +51803,7 @@ const UI = {
             else wearItem(it);
             this.renderGear();
             this.renderMenu();
-          }, 'gearPick/' + it.id, 'Item kiezen mislukt');
+          }, 'gearPick/' + it.id, errT('toast.errRetry', 'Action failed — try again'));
         });
         frag.appendChild(el);
       }
@@ -51124,9 +52185,7 @@ const UI = {
     const titleKey = data.titleKey || (data.mode === 'training'
       ? (win ? 'result.trainWin' : 'result.trainLose')
       : (win ? 'result.advWin' : 'result.advLose'));
-    const titleFallback = data.mode === 'training'
-      ? (win ? tOr('result.trainWin', 'KAMPIOEN!') : tOr('result.trainLose', 'ROBOT WINT...'))
-      : (win ? tOr('result.advWin', 'GEWONNEN!') : tOr('result.advLose', 'VERLOREN'));
+    const titleFallback = (typeof t === 'function') ? t(titleKey) : titleKey;
     // Never reuse a stale English title (ROBOT WINS / YOU LOST) when the UI is NL.
     const painted = (typeof tOr === 'function') ? tOr(titleKey, titleFallback) : titleFallback;
     title.textContent = painted;
@@ -51143,7 +52202,7 @@ const UI = {
         detail = tOr(data.detailKey, detail, params);
         if (data.diffLineKey) detail = tOr(data.diffLineKey, '', data.diffLineParams || {}) + detail;
         if (data.keepLoot) {
-          const keep = tOr('result.advLoseKeep', 'XP en loot van deze run blijven');
+          const keep = t('result.advLoseKeep');
           if (keep) detail = keep + ' · ' + detail;
         }
         if (data.masterBuff) detail += tOr('result.masterBuffActive', '');
@@ -51217,7 +52276,7 @@ const UI = {
     playMenuBgm(true);
     AudioSys.applyVolumes();
     } catch (err) {
-      sfReportError('showResult', err, 'Resultaat hiccup — probeer Opnieuw / Menu');
+      sfReportError('showResult', err, errT('toast.resultHiccup', 'Result hiccup — try Again / Menu'));
       // NOOIT stil naar startscherm: forceer result-screen best-effort
       try {
         state = 'result';
@@ -51381,7 +52440,7 @@ if (typeof UI === 'object' && UI) {
     this._buildingsRowBound = {};
     this.stopBuildingsTick();
     this.safeOpen('buildingsScreen', () => this.renderBuildings(), {
-      msg: buildingsTxt('buildings.loadFail', 'Fabrieken laden mislukt'),
+      msg: buildingsTxt('buildings.loadFail', 'Could not load factories'),
     });
     this.startBuildingsTick();
   };
@@ -51579,7 +52638,7 @@ if (typeof UI === 'object' && UI) {
         : (view.pending + '/' + view.capacity + ' ' + buildingsEscape(view.resourceLabel));
       btn.innerHTML =
         '<span class="hub-tile-ico">' + buildingsArtHtml(view) + '</span>'
-        + '<span class="hub-tile-title">' + buildingsEscape(view.name) + '</span>'
+        + '<span class="hub-tile-title">' + buildingsEscape(view.nameShort || view.name) + '</span>'
         + '<span class="hub-tile-sub">' + buildingsEscape(does) + '</span>'
         + '<span class="hub-tile-stat">' + lockBit + (stock ? ' · ' + stock : '') + '</span>';
       if (!this._buildingsRowBound[view.id]) {
@@ -51934,7 +52993,7 @@ function bindPress(el, handler) {
     if (now - last < 320) return;
     last = now;
     try { handler(e); } catch (err) {
-      sfReportError('ui/' + (el.id || 'press'), err, 'Actie mislukt — probeer opnieuw');
+      sfReportError('ui/' + (el.id || 'press'), err, errT('toast.errRetry', 'Action failed — try again'));
     }
   };
   const hitOk = (e) => {
@@ -52016,7 +53075,7 @@ bindPress(btnContinue, () => {
   try {
     if (!resumeLastPlay()) userToast(t('toast.noSession'), 2400, { tone: 'warn' });
   } catch (err) {
-    sfReportError('resume', err, 'Verder spelen mislukt — kies een modus');
+    sfReportError('resume', err, errT('ui.errResume', 'Resume failed — pick a mode'));
   }
 });
 bindPress(document.getElementById('btnTraining'), () => {
@@ -52128,7 +53187,7 @@ if (dailyClaimAllBtn) bindPress(dailyClaimAllBtn, () => {
   try {
     AudioSys.init(); AudioSys.sfx('select'); claimAllDailyReady();
   } catch (err) {
-    sfReportError('claimAll', err, 'Claim mislukt — probeer opnieuw');
+    sfReportError('claimAll', err, errT('ui.errClaimRetry', 'Claim failed — try again'));
   }
 });
 const dailyBonusBtn = document.getElementById('dailyBonusBtn');
@@ -52136,17 +53195,17 @@ if (dailyBonusBtn) bindPress(dailyBonusBtn, () => {
   try {
     AudioSys.sfx('select'); claimDailyDayBonus();
   } catch (err) {
-    sfReportError('dayBonus', err, 'Dagbonus mislukt — probeer opnieuw');
+    sfReportError('dayBonus', err, errT('ui.errDayBonus', 'Daily bonus failed — try again'));
   }
 });
 bindPress(document.getElementById('fomoRitualDismiss'), () => {
   try { AudioSys.sfx('select'); dismissFomoRitual(); } catch (err) {
-    sfReportError('fomoDismiss', err, 'Kon overzicht sluiten');
+    sfReportError('fomoDismiss', err, errT('ui.errFomo', 'Could not close day overview'));
   }
 });
 bindPress(document.getElementById('fomoRitualBackdrop'), () => {
   try { dismissFomoRitual(); } catch (err) {
-    sfReportError('fomoDismiss', err, 'Kon overzicht sluiten');
+    sfReportError('fomoDismiss', err, errT('ui.errFomo', 'Could not close day overview'));
   }
 });
 bindPress(document.getElementById('fomoRitualCta'), () => {
@@ -52154,7 +53213,7 @@ bindPress(document.getElementById('fomoRitualCta'), () => {
     AudioSys.init(); AudioSys.sfx('select');
     UI.runFomoRitualCta();
   } catch (err) {
-    sfReportError('fomoCta', err, 'Kon actie niet openen');
+    sfReportError('fomoCta', err, errT('ui.errFomo', 'Could not close day overview'));
   }
 });
 bindPress(document.getElementById('fomoRitualReopen'), () => {
@@ -52162,7 +53221,7 @@ bindPress(document.getElementById('fomoRitualReopen'), () => {
     AudioSys.init(); AudioSys.sfx('select');
     reopenFomoRitual();
   } catch (err) {
-    sfReportError('fomoReopen', err, 'Kon dagoverzicht niet openen');
+    sfReportError('fomoReopen', err, errT('ui.errFomo', 'Could not close day overview'));
   }
 });
 const btnCopyLink = document.getElementById('btnCopyLink');
@@ -52174,7 +53233,7 @@ if (btnOpenPlayLink) btnOpenPlayLink.addEventListener('click', () => {
     const url = await resolveSharePlayUrl();
     if (url) window.open(url, '_blank', 'noopener');
     else userToast(t('toast.noPlayLink'), 2800, { tone: 'warn' });
-  })(), 'openPlayLink', 'Link openen mislukt');
+  })(), 'openPlayLink', errT('ui.errCopyLink', 'Could not copy link — see Settings'));
 });
 const btnExportSave = document.getElementById('btnExportSave');
 if (btnExportSave) btnExportSave.addEventListener('click', () => {
@@ -52204,7 +53263,7 @@ if (btnExportSave) btnExportSave.addEventListener('click', () => {
       size: formatSaveBytes(json.length),
     }), 3600, { tone: 'ok' });
     UI.renderSettings();
-  })(), 'exportSave', 'Export mislukt — kopieer JSON handmatig uit het vak');
+  })(), 'exportSave', errT('ui.errExport', 'Export failed — copy JSON from the box'));
 });
 const btnImportSave = document.getElementById('btnImportSave');
 bindSaveImportFile();
@@ -52374,7 +53433,7 @@ if (btnRestoreBackup) btnRestoreBackup.addEventListener('click', () => {
       UI.toast(t('toast.backupRestored'), 3000, { tone: 'ok' });
       UI.renderSettings();
     } else UI.toast(t('toast.backupFailed'), 3200, { tone: 'danger' });
-  }, 'restoreBackup', 'Backup herstellen mislukt');
+  }, 'restoreBackup', errT('toast.backupFailed', 'Backup restore failed'));
 });
 const btnSyncBackup = document.getElementById('btnSyncBackup');
 if (btnSyncBackup) btnSyncBackup.addEventListener('click', () => {
@@ -52391,7 +53450,7 @@ if (btnSyncBackup) btnSyncBackup.addEventListener('click', () => {
       UI.toast(t('toast.syncOk'), 2800, { tone: 'ok' });
       UI.renderSettings();
     } else UI.toast(t('toast.syncFailed'), 3200, { tone: 'danger' });
-  }, 'syncBackup', 'Backup sync mislukt');
+  }, 'syncBackup', errT('ui.errBackupSync', 'Backup sync failed'));
 });
 const btnClearSave = document.getElementById('btnClearSave');
 if (btnClearSave) btnClearSave.addEventListener('click', () => {
@@ -52413,7 +53472,7 @@ if (btnClearSave) btnClearSave.addEventListener('click', () => {
     AudioSys.sfx('lose');
     UI.renderMenu();
     UI.toast(t('toast.newStart'), 4000, { tone: 'ok' });
-  }, 'clearSave', 'Reset mislukt — probeer opnieuw');
+  }, 'clearSave', errT('toast.errRetry', 'Action failed — try again'));
 });
 bindSettingsControls();
 function bindPlayerDiagUnlock() {
@@ -52943,7 +54002,7 @@ function loop(now) {
         game.update(dt);
       } catch (updateErr) {
         // NOOIT recoverToMenu tijdens live fight (Kets/charge crashte → startscherm)
-        try { sfReportError('update', updateErr, 'Hiccup in gevecht — speel door'); } catch (_) {}
+        try { sfReportError('update', updateErr, errT('toast.fightHiccup', 'Hiccup — fight continues')); } catch (_) {}
         try {
           if (typeof recoverFightHiccup === 'function') recoverFightHiccup(game);
           else if (game) {
@@ -52984,7 +54043,7 @@ function loop(now) {
         try {
           game.draw(ctx);
         } catch (drawErr) {
-          try { sfReportError('draw', drawErr, 'Tekenen hiccup — speel door'); } catch (_) {}
+          try { sfReportError('draw', drawErr, errT('toast.fightHiccup', 'Hiccup — fight continues')); } catch (_) {}
           // On error: still paint sky+ground so adventure doesn't go black
           try {
             if (game && typeof drawBackground === 'function') {
@@ -53584,7 +54643,7 @@ function bootGame() {
       if (window.__sfLoopErr) return;
       const r = ev.reason;
       const err = r instanceof Error ? r : new Error(String(r != null ? r : 'async reject'));
-      sfReportError('async', err, 'Actie mislukt — probeer opnieuw');
+      sfReportError('async', err, errT('toast.errRetry', 'Action failed — try again'));
       if (state === 'play' || state === 'pause') return;
       if (state === 'result' && !game) {
         try { recoverToMenu(); } catch (_) {}

@@ -5,9 +5,9 @@ const SAVE_STAMP_KEY = 'stickfighter_save_stamp_v1';
 const VERSION_UPDATE_SAVE_KEY = 'stickfighter_version_update_save_v1';
 const VERSION_UPDATE_FLAG_KEY = 'stickfighter_version_update_flag_v1';
 const SAVE_EXPORT_SCHEMA = 3;
-const APP_VERSION = '1.18.172';
+const APP_VERSION = '1.18.186';
 /** Keep in sync with sw.js CACHE suffix */
-const SW_CACHE_REV = 382;
+const SW_CACHE_REV = 396;
 const DEFAULT_SAVE = { lvl: 1, xp: 0, unlocked: 1, weapon: 'vuist', petCoins: 0, dex: {}, summons: {}, pets: {}, activePet: null,
   eggPets: {}, activeEggPet: null, eggDaily: null,
   chestDaily: null, chestWeapons: {},
@@ -1221,7 +1221,7 @@ function persist() {
     } catch (_) {}
     if (!backupOk && !window.__sfBackupWriteWarn) {
       window.__sfBackupWriteWarn = true;
-      userToast(toastT('toast.backupWriteFail', null, 'Backup opslaan mislukt — export save in Instellingen (hoofd-save wel OK)'), 5200, { tone: 'warn' });
+      userToast(toastT('toast.backupWriteFail', null, 'Backup save failed — export in Settings (main save is OK)'), 5200, { tone: 'warn' });
     }
     writeSaveStamp(json);
     return true;
@@ -1234,8 +1234,8 @@ function persist() {
     if (!window.__sfPersistWarn) {
       window.__sfPersistWarn = true;
       userToast(backupSaved
-        ? toastT('toast.persistPrimaryFail', null, 'Hoofd-save mislukt — backup wel bijgewerkt (export in Instellingen)')
-        : toastT('toast.persistFail', null, 'Opslaan mislukt — export save in Instellingen'), 5200, { tone: 'danger' });
+        ? toastT('toast.persistPrimaryFail', null, 'Main save failed — backup updated (export in Settings)')
+        : toastT('toast.persistFail', null, 'Save failed — export in Settings'), 5200, { tone: 'danger' });
     }
     return false;
   }
@@ -1251,25 +1251,51 @@ function safeCall(fn, label, toastOnFail) {
 
 function safeAsync(promise, label, userMsg) {
   return Promise.resolve(promise).catch((err) => {
-    sfReportError(label || 'async', err, userMsg || 'Actie mislukt — probeer opnieuw');
+    sfReportError(label || 'async', err, userMsg || errT('toast.errRetry', 'Action failed — try again'));
   });
 }
 
 function safeUiAction(fn, label, userMsg) {
   try { return fn(); } catch (err) {
-    sfReportError(label || 'ui', err, userMsg || 'Actie mislukt — probeer opnieuw');
+    sfReportError(label || 'ui', err, userMsg || errT('toast.errRetry', 'Action failed — try again'));
   }
+}
+
+function persistContextLabel(context) {
+  const raw = String(context || '').trim();
+  if (!raw) return '';
+  const map = {
+    skill: 'toast.persistCtxSkill', super: 'toast.persistCtxSuper',
+    wapen: 'toast.persistCtxWeapon', weapon: 'toast.persistCtxWeapon',
+    style: 'toast.persistCtxStyle', stijl: 'toast.persistCtxStyle',
+    'missie-claim': 'toast.persistCtxMission', mission: 'toast.persistCtxMission',
+    'claim-all': 'toast.persistCtxClaim', dagbonus: 'toast.persistCtxDaily',
+    daily: 'toast.persistCtxDaily', XP: 'toast.persistCtxXp', xp: 'toast.persistCtxXp',
+    gear: 'toast.persistCtxGear', 'tide-battle': 'toast.persistCtxTide',
+  };
+  let key = map[raw];
+  if (!key) {
+    if (raw.indexOf('building/') === 0) key = 'toast.persistCtxBuilding';
+    else if (raw.indexOf('itemUp/') === 0) key = 'toast.persistCtxItem';
+    else if (raw.indexOf('skillUp/') === 0) key = 'toast.persistCtxSkill';
+  }
+  if (key && typeof t === 'function') {
+    const label = t(key);
+    if (label && label !== key) return label;
+  }
+  return raw;
 }
 
 function persistOrToast(context) {
   if (persist()) return true;
   const key = context || 'save';
+  const ctxLabel = persistContextLabel(context);
   window.__sfPersistCtxWarn = window.__sfPersistCtxWarn || {};
   if (!window.__sfPersistCtxWarn[key]) {
     window.__sfPersistCtxWarn[key] = true;
     userToast(context
-      ? toastT('toast.persistFailCtx', { context }, `Opslaan mislukt (${context}) — export save in Instellingen`)
-      : toastT('toast.persistFail', null, 'Opslaan mislukt — export save in Instellingen'), 4200, { tone: 'warn' });
+      ? toastT('toast.persistFailCtx', { context: ctxLabel }, `Save failed (${ctxLabel}) — export in Settings`)
+      : toastT('toast.persistFail', null, 'Save failed — export in Settings'), 4200, { tone: 'warn' });
   }
   return false;
 }
@@ -1288,7 +1314,7 @@ function applySaveFromBackupRaw() {
 function restoreSaveFromBackup() {
   try {
     if (!applySaveFromBackupRaw()) {
-      userToast(toastT('toast.backupFailed', null, 'Backup herstellen mislukt — export save als je die hebt'), 4200, { tone: 'danger' });
+      userToast(toastT('toast.backupFailed', null, 'Backup restore failed — export save if you have one'), 4200, { tone: 'danger' });
       return false;
     }
     try { checkAchievements(); } catch (_) {}
@@ -1296,7 +1322,7 @@ function restoreSaveFromBackup() {
     try { if (UI.renderMissions) UI.renderMissions(); } catch (_) {}
     return true;
   } catch (err) {
-    sfReportError('restoreBackup', err, 'Backup herstellen mislukt');
+    sfReportError('restoreBackup', err, errT('toast.backupFailed', 'Backup restore failed'));
     return false;
   }
 }
@@ -1340,7 +1366,7 @@ function stashSaveForVersionUpdate() {
     localStorage.setItem(VERSION_UPDATE_FLAG_KEY, '1');
     return true;
   } catch (err) {
-    sfReportError('versionStash', err, 'Save veiligstellen mislukt');
+    sfReportError('versionStash', err, errT('ui.errBackupStash', 'Could not stash save'));
     return false;
   }
 }
@@ -1370,7 +1396,7 @@ function applyVersionUpdateSave() {
   try {
     save = sanitizeSave(stash.save);
     if (!persist()) {
-      userToast(toastT('toast.persistFail', null, 'Save geladen maar opslaan mislukt — export in Instellingen'), 4200, { tone: 'danger' });
+      userToast(toastT('toast.persistFail', null, 'Save loaded but write failed — export in Settings'), 4200, { tone: 'danger' });
       return false;
     }
     clearVersionUpdateSave();
@@ -1382,7 +1408,7 @@ function applyVersionUpdateSave() {
     }
     return true;
   } catch (err) {
-    sfReportError('versionApply', err, 'Save laden mislukt');
+    sfReportError('versionApply', err, errT('ui.errSaveApply', 'Could not load save'));
     return false;
   }
 }
@@ -1408,7 +1434,7 @@ function syncBackupFromPrimary() {
     writeSaveStamp(json);
     return true;
   } catch (err) {
-    sfReportError('syncBackup', err, 'Backup sync mislukt');
+    sfReportError('syncBackup', err, errT('ui.errBackupSync', 'Backup sync failed'));
     return false;
   }
 }
